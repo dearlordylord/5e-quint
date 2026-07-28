@@ -118,27 +118,118 @@ module unitFeatureRageRecklessCoreExamples {
       hitWithAttackRoll: true,
       strengthBasedAttack: true,
       barbarianLevel: 3,
-      attackDamageType: BludgeoningDamage,
+      attackBaseDamageTypes: List(BludgeoningDamage),
+      damageTypeSelection: NoFrenzyDamageTypeSelection,
     })
-    val repeated = resolveFrenzy(result.state, {
+    val repeated = resolveFrenzy(frenzyResultState(result), {
       hitWithAttackRoll: true,
       strengthBasedAttack: true,
       barbarianLevel: 3,
-      attackDamageType: SlashingDamage,
+      attackBaseDamageTypes: List(SlashingDamage),
+      damageTypeSelection: NoFrenzyDamageTypeSelection,
     })
     val blocked = resolveFrenzy(initialFrenzyState(rage, reckless, false), {
       hitWithAttackRoll: true,
       strengthBasedAttack: true,
       barbarianLevel: 3,
-      attackDamageType: SlashingDamage,
+      attackBaseDamageTypes: List(SlashingDamage),
+      damageTypeSelection: NoFrenzyDamageTypeSelection,
+    })
+    val blockedSelection = resolveFrenzy(
+      initialFrenzyState(rage, reckless, false),
+      {
+        hitWithAttackRoll: false,
+        strengthBasedAttack: true,
+        barbarianLevel: 3,
+        attackBaseDamageTypes: List(SlashingDamage),
+        damageTypeSelection: SelectedFrenzyDamageType(SlashingDamage),
+      }
+    )
+    val mixedDecision = resolveFrenzy(state, {
+      hitWithAttackRoll: true,
+      strengthBasedAttack: true,
+      barbarianLevel: 3,
+      attackBaseDamageTypes: List(PiercingDamage, FireDamage),
+      damageTypeSelection: NoFrenzyDamageTypeSelection,
+    })
+    val duplicateDamageType = resolveFrenzy(state, {
+      hitWithAttackRoll: true,
+      strengthBasedAttack: true,
+      barbarianLevel: 3,
+      attackBaseDamageTypes: List(PiercingDamage, PiercingDamage),
+      damageTypeSelection: NoFrenzyDamageTypeSelection,
+    })
+    val mixedPiercing = resolveFrenzy(state, {
+      hitWithAttackRoll: true,
+      strengthBasedAttack: true,
+      barbarianLevel: 3,
+      attackBaseDamageTypes: List(PiercingDamage, FireDamage),
+      damageTypeSelection: SelectedFrenzyDamageType(PiercingDamage),
+    })
+    val mixedFire = resolveFrenzy(state, {
+      hitWithAttackRoll: true,
+      strengthBasedAttack: true,
+      barbarianLevel: 3,
+      attackBaseDamageTypes: List(PiercingDamage, FireDamage),
+      damageTypeSelection: SelectedFrenzyDamageType(FireDamage),
+    })
+    val mixedInvalid = resolveFrenzy(state, {
+      hitWithAttackRoll: true,
+      strengthBasedAttack: true,
+      barbarianLevel: 3,
+      attackBaseDamageTypes: List(PiercingDamage, FireDamage),
+      damageTypeSelection: SelectedFrenzyDamageType(ColdDamage),
     })
     all {
-      assert(result.admitted),
-      assert(result.state.firstEligibleHitResolvedThisTurn),
-      assert(result.damageDice == rageDamageBonus(3)),
-      assert(result.damageType == BludgeoningDamage),
-      assert(not(repeated.admitted)),
-      assert(not(blocked.admitted)),
+      assert(
+        match result {
+          | FrenzyResolved(facts) =>
+              facts.state.firstEligibleHitResolvedThisTurn
+                and facts.damageDice == rageDamageBonus(3)
+                and facts.damageType == BludgeoningDamage
+          | _ => false
+        }
+      ),
+      assert(not(frenzyResultIsResolved(repeated))),
+      assert(not(frenzyResultIsResolved(blocked))),
+      assert(
+        match blockedSelection {
+          | FrenzyDamageTypeSelectionRejected(_) => true
+          | _ => false
+        }
+      ),
+      assert(
+        match mixedDecision {
+          | FrenzyDamageTypeDecisionRequired(facts) =>
+              facts.choices == Set(PiercingDamage, FireDamage)
+                and not(facts.state.firstEligibleHitResolvedThisTurn)
+          | _ => false
+        }
+      ),
+      assert(
+        match duplicateDamageType {
+          | FrenzyResolved(facts) => facts.damageType == PiercingDamage
+          | _ => false
+        }
+      ),
+      assert(
+        match mixedPiercing {
+          | FrenzyResolved(facts) => facts.damageType == PiercingDamage
+          | _ => false
+        }
+      ),
+      assert(
+        match mixedFire {
+          | FrenzyResolved(facts) => facts.damageType == FireDamage
+          | _ => false
+        }
+      ),
+      assert(
+        match mixedInvalid {
+          | FrenzyDamageTypeSelectionRejected(_) => true
+          | _ => false
+        }
+      ),
     }
   }
 }

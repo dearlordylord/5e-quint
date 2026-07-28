@@ -110,7 +110,7 @@ import {
   attackDamageEventWithEntries,
   attackDamageInterruptionFrame,
   battleAttackHostParticipantId,
-  attackFillsThroughAttackRoll,
+  attackFillsForAttackHitReplay,
 } from "./attack-damage-events.ts";
 import { resolveAttackDamageReductionZeroDamageRedirectAfterReduction } from "./attack-damage-redirect.ts";
 import { resumeInterruptedProcedure } from "./dispatcher.ts";
@@ -175,6 +175,7 @@ import {
   attackCanCarryKnockOutChoice,
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
+  frenzyDamageTypeDecision,
   eligibleAttackDamageDieFloorProcedureRefs,
   eligibleWeaponDamageDiceRollChoiceProcedureRefs,
   recordAttackRollMissToHitReplacementUsed,
@@ -1216,6 +1217,21 @@ export function resolveSelectedAttackProcedure(
       return spendAttackProcedure(mirrorImageCheck.state, attackerId, attack);
     }
   }
+  const frenzyDamageType = frenzyDamageTypeDecision({
+    state: attackRolledState,
+    attackerId,
+    attack,
+    hitWithAttackRoll: hit,
+    selectedDamageType: fillSet.frenzyDamageTypeChoice?.value,
+  });
+  if (frenzyDamageType.tag === "decisionRequired") {
+    return needsHolesResult(attackRolledState, input.subject, [
+      frenzyDamageType.hole,
+    ]);
+  }
+  if (frenzyDamageType.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", frenzyDamageType.message);
+  }
   const eligibleDamageRiders = hit
     ? [
         ...eligibleAttackDamageRiders(
@@ -1225,6 +1241,7 @@ export function resolveSelectedAttackProcedure(
           attack,
           effectiveAttackRoll,
           fillSet.targetSpatialFacts,
+          frenzyDamageType,
         ),
         ...brutalStrikeDamageRiders({
           state: attackRolledState,
@@ -1335,7 +1352,7 @@ export function resolveSelectedAttackProcedure(
         continuation: {
           kind: "replay",
           subject: input.subject,
-          fills: attackFillsThroughAttackRoll(input.fills),
+          fills: attackFillsForAttackHitReplay(input.fills),
         },
       },
       input.handledInterruptTrigger,
@@ -3513,6 +3530,31 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         secondTargetId,
       )
     : [];
+  const frenzyDamageType = frenzyDamageTypeDecision({
+    state: rolledState,
+    attackerId: input.subject.actorId,
+    attack: input.attack,
+    hitWithAttackRoll: hit,
+    selectedDamageType: input.fillSet.frenzyDamageTypeChoice?.value,
+  });
+  if (frenzyDamageType.tag === "decisionRequired") {
+    return {
+      tag: "result",
+      result: needsHolesResult(rolledState, input.subject, [
+        frenzyDamageType.hole,
+      ]),
+    };
+  }
+  if (frenzyDamageType.tag === "invalid") {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        frenzyDamageType.message,
+      ),
+    };
+  }
   const hordeBreakerEligibleDamageRiders = hit
     ? eligibleAttackDamageRiders(
         rolledState,
@@ -3521,6 +3563,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         input.attack,
         effectiveHordeBreakerAttackRoll,
         targetFacts,
+        frenzyDamageType,
       )
     : [];
   const hordeBreakerOngoingDamageModifier = ongoingFeatureDamageModifier(

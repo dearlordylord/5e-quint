@@ -56,10 +56,14 @@ import {
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintList,
   quintStateRecord,
   quintVariantTag,
+  quintVariantValue,
   run,
   stateCheck,
+  stringLiteralField,
+  stringLiteralValue,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import {
   decodeRuleCoreComponentRoute,
@@ -88,7 +92,11 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import acidSplashInput from "../../surface/content/acid_splash.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
-import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
+import type {
+  DamageType,
+  SpellRecord,
+  UnitRecord,
+} from "@dnd/surface/surface/types";
 
 import {
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
@@ -124,6 +132,7 @@ import { parseSupportedUnitFeatureProfile } from "./unit-feature-support.ts";
 import { unitSupportProfileKind } from "./character-execution-queries.ts";
 import { mechanicsOnlyMyceliumStepUnit } from "./classic-non-srd-mechanics-fixtures.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { frenzyDamageTypeSelection } from "./battle-reducer/statblock-attacks.ts";
 
 const ruleCoreFeatureMbtHoles = [
   "DamageRoll",
@@ -148,6 +157,21 @@ const actionSurgeGrants = [
   "ActionSurgeActionSpent",
 ] as const;
 type ActionSurgeGrant = (typeof actionSurgeGrants)[number];
+const frenzyMbtDamageTypes = ["bludgeoning", "piercing", "fire"] as const;
+type FrenzyMbtDamageType = (typeof frenzyMbtDamageTypes)[number];
+type FrenzyDamageTypeSelectionProjection =
+  | { readonly tag: "notObserved" }
+  | { readonly tag: "automatic"; readonly damageType: FrenzyMbtDamageType }
+  | {
+      readonly tag: "decisionRequired";
+      readonly choices: readonly [
+        FrenzyMbtDamageType,
+        FrenzyMbtDamageType,
+        ...FrenzyMbtDamageType[],
+      ];
+    }
+  | { readonly tag: "selected"; readonly damageType: FrenzyMbtDamageType }
+  | { readonly tag: "rejected" };
 
 type RuleCoreFeatureProjection = RuleCoreComponentRoutedProjection & {
   readonly actionAvailable: boolean;
@@ -169,6 +193,7 @@ type RuleCoreFeatureProjection = RuleCoreComponentRoutedProjection & {
   readonly abilityCheckBoostedSucceeded: boolean;
   readonly critical: boolean;
   readonly actorArmorClass: number;
+  readonly frenzyDamageTypeSelection: FrenzyDamageTypeSelectionProjection;
   readonly holes: readonly RuleCoreFeatureMbtHole[];
   readonly pendingInterrupt: boolean;
   readonly lastResult: RuleCoreFeatureResult;
@@ -224,6 +249,11 @@ const driverSchema = {
   doRecklessAttack: {},
   doSneakAttack: {},
   doFrenzy: {},
+  doFrenzyDuplicateTypesAutomatic: {},
+  doFrenzyMixedDecisionRequired: {},
+  doFrenzyMixedSelectPiercing: {},
+  doFrenzyMixedSelectFire: {},
+  doFrenzyMixedRejectOutsideType: {},
   doImprovedCritical: {},
   doEvasionSuccess: {},
   doEvasionFailure: {},
@@ -535,6 +565,10 @@ const selectedUnitIdentityReplays = [
           recklessActive: true,
           incomingAttackAdvantage: true,
           lastDamageAmount: 2,
+          frenzyDamageTypeSelection: {
+            tag: "automatic",
+            damageType: "bludgeoning",
+          },
           lastResult: "resolved",
         }),
       },
@@ -730,12 +764,28 @@ function expectedProjection(
     abilityCheckBoostedSucceeded: false,
     critical: false,
     actorArmorClass: featureMbtBaselineArmorClass,
+    frenzyDamageTypeSelection: { tag: "notObserved" },
     holes: [],
     pendingInterrupt: false,
     lastResult: "init",
     lastInvalidReason: "none",
     ...overrides,
   });
+}
+
+function projectFrenzyMbtDamageType(
+  damageType: DamageType,
+): FrenzyMbtDamageType {
+  if (
+    damageType === "bludgeoning" ||
+    damageType === "piercing" ||
+    damageType === "fire"
+  ) {
+    return damageType;
+  }
+  throw new Error(
+    `Unexpected Frenzy MBT damage type projection: ${damageType}.`,
+  );
 }
 
 function resetSelectedUnitRuntimeBoundaryIds(): void {
@@ -767,6 +817,8 @@ function createRuleCoreFeatureDriver(
     let lastInvalidReason: RuleCoreFeatureProjection["lastInvalidReason"] =
       "none";
     let lastDamageAmount = 0;
+    let frenzyDamageTypeSelectionProjection: FrenzyDamageTypeSelectionProjection =
+      { tag: "notObserved" };
     let abilityCheckBoostedTotal = 0;
     let abilityCheckBoostedSucceeded = false;
     let critical = false;
@@ -792,12 +844,54 @@ function createRuleCoreFeatureDriver(
       lastResult = "init";
       lastInvalidReason = "none";
       lastDamageAmount = 0;
+      frenzyDamageTypeSelectionProjection = { tag: "notObserved" };
       abilityCheckBoostedTotal = 0;
       abilityCheckBoostedSucceeded = false;
       critical = false;
       actorArmorClass = featureMbtBaselineArmorClass;
       featureUsesRemaining = 1;
       targetHpFallback = 12;
+    }
+
+    function recordFrenzyDamageTypeSelection(input: {
+      readonly choices: readonly [
+        FrenzyMbtDamageType,
+        ...FrenzyMbtDamageType[],
+      ];
+      readonly selectedDamageType: FrenzyMbtDamageType | undefined;
+    }): void {
+      const selection = frenzyDamageTypeSelection({
+        authoredDamageTypes: input.choices,
+        selectedDamageType: input.selectedDamageType,
+      });
+      lastResult = "resolved";
+      if (selection.tag === "automatic") {
+        frenzyDamageTypeSelectionProjection = {
+          tag: "automatic",
+          damageType: projectFrenzyMbtDamageType(selection.damageType),
+        };
+        return;
+      }
+      if (selection.tag === "decisionRequired") {
+        const [first, second, ...rest] = selection.choices;
+        frenzyDamageTypeSelectionProjection = {
+          tag: "decisionRequired",
+          choices: [
+            projectFrenzyMbtDamageType(first),
+            projectFrenzyMbtDamageType(second),
+            ...rest.map(projectFrenzyMbtDamageType),
+          ],
+        };
+        return;
+      }
+      if (selection.tag === "selected") {
+        frenzyDamageTypeSelectionProjection = {
+          tag: "selected",
+          damageType: projectFrenzyMbtDamageType(selection.damageType),
+        };
+        return;
+      }
+      frenzyDamageTypeSelectionProjection = { tag: "rejected" };
     }
 
     function recordResult(result: BattleResolutionResult): void {
@@ -1076,6 +1170,45 @@ function createRuleCoreFeatureDriver(
         });
         featureUsesRemaining = resourceUsesRemaining(state);
         lastDamageAmount = 2;
+        recordFrenzyDamageTypeSelection({
+          choices: ["bludgeoning"],
+          selectedDamageType: undefined,
+        });
+      },
+      doFrenzyMixedDecisionRequired: () => {
+        reset();
+        recordFrenzyDamageTypeSelection({
+          choices: ["piercing", "fire"],
+          selectedDamageType: undefined,
+        });
+      },
+      doFrenzyDuplicateTypesAutomatic: () => {
+        reset();
+        recordFrenzyDamageTypeSelection({
+          choices: ["piercing", "piercing"],
+          selectedDamageType: undefined,
+        });
+      },
+      doFrenzyMixedSelectPiercing: () => {
+        reset();
+        recordFrenzyDamageTypeSelection({
+          choices: ["piercing", "fire"],
+          selectedDamageType: "piercing",
+        });
+      },
+      doFrenzyMixedSelectFire: () => {
+        reset();
+        recordFrenzyDamageTypeSelection({
+          choices: ["piercing", "fire"],
+          selectedDamageType: "fire",
+        });
+      },
+      doFrenzyMixedRejectOutsideType: () => {
+        reset();
+        recordFrenzyDamageTypeSelection({
+          choices: ["piercing", "fire"],
+          selectedDamageType: "bludgeoning",
+        });
       },
       doImprovedCritical: () => {
         state = improvedCriticalBattle();
@@ -1316,6 +1449,7 @@ function createRuleCoreFeatureDriver(
           state,
           holes,
           lastDamageAmount,
+          frenzyDamageTypeSelection: frenzyDamageTypeSelectionProjection,
           abilityCheckBoostedTotal,
           abilityCheckBoostedSucceeded,
           critical,
@@ -1667,6 +1801,26 @@ describe("rule-core Feature focused MBT", () => {
         seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(ruleCoreFeatureDefaultMbtSteps),
+        stateCheck: featureStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "replays QCORE9 attack rider feature family mixed Frenzy damage-type outcomes",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-feature-attack-riders.mbt.qnt",
+        ),
+        init: "init",
+        step: "stepFrenzyDamageTypeChoice",
+        driver: createRuleCoreFeatureDriver(),
+        backend: "typescript",
+        nTraces: 1,
+        maxSteps: 5,
         stateCheck: featureStateCheck,
       });
     },
@@ -2703,6 +2857,7 @@ function projectRuleCoreFeatureState(input: {
   readonly state: BattleState;
   readonly holes: readonly BattleHole[];
   readonly lastDamageAmount: number;
+  readonly frenzyDamageTypeSelection: FrenzyDamageTypeSelectionProjection;
   readonly abilityCheckBoostedTotal: number;
   readonly abilityCheckBoostedSucceeded: boolean;
   readonly critical: boolean;
@@ -2758,6 +2913,7 @@ function projectRuleCoreFeatureState(input: {
             sneakAttackProcedureRefForProjection(input.state),
       ),
     lastDamageAmount: input.lastDamageAmount,
+    frenzyDamageTypeSelection: input.frenzyDamageTypeSelection,
     abilityCheckBoostedTotal: input.abilityCheckBoostedTotal,
     abilityCheckBoostedSucceeded: input.abilityCheckBoostedSucceeded,
     critical: input.critical,
@@ -2946,6 +3102,9 @@ function normalizeRuleCoreFeatureQuintState(
       state["qLastDamageAmount"],
       "qLastDamageAmount",
     ),
+    frenzyDamageTypeSelection: frenzyDamageTypeSelectionProjection(
+      state["qFrenzyDamageTypeSelection"],
+    ),
     abilityCheckBoostedTotal: numberFromQuintInt(
       state["qAbilityCheckBoostedTotal"],
       "qAbilityCheckBoostedTotal",
@@ -3057,6 +3216,56 @@ function featureHoleName(raw: unknown): RuleCoreFeatureMbtHole {
   const tag = quintVariantTag(raw);
   if (isRuleCoreFeatureMbtHole(tag)) return tag;
   throw new Error(`Unknown Quint rule-core Feature hole variant: ${tag}`);
+}
+
+function frenzyDamageTypeSelectionProjection(
+  raw: unknown,
+): FrenzyDamageTypeSelectionProjection {
+  const tag = quintVariantTag(raw);
+  if (tag === "FrenzySelectionNotObserved") return { tag: "notObserved" };
+  if (tag === "FrenzyAutomatic" || tag === "FrenzySelected") {
+    return {
+      tag: tag === "FrenzyAutomatic" ? "automatic" : "selected",
+      damageType: decodeFrenzyMbtDamageType(
+        quintVariantValue(raw, tag, "qFrenzyDamageTypeSelection"),
+        "qFrenzyDamageTypeSelection.value",
+      ),
+    };
+  }
+  if (tag === "FrenzyDecisionRequired") {
+    const choices = quintStateRecord(
+      quintVariantValue(
+        raw,
+        "FrenzyDecisionRequired",
+        "qFrenzyDamageTypeSelection",
+      ),
+    );
+    return {
+      tag: "decisionRequired",
+      choices: [
+        stringLiteralField(choices, "first", frenzyMbtDamageTypes),
+        stringLiteralField(choices, "second", frenzyMbtDamageTypes),
+        ...quintList(
+          choices["rest"],
+          "qFrenzyDamageTypeSelection.value.rest",
+        ).map((damageType) =>
+          decodeFrenzyMbtDamageType(
+            damageType,
+            "qFrenzyDamageTypeSelection.value.rest[]",
+          ),
+        ),
+      ],
+    };
+  }
+  if (tag === "FrenzyRejected") return { tag: "rejected" };
+  throw new Error(`Unknown Quint Frenzy damage-type selection: ${tag}.`);
+}
+
+function decodeFrenzyMbtDamageType(
+  raw: unknown,
+  field: string,
+): FrenzyMbtDamageType {
+  return stringLiteralValue(raw, field, frenzyMbtDamageTypes);
 }
 
 function isRuleCoreFeatureMbtHole(raw: unknown): raw is RuleCoreFeatureMbtHole {

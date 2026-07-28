@@ -16,6 +16,7 @@ import {
   ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
   ATTACK_ROLL_HOLE_ID,
   ATTACK_TARGET_HOLE_ID,
+  FRENZY_DAMAGE_TYPE_HOLE_ID,
   GRAPPLE_OUTCOME_HOLE_ID,
   type AttackFillSet,
 } from "./battle-runtime-protocol.ts";
@@ -82,6 +83,9 @@ export function attackFillSet(
     [];
   let targetSpatialFactsFilled = false;
   let attackRoll: BattleAttackRollResult | undefined;
+  let frenzyDamageTypeChoice:
+    | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
+    | undefined;
   const concentrationSavingThrows: Extract<
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
@@ -677,6 +681,20 @@ export function attackFillSet(
       continue;
     }
 
+    if (
+      fill.kind === "damageTypeChoice" &&
+      fill.holeId === FRENZY_DAMAGE_TYPE_HOLE_ID
+    ) {
+      if (frenzyDamageTypeChoice !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Frenzy damage type was filled twice.",
+        };
+      }
+      frenzyDamageTypeChoice = fill;
+      continue;
+    }
+
     if (fill.kind === "rolledDice" && isMirrorImageDuplicateRollFill(fill)) {
       if (mirrorImageDuplicateRoll !== undefined) {
         return {
@@ -854,6 +872,7 @@ export function attackFillSet(
     targetRelationshipFacts,
     attackRollRelationshipFacts,
     attackRoll,
+    frenzyDamageTypeChoice,
     concentrationSavingThrows,
     hideousLaughterDamageRepeatSaves,
     damageDisposition,

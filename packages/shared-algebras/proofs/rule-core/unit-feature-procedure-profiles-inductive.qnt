@@ -356,14 +356,15 @@ module unitFeatureProcedureProfilesInductive {
       hitWithAttackRoll: true,
       strengthBasedAttack: strengthAttack,
       barbarianLevel: 3,
-      attackDamageType: SlashingDamage,
+      attackBaseDamageTypes: List(SlashingDamage),
+      damageTypeSelection: NoFrenzyDamageTypeSelection,
     })
     all {
-      qFrenzyUsedThisTurn' = result.state.firstEligibleHitResolvedThisTurn,
+      qFrenzyUsedThisTurn' = frenzyResultState(result).firstEligibleHitResolvedThisTurn,
       qSneakAttackUsedThisTurn' = qSneakAttackUsedThisTurn,
       qWeaponDamageDiceRollChoiceUsedThisTurn' = qWeaponDamageDiceRollChoiceUsedThisTurn,
       qAttackRollMissToHitReplacementUsedSinceTurnStart' = qAttackRollMissToHitReplacementUsedSinceTurnStart,
-      qLastDamageAmount' = result.damageDice,
+      qLastDamageAmount' = frenzyResultDamageDice(result),
       qLastArmorClass' = qLastArmorClass,
       qFeatureUsesRemaining' = qFeatureUsesRemaining,
       qFeatureMaximumUses' = qFeatureMaximumUses,

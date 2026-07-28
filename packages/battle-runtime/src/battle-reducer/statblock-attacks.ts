@@ -38,6 +38,7 @@ import {
   type AttackRollMissToHitReplacement,
   type BattleAttackRollHole,
   type BattleAttackRollResult,
+  type BattleDamageTypeChoiceHole,
   type CharacterBattleCreatureState,
   type BattleCreatureState,
   type BattleState,
@@ -59,6 +60,12 @@ import {
   ongoingFeatureProfileIsRecklessAttackForFrenzy,
 } from "./barbarian-frenzy.ts";
 import { supportedStatBlockAttackDamage } from "../statblock-attack-damage-support.ts";
+import {
+  FRENZY_DAMAGE_TYPE_HOLE_ID,
+  FRENZY_DAMAGE_TYPE_HOLE_INSTANCE,
+} from "./battle-runtime-protocol.ts";
+
+const byTag = Match.discriminator("tag");
 
 export function supportedStatBlockAttackTargetConstraint(
   attack: SupportedCreatureAttackRollMechanics,
@@ -395,27 +402,183 @@ function attackUsesStrengthBasedAttack(
   return attackExecutionAbility(attack) === "str";
 }
 
-function selectedAttackDamageType(
-  attack:
-    | CharacterWeaponAttackActionOption
-    | CharacterUnarmedStrikeActionOption
-    | StatBlockAttackActionOption,
-): DamageType {
-  if (attack.kind === "weapon") {
-    return selectedWeaponDamage(attack.weapon).damageType;
+export type FrenzyDamageTypeDecision =
+  | {
+      readonly tag: "notApplicable";
+    }
+  | {
+      readonly tag: "selected";
+      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly damageType: DamageType;
+    }
+  | {
+      readonly tag: "decisionRequired";
+      readonly hole: BattleDamageTypeChoiceHole;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly message: string;
+    };
+
+export type FrenzyDamageTypeSelection =
+  | {
+      readonly tag: "automatic";
+      readonly damageType: DamageType;
+    }
+  | {
+      readonly tag: "decisionRequired";
+      readonly choices: readonly [DamageType, DamageType, ...DamageType[]];
+    }
+  | {
+      readonly tag: "selected";
+      readonly damageType: DamageType;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly reason: "selectionForAutomaticType" | "outsideOfferedTypes";
+    };
+
+export function frenzyDamageTypeSelection(input: {
+  readonly authoredDamageTypes: readonly [DamageType, ...DamageType[]];
+  readonly selectedDamageType: DamageType | undefined;
+}): FrenzyDamageTypeSelection {
+  const [firstDamageType, ...remainingDamageTypes] = input.authoredDamageTypes;
+  const choices = remainingDamageTypes.reduce<
+    readonly [DamageType, ...DamageType[]]
+  >(
+    (distinct, damageType) =>
+      distinct.includes(damageType) ? distinct : [...distinct, damageType],
+    [firstDamageType],
+  );
+  if (choices.length === 1) {
+    return input.selectedDamageType === undefined
+      ? { tag: "automatic", damageType: choices[0] }
+      : { tag: "invalid", reason: "selectionForAutomaticType" };
   }
-  if (attack.kind === "unarmedStrike") {
-    return attack.effect.damage.damageType;
+  const decisionChoices = requireMultipleDistinctDamageTypes(choices);
+  if (input.selectedDamageType === undefined) {
+    return { tag: "decisionRequired", choices: decisionChoices };
   }
-  return frenzyDamageTypeForStatBlockAttack(attack);
+  return decisionChoices.includes(input.selectedDamageType)
+    ? { tag: "selected", damageType: input.selectedDamageType }
+    : { tag: "invalid", reason: "outsideOfferedTypes" };
 }
 
-function frenzyDamageTypeForStatBlockAttack(
-  attack: StatBlockAttackActionOption,
-): DamageType {
-  // ASSUMPTIONS.md A50 owns the authored-order interpretation.
-  return supportedStatBlockAttackDamage(attack.attack).baseComponents[0]
-    .damageType;
+export function frenzyDamageTypeDecision(input: {
+  readonly state: BattleState;
+  readonly attackerId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly hitWithAttackRoll: boolean;
+  readonly selectedDamageType: DamageType | undefined;
+}): FrenzyDamageTypeDecision {
+  const attacker = input.state.combatants.get(input.attackerId);
+  if (!input.hitWithAttackRoll || !isCharacterBattleCreatureState(attacker)) {
+    return input.selectedDamageType === undefined
+      ? { tag: "notApplicable" }
+      : {
+          tag: "invalid",
+          message:
+            "Frenzy damage type can be selected only for an eligible character attack.",
+        };
+  }
+  const bindings = attacker.origin.execution.procedureBindings.filter(
+    (binding) =>
+      binding.procedure.kind === "unitFeature" &&
+      binding.procedure.execution.kind === "attackDamageRider" &&
+      binding.procedure.execution.trigger ===
+        "rageActiveRecklessStrengthBasedAttackFirstHit" &&
+      !input.state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
+        (usage) =>
+          usage.attackerId === input.attackerId &&
+          usage.procedureRef === binding.procedureRef,
+      ) &&
+      frenzyAttackDamageRiderIsEligible({
+        state: input.state,
+        attacker,
+        attackerId: input.attackerId,
+        attack: input.attack,
+      }),
+  );
+  if (bindings.length === 0) {
+    return input.selectedDamageType === undefined
+      ? { tag: "notApplicable" }
+      : {
+          tag: "invalid",
+          message:
+            "Frenzy damage type is not available for this attack resolution.",
+        };
+  }
+  const [binding] = bindings;
+  if (binding === undefined || bindings.length !== 1) {
+    return {
+      tag: "invalid",
+      message: `Frenzy requires exactly one eligible procedure binding, got ${bindings.length}.`,
+    };
+  }
+  const choices = attackBaseDamageTypes(input.attack);
+  return Match.value(
+    frenzyDamageTypeSelection({
+      authoredDamageTypes: choices,
+      selectedDamageType: input.selectedDamageType,
+    }),
+  ).pipe(
+    byTag("automatic", ({ damageType }) => ({
+      tag: "selected" as const,
+      procedureRef: binding.procedureRef,
+      damageType,
+    })),
+    byTag("decisionRequired", ({ choices: offeredChoices }) => ({
+      tag: "decisionRequired" as const,
+      hole: {
+        sourceProcedureRef: binding.procedureRef,
+        holeInstanceKey: FRENZY_DAMAGE_TYPE_HOLE_INSTANCE,
+        holeId: FRENZY_DAMAGE_TYPE_HOLE_ID,
+        kind: "damageTypeChoice" as const,
+        label: "Choose the Frenzy damage type",
+        choices: offeredChoices,
+      },
+    })),
+    byTag("selected", ({ damageType }) => ({
+      tag: "selected" as const,
+      procedureRef: binding.procedureRef,
+      damageType,
+    })),
+    byTag("invalid", ({ reason }) => ({
+      tag: "invalid" as const,
+      message:
+        reason === "selectionForAutomaticType"
+          ? "Frenzy damage type is automatic when the attack has one distinct base damage type."
+          : "Frenzy damage type must be one of the attack's authored base damage types.",
+    })),
+    Match.exhaustive,
+  );
+}
+
+function requireMultipleDistinctDamageTypes(
+  choices: readonly [DamageType, ...DamageType[]],
+): readonly [DamageType, DamageType, ...DamageType[]] {
+  const [firstChoice, secondChoice, ...remainingChoices] = choices;
+  if (secondChoice === undefined) {
+    throw new Error(
+      "Frenzy multiple-damage-type selection requires two distinct choices.",
+    );
+  }
+  return [firstChoice, secondChoice, ...remainingChoices];
+}
+
+function attackBaseDamageTypes(
+  attack: SupportedAttackActionOption,
+): readonly [DamageType, ...DamageType[]] {
+  if (attack.kind === "weapon") {
+    return [selectedWeaponDamage(attack.weapon).damageType];
+  }
+  if (attack.kind === "unarmedStrike") {
+    return [attack.effect.damage.damageType];
+  }
+  const [first, ...rest] = supportedStatBlockAttackDamage(
+    attack.attack,
+  ).baseComponents;
+  return [first.damageType, ...rest.map((component) => component.damageType)];
 }
 
 export function targetHasAdjacentNonIncapacitatedAlly(
@@ -449,6 +612,10 @@ export function eligibleAttackDamageRiders(
   attack: SupportedAttackActionOption,
   attackRoll: AttackRollResult,
   targetSpatialFacts: readonly BattleTargetSpatialFact[],
+  frenzyDamageType: Extract<
+    FrenzyDamageTypeDecision,
+    { readonly tag: "notApplicable" | "selected" }
+  >,
 ): readonly AttackDamageRider[] {
   const attacker = state.combatants.get(attackerId);
   if (!isCharacterBattleCreatureState(attacker)) {
@@ -481,6 +648,8 @@ export function eligibleAttackDamageRiders(
         targetId,
         targetSpatialFacts,
         profile,
+        procedureRef: binding.procedureRef,
+        frenzyDamageType,
       });
       if (damageType === null) {
         return [];
@@ -578,6 +747,11 @@ function selectedAttackDamageTypeForProfile(input: {
     UnitFeatureProcedureExecution,
     { readonly kind: "attackDamageRider" }
   >;
+  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly frenzyDamageType: Extract<
+    FrenzyDamageTypeDecision,
+    { readonly tag: "notApplicable" | "selected" }
+  >;
 }): DamageType | null {
   if (input.profile.trigger === "finesseOrRangedAttackWithAdvantageOrAlly") {
     if (!weaponAttackSupportsFinesseOrRanged(input.attack)) {
@@ -599,26 +773,38 @@ function selectedAttackDamageTypeForProfile(input: {
   if (
     input.profile.trigger === "rageActiveRecklessStrengthBasedAttackFirstHit"
   ) {
-    if (currentActorId(input.state) !== input.attackerId) {
-      return null;
-    }
-    if (!attackUsesStrengthBasedAttack(input.attack)) {
-      return null;
-    }
-    const attack = input.attack;
     if (
-      !frenzyRecklessAttackWhileRagingUsedThisTurn({
-        state: input.state,
-        attacker: input.attacker,
-        attackerId: input.attackerId,
-        attack,
-      })
+      input.frenzyDamageType.tag !== "selected" ||
+      input.frenzyDamageType.procedureRef !== input.procedureRef
     ) {
       return null;
     }
-    return selectedAttackDamageType(attack);
+    return input.frenzyDamageType.damageType;
   }
   return null;
+}
+
+function frenzyAttackDamageRiderIsEligible(input: {
+  readonly state: BattleState;
+  readonly attacker: CharacterBattleCreatureState;
+  readonly attackerId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+}): input is typeof input & {
+  readonly attack:
+    | CharacterWeaponAttackActionOption
+    | CharacterUnarmedStrikeActionOption
+    | StatBlockAttackActionOption;
+} {
+  return (
+    currentActorId(input.state) === input.attackerId &&
+    attackUsesStrengthBasedAttack(input.attack) &&
+    frenzyRecklessAttackWhileRagingUsedThisTurn({
+      state: input.state,
+      attacker: input.attacker,
+      attackerId: input.attackerId,
+      attack: input.attack,
+    })
+  );
 }
 
 function frenzyRecklessAttackWhileRagingUsedThisTurn(input: {

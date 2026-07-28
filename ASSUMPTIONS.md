@@ -190,16 +190,16 @@ but does not specify how opposite-mode castings are compared or how their
 active projections transition, so the target-exclusive replacement rule is an
 explicit model choice for that gap.
 
-## A50: Frenzy uses the first authored damage component for a mixed-damage attack
+## A50: Mixed-damage Frenzy is a Table Decision
 
 **Assumption:** A Strength-based Stat Block attack with multiple damage types
-still triggers Frenzy. The extra Frenzy dice use the type of the attack's first
-authored damage component; later damage components are treated as additional
-damage riders for this purpose.
+still triggers Frenzy. When its authored base damage components contain more
+than one distinct damage type, the table chooses the extra Frenzy dice's type
+from exactly those distinct types. A single distinct type is automatic.
 
 **Rules basis / gap:** `.references/srd-5.2.1/Classes/Barbarian.md`, "Level 3:
 Frenzy" applies extra damage to the first target hit with a Strength-based
 attack and says that the extra damage has the same type as the weapon or
 Unarmed Strike used. The SRD does not select one type when a Stat Block attack
-deals multiple damage types. Authored `onHit` order is therefore the explicit
-tie-breaker at the runtime projection boundary.
+deals multiple damage types. The explicit Table Decision preserves the SRD's
+same-type constraint without inferring an authored-order tie-breaker.

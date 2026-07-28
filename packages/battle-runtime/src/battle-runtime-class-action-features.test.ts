@@ -78,8 +78,15 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { BRUTAL_STRIKE_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import { activeRageDamageBonusForFrenzy } from "./battle-reducer/barbarian-frenzy.ts";
+import { resolveSelectedAttackProcedure } from "./battle-reducer/attack-main.ts";
+import { attackFillsForAttackHitReplay } from "./battle-reducer/attack-damage-events.ts";
+import { FRENZY_DAMAGE_TYPE_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
+import { attackTargetHole } from "./battle-reducer/hole-helpers.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-queries.ts";
-import { eligibleAttackDamageRiders } from "./battle-reducer/statblock-attacks.ts";
+import {
+  eligibleAttackDamageRiders,
+  frenzyDamageTypeDecision,
+} from "./battle-reducer/statblock-attacks.ts";
 import { creatureNamedAttackRollIsSupported } from "./statblock-action-support.ts";
 import type {
   BattleState,
@@ -2428,8 +2435,30 @@ describe("battle runtime: class action features", () => {
         },
       ],
     };
+    const duplicateDamageTypeStatBlockAttack: CreatureNamedAttackRoll = {
+      ...strengthBasedStatBlockAttack,
+      onHit: [
+        baseDamageEffect,
+        {
+          kind: "damage",
+          amount: {
+            kind: "fixed",
+            expr: { dice: 1, dieSize: 4, flat: 0 },
+            static: 2,
+          },
+          damageType: "piercing",
+        },
+      ],
+    };
     if (!creatureNamedAttackRollIsSupported(multiDamageStatBlockAttack)) {
       throw new Error("Expected a supported multi-damage Stat Block attack.");
+    }
+    if (
+      !creatureNamedAttackRollIsSupported(duplicateDamageTypeStatBlockAttack)
+    ) {
+      throw new Error(
+        "Expected a supported duplicate-damage-type Stat Block attack.",
+      );
     }
     expect(
       activeRageDamageBonusForFrenzy(ragingActor, {
@@ -2475,41 +2504,200 @@ describe("battle runtime: class action features", () => {
         },
       ],
     });
-    expect(
-      eligibleAttackDamageRiders(
-        afterRecklessRoll.state,
-        fighterId,
-        goblinId,
-        {
-          kind: "statBlockAttack",
-          procedureRef: statBlockProcedureRef,
-          attack: strengthBasedStatBlockAttack,
-          damageNotation: "rolled",
-        },
-        recklessAttackRollFill.value,
-        [],
-      ),
-    ).toHaveLength(1);
-    expect(
-      eligibleAttackDamageRiders(
-        afterRecklessRoll.state,
-        fighterId,
-        goblinId,
-        {
-          kind: "statBlockAttack",
-          procedureRef: statBlockProcedureRef,
-          attack: multiDamageStatBlockAttack,
-          damageNotation: "rolled",
-        },
-        recklessAttackRollFill.value,
-        [],
-      ),
-    ).toMatchObject([
+    const singleDamageStatBlockOption = {
+      kind: "statBlockAttack",
+      procedureRef: statBlockProcedureRef,
+      attack: strengthBasedStatBlockAttack,
+      damageNotation: "rolled",
+    } as const;
+    const mixedDamageStatBlockOption = {
+      kind: "statBlockAttack",
+      procedureRef: statBlockProcedureRef,
+      attack: multiDamageStatBlockAttack,
+      damageNotation: "rolled",
+    } as const;
+    const mixedDamageTarget = attackTargetHole(
+      afterRecklessRoll.state,
+      fighterId,
+      mixedDamageStatBlockOption,
+    );
+    const mixedDamageSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "attack",
+      procedureRef: statBlockProcedureRef,
+    } as const;
+    const stopBeforeAttackSpend = () => {
+      throw new Error("Frenzy damage-type tests stop before attack spend.");
+    };
+    const mixedDamageAfterTarget = resolveSelectedAttackProcedure(
       {
-        optional: false,
-        damage: { damageType: "piercing" },
+        state: afterRecklessRoll.state,
+        subject: mixedDamageSubject,
+        fills: [targetFill(mixedDamageTarget, goblinId)],
       },
-    ]);
+      mixedDamageStatBlockOption,
+      stopBeforeAttackSpend,
+    );
+    if (mixedDamageAfterTarget.tag !== "needsHoles") {
+      throw new Error("Expected the mixed Stat Block attack-roll hole.");
+    }
+    const mixedDamageAttackRoll = findHole(
+      mixedDamageAfterTarget.holes,
+      "attackRoll",
+    );
+    const mixedDamageRecklessAttackRollFill = attackRollFill(
+      mixedDamageAttackRoll,
+      {
+        total: 15,
+        naturalD20: 10,
+        rollMode: "advantage",
+      },
+    );
+    expect(
+      frenzyDamageTypeDecision({
+        state: afterRecklessRoll.state,
+        attackerId: fighterId,
+        attack: singleDamageStatBlockOption,
+        hitWithAttackRoll: true,
+        selectedDamageType: undefined,
+      }),
+    ).toMatchObject({ tag: "selected", damageType: "piercing" });
+    expect(
+      frenzyDamageTypeDecision({
+        state: afterRecklessRoll.state,
+        attackerId: fighterId,
+        attack: {
+          ...mixedDamageStatBlockOption,
+          attack: duplicateDamageTypeStatBlockAttack,
+        },
+        hitWithAttackRoll: true,
+        selectedDamageType: undefined,
+      }),
+    ).toMatchObject({ tag: "selected", damageType: "piercing" });
+    expect(
+      frenzyDamageTypeDecision({
+        state: afterRecklessRoll.state,
+        attackerId: fighterId,
+        attack: mixedDamageStatBlockOption,
+        hitWithAttackRoll: true,
+        selectedDamageType: undefined,
+      }),
+    ).toMatchObject({
+      tag: "decisionRequired",
+      hole: {
+        kind: "damageTypeChoice",
+        choices: ["piercing", "fire"],
+      },
+    });
+    const resolveMixedDamageAttack = (
+      damageType?: "piercing" | "fire" | "cold",
+    ) =>
+      resolveSelectedAttackProcedure(
+        {
+          state: afterRecklessRoll.state,
+          subject: mixedDamageSubject,
+          fills: [
+            targetFill(mixedDamageTarget, goblinId),
+            mixedDamageRecklessAttackRollFill,
+            ...(damageType === undefined
+              ? []
+              : [
+                  {
+                    kind: "damageTypeChoice" as const,
+                    holeId: FRENZY_DAMAGE_TYPE_HOLE_ID,
+                    value: damageType,
+                  },
+                ]),
+          ],
+        },
+        mixedDamageStatBlockOption,
+        stopBeforeAttackSpend,
+      );
+    const mixedDamageDecision = resolveMixedDamageAttack();
+    if (mixedDamageDecision.tag === "invalid") {
+      throw new Error(mixedDamageDecision.message);
+    }
+    expect(mixedDamageDecision).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "damageTypeChoice",
+          choices: ["piercing", "fire"],
+        },
+      ],
+    });
+    expect(resolveMixedDamageAttack("cold")).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+    expect(
+      attackFillsForAttackHitReplay([
+        targetFill(mixedDamageTarget, goblinId),
+        mixedDamageRecklessAttackRollFill,
+        {
+          kind: "damageTypeChoice",
+          holeId: FRENZY_DAMAGE_TYPE_HOLE_ID,
+          value: "fire",
+        },
+      ]),
+    ).toContainEqual({
+      kind: "damageTypeChoice",
+      holeId: FRENZY_DAMAGE_TYPE_HOLE_ID,
+      value: "fire",
+    });
+    expect(
+      frenzyDamageTypeDecision({
+        state: afterRecklessRoll.state,
+        attackerId: fighterId,
+        attack: mixedDamageStatBlockOption,
+        hitWithAttackRoll: true,
+        selectedDamageType: "cold",
+      }),
+    ).toMatchObject({ tag: "invalid" });
+    for (const damageType of ["piercing", "fire"] as const) {
+      const selection = frenzyDamageTypeDecision({
+        state: afterRecklessRoll.state,
+        attackerId: fighterId,
+        attack: mixedDamageStatBlockOption,
+        hitWithAttackRoll: true,
+        selectedDamageType: damageType,
+      });
+      expect(selection).toMatchObject({ tag: "selected", damageType });
+      if (selection.tag !== "selected") {
+        throw new Error("Expected an admitted mixed-damage Frenzy selection.");
+      }
+      expect(
+        eligibleAttackDamageRiders(
+          afterRecklessRoll.state,
+          fighterId,
+          goblinId,
+          mixedDamageStatBlockOption,
+          recklessAttackRollFill.value,
+          [],
+          selection,
+        ),
+      ).toMatchObject([
+        {
+          optional: false,
+          damage: { damageType },
+        },
+      ]);
+      expect(resolveMixedDamageAttack(damageType)).toMatchObject({
+        tag: "needsHoles",
+        holes: [
+          {
+            kind: "rolledDice",
+            attackDamageRiders: [
+              {
+                optional: false,
+                damage: { damageType },
+              },
+            ],
+          },
+        ],
+      });
+    }
     const damageFill = damageRollFillWithGroups(damage, [[4, 4]]);
     const disposition = attackDamageDispositionHoleAfterFills(
       afterRecklessRoll.state,

@@ -4557,7 +4557,7 @@ export type BattleDroppedObjectOutcome = {
   readonly objectId: BattleObjectId;
   readonly source: BattleDroppedObjectSource;
 };
-export type BattleSpellDamageTypeChoiceHole = {
+export type BattleDamageTypeChoiceHole = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -5925,7 +5925,7 @@ export type BattleHole =
   | BattleCompanionReappearancePlacementHole
   | BattleCompanionReappearanceInitiativeHole
   | BattleMagicWeaponTargetItemHole
-  | BattleSpellDamageTypeChoiceHole
+  | BattleDamageTypeChoiceHole
   | BattleSpellTargetAllocationHole
   | BattleSpellTargetListHole
   | BattleAttackRollHole

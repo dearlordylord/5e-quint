@@ -64,7 +64,7 @@ import {
   attackDamageEventEntries,
   attackDamageEventWithEntries,
   attackDamageInterruptionFrame,
-  attackFillsThroughAttackRoll,
+  attackFillsForAttackHitReplay,
 } from "./attack-damage-events.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
@@ -91,6 +91,7 @@ import { parseAttackRollRelationshipFacts } from "./roll-trigger-relationship-fa
 import {
   attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
+  frenzyDamageTypeDecision,
   eligibleAttackDamageDieFloorProcedureRefs,
   eligibleWeaponDamageDiceRollChoiceProcedureRefs,
   selectedAttackDamageRiders,
@@ -320,6 +321,21 @@ export function resolveOpportunityAttackCommand(
     effectiveAttackRoll,
     criticalThreshold,
   );
+  const frenzyDamageType = frenzyDamageTypeDecision({
+    state: attackRolledState,
+    attackerId: subject.reactorId,
+    attack,
+    hitWithAttackRoll: hit,
+    selectedDamageType: fillSet.frenzyDamageTypeChoice?.value,
+  });
+  if (frenzyDamageType.tag === "decisionRequired") {
+    return needsHolesResult(attackRolledState, input.subject, [
+      frenzyDamageType.hole,
+    ]);
+  }
+  if (frenzyDamageType.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", frenzyDamageType.message);
+  }
   const eligibleDamageRiders = hit
     ? eligibleAttackDamageRiders(
         attackRolledState,
@@ -328,6 +344,7 @@ export function resolveOpportunityAttackCommand(
         attack,
         effectiveAttackRoll,
         [],
+        frenzyDamageType,
       )
     : [];
   const eligibleDamageDiceChoiceUnitIds = hit
@@ -406,7 +423,7 @@ export function resolveOpportunityAttackCommand(
         continuation: {
           kind: "replay",
           subject: input.subject,
-          fills: attackFillsThroughAttackRoll(input.fills),
+          fills: attackFillsForAttackHitReplay(input.fills),
         },
       },
       input.handledInterruptTrigger,

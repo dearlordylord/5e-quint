@@ -88,7 +88,7 @@ import {
   type BattleSpellAttackRollHole,
   type BattleSpellAbilityChoiceHole,
   type BattleSpellDamageRollHole,
-  type BattleSpellDamageTypeChoiceHole,
+  type BattleDamageTypeChoiceHole,
   type BattleExecutableSpellInvocation,
   type BattleSpellConditionChoiceHole,
   type BattleSpellHealingRollHole,
@@ -187,7 +187,7 @@ export type SelectedSpellAttackDamageProcedureResult<
     }
   | {
       readonly tag: "needsHoles";
-      readonly hole: BattleSpellDamageTypeChoiceHole;
+      readonly hole: BattleDamageTypeChoiceHole;
     }
   | { readonly tag: "invalid"; readonly message: string };
 
@@ -211,7 +211,7 @@ export function selectedSpellAttackDamageProcedure(
     }
   | {
       readonly tag: "needsHoles";
-      readonly hole: BattleSpellDamageTypeChoiceHole;
+      readonly hole: BattleDamageTypeChoiceHole;
     }
   | { readonly tag: "invalid"; readonly message: string } {
   if (
@@ -407,7 +407,7 @@ export function spellDamageTypeChoiceHole(
       }
     >
   >,
-): BattleSpellDamageTypeChoiceHole {
+): BattleDamageTypeChoiceHole {
   const protocolId =
     invocation.procedure === "spellHostedWeaponAttack"
       ? `battle:spell:damage-type:${invocation.procedure}:${invocation.componentWeaponObjectId}`

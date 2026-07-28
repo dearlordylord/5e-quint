@@ -25,6 +25,7 @@ import type {
   BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
+import { FRENZY_DAMAGE_TYPE_HOLE_ID } from "./battle-runtime-protocol.ts";
 import {
   damageAmountByTypeAfterTargetAdjustments,
   damageAmountByTypeEntriesToMap,
@@ -186,10 +187,14 @@ export function damageAmountByTypeEntriesAfterScalarReduction(
   return entriesAfterProportionalDamageReduction(entries, reductionAmount);
 }
 
-export function attackFillsThroughAttackRoll(
+export function attackFillsForAttackHitReplay(
   fills: readonly BattleFill[],
 ): readonly BattleFill[] {
   return fills.filter(
-    (fill) => fill.kind === "targetChoice" || fill.kind === "attackRoll",
+    (fill) =>
+      fill.kind === "targetChoice" ||
+      fill.kind === "attackRoll" ||
+      (fill.kind === "damageTypeChoice" &&
+        fill.holeId === FRENZY_DAMAGE_TYPE_HOLE_ID),
   );
 }

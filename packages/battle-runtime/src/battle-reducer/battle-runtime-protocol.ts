@@ -58,6 +58,9 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
 });
 export const ATTACK_TARGET_HOLE_ID = holeId("battle:attack:target");
 export const ATTACK_ROLL_HOLE_ID = holeId("battle:attack:roll");
+export const FRENZY_DAMAGE_TYPE_HOLE_ID = holeId(
+  "battle:attack:frenzy-damage-type",
+);
 export const ATTACK_DAMAGE_DISPOSITION_HOLE_ID = holeId(
   "battle:attack:damage-disposition",
 );
@@ -65,6 +68,9 @@ export const ATTACK_TARGET_HOLE_INSTANCE = holeInstanceKey(
   "battle:attack:target",
 );
 export const ATTACK_ROLL_HOLE_INSTANCE = holeInstanceKey("battle:attack:roll");
+export const FRENZY_DAMAGE_TYPE_HOLE_INSTANCE = holeInstanceKey(
+  "battle:attack:frenzy-damage-type",
+);
 export const ATTACK_DAMAGE_DISPOSITION_HOLE_INSTANCE = holeInstanceKey(
   "battle:attack:damage-disposition",
 );
@@ -216,6 +222,9 @@ export type AttackFillSet =
       readonly targetRelationshipFacts: readonly BattleAttackRollRelationshipFact[];
       readonly attackRollRelationshipFacts: readonly BattleAttackRollRelationshipFact[];
       readonly attackRoll: BattleAttackRollResult | undefined;
+      readonly frenzyDamageTypeChoice:
+        | Extract<BattleFill, { readonly kind: "damageTypeChoice" }>
+        | undefined;
       readonly concentrationSavingThrows: readonly Extract<
         BattleFill,
         { readonly kind: "concentrationSavingThrow" }

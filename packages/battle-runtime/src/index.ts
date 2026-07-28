@@ -453,7 +453,7 @@ export {
   type BattleSpellConditionChoiceHole,
   type BattleSpellConditionEndTurnSavingThrowOutcomeHole,
   type BattleSpellDamageRollHole,
-  type BattleSpellDamageTypeChoiceHole,
+  type BattleDamageTypeChoiceHole,
   type BattleSpellHealingRollHole,
   type BattleSpellEffectEarlyEnd,
   type BattleSpellSavingThrowOutcomeHole,

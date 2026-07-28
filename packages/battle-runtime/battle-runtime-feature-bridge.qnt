@@ -197,12 +197,15 @@ module battleRuntimeFeatureBridge {
       battleRuntimeRecklessAttackState(recklessAttackUsedWhileRagingThisTurn, true),
       recklessAttackUsedWhileRagingThisTurn
     ).with("firstEligibleHitResolvedThisTurn", usedThisTurn)
-    resolveFrenzy(state, {
-      hitWithAttackRoll: hitWithAttackRoll,
-      strengthBasedAttack: strengthBasedAttack,
-      barbarianLevel: barbarianLevel,
-      attackDamageType: BludgeoningDamage,
-    }).damageDice
+    frenzyResultDamageDice(
+      resolveFrenzy(state, {
+        hitWithAttackRoll: hitWithAttackRoll,
+        strengthBasedAttack: strengthBasedAttack,
+        barbarianLevel: barbarianLevel,
+        attackBaseDamageTypes: List(BludgeoningDamage),
+        damageTypeSelection: NoFrenzyDamageTypeSelection,
+      })
+    )
   }
 
   pure def battleRuntimePassiveSavingThrowRollMode(

@@ -12,43 +12,18 @@ module ruleCoreFeatureAttackRidersMbt {
     | ActionSurgeActionAvailable
     | ActionSurgeActionSpent
 
-  var qActionAvailable: bool
-  var qBonusActionAvailable: bool
-  var qReactionAvailable: bool
-  var qFeatureUsesRemaining: int
-  var qActionSurgeGrant: ActionSurgeActionGrant
-  var qActorHp: int
-  var qTargetHp: int
-  var qDashBonusFeet: int
-  var qDisengaged: bool
-  var qHidden: bool
-  var qRageActive: bool
-  var qRecklessActive: bool
-  var qIncomingAttackAdvantage: bool
-  var qSneakAttackUsedThisTurn: bool
-  var qLastDamageAmount: int
-  var qAbilityCheckBoostedTotal: int
-  var qAbilityCheckBoostedSucceeded: bool
-  var qActorArmorClass: int
-  var qCritical: bool
-  var qProtocol: WitnessProtocol[str]
-  var qPendingReaction: bool
-  var qComponentRoute: List[RuleCoreComponentRouteEvent]
+  type FrenzyDamageTypeSelectionProjection =
+    | FrenzySelectionNotObserved
+    | FrenzyAutomatic(str)
+    | FrenzyDecisionRequired({
+        first: str,
+        second: str,
+        rest: List[str],
+      })
+    | FrenzySelected(str)
+    | FrenzyRejected
 
-  pure def openHoles: Set[str] = qProtocol.holes
-
-  pure def componentRouteEvidence: List[RuleCoreComponentRouteEvent] =
-    ruleCoreComponentRoute(RuleCoreFeatureProfileSemanticsOwner)
-
-  pure def witnessProtocolForProjection(
-    holes: Set[str],
-    result: WitnessResult,
-  ): WitnessProtocol[str] =
-    witnessProtocolFromResult(holes, "DamageRoll", result)
-
-  pure def featureMbtBaselineArmorClass: int = 10
-
-  action recordProjection(
+  type FeatureProjection = {
     actionAvailable: bool,
     bonusActionAvailable: bool,
     reactionAvailable: bool,
@@ -69,106 +44,250 @@ module ruleCoreFeatureAttackRidersMbt {
     holes: Set[str],
     pendingReaction: bool,
     result: WitnessResult,
-  ): bool = all {
-    qActionAvailable' = actionAvailable,
-    qBonusActionAvailable' = bonusActionAvailable,
-    qReactionAvailable' = reactionAvailable,
-    qFeatureUsesRemaining' = featureUsesRemaining,
-    qActionSurgeGrant' = actionSurgeGrant,
-    qActorHp' = actorHp,
-    qTargetHp' = targetHp,
-    qDashBonusFeet' = dashBonusFeet,
-    qDisengaged' = disengaged,
-    qHidden' = hidden,
-    qRageActive' = rageActive,
-    qRecklessActive' = recklessActive,
-    qIncomingAttackAdvantage' = incomingAttackAdvantage,
-    qSneakAttackUsedThisTurn' = sneakAttackUsedThisTurn,
-    qLastDamageAmount' = lastDamageAmount,
+    frenzyDamageTypeSelection: FrenzyDamageTypeSelectionProjection,
+  }
+
+  var qActionAvailable: bool
+  var qBonusActionAvailable: bool
+  var qReactionAvailable: bool
+  var qFeatureUsesRemaining: int
+  var qActionSurgeGrant: ActionSurgeActionGrant
+  var qActorHp: int
+  var qTargetHp: int
+  var qDashBonusFeet: int
+  var qDisengaged: bool
+  var qHidden: bool
+  var qRageActive: bool
+  var qRecklessActive: bool
+  var qIncomingAttackAdvantage: bool
+  var qSneakAttackUsedThisTurn: bool
+  var qLastDamageAmount: int
+  var qAbilityCheckBoostedTotal: int
+  var qAbilityCheckBoostedSucceeded: bool
+  var qActorArmorClass: int
+  var qCritical: bool
+  var qFrenzyDamageTypeSelection: FrenzyDamageTypeSelectionProjection
+  var qProtocol: WitnessProtocol[str]
+  var qPendingReaction: bool
+  var qComponentRoute: List[RuleCoreComponentRouteEvent]
+
+  pure def openHoles: Set[str] = qProtocol.holes
+
+  pure def componentRouteEvidence: List[RuleCoreComponentRouteEvent] =
+    ruleCoreComponentRoute(RuleCoreFeatureProfileSemanticsOwner)
+
+  pure def witnessProtocolForProjection(
+    holes: Set[str],
+    result: WitnessResult,
+  ): WitnessProtocol[str] =
+    witnessProtocolFromResult(holes, "DamageRoll", result)
+
+  pure def featureMbtBaselineArmorClass: int = 10
+
+  pure def baselineProjection: FeatureProjection = {
+    actionAvailable: true,
+    bonusActionAvailable: true,
+    reactionAvailable: true,
+    featureUsesRemaining: 1,
+    actionSurgeGrant: NoActionSurgeActionGrant,
+    actorHp: 12,
+    targetHp: 12,
+    dashBonusFeet: 0,
+    disengaged: false,
+    hidden: false,
+    rageActive: false,
+    recklessActive: false,
+    incomingAttackAdvantage: false,
+    sneakAttackUsedThisTurn: false,
+    lastDamageAmount: 0,
+    critical: false,
+    actorArmorClass: featureMbtBaselineArmorClass,
+    holes: Set(),
+    pendingReaction: false,
+    result: WInit,
+    frenzyDamageTypeSelection: FrenzySelectionNotObserved,
+  }
+
+  action recordProjection(projection: FeatureProjection): bool = all {
+    qActionAvailable' = projection.actionAvailable,
+    qBonusActionAvailable' = projection.bonusActionAvailable,
+    qReactionAvailable' = projection.reactionAvailable,
+    qFeatureUsesRemaining' = projection.featureUsesRemaining,
+    qActionSurgeGrant' = projection.actionSurgeGrant,
+    qActorHp' = projection.actorHp,
+    qTargetHp' = projection.targetHp,
+    qDashBonusFeet' = projection.dashBonusFeet,
+    qDisengaged' = projection.disengaged,
+    qHidden' = projection.hidden,
+    qRageActive' = projection.rageActive,
+    qRecklessActive' = projection.recklessActive,
+    qIncomingAttackAdvantage' = projection.incomingAttackAdvantage,
+    qSneakAttackUsedThisTurn' = projection.sneakAttackUsedThisTurn,
+    qLastDamageAmount' = projection.lastDamageAmount,
     qAbilityCheckBoostedTotal' = 0,
     qAbilityCheckBoostedSucceeded' = false,
-    qCritical' = critical,
-    qActorArmorClass' = actorArmorClass,
-    qProtocol' = witnessProtocolForProjection(holes, result),
-    qPendingReaction' = pendingReaction,
+    qCritical' = projection.critical,
+    qActorArmorClass' = projection.actorArmorClass,
+    qFrenzyDamageTypeSelection' = projection.frenzyDamageTypeSelection,
+    qProtocol' = witnessProtocolForProjection(projection.holes, projection.result),
+    qPendingReaction' = projection.pendingReaction,
     qComponentRoute' = componentRouteEvidence,
   }
 
-  action init = recordProjection(
-    true, true, true, 1, NoActionSurgeActionGrant, 12, 12, 0, false, false,
-    false, false, false, false, 0, false, featureMbtBaselineArmorClass, Set(), false, WInit
-  )
+  action init = recordProjection(baselineProjection)
 
   action doRageActivateAndDamage = all {
     openHoles == Set(),
-    recordProjection(
-      false, false, true, 0, NoActionSurgeActionGrant, 12, 5, 0, false,
-      false, true, false, false, false, 7, false,
-      featureMbtBaselineArmorClass, Set(), false, WResolved
-    ),
+    recordProjection({
+      ...baselineProjection,
+      actionAvailable: false,
+      bonusActionAvailable: false,
+      featureUsesRemaining: 0,
+      targetHp: 5,
+      rageActive: true,
+      lastDamageAmount: 7,
+      result: WResolved,
+    }),
   }
 
   action doRecklessAttack = all {
     openHoles == Set(),
-    recordProjection(
-      false, true, true, 1, NoActionSurgeActionGrant, 12, 5, 0, false, false,
-      false, true, true, false, 7, false, featureMbtBaselineArmorClass, Set(),
-      false, WResolved
-    ),
+    recordProjection({
+      ...baselineProjection,
+      actionAvailable: false,
+      targetHp: 5,
+      recklessActive: true,
+      incomingAttackAdvantage: true,
+      lastDamageAmount: 7,
+      result: WResolved,
+    }),
   }
 
   action doSneakAttack = all {
     openHoles == Set(),
-    recordProjection(
-      false, true, true, 1, NoActionSurgeActionGrant, 12, 2, 0,
-      false, false, false, false, false, true, 1, false,
-      featureMbtBaselineArmorClass, Set(), false, WResolved
-    ),
+    recordProjection({
+      ...baselineProjection,
+      actionAvailable: false,
+      targetHp: 2,
+      sneakAttackUsedThisTurn: true,
+      lastDamageAmount: 1,
+      result: WResolved,
+    }),
   }
 
   action doFrenzy = all {
     openHoles == Set(),
-    recordProjection(
-      false, false, true, 0, NoActionSurgeActionGrant, 12, 7, 0,
-      false, false, true, true, true, false, 2, false,
-      featureMbtBaselineArmorClass, Set(), false, WResolved
-    ),
+    recordProjection({
+      ...baselineProjection,
+      actionAvailable: false,
+      bonusActionAvailable: false,
+      featureUsesRemaining: 0,
+      targetHp: 7,
+      rageActive: true,
+      recklessActive: true,
+      incomingAttackAdvantage: true,
+      lastDamageAmount: 2,
+      result: WResolved,
+      frenzyDamageTypeSelection: FrenzyAutomatic("bludgeoning"),
+    }),
   }
 
   action doImprovedCritical = all {
     openHoles == Set(),
-    recordProjection(
-      false, true, true, 1, NoActionSurgeActionGrant, 12, 4, 0,
-      false, false, false, false, false, false, 8, true,
-      featureMbtBaselineArmorClass, Set(), false, WResolved
-    ),
+    recordProjection({
+      ...baselineProjection,
+      actionAvailable: false,
+      targetHp: 4,
+      lastDamageAmount: 8,
+      critical: true,
+      result: WResolved,
+    }),
   }
 
   action doSavageAttackerDamage = all {
     openHoles == Set(),
-    recordProjection(
-      false, true, true, 1, NoActionSurgeActionGrant, 12, 4, 0, false, false,
-      false, false, false, false, 8, false, featureMbtBaselineArmorClass,
-      Set(), false, WResolved
-    ),
+    recordProjection({
+      ...baselineProjection,
+      actionAvailable: false,
+      targetHp: 4,
+      lastDamageAmount: 8,
+      result: WResolved,
+    }),
   }
 
   action doArcheryAttackRollBonus = all {
     openHoles == Set(),
-    recordProjection(
-      false, true, true, 1, NoActionSurgeActionGrant, 12, 12, 0, false, false,
-      false, false, false, false, 2, false, 9, Set(), false, WResolved
-    ),
+    recordProjection({
+      ...baselineProjection,
+      actionAvailable: false,
+      lastDamageAmount: 2,
+      actorArmorClass: 9,
+      result: WResolved,
+    }),
   }
 
   action doCombatProwessMissToHit = all {
     openHoles == Set(),
-    recordProjection(
-      false, true, true, 0, NoActionSurgeActionGrant, 12, 8, 0, false, false,
-      false, false, false, false, 4, false, featureMbtBaselineArmorClass,
-      Set(), false, WResolved
-    ),
+    recordProjection({
+      ...baselineProjection,
+      actionAvailable: false,
+      featureUsesRemaining: 0,
+      targetHp: 8,
+      lastDamageAmount: 4,
+      result: WResolved,
+    }),
   }
+
+  action doFrenzyMixedDecisionRequired = recordProjection({
+    ...baselineProjection,
+    result: WResolved,
+    frenzyDamageTypeSelection: FrenzyDecisionRequired({
+      first: "piercing",
+      second: "fire",
+      rest: [],
+    }),
+  })
+
+  action doFrenzyDuplicateTypesAutomatic = recordProjection({
+    ...baselineProjection,
+    result: WResolved,
+    frenzyDamageTypeSelection: FrenzyAutomatic("piercing"),
+  })
+
+  action doFrenzyMixedSelectPiercing = recordProjection({
+    ...baselineProjection,
+    result: WResolved,
+    frenzyDamageTypeSelection: FrenzySelected("piercing"),
+  })
+
+  action doFrenzyMixedSelectFire = recordProjection({
+    ...baselineProjection,
+    result: WResolved,
+    frenzyDamageTypeSelection: FrenzySelected("fire"),
+  })
+
+  action doFrenzyMixedRejectOutsideType = recordProjection({
+    ...baselineProjection,
+    result: WResolved,
+    frenzyDamageTypeSelection: FrenzyRejected,
+  })
+
+  action stepFrenzyDamageTypeChoice =
+    match qFrenzyDamageTypeSelection {
+      | FrenzySelectionNotObserved =>
+          any { doFrenzyDuplicateTypesAutomatic, }
+      | FrenzyDecisionRequired(_) =>
+          any { doFrenzyMixedSelectPiercing, }
+      | FrenzySelected(damageType) =>
+          if (damageType == "piercing")
+          any { doFrenzyMixedSelectFire, }
+          else
+          any { doFrenzyMixedRejectOutsideType, }
+      | FrenzyAutomatic(_) =>
+          any { doFrenzyMixedDecisionRequired, }
+      | FrenzyRejected =>
+          any { doFrenzyMixedDecisionRequired, }
+    }
 
   action step = any {
     doRageActivateAndDamage,
@@ -179,5 +298,10 @@ module ruleCoreFeatureAttackRidersMbt {
     doArcheryAttackRollBonus,
     doCombatProwessMissToHit,
     doSavageAttackerDamage,
+    doFrenzyDuplicateTypesAutomatic,
+    doFrenzyMixedDecisionRequired,
+    doFrenzyMixedSelectPiercing,
+    doFrenzyMixedSelectFire,
+    doFrenzyMixedRejectOutsideType,
   }
 }

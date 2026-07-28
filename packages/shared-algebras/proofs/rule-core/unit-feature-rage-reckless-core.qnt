@@ -90,15 +90,30 @@ module unitFeatureRageRecklessCore {
     hitWithAttackRoll: bool,
     strengthBasedAttack: bool,
     barbarianLevel: int,
-    attackDamageType: RuleDamageType,
+    attackBaseDamageTypes: List[RuleDamageType],
+    damageTypeSelection: FrenzyDamageTypeSelection,
   }
 
-  type FrenzyResult = {
+  type FrenzyDamageTypeSelection =
+    | NoFrenzyDamageTypeSelection
+    | SelectedFrenzyDamageType(RuleDamageType)
+
+  type FrenzyResolvedFacts = {
     state: FrenzyState,
-    admitted: bool,
     damageDice: int,
     damageType: RuleDamageType,
   }
+
+  type FrenzyDamageTypeDecisionFacts = {
+    state: FrenzyState,
+    choices: Set[RuleDamageType],
+  }
+
+  type FrenzyResult =
+    | FrenzyNotAdmitted(FrenzyState)
+    | FrenzyDamageTypeDecisionRequired(FrenzyDamageTypeDecisionFacts)
+    | FrenzyResolved(FrenzyResolvedFacts)
+    | FrenzyDamageTypeSelectionRejected(FrenzyState)
 
   pure def legalRageActivationFacts(facts: RageActivationFacts): bool = all {
     facts.wearingHeavyArmor.in(Set(true, false)),
@@ -251,6 +266,52 @@ module unitFeatureRageRecklessCore {
     firstEligibleHitResolvedThisTurn: false,
   }
 
+  pure def frenzyDamageTypeChoices(
+    attackBaseDamageTypes: List[RuleDamageType]
+  ): Set[RuleDamageType] =
+    attackBaseDamageTypes.foldl(
+      Set(),
+      (choices, damageType) => choices.union(Set(damageType))
+    )
+
+  pure def resolveFrenzyDamageType(
+    state: FrenzyState,
+    damageDice: int,
+    attackBaseDamageTypes: List[RuleDamageType],
+    selection: FrenzyDamageTypeSelection
+  ): FrenzyResult = {
+    val choices = frenzyDamageTypeChoices(attackBaseDamageTypes)
+    if (choices.size() == 0)
+      FrenzyDamageTypeSelectionRejected(state)
+    else if (choices.size() == 1)
+      match selection {
+        | NoFrenzyDamageTypeSelection =>
+            FrenzyResolved({
+              state: state.with("firstEligibleHitResolvedThisTurn", true),
+              damageDice: damageDice,
+              damageType: attackBaseDamageTypes.head(),
+            })
+        | SelectedFrenzyDamageType(_) =>
+            FrenzyDamageTypeSelectionRejected(state)
+      }
+    else
+      match selection {
+        | NoFrenzyDamageTypeSelection =>
+            FrenzyDamageTypeDecisionRequired({
+              state: state,
+              choices: choices,
+            })
+        | SelectedFrenzyDamageType(damageType) =>
+            if (choices.contains(damageType))
+              FrenzyResolved({
+                state: state.with("firstEligibleHitResolvedThisTurn", true),
+                damageDice: damageDice,
+                damageType: damageType,
+              })
+            else FrenzyDamageTypeSelectionRejected(state)
+      }
+  }
+
   pure def resolveFrenzy(state: FrenzyState, facts: FrenzyAttackFacts): FrenzyResult = {
     val dice = rageDamageBonus(facts.barbarianLevel)
     val admitted = all {
@@ -263,13 +324,38 @@ module unitFeatureRageRecklessCore {
       not(state.firstEligibleHitResolvedThisTurn),
       dice > 0,
     }
-    {
-      state:
-        if (admitted) state.with("firstEligibleHitResolvedThisTurn", true)
-        else state,
-      admitted: admitted,
-      damageDice: if (admitted) dice else 0,
-      damageType: facts.attackDamageType,
-    }
+    if (admitted)
+      resolveFrenzyDamageType(
+        state,
+        dice,
+        facts.attackBaseDamageTypes,
+        facts.damageTypeSelection
+      )
+    else
+      match facts.damageTypeSelection {
+        | NoFrenzyDamageTypeSelection => FrenzyNotAdmitted(state)
+        | SelectedFrenzyDamageType(_) =>
+            FrenzyDamageTypeSelectionRejected(state)
+      }
   }
+
+  pure def frenzyResultState(result: FrenzyResult): FrenzyState =
+    match result {
+      | FrenzyNotAdmitted(state) => state
+      | FrenzyDamageTypeDecisionRequired(facts) => facts.state
+      | FrenzyResolved(facts) => facts.state
+      | FrenzyDamageTypeSelectionRejected(state) => state
+    }
+
+  pure def frenzyResultDamageDice(result: FrenzyResult): int =
+    match result {
+      | FrenzyResolved(facts) => facts.damageDice
+      | _ => 0
+    }
+
+  pure def frenzyResultIsResolved(result: FrenzyResult): bool =
+    match result {
+      | FrenzyResolved(_) => true
+      | _ => false
+    }
 }
