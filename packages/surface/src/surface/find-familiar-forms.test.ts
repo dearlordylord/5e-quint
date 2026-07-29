@@ -98,6 +98,48 @@ describe("Find Familiar form selection", () => {
         creatureTypeOverrideChoiceId: creatureTypeChoice.optionId,
       }),
     ).toMatchObject({ tag: "resolved" });
+
+    expect(
+      resolvePactOfTheChainFindFamiliarForm({
+        catalog,
+        eligibility: pactEligibility,
+        selection: {
+          tag: "normalNamedForm",
+          formId: normalForm.formId,
+        },
+        creatureTypeOverrideChoiceId: creatureTypeChoice.optionId,
+      }),
+    ).toMatchObject({ tag: "resolved" });
+  });
+
+  test("rejects spells outside the familiar-form catalog family", () => {
+    const unrelatedSpell = srdUnitCollection.units.find(
+      (unit) => unit.kind === "spell" && unit.mechanics.family === "activation",
+    );
+    const otherSpawnedCreature = srdUnitCollection.units.find(
+      (unit) =>
+        unit.kind === "spell" &&
+        unit.mechanics.family === "spawned_creature" &&
+        unit.mechanics.creature.kind !== "familiar_form_catalog",
+    );
+    expect(unrelatedSpell).toBeDefined();
+    expect(otherSpawnedCreature).toBeDefined();
+    if (
+      unrelatedSpell === undefined ||
+      unrelatedSpell.kind !== "spell" ||
+      otherSpawnedCreature === undefined ||
+      otherSpawnedCreature.kind !== "spell"
+    ) {
+      return;
+    }
+
+    expect(findFamiliarFormEligibilityForSpell(unrelatedSpell)).toBeNull();
+    expect(
+      findFamiliarFormEligibilityForSpell(otherSpawnedCreature),
+    ).toBeNull();
+    expect(
+      pactOfTheChainFindFamiliarFormEligibilityForSpell(unrelatedSpell),
+    ).toBeNull();
   });
 
   test("reports ineligible choices and missing or non-CR-0-Beast records", () => {

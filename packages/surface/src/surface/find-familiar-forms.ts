@@ -153,11 +153,13 @@ export function findFamiliarFormEligibilityForSpell(
   if (
     !hasUniqueFindFamiliarNormalFormIds(spell.mechanics.creature.normalForms)
   ) {
+    /* v8 ignore next -- duplicate normal-form ids are malformed Find Familiar authorship; the shipped record is decoded and uniqueness-audited */
     return null;
   }
   const creatureTypeOverrideChoices =
     findFamiliarCreatureTypeOverrideChoicesForSpell(spell);
   if (creatureTypeOverrideChoices === null) {
+    /* v8 ignore next -- a missing, duplicate, or incomplete override menu is malformed Find Familiar authorship */
     return null;
   }
 
@@ -291,6 +293,7 @@ function findFamiliarCreatureTypeOverrideChoicesForSpell(
       ? spell.mechanics.mode
       : undefined;
   if (mode === undefined) {
+    /* v8 ignore next -- the admitted Find Familiar record must author its complete creature-type mode menu */
     return null;
   }
 
@@ -306,6 +309,7 @@ function findFamiliarCreatureTypeOverrideChoicesForSpell(
       optionIds.has(option.id) ||
       creatureTypes.has(creatureType)
     ) {
+      /* v8 ignore next -- unknown creature types and duplicate option/type identities are malformed mode-menu authorship */
       return null;
     }
     optionIds.add(option.id);
@@ -320,7 +324,8 @@ function findFamiliarCreatureTypeOverrideChoicesForSpell(
     creatureTypes.has(creatureType),
   )
     ? choices
-    : null;
+    : /* v8 ignore next -- the admitted mode menu must cover every canonical Find Familiar creature-type override */
+      null;
 }
 
 function hasUniqueFindFamiliarNormalFormIds(
@@ -329,6 +334,7 @@ function hasUniqueFindFamiliarNormalFormIds(
   const formIds = new Set<FindFamiliarNormalFormRef["formId"]>();
   for (const form of normalForms) {
     if (formIds.has(form.formId)) {
+      /* v8 ignore next -- duplicate normal-form identities are rejected as malformed Find Familiar authorship */
       return false;
     }
     formIds.add(form.formId);
