@@ -339,8 +339,54 @@ export type BattleReducerRouteEvents = readonly [
   ...BattleReducerRouteEvent[],
 ];
 
+function startBattleRoute(
+  owner: BattleReducerRouteOwnerGroup,
+): Extract<BattleReducerRouteEvent, { readonly kind: "startBattle" }> {
+  return { kind: "startBattle", owner };
+}
+
+function discoverBattleActsRoute(
+  subject: BattleReducerRouteSubjectFamily,
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): Extract<BattleReducerRouteEvent, { readonly kind: "discoverBattleActs" }> {
+  return { kind: "discoverBattleActs", subject, holes, owner };
+}
+
+function resolveBattleSubjectWithoutFillRoute(
+  subject: BattleReducerRouteSubjectFamily,
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): Extract<
+  BattleReducerRouteEvent,
+  { readonly kind: "resolveBattleSubjectWithoutFill" }
+> {
+  return { kind: "resolveBattleSubjectWithoutFill", subject, holes, owner };
+}
+
+function resolveBattleSubjectRoute(
+  subject: BattleReducerRouteSubjectFamily,
+  fill: BattleReducerRouteFill,
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): Extract<BattleReducerRouteEvent, { readonly kind: "resolveBattleSubject" }> {
+  return { kind: "resolveBattleSubject", subject, fill, holes, owner };
+}
+
+function resolveBattleInterruptRoute(
+  subject: BattleReducerRouteSubjectFamily,
+  fill: BattleReducerRouteFill,
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): Extract<
+  BattleReducerRouteEvent,
+  { readonly kind: "resolveBattleInterrupt" }
+> {
+  return { kind: "resolveBattleInterrupt", subject, fill, holes, owner };
+}
+
 export function battleReducerStartRouteEvent(): BattleReducerRouteEvent {
-  return { kind: "startBattle", owner: "battleActionEconomy" };
+  return startBattleRoute("battleActionEconomy");
 }
 
 function creatureStatProjectionRouteEvents(input: {
@@ -353,25 +399,22 @@ function creatureStatProjectionRouteEvents(input: {
     return undefined;
   }
   return [
-    { kind: "startBattle", owner: "battleCreatureState" },
-    {
-      kind: "discoverBattleActs",
-      subject: "creatureStatProjection",
-      holes: [],
-      owner: "battleCreatureState",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "creatureStatProjection",
-      holes: [],
-      owner: "battleCreatureState",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "creatureStatProjection",
-      holes: [],
-      owner: "battleMovementResource",
-    },
+    startBattleRoute("battleCreatureState"),
+    discoverBattleActsRoute(
+      "creatureStatProjection",
+      [],
+      "battleCreatureState",
+    ),
+    resolveBattleSubjectWithoutFillRoute(
+      "creatureStatProjection",
+      [],
+      "battleCreatureState",
+    ),
+    resolveBattleSubjectWithoutFillRoute(
+      "creatureStatProjection",
+      [],
+      "battleMovementResource",
+    ),
   ];
 }
 
@@ -394,19 +437,17 @@ function passiveDamageAdjustmentRouteEvents(input: {
     return undefined;
   }
   return [
-    { kind: "startBattle", owner: "battleDamageAdjustment" },
-    {
-      kind: "discoverBattleActs",
-      subject: "passiveDamageAdjustment",
-      holes: [],
-      owner: "battleDamageAdjustment",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "passiveDamageAdjustment",
-      holes: [],
-      owner: "battleDamageAdjustment",
-    },
+    startBattleRoute("battleDamageAdjustment"),
+    discoverBattleActsRoute(
+      "passiveDamageAdjustment",
+      [],
+      "battleDamageAdjustment",
+    ),
+    resolveBattleSubjectWithoutFillRoute(
+      "passiveDamageAdjustment",
+      [],
+      "battleDamageAdjustment",
+    ),
   ];
 }
 
@@ -436,20 +477,18 @@ function passiveAbilityCheckRollModeRouteEvents(input: {
     return undefined;
   }
   return [
-    { kind: "startBattle", owner: "battleAbilityCheckRollMode" },
-    {
-      kind: "discoverBattleActs",
-      subject: "passiveAbilityCheckRollMode",
-      holes: ["grappleOutcome"],
-      owner: "battleAbilityCheckRollMode",
-    },
-    {
-      kind: "resolveBattleSubject",
-      subject: "passiveAbilityCheckRollMode",
-      fill: "grappleOutcome",
-      holes: [],
-      owner: "battleAbilityCheckRollMode",
-    },
+    startBattleRoute("battleAbilityCheckRollMode"),
+    discoverBattleActsRoute(
+      "passiveAbilityCheckRollMode",
+      ["grappleOutcome"],
+      "battleAbilityCheckRollMode",
+    ),
+    resolveBattleSubjectRoute(
+      "passiveAbilityCheckRollMode",
+      "grappleOutcome",
+      [],
+      "battleAbilityCheckRollMode",
+    ),
   ];
 }
 
@@ -461,18 +500,16 @@ export function activeFeatureSpellSaveDcRouteEvents(input: {
     return undefined;
   }
   return [
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "activeFeatureSpellSaveDc",
-      holes: [],
-      owner: "battleActiveEffect",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "activeFeatureSpellSaveDc",
-      holes: [],
-      owner: "battleSpellSlotAndActionEconomy",
-    },
+    resolveBattleSubjectWithoutFillRoute(
+      "activeFeatureSpellSaveDc",
+      [],
+      "battleActiveEffect",
+    ),
+    resolveBattleSubjectWithoutFillRoute(
+      "activeFeatureSpellSaveDc",
+      [],
+      "battleSpellSlotAndActionEconomy",
+    ),
   ];
 }
 
@@ -485,34 +522,30 @@ export function passiveSavingThrowRollModeRouteEvents(input: {
   if (disposition === null) {
     return undefined;
   }
-  const routeStart: BattleReducerRouteEvent = {
-    kind: "startBattle",
-    owner: "battleSavingThrowRollMode",
-  };
+  const routeStart: BattleReducerRouteEvent = startBattleRoute(
+    "battleSavingThrowRollMode",
+  );
   const holes: readonly BattleReducerRouteHole[] =
     disposition === "projected" ? ["savingThrowOutcome"] : [];
   return [
     routeStart,
-    {
-      kind: "discoverBattleActs",
-      subject: "passiveSavingThrowRollMode",
+    discoverBattleActsRoute(
+      "passiveSavingThrowRollMode",
       holes,
-      owner: "battleSavingThrowRollMode",
-    },
+      "battleSavingThrowRollMode",
+    ),
     disposition === "projected"
-      ? {
-          kind: "resolveBattleSubject",
-          subject: "passiveSavingThrowRollMode",
-          fill: "savingThrowOutcome",
-          holes: [],
-          owner: "battleSavingThrowRollMode",
-        }
-      : {
-          kind: "resolveBattleSubjectWithoutFill",
-          subject: "passiveSavingThrowRollMode",
-          holes: [],
-          owner: "battleConditionLifecycle",
-        },
+      ? resolveBattleSubjectRoute(
+          "passiveSavingThrowRollMode",
+          "savingThrowOutcome",
+          [],
+          "battleSavingThrowRollMode",
+        )
+      : resolveBattleSubjectWithoutFillRoute(
+          "passiveSavingThrowRollMode",
+          [],
+          "battleConditionLifecycle",
+        ),
   ];
 }
 
@@ -591,12 +624,11 @@ export function battleReducerRouteEventsForDiscoveredAct(
   }
   if (isUnitFeatureBonusActionRouteSubject(state, act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "unitFeatureBonusAction",
-        holes: [],
-        owner: "battleFeatureResource",
-      },
+      discoverBattleActsRoute(
+        "unitFeatureBonusAction",
+        [],
+        "battleFeatureResource",
+      ),
     ];
   }
   const companionRoute = companionRouteForDiscoveredAct(act);
@@ -605,12 +637,11 @@ export function battleReducerRouteEventsForDiscoveredAct(
   }
   if (isTwinnedEffectiveSpellLevelDiscoveryAct(state, act)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "metamagicEffectiveSpellLevel",
-        holes: battleReducerRouteHoles(act.initialHoles),
-        owner: "battleFeatureResource",
-      },
+      discoverBattleActsRoute(
+        "metamagicEffectiveSpellLevel",
+        battleReducerRouteHoles(act.initialHoles),
+        "battleFeatureResource",
+      ),
     ];
   }
   const rollModifierRoute = rollModifierRouteForDiscoveredAct(state, act);
@@ -636,12 +667,11 @@ export function battleReducerRouteEventsForDiscoveredAct(
   }
   if (isSubtleSpellComponentProjectionSubject(act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "metamagicSpellComponentProjection",
-        holes: [],
-        owner: "battleFeatureResource",
-      },
+      discoverBattleActsRoute(
+        "metamagicSpellComponentProjection",
+        [],
+        "battleFeatureResource",
+      ),
     ];
   }
   const protectionCharmRoute = protectionCharmRouteForDiscoveredAct(state, act);
@@ -668,71 +698,63 @@ export function battleReducerRouteEventsForDiscoveredAct(
   }
   if (isStatBlockActionRouteSubject(state, act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "statBlockAction",
-        holes: battleReducerRouteHoles(act.initialHoles),
-        owner: "battleStatBlockAction",
-      },
+      discoverBattleActsRoute(
+        "statBlockAction",
+        battleReducerRouteHoles(act.initialHoles),
+        "battleStatBlockAction",
+      ),
     ];
   }
   if (act.subject.tag === "creatureAttack") {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "creatureAttack",
-        holes: battleReducerRouteHoles(act.initialHoles),
-        owner: "battleAttackRoll",
-      },
+      discoverBattleActsRoute(
+        "creatureAttack",
+        battleReducerRouteHoles(act.initialHoles),
+        "battleAttackRoll",
+      ),
     ];
   }
   if (isWeaponAttackSubject(act.subject)) {
     const markedDamageRiderWeaponAttackDiscoveryRoute =
       markedDamageRiderWeaponAttackRouteForDiscoveredAct(state, act);
-    const weaponAttackRoute: BattleReducerRouteEvent = {
-      kind: "discoverBattleActs",
-      subject: "weaponAttack",
-      holes: battleReducerRouteHoles(act.initialHoles),
-      owner: "battleActionEconomy",
-    };
+    const weaponAttackRoute: BattleReducerRouteEvent = discoverBattleActsRoute(
+      "weaponAttack",
+      battleReducerRouteHoles(act.initialHoles),
+      "battleActionEconomy",
+    );
     return markedDamageRiderWeaponAttackDiscoveryRoute === undefined
       ? [weaponAttackRoute]
       : [markedDamageRiderWeaponAttackDiscoveryRoute, weaponAttackRoute];
   }
   if (isConcentrationTeardownDiscoverySubject(state, act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "concentrationTeardown",
-        holes: battleReducerRouteHoles(act.initialHoles),
-        owner:
-          act.subject.tag === "actionSpell"
-            ? "battleSpellSlotAndActionEconomy"
-            : "battleConcentration",
-      },
+      discoverBattleActsRoute(
+        "concentrationTeardown",
+        battleReducerRouteHoles(act.initialHoles),
+        act.subject.tag === "actionSpell"
+          ? "battleSpellSlotAndActionEconomy"
+          : "battleConcentration",
+      ),
     ];
   }
   if (isExtendedSpellDurationProjectionSubject(state, act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "metamagicSpellDurationProjection",
-        holes: [],
-        owner: "battleFeatureResource",
-      },
+      discoverBattleActsRoute(
+        "metamagicSpellDurationProjection",
+        [],
+        "battleFeatureResource",
+      ),
     ];
   }
   if (isCommandEffectDiscoverySubject(state, act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "commandEffect",
-        holes: battleReducerRouteHoles(act.initialHoles),
-        owner:
-          act.subject.tag === "actionSpell"
-            ? "battleSpellSlotAndActionEconomy"
-            : "battleActiveEffect",
-      },
+      discoverBattleActsRoute(
+        "commandEffect",
+        battleReducerRouteHoles(act.initialHoles),
+        act.subject.tag === "actionSpell"
+          ? "battleSpellSlotAndActionEconomy"
+          : "battleActiveEffect",
+      ),
     ];
   }
   const movementSubstrateDiscoveryRoute =
@@ -742,62 +764,56 @@ export function battleReducerRouteEventsForDiscoveredAct(
   }
   if (isQuickenedBonusActionCastingTimeSubject(act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "metamagicBonusActionCastingTime",
-        holes: battleReducerRouteHoles(act.initialHoles),
-        owner: "battleFeatureResource",
-      },
+      discoverBattleActsRoute(
+        "metamagicBonusActionCastingTime",
+        battleReducerRouteHoles(act.initialHoles),
+        "battleFeatureResource",
+      ),
     ];
   }
   if (isCarefulSavingThrowProtectionSubject(act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "metamagicSavingThrowProtection",
-        holes: battleReducerRouteHoles(act.initialHoles),
-        owner: "battleFeatureResource",
-      },
+      discoverBattleActsRoute(
+        "metamagicSavingThrowProtection",
+        battleReducerRouteHoles(act.initialHoles),
+        "battleFeatureResource",
+      ),
     ];
   }
   if (isTransmutedDamageTypeSubstitutionSubject(state, act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "metamagicDamageTypeSubstitution",
-        holes: ["damageTypeChoice"],
-        owner: "battleFeatureResource",
-      },
+      discoverBattleActsRoute(
+        "metamagicDamageTypeSubstitution",
+        ["damageTypeChoice"],
+        "battleFeatureResource",
+      ),
     ];
   }
   if (isDistantSpellRangeProjectionSubject(state, act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "metamagicSpellRangeProjection",
-        holes: battleReducerRouteHoles(act.initialHoles),
-        owner: "battleFeatureResource",
-      },
+      discoverBattleActsRoute(
+        "metamagicSpellRangeProjection",
+        battleReducerRouteHoles(act.initialHoles),
+        "battleFeatureResource",
+      ),
     ];
   }
   if (isHitPointRestorationDiscoverySubject(state, act)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "hitPointRestoration",
-        holes: battleReducerRouteHoles(act.initialHoles),
-        owner: hitPointRestorationDiscoveryOwner(act.subject),
-      },
+      discoverBattleActsRoute(
+        "hitPointRestoration",
+        battleReducerRouteHoles(act.initialHoles),
+        hitPointRestorationDiscoveryOwner(act.subject),
+      ),
     ];
   }
   if (isZeroHitPointStabilizationSubject(state, act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "zeroHitPointStabilization",
-        holes: battleReducerRouteHoles(act.initialHoles),
-        owner: "battleActionEconomy",
-      },
+      discoverBattleActsRoute(
+        "zeroHitPointStabilization",
+        battleReducerRouteHoles(act.initialHoles),
+        "battleActionEconomy",
+      ),
     ];
   }
   const wardedTargetRoute = wardedTargetInterdictionRouteForDiscoveredAct(
@@ -850,12 +866,11 @@ export function battleReducerRouteEventsForDiscoveredAct(
   }
   if (isSlotSpellDiscoverySubject(state, act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "slotSpell",
-        holes: battleReducerRouteHoles(act.initialHoles),
-        owner: "battleSpellSlotAndActionEconomy",
-      },
+      discoverBattleActsRoute(
+        "slotSpell",
+        battleReducerRouteHoles(act.initialHoles),
+        "battleSpellSlotAndActionEconomy",
+      ),
     ];
   }
   if (saveGatedDiscoveryRoute !== undefined) {
@@ -878,17 +893,13 @@ export function battleReducerRouteEventsForDiscoveredAct(
       : invocation.resource.tag === "spellSlot"
         ? "battleSpellSlotAndActionEconomy"
         : "battleActionEconomy";
-  const actionEconomyEvent: BattleReducerRouteEvent = {
-    kind: "discoverBattleActs",
-    subject: "spellAttackProcedure",
-    holes:
-      invocation.procedure === "spellAttackSequence"
-        ? spellAttackSequenceRouteHoles(
-            battleReducerRouteHoles(act.initialHoles),
-          )
-        : battleReducerRouteHoles(act.initialHoles),
-    owner: actionOwner,
-  };
+  const actionEconomyEvent: BattleReducerRouteEvent = discoverBattleActsRoute(
+    "spellAttackProcedure",
+    invocation.procedure === "spellAttackSequence"
+      ? spellAttackSequenceRouteHoles(battleReducerRouteHoles(act.initialHoles))
+      : battleReducerRouteHoles(act.initialHoles),
+    actionOwner,
+  );
   if (invocation.procedure === "spellAttackSequence") {
     return nonEmptyRouteEvents([
       actionEconomyEvent,
@@ -916,14 +927,13 @@ export function battleReducerRouteEventsForDiscoveredAct(
   }
   return nonEmptyRouteEvents([
     actionEconomyEvent,
-    {
-      kind: "discoverBattleActs",
-      subject: "spellAttackProcedure",
-      holes: battleReducerRouteHoles(
+    discoverBattleActsRoute(
+      "spellAttackProcedure",
+      battleReducerRouteHoles(
         act.initialHoles.filter((hole) => hole.kind === "objectTargetChoice"),
       ),
-      owner: "battleObjectTargetBoundary",
-    },
+      "battleObjectTargetBoundary",
+    ),
     ...passiveDamageAdjustmentRouteForSpellDiscovery(state),
     ...activeFeatureSpellAttackRollModeDiscoveryRouteEvents(
       state,
@@ -1289,13 +1299,12 @@ function creatureStatProjectionRouteForDiscoveredAct(
     return undefined;
   }
   return [
-    { kind: "startBattle", owner: "battleCreatureState" },
-    {
-      kind: "discoverBattleActs",
-      subject: "creatureStatProjection",
-      holes: [],
-      owner: "battleCreatureState",
-    },
+    startBattleRoute("battleCreatureState"),
+    discoverBattleActsRoute(
+      "creatureStatProjection",
+      [],
+      "battleCreatureState",
+    ),
   ];
 }
 
@@ -1366,12 +1375,11 @@ function passiveSavingThrowRollModeRouteForDiscoveredAct(
     return undefined;
   }
   return [
-    {
-      kind: "discoverBattleActs",
-      subject: "passiveSavingThrowRollMode",
-      holes: ["savingThrowOutcome"],
-      owner: "battleSavingThrowRollMode",
-    },
+    discoverBattleActsRoute(
+      "passiveSavingThrowRollMode",
+      ["savingThrowOutcome"],
+      "battleSavingThrowRollMode",
+    ),
   ];
 }
 
@@ -1391,13 +1399,12 @@ function passiveSavingThrowRollModeRouteForResolution(
     return undefined;
   }
   return [
-    {
-      kind: "resolveBattleSubject",
-      subject: "passiveSavingThrowRollMode",
-      fill: "savingThrowOutcome",
-      holes: [],
-      owner: "battleSavingThrowRollMode",
-    },
+    resolveBattleSubjectRoute(
+      "passiveSavingThrowRollMode",
+      "savingThrowOutcome",
+      [],
+      "battleSavingThrowRollMode",
+    ),
   ];
 }
 
@@ -1487,21 +1494,21 @@ function creatureSpaceMovementPermissionRouteForResolution(
   const holes: readonly BattleReducerRouteHole[] =
     result.tag === "invalid" ? ["movement"] : [];
   const route: BattleReducerRouteEvent[] = [
-    {
-      kind: "resolveBattleSubject",
-      subject: "creatureSpaceMovementPermission",
-      fill: "movement",
+    resolveBattleSubjectRoute(
+      "creatureSpaceMovementPermission",
+      "movement",
       holes,
-      owner: "battleCreatureSpaceMovement",
-    },
+      "battleCreatureSpaceMovement",
+    ),
   ];
   if (result.tag === "resolved") {
-    route.push({
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "creatureSpaceMovementPermission",
-      holes: [],
-      owner: "battleMovementResource",
-    });
+    route.push(
+      resolveBattleSubjectWithoutFillRoute(
+        "creatureSpaceMovementPermission",
+        [],
+        "battleMovementResource",
+      ),
+    );
   }
   return nonEmptyRouteEvents(route);
 }
@@ -1512,42 +1519,34 @@ function movementSubstrateRouteForDiscoveredAct(
 ): BattleReducerRouteEvents | undefined {
   if (isForcedReactionMovementSpellSubject(state, act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "forcedMovement",
-        holes: ["movement", "rolledDice", "savingThrowOutcome", "targetChoice"],
-        owner: "battleSpellSlotAndActionEconomy",
-      },
+      discoverBattleActsRoute(
+        "forcedMovement",
+        ["movement", "rolledDice", "savingThrowOutcome", "targetChoice"],
+        "battleSpellSlotAndActionEconomy",
+      ),
     ];
   }
   if (isSpellGrantedDashSubject(act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "movementResource",
-        holes: [],
-        owner: "battleSpellSlotAndActionEconomy",
-      },
+      discoverBattleActsRoute(
+        "movementResource",
+        [],
+        "battleSpellSlotAndActionEconomy",
+      ),
     ];
   }
   if (isPassiveSpeedDashSubject(act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "movementResource",
-        holes: [],
-        owner: "battleActionEconomy",
-      },
+      discoverBattleActsRoute("movementResource", [], "battleActionEconomy"),
     ];
   }
   if (isSpecialSpeedMovementSubject(state, act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "specialSpeedProjection",
-        holes: [],
-        owner: "battleCreatureState",
-      },
+      discoverBattleActsRoute(
+        "specialSpeedProjection",
+        [],
+        "battleCreatureState",
+      ),
       movementSubstrateResolveWithoutFill(
         "specialSpeedProjection",
         "battleCreatureState",
@@ -1556,12 +1555,11 @@ function movementSubstrateRouteForDiscoveredAct(
         "specialSpeedProjection",
         "battleMovementResource",
       ),
-      {
-        kind: "discoverBattleActs",
-        subject: "movementResource",
-        holes: ["movement"],
-        owner: "battleMovementResource",
-      },
+      discoverBattleActsRoute(
+        "movementResource",
+        ["movement"],
+        "battleMovementResource",
+      ),
     ];
   }
   return undefined;
@@ -1633,13 +1631,12 @@ function movementSubstrateRouteForResolution(
       return undefined;
     }
     return [
-      {
-        kind: "resolveBattleSubject",
-        subject: "movementResource",
-        fill: "movement",
-        holes: [],
-        owner: "battleMovementResource",
-      },
+      resolveBattleSubjectRoute(
+        "movementResource",
+        "movement",
+        [],
+        "battleMovementResource",
+      ),
     ];
   }
   return undefined;
@@ -1661,17 +1658,16 @@ function commandFleeForcedMovementDiscoveryRoute(
     return undefined;
   }
   return [
-    {
-      kind: "discoverBattleActs",
-      subject: "forcedMovement",
-      holes: [
+    discoverBattleActsRoute(
+      "forcedMovement",
+      [
         "commandOptionChoice",
         "movement",
         "savingThrowOutcome",
         "spellTargetList",
       ],
-      owner: "battleSpellSlotAndActionEconomy",
-    },
+      "battleSpellSlotAndActionEconomy",
+    ),
   ];
 }
 
@@ -1697,13 +1693,12 @@ function forcedMovementResolvedRoute(
   ...owners: readonly BattleReducerRouteOwnerGroup[]
 ): BattleReducerRouteEvents {
   return [
-    {
-      kind: "resolveBattleSubject",
-      subject: "forcedMovement",
-      fill: "movement",
-      holes: [],
-      owner: "battleMovementResource",
-    },
+    resolveBattleSubjectRoute(
+      "forcedMovement",
+      "movement",
+      [],
+      "battleMovementResource",
+    ),
     ...owners.map((owner) =>
       movementSubstrateResolveWithoutFill("forcedMovement", owner),
     ),
@@ -1717,12 +1712,7 @@ function movementSubstrateResolveWithoutFill(
   >,
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject,
-    holes: [],
-    owner,
-  };
+  return resolveBattleSubjectWithoutFillRoute(subject, [], owner);
 }
 
 function isForcedReactionMovementSpellSubject(
@@ -1810,13 +1800,12 @@ function zeroHitPointStabilizationRouteForResolution(
   if (fill === undefined || battleFillKind(fill) !== "targetChoice") {
     return undefined;
   }
-  return {
-    kind: "resolveBattleSubject",
-    subject: "zeroHitPointStabilization",
-    fill: "targetChoice",
-    holes: [],
-    owner: "battleHitPointAndZeroHpLifecycle",
-  };
+  return resolveBattleSubjectRoute(
+    "zeroHitPointStabilization",
+    "targetChoice",
+    [],
+    "battleHitPointAndZeroHpLifecycle",
+  );
 }
 
 function isSpellBaseArmorClassEffectSubject(
@@ -1839,12 +1828,11 @@ function spellBaseArmorClassEffectRouteForDiscoveredAct(
   if (!isSpellBaseArmorClassEffectSubject(state, act.subject)) {
     return undefined;
   }
-  return {
-    kind: "discoverBattleActs",
-    subject: "spellBaseArmorClassEffect",
-    holes: battleReducerRouteHoles(act.initialHoles),
-    owner: "battleSpellSlotAndActionEconomy",
-  };
+  return discoverBattleActsRoute(
+    "spellBaseArmorClassEffect",
+    battleReducerRouteHoles(act.initialHoles),
+    "battleSpellSlotAndActionEconomy",
+  );
 }
 
 function wardedTargetInterdictionRouteForDiscoveredAct(
@@ -1853,22 +1841,20 @@ function wardedTargetInterdictionRouteForDiscoveredAct(
 ): BattleReducerRouteEvents | undefined {
   if (isSanctuaryTargetingInterdictionSubject(state, act.subject)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "wardedTargetInterdiction",
-        holes: ["targetChoice"],
-        owner: "battleSpellSlotAndActionEconomy",
-      },
+      discoverBattleActsRoute(
+        "wardedTargetInterdiction",
+        ["targetChoice"],
+        "battleSpellSlotAndActionEconomy",
+      ),
     ];
   }
   if (areaEffectBypassesWardedTargetInterdiction(state, act)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "wardedTargetInterdiction",
-        holes: [],
-        owner: "battleAreaShape",
-      },
+      discoverBattleActsRoute(
+        "wardedTargetInterdiction",
+        [],
+        "battleAreaShape",
+      ),
     ];
   }
   return undefined;
@@ -1887,18 +1873,17 @@ function wardedTargetInterdictionRouteForResolution(
     if (routeFill !== "spellTargetList") {
       return undefined;
     }
-    const targetSelectionRoute: BattleReducerRouteEvent = {
-      kind: "resolveBattleSubject",
-      subject: "wardedTargetInterdiction",
-      fill: "targetChoice",
-      holes:
+    const targetSelectionRoute: BattleReducerRouteEvent =
+      resolveBattleSubjectRoute(
+        "wardedTargetInterdiction",
+        "targetChoice",
         result.tag === "needsHoles"
           ? battleReducerRouteHoles(result.holes)
           : result.tag === "invalid"
             ? ["targetChoice"]
             : [],
-      owner: "battleTargetSelection",
-    };
+        "battleTargetSelection",
+      );
     if (
       result.tag !== "resolved" ||
       !activeEffectKindsAdded(input.state, result.state).includes(
@@ -1916,30 +1901,29 @@ function wardedTargetInterdictionRouteForResolution(
     const replacementTarget =
       !fill.value.saveSucceeded && fill.value.outcome.kind === "newTarget";
     const route: BattleReducerRouteEvent[] = [
-      {
-        kind: "discoverBattleActs",
-        subject: "wardedTargetInterdiction",
-        holes: replacementTarget
+      discoverBattleActsRoute(
+        "wardedTargetInterdiction",
+        replacementTarget
           ? ["sanctuaryInterdictionOutcome", "targetChoice"]
           : ["sanctuaryInterdictionOutcome"],
-        owner: "battleActiveEffect",
-      },
-      {
-        kind: "resolveBattleSubject",
-        subject: "wardedTargetInterdiction",
-        fill: "sanctuaryInterdictionOutcome",
-        holes: replacementTarget ? ["targetChoice"] : [],
-        owner: "battleSavingThrowOutcome",
-      },
+        "battleActiveEffect",
+      ),
+      resolveBattleSubjectRoute(
+        "wardedTargetInterdiction",
+        "sanctuaryInterdictionOutcome",
+        replacementTarget ? ["targetChoice"] : [],
+        "battleSavingThrowOutcome",
+      ),
     ];
     if (replacementTarget) {
-      route.push({
-        kind: "resolveBattleSubject",
-        subject: "wardedTargetInterdiction",
-        fill: "targetChoice",
-        holes: result.tag === "invalid" ? ["targetChoice"] : [],
-        owner: "battleTargetSelection",
-      });
+      route.push(
+        resolveBattleSubjectRoute(
+          "wardedTargetInterdiction",
+          "targetChoice",
+          result.tag === "invalid" ? ["targetChoice"] : [],
+          "battleTargetSelection",
+        ),
+      );
     } else {
       route.push(
         wardedTargetInterdictionResolveWithoutFill(
@@ -1990,12 +1974,11 @@ function wardedTargetInterdictionEarlyEndRoute(
   >,
 ): BattleReducerRouteEvents {
   return [
-    {
-      kind: "discoverBattleActs",
-      subject: "wardedTargetInterdiction",
-      holes: [],
-      owner: "battleActiveEffect",
-    },
+    discoverBattleActsRoute(
+      "wardedTargetInterdiction",
+      [],
+      "battleActiveEffect",
+    ),
     wardedTargetInterdictionResolveWithoutFill(owner),
     wardedTargetInterdictionResolveWithoutFill("battleActiveEffect"),
   ];
@@ -2004,12 +1987,11 @@ function wardedTargetInterdictionEarlyEndRoute(
 function wardedTargetInterdictionResolveWithoutFill(
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject: "wardedTargetInterdiction",
-    holes: [],
+  return resolveBattleSubjectWithoutFillRoute(
+    "wardedTargetInterdiction",
+    [],
     owner,
-  };
+  );
 }
 
 function sanctuaryWardRemoved(
@@ -2141,13 +2123,13 @@ function spellBaseArmorClassEffectRouteForResolution(
       : result.tag === "needsHoles"
         ? battleReducerRouteHoles(result.holes)
         : [];
-  const targetSelectionRoute: BattleReducerRouteEvent = {
-    kind: "resolveBattleSubject",
-    subject: "spellBaseArmorClassEffect",
-    fill: "targetChoice",
-    holes,
-    owner: "battleTargetSelection",
-  };
+  const targetSelectionRoute: BattleReducerRouteEvent =
+    resolveBattleSubjectRoute(
+      "spellBaseArmorClassEffect",
+      "targetChoice",
+      holes,
+      "battleTargetSelection",
+    );
   if (
     result.tag !== "resolved" ||
     !spellBaseArmorClassEffectWasAdded(input.state, result.state)
@@ -2164,12 +2146,11 @@ function spellBaseArmorClassEffectRouteForResolution(
 function spellBaseArmorClassEffectResolveWithoutFill(
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject: "spellBaseArmorClassEffect",
-    holes: [],
+  return resolveBattleSubjectWithoutFillRoute(
+    "spellBaseArmorClassEffect",
+    [],
     owner,
-  };
+  );
 }
 
 function spellBaseArmorClassEffectWasAdded(
@@ -2227,12 +2208,11 @@ function spellAttackProcedureRouteForResolution(
   if (result.tag === "invalid") {
     if (result.reason === "staleSubject") {
       return [
-        {
-          kind: "resolveBattleSubjectWithoutFill",
-          subject: "spellAttackProcedure",
-          holes: [],
-          owner: "battleHoleFrontier",
-        },
+        resolveBattleSubjectWithoutFillRoute(
+          "spellAttackProcedure",
+          [],
+          "battleHoleFrontier",
+        ),
       ];
     }
     return undefined;
@@ -2256,13 +2236,8 @@ function spellAttackProcedureRouteForResolution(
   }
   const eventForOwner = (
     owner: BattleReducerRouteOwnerGroup,
-  ): BattleReducerRouteEvent => ({
-    kind: "resolveBattleSubject",
-    subject: "spellAttackProcedure",
-    fill: routeFill,
-    holes,
-    owner,
-  });
+  ): BattleReducerRouteEvent =>
+    resolveBattleSubjectRoute("spellAttackProcedure", routeFill, holes, owner);
   return [
     eventForOwner(firstOwner),
     ...remainingOwners.map(eventForOwner),
@@ -2291,15 +2266,13 @@ function objectTargetSpellAttackRouteForResolution(
   const fillKind = battleFillKind(fill);
   if (fillKind === "objectTargetChoice") {
     return [
-      {
-        kind: "resolveBattleSubjectWithoutFill",
-        subject: "objectTargetSpellAttack",
-        holes:
-          result.tag === "needsHoles"
-            ? battleReducerRouteHoles(result.holes)
-            : [],
-        owner: "battleObjectTargetBoundary",
-      },
+      resolveBattleSubjectWithoutFillRoute(
+        "objectTargetSpellAttack",
+        result.tag === "needsHoles"
+          ? battleReducerRouteHoles(result.holes)
+          : [],
+        "battleObjectTargetBoundary",
+      ),
     ];
   }
   if (!hasObjectTarget) {
@@ -2308,54 +2281,48 @@ function objectTargetSpellAttackRouteForResolution(
   if (result.tag === "invalid") {
     return result.reason === "staleSubject"
       ? [
-          {
-            kind: "resolveBattleSubjectWithoutFill",
-            subject: "objectTargetSpellAttack",
-            holes: [],
-            owner: "battleHoleFrontier",
-          },
+          resolveBattleSubjectWithoutFillRoute(
+            "objectTargetSpellAttack",
+            [],
+            "battleHoleFrontier",
+          ),
         ]
       : undefined;
   }
   if (fillKind === "attackRoll") {
     return [
-      {
-        kind: "resolveBattleSubject",
-        subject: "objectTargetSpellAttack",
-        fill: "attackRoll",
-        holes:
-          result.tag === "needsHoles"
-            ? battleReducerRouteHoles(result.holes)
-            : [],
-        owner: "battleAttackRoll",
-      },
+      resolveBattleSubjectRoute(
+        "objectTargetSpellAttack",
+        "attackRoll",
+        result.tag === "needsHoles"
+          ? battleReducerRouteHoles(result.holes)
+          : [],
+        "battleAttackRoll",
+      ),
     ];
   }
   if (fillKind !== "rolledDice") {
     return undefined;
   }
   const route: BattleReducerRouteEvent[] = [
-    {
-      kind: "resolveBattleSubject",
-      subject: "objectTargetSpellAttack",
-      fill: "rolledDice",
-      holes:
-        result.tag === "needsHoles"
-          ? battleReducerRouteHoles(result.holes)
-          : [],
-      owner: "battleObjectTargetBoundary",
-    },
+    resolveBattleSubjectRoute(
+      "objectTargetSpellAttack",
+      "rolledDice",
+      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+      "battleObjectTargetBoundary",
+    ),
   ];
   if (
     result.tag === "resolved" &&
     objectInvisibleRevealLightEmitterWasAdded(input.state, result.state)
   ) {
-    route.push({
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "objectTargetSpellAttack",
-      holes: [],
-      owner: "battleActiveEffect",
-    });
+    route.push(
+      resolveBattleSubjectWithoutFillRoute(
+        "objectTargetSpellAttack",
+        [],
+        "battleActiveEffect",
+      ),
+    );
   }
   return nonEmptyRouteEvents(route);
 }
@@ -2412,13 +2379,13 @@ export function battleReducerRouteForInterrupt(
   }
   const eventForOwner = (
     owner: BattleReducerRouteOwnerGroup,
-  ): BattleReducerRouteEvent => ({
-    kind: "resolveBattleInterrupt",
-    subject: "interruptStackResume",
-    fill: "interruptDecision",
-    holes,
-    owner,
-  });
+  ): BattleReducerRouteEvent =>
+    resolveBattleInterruptRoute(
+      "interruptStackResume",
+      "interruptDecision",
+      holes,
+      owner,
+    );
   if (
     result.tag === "resolved" &&
     interruptResolutionAddedArmorClassEffect(before, result)
@@ -2443,18 +2410,16 @@ export function battleReducerRouteForCreatureFallsInterruptWindow(
     return undefined;
   }
   return [
-    {
-      kind: "discoverBattleActs",
-      subject: "reactionSpell",
-      holes: ["interruptDecision"],
-      owner: "battleInterruptStack",
-    },
-    {
-      kind: "discoverBattleActs",
-      subject: "reactionFallMitigation",
-      holes: ["interruptDecision"],
-      owner: "battleInterruptStack",
-    },
+    discoverBattleActsRoute(
+      "reactionSpell",
+      ["interruptDecision"],
+      "battleInterruptStack",
+    ),
+    discoverBattleActsRoute(
+      "reactionFallMitigation",
+      ["interruptDecision"],
+      "battleInterruptStack",
+    ),
   ];
 }
 
@@ -2517,24 +2482,21 @@ function activeFeatureBonusActionRouteForResolution(
     return undefined;
   }
   return [
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "unitFeatureBonusAction",
-      holes: [],
-      owner: "battleActionEconomy",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "unitFeatureBonusAction",
-      holes: [],
-      owner: "battleFeatureResource",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "unitFeatureBonusAction",
-      holes: [],
-      owner: "battleActiveEffect",
-    },
+    resolveBattleSubjectWithoutFillRoute(
+      "unitFeatureBonusAction",
+      [],
+      "battleActionEconomy",
+    ),
+    resolveBattleSubjectWithoutFillRoute(
+      "unitFeatureBonusAction",
+      [],
+      "battleFeatureResource",
+    ),
+    resolveBattleSubjectWithoutFillRoute(
+      "unitFeatureBonusAction",
+      [],
+      "battleActiveEffect",
+    ),
   ];
 }
 
@@ -2602,12 +2564,11 @@ function activeFeatureSpellAttackRollModeDiscoveryRouteEvents(
     return [];
   }
   return [
-    {
-      kind: "discoverBattleActs",
-      subject: "activeFeatureSpellAttackRollMode",
-      holes: ["targetChoice"],
-      owner: "battleSpellSlotAndActionEconomy",
-    },
+    discoverBattleActsRoute(
+      "activeFeatureSpellAttackRollMode",
+      ["targetChoice"],
+      "battleSpellSlotAndActionEconomy",
+    ),
   ];
 }
 
@@ -2633,25 +2594,22 @@ function activeFeatureSpellAttackRollModeResolutionRouteEvents(
     return [];
   }
   return [
-    {
-      kind: "resolveBattleSubject",
-      subject: "activeFeatureSpellAttackRollMode",
-      fill: "targetChoice",
-      holes: ["attackRoll"],
-      owner: "battleTargetSelection",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "activeFeatureSpellAttackRollMode",
-      holes: ["attackRoll"],
-      owner: "battleActiveEffect",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "activeFeatureSpellAttackRollMode",
-      holes: ["attackRoll"],
-      owner: "battleSpellAttackProcedure",
-    },
+    resolveBattleSubjectRoute(
+      "activeFeatureSpellAttackRollMode",
+      "targetChoice",
+      ["attackRoll"],
+      "battleTargetSelection",
+    ),
+    resolveBattleSubjectWithoutFillRoute(
+      "activeFeatureSpellAttackRollMode",
+      ["attackRoll"],
+      "battleActiveEffect",
+    ),
+    resolveBattleSubjectWithoutFillRoute(
+      "activeFeatureSpellAttackRollMode",
+      ["attackRoll"],
+      "battleSpellAttackProcedure",
+    ),
   ];
 }
 
@@ -2663,12 +2621,11 @@ function weaponHostedRouteForDiscoveredAct(
   if (subject === undefined) {
     return undefined;
   }
-  return {
-    kind: "discoverBattleActs",
+  return discoverBattleActsRoute(
     subject,
-    holes: weaponHostedSpellDiscoveryHoles(subject, act.initialHoles),
-    owner: weaponHostedSpellDiscoveryOwner(subject),
-  };
+    weaponHostedSpellDiscoveryHoles(subject, act.initialHoles),
+    weaponHostedSpellDiscoveryOwner(subject),
+  );
 }
 
 function weaponHostedSpellRouteForResolution(
@@ -2682,12 +2639,11 @@ function weaponHostedSpellRouteForResolution(
   if (result.tag === "invalid") {
     return result.reason === "staleSubject"
       ? [
-          {
-            kind: "resolveBattleSubjectWithoutFill",
+          resolveBattleSubjectWithoutFillRoute(
             subject,
-            holes: [],
-            owner: "battleHoleFrontier",
-          },
+            [],
+            "battleHoleFrontier",
+          ),
         ]
       : undefined;
   }
@@ -2697,12 +2653,7 @@ function weaponHostedSpellRouteForResolution(
       return undefined;
     }
     return [
-      {
-        kind: "resolveBattleSubjectWithoutFill",
-        subject,
-        holes: [],
-        owner: "battleActiveEffect",
-      },
+      resolveBattleSubjectWithoutFillRoute(subject, [], "battleActiveEffect"),
     ];
   }
   const routeFill = battleReducerRouteFill(fill);
@@ -2715,12 +2666,7 @@ function weaponHostedSpellRouteForResolution(
     result.tag === "resolved"
   ) {
     return [
-      {
-        kind: "resolveBattleSubjectWithoutFill",
-        subject,
-        holes: [],
-        owner: "battleActiveEffect",
-      },
+      resolveBattleSubjectWithoutFillRoute(subject, [], "battleActiveEffect"),
     ];
   }
   if (subject !== "spellHostedWeaponAttack") {
@@ -2733,22 +2679,11 @@ function weaponHostedSpellRouteForResolution(
   const holes =
     result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
   const route: BattleReducerRouteEvent[] = [
-    {
-      kind: "resolveBattleSubject",
-      subject,
-      fill: routeFill,
-      holes,
-      owner: owners.resolveOwner,
-    },
+    resolveBattleSubjectRoute(subject, routeFill, holes, owners.resolveOwner),
   ];
   const nextDiscoveryOwner = spellHostedWeaponAttackNextDiscoveryOwner(holes);
   if (nextDiscoveryOwner !== undefined) {
-    route.push({
-      kind: "discoverBattleActs",
-      subject,
-      holes,
-      owner: nextDiscoveryOwner,
-    });
+    route.push(discoverBattleActsRoute(subject, holes, nextDiscoveryOwner));
   }
   return nonEmptyRouteEvents(route);
 }
@@ -2865,18 +2800,16 @@ function weaponHostedCleanupRouteForResolution(
     return undefined;
   }
   return [
-    {
-      kind: "discoverBattleActs",
-      subject: "weaponHostedSpellEffectCleanup",
-      holes: [],
-      owner: "battleActiveEffect",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "weaponHostedSpellEffectCleanup",
-      holes: [],
-      owner: "battleActiveEffect",
-    },
+    discoverBattleActsRoute(
+      "weaponHostedSpellEffectCleanup",
+      [],
+      "battleActiveEffect",
+    ),
+    resolveBattleSubjectWithoutFillRoute(
+      "weaponHostedSpellEffectCleanup",
+      [],
+      "battleActiveEffect",
+    ),
   ];
 }
 
@@ -2935,12 +2868,11 @@ function attackActionAreaSaveDamageReplacementRouteForDiscoveredAct(
   if (!isAttackActionAreaSaveDamageReplacementSubject(state, act.subject)) {
     return undefined;
   }
-  return {
-    kind: "discoverBattleActs",
-    subject: "attackActionAreaSaveDamageReplacement",
-    holes: battleReducerRouteHoles(act.initialHoles),
-    owner: "battleFeatureResource",
-  };
+  return discoverBattleActsRoute(
+    "attackActionAreaSaveDamageReplacement",
+    battleReducerRouteHoles(act.initialHoles),
+    "battleFeatureResource",
+  );
 }
 
 function attackActionAreaSaveDamageReplacementRouteForResolution(
@@ -3019,12 +2951,11 @@ function attackActionAreaSaveDamageReplacementRouteForResolution(
       resource.sourceOwnerId === input.subject.actorId,
   )
     ? [
-        {
-          kind: "discoverBattleActs" as const,
-          subject: "weaponAttack" as const,
-          holes: ["targetChoice"] as const,
-          owner: "battleAttackActionProcedure" as const,
-        },
+        discoverBattleActsRoute(
+          "weaponAttack" as const,
+          ["targetChoice"] as const,
+          "battleAttackActionProcedure" as const,
+        ),
       ]
     : [
         attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
@@ -3055,25 +2986,23 @@ function attackActionAreaSaveDamageReplacementResolveRoute(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubject",
-    subject: "attackActionAreaSaveDamageReplacement",
+  return resolveBattleSubjectRoute(
+    "attackActionAreaSaveDamageReplacement",
     fill,
     holes,
     owner,
-  };
+  );
 }
 
 function attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject: "attackActionAreaSaveDamageReplacement",
+  return resolveBattleSubjectWithoutFillRoute(
+    "attackActionAreaSaveDamageReplacement",
     holes,
     owner,
-  };
+  );
 }
 
 function isAttackActionAreaSaveDamageReplacementSubject(
@@ -3442,12 +3371,7 @@ function afterHitDamageRiderDiscoverRoute(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "discoverBattleActs",
-    subject: "afterHitDamageRider",
-    holes,
-    owner,
-  };
+  return discoverBattleActsRoute("afterHitDamageRider", holes, owner);
 }
 
 function afterHitDamageRiderResolveRoute(
@@ -3455,25 +3379,18 @@ function afterHitDamageRiderResolveRoute(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubject",
-    subject: "afterHitDamageRider",
-    fill,
-    holes,
-    owner,
-  };
+  return resolveBattleSubjectRoute("afterHitDamageRider", fill, holes, owner);
 }
 
 function afterHitDamageRiderResolveWithoutFillRoute(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject: "afterHitDamageRider",
+  return resolveBattleSubjectWithoutFillRoute(
+    "afterHitDamageRider",
     holes,
     owner,
-  };
+  );
 }
 
 function combatantsConcentrationChanged(
@@ -3529,13 +3446,13 @@ function reactionSpellRouteForInterrupt(input: {
   const eventForOwner = (
     subject: BattleReducerRouteSubjectFamily,
     owner: BattleReducerRouteOwnerGroup,
-  ): BattleReducerRouteEvent => ({
-    kind: "resolveBattleInterrupt",
-    subject,
-    fill: "interruptDecision",
-    holes: input.holes,
-    owner,
-  });
+  ): BattleReducerRouteEvent =>
+    resolveBattleInterruptRoute(
+      subject,
+      "interruptDecision",
+      input.holes,
+      owner,
+    );
   if (frame.trigger === "creatureFalls" && input.result.tag === "resolved") {
     return [
       eventForOwner("reactionSpell", "battleInterruptStack"),
@@ -3627,33 +3544,24 @@ function reactionInterruptPayloadRouteForInterrupt(input: {
   const interruptEvent = (
     holes: readonly BattleReducerRouteHole[],
     owner: BattleReducerRouteOwnerGroup,
-  ): BattleReducerRouteEvent => ({
-    kind: "resolveBattleInterrupt",
-    subject: input.subject,
-    fill: "interruptDecision",
-    holes,
-    owner,
-  });
+  ): BattleReducerRouteEvent =>
+    resolveBattleInterruptRoute(
+      input.subject,
+      "interruptDecision",
+      holes,
+      owner,
+    );
   const subjectEvent = (
     fill: BattleReducerRouteFill,
     holes: readonly BattleReducerRouteHole[],
     owner: BattleReducerRouteOwnerGroup,
     subject: BattleReducerRouteSubjectFamily = input.subject,
-  ): BattleReducerRouteEvent => ({
-    kind: "resolveBattleSubject",
-    subject,
-    fill,
-    holes,
-    owner,
-  });
+  ): BattleReducerRouteEvent =>
+    resolveBattleSubjectRoute(subject, fill, holes, owner);
   const subjectWithoutFillEvent = (
     owner: BattleReducerRouteOwnerGroup,
-  ): BattleReducerRouteEvent => ({
-    kind: "resolveBattleSubjectWithoutFill",
-    subject: input.subject,
-    holes: input.holes,
-    owner,
-  });
+  ): BattleReducerRouteEvent =>
+    resolveBattleSubjectWithoutFillRoute(input.subject, input.holes, owner);
 
   if (
     input.subject === "reactionArmorClassEffect" &&
@@ -3789,13 +3697,12 @@ function metamagicRouteForResolution(
   if (routeFill === "targetChoice") {
     return [
       ...metamagicBonusActionTimingRoutes(["targetChoice"]),
-      {
-        kind: "resolveBattleSubject",
-        subject: "metamagicBonusActionCastingTime",
-        fill: routeFill,
+      resolveBattleSubjectRoute(
+        "metamagicBonusActionCastingTime",
+        routeFill,
         holes,
-        owner: "battleTargetSelection",
-      },
+        "battleTargetSelection",
+      ),
     ];
   }
   if (routeFill === "attackRoll") {
@@ -3805,40 +3712,36 @@ function metamagicRouteForResolution(
       result.tag === "resolved"
     ) {
       return [
-        {
-          kind: "resolveBattleSubjectWithoutFill",
-          subject: "metamagicBonusActionCastingTime",
-          holes: [],
-          owner: "battleTurnBoundary",
-        },
+        resolveBattleSubjectWithoutFillRoute(
+          "metamagicBonusActionCastingTime",
+          [],
+          "battleTurnBoundary",
+        ),
       ];
     }
     return [
-      {
-        kind: "resolveBattleSubject",
-        subject: "metamagicBonusActionCastingTime",
-        fill: routeFill,
+      resolveBattleSubjectRoute(
+        "metamagicBonusActionCastingTime",
+        routeFill,
         holes,
-        owner: "battleSpellAttackProcedure",
-      },
+        "battleSpellAttackProcedure",
+      ),
     ];
   }
   if (routeFill === "spellTargetList" && result.tag === "resolved") {
     return [
       ...metamagicBonusActionTimingRoutes(["spellTargetList"]),
-      {
-        kind: "resolveBattleSubject",
-        subject: "metamagicBonusActionCastingTime",
-        fill: routeFill,
+      resolveBattleSubjectRoute(
+        "metamagicBonusActionCastingTime",
+        routeFill,
         holes,
-        owner: "battleTargetSelection",
-      },
-      {
-        kind: "resolveBattleSubjectWithoutFill",
-        subject: "metamagicBonusActionCastingTime",
-        holes: [],
-        owner: "battleActiveEffect",
-      },
+        "battleTargetSelection",
+      ),
+      resolveBattleSubjectWithoutFillRoute(
+        "metamagicBonusActionCastingTime",
+        [],
+        "battleActiveEffect",
+      ),
     ];
   }
   if (
@@ -3849,21 +3752,19 @@ function metamagicRouteForResolution(
   ) {
     return [
       ...metamagicBonusActionTimingRoutes(["savingThrowOutcome"]),
-      {
-        kind: "resolveBattleSubject",
-        subject: "metamagicBonusActionCastingTime",
-        fill: routeFill,
+      resolveBattleSubjectRoute(
+        "metamagicBonusActionCastingTime",
+        routeFill,
         holes,
-        owner: "battleSavingThrowOutcome",
-      },
+        "battleSavingThrowOutcome",
+      ),
       ...(result.tag === "resolved"
         ? [
-            {
-              kind: "resolveBattleSubjectWithoutFill" as const,
-              subject: "metamagicBonusActionCastingTime" as const,
-              holes: [],
-              owner: metamagicSaveGatedFinalOwner(input.state, result.state),
-            },
+            resolveBattleSubjectWithoutFillRoute(
+              "metamagicBonusActionCastingTime" as const,
+              [],
+              metamagicSaveGatedFinalOwner(input.state, result.state),
+            ),
           ]
         : []),
     ];
@@ -3871,19 +3772,17 @@ function metamagicRouteForResolution(
   if (routeFill === "savingThrowOutcome" && result.tag === "resolved") {
     return [
       ...metamagicBonusActionTimingRoutes(["savingThrowOutcome"]),
-      {
-        kind: "resolveBattleSubject",
-        subject: "metamagicBonusActionCastingTime",
-        fill: routeFill,
+      resolveBattleSubjectRoute(
+        "metamagicBonusActionCastingTime",
+        routeFill,
         holes,
-        owner: "battleSavingThrowOutcome",
-      },
-      {
-        kind: "resolveBattleSubjectWithoutFill",
-        subject: "metamagicBonusActionCastingTime",
-        holes: [],
-        owner: metamagicSaveGatedFinalOwner(input.state, result.state),
-      },
+        "battleSavingThrowOutcome",
+      ),
+      resolveBattleSubjectWithoutFillRoute(
+        "metamagicBonusActionCastingTime",
+        [],
+        metamagicSaveGatedFinalOwner(input.state, result.state),
+      ),
     ];
   }
   if (routeFill === "rolledDice" && result.tag === "resolved") {
@@ -3892,19 +3791,17 @@ function metamagicRouteForResolution(
       "directHitPointRestoration"
     ) {
       return [
-        {
-          kind: "resolveBattleSubject",
-          subject: "metamagicBonusActionCastingTime",
-          fill: routeFill,
+        resolveBattleSubjectRoute(
+          "metamagicBonusActionCastingTime",
+          routeFill,
           holes,
-          owner: "battleHitPointAndZeroHpLifecycle",
-        },
-        {
-          kind: "resolveBattleSubjectWithoutFill",
-          subject: "metamagicBonusActionCastingTime",
-          holes: [],
-          owner: "battleTurnBoundary",
-        },
+          "battleHitPointAndZeroHpLifecycle",
+        ),
+        resolveBattleSubjectWithoutFillRoute(
+          "metamagicBonusActionCastingTime",
+          [],
+          "battleTurnBoundary",
+        ),
       ];
     }
     if (
@@ -3912,28 +3809,25 @@ function metamagicRouteForResolution(
       "saveGatedDamage"
     ) {
       return [
-        {
-          kind: "resolveBattleSubject",
-          subject: "metamagicBonusActionCastingTime",
-          fill: routeFill,
+        resolveBattleSubjectRoute(
+          "metamagicBonusActionCastingTime",
+          routeFill,
           holes,
-          owner: "battleDamageRoll",
-        },
-        {
-          kind: "resolveBattleSubjectWithoutFill",
-          subject: "metamagicBonusActionCastingTime",
-          holes: [],
-          owner: "battleTurnBoundary",
-        },
+          "battleDamageRoll",
+        ),
+        resolveBattleSubjectWithoutFillRoute(
+          "metamagicBonusActionCastingTime",
+          [],
+          "battleTurnBoundary",
+        ),
       ];
     }
     return [
-      {
-        kind: "resolveBattleSubjectWithoutFill",
-        subject: "metamagicBonusActionCastingTime",
-        holes: [],
-        owner: "battleTurnBoundary",
-      },
+      resolveBattleSubjectWithoutFillRoute(
+        "metamagicBonusActionCastingTime",
+        [],
+        "battleTurnBoundary",
+      ),
     ];
   }
   return undefined;
@@ -3953,55 +3847,49 @@ function metamagicSavingThrowProtectionRouteForResolution(
   const routeFill = battleReducerRouteFill(fill);
   if (routeFill === "spellTargetList") {
     return [
-      {
-        kind: "resolveBattleSubject",
-        subject: "metamagicSavingThrowProtection",
-        fill: routeFill,
-        holes:
-          result.tag === "needsHoles"
-            ? battleReducerRouteHoles(result.holes)
-            : [],
-        owner: "battleFeatureResource",
-      },
+      resolveBattleSubjectRoute(
+        "metamagicSavingThrowProtection",
+        routeFill,
+        result.tag === "needsHoles"
+          ? battleReducerRouteHoles(result.holes)
+          : [],
+        "battleFeatureResource",
+      ),
     ];
   }
   if (routeFill === "savingThrowOutcome") {
     const holes =
       result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
     return [
-      {
-        kind: "resolveBattleSubject",
-        subject: "metamagicSavingThrowProtection",
-        fill: routeFill,
+      resolveBattleSubjectRoute(
+        "metamagicSavingThrowProtection",
+        routeFill,
         holes,
-        owner: "battleSavingThrowOutcome",
-      },
-      {
-        kind: "resolveBattleSubjectWithoutFill",
-        subject: "metamagicSavingThrowProtection",
+        "battleSavingThrowOutcome",
+      ),
+      resolveBattleSubjectWithoutFillRoute(
+        "metamagicSavingThrowProtection",
         holes,
-        owner: "battleDamageAdjustment",
-      },
+        "battleDamageAdjustment",
+      ),
       ...(result.tag === "resolved"
         ? [
-            {
-              kind: "resolveBattleSubjectWithoutFill",
-              subject: "metamagicSavingThrowProtection",
-              holes: [],
-              owner: "battleFeatureResource",
-            } satisfies BattleReducerRouteEvent,
+            resolveBattleSubjectWithoutFillRoute(
+              "metamagicSavingThrowProtection",
+              [],
+              "battleFeatureResource",
+            ) satisfies BattleReducerRouteEvent,
           ]
         : []),
     ];
   }
   if (routeFill === "rolledDice" && result.tag === "resolved") {
     return [
-      {
-        kind: "resolveBattleSubjectWithoutFill",
-        subject: "metamagicSavingThrowProtection",
-        holes: [],
-        owner: "battleFeatureResource",
-      },
+      resolveBattleSubjectWithoutFillRoute(
+        "metamagicSavingThrowProtection",
+        [],
+        "battleFeatureResource",
+      ),
     ];
   }
   return undefined;
@@ -4027,30 +3915,27 @@ function metamagicDamageTypeSubstitutionRouteForResolution(
     holes.includes("rolledDice")
   ) {
     return [
-      {
-        kind: "resolveBattleSubject",
-        subject: "metamagicDamageTypeSubstitution",
-        fill: "damageTypeChoice",
+      resolveBattleSubjectRoute(
+        "metamagicDamageTypeSubstitution",
+        "damageTypeChoice",
         holes,
-        owner: "battleDamageType",
-      },
+        "battleDamageType",
+      ),
     ];
   }
   if (routeFill === "rolledDice" && result.tag === "resolved") {
     return [
-      {
-        kind: "resolveBattleSubject",
-        subject: "metamagicDamageTypeSubstitution",
-        fill: routeFill,
-        holes: [],
-        owner: "battleDamageRoll",
-      },
-      {
-        kind: "resolveBattleSubjectWithoutFill",
-        subject: "metamagicDamageTypeSubstitution",
-        holes: [],
-        owner: "battleHitPoint",
-      },
+      resolveBattleSubjectRoute(
+        "metamagicDamageTypeSubstitution",
+        routeFill,
+        [],
+        "battleDamageRoll",
+      ),
+      resolveBattleSubjectWithoutFillRoute(
+        "metamagicDamageTypeSubstitution",
+        [],
+        "battleHitPoint",
+      ),
     ];
   }
   return undefined;
@@ -4077,35 +3962,31 @@ function metamagicSavingThrowRollModeRouteForResolution(
   ) {
     const holes = battleReducerRouteHoles(result.holes);
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "metamagicSavingThrowRollMode",
+      discoverBattleActsRoute(
+        "metamagicSavingThrowRollMode",
         holes,
-        owner: "battleFeatureResource",
-      },
-      {
-        kind: "resolveBattleSubjectWithoutFill",
-        subject: "metamagicSavingThrowRollMode",
+        "battleFeatureResource",
+      ),
+      resolveBattleSubjectWithoutFillRoute(
+        "metamagicSavingThrowRollMode",
         holes,
-        owner: "battleSavingThrowRollMode",
-      },
+        "battleSavingThrowRollMode",
+      ),
     ];
   }
   if (routeFill === "savingThrowOutcome" && result.tag === "resolved") {
     return [
-      {
-        kind: "resolveBattleSubject",
-        subject: "metamagicSavingThrowRollMode",
-        fill: routeFill,
-        holes: [],
-        owner: "battleSavingThrowOutcome",
-      },
-      {
-        kind: "resolveBattleSubjectWithoutFill",
-        subject: "metamagicSavingThrowRollMode",
-        holes: [],
-        owner: "battleConditionLifecycle",
-      },
+      resolveBattleSubjectRoute(
+        "metamagicSavingThrowRollMode",
+        routeFill,
+        [],
+        "battleSavingThrowOutcome",
+      ),
+      resolveBattleSubjectWithoutFillRoute(
+        "metamagicSavingThrowRollMode",
+        [],
+        "battleConditionLifecycle",
+      ),
     ];
   }
   return undefined;
@@ -4131,19 +4012,17 @@ function metamagicEffectiveSpellLevelRouteForResolution(
   const holes =
     result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
   return [
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "metamagicEffectiveSpellLevel",
-      holes: ["spellTargetList"],
-      owner: "battleSpellSlotAndActionEconomy",
-    },
-    {
-      kind: "resolveBattleSubject",
-      subject: "metamagicEffectiveSpellLevel",
-      fill: "spellTargetList",
+    resolveBattleSubjectWithoutFillRoute(
+      "metamagicEffectiveSpellLevel",
+      ["spellTargetList"],
+      "battleSpellSlotAndActionEconomy",
+    ),
+    resolveBattleSubjectRoute(
+      "metamagicEffectiveSpellLevel",
+      "spellTargetList",
       holes,
-      owner: "battleTargetSelection",
-    },
+      "battleTargetSelection",
+    ),
   ];
 }
 
@@ -4165,19 +4044,17 @@ function metamagicSpellRangeProjectionRouteForResolution(
   const holes =
     result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
   return [
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "metamagicSpellRangeProjection",
-      holes: ["targetChoice"],
-      owner: "battleObjectTargetBoundary",
-    },
-    {
-      kind: "resolveBattleSubject",
-      subject: "metamagicSpellRangeProjection",
-      fill: routeFill,
+    resolveBattleSubjectWithoutFillRoute(
+      "metamagicSpellRangeProjection",
+      ["targetChoice"],
+      "battleObjectTargetBoundary",
+    ),
+    resolveBattleSubjectRoute(
+      "metamagicSpellRangeProjection",
+      routeFill,
       holes,
-      owner: "battleTargetSelection",
-    },
+      "battleTargetSelection",
+    ),
   ];
 }
 
@@ -4193,18 +4070,16 @@ function metamagicSpellDurationProjectionRouteForResolution(
     return undefined;
   }
   return [
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "metamagicSpellDurationProjection",
-      holes: [],
-      owner: "battleActiveEffect",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "metamagicSpellDurationProjection",
-      holes: [],
-      owner: "battleConcentration",
-    },
+    resolveBattleSubjectWithoutFillRoute(
+      "metamagicSpellDurationProjection",
+      [],
+      "battleActiveEffect",
+    ),
+    resolveBattleSubjectWithoutFillRoute(
+      "metamagicSpellDurationProjection",
+      [],
+      "battleConcentration",
+    ),
   ];
 }
 
@@ -4241,12 +4116,11 @@ function metamagicSpellComponentProjectionRouteForResolution(
     return undefined;
   }
   return [
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "metamagicSpellComponentProjection",
-      holes: [],
-      owner: "battleSpellSlotAndActionEconomy",
-    },
+    resolveBattleSubjectWithoutFillRoute(
+      "metamagicSpellComponentProjection",
+      [],
+      "battleSpellSlotAndActionEconomy",
+    ),
   ];
 }
 
@@ -4268,12 +4142,11 @@ function metamagicDamageDiceRerollRouteForResolution(
     hasEmpoweredSpellDamageRerollHole(result.holes)
   ) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "metamagicDamageDiceReroll",
-        holes: battleReducerRouteHoles(result.holes),
-        owner: "battleFeatureResource",
-      },
+      discoverBattleActsRoute(
+        "metamagicDamageDiceReroll",
+        battleReducerRouteHoles(result.holes),
+        "battleFeatureResource",
+      ),
     ];
   }
   if (
@@ -4285,26 +4158,23 @@ function metamagicDamageDiceRerollRouteForResolution(
     return undefined;
   }
   return [
-    {
-      kind: "resolveBattleSubject",
-      subject: "metamagicDamageDiceReroll",
-      fill: routeFill,
-      holes: ["rolledDice"],
-      owner: "battleDamageRoll",
-    },
-    {
-      kind: "resolveBattleSubject",
-      subject: "metamagicDamageDiceReroll",
-      fill: routeFill,
-      holes: [],
-      owner: "battleDamageRoll",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "metamagicDamageDiceReroll",
-      holes: [],
-      owner: "battleHitPoint",
-    },
+    resolveBattleSubjectRoute(
+      "metamagicDamageDiceReroll",
+      routeFill,
+      ["rolledDice"],
+      "battleDamageRoll",
+    ),
+    resolveBattleSubjectRoute(
+      "metamagicDamageDiceReroll",
+      routeFill,
+      [],
+      "battleDamageRoll",
+    ),
+    resolveBattleSubjectWithoutFillRoute(
+      "metamagicDamageDiceReroll",
+      [],
+      "battleHitPoint",
+    ),
   ];
 }
 
@@ -4330,19 +4200,17 @@ function metamagicMissedSpellAttackRerollRouteForResolution(
     hasSeekingSpellAttackRerollHole(result.holes)
   ) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "metamagicMissedSpellAttackReroll",
+      discoverBattleActsRoute(
+        "metamagicMissedSpellAttackReroll",
         holes,
-        owner: "battleFeatureResource",
-      },
-      {
-        kind: "resolveBattleSubject",
-        subject: "metamagicMissedSpellAttackReroll",
-        fill: routeFill,
+        "battleFeatureResource",
+      ),
+      resolveBattleSubjectRoute(
+        "metamagicMissedSpellAttackReroll",
+        routeFill,
         holes,
-        owner: "battleAttackRoll",
-      },
+        "battleAttackRoll",
+      ),
     ];
   }
   if (
@@ -4352,13 +4220,12 @@ function metamagicMissedSpellAttackRerollRouteForResolution(
     return undefined;
   }
   return [
-    {
-      kind: "resolveBattleSubject",
-      subject: "metamagicMissedSpellAttackReroll",
-      fill: routeFill,
+    resolveBattleSubjectRoute(
+      "metamagicMissedSpellAttackReroll",
+      routeFill,
       holes,
-      owner: "battleAttackRoll",
-    },
+      "battleAttackRoll",
+    ),
   ];
 }
 
@@ -4380,12 +4247,11 @@ function metamagicMissedSpellAttackRerollCompletionRoute(
     return undefined;
   }
   return [
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "metamagicMissedSpellAttackReroll",
-      holes: [],
-      owner: "battleFeatureResource",
-    },
+    resolveBattleSubjectWithoutFillRoute(
+      "metamagicMissedSpellAttackReroll",
+      [],
+      "battleFeatureResource",
+    ),
   ];
 }
 
@@ -4419,18 +4285,16 @@ function metamagicBonusActionTimingRoutes(
   holes: readonly BattleReducerRouteHole[],
 ): readonly [BattleReducerRouteEvent, BattleReducerRouteEvent] {
   return [
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "metamagicBonusActionCastingTime",
+    resolveBattleSubjectWithoutFillRoute(
+      "metamagicBonusActionCastingTime",
       holes,
-      owner: "battleActionEconomy",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "metamagicBonusActionCastingTime",
+      "battleActionEconomy",
+    ),
+    resolveBattleSubjectWithoutFillRoute(
+      "metamagicBonusActionCastingTime",
       holes,
-      owner: "battleSpellSlotAndActionEconomy",
-    },
+      "battleSpellSlotAndActionEconomy",
+    ),
   ];
 }
 
@@ -4463,19 +4327,17 @@ function metamagicGovernorInvalidRoute(
       input.subject.actorId,
     )
   ) {
-    return {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "metamagicBonusActionCastingTime",
-      holes: [],
-      owner: "battleTurnBoundary",
-    };
+    return resolveBattleSubjectWithoutFillRoute(
+      "metamagicBonusActionCastingTime",
+      [],
+      "battleTurnBoundary",
+    );
   }
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject: "metamagicSpellGovernor",
-    holes: [],
-    owner: "battleFeatureResource",
-  };
+  return resolveBattleSubjectWithoutFillRoute(
+    "metamagicSpellGovernor",
+    [],
+    "battleFeatureResource",
+  );
 }
 
 function isTwinnedEffectiveSpellLevelDiscoveryAct(
@@ -4612,16 +4474,14 @@ function deathSavingThrowRouteForResolution(
       return undefined;
     }
     return nonEmptyRouteEvents([
-      {
-        kind: "resolveBattleSubject",
-        subject: "deathSavingThrow",
-        fill: "deathSavingThrow",
-        holes:
-          result.tag === "needsHoles"
-            ? deathSavingThrowRouteHoles(result.holes)
-            : [],
-        owner: "battleHitPointAndZeroHpLifecycle",
-      },
+      resolveBattleSubjectRoute(
+        "deathSavingThrow",
+        "deathSavingThrow",
+        result.tag === "needsHoles"
+          ? deathSavingThrowRouteHoles(result.holes)
+          : [],
+        "battleHitPointAndZeroHpLifecycle",
+      ),
     ]);
   }
 
@@ -4633,12 +4493,11 @@ function deathSavingThrowRouteForResolution(
   }
 
   return nonEmptyRouteEvents([
-    {
-      kind: "discoverBattleActs",
-      subject: "deathSavingThrow",
-      holes: deathSavingThrowRouteHoles(result.holes),
-      owner: "battleHitPointAndZeroHpLifecycle",
-    },
+    discoverBattleActsRoute(
+      "deathSavingThrow",
+      deathSavingThrowRouteHoles(result.holes),
+      "battleHitPointAndZeroHpLifecycle",
+    ),
   ]);
 }
 
@@ -4691,35 +4550,31 @@ function concentrationRouteForResolution(
         input.state.combatants.get(input.subject.actorId)?.concentration ??
         null;
       const castRoute: BattleReducerRouteEvents = [
-        {
-          kind: "resolveBattleSubjectWithoutFill",
-          subject: "concentrationTeardown",
+        resolveBattleSubjectWithoutFillRoute(
+          "concentrationTeardown",
           holes,
-          owner: "battleActiveEffect",
-        },
-        {
-          kind: "resolveBattleSubjectWithoutFill",
-          subject: "concentrationTeardown",
+          "battleActiveEffect",
+        ),
+        resolveBattleSubjectWithoutFillRoute(
+          "concentrationTeardown",
           holes,
-          owner: "battleConcentration",
-        },
+          "battleConcentration",
+        ),
       ];
       if (priorConcentration === null) {
         return castRoute;
       }
       return [
-        {
-          kind: "resolveBattleSubjectWithoutFill",
-          subject: "concentrationTeardown",
+        resolveBattleSubjectWithoutFillRoute(
+          "concentrationTeardown",
           holes,
-          owner: "battleConcentration",
-        },
-        {
-          kind: "resolveBattleSubjectWithoutFill",
-          subject: "concentrationTeardown",
+          "battleConcentration",
+        ),
+        resolveBattleSubjectWithoutFillRoute(
+          "concentrationTeardown",
           holes,
-          owner: "battleActiveEffect",
-        },
+          "battleActiveEffect",
+        ),
         ...castRoute,
       ];
     }
@@ -4805,18 +4660,16 @@ function concentrationRouteForResolution(
             ]
           : [];
       return [
-        {
-          kind: "resolveBattleSubjectWithoutFill",
-          subject: "concentrationTeardown",
+        resolveBattleSubjectWithoutFillRoute(
+          "concentrationTeardown",
           holes,
-          owner: "battleConcentration",
-        },
-        {
-          kind: "resolveBattleSubjectWithoutFill",
-          subject: "concentrationTeardown",
+          "battleConcentration",
+        ),
+        resolveBattleSubjectWithoutFillRoute(
+          "concentrationTeardown",
           holes,
-          owner: "battleActiveEffect",
-        },
+          "battleActiveEffect",
+        ),
         ...afterHitRoutes,
         ...conditionImmunityRoutes,
         ...markedDamageRiderRoutes,
@@ -4831,22 +4684,21 @@ function concentrationRouteForResolution(
     return undefined;
   }
   if (routeFill === "concentrationSavingThrow") {
-    const concentrationEvent: BattleReducerRouteEvent = {
-      kind: "resolveBattleSubject",
-      subject: "concentrationTeardown",
-      fill: routeFill,
-      holes,
-      owner: "battleConcentration",
-    };
+    const concentrationEvent: BattleReducerRouteEvent =
+      resolveBattleSubjectRoute(
+        "concentrationTeardown",
+        routeFill,
+        holes,
+        "battleConcentration",
+      );
     return result.tag === "resolved"
       ? [
           concentrationEvent,
-          {
-            kind: "resolveBattleSubjectWithoutFill",
-            subject: "concentrationTeardown",
-            holes: [],
-            owner: "battleActiveEffect",
-          },
+          resolveBattleSubjectWithoutFillRoute(
+            "concentrationTeardown",
+            [],
+            "battleActiveEffect",
+          ),
         ]
       : [concentrationEvent];
   }
@@ -4857,13 +4709,12 @@ function concentrationRouteForResolution(
     ).includes("concentrationSavingThrow")
   ) {
     return [
-      {
-        kind: "resolveBattleSubject",
-        subject: "concentrationTeardown",
-        fill: routeFill,
+      resolveBattleSubjectRoute(
+        "concentrationTeardown",
+        routeFill,
         holes,
-        owner: "battleConcentration",
-      },
+        "battleConcentration",
+      ),
     ];
   }
   return undefined;
@@ -4889,14 +4740,12 @@ function hitPointRestorationRouteForResolution(
     return undefined;
   }
 
-  return {
-    kind: "resolveBattleSubject",
-    subject: "hitPointRestoration",
-    fill: routeFill,
-    holes:
-      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
-    owner: hitPointRestorationRouteOwner(routeFill, result),
-  };
+  return resolveBattleSubjectRoute(
+    "hitPointRestoration",
+    routeFill,
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+    hitPointRestorationRouteOwner(routeFill, result),
+  );
 }
 
 function hitPointRestorationRouteOwner(
@@ -4933,29 +4782,25 @@ function slotSpellRouteForResolution(
     return undefined;
   }
 
-  const routeEvent: BattleReducerRouteEvent = {
-    kind: "resolveBattleSubject",
-    subject: "slotSpell",
-    fill: routeFill,
-    holes:
-      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
-    owner:
-      routeFill === "rolledDice" && result.tag === "resolved"
-        ? "battleHitPoint"
-        : "battleHoleFrontier",
-  };
+  const routeEvent: BattleReducerRouteEvent = resolveBattleSubjectRoute(
+    "slotSpell",
+    routeFill,
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+    routeFill === "rolledDice" && result.tag === "resolved"
+      ? "battleHitPoint"
+      : "battleHoleFrontier",
+  );
   return [
     routeEvent,
     ...(input.state.interruptStack.at(-1)?.kind === "replayContinuation" &&
     routeFill === "rolledDice" &&
     result.tag === "resolved"
       ? [
-          {
-            kind: "resolveBattleSubjectWithoutFill" as const,
-            subject: "reactionSpellInterruption" as const,
-            holes: [],
-            owner: "battleInterruptStack" as const,
-          },
+          resolveBattleSubjectWithoutFillRoute(
+            "reactionSpellInterruption" as const,
+            [],
+            "battleInterruptStack" as const,
+          ),
         ]
       : []),
   ];
@@ -4982,13 +4827,12 @@ function commandRouteForResolution(
     return commandRouteWithoutFill(input);
   }
 
-  return {
-    kind: "resolveBattleSubject",
-    subject: "commandEffect",
-    fill: routeFill,
-    holes: commandRouteHolesAfter(input, result),
-    owner: commandRouteOwner(input, result, routeFill),
-  };
+  return resolveBattleSubjectRoute(
+    "commandEffect",
+    routeFill,
+    commandRouteHolesAfter(input, result),
+    commandRouteOwner(input, result, routeFill),
+  );
 }
 
 function commandRouteWithoutFill(
@@ -4997,12 +4841,7 @@ function commandRouteWithoutFill(
   const owner = commandRouteOwnerWithoutFill(input);
   return owner === undefined
     ? undefined
-    : {
-        kind: "resolveBattleSubjectWithoutFill",
-        subject: "commandEffect",
-        holes: [],
-        owner,
-      };
+    : resolveBattleSubjectWithoutFillRoute("commandEffect", [], owner);
 }
 
 function commandRouteOwnerWithoutFill(
@@ -5086,13 +4925,12 @@ function saveGatedSpellRouteForResolution(
   if (owner === undefined) {
     return undefined;
   }
-  const primaryRoute: BattleReducerRouteEvent = {
-    kind: "resolveBattleSubject",
-    subject: "saveGatedSpell",
-    fill: routeFill,
+  const primaryRoute: BattleReducerRouteEvent = resolveBattleSubjectRoute(
+    "saveGatedSpell",
+    routeFill,
     holes,
     owner,
-  };
+  );
   if (result.tag !== "needsHoles") {
     return [primaryRoute];
   }
@@ -5105,13 +4943,12 @@ function saveGatedSpellRouteForResolution(
 
   return [
     primaryRoute,
-    {
-      kind: "resolveBattleSubject",
-      subject: "saveGatedSpell",
-      fill: routeFill,
+    resolveBattleSubjectRoute(
+      "saveGatedSpell",
+      routeFill,
       holes,
-      owner: "battleInterruptStack",
-    },
+      "battleInterruptStack",
+    ),
   ];
 }
 
@@ -5128,15 +4965,13 @@ function saveGatedSpellRouteForDiscoveredAct(
     return undefined;
   }
   return [
-    {
-      kind: "discoverBattleActs",
-      subject: "saveGatedSpell",
-      holes: battleReducerRouteHoles(act.initialHoles),
-      owner:
-        invocation.resource.tag === "spellSlot"
-          ? "battleSpellSlotAndActionEconomy"
-          : "battleActionEconomy",
-    },
+    discoverBattleActsRoute(
+      "saveGatedSpell",
+      battleReducerRouteHoles(act.initialHoles),
+      invocation.resource.tag === "spellSlot"
+        ? "battleSpellSlotAndActionEconomy"
+        : "battleActionEconomy",
+    ),
   ];
 }
 
@@ -5782,12 +5617,7 @@ function spatialCompositionDiscover(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "discoverBattleActs",
-    subject,
-    holes,
-    owner,
-  };
+  return discoverBattleActsRoute(subject, holes, owner);
 }
 
 function spatialCompositionResolve(
@@ -5796,25 +5626,14 @@ function spatialCompositionResolve(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubject",
-    subject,
-    fill,
-    holes,
-    owner,
-  };
+  return resolveBattleSubjectRoute(subject, fill, holes, owner);
 }
 
 function spatialCompositionResolveWithoutFill(
   subject: BattleReducerRouteSubjectFamily,
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject,
-    holes: [],
-    owner,
-  };
+  return resolveBattleSubjectWithoutFillRoute(subject, [], owner);
 }
 
 function spellAttackHitActiveEffectAdmissionRouteForResolution(
@@ -5833,12 +5652,11 @@ function spellAttackHitActiveEffectAdmissionRouteForResolution(
     return subject === undefined
       ? []
       : [
-          {
-            kind: "resolveBattleSubjectWithoutFill" as const,
+          resolveBattleSubjectWithoutFillRoute(
             subject,
-            holes: [],
-            owner: "battleActiveEffect" as const,
-          },
+            [],
+            "battleActiveEffect" as const,
+          ),
         ];
   });
 }
@@ -5915,12 +5733,7 @@ function interruptStackResumeDiscoveryRouteForResolution(
       ? (reactionInterruptPayloadRouteSubjectForFrame(result.state, frame) ??
         "reactionSpell")
       : "interruptStackResume";
-  return {
-    kind: "discoverBattleActs",
-    subject,
-    holes,
-    owner: "battleInterruptStack",
-  };
+  return discoverBattleActsRoute(subject, holes, "battleInterruptStack");
 }
 
 function reactionInterruptPayloadRouteSubjectForFrame(
@@ -5989,16 +5802,14 @@ function rollModifierRouteForDiscoveredAct(
   if (!isRollModifierEffectDiscoverySubject(state, act.subject)) {
     return undefined;
   }
-  return {
-    kind: "discoverBattleActs",
-    subject: "rollModifierEffect",
-    holes: rollModifierRouteHoles(act.initialHoles),
-    owner:
-      spellInvocationForRouteSubject(state, act.subject)?.procedure ===
+  return discoverBattleActsRoute(
+    "rollModifierEffect",
+    rollModifierRouteHoles(act.initialHoles),
+    spellInvocationForRouteSubject(state, act.subject)?.procedure ===
       "thaumaturgyBoomingVoice"
-        ? "battleActiveEffect"
-        : "battleSpellSlotAndActionEconomy",
-  };
+      ? "battleActiveEffect"
+      : "battleSpellSlotAndActionEconomy",
+  );
 }
 
 function rollModifierRouteForResolution(
@@ -6036,12 +5847,11 @@ function rollModifierRouteForResolution(
     holes.includes("savingThrowOutcome")
   ) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "rollModifierEffect",
+      discoverBattleActsRoute(
+        "rollModifierEffect",
         holes,
-        owner: "battleSpellSlotAndActionEconomy",
-      },
+        "battleSpellSlotAndActionEconomy",
+      ),
     ];
   }
   if (result.tag !== "resolved") {
@@ -6059,13 +5869,12 @@ function rollModifierRouteForResolution(
     ];
   }
   return [
-    {
-      kind: "resolveBattleSubject",
-      subject: "rollModifierEffect",
-      fill: routeFill,
-      holes: [],
-      owner: "battleActiveEffect",
-    },
+    resolveBattleSubjectRoute(
+      "rollModifierEffect",
+      routeFill,
+      [],
+      "battleActiveEffect",
+    ),
     rollModifierResolveWithoutFill([], "battleConcentration"),
   ];
 }
@@ -6096,12 +5905,11 @@ function rollModifierResolveWithoutFill(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject: "rollModifierEffect",
+  return resolveBattleSubjectWithoutFillRoute(
+    "rollModifierEffect",
     holes,
     owner,
-  };
+  );
 }
 
 function spellDamageReductionRouteForDiscoveredAct(
@@ -6115,12 +5923,11 @@ function spellDamageReductionRouteForDiscoveredAct(
   ) {
     return undefined;
   }
-  return {
-    kind: "discoverBattleActs",
-    subject: "spellDamageReduction",
-    holes: spellDamageReductionCastDiscoveryHoles(act.initialHoles),
-    owner: "battleSpellSlotAndActionEconomy",
-  };
+  return discoverBattleActsRoute(
+    "spellDamageReduction",
+    spellDamageReductionCastDiscoveryHoles(act.initialHoles),
+    "battleSpellSlotAndActionEconomy",
+  );
 }
 
 function spellDamageReductionRouteForResolution(
@@ -6167,12 +5974,11 @@ function spellDamageReductionAdjustmentDiscoveryRouteForResolution(
   ) {
     return undefined;
   }
-  return {
-    kind: "discoverBattleActs",
-    subject: "spellDamageReduction",
-    holes: ["rolledDice"],
-    owner: "battleDamageAdjustment",
-  };
+  return discoverBattleActsRoute(
+    "spellDamageReduction",
+    ["rolledDice"],
+    "battleDamageAdjustment",
+  );
 }
 
 function spellDamageReductionAdjustmentRouteForResolution(
@@ -6285,25 +6091,18 @@ function spellDamageReductionResolveWithFill(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubject",
-    subject: "spellDamageReduction",
-    fill,
-    holes,
-    owner,
-  };
+  return resolveBattleSubjectRoute("spellDamageReduction", fill, holes, owner);
 }
 
 function spellDamageReductionResolveWithoutFill(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject: "spellDamageReduction",
+  return resolveBattleSubjectWithoutFillRoute(
+    "spellDamageReduction",
     holes,
     owner,
-  };
+  );
 }
 
 function scalarBuffRouteForDiscoveredAct(
@@ -6313,12 +6112,11 @@ function scalarBuffRouteForDiscoveredAct(
   if (!isScalarBuffEffectSubject(state, act.subject)) {
     return undefined;
   }
-  return {
-    kind: "discoverBattleActs",
-    subject: "scalarBuffEffect",
-    holes: [],
-    owner: "battleSpellSlotAndActionEconomy",
-  };
+  return discoverBattleActsRoute(
+    "scalarBuffEffect",
+    [],
+    "battleSpellSlotAndActionEconomy",
+  );
 }
 
 type MarkedDamageAndConditionProtectionSubject = Extract<
@@ -6334,21 +6132,20 @@ function markedDamageAndConditionProtectionRouteForDiscoveredAct(
   if (subject === undefined) {
     return undefined;
   }
-  return {
-    kind: "discoverBattleActs",
+  return discoverBattleActsRoute(
     subject,
-    holes: markedDamageAndConditionProtectionDiscoveryHolesForAct(
+    markedDamageAndConditionProtectionDiscoveryHolesForAct(
       state,
       subject,
       act.subject,
       act.initialHoles,
     ),
-    owner: markedDamageAndConditionProtectionDiscoveryOwnerForAct(
+    markedDamageAndConditionProtectionDiscoveryOwnerForAct(
       state,
       subject,
       act.subject,
     ),
-  };
+  );
 }
 
 function markedDamageAndConditionProtectionRouteForResolution(
@@ -6593,13 +6390,7 @@ function effectRouteResolve(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubject",
-    subject,
-    fill,
-    holes,
-    owner,
-  };
+  return resolveBattleSubjectRoute(subject, fill, holes, owner);
 }
 
 function effectRouteDiscover(
@@ -6607,12 +6398,7 @@ function effectRouteDiscover(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "discoverBattleActs",
-    subject,
-    holes,
-    owner,
-  };
+  return discoverBattleActsRoute(subject, holes, owner);
 }
 
 function markedDamageAndConditionProtectionResolveWithoutFillRoute(
@@ -6620,12 +6406,7 @@ function markedDamageAndConditionProtectionResolveWithoutFillRoute(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject,
-    holes,
-    owner,
-  };
+  return resolveBattleSubjectWithoutFillRoute(subject, holes, owner);
 }
 
 function markedDamageRiderWeaponAttackRouteForDiscoveredAct(
@@ -6838,30 +6619,27 @@ function protectionCharmRouteForDiscoveredAct(
   const invocation = spellInvocationForRouteSubject(state, act.subject);
   if (isSourceDamageBreakCharmedSaveGatedConditionInvocation(invocation)) {
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "creatureTypeTargetAdmission",
-        holes: ["targetChoice"],
-        owner: "battleSpellSlotAndActionEconomy",
-      },
-      {
-        kind: "discoverBattleActs",
-        subject: "protectionCharmActiveEffect",
-        holes: ["savingThrowOutcome", "targetChoice"],
-        owner: "battleSpellSlotAndActionEconomy",
-      },
+      discoverBattleActsRoute(
+        "creatureTypeTargetAdmission",
+        ["targetChoice"],
+        "battleSpellSlotAndActionEconomy",
+      ),
+      discoverBattleActsRoute(
+        "protectionCharmActiveEffect",
+        ["savingThrowOutcome", "targetChoice"],
+        "battleSpellSlotAndActionEconomy",
+      ),
     ];
   }
   if (!isCreatureTypeProtectionInvocation(invocation)) {
     return undefined;
   }
   return [
-    {
-      kind: "discoverBattleActs",
-      subject: "protectionCharmActiveEffect",
-      holes: ["targetChoice"],
-      owner: "battleSpellSlotAndActionEconomy",
-    },
+    discoverBattleActsRoute(
+      "protectionCharmActiveEffect",
+      ["targetChoice"],
+      "battleSpellSlotAndActionEconomy",
+    ),
   ];
 }
 
@@ -6989,13 +6767,12 @@ function creatureTypeProtectionRouteForResolution(
   const holes =
     result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
   const route: BattleReducerRouteEvent[] = [
-    {
-      kind: "resolveBattleSubject",
-      subject: "protectionCharmActiveEffect",
-      fill: "targetChoice",
+    resolveBattleSubjectRoute(
+      "protectionCharmActiveEffect",
+      "targetChoice",
       holes,
-      owner: "battleTargetSelection",
-    },
+      "battleTargetSelection",
+    ),
   ];
   if (result.tag === "resolved") {
     if (combatantsActiveEffectsChanged(input.state, result.state)) {
@@ -7026,13 +6803,12 @@ function sourceDamageBreakCharmedRouteForResolution(
   const routeFill = battleReducerRouteFill(fill);
   if (routeFill === "spellTargetList" && result.tag === "needsHoles") {
     return [
-      {
-        kind: "resolveBattleSubject",
-        subject: "protectionCharmActiveEffect",
-        fill: "targetChoice",
-        holes: battleReducerRouteHoles(result.holes),
-        owner: "battleTargetSelection",
-      },
+      resolveBattleSubjectRoute(
+        "protectionCharmActiveEffect",
+        "targetChoice",
+        battleReducerRouteHoles(result.holes),
+        "battleTargetSelection",
+      ),
     ];
   }
   if (routeFill !== "savingThrowOutcome" || result.tag === "invalid") {
@@ -7041,13 +6817,12 @@ function sourceDamageBreakCharmedRouteForResolution(
   const holes =
     result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
   const route: BattleReducerRouteEvent[] = [
-    {
-      kind: "resolveBattleSubject",
-      subject: "protectionCharmActiveEffect",
-      fill: "savingThrowOutcome",
+    resolveBattleSubjectRoute(
+      "protectionCharmActiveEffect",
+      "savingThrowOutcome",
       holes,
-      owner: "battleSavingThrowOutcome",
-    },
+      "battleSavingThrowOutcome",
+    ),
   ];
   if (result.tag === "resolved") {
     if (
@@ -7193,24 +6968,18 @@ function protectionCharmDiscover(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "discoverBattleActs",
-    subject: "protectionCharmActiveEffect",
-    holes,
-    owner,
-  };
+  return discoverBattleActsRoute("protectionCharmActiveEffect", holes, owner);
 }
 
 function protectionCharmResolveWithoutFill(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject: "protectionCharmActiveEffect",
+  return resolveBattleSubjectWithoutFillRoute(
+    "protectionCharmActiveEffect",
     holes,
     owner,
-  };
+  );
 }
 
 function activeFormLifecycleRouteForDiscoveredAct(
@@ -7219,12 +6988,11 @@ function activeFormLifecycleRouteForDiscoveredAct(
   if (act.subject.tag !== "druidWildShape") {
     return undefined;
   }
-  return {
-    kind: "discoverBattleActs",
-    subject: "activeFormLifecycle",
-    holes: battleReducerRouteHoles(act.initialHoles),
-    owner: "battleActionEconomy",
-  };
+  return discoverBattleActsRoute(
+    "activeFormLifecycle",
+    battleReducerRouteHoles(act.initialHoles),
+    "battleActionEconomy",
+  );
 }
 
 function activeFormLifecycleRouteForResolution(
@@ -7251,13 +7019,12 @@ function activeFormLifecycleRouteForResolution(
     return undefined;
   }
   return [
-    {
-      kind: "resolveBattleSubject",
-      subject: "activeFormLifecycle",
-      fill: "wildShapeEquipmentDisposition",
-      holes: [],
-      owner: "battleActionEconomy",
-    },
+    resolveBattleSubjectRoute(
+      "activeFormLifecycle",
+      "wildShapeEquipmentDisposition",
+      [],
+      "battleActionEconomy",
+    ),
     ...activeFormLifecycleResolveWithoutFillRoute(
       "battleFeatureResource",
       "battleTemporaryHitPoint",
@@ -7280,12 +7047,7 @@ function activeFormLifecycleTurnBoundaryRouteForResolution(
     return undefined;
   }
   return [
-    {
-      kind: "discoverBattleActs",
-      subject: "activeFormLifecycle",
-      holes: [],
-      owner: "battleTurnBoundary",
-    },
+    discoverBattleActsRoute("activeFormLifecycle", [], "battleTurnBoundary"),
     ...activeFormLifecycleResolveWithoutFillRoute(
       "battleTurnBoundary",
       "battleActionEconomy",
@@ -7310,12 +7072,11 @@ function activeFormLifecycleTerminalRouteForResolution(
     }
     if (zeroHpLifecycleIsTerminal(after)) {
       return [
-        {
-          kind: "discoverBattleActs",
-          subject: "activeFormLifecycle",
-          holes: [],
-          owner: "battleHitPointAndZeroHpLifecycle",
-        },
+        discoverBattleActsRoute(
+          "activeFormLifecycle",
+          [],
+          "battleHitPointAndZeroHpLifecycle",
+        ),
         ...activeFormLifecycleResolveWithoutFillRoute(
           "battleHitPointAndZeroHpLifecycle",
           "battleActiveEffect",
@@ -7326,12 +7087,11 @@ function activeFormLifecycleTerminalRouteForResolution(
     }
     if (isIncapacitated(after.conditions)) {
       return [
-        {
-          kind: "discoverBattleActs",
-          subject: "activeFormLifecycle",
-          holes: [],
-          owner: "battleConditionLifecycle",
-        },
+        discoverBattleActsRoute(
+          "activeFormLifecycle",
+          [],
+          "battleConditionLifecycle",
+        ),
         ...activeFormLifecycleResolveWithoutFillRoute(
           "battleConditionLifecycle",
           "battleActiveEffect",
@@ -7350,12 +7110,8 @@ function activeFormLifecycleResolveWithoutFillRoute(
 ): BattleReducerRouteEvents {
   const eventForOwner = (
     routeOwner: BattleReducerRouteOwnerGroup,
-  ): BattleReducerRouteEvent => ({
-    kind: "resolveBattleSubjectWithoutFill",
-    subject: "activeFormLifecycle",
-    holes: [],
-    owner: routeOwner,
-  });
+  ): BattleReducerRouteEvent =>
+    resolveBattleSubjectWithoutFillRoute("activeFormLifecycle", [], routeOwner);
   return [eventForOwner(owner), ...owners.map(eventForOwner)];
 }
 
@@ -7378,13 +7134,12 @@ function scalarBuffRouteForResolution(
   if (result.tag === "invalid") {
     return result.reason === "staleSubject"
       ? [
-          {
-            kind: "resolveBattleSubject",
-            subject: "scalarBuffEffect",
-            fill: routeFill,
-            holes: [],
-            owner: "battleHoleFrontier",
-          },
+          resolveBattleSubjectRoute(
+            "scalarBuffEffect",
+            routeFill,
+            [],
+            "battleHoleFrontier",
+          ),
         ]
       : undefined;
   }
@@ -7527,28 +7282,17 @@ function scalarBuffResolveWithoutFill(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject: "scalarBuffEffect",
-    holes,
-    owner,
-  };
+  return resolveBattleSubjectWithoutFillRoute("scalarBuffEffect", holes, owner);
 }
 
 export function findFamiliarCompanionLifecycleRouteEvents(): BattleReducerRouteEvents {
   return [
-    {
-      kind: "discoverBattleActs",
-      subject: "companionLifecycle",
-      holes: [],
-      owner: "battleCompanion",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "companionLifecycle",
-      holes: [],
-      owner: "battleCompanion",
-    },
+    discoverBattleActsRoute("companionLifecycle", [], "battleCompanion"),
+    resolveBattleSubjectWithoutFillRoute(
+      "companionLifecycle",
+      [],
+      "battleCompanion",
+    ),
   ];
 }
 
@@ -7556,36 +7300,32 @@ function companionRouteForDiscoveredAct(
   act: BattleActDiscoveryCandidate,
 ): BattleReducerRouteEvent | undefined {
   if (act.subject.tag === "companionLifecycle") {
-    return {
-      kind: "discoverBattleActs",
-      subject: "companionLifecycle",
-      holes: battleReducerRouteHoles(act.initialHoles),
-      owner: "battleCompanion",
-    };
+    return discoverBattleActsRoute(
+      "companionLifecycle",
+      battleReducerRouteHoles(act.initialHoles),
+      "battleCompanion",
+    );
   }
   if (act.subject.tag === "findFamiliarSharedSenses") {
-    return {
-      kind: "discoverBattleActs",
-      subject: "companionSharedSenses",
-      holes: battleReducerRouteHoles(act.initialHoles),
-      owner: "battleCompanion",
-    };
+    return discoverBattleActsRoute(
+      "companionSharedSenses",
+      battleReducerRouteHoles(act.initialHoles),
+      "battleCompanion",
+    );
   }
   if (act.subject.tag === "findFamiliarTouchSpell") {
-    return {
-      kind: "discoverBattleActs",
-      subject: "companionTouchDelivery",
-      holes: battleReducerRouteHoles(act.initialHoles),
-      owner: "battleSpellSlotAndActionEconomy",
-    };
+    return discoverBattleActsRoute(
+      "companionTouchDelivery",
+      battleReducerRouteHoles(act.initialHoles),
+      "battleSpellSlotAndActionEconomy",
+    );
   }
   if (act.subject.tag === "pactOfTheChainFamiliarAttack") {
-    return {
-      kind: "discoverBattleActs",
-      subject: "companionReactionAttack",
-      holes: battleReducerRouteHoles(act.initialHoles),
-      owner: "battleCompanion",
-    };
+    return discoverBattleActsRoute(
+      "companionReactionAttack",
+      battleReducerRouteHoles(act.initialHoles),
+      "battleCompanion",
+    );
   }
   return undefined;
 }
@@ -7599,32 +7339,28 @@ function companionRouteForResolution(
   }
   if (input.subject.tag === "companionLifecycle") {
     return [
-      {
-        kind: "resolveBattleSubjectWithoutFill",
-        subject: "companionLifecycle",
-        holes:
-          result.tag === "needsHoles"
-            ? battleReducerRouteHoles(result.holes)
-            : [],
-        owner: "battleCompanion",
-      },
+      resolveBattleSubjectWithoutFillRoute(
+        "companionLifecycle",
+        result.tag === "needsHoles"
+          ? battleReducerRouteHoles(result.holes)
+          : [],
+        "battleCompanion",
+      ),
     ];
   }
   if (input.subject.tag === "findFamiliarSharedSenses") {
     return result.tag === "resolved"
       ? [
-          {
-            kind: "resolveBattleSubjectWithoutFill",
-            subject: "companionSharedSenses",
-            holes: [],
-            owner: "battleActionEconomy",
-          },
-          {
-            kind: "resolveBattleSubjectWithoutFill",
-            subject: "companionSharedSenses",
-            holes: [],
-            owner: "battleActiveEffect",
-          },
+          resolveBattleSubjectWithoutFillRoute(
+            "companionSharedSenses",
+            [],
+            "battleActionEconomy",
+          ),
+          resolveBattleSubjectWithoutFillRoute(
+            "companionSharedSenses",
+            [],
+            "battleActiveEffect",
+          ),
         ]
       : undefined;
   }
@@ -7649,26 +7385,22 @@ function findFamiliarTouchDeliveryRouteForResolution(
   if (routeFill !== "targetChoice" && routeFill !== "rolledDice") {
     return undefined;
   }
-  const event: BattleReducerRouteEvent = {
-    kind: "resolveBattleSubject",
-    subject: "companionTouchDelivery",
-    fill: routeFill,
-    holes:
-      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
-    owner:
-      routeFill === "targetChoice"
-        ? "battleCompanion"
-        : "battleSpellSlotAndActionEconomy",
-  };
+  const event: BattleReducerRouteEvent = resolveBattleSubjectRoute(
+    "companionTouchDelivery",
+    routeFill,
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+    routeFill === "targetChoice"
+      ? "battleCompanion"
+      : "battleSpellSlotAndActionEconomy",
+  );
   return routeFill === "rolledDice" && result.tag === "resolved"
     ? [
         event,
-        {
-          kind: "resolveBattleSubjectWithoutFill",
-          subject: "companionTouchDelivery",
-          holes: [],
-          owner: "battleActionEconomy",
-        },
+        resolveBattleSubjectWithoutFillRoute(
+          "companionTouchDelivery",
+          [],
+          "battleActionEconomy",
+        ),
       ]
     : [event];
 }
@@ -7680,15 +7412,13 @@ function pactFamiliarReactionAttackRouteForResolution(
   const fill = input.fills.at(-1);
   if (fill === undefined) {
     return [
-      {
-        kind: "resolveBattleSubjectWithoutFill",
-        subject: "companionReactionAttack",
-        holes:
-          result.tag === "needsHoles"
-            ? battleReducerRouteHoles(result.holes)
-            : [],
-        owner: "battleStatBlockAction",
-      },
+      resolveBattleSubjectWithoutFillRoute(
+        "companionReactionAttack",
+        result.tag === "needsHoles"
+          ? battleReducerRouteHoles(result.holes)
+          : [],
+        "battleStatBlockAction",
+      ),
     ];
   }
   const routeFill = battleReducerRouteFill(fill);
@@ -7699,28 +7429,24 @@ function pactFamiliarReactionAttackRouteForResolution(
   ) {
     return undefined;
   }
-  const event: BattleReducerRouteEvent = {
-    kind: "resolveBattleSubject",
-    subject: "companionReactionAttack",
-    fill: routeFill,
-    holes:
-      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
-    owner:
-      routeFill === "targetChoice"
-        ? "battleTargetSelection"
-        : routeFill === "attackRoll"
-          ? "battleAttackRoll"
-          : "battleHitPoint",
-  };
+  const event: BattleReducerRouteEvent = resolveBattleSubjectRoute(
+    "companionReactionAttack",
+    routeFill,
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+    routeFill === "targetChoice"
+      ? "battleTargetSelection"
+      : routeFill === "attackRoll"
+        ? "battleAttackRoll"
+        : "battleHitPoint",
+  );
   return routeFill === "rolledDice" && result.tag === "resolved"
     ? [
         event,
-        {
-          kind: "resolveBattleSubjectWithoutFill",
-          subject: "companionReactionAttack",
-          holes: [],
-          owner: "battleActionEconomy",
-        },
+        resolveBattleSubjectWithoutFillRoute(
+          "companionReactionAttack",
+          [],
+          "battleActionEconomy",
+        ),
       ]
     : [event];
 }
@@ -7732,12 +7458,11 @@ function sleepRepeatSaveRouteForDiscoveredAct(
   if (!isSleepTargetAdmissionSubject(state, act.subject)) {
     return undefined;
   }
-  return {
-    kind: "discoverBattleActs",
-    subject: "repeatSaveConditionEffect",
-    holes: sleepTargetAdmissionRouteHoles(act.initialHoles),
-    owner: "battleSpellSlotAndActionEconomy",
-  };
+  return discoverBattleActsRoute(
+    "repeatSaveConditionEffect",
+    sleepTargetAdmissionRouteHoles(act.initialHoles),
+    "battleSpellSlotAndActionEconomy",
+  );
 }
 
 function sleepRepeatSaveRouteForResolution(
@@ -7792,12 +7517,11 @@ function repeatSaveConditionEffectRouteForResolution(
       return undefined;
     }
     return [
-      {
-        kind: "discoverBattleActs",
-        subject: "repeatSaveConditionEffect",
+      discoverBattleActsRoute(
+        "repeatSaveConditionEffect",
         holes,
-        owner: "battleTurnBoundary",
-      },
+        "battleTurnBoundary",
+      ),
     ];
   }
   if (
@@ -7809,33 +7533,30 @@ function repeatSaveConditionEffectRouteForResolution(
   return nonEmptyRouteEvents([
     ...(combatantConditionsChanged(input.state, result.state)
       ? [
-          {
-            kind: "resolveBattleSubject" as const,
-            subject: "repeatSaveConditionEffect" as const,
-            fill: "savingThrowOutcome" as const,
-            holes: [],
-            owner: "battleConditionLifecycle" as const,
-          },
+          resolveBattleSubjectRoute(
+            "repeatSaveConditionEffect" as const,
+            "savingThrowOutcome" as const,
+            [],
+            "battleConditionLifecycle" as const,
+          ),
         ]
       : []),
     ...(combatantsActiveEffectsChanged(input.state, result.state)
       ? [
-          {
-            kind: "resolveBattleSubjectWithoutFill" as const,
-            subject: "repeatSaveConditionEffect" as const,
-            holes: [],
-            owner: "battleActiveEffect" as const,
-          },
+          resolveBattleSubjectWithoutFillRoute(
+            "repeatSaveConditionEffect" as const,
+            [],
+            "battleActiveEffect" as const,
+          ),
         ]
       : []),
     ...(combatantsConcentrationChanged(input.state, result.state)
       ? [
-          {
-            kind: "resolveBattleSubjectWithoutFill" as const,
-            subject: "repeatSaveConditionEffect" as const,
-            holes: [],
-            owner: "battleConcentration" as const,
-          },
+          resolveBattleSubjectWithoutFillRoute(
+            "repeatSaveConditionEffect" as const,
+            [],
+            "battleConcentration" as const,
+          ),
         ]
       : []),
   ]);
@@ -7902,12 +7623,11 @@ function sleepRepeatSaveTurnBoundaryRoute(
       return holes.length === 0
         ? undefined
         : [
-            {
-              kind: "discoverBattleActs",
-              subject: "repeatSaveConditionEffect",
+            discoverBattleActsRoute(
+              "repeatSaveConditionEffect",
               holes,
-              owner: "battleTurnBoundary",
-            },
+              "battleTurnBoundary",
+            ),
           ];
     }
     if (
@@ -7960,13 +7680,12 @@ function sleepRepeatSaveResolvedRoutes(input: {
 }): BattleReducerRouteEvents | undefined {
   const conditionRoutes = combatantConditionsChanged(input.before, input.after)
     ? [
-        {
-          kind: "resolveBattleSubject" as const,
-          subject: "repeatSaveConditionEffect" as const,
-          fill: input.fill,
-          holes: [],
-          owner: "battleConditionLifecycle" as const,
-        },
+        resolveBattleSubjectRoute(
+          "repeatSaveConditionEffect" as const,
+          input.fill,
+          [],
+          "battleConditionLifecycle" as const,
+        ),
       ]
     : [];
   const activeEffectRoutes =
@@ -8004,12 +7723,11 @@ function sleepRepeatSaveResolveWithoutFill(
   holes: readonly BattleReducerRouteHole[],
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject: "repeatSaveConditionEffect",
+  return resolveBattleSubjectWithoutFillRoute(
+    "repeatSaveConditionEffect",
     holes,
     owner,
-  };
+  );
 }
 
 function turnBoundaryEffectLifecycleRouteForResolution(
@@ -8040,13 +7758,12 @@ function turnBoundaryEffectLifecycleRouteForResolution(
 
   const routeFill = battleReducerRouteFill(fill);
   if (routeFill === "rolledDice") {
-    const hitPointRoute: BattleReducerRouteEvent = {
-      kind: "resolveBattleSubject",
-      subject: "turnBoundaryEffectLifecycle",
-      fill: routeFill,
+    const hitPointRoute: BattleReducerRouteEvent = resolveBattleSubjectRoute(
+      "turnBoundaryEffectLifecycle",
+      routeFill,
       holes,
-      owner: "battleHitPoint",
-    };
+      "battleHitPoint",
+    );
     const concentrationRoute =
       turnBoundaryEffectLifecycleConcentrationRouteForResolution(
         routeFill,
@@ -8071,13 +7788,12 @@ function turnBoundaryEffectLifecycleRouteForResolution(
       return undefined;
     }
     return [
-      {
-        kind: "resolveBattleSubject",
-        subject: "turnBoundaryEffectLifecycle",
-        fill: routeFill,
+      resolveBattleSubjectRoute(
+        "turnBoundaryEffectLifecycle",
+        routeFill,
         holes,
-        owner: "battleActiveEffect",
-      },
+        "battleActiveEffect",
+      ),
     ];
   }
   return undefined;
@@ -8141,13 +7857,12 @@ function turnBoundaryEffectLifecycleConcentrationRouteForResolution(
   if (holes.length === 0) {
     return undefined;
   }
-  return {
-    kind: "resolveBattleSubject",
-    subject: "concentrationTeardown",
+  return resolveBattleSubjectRoute(
+    "concentrationTeardown",
     fill,
     holes,
-    owner: "battleConcentration",
-  };
+    "battleConcentration",
+  );
 }
 
 function turnBoundaryEffectLifecycleDiscoveryRouteForResolution(
@@ -8167,23 +7882,21 @@ function turnBoundaryEffectLifecycleDiscoveryRouteForResolution(
   if (holes.length === 0) {
     return undefined;
   }
-  return {
-    kind: "discoverBattleActs",
-    subject: "turnBoundaryEffectLifecycle",
+  return discoverBattleActsRoute(
+    "turnBoundaryEffectLifecycle",
     holes,
-    owner: "battleTurnBoundary",
-  };
+    "battleTurnBoundary",
+  );
 }
 
 function turnBoundaryEffectLifecycleResolveWithoutFill(
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject: "turnBoundaryEffectLifecycle",
-    holes: [],
+  return resolveBattleSubjectWithoutFillRoute(
+    "turnBoundaryEffectLifecycle",
+    [],
     owner,
-  };
+  );
 }
 
 function spellBaseArmorClassEffectTurnBoundaryRouteForResolution(
@@ -8199,12 +7912,11 @@ function spellBaseArmorClassEffectTurnBoundaryRouteForResolution(
     return undefined;
   }
   return [
-    {
-      kind: "discoverBattleActs",
-      subject: "spellBaseArmorClassEffect",
-      holes: [],
-      owner: "battleActiveEffect",
-    },
+    discoverBattleActsRoute(
+      "spellBaseArmorClassEffect",
+      [],
+      "battleActiveEffect",
+    ),
     spellBaseArmorClassEffectResolveWithoutFill("battleTurnBoundary"),
     spellBaseArmorClassEffectResolveWithoutFill("battleActiveEffect"),
     spellBaseArmorClassEffectResolveWithoutFill("battleArmorClass"),
@@ -8502,29 +8214,24 @@ function creatureAttackRouteForResolution(
         : []
       : [];
     return [
-      {
-        kind: "resolveBattleSubject",
-        subject: "creatureAttack",
-        fill: routeFill,
+      resolveBattleSubjectRoute(
+        "creatureAttack",
+        routeFill,
         holes,
-        owner: "battleAttackRoll",
-      },
+        "battleAttackRoll",
+      ),
     ];
   }
   if (routeFill !== "rolledDice") {
     return undefined;
   }
   return [
-    {
-      kind: "resolveBattleSubject",
-      subject: "creatureAttack",
-      fill: routeFill,
-      holes:
-        result.tag === "needsHoles"
-          ? battleReducerRouteHoles(result.holes)
-          : [],
-      owner: "battleHitPoint",
-    },
+    resolveBattleSubjectRoute(
+      "creatureAttack",
+      routeFill,
+      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+      "battleHitPoint",
+    ),
   ];
 }
 
@@ -8543,12 +8250,11 @@ function weaponAttackRouteForResolution(
       return undefined;
     }
     return [
-      {
-        kind: "resolveBattleSubjectWithoutFill",
-        subject: "weaponAttack",
-        holes: [],
-        owner: "battleHoleFrontier",
-      },
+      resolveBattleSubjectWithoutFillRoute(
+        "weaponAttack",
+        [],
+        "battleHoleFrontier",
+      ),
     ];
   }
   if (
@@ -8596,13 +8302,8 @@ function weaponAttackRouteForResolution(
   const event = (
     subject: BattleReducerRouteSubjectFamily,
     owner: BattleReducerRouteOwnerGroup,
-  ): BattleReducerRouteEvent => ({
-    kind: "resolveBattleSubject",
-    subject,
-    fill: routeFill,
-    holes,
-    owner,
-  });
+  ): BattleReducerRouteEvent =>
+    resolveBattleSubjectRoute(subject, routeFill, holes, owner);
 
   if (weaponMasteryCleaveRouteStarted(input.fills)) {
     return weaponMasteryCleaveRouteForResolution(input, result, event);
@@ -8633,30 +8334,33 @@ function weaponAttackRouteForResolution(
   }
   routeTail.push(...charmSourceDamageBreakRouteForResolution(input, result));
   if (holes.includes("unitFeatureDecision")) {
-    routeTail.push({
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "weaponMasteryProperty",
-      holes,
-      owner: "battleFeatureResource",
-    });
+    routeTail.push(
+      resolveBattleSubjectWithoutFillRoute(
+        "weaponMasteryProperty",
+        holes,
+        "battleFeatureResource",
+      ),
+    );
   } else if (combatantsActiveEffectsChanged(input.state, result.state)) {
-    routeTail.push({
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "weaponMasteryProperty",
-      holes,
-      owner: "battleActiveEffect",
-    });
+    routeTail.push(
+      resolveBattleSubjectWithoutFillRoute(
+        "weaponMasteryProperty",
+        holes,
+        "battleActiveEffect",
+      ),
+    );
   }
   if (
     input.state.interruptStack.at(-1)?.kind === "replayContinuation" &&
     result.tag === "resolved"
   ) {
-    routeTail.push({
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "interruptStackResume",
-      holes: [],
-      owner: "battleInterruptStack",
-    });
+    routeTail.push(
+      resolveBattleSubjectWithoutFillRoute(
+        "interruptStackResume",
+        [],
+        "battleInterruptStack",
+      ),
+    );
   }
   return [weaponDamageRoute, ...routeTail];
 }
@@ -8831,26 +8535,24 @@ function weaponAttackInvalidFillRoute(
   const holes = weaponAttackOrderingInvalidHoles(result, routeFill);
   if (holes !== undefined) {
     return [
-      {
-        kind: "resolveBattleSubject",
+      resolveBattleSubjectRoute(
         subject,
-        fill: routeFill,
+        routeFill,
         holes,
-        owner: "battleHoleFrontier",
-      },
+        "battleHoleFrontier",
+      ),
     ];
   }
   if (routeFill !== "targetChoice") {
     return undefined;
   }
   return [
-    {
-      kind: "resolveBattleSubject",
+    resolveBattleSubjectRoute(
       subject,
-      fill: routeFill,
-      holes: ["targetChoice"],
-      owner: "battleTargetSelection",
-    },
+      routeFill,
+      ["targetChoice"],
+      "battleTargetSelection",
+    ),
   ];
 }
 
@@ -8921,24 +8623,21 @@ function charmSourceDamageBreakRouteForResolution(
     return [];
   }
   return [
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "charmSourceDamageBreak",
-      holes: [],
-      owner: "battleHitPoint",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "charmSourceDamageBreak",
-      holes: [],
-      owner: "battleConditionLifecycle",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "charmSourceDamageBreak",
-      holes: [],
-      owner: "battleActiveEffect",
-    },
+    resolveBattleSubjectWithoutFillRoute(
+      "charmSourceDamageBreak",
+      [],
+      "battleHitPoint",
+    ),
+    resolveBattleSubjectWithoutFillRoute(
+      "charmSourceDamageBreak",
+      [],
+      "battleConditionLifecycle",
+    ),
+    resolveBattleSubjectWithoutFillRoute(
+      "charmSourceDamageBreak",
+      [],
+      "battleActiveEffect",
+    ),
   ];
 }
 
@@ -9060,12 +8759,11 @@ function weaponMasteryCleaveRouteForResolution(
   }
   return [
     event("weaponMasteryProperty", "battleHitPoint"),
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "weaponMasteryProperty",
-      holes: [],
-      owner: "battleFeatureResource",
-    },
+    resolveBattleSubjectWithoutFillRoute(
+      "weaponMasteryProperty",
+      [],
+      "battleFeatureResource",
+    ),
   ];
 }
 
@@ -9310,12 +9008,11 @@ function battleActionRouteForResolution(
     if (input.fills.length !== 0) {
       return undefined;
     }
-    return {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "battleAction",
-      holes: [],
-      owner: "battleActionEconomy",
-    };
+    return resolveBattleSubjectWithoutFillRoute(
+      "battleAction",
+      [],
+      "battleActionEconomy",
+    );
   }
   if (
     input.subject.tag !== "action" ||
@@ -9331,12 +9028,11 @@ function battleActionRouteForResolution(
   ) {
     return undefined;
   }
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject: "statBlockAction",
-    holes: [],
-    owner: "battleStatBlockAction",
-  };
+  return resolveBattleSubjectWithoutFillRoute(
+    "statBlockAction",
+    [],
+    "battleStatBlockAction",
+  );
 }
 
 function isCommandEffectSubject(
@@ -9662,12 +9358,11 @@ function zeroHitPointSpellEffectTeardownRouteForResolution(
 function zeroHitPointSpellEffectTeardownRoute(
   owner: BattleReducerRouteOwnerGroup,
 ): BattleReducerRouteEvent {
-  return {
-    kind: "resolveBattleSubjectWithoutFill",
-    subject: "zeroHitPointSpellEffectTeardown",
-    holes: [],
+  return resolveBattleSubjectWithoutFillRoute(
+    "zeroHitPointSpellEffectTeardown",
+    [],
     owner,
-  };
+  );
 }
 
 function zeroHitPointConcentrationTeardown(

@@ -1,7 +1,12 @@
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import { Schema } from "effect";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  BattleInterruptProcedureChoiceSchema,
+  BattleSnapshotSchema,
+} from "./index.ts";
 import {
   characterBattleFeatureInitForTest,
   startBattleRight,
@@ -174,17 +179,16 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     expect(damage).toMatchObject({
       label: "weapon_dagger damage (1d4-piercing)",
     });
-    expect(
-      resolveBattleSubject({
-        state: afterQualifyingAttack,
-        subject,
-        fills: [
-          targetFill(target, goblinId),
-          attackRollFill(roll, { total: 15, naturalD20: 10 }),
-          damageRollFill(damage, 4),
-        ],
-      }),
-    ).toMatchObject({
+    const completed = resolveBattleSubject({
+      state: afterQualifyingAttack,
+      subject,
+      fills: [
+        targetFill(target, goblinId),
+        attackRollFill(roll, { total: 15, naturalD20: 10 }),
+        damageRollFill(damage, 4),
+      ],
+    });
+    expect(completed).toMatchObject({
       tag: "resolved",
       snapshot: {
         turn: { bonusActionAvailable: false },
@@ -192,6 +196,20 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           expect.objectContaining({ combatantId: goblinId, hp: 6 }),
         ]),
       },
+    });
+    if (completed.tag !== "resolved") {
+      throw new Error(`Expected resolved, got ${completed.tag}.`);
+    }
+    expect(
+      resolveBattleSubject({
+        state: completed.state,
+        subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Bonus Action is no longer available for the current actor.",
     });
   });
 
@@ -1230,6 +1248,16 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (secondChoice === undefined) {
       throw new Error("Expected the second procedure's interrupt choice.");
     }
+    expect(() =>
+      Schema.decodeUnknownSync(BattleInterruptProcedureChoiceSchema)(
+        secondChoice,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        Schema.encodeSync(BattleSnapshotSchema)(awaitingReaction.snapshot),
+      ),
+    ).not.toThrow();
     const startedReaction = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(

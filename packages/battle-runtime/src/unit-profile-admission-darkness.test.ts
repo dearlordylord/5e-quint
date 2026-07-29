@@ -1,5 +1,8 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  assertBattleSnapshotCodecRoundTripForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime.test-support.ts";
 import {
   battleActSpellSlotPresentation,
   battleActSpellPresentation,
@@ -159,6 +162,7 @@ describe("battle runtime: Darkness", () => {
         },
       },
     ]);
+    assertBattleSnapshotCodecRoundTripForTest(resolved.snapshot);
   });
 
   test("Darkness projection blocks ordinary sight, Darkvision, and nonmagical light by witness fact", () => {

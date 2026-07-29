@@ -288,6 +288,25 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         "frightened",
       ),
     ).toBe(true);
+    const conditionAttempt = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "creatureTypeProtectionConditionAttempt",
+        sourceCombatantId: feySourceId,
+        condition: "frightened",
+      },
+      fills: [],
+    });
+    if (conditionAttempt.tag === "invalid") {
+      throw new Error(
+        `Expected protected condition attempt to resolve: ${conditionAttempt.reason}: ${conditionAttempt.message}`,
+      );
+    }
+    expect(conditionAttempt).toMatchObject({
+      tag: "resolved",
+    });
     expect(
       resolveBattlePossessionAttempt({
         state: protectedResult.state,
@@ -299,6 +318,24 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       prevention: "creatureTypeProtection",
       sourceCombatantId: feySourceId,
       targetId: spellTargetId,
+    });
+    const possessionAttempt = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "creatureTypeProtectionPossessionAttempt",
+        sourceCombatantId: feySourceId,
+      },
+      fills: [],
+    });
+    if (possessionAttempt.tag === "invalid") {
+      throw new Error(
+        `Expected protected possession attempt to resolve: ${possessionAttempt.reason}: ${possessionAttempt.message}`,
+      );
+    }
+    expect(possessionAttempt).toMatchObject({
+      tag: "resolved",
     });
     expect(
       resolveBattlePossessionAttempt({

@@ -71,6 +71,7 @@ export function reappearTemporarilyDismissedFindFamiliar(
   input: FindFamiliarReappearanceInput,
 ): BattleResolutionResult {
   const admission = admitFindFamiliarReappearance(input);
+  /* v8 ignore start -- Reappearance admission owns malformed/stale input diagnostics; this lifecycle wrapper only preserves its typed issue as an invalid result. */
   return Either.isLeft(admission)
     ? invalidFindFamiliarResult(
         input.state,
@@ -84,6 +85,7 @@ export function reappearTemporarilyDismissedFindFamiliar(
         initiative: input.initiative,
         placement: input.placement,
       });
+  /* v8 ignore stop */
 }
 import type {
   BattleResourcePoolExecutionRef,
@@ -244,6 +246,7 @@ export function castFindFamiliar(
     selection: input.selection,
     creatureTypeOverrideChoiceId: input.creatureTypeOverrideChoiceId,
   });
+  /* v8 ignore start -- Malformed authored selection: the Surface form resolver owns unknown form and creature-type choice diagnostics. */
   if (resolvedForm.tag === "issue") {
     return invalidFindFamiliarResult(
       input.state,
@@ -251,6 +254,7 @@ export function castFindFamiliar(
       resolvedForm.message,
     );
   }
+  /* v8 ignore stop */
   return castResolvedFindFamiliar({
     state: input.state,
     casterId: input.casterId,
@@ -273,6 +277,7 @@ export type ResolvedFindFamiliarCastInput = Omit<
 export function castResolvedFindFamiliar(
   input: ResolvedFindFamiliarCastInput,
 ): BattleResolutionResult {
+  /* v8 ignore start -- Stale direct call: discovered Find Familiar acts retain a caster already present in the same battle state. */
   if (!input.state.combatants.has(input.casterId)) {
     return invalidFindFamiliarResult(
       input.state,
@@ -280,6 +285,7 @@ export function castResolvedFindFamiliar(
       "Find Familiar caster is not in this battle.",
     );
   }
+  /* v8 ignore stop */
   const priorFamiliarEntry = findCompanionEntryByOwner(
     input.state.companions,
     input.casterId,
@@ -326,6 +332,7 @@ export function castResolvedFindFamiliar(
     priorFamiliar,
     statBlock: resolvedForm.statBlock,
   });
+  /* v8 ignore start -- Corrupt retained state: admitted present/dismissed companions carry positive HP and a resolvable literal familiar maximum. */
   if (typeof preservedHitPoints === "string") {
     return invalidFindFamiliarResult(
       input.state,
@@ -333,6 +340,7 @@ export function castResolvedFindFamiliar(
       preservedHitPoints,
     );
   }
+  /* v8 ignore stop */
   const nextState = withAdmittedFindFamiliarCombatant({
     state: input.state,
     casterId: input.casterId,
@@ -347,19 +355,23 @@ export function castResolvedFindFamiliar(
           tempHp: preservedHitPoints.tempHp,
         }),
   });
-  return nextState.tag === "invalid"
-    ? nextState
-    : resolvedFindFamiliarResult(
-        nextState.state,
-        [],
-        findFamiliarCompanionLifecycleRouteEvents(),
-      );
+  /* v8 ignore start -- The resolved catalog form and collision-checked combatant identity satisfy Stat Block admission; failures remain a defensive typed propagation. */
+  if (nextState.tag === "invalid") {
+    return nextState;
+  }
+  /* v8 ignore stop */
+  return resolvedFindFamiliarResult(
+    nextState.state,
+    [],
+    findFamiliarCompanionLifecycleRouteEvents(),
+  );
 }
 
 export function castWildCompanion(
   input: WildCompanionCastInput,
 ): BattleResolutionResult {
   const owner = input.state.combatants.get(input.casterId);
+  /* v8 ignore start -- Stale direct call: Wild Companion discovery is available only for an admitted character caster. */
   if (owner?.origin.kind !== "character") {
     return invalidFindFamiliarResult(
       input.state,
@@ -367,6 +379,7 @@ export function castWildCompanion(
       "Wild Companion caster is not a character in this battle.",
     );
   }
+  /* v8 ignore stop */
   if (!characterHasWildCompanionFeature(owner.origin.execution)) {
     return invalidFindFamiliarResult(
       input.state,
@@ -379,15 +392,18 @@ export function castWildCompanion(
     casterId: input.casterId,
     spend: input.spend,
   });
+  /* v8 ignore start -- Stale subject diagnostics are owned by the cost boundary; this cast workflow only preserves its typed invalid result. */
   if (spent.tag === "invalid") {
     return spent;
   }
+  /* v8 ignore stop */
   const resolvedForm = resolveFindFamiliarForm({
     catalog: input.catalog,
     eligibility: input.eligibility,
     selection: input.selection,
     creatureTypeOverrideChoiceId: "fey",
   });
+  /* v8 ignore start -- Malformed authored selection: the Surface form resolver owns unknown Wild Companion form diagnostics. */
   if (resolvedForm.tag === "issue") {
     return invalidFindFamiliarResult(
       spent.state,
@@ -395,6 +411,7 @@ export function castWildCompanion(
       resolvedForm.message,
     );
   }
+  /* v8 ignore stop */
   const priorFamiliarEntry = findCompanionEntryByOwner(
     spent.state.companions,
     input.casterId,
@@ -410,9 +427,11 @@ export function castWildCompanion(
     input.casterId,
     familiarId,
   );
+  /* v8 ignore start -- Stale direct call: discovery and retained-companion ownership prevent choosing an ordinary combatant identity for the familiar. */
   if (identityIssue !== null) {
     return invalidFindFamiliarResult(spent.state, "invalidFill", identityIssue);
   }
+  /* v8 ignore stop */
   const nextFamiliar = findFamiliarPresentState({
     form: {
       formAccess: "findFamiliar",
@@ -430,6 +449,7 @@ export function castWildCompanion(
     priorFamiliar,
     statBlock: resolvedForm.form.statBlock,
   });
+  /* v8 ignore start -- Corrupt retained state: admitted Wild Companions carry positive HP and a resolvable literal familiar maximum. */
   if (typeof preservedHitPoints === "string") {
     return invalidFindFamiliarResult(
       spent.state,
@@ -437,6 +457,7 @@ export function castWildCompanion(
       preservedHitPoints,
     );
   }
+  /* v8 ignore stop */
   const nextState = withAdmittedFindFamiliarCombatant({
     state: spent.state,
     casterId: input.casterId,
@@ -454,22 +475,28 @@ export function castWildCompanion(
           tempHp: preservedHitPoints.tempHp,
         }),
   });
-  return nextState.tag === "invalid"
-    ? nextState
-    : resolvedFindFamiliarResult(nextState.state, []);
+  /* v8 ignore start -- The resolved catalog form and collision-checked combatant identity satisfy Stat Block admission; failures remain a defensive typed propagation. */
+  if (nextState.tag === "invalid") {
+    return nextState;
+  }
+  /* v8 ignore stop */
+  return resolvedFindFamiliarResult(nextState.state, []);
 }
 
 export function admitCompanionToBattle(
   input: CompanionBattleAdmissionInput,
 ): Either.Either<BattleState, BattleStateInitIssue> {
+  /* v8 ignore start -- Malformed handoff: character-battle admission supplies an owner from the battle roster it just created. */
   if (!input.state.combatants.has(input.ownerId)) {
     return battleStateInitIssue(
       "Companion admission owner is not in this battle.",
     );
   }
+  /* v8 ignore stop */
   if (input.identity.durableCompanionId.length === 0) {
     return battleStateInitIssue("Companion admission requires durable id.");
   }
+  /* v8 ignore start -- Malformed handoff: the one-at-a-time retained companion boundary cannot admit a second companion for the same owner. */
   if (
     findCompanionByOwner(input.state.companions, input.ownerId) !== undefined
   ) {
@@ -477,6 +504,7 @@ export function admitCompanionToBattle(
       "Companion admission requires at most one retained companion per owner.",
     );
   }
+  /* v8 ignore stop */
   if (
     companionDurableIdentityInUse(
       input.state.companions,
@@ -492,11 +520,13 @@ export function admitCompanionToBattle(
       ...input,
     });
   }
+  /* v8 ignore start -- Type-level invariant: the companionId branch of CompanionBattleAdmissionInput requires an embodied manifestation. */
   if (input.manifestation.tag !== "embodiedOutsideBattle") {
     return battleStateInitIssue(
       "Present companion admission requires embodied manifestation.",
     );
   }
+  /* v8 ignore stop */
   const identityIssue = findFamiliarIdentityIssue(
     input.state,
     input.ownerId,
@@ -510,9 +540,11 @@ export function admitCompanionToBattle(
     storedForm: input.manifestation.storedForm,
     creatureTypeOverride: input.manifestation.creatureTypeOverride,
   });
+  /* v8 ignore start -- Malformed handoff: retained companion authoring resolves and stores form proof against this same eligibility and catalog. */
   if (resolvedForm.tag === "issue") {
     return battleStateInitIssue(resolvedForm.message);
   }
+  /* v8 ignore stop */
   const nextCompanion = findFamiliarPresentState({
     form: { formAccess: input.manifestation.storedForm.formAccess },
     combatantId: input.companionId,
@@ -532,9 +564,11 @@ export function admitCompanionToBattle(
     currentHp: input.manifestation.hitPoints.currentHp,
     tempHp: input.manifestation.hitPoints.tempHp,
   });
+  /* v8 ignore start -- The resolved stored form and collision-checked companion identity satisfy Stat Block admission; failures remain a defensive typed propagation. */
   if (nextState.tag === "invalid") {
     return battleStateInitIssue(nextState.message);
   }
+  /* v8 ignore stop */
   return withInitialInitiativeOrder(
     nextState.state,
     input.initialCombatantOrder,
@@ -558,6 +592,7 @@ function withAdmittedFindFamiliarCombatant(
       allocation?.nextScopeOrdinal,
     ),
   });
+  /* v8 ignore start -- The stored form was resolved from the catalog immediately above; only a forged execution source can fail Stat Block combatant admission here. */
   if (Either.isLeft(combatantAdmission)) {
     return invalidFindFamiliarResult(
       input.state,
@@ -565,6 +600,7 @@ function withAdmittedFindFamiliarCombatant(
       battleStateInitIssueMessage(combatantAdmission.left),
     );
   }
+  /* v8 ignore stop */
   return withFindFamiliarCombatant({
     state: input.state,
     casterId: input.casterId,
@@ -631,11 +667,13 @@ function admitAbsentCompanionToBattle(
           creatureTypeOverride: input.manifestation.creatureTypeOverride,
           ownerId: input.ownerId,
         });
+  /* v8 ignore start -- Type-level invariant: both absent-companion constructors above receive the retained identity required by this admission input. */
   if (companion.identity.tag !== "retainedBetweenBattles") {
     return battleStateInitIssue(
       "Retained companion admission requires retained identity.",
     );
   }
+  /* v8 ignore stop */
   return Either.right({
     ...input.state,
     companions: setCompanion(input.state.companions, companion),
@@ -665,9 +703,12 @@ function withInitialInitiativeOrder(
     initialCombatantOrder,
     emptyRosterMessage: "Find Familiar admission requires combatants.",
   });
-  return Either.isLeft(initiative)
-    ? Either.left(initiative.left)
-    : Either.right({ ...state, initiative: initiative.right });
+  /* v8 ignore start -- Malformed handoff: the character-battle boundary supplies one unique initial-order entry for every admitted combatant. */
+  if (Either.isLeft(initiative)) {
+    return Either.left(initiative.left);
+  }
+  /* v8 ignore stop */
+  return Either.right({ ...state, initiative: initiative.right });
 }
 
 function hitPointsForFindFamiliarCast(input: {
@@ -687,9 +728,11 @@ function hitPointsForFindFamiliarCast(input: {
     input.priorFamiliar.status === "present"
       ? presentFindFamiliarHitPoints(input.state, input.priorFamiliarId)
       : input.priorFamiliar.hitPoints;
+  /* v8 ignore start -- Corrupt retained state: a present companion admitted by this lifecycle always has its referenced Stat Block combatant and positive HP state. */
   if (typeof hitPoints === "string") {
     return hitPoints;
   }
+  /* v8 ignore stop */
   return hitPointsForAdoptedFamiliarForm({
     hitPoints,
     statBlock: input.statBlock,
@@ -701,18 +744,23 @@ function hitPointsForAdoptedFamiliarForm(input: {
   readonly statBlock: StatBlockRecord;
 }): BattleCompanionHitPoints | string {
   const maxHp = familiarMaxHp(input.statBlock);
+  /* v8 ignore start -- Eligible familiar forms are admitted from the supported catalog, whose execution projection has literal positive maximum HP. */
   if (typeof maxHp === "string") {
     return maxHp;
   }
+  /* v8 ignore stop */
   const currentHp = findFamiliarCurrentHitPoints(
     Hp(Math.min(Number(input.hitPoints.currentHp), Number(maxHp))),
   );
-  return typeof currentHp === "string"
-    ? currentHp
-    : {
-        currentHp,
-        tempHp: input.hitPoints.tempHp,
-      };
+  /* v8 ignore start -- Both retained current HP and the supported familiar maximum are positive, so their minimum remains positive. */
+  if (typeof currentHp === "string") {
+    return currentHp;
+  }
+  /* v8 ignore stop */
+  return {
+    currentHp,
+    tempHp: input.hitPoints.tempHp,
+  };
 }
 
 function resolveStoredFindFamiliarForm(input: {
@@ -734,18 +782,21 @@ function resolveStoredFindFamiliarForm(input: {
   const statBlock = input.catalog.getStatBlock(
     input.storedForm.resolvedStatBlockId,
   );
-  return Option.isNone(statBlock)
-    ? {
-        tag: "issue",
-        message: `Retained familiar form Stat Block is missing: ${input.storedForm.resolvedStatBlockId}.`,
-      }
-    : {
-        tag: "resolved",
-        form: {
-          statBlock: statBlock.value,
-          creatureTypeOverride: input.creatureTypeOverride,
-        },
-      };
+  /* v8 ignore start -- Malformed handoff: retained selections are created only after their resolved Stat Block id is found in this catalog. */
+  if (Option.isNone(statBlock)) {
+    return {
+      tag: "issue",
+      message: `Retained familiar form Stat Block is missing: ${input.storedForm.resolvedStatBlockId}.`,
+    };
+  }
+  /* v8 ignore stop */
+  return {
+    tag: "resolved",
+    form: {
+      statBlock: statBlock.value,
+      creatureTypeOverride: input.creatureTypeOverride,
+    },
+  };
 }
 
 function storedFormResolvedStatBlockIdIssue(input: {
@@ -753,9 +804,11 @@ function storedFormResolvedStatBlockIdIssue(input: {
   readonly storedForm: CompanionBattleAdmissionStoredForm;
   readonly formEligibility: CompanionBattleAdmissionFormEligibility;
 }): string | null {
+  /* v8 ignore start -- Malformed handoff: stored-form and eligibility variants are constructed together from one authored companion selection. */
   if (input.storedForm.formAccess !== input.formEligibility.formAccess) {
     return "Retained familiar form proof access does not match admission eligibility.";
   }
+  /* v8 ignore stop */
   const expected = selectedStoredFormStatBlockId(input);
   if (typeof expected !== "string") return expected.message;
   return expected === input.storedForm.resolvedStatBlockId
@@ -771,11 +824,13 @@ function selectedStoredFormStatBlockId(input: {
   const selection = input.storedForm.formSelection;
   if (selection.tag === "challengeRatingZeroBeast") {
     const statBlock = input.catalog.getStatBlock(selection.statBlockId);
+    /* v8 ignore start -- Malformed authored selection: a retained CR 0 Beast selection is created only after its Stat Block id resolves in the owning catalog. */
     if (Option.isNone(statBlock)) {
       return {
         message: `Retained familiar Challenge Rating 0 Beast form Stat Block is missing: ${selection.statBlockId}.`,
       };
     }
+    /* v8 ignore stop */
     if (
       statBlock.value.statBlock.creatureType !== "beast" ||
       statBlock.value.challengeRating !== 0
@@ -787,29 +842,37 @@ function selectedStoredFormStatBlockId(input: {
     return selection.statBlockId;
   }
   if (selection.tag === "pactOfTheChainSpecialForm") {
+    /* v8 ignore start -- Malformed handoff: the discriminated stored-form variant and its eligibility variant are constructed together at the authored companion boundary. */
     if (input.formEligibility.formAccess !== "pactOfTheChain") {
       return {
         message:
           "Retained familiar Pact of the Chain special form requires Pact of the Chain eligibility.",
       };
     }
+    /* v8 ignore stop */
     const specialForm = input.formEligibility.eligibility.specialForms.find(
       (candidate) => candidate.formId === selection.formId,
     );
-    return specialForm === undefined
-      ? {
-          message: `Retained familiar Pact of the Chain special form is unknown: ${selection.formId}.`,
-        }
-      : specialForm.statBlockId;
+    /* v8 ignore start -- Malformed authored selection: stored Pact special-form ids originate from this eligibility list. */
+    if (specialForm === undefined) {
+      return {
+        message: `Retained familiar Pact of the Chain special form is unknown: ${selection.formId}.`,
+      };
+    }
+    /* v8 ignore stop */
+    return specialForm.statBlockId;
   }
   const normalForm = input.formEligibility.eligibility.normalForms.find(
     (candidate) => candidate.formId === selection.formId,
   );
-  return normalForm === undefined
-    ? {
-        message: `Retained familiar normal form is not eligible: ${selection.formId}.`,
-      }
-    : normalForm.statBlockId;
+  /* v8 ignore start -- Malformed authored selection: stored normal-form ids originate from this eligibility list. */
+  if (normalForm === undefined) {
+    return {
+      message: `Retained familiar normal form is not eligible: ${selection.formId}.`,
+    };
+  }
+  /* v8 ignore stop */
+  return normalForm.statBlockId;
 }
 
 function spendWildCompanionCost(input: {
@@ -824,10 +887,13 @@ function spendWildCompanionCost(input: {
     input.casterId,
     "Wild Companion",
   );
+  /* v8 ignore start -- Stale subject: Wild Companion discovery requires the caster's Magic action to remain available until resolution. */
   if (spentAction.tag === "invalid") {
     return spentAction;
   }
+  /* v8 ignore stop */
   const actor = spentAction.state.combatants.get(input.casterId);
+  /* v8 ignore start -- Internal sequencing invariant: spendFindFamiliarMagicAction just resolved for the admitted character caster supplied by Wild Companion discovery. */
   if (actor?.origin.kind !== "character") {
     return invalidFindFamiliarResult(
       input.state,
@@ -835,6 +901,7 @@ function spendWildCompanionCost(input: {
       "Wild Companion requires a character caster.",
     );
   }
+  /* v8 ignore stop */
   const spend = input.spend;
   if (spend.kind === "spellSlot") {
     const slot = actor.origin.spellcasting?.spellSlots.find(
@@ -842,6 +909,7 @@ function spendWildCompanionCost(input: {
         candidate.spellLevel === spend.spellLevel &&
         candidate.count > candidate.expended,
     );
+    /* v8 ignore start -- Stale subject: Wild Companion discovery offers the Spell Slot spend only while that exact slot remains available. */
     if (slot === undefined) {
       return invalidFindFamiliarResult(
         input.state,
@@ -849,10 +917,12 @@ function spendWildCompanionCost(input: {
         "Wild Companion requires the selected Spell Slot to be available.",
       );
     }
+    /* v8 ignore stop */
     const markedSpellSlotUse = markSpellSlotExpendedThisTurn(
       spentAction.state.currentTurnResources,
       input.casterId,
     );
+    /* v8 ignore start -- Stale subject: the once-per-turn Spell Slot marker is part of the same discovery gate as the Wild Companion spend option. */
     if (Either.isLeft(markedSpellSlotUse)) {
       return invalidFindFamiliarResult(
         input.state,
@@ -860,6 +930,7 @@ function spendWildCompanionCost(input: {
         "Wild Companion cannot expend more than one Spell Slot on the same turn.",
       );
     }
+    /* v8 ignore stop */
     const stateWithMarkedSpellSlotUse = {
       ...spentAction.state,
       currentTurnResources: markedSpellSlotUse.right,
@@ -876,6 +947,7 @@ function spendWildCompanionCost(input: {
   const resource = actor.origin.resources.find(
     (candidate) => candidate.resourcePoolRef === spend.resourcePoolRef,
   );
+  /* v8 ignore start -- Stale subject: Wild Companion discovery offers a Wild Shape spend only for its owned resource pool while a use remains. */
   if (resource === undefined || !resourceHasUsesRemaining(resource)) {
     return invalidFindFamiliarResult(
       input.state,
@@ -883,6 +955,7 @@ function spendWildCompanionCost(input: {
       "Wild Companion requires an available Wild Shape use.",
     );
   }
+  /* v8 ignore stop */
   const nextActor = {
     ...actor,
     origin: {

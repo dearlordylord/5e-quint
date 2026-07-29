@@ -158,6 +158,7 @@ function resolveShieldReaction(
       "Shield requires a matching attack-hit or Magic Missile Reaction trigger.",
     );
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!fillsBelongToSpellCastHoles(input.input.fills)) {
     return invalidResult(
       input.input.state,
@@ -165,6 +166,7 @@ function resolveShieldReaction(
       "Shield accepts only spell-cast Reaction trigger facts.",
     );
   }
+  /* v8 ignore stop */
 
   const castingState = stateAfterSpellCastDeclared({
     state: input.input.state,

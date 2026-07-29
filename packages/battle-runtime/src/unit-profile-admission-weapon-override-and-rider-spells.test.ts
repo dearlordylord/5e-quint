@@ -12,6 +12,7 @@ import {
   ATTACK_TARGET_HOLE_ID,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
 } from "./battle-reducer/battle-runtime-protocol.ts";
+import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84H shillelagh
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31A divine_favor
@@ -1102,7 +1103,17 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
     const session = spellBattle({
       preparedSpells: [magicWeapon],
       spellSlots: [{ spellLevel: 6, count: 1 }],
-      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+      attack: {
+        ...zeroAbilityWeaponAttack("weapon_longsword"),
+        alternateAbilityChoices: [
+          {
+            ability: "dex",
+            abilityModifier: abilityModifier(2),
+            attackBonus: attackBonus(4),
+            damageAbilityModifier: abilityModifier(2),
+          },
+        ],
+      },
     });
     const act = bonusSpellAct({
       session,
@@ -1123,6 +1134,17 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
     if (cast.tag !== "resolved") {
       throw new Error("Expected level 6 Magic Weapon to resolve.");
     }
+    expect(
+      attackActionOptionsForActor(cast.state, spellCasterId).find(
+        (attack) => attack.kind === "weapon" && attack.ability === "dex",
+      ),
+    ).toMatchObject({
+      ability: "dex",
+      abilityModifier: 2,
+      attackBonus: 7,
+      damageBonus: 3,
+      damageAbilityModifier: 2,
+    });
 
     const castSession = battleRuntimeSessionForTest({
       state: cast.state,

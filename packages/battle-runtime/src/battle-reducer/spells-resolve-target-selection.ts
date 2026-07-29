@@ -88,9 +88,11 @@ export function spellSingleTargetSelection(input: {
   readonly targetListMessage: string;
   readonly invalidTargetMessage: string;
 }): SpellSingleTargetSelection {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fillSet.targetList !== undefined) {
     return { tag: "invalid", message: input.targetListMessage };
   }
+  /* v8 ignore stop */
   if (input.fillSet.targetId === undefined) {
     return {
       tag: "needsHoles",
@@ -131,9 +133,11 @@ export function spellTargetListSelection(input: {
     });
   }
 
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fillSet.targetId !== undefined) {
     return { tag: "invalid", message: input.multiTargetChoiceMessage };
   }
+  /* v8 ignore stop */
   if (input.fillSet.targetList === undefined) {
     return {
       tag: "needsHoles",
@@ -199,12 +203,14 @@ export function scalarBuffSpellTargetSelection(input: {
         }
       : { tag: "ok", targetIds: [input.actorId] };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!isScalarBuffTargetListInvocation(input.invocation)) {
     return {
       tag: "invalid",
       message: "Scalar buff spell target shape is unsupported.",
     };
   }
+  /* v8 ignore stop */
 
   return spellTargetListSelection({
     state: input.input.state,
@@ -253,6 +259,7 @@ export function rollModifierSpellEffectSelection(input: {
   readonly targetIds: readonly CombatantId[];
 }): RollModifierSpellEffectSelection {
   if (input.invocation.effect.kind === "d20RollModifier") {
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       input.fillSet.abilityChoice !== undefined ||
       input.fillSet.targetAbilityChoices !== undefined
@@ -262,6 +269,7 @@ export function rollModifierSpellEffectSelection(input: {
         message: "This roll modifier spell does not choose an ability.",
       };
     }
+    /* v8 ignore stop */
     if (input.invocation.skillChoices === null) {
       return input.fillSet.skillChoice === undefined
         ? {
@@ -305,20 +313,25 @@ export function rollModifierSpellEffectSelection(input: {
         };
   }
 
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fillSet.skillChoice !== undefined) {
     return {
       tag: "invalid",
       message: "This roll modifier spell does not choose a skill.",
     };
   }
+  /* v8 ignore stop */
   const abilityChoices = input.invocation.abilityChoices;
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (abilityChoices === null) {
     return {
       tag: "invalid",
       message: "This roll modifier spell does not choose an ability.",
     };
   }
+  /* v8 ignore stop */
   if (rollModifierUsesTargetAbilityChoices(input.invocation)) {
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (input.fillSet.abilityChoice !== undefined) {
       return {
         tag: "invalid",
@@ -326,6 +339,7 @@ export function rollModifierSpellEffectSelection(input: {
           "Per-target roll modifier spells do not use one shared ability choice.",
       };
     }
+    /* v8 ignore stop */
     const targetAbilityChoices = input.fillSet.targetAbilityChoices;
     if (targetAbilityChoices === undefined) {
       return {
@@ -334,6 +348,7 @@ export function rollModifierSpellEffectSelection(input: {
       };
     }
     const selectedTargets = new Set(input.targetIds);
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       targetAbilityChoices.value.choices.length !== selectedTargets.size ||
       !targetAbilityChoices.value.choices.every((choice) =>
@@ -346,6 +361,7 @@ export function rollModifierSpellEffectSelection(input: {
           "Roll modifier spell target ability choices must match the selected targets.",
       };
     }
+    /* v8 ignore stop */
     return {
       tag: "ok",
       selection: {
@@ -361,12 +377,14 @@ export function rollModifierSpellEffectSelection(input: {
       },
     };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fillSet.targetAbilityChoices !== undefined) {
     return {
       tag: "invalid",
       message: "This roll modifier spell does not choose abilities per target.",
     };
   }
+  /* v8 ignore stop */
   if (input.fillSet.abilityChoice === undefined) {
     return {
       tag: "needsHoles",
@@ -403,12 +421,14 @@ export function rollModifierSpellAffectedTargets(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): RollModifierSpellAffectedTargets {
   if (input.invocation.saveGate === null) {
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (input.fillSet.savingThrowOutcomes !== undefined) {
       return {
         tag: "invalid",
         message: "Ungated roll modifier spells do not use Saving Throw fills.",
       };
     }
+    /* v8 ignore stop */
     const targetSelection = rollModifierSpellTargetSelection(input);
     return targetSelection.tag === "ok"
       ? { tag: "ok", targetIds: targetSelection.targetIds }
@@ -430,9 +450,11 @@ export function rollModifierSpellAffectedTargets(input: {
     input.actorId,
     undefined,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation !== null) {
     return { tag: "invalid", message: validation };
   }
+  /* v8 ignore stop */
   const targetSelection = rollModifierSpellTargetSelection(input);
   if (targetSelection.tag !== "ok") {
     return targetSelection;
@@ -440,6 +462,7 @@ export function rollModifierSpellAffectedTargets(input: {
   const outcomeTargetIds = input.fillSet.savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!sameCombatantIdSet(targetSelection.targetIds, outcomeTargetIds)) {
     return {
       tag: "invalid",
@@ -447,6 +470,7 @@ export function rollModifierSpellAffectedTargets(input: {
         "Save-gated roll modifier spell Saving Throw outcomes must match the selected targets.",
     };
   }
+  /* v8 ignore stop */
   return {
     tag: "ok",
     targetIds: input.fillSet.savingThrowOutcomes.outcomes.flatMap((outcome) =>

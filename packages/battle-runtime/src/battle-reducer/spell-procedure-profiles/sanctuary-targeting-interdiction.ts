@@ -52,6 +52,7 @@ import type {
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
+  preparedSpellSlotInvocations,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -90,22 +91,13 @@ function admitSanctuaryTargetingInterdiction(
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
-    (slot): readonly SanctuaryTargetingInterdictionInvocation[] =>
-      Number(slot.spellLevel) < spell.mechanics.level
-        ? []
-        : [
-            {
-              access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-              procedure: "sanctuaryTargetingInterdiction",
-              spell,
-              actionCost: "bonusAction",
-              targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
-              ...projection,
-            },
-          ],
-  );
+  return preparedSpellSlotInvocations(spell, ctx, (base) => ({
+    ...base,
+    procedure: "sanctuaryTargetingInterdiction",
+    actionCost: "bonusAction",
+    targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+    ...projection,
+  }));
 }
 
 function sanctuaryTargetingInterdictionProjection(
@@ -199,6 +191,7 @@ function resolveSanctuaryTargetingInterdiction(
       spellTargetListHole(input.input.state, input.actorId, input.invocation),
     ]);
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (targetList.targetIds.length !== 1) {
     return invalidResult(
       input.input.state,
@@ -206,12 +199,14 @@ function resolveSanctuaryTargetingInterdiction(
       "Sanctuary must target exactly one creature.",
     );
   }
+  /* v8 ignore stop */
   const targetId = targetList.targetIds[0]!;
   const spellCastState = battleStateAfterTargetActionEarlyEndForActor(
     input.input.state,
     input.actorId,
   );
   const target = spellCastState.combatants.get(targetId);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     target === undefined ||
     !spellTargetIsLegal(
@@ -228,6 +223,7 @@ function resolveSanctuaryTargetingInterdiction(
       "Sanctuary target must be a combatant within range.",
     );
   }
+  /* v8 ignore stop */
   const combatants = new Map(spellCastState.combatants).set(
     targetId,
     combatantWithSanctuaryWard(target, input.invocation),

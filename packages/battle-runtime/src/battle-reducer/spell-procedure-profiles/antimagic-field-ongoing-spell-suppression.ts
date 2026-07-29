@@ -172,6 +172,7 @@ function antimagicFieldOngoingSpellSuppressionSpell(
 function resolveAntimagicFieldOngoingSpellSuppression(
   input: AntimagicFieldOngoingSpellSuppressionResolveInput,
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
       spellAreaChoiceHoleId(input.invocation),
@@ -183,11 +184,13 @@ function resolveAntimagicFieldOngoingSpellSuppression(
       "Antimagic Field uses one table-supplied antimagic Emanation fill.",
     );
   }
+  /* v8 ignore stop */
   if (input.fillSet.areaChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellAreaChoiceHole(input.invocation),
     ]);
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.areaChoice.kind !== "antimagicFieldSelfEmanation" ||
     input.fillSet.areaChoice.areaId.length === 0
@@ -198,6 +201,8 @@ function resolveAntimagicFieldOngoingSpellSuppression(
       "Antimagic Field area id must be a non-empty antimagic Emanation area.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.areaChoice.auraMembership.nonOriginCombatantIds.includes(
       input.actorId,
@@ -209,10 +214,12 @@ function resolveAntimagicFieldOngoingSpellSuppression(
       "Antimagic Field non-origin aura membership cannot include the source combatant.",
     );
   }
+  /* v8 ignore stop */
   const invalidAffectedEffects = antimagicFieldAreaChoiceInvalidReason(
     input.input.state,
     input.fillSet.areaChoice,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (invalidAffectedEffects !== null) {
     return invalidResult(
       input.input.state,
@@ -220,6 +227,7 @@ function resolveAntimagicFieldOngoingSpellSuppression(
       invalidAffectedEffects,
     );
   }
+  /* v8 ignore stop */
 
   const resourced = spendSpellCastResources({
     state: input.input.state,

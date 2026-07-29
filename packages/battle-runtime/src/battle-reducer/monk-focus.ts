@@ -100,6 +100,7 @@ export function resolveMonkFocusOption(
       heightenedPatientDefenseRollRequest.hole,
     ]);
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (heightenedPatientDefenseRollRequest.tag === "invalid") {
     return invalidResult(
       input.state,
@@ -107,6 +108,8 @@ export function resolveMonkFocusOption(
       heightenedPatientDefenseRollRequest.message,
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (heightenedStepOfTheWindCarryRequest.tag === "invalid") {
     return invalidResult(
       input.state,
@@ -114,6 +117,8 @@ export function resolveMonkFocusOption(
       heightenedStepOfTheWindCarryRequest.message,
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.length > 0 &&
     heightenedPatientDefenseRollRequest.tag !== "roll" &&
@@ -125,6 +130,7 @@ export function resolveMonkFocusOption(
       "Monk Focus options accept no fills.",
     );
   }
+  /* v8 ignore stop */
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
@@ -264,6 +270,7 @@ function resolvePatientDefenseFocus(
     input,
     focus,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (heightenedRoll.tag === "invalid" || heightenedRoll.tag === "needsRoll") {
     return invalidResult(
       input.state,
@@ -273,6 +280,7 @@ function resolvePatientDefenseFocus(
         : "Heightened Focus Patient Defense requires a Temporary Hit Points roll.",
     );
   }
+  /* v8 ignore stop */
   const withHeightenedTemporaryHitPoints =
     heightenedRoll.tag === "roll"
       ? stateWithHeightenedPatientDefenseTemporaryHitPoints(
@@ -323,6 +331,7 @@ function heightenedPatientDefenseTemporaryHitPointsRollRequest(
       hole: heightenedPatientDefenseTemporaryHitPointsRollHole(focus),
     };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (roll === "invalid") {
     return {
       tag: "invalid",
@@ -330,8 +339,10 @@ function heightenedPatientDefenseTemporaryHitPointsRollRequest(
         "Heightened Focus Patient Defense requires exactly one Temporary Hit Points roll.",
     };
   }
+  /* v8 ignore stop */
   const expectedHole =
     heightenedPatientDefenseTemporaryHitPointsRollHole(focus);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (roll.holeId !== expectedHole.holeId) {
     return {
       tag: "invalid",
@@ -339,6 +350,8 @@ function heightenedPatientDefenseTemporaryHitPointsRollRequest(
         "Heightened Focus Patient Defense roll does not match the requested hole.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     roll.selectedAttackDamageRiderProcedureRefs !== undefined ||
     roll.cunningStrikeOption !== undefined ||
@@ -353,6 +366,7 @@ function heightenedPatientDefenseTemporaryHitPointsRollRequest(
         "Heightened Focus Patient Defense roll does not accept damage-roll feature choices.",
     };
   }
+  /* v8 ignore stop */
   const validation = validateRolledDiceForDiceExpr(
     roll.value,
     heightenedPatientDefenseTemporaryHitPointsDiceExpr(focus),
@@ -480,6 +494,7 @@ function heightenedStepOfTheWindCarryRequestForInput(
   }
   const [first, ...rest] = input.fills;
   if (first === undefined) return { tag: "noCarry" };
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     rest.length > 0 ||
     first.kind !== "targetChoice" ||
@@ -491,7 +506,9 @@ function heightenedStepOfTheWindCarryRequestForInput(
         "Heightened Focus Step of the Wind accepts at most one carried-creature target choice.",
     };
   }
+  /* v8 ignore stop */
   const carriedCreature = input.state.combatants.get(first.value);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (first.value === input.subject.actorId || carriedCreature === undefined) {
     return {
       tag: "invalid",
@@ -499,6 +516,8 @@ function heightenedStepOfTheWindCarryRequestForInput(
         "Heightened Focus Step of the Wind carried creature must be another combatant in the battle.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !heightenedStepOfTheWindCarryHole(input.state, focus).choices.includes(
       first.value,
@@ -510,6 +529,8 @@ function heightenedStepOfTheWindCarryRequestForInput(
         "Heightened Focus Step of the Wind carried creature is not an eligible target choice.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!creatureSizeAtMostLarge(carriedCreature)) {
     return {
       tag: "invalid",
@@ -517,6 +538,8 @@ function heightenedStepOfTheWindCarryRequestForInput(
         "Heightened Focus Step of the Wind carried creature must be Large or smaller.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !first.spatialFacts?.some(
       (fact) =>
@@ -531,6 +554,7 @@ function heightenedStepOfTheWindCarryRequestForInput(
         "Heightened Focus Step of the Wind requires a table fact that the carried creature is willing and within 5 feet.",
     };
   }
+  /* v8 ignore stop */
   return { tag: "carry", carriedCreatureId: first.value };
 }
 

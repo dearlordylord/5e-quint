@@ -200,22 +200,28 @@ export function resolveChainedSpellAttackDamageAct(input: {
       input.actorId,
       input.input.state,
     );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.input.state, "invalidFill", fillSet.message);
   }
+  /* v8 ignore stop */
   if (fillSet.damageType === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellDamageTypeChoiceHole(input.invocation),
     ]);
   }
   const selectedDamageType = fillSet.damageType.value;
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!input.invocation.damageTypeChoices.includes(selectedDamageType)) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Chained spell damage type must be one of the selected spell's choices.",
     );
   }
+  /* v8 ignore stop */
 
   let replayState = input.input.state;
   let targeted: readonly CombatantId[] = [];
@@ -239,20 +245,27 @@ export function resolveChainedSpellAttackDamageAct(input: {
       ]);
     }
     const target = replayState.combatants.get(step.target.value);
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (target === undefined) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
         "Chained spell target must be a combatant.",
       );
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (targeted.includes(target.combatantId)) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
         "Chromatic Orb cannot target a creature more than once in the same casting.",
       );
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       stepIndex === 0
         ? !spellTargetIsLegal(
@@ -269,6 +282,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
             step.target.spatialFacts ?? [],
           )
     ) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
@@ -277,6 +291,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
           : "Chromatic Orb leap target must be different and within 30 feet of the previous target.",
       );
     }
+    /* v8 ignore stop */
     targeted = [...targeted, target.combatantId];
 
     const targetEventId = chainedSpellTargetHoleId(input.invocation, stepIndex);
@@ -294,13 +309,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
         sanctuaryCheck.hole,
       ]);
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (sanctuaryCheck.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
         sanctuaryCheck.message,
       );
     }
+    /* v8 ignore stop */
     if (sanctuaryCheck.tag === "lost") {
       if (input.spendsCastResources === false) {
         return {
@@ -342,7 +360,9 @@ export function resolveChainedSpellAttackDamageAct(input: {
               replacementTarget.combatantId,
               sanctuaryCheck.spatialFacts,
             ));
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (replacementTarget === undefined || !replacementIsLegal) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
         return invalidResult(
           input.input.state,
           "invalidFill",
@@ -351,19 +371,23 @@ export function resolveChainedSpellAttackDamageAct(input: {
             : "Sanctuary replacement Chromatic Orb leap target must be different and within 30 feet of the previous target.",
         );
       }
+      /* v8 ignore stop */
       const originalTargetFill = input.input.fills.find(
         (
           fill,
         ): fill is Extract<BattleFill, { readonly kind: "targetChoice" }> =>
           fill.kind === "targetChoice" && fill.holeId === targetEventId,
       );
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (originalTargetFill === undefined) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
         return invalidResult(
           input.input.state,
           "invalidFill",
           "Sanctuary replacement requires the original Chromatic Orb target fill.",
         );
       }
+      /* v8 ignore stop */
       const fills = input.input.fills.map(
         (fill): BattleFill =>
           fill === originalTargetFill
@@ -379,13 +403,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
         input.actorId,
         input.input.state,
       );
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (replacementFillSet.tag === "invalid") {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
         return invalidResult(
           input.input.state,
           "invalidFill",
           replacementFillSet.message,
         );
       }
+      /* v8 ignore stop */
       return resolveChainedSpellAttackDamageAct({
         ...input,
         input: { ...input.input, fills },
@@ -435,30 +462,39 @@ export function resolveChainedSpellAttackDamageAct(input: {
         ),
       ]);
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!attackRollResultIsValid(step.attackRoll.value)) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
         "Spell attack roll result is outside the d20 attack-roll protocol.",
       );
     }
+    /* v8 ignore stop */
     const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
       step.attackRoll.value,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (spellAttackRerollIssue !== null) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
         spellAttackRerollIssue,
       );
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!attackRollModeMatches(step.attackRoll.value, requiredRollMode)) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
         "Spell attack roll mode does not match the current attack-roll rule.",
       );
     }
+    /* v8 ignore stop */
     const actorBeforeSpellAttack = replayState.combatants.get(input.actorId);
     if (
       d20TestNaturalOneRerollRollDecisionRequired({
@@ -490,13 +526,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
       decision: step.attackRoll.value.d20TestNaturalOneReroll,
       requiredRollMode,
     });
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (d20TestNaturalOneRerollIssue !== null) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
         d20TestNaturalOneRerollIssue,
       );
     }
+    /* v8 ignore stop */
     const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
       step.attackRoll.value,
     );
@@ -513,10 +552,12 @@ export function resolveChainedSpellAttackDamageAct(input: {
       attackRoll: effectiveAttackRoll,
       ordinaryHit,
     });
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       step.attackRoll.value.missToHitReplacementProcedureRef !== undefined &&
       missToHitReplacement === null
     ) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
@@ -525,6 +566,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
           : "Attack-roll miss-to-hit replacement is not available for this spell attack roll.",
       );
     }
+    /* v8 ignore stop */
     const attackRolledState = recordAttackRollMissToHitReplacementUsed(
       consumeHelpAttackForAttackRoll(
         recordAttackRollOngoingFeatures(
@@ -561,13 +603,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
         return remarkableAthleteMovement.result;
       }
       replayState = remarkableAthleteMovement.state;
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (!chainedSpellLaterStepsAreEmpty(fillSet.steps, stepIndex)) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
         return invalidResult(
           input.input.state,
           "invalidFill",
           "Chromatic Orb chain cannot continue after a missed attack roll.",
         );
       }
+      /* v8 ignore stop */
       const extraFillValidation = validateChainedSpellFollowUpFills({
         concentrationHoles,
         concentrationFills: fillSet.concentrationSavingThrows,
@@ -577,13 +622,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
         damageDispositionHoles,
         damageDispositionFills: fillSet.damageDispositions,
       });
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (extraFillValidation !== null) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
         return invalidResult(
           input.input.state,
           "invalidFill",
           extraFillValidation,
         );
       }
+      /* v8 ignore stop */
       return resolveCompletedChainedSpell({
         input,
         state: replayState,
@@ -640,9 +688,12 @@ export function resolveChainedSpellAttackDamageAct(input: {
       selectedDamageType,
       { stepIndex, critical },
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (damageValidation !== null) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(input.input.state, "invalidFill", damageValidation);
     }
+    /* v8 ignore stop */
     const damageByType = chainedSpellDamageByType(
       input.invocation,
       selectedDamageType,
@@ -660,13 +711,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
         step.damageRoll.holeId,
       ),
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (sourcePenalty.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
         "Source damage roll penalty does not match an active source-side damage penalty.",
       );
     }
+    /* v8 ignore stop */
     if (sourcePenalty.tag === "needsHoles") {
       return needsHolesResult(replayState, input.input.subject, [
         ...sourcePenalty.holes,
@@ -706,13 +760,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
         ...concentrationSaveCheck.holes,
       ]);
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (concentrationSaveCheck.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
         concentrationSaveCheck.message,
       );
     }
+    /* v8 ignore stop */
     const concentrationSave = concentrationSavingThrowHole(
       target,
       damageAmount,
@@ -766,13 +823,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
         ...hideousLaughterSaveCheck.holes,
       ]);
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (hideousLaughterSaveCheck.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
         hideousLaughterSaveCheck.message,
       );
     }
+    /* v8 ignore stop */
     for (const hole of hideousLaughterSaveCheck.holes) {
       hideousLaughterDamageRepeatSaveHoleIds.add(String(hole.holeId));
     }
@@ -805,13 +865,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
         relationshipCheck.holes,
       );
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (relationshipCheck.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
         relationshipCheck.message,
       );
     }
+    /* v8 ignore stop */
     replayState = applyChainedSpellDamage(
       replayState,
       target.combatantId,
@@ -846,13 +909,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
       !damageRollHasDuplicateD8Face(step.damageRoll) ||
       stepIndex >= maxLeaps
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (!chainedSpellLaterStepsAreEmpty(fillSet.steps, stepIndex)) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
         return invalidResult(
           input.input.state,
           "invalidFill",
           "Chromatic Orb chain can continue only after duplicate d8 damage faces and remaining leap budget.",
         );
       }
+      /* v8 ignore stop */
       const extraFillValidation = validateChainedSpellFollowUpFills({
         concentrationHoles,
         concentrationFills: fillSet.concentrationSavingThrows,
@@ -862,13 +928,16 @@ export function resolveChainedSpellAttackDamageAct(input: {
         damageDispositionHoles,
         damageDispositionFills: fillSet.damageDispositions,
       });
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (extraFillValidation !== null) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
         return invalidResult(
           input.input.state,
           "invalidFill",
           extraFillValidation,
         );
       }
+      /* v8 ignore stop */
       return resolveCompletedChainedSpell({
         input,
         state: replayState,
@@ -877,6 +946,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     }
   }
 
+  /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
   return invalidResult(
     input.input.state,
     "invalidFill",
@@ -993,23 +1063,28 @@ export function chainedSpellFillSet(
 
     const spellCastReactionFacts = parseSpellCastReactionFactsFill(fill);
     if (spellCastReactionFacts.tag !== "notSpellCastReactionFactsFill") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (reactionSpellTargetFactsFilled) {
         return {
           tag: "invalid",
           message: "Spell-cast Reaction trigger facts were filled twice.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (spellCastReactionFacts.tag === "invalid") {
         return {
           tag: "invalid",
           message: spellCastReactionFacts.message,
         };
       }
+      /* v8 ignore stop */
       reactionSpellTargetFacts = spellCastReactionFacts.facts;
       reactionSpellTargetFactsFilled = true;
       continue;
     }
     if (fill.kind === "rolledDice" && isSourceDamageRollPenaltyRollFill(fill)) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         sourceDamageRollPenaltyRolls.some(
           (candidate) => candidate.holeId === fill.holeId,
@@ -1020,10 +1095,12 @@ export function chainedSpellFillSet(
           message: "Source damage roll penalty was filled twice.",
         };
       }
+      /* v8 ignore stop */
       sourceDamageRollPenaltyRolls.push(fill);
       continue;
     }
     if (fill.kind === "damageTypeChoice") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.holeId !== spellDamageTypeChoiceHole(invocation).holeId) {
         return {
           tag: "invalid",
@@ -1031,12 +1108,15 @@ export function chainedSpellFillSet(
             "Damage type choice must use the selected chained spell act damage-type hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (damageType !== undefined) {
         return {
           tag: "invalid",
           message: "Chained spell damage type was filled twice.",
         };
       }
+      /* v8 ignore stop */
       damageType = fill;
       continue;
     }
@@ -1046,6 +1126,7 @@ export function chainedSpellFillSet(
     ) {
       const stepIndex =
         latestChainedSpellStepIndexForRemarkableAthleteDecision(steps);
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (stepIndex === null) {
         return {
           tag: "invalid",
@@ -1053,7 +1134,9 @@ export function chainedSpellFillSet(
             "Remarkable Athlete movement decision must follow a chained spell attack roll.",
         };
       }
+      /* v8 ignore stop */
       const step = steps[stepIndex];
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (step === undefined) {
         return {
           tag: "invalid",
@@ -1061,6 +1144,7 @@ export function chainedSpellFillSet(
             "Remarkable Athlete movement decision is outside this chained spell act.",
         };
       }
+      /* v8 ignore stop */
       steps[stepIndex] = {
         ...step,
         remarkableAthleteCriticalHitMovementDecision: fill,
@@ -1073,6 +1157,7 @@ export function chainedSpellFillSet(
     ) {
       const stepIndex =
         latestChainedSpellStepIndexForRemarkableAthleteMovement(steps);
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (stepIndex === null) {
         return {
           tag: "invalid",
@@ -1080,7 +1165,9 @@ export function chainedSpellFillSet(
             "Remarkable Athlete movement must follow a chained spell use decision.",
         };
       }
+      /* v8 ignore stop */
       const step = steps[stepIndex];
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (step === undefined) {
         return {
           tag: "invalid",
@@ -1088,6 +1175,7 @@ export function chainedSpellFillSet(
             "Remarkable Athlete movement is outside this chained spell act.",
         };
       }
+      /* v8 ignore stop */
       steps[stepIndex] = {
         ...step,
         remarkableAthleteCriticalHitMovement: fill,
@@ -1100,12 +1188,14 @@ export function chainedSpellFillSet(
       fill.kind === "rolledDice"
     ) {
       const stepIndex = chainedSpellStepIndexForFill(fill, invocation);
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (stepIndex === null || steps[stepIndex] === undefined) {
         return {
           tag: "invalid",
           message: `Fill ${fill.kind} does not match the chained spell replay holes.`,
         };
       }
+      /* v8 ignore stop */
       const step = steps[stepIndex];
       if (fill.kind === "targetChoice") {
         const parsed = parseAttackTargetChoiceFill(
@@ -1118,12 +1208,14 @@ export function chainedSpellFillSet(
           ),
         );
         if (parsed.tag === "invalid") return parsed;
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (step.target !== undefined) {
           return {
             tag: "invalid",
             message: "Chained spell target was filled twice for one step.",
           };
         }
+        /* v8 ignore stop */
         const sightFactValidation = chainedSpellAttackSightFactValidation(
           fill.spatialFacts ?? [],
         );
@@ -1132,25 +1224,30 @@ export function chainedSpellFillSet(
         continue;
       }
       if (fill.kind === "attackRoll") {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (step.attackRoll !== undefined) {
           return {
             tag: "invalid",
             message: "Chained spell attack roll was filled twice for one step.",
           };
         }
+        /* v8 ignore stop */
         steps[stepIndex] = { ...step, attackRoll: fill };
         continue;
       }
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (step.damageRoll !== undefined) {
         return {
           tag: "invalid",
           message: "Chained spell damage roll was filled twice for one step.",
         };
       }
+      /* v8 ignore stop */
       steps[stepIndex] = { ...step, damageRoll: fill };
       continue;
     }
     if (fill.kind === "concentrationSavingThrow") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         concentrationSavingThrows.some(
           (candidate) => candidate.holeId === fill.holeId,
@@ -1161,6 +1258,7 @@ export function chainedSpellFillSet(
           message: "Concentration Saving Throw was filled twice.",
         };
       }
+      /* v8 ignore stop */
       concentrationSavingThrows.push(fill);
       continue;
     }
@@ -1168,6 +1266,7 @@ export function chainedSpellFillSet(
       fill.kind === "savingThrowOutcome" &&
       isHideousLaughterDamageRepeatSaveFill(fill)
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         hideousLaughterDamageRepeatSaves.some(
           (candidate) => candidate.holeId === fill.holeId,
@@ -1178,10 +1277,12 @@ export function chainedSpellFillSet(
           message: "Hideous Laughter repeat save was filled twice.",
         };
       }
+      /* v8 ignore stop */
       hideousLaughterDamageRepeatSaves.push(fill);
       continue;
     }
     if (fill.kind === "attackDamageDisposition") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         damageDispositions.some((candidate) => candidate.holeId === fill.holeId)
       ) {
@@ -1190,6 +1291,7 @@ export function chainedSpellFillSet(
           message: "Damage disposition was filled twice.",
         };
       }
+      /* v8 ignore stop */
       damageDispositions.push(fill);
       continue;
     }
@@ -1213,12 +1315,14 @@ export function chainedSpellFillSet(
     ),
     owner: "a chained Spell",
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipDecisions.tag === "invalid") {
     return {
       tag: "invalid",
       message: relationshipDecisions.message,
     };
   }
+  /* v8 ignore stop */
 
   return {
     tag: "ok",

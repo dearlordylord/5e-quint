@@ -1,14 +1,27 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime.test-support.ts";
 import { Schema } from "effect";
+import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
 import { NonNegativeInteger } from "@dnd/shared/types";
 import {
+  battleObjectId,
   combatantId,
   sameBattleSubject,
   BattleSubjectSchema,
   type BattleSubject,
+  type BattleSubjectAction,
+  type BattleRuntimeCommand,
 } from "./index.ts";
+import {
+  BATTLE_SUBJECT_ACTIONS,
+  BATTLE_RUNTIME_COMMANDS,
+  battleSubjectBoundExecutionReferences,
+  battleSubjectProcedureRefs,
+} from "./battle-subjects.ts";
 import {
   battleAttackExecutionScopeRef,
   battleAttackProcedureExecutionRef,
@@ -17,9 +30,291 @@ import {
   battleId,
   battleProcedureExecutionRef,
   battleStatBlockExecutionScopeRef,
+  battleStatBlockProcedureExecutionRef,
 } from "./identity.ts";
 
+const decodeBattleSubject = Schema.decodeUnknownSync(BattleSubjectSchema);
+const encodeBattleSubject = Schema.encodeSync(BattleSubjectSchema);
+
+function expectStableBattleSubjectRoundtrip(candidate: unknown): void {
+  const subject = decodeBattleSubject(candidate);
+  const roundtripped = decodeBattleSubject(encodeBattleSubject(subject));
+
+  expect(roundtripped).toEqual(subject);
+  expect(sameBattleSubject(subject, roundtripped)).toBe(true);
+  expect(battleSubjectProcedureRefs(roundtripped)).toEqual(
+    battleSubjectProcedureRefs(subject),
+  );
+  expect(battleSubjectBoundExecutionReferences(roundtripped)).toEqual(
+    battleSubjectBoundExecutionReferences(subject),
+  );
+}
+
 describe("BattleSubject identity", () => {
+  test("every runtime command roundtrips with stable execution-reference projections", () => {
+    const actorId = combatantId("runtime-command-actor");
+    const targetId = combatantId("runtime-command-target");
+    const procedureRef = battleProcedureExecutionRefForTest(
+      "runtime-command-procedure",
+    );
+    const attackProcedureRef = battleAttackProcedureExecutionRef(
+      battleAttackExecutionScopeRef(
+        battleId("runtime-command-battle"),
+        actorId,
+        battleExecutionScopeOrdinal(0),
+      ),
+      NonNegativeInteger(0),
+    );
+    const effectRef = battleActiveEffectExecutionRefForTest(
+      "runtime-command-effect",
+    );
+    const areaId = "runtime-command-area";
+    const runtimeCommandExtras = {
+      endTurn: {},
+      endConcentration: {},
+      move: {},
+      standFromProne: {},
+      releaseReadiedSpell: { readiedSpellCasterId: targetId, procedureRef },
+      releaseReadiedMovement: { readiedMovementActorId: targetId },
+      castTriggeredReactionSpell: { reactorId: targetId, procedureRef },
+      castAttackHitBonusActionSpell: { casterId: targetId, procedureRef },
+      releaseGrapple: { targetId },
+      opportunityAttack: {
+        reactorId: targetId,
+        targetId: actorId,
+        procedureRef: attackProcedureRef,
+        attackAbility: "str",
+        attackDamageType: "slashing",
+      },
+      retaliationAttack: {
+        reactorId: targetId,
+        targetId: actorId,
+        procedureRef: attackProcedureRef,
+        attackAbility: "str",
+        attackDamageType: "slashing",
+      },
+      greaseGroundHazardSave: { areaId, trigger: "entersArea" },
+      webRestraintSave: { areaId, trigger: "startsTurnInArea" },
+      sleetStormAreaHazardSave: {
+        areaMembershipTrigger: { kind: "turnStartInArea", areaId },
+      },
+      insectPlagueAreaHazardSave: {
+        areaMembershipTrigger: { kind: "turnEndInArea", areaId },
+      },
+      cloudkillAreaHazardSave: {
+        areaMembershipTrigger: { kind: "areaMovesIntoSpace", areaId },
+      },
+      disperseCloudkill: { areaId },
+      webRestrainedNoLongerInArea: { areaId },
+      webAreaRemoved: { areaId },
+      gustOfWindLineSave: {
+        areaId,
+        directionId: "runtime-command-direction",
+        trigger: "endsTurnInLine",
+      },
+      gustOfWindLineDirectionChange: {
+        areaId,
+        directionId: "runtime-command-direction",
+      },
+      movableZoneSave: { areaId, trigger: "entersArea" },
+      moonbeamCylinderExit: { areaId },
+      movableZoneReposition: { areaId },
+      movableZoneRam: { targetId, areaId, trigger: "rammedBySphere" },
+      releaseSpellCreatedHeldObject: { effectRef },
+      protectionRelevantEffectSave: { effectRef, relevantEffect: "charmed" },
+      creatureTypeProtectionConditionAttempt: {
+        sourceCombatantId: targetId,
+        condition: "frightened",
+      },
+      creatureTypeProtectionPossessionAttempt: {
+        sourceCombatantId: targetId,
+      },
+      disperseFogCloud: { areaId },
+      wardingBondSeparation: { effectRef, targetId },
+      jumpMovementReplacement: { effectRef },
+      dragonsBreathExhale: { effectRef },
+      replaceSelfTransformationMode: {
+        effectRef,
+        mode: "naturalWeapons",
+        naturalWeaponDamageType: "fire",
+      },
+      commandGrovel: { effectRef },
+      commandDrop: { effectRef },
+      commandApproach: { effectRef },
+      commandFlee: { effectRef },
+      levitateAltitudeControl: { effectRef, targetId },
+      creatureFalls: { fallingCreatureId: targetId },
+    } as const satisfies Record<
+      BattleRuntimeCommand,
+      Readonly<Record<string, unknown>>
+    >;
+    const everyCommandInRandomOrder = fc.shuffledSubarray(
+      [...BATTLE_RUNTIME_COMMANDS],
+      {
+        minLength: BATTLE_RUNTIME_COMMANDS.length,
+        maxLength: BATTLE_RUNTIME_COMMANDS.length,
+      },
+    );
+
+    fc.assert(
+      fc.property(everyCommandInRandomOrder, (commands) => {
+        for (const command of commands) {
+          expectStableBattleSubjectRoundtrip({
+            tag: "runtimeCommand",
+            actorId,
+            command,
+            ...runtimeCommandExtras[command],
+          });
+        }
+      }),
+      { numRuns: 20 },
+    );
+  });
+
+  test("every action roundtrips with stable execution-reference projections", () => {
+    const actorId = combatantId("action-subject-actor");
+    const targetId = combatantId("action-subject-target");
+    const battle = battleId("action-subject-battle");
+    const attackProcedureRef = battleAttackProcedureExecutionRef(
+      battleAttackExecutionScopeRef(
+        battle,
+        actorId,
+        battleExecutionScopeOrdinal(0),
+      ),
+      NonNegativeInteger(0),
+    );
+    const statBlockProcedureRef = battleStatBlockProcedureExecutionRef(
+      battleStatBlockExecutionScopeRef(
+        battle,
+        actorId,
+        battleExecutionScopeOrdinal(1),
+      ),
+      NonNegativeInteger(0),
+    );
+    const effectRef = battleActiveEffectExecutionRefForTest(
+      "action-subject-effect",
+    );
+    const actionExtras = {
+      attack: {
+        procedureRef: attackProcedureRef,
+        attackAbility: "dex",
+        attackDamageType: "piercing",
+      },
+      dash: { speedKind: "walk" },
+      disengage: {},
+      dodge: {},
+      helpAttack: {},
+      hide: {},
+      multiattack: { procedureRef: statBlockProcedureRef },
+      ready: { readyTrigger: "attackHit" },
+      search: {},
+      grapple: {},
+      shove: {},
+      escapeGrapple: {},
+      escapeSpellRestraint: { targetId, effectRef },
+      shakeAwakeFromSleep: {},
+      shakeAwakeFromHypnoticPattern: {},
+    } as const satisfies Record<
+      BattleSubjectAction,
+      Readonly<Record<string, unknown>>
+    >;
+    const everyActionInRandomOrder = fc.shuffledSubarray(
+      [...BATTLE_SUBJECT_ACTIONS],
+      {
+        minLength: BATTLE_SUBJECT_ACTIONS.length,
+        maxLength: BATTLE_SUBJECT_ACTIONS.length,
+      },
+    );
+
+    fc.assert(
+      fc.property(everyActionInRandomOrder, (actions) => {
+        for (const action of actions) {
+          expectStableBattleSubjectRoundtrip({
+            tag: "action",
+            actorId,
+            action,
+            ...actionExtras[action],
+          });
+        }
+      }),
+      { numRuns: 20 },
+    );
+  });
+
+  test("reference-bearing non-action subjects roundtrip with stable projections", () => {
+    const actorId = combatantId("reference-bearing-subject-actor");
+    const companionId = combatantId("reference-bearing-subject-companion");
+    const battle = battleId("reference-bearing-subject-battle");
+    const procedureRef = battleProcedureExecutionRef(
+      battleCharacterExecutionScopeRef(
+        battle,
+        actorId,
+        battleExecutionScopeOrdinal(0),
+      ),
+      NonNegativeInteger(0),
+    );
+    const statBlockProcedureRef = battleStatBlockProcedureExecutionRef(
+      battleStatBlockExecutionScopeRef(
+        battle,
+        companionId,
+        battleExecutionScopeOrdinal(1),
+      ),
+      NonNegativeInteger(0),
+    );
+    const effectRef = battleActiveEffectExecutionRefForTest(
+      "reference-bearing-subject-effect",
+    );
+    const candidates = [
+      {
+        tag: "pactOfTheChainFamiliarAttack",
+        actorId,
+        familiarId: companionId,
+        procedureRef: statBlockProcedureRef,
+      },
+      {
+        tag: "bonusActionStandardAction",
+        actorId,
+        procedureRef,
+        sourceEffectRef: effectRef,
+        action: "dash",
+        speedKind: "walk",
+      },
+      {
+        tag: "monkFocusOption",
+        actorId,
+        procedureRef,
+        option: "patientDefense",
+        mode: "focusDisengageDodge",
+      },
+      {
+        tag: "bonusActionDashSpell",
+        actorId,
+        procedureRef,
+        mode: { tag: "cast" },
+        speedKind: "walk",
+      },
+      { tag: "unitFeature", actorId, procedureRef },
+      {
+        tag: "unitFeatureHeldWeaponActivation",
+        actorId,
+        procedureRef,
+        weaponItemId: battleObjectId("reference-bearing-subject-weapon"),
+      },
+      {
+        tag: "findFamiliarTouchSpell",
+        actorId,
+        procedureRef,
+        companionId,
+        spellAction: "action",
+        mode: { tag: "cast" },
+      },
+    ] as const;
+
+    for (const candidate of candidates) {
+      expectStableBattleSubjectRoundtrip(candidate);
+    }
+  });
+
   test("attack ability projections of one bound procedure remain distinct", () => {
     const actorId = combatantId("ability-choice-attacker");
     const procedureRef = battleAttackProcedureExecutionRef(

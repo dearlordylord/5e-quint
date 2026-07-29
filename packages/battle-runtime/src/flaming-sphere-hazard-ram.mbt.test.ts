@@ -18,7 +18,7 @@ import {
   resolveFlamingSphereCast,
   resolveFlamingSphereHazardRam,
   type FlamingSphereHazardRamState,
-} from "./battle-reducer/flaming-sphere-hazard-ram.ts";
+} from "./battle-reducer/flaming-sphere-hazard-ram.test-support.ts";
 
 function initialState(slotLedgerLevel: number): FlamingSphereHazardRamState {
   return {

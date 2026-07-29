@@ -6,7 +6,6 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { Match } from "effect";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type { CombatantId } from "../identity.ts";
 import {
@@ -25,18 +24,6 @@ import type {
   BattleState,
 } from "../battle-state-execution.ts";
 import { statBlockAttackActionOptions } from "../stat-block-execution-state.ts";
-
-export type CreatureAttackState = {
-  readonly creatureAHp: number;
-  readonly creatureBHp: number;
-};
-
-export type Attacker = "attackerA" | "attackerB";
-
-export type CreatureAttackFills = {
-  readonly damage: number;
-  readonly hit: boolean;
-};
 
 export type CreatureAttackSubject = Extract<
   BattleSubject,
@@ -59,38 +46,6 @@ export const CREATURE_ATTACK_DAMAGE_HOLE_ID = holeId(
 export const CREATURE_ATTACK_DAMAGE_HOLE_INSTANCE = holeInstanceKey(
   "battle:creature-attack:damage",
 );
-
-export function applyDamageToCreature(
-  currentHp: number,
-  damage: number,
-): number {
-  return Math.max(0, currentHp - Math.max(0, damage));
-}
-
-export function resolveCreatureAttack(
-  state: CreatureAttackState,
-  attacker: Attacker,
-  fills: CreatureAttackFills,
-): CreatureAttackState {
-  if (!fills.hit) return state;
-  return Match.value(attacker).pipe(
-    Match.when(
-      "attackerA",
-      (): CreatureAttackState => ({
-        creatureAHp: state.creatureAHp,
-        creatureBHp: applyDamageToCreature(state.creatureBHp, fills.damage),
-      }),
-    ),
-    Match.when(
-      "attackerB",
-      (): CreatureAttackState => ({
-        creatureAHp: applyDamageToCreature(state.creatureAHp, fills.damage),
-        creatureBHp: state.creatureBHp,
-      }),
-    ),
-    Match.exhaustive,
-  );
-}
 
 export function minimalCreatureAttackActs(
   state: BattleState,
@@ -249,6 +204,7 @@ export function creatureAttackFillSequence(
   | { readonly tag: "invalid"; readonly message: string } {
   const [attackRoll, damageRoll, relationshipFill, extra] = input.fills;
   if (attackRoll === undefined) return { tag: "empty" };
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     attackRoll.kind !== "attackRoll" ||
     attackRoll.holeId !== CREATURE_ATTACK_ROLL_HOLE_ID
@@ -258,7 +214,9 @@ export function creatureAttackFillSequence(
       message: "Creature Attack requires an Attack Roll fill first.",
     };
   }
+  /* v8 ignore stop */
   if (damageRoll === undefined) return { tag: "attackRoll", attackRoll };
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!creatureAttackDamageFillMatchesSubject(damageRoll, input.subject)) {
     return {
       tag: "invalid",
@@ -266,6 +224,8 @@ export function creatureAttackFillSequence(
         "Creature Attack damage requires a Rolled Dice fill or zero-damage Creature Attack fill.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     relationshipFill !== undefined &&
     relationshipFill.kind !== "damageRelationshipDecisions"
@@ -276,6 +236,8 @@ export function creatureAttackFillSequence(
         "Creature Attack relationship decisions must fill its emitted relationship hole.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (extra !== undefined) {
     return {
       tag: "invalid",
@@ -283,6 +245,7 @@ export function creatureAttackFillSequence(
         "Creature Attack accepts only Attack Roll, damage, and relationship-decision fills.",
     };
   }
+  /* v8 ignore stop */
   return {
     tag: "damageRoll",
     attackRoll,

@@ -81,6 +81,7 @@ import {
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
+  preparedSpellSlotInvocations,
   spellAdmissionBattleTurn,
   spellAdmissionOngoingSpellEffectSuppressed,
   SpellRuleExecutionFactsSchema,
@@ -137,25 +138,17 @@ function admitSpiritualWeaponAttackProxy(
     return [];
   }
   const spellcasting = ctx.actor.origin.spellcasting;
-  return spellcasting.spellSlots.flatMap(
-    (slot): readonly SpiritualWeaponAttackProxyInvocation[] => {
-      if (Number(slot.spellLevel) < spell.mechanics.level) {
-        return [];
-      }
-      const damageExpr = supportedDamageAmountExpr({
-        amount: proxy.damageAmount,
-        spellLevel: spell.mechanics.level,
-        slotLevel: slot.spellLevel,
-      });
-      if (damageExpr === null) {
-        return [];
-      }
-      return [
-        {
-          access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+  return preparedSpellSlotInvocations(spell, ctx, (base, slotLevel) => {
+    const damageExpr = supportedDamageAmountExpr({
+      amount: proxy.damageAmount,
+      spellLevel: spell.mechanics.level,
+      slotLevel,
+    });
+    return damageExpr === null
+      ? null
+      : {
+          ...base,
           procedure: "spiritualWeaponAttackProxy",
-          spell,
           actionCost: "bonusAction",
           targeting: { kind: "singleCombatant" },
           durationTicks: proxy.durationTicks,
@@ -176,10 +169,8 @@ function admitSpiritualWeaponAttackProxy(
               spellcasting.spellcastingAbilityModifier,
             proficiencyBonus: spellcasting.proficiencyBonus,
           }),
-        },
-      ];
-    },
-  );
+        };
+  });
 }
 
 function admitSpiritualWeaponRepeatAttack(

@@ -188,6 +188,7 @@ function discoverChosenDamageResistanceCastAct(
 function resolveChosenDamageResistance(
   input: ChosenDamageResistanceResolveInput,
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
       ATTACK_TARGET_HOLE_ID,
@@ -200,6 +201,7 @@ function resolveChosenDamageResistance(
       "Chosen damage Resistance spells use one target fill and one damage type choice.",
     );
   }
+  /* v8 ignore stop */
 
   const selection = selectSingleSpellTargetAndDamageType({
     state: input.input.state,

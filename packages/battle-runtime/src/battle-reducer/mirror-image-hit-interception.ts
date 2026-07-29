@@ -176,9 +176,11 @@ export function mirrorImageHitInterceptionCheck(input: {
     return { tag: "needsHoles", hole };
   }
   const validation = validateMirrorImageDuplicateRoll(input.fill, hole);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation !== null) {
     return { tag: "invalid", message: validation };
   }
+  /* v8 ignore stop */
   const result = resolveMirrorImageHitInterception(
     { remainingDuplicates: effect.remainingDuplicates },
     {

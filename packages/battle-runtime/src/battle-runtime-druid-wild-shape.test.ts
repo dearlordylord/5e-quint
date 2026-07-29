@@ -34,6 +34,7 @@ import {
   activeDruidWildShape,
   spendActiveDruidWildShapeProcedureResources,
 } from "./battle-reducer/druid-wild-shape.ts";
+import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
 import {
   attackInitialTargetHole,
   attackRollFill,
@@ -602,7 +603,17 @@ test("projects practical worn Wild Shape equipment into the effective loadout", 
 
 test("uses a practical worn Wild Shape weapon when form limbs can handle objects", () => {
   const initial = druidWildShapeBattle({
-    attack: weakTrueFormLongswordAttack(),
+    attack: {
+      ...weakTrueFormLongswordAttack(),
+      alternateAbilityChoices: [
+        {
+          ability: "dex",
+          abilityModifier: abilityModifier(2),
+          attackBonus: attackBonus(4),
+          damageAbilityModifier: abilityModifier(2),
+        },
+      ],
+    },
     selectedLoadout: {
       weapon: {
         itemId: battleObjectId("main:weapon_longsword"),
@@ -696,6 +707,17 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
     abilityModifier: 3,
     attackBonus: 5,
     damageAbilityModifier: 3,
+  });
+  expect(
+    attackActionOptionsForActor(resolved.state, druidId).find(
+      (attack) => attack.kind === "weapon" && attack.ability === "dex",
+    ),
+  ).toMatchObject({
+    kind: "weapon",
+    ability: "dex",
+    abilityModifier: 1,
+    attackBonus: 3,
+    damageAbilityModifier: 1,
   });
 
   const needsDamage = resolveBattleSubject({

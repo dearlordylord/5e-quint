@@ -73,19 +73,6 @@ export const EXTENDED_SPELL_METAMAGIC_SELECTION = [
   { effectKind: EXTENDED_METAMAGIC_EFFECT_KIND },
 ] as const satisfies readonly [SpellMetamagicSelection];
 
-const SPELL_METAMAGIC_EFFECT_KIND_LABELS = {
-  [CAREFUL_METAMAGIC_EFFECT_KIND]: "Careful Spell",
-  [DISTANT_METAMAGIC_EFFECT_KIND]: "Distant Spell",
-  [EMPOWERED_METAMAGIC_EFFECT_KIND]: "Empowered Spell",
-  [EXTENDED_METAMAGIC_EFFECT_KIND]: "Extended Spell",
-  [HEIGHTENED_METAMAGIC_EFFECT_KIND]: "Heightened Spell",
-  [QUICKENED_METAMAGIC_EFFECT_KIND]: "Quickened Spell",
-  [SEEKING_METAMAGIC_EFFECT_KIND]: "Seeking Spell",
-  [SUBTLE_METAMAGIC_EFFECT_KIND]: "Subtle Spell",
-  [TRANSMUTED_METAMAGIC_EFFECT_KIND]: "Transmuted Spell",
-  [TWINNED_METAMAGIC_EFFECT_KIND]: "Twinned Spell",
-} as const satisfies Record<CharacterBattleMetamagicEffectKind, string>;
-
 export { TRANSMUTED_METAMAGIC_EFFECT_KIND } from "./metamagic-transmuted-facts.ts";
 export type { TransmutedSpellDamageType } from "./metamagic-transmuted-facts.ts";
 
@@ -436,15 +423,6 @@ export function spellMetamagicApplications(
         isSpellMetamagicApplicationFactWithoutSelectionPayload(option),
     ),
   );
-}
-
-export function spellMetamagicLabel(
-  metamagic: readonly [
-    Pick<SpellMetamagicSelection, "effectKind">,
-    ...Pick<SpellMetamagicSelection, "effectKind">[],
-  ],
-): string {
-  return SPELL_METAMAGIC_EFFECT_KIND_LABELS[metamagic[0].effectKind];
 }
 
 export function transmutedSpellMetamagicLabel(

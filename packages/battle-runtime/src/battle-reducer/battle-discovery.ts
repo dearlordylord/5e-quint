@@ -27,7 +27,6 @@ import {
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { type StandardActionKind } from "@dnd/shared/game-facts";
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
-import { Match } from "effect";
 import * as Either from "effect/Either";
 import { BATTLE_INTERRUPT_TRIGGERS } from "../battle-interrupt-triggers.ts";
 import type {
@@ -1818,13 +1817,4 @@ export function isStatBlockBattleCreatureState(
   return combatant?.origin.kind === "statBlock";
 }
 
-export function standardActionLabel(
-  standardAction: SupportedStatBlockBonusActionStandardAction,
-): string {
-  return Match.value(standardAction).pipe(
-    Match.when("disengage", () => "Disengage"),
-    Match.when("hide", () => "Hide"),
-    Match.exhaustive,
-  );
-}
 // KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY

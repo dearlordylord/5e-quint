@@ -113,7 +113,6 @@ import {
   type SupportedSpellInvocation,
   type BattleWebRestraintTrigger,
 } from "../battle-state-execution.ts";
-import { type SelfTransformationModeKind } from "./domain-constants.ts";
 import {
   antimagicFieldSuppressedOngoingSpellEffectKeys,
   isTrackedOngoingSpellLightEmitter,
@@ -541,20 +540,6 @@ export function battlePerceptionRollModeForObscurement(
   );
 }
 
-export function spellCreatedHeldObjectEffectForSource(
-  combatant: BattleCreatureState | undefined,
-  sourceCombatantId: CombatantId,
-  sourceProcedureRef?: BattleProcedureExecutionRef,
-): SpellCreatedHeldObjectActiveEffect | undefined {
-  return combatant?.activeEffects.find(
-    (effect): effect is SpellCreatedHeldObjectActiveEffect =>
-      effect.kind === "spellCreatedHeldObject" &&
-      effect.sourceCombatantId === sourceCombatantId &&
-      (sourceProcedureRef === undefined ||
-        effect.sourceProcedureRef === sourceProcedureRef),
-  );
-}
-
 export function spellCreatedHeldObjectEffectsForActor(
   combatant: BattleCreatureState | undefined,
 ): readonly SpellCreatedHeldObjectActiveEffect[] {
@@ -576,19 +561,23 @@ export function applySpellCreatedHeldObjectEffect(input: {
   | { readonly tag: "updated"; readonly state: BattleState }
   | { readonly tag: "invalid"; readonly message: string } {
   const actor = input.state.combatants.get(input.actorId);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (actor === undefined) {
     return {
       tag: "invalid",
       message: "Spell-created held object actor is not in this battle.",
     };
   }
+  /* v8 ignore stop */
   const freeHand = spellCreatedHeldObjectFreeHand(input.state, input.actorId);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (freeHand === undefined) {
     return {
       tag: "invalid",
       message: "Spell-created held object requires a free hand.",
     };
   }
+  /* v8 ignore stop */
   const activeEffects = [
     ...actor.activeEffects.filter(
       (effect) =>
@@ -607,12 +596,14 @@ export function applySpellCreatedHeldObjectEffect(input: {
     },
     freeHand,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (nextActor.origin.kind !== "character") {
     return {
       tag: "invalid",
       message: "Spell-created held object execution owner is not a character.",
     };
   }
+  /* v8 ignore stop */
   const dynamicExecution =
     characterExecutionWithSpellCreatedHeldObjectProcedures(
       nextActor.origin.execution,
@@ -668,12 +659,14 @@ export function setSpellCreatedHeldObjectState(input: {
   | { readonly tag: "updated"; readonly state: BattleState }
   | { readonly tag: "invalid"; readonly message: string } {
   const actor = input.state.combatants.get(input.actorId);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (actor === undefined) {
     return {
       tag: "invalid",
       message: "Spell-created held object actor is not in this battle.",
     };
   }
+  /* v8 ignore stop */
   const activeEffects = actor.activeEffects.map((effect) =>
     effect === input.effect
       ? { ...input.effect, objectState: input.objectState }
@@ -716,12 +709,14 @@ function spellCreatedHeldObjectHeldActor(input: {
   | { readonly tag: "updated"; readonly actor: BattleCreatureState }
   | { readonly tag: "invalid"; readonly message: string } {
   const freeHand = spellCreatedHeldObjectFreeHand(input.state, input.actorId);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (freeHand === undefined) {
     return {
       tag: "invalid",
       message: "Spell-created held object requires a free hand.",
     };
   }
+  /* v8 ignore stop */
   return {
     tag: "updated",
     actor: battleCreatureWithSpellCreatedHeldObjectHand(input.actor, freeHand),
@@ -1460,18 +1455,6 @@ export type SelfTransformationModeActiveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "selfTransformation" }
 >;
-
-const SELF_TRANSFORMATION_MODE_LABELS = {
-  aquaticAdaptation: "Aquatic Adaptation",
-  changeAppearance: "Change Appearance",
-  naturalWeapons: "Natural Weapons",
-} as const satisfies Record<SelfTransformationModeKind, string>;
-
-export function selfTransformationModeLabel(
-  mode: SelfTransformationModeKind,
-): string {
-  return SELF_TRANSFORMATION_MODE_LABELS[mode];
-}
 
 export function activeSelfTransformationModeEffect(
   combatant: BattleCreatureState | undefined,

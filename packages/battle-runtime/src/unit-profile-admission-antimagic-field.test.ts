@@ -49,6 +49,7 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
+  assertBattleSnapshotCodecRoundTripForTest,
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   resolveBattleSubject,
@@ -74,6 +75,15 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       spellId: antimagicFieldUnitId,
       slotLevel: 8,
     });
+    const awaitingArea = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [],
+    });
+    if (awaitingArea.tag !== "needsHoles") {
+      throw new Error("Expected Antimagic Field area choice.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(awaitingArea.snapshot);
 
     expect(act).toEqual(
       expect.objectContaining({

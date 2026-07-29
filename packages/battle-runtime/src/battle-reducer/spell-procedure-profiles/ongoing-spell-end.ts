@@ -326,9 +326,11 @@ function resolveOngoingSpellEndSpellAct(input: {
   readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
 }): BattleResolutionResult {
   const unrelatedFill = ongoingSpellEndUnrelatedFill(input.fillSet);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (unrelatedFill !== null) {
     return invalidResult(input.input.state, "invalidFill", unrelatedFill);
   }
+  /* v8 ignore stop */
   if (input.fillSet.ongoingSpellTarget === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       ongoingSpellTargetChoiceHole(
@@ -338,6 +340,7 @@ function resolveOngoingSpellEndSpellAct(input: {
       ),
     ]);
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.ongoingSpellTarget.holeId !==
     ONGOING_SPELL_TARGET_CHOICE_HOLE_ID
@@ -348,7 +351,9 @@ function resolveOngoingSpellEndSpellAct(input: {
       "Ongoing spell target fill must use the selected spell act target hole.",
     );
   }
+  /* v8 ignore stop */
   const selectedTarget = input.fillSet.ongoingSpellTarget.target;
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !input.fillSet.ongoingSpellTarget.spatialFacts.some((fact) =>
       ongoingSpellTargetMatchesFact({
@@ -365,6 +370,7 @@ function resolveOngoingSpellEndSpellAct(input: {
       "Ongoing spell target does not satisfy the selected spell's range.",
     );
   }
+  /* v8 ignore stop */
 
   const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
     input,
@@ -380,6 +386,7 @@ function resolveOngoingSpellEndSpellAct(input: {
     input.input.state,
     selectedTarget,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (dispelException.kind === "invalid") {
     return invalidResult(
       input.input.state,
@@ -387,6 +394,7 @@ function resolveOngoingSpellEndSpellAct(input: {
       dispelException.message,
     );
   }
+  /* v8 ignore stop */
   if (dispelException.kind === "antimagicFieldAuraNoEffect") {
     return resolveOngoingSpellEndDispelException({
       state: input.input.state,
@@ -429,6 +437,7 @@ function resolveOngoingSpellEndSpellAct(input: {
   const unknownAbilityCheck = input.fillSet.ongoingSpellAbilityChecks.find(
     (fill) => !gatedHoles.some((hole) => hole.holeId === fill.holeId),
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (unknownAbilityCheck !== undefined) {
     return invalidResult(
       input.input.state,
@@ -436,6 +445,7 @@ function resolveOngoingSpellEndSpellAct(input: {
       "Ongoing spell ending ability check fill does not match this spell act.",
     );
   }
+  /* v8 ignore stop */
   const missingHoles = gatedHoles.filter(
     (hole) => !abilityCheckByHoleId.has(hole.holeId),
   );

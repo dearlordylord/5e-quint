@@ -2275,6 +2275,35 @@ export function resolveBattleSubjectUncheckedForTest(
   return resolveBattleSubjectRuntime(input);
 }
 
+export function assertBattleSnapshotCodecRoundTripForTest(
+  snapshot: Schema.Schema.Type<typeof BattleSnapshotSchema>,
+): void {
+  Schema.decodeUnknownSync(BattleSnapshotSchema)(
+    Schema.encodeSync(BattleSnapshotSchema)(snapshot),
+  );
+}
+
+export function assertBattleSnapshotCodecAcceptsHolesForSubjectForTest(input: {
+  readonly snapshot: Schema.Schema.Type<typeof BattleSnapshotSchema>;
+  readonly subject: BattleSubject;
+  readonly holes: readonly BattleHole[];
+}): void {
+  const actIndex = input.snapshot.acts.findIndex((act) =>
+    sameBattleSubject(act.subject, input.subject),
+  );
+  if (actIndex < 0) {
+    throw new Error(
+      "Expected the persisted snapshot to contain the hole-owning subject.",
+    );
+  }
+  Schema.decodeUnknownSync(BattleSnapshotSchema)({
+    ...Schema.encodeSync(BattleSnapshotSchema)(input.snapshot),
+    acts: input.snapshot.acts.map((act, index) =>
+      index === actIndex ? { ...act, initialHoles: input.holes } : act,
+    ),
+  });
+}
+
 function bindSelectedSpellSpatialFactsForTest(
   fills: readonly BattleFill[],
   procedureRef: BattleProcedureExecutionRef,

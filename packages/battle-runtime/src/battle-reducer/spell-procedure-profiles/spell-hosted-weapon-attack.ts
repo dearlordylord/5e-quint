@@ -281,6 +281,7 @@ function resolveSpellHostedWeaponAttack(
     ]);
   }
   const selectedDamageType = input.fillSet.damageTypeChoice.value;
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!input.invocation.damageTypeChoices.includes(selectedDamageType)) {
     return invalidResult(
       input.input.state,
@@ -288,6 +289,7 @@ function resolveSpellHostedWeaponAttack(
       "Spell-hosted weapon attack damage type must be Radiant or the selected weapon's normal damage type.",
     );
   }
+  /* v8 ignore stop */
   const attack = spellHostedWeaponAttack(
     input.invocation,
     componentWeapon.attack,

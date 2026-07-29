@@ -70,6 +70,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   applyCondition,
+  assertBattleSnapshotCodecRoundTripForTest,
   battleCreatureStateWithKnockOutPreservedConditions,
   breakBattleConcentration,
   cantripSpellInvocationRef,
@@ -429,6 +430,15 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     const act = spellAct({ session: state, spellId: guidanceUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const skillHole = requireHole(act.initialHoles, "skillChoice");
+    const awaitingSkill = resolveBattleSubject({
+      state: state.state,
+      subject: act.subject,
+      fills: [],
+    });
+    if (awaitingSkill.tag !== "needsHoles") {
+      throw new Error("Expected Guidance skill choice.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(awaitingSkill.snapshot);
 
     expect({
       ...act.subject,
@@ -607,6 +617,15 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     const act = spellAct({ session: state, spellId: enhanceAbilityUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const abilityHole = requireHole(act.initialHoles, "abilityChoice");
+    const awaitingAbility = resolveBattleSubject({
+      state: state.state,
+      subject: act.subject,
+      fills: [],
+    });
+    if (awaitingAbility.tag !== "needsHoles") {
+      throw new Error("Expected Enhance Ability ability choice.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(awaitingAbility.snapshot);
 
     expect({
       ...act.subject,
@@ -823,6 +842,15 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       act.initialHoles,
       "targetAbilityChoices",
     );
+    const awaitingTargetAbilities = resolveBattleSubject({
+      state: state.state,
+      subject: act.subject,
+      fills: [],
+    });
+    if (awaitingTargetAbilities.tag !== "needsHoles") {
+      throw new Error("Expected per-target Enhance Ability choices.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(awaitingTargetAbilities.snapshot);
 
     expect({
       ...act.subject,

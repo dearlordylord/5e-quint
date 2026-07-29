@@ -3,7 +3,12 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-hellish-rebuke spell.invocation-damage-save-or-attack
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
 import * as Either from "effect/Either";
+import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
+import {
+  BattleInterruptProcedureChoiceSchema,
+  BattleSnapshotSchema,
+} from "./index.ts";
 
 import {
   abilityModifier,
@@ -890,6 +895,14 @@ function expectHellishRebukeChoice(
   if (choice?.kind !== "castTriggeredReactionSpell") {
     throw new Error("Expected Hellish Rebuke Reaction spell choice.");
   }
+  expect(() =>
+    Schema.decodeUnknownSync(BattleInterruptProcedureChoiceSchema)(choice),
+  ).not.toThrow();
+  expect(() =>
+    Schema.decodeUnknownSync(BattleSnapshotSchema)(
+      Schema.encodeSync(BattleSnapshotSchema)(result.snapshot),
+    ),
+  ).not.toThrow();
   expect(
     characterSpellInvocationRefForProcedureRefForTest(
       battleRuntimeSessionForTest({ ...session, state: result.state }),

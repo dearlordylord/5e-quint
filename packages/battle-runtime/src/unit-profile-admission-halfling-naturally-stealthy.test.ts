@@ -8,6 +8,8 @@ import { describe, expect, test } from "vitest";
 import type { BattleHidePrerequisite } from "./battle-state-execution.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
+import { removeBattleCombatants } from "./battle-reducer/combatant-removal.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   abilityCheckFill,
   characterSeed,
@@ -221,6 +223,28 @@ describe("L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME deterministic profile 
 
     expect(Either.isLeft(unknown)).toBe(true);
     expect(Either.isLeft(selfObscuring)).toBe(true);
+  });
+
+  test("removing the obscuring creature prunes its hider's prerequisite", () => {
+    const { unitRef } = supportSelection(
+      unitLibrary.requireUnit(speciesHalflingNaturallyStealthyUnitId),
+    );
+    const session = naturallyStealthyBattle({
+      actorSize: "small",
+      obscuringCreatureSize: "medium",
+      unitRef,
+    });
+
+    const removed = removeBattleCombatants({
+      state: session.state,
+      combatantIds: [obscuringCreatureId],
+    });
+
+    expect(Either.isRight(removed)).toBe(true);
+    if (Either.isLeft(removed)) {
+      throw new Error(battleStateInitIssueMessage(removed.left));
+    }
+    expect(removed.right.hidePrerequisites.has(fighterId)).toBe(false);
   });
 });
 

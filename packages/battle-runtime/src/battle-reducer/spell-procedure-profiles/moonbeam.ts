@@ -42,6 +42,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import {
+  preparedSpellSlotInvocations,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -103,25 +104,17 @@ function admitMoonbeam(
     return [];
   }
 
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
-    (slot): readonly MoonbeamSpellInvocation[] => {
-      if (Number(slot.spellLevel) < spell.mechanics.level) {
-        return [];
-      }
-      const damageExpr = supportedDamageAmountExpr({
-        amount: moonbeam.damageAmount,
-        spellLevel: spell.mechanics.level,
-        slotLevel: slot.spellLevel,
-      });
-      if (damageExpr === null) {
-        return [];
-      }
-      return [
-        {
-          access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+  return preparedSpellSlotInvocations(spell, ctx, (base, slotLevel) => {
+    const damageExpr = supportedDamageAmountExpr({
+      amount: moonbeam.damageAmount,
+      spellLevel: spell.mechanics.level,
+      slotLevel,
+    });
+    return damageExpr === null
+      ? null
+      : {
+          ...base,
           procedure: "moonbeam",
-          spell,
           ability: "con",
           dc: { kind: "caster_spell_save_dc" },
           targeting: {
@@ -133,10 +126,8 @@ function admitMoonbeam(
           rangeFeet: movementFeet(MOONBEAM_RANGE_FEET),
           repositionMaxMoveFeet: movementFeet(moonbeam.repositionMaxMoveFeet),
           damage: { expr: damageExpr, damageType: "radiant" },
-        },
-      ];
-    },
-  );
+        };
+  });
 }
 
 function moonbeamSpell(

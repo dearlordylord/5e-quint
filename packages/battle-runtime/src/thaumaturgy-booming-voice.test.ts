@@ -18,6 +18,7 @@ import {
 
 import {
   battleId,
+  assertBattleSnapshotCodecRoundTripForTest,
   cantripSpellInvocationRef,
   characterSeed,
   difficultyClass,
@@ -104,6 +105,7 @@ describe("Thaumaturgy Booming Voice", () => {
       }),
     );
     const countHole = findThaumaturgyCountHole(missing.holes);
+    assertBattleSnapshotCodecRoundTripForTest(missing.snapshot);
     const rejected = resolveBattleSubject({
       state: state.state,
       subject: act.subject,

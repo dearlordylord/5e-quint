@@ -28,6 +28,9 @@ const validRecord = readFileSync(
   "utf8",
 );
 const require = createRequire(import.meta.url);
+// This integration check deliberately builds the real local RAW index through
+// CJS; its measured cold path is just over Vitest's 5 s default.
+const REAL_LOCATOR_DIAGNOSTIC_TIMEOUT_MS = 10_000;
 
 describe("Surface content publication checker", () => {
   it("returns unreadable RAW input as a typed publication issue", () => {
@@ -106,51 +109,55 @@ describe("Surface content publication checker", () => {
     }
   });
 
-  it("preserves real locator diagnostics across the CJS boundary", () => {
-    const candidate: unknown = require("./srd521-surface-authored-corpus-audit.cjs");
-    expect(typeof candidate).toBe("object");
-    expect(candidate).not.toBeNull();
-    if (typeof candidate !== "object" || candidate === null) return;
-    const buildReferenceIndex = Reflect.get(candidate, "buildReferenceIndex");
-    const rulesExcerptForSection = Reflect.get(
-      candidate,
-      "rulesExcerptForSection",
-    );
-    expect(typeof buildReferenceIndex).toBe("function");
-    expect(typeof rulesExcerptForSection).toBe("function");
-    if (
-      typeof buildReferenceIndex !== "function" ||
-      typeof rulesExcerptForSection !== "function"
-    ) {
-      return;
-    }
-    const index: unknown = buildReferenceIndex();
-    const actualAliasResult: unknown = rulesExcerptForSection(
-      "MagicItems#Cloak of Protection",
-      index,
-    );
+  it(
+    "preserves real locator diagnostics across the CJS boundary",
+    () => {
+      const candidate: unknown = require("./srd521-surface-authored-corpus-audit.cjs");
+      expect(typeof candidate).toBe("object");
+      expect(candidate).not.toBeNull();
+      if (typeof candidate !== "object" || candidate === null) return;
+      const buildReferenceIndex = Reflect.get(candidate, "buildReferenceIndex");
+      const rulesExcerptForSection = Reflect.get(
+        candidate,
+        "rulesExcerptForSection",
+      );
+      expect(typeof buildReferenceIndex).toBe("function");
+      expect(typeof rulesExcerptForSection).toBe("function");
+      if (
+        typeof buildReferenceIndex !== "function" ||
+        typeof rulesExcerptForSection !== "function"
+      ) {
+        return;
+      }
+      const index: unknown = buildReferenceIndex();
+      const actualAliasResult: unknown = rulesExcerptForSection(
+        "MagicItems#Cloak of Protection",
+        index,
+      );
 
-    const publication = buildSrdSurfacePublication({
-      excerptSource: {
-        buildReferenceIndex: () => index,
-        rulesExcerptForSection: () => actualAliasResult,
-      },
-    });
-
-    expect(publication.tag).toBe("invalid");
-    if (publication.tag === "invalid") {
-      expect(publication.issues[0]).toMatchObject({
-        kind: "record-excerpt-invalid",
-        reason: "invalid-locator",
-        resolutions: [
-          {
-            part: "MagicItems#Cloak of Protection",
-            status: "ok-heading-alias",
-          },
-        ],
+      const publication = buildSrdSurfacePublication({
+        excerptSource: {
+          buildReferenceIndex: () => index,
+          rulesExcerptForSection: () => actualAliasResult,
+        },
       });
-    }
-  });
+
+      expect(publication.tag).toBe("invalid");
+      if (publication.tag === "invalid") {
+        expect(publication.issues[0]).toMatchObject({
+          kind: "record-excerpt-invalid",
+          reason: "invalid-locator",
+          resolutions: [
+            {
+              part: "MagicItems#Cloak of Protection",
+              status: "ok-heading-alias",
+            },
+          ],
+        });
+      }
+    },
+    REAL_LOCATOR_DIAGNOSTIC_TIMEOUT_MS,
+  );
 
   it("requires the compiler version that owns byte-exact publication", () => {
     expect(

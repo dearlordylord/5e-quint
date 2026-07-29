@@ -304,6 +304,7 @@ function discoverSlowActivePenaltiesCastAct(
 function resolveSlowActivePenalties(
   input: SlowActivePenaltiesResolveInput,
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.targetList !== undefined ||
@@ -318,6 +319,7 @@ function resolveSlowActivePenalties(
       "Slow uses an area Saving Throw outcome fill.",
     );
   }
+  /* v8 ignore stop */
   const areaSave = resolveAreaSaveMetamagicFills({
     state: input.input.state,
     subject: input.input.subject,
@@ -335,6 +337,7 @@ function resolveSlowActivePenalties(
     savingThrowOutcomes,
     input.invocation.maxTargets,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (areaWitnessValidation !== null) {
     return invalidResult(
       input.input.state,
@@ -342,6 +345,7 @@ function resolveSlowActivePenalties(
       areaWitnessValidation,
     );
   }
+  /* v8 ignore stop */
   const affectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );

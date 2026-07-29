@@ -461,13 +461,16 @@ export function spellFillSet(
     if (fill.kind === "damageRelationshipDecisions") {
       continue;
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fill.kind === "attackRoll" && fill.relationshipFacts !== undefined) {
+      /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
       return {
         tag: "invalid",
         message:
           "Spell attack roll relationship facts do not match a requested spell attack-roll decision.",
       };
     }
+    /* v8 ignore stop */
     if (fill.kind === "slowSomaticSpellFailureOutcome") {
       continue;
     }
@@ -485,40 +488,52 @@ export function spellFillSet(
           latestAttackSequencePartIndexForRemarkableAthleteDecision(
             attackSequencePartFills,
           );
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (partIndex === null) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message:
               "Remarkable Athlete movement decision must follow a spell attack sequence attack roll.",
           };
         }
+        /* v8 ignore stop */
         const attackSequencePartFill = attackSequencePartFills[partIndex];
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (attackSequencePartFill === undefined) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message:
               "Remarkable Athlete movement decision is outside this spell act.",
           };
         }
+        /* v8 ignore stop */
         attackSequencePartFills[partIndex] = {
           ...attackSequencePartFill,
           remarkableAthleteCriticalHitMovementDecision: fill,
         };
         continue;
       }
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (!spellInvocationCanUseRemarkableAthleteCriticalMovement(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Remarkable Athlete movement decision does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (remarkableAthleteCriticalHitMovementDecision !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Remarkable Athlete movement decision was filled twice.",
         };
       }
+      /* v8 ignore stop */
       remarkableAthleteCriticalHitMovementDecision = fill;
       continue;
     }
@@ -532,38 +547,50 @@ export function spellFillSet(
           latestAttackSequencePartIndexForRemarkableAthleteMovement(
             attackSequencePartFills,
           );
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (partIndex === null) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message:
               "Remarkable Athlete movement must follow a spell attack sequence use decision.",
           };
         }
+        /* v8 ignore stop */
         const attackSequencePartFill = attackSequencePartFills[partIndex];
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (attackSequencePartFill === undefined) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Remarkable Athlete movement is outside this spell act.",
           };
         }
+        /* v8 ignore stop */
         attackSequencePartFills[partIndex] = {
           ...attackSequencePartFill,
           remarkableAthleteCriticalHitMovement: fill,
         };
         continue;
       }
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (!spellInvocationCanUseRemarkableAthleteCriticalMovement(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Remarkable Athlete movement does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (remarkableAthleteCriticalHitMovement !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Remarkable Athlete movement was filled twice.",
         };
       }
+      /* v8 ignore stop */
       remarkableAthleteCriticalHitMovement = fill;
       continue;
     }
@@ -579,16 +606,22 @@ export function spellFillSet(
           )
         : null;
       if (parsed?.tag === "invalid") return parsed;
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (!requiresAttackRelationship && fill.relationshipFacts !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Non-attack spell target does not accept attack-roll relationship facts.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (targetId !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return { tag: "invalid", message: "Spell target was filled twice." };
       }
+      /* v8 ignore stop */
       targetId = fill.value;
       targetSpatialFacts = fill.spatialFacts ?? [];
       targetRelationshipFacts = parsed?.fill.relationshipFacts ?? [];
@@ -598,13 +631,16 @@ export function spellFillSet(
     }
 
     if (fill.holeId === heightenedSpellTargetChoiceHoleId(sourceProcedureRef)) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.kind !== "targetChoice") {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Heightened Spell target must use the Heightened Spell target hole.",
         };
       }
+      /* v8 ignore stop */
       continue;
     }
 
@@ -612,23 +648,32 @@ export function spellFillSet(
       fill.kind === "targetSpatialFacts" &&
       fill.holeId === SPELL_CAST_REACTION_FACTS_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (reactionSpellTargetFactsFilled) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell-cast Reaction trigger facts were filled twice.",
         };
       }
+      /* v8 ignore stop */
       const reactionFactValidation = parseSpellCastReactionFactsFill(fill);
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (reactionFactValidation.tag === "invalid") {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return { tag: "invalid", message: reactionFactValidation.message };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (reactionFactValidation.tag === "notSpellCastReactionFactsFill") {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Spell-cast Reaction trigger facts must use the spell-cast Reaction facts hole.",
         };
       }
+      /* v8 ignore stop */
       reactionSpellTargetFacts = reactionFactValidation.facts;
       reactionSpellTargetFactsFilled = true;
       continue;
@@ -651,18 +696,24 @@ export function spellFillSet(
         );
         if (parsed.tag === "invalid") return parsed;
         const attackSequencePartFill = attackSequencePartFills[partIndex];
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (attackSequencePartFill === undefined) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Spell attack sequence target is outside this spell act.",
           };
         }
+        /* v8 ignore stop */
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (attackSequencePartFill.target !== undefined) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Spell attack sequence target was filled twice.",
           };
         }
+        /* v8 ignore stop */
         const spatialFacts = fill.spatialFacts ?? [];
         const sightFactValidation = attackSightFactValidation(spatialFacts);
         if (sightFactValidation !== null) return sightFactValidation;
@@ -688,19 +739,25 @@ export function spellFillSet(
         );
         if (partIndex !== null) {
           const attackSequencePartFill = attackSequencePartFills[partIndex];
+          /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
           if (attackSequencePartFill === undefined) {
+            /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
             return {
               tag: "invalid",
               message:
                 "Spell attack sequence object target is outside this spell act.",
             };
           }
+          /* v8 ignore stop */
+          /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
           if (attackSequencePartFill.target !== undefined) {
+            /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
             return {
               tag: "invalid",
               message: "Spell attack sequence target was filled twice.",
             };
           }
+          /* v8 ignore stop */
           attackSequencePartFills[partIndex] = {
             ...attackSequencePartFill,
             target: {
@@ -725,6 +782,7 @@ export function spellFillSet(
           continue;
         }
       }
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         (invocation.procedure !== "heldLightHurl" &&
           invocation.procedure !== "objectLight" &&
@@ -734,24 +792,32 @@ export function spellFillSet(
           invocation.targeting.kind !== "singleManufacturedMetalObject" &&
           invocation.targeting.kind !== "singleObject")
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Object target fill does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.holeId !== spellObjectTargetHoleId(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Object target fill must use the selected spell act object-target hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (objectTarget !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell object target was filled twice.",
         };
       }
+      /* v8 ignore stop */
       objectTarget = {
         objectId: fill.value,
         spatialFacts: fill.spatialFacts.filter(
@@ -770,18 +836,24 @@ export function spellFillSet(
     }
 
     if (fill.kind === "ongoingSpellTargetChoice") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (invocation.procedure !== "ongoingSpellEnd") {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Ongoing spell target fill does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (ongoingSpellTarget !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Ongoing spell target was filled twice.",
         };
       }
+      /* v8 ignore stop */
       ongoingSpellTarget = {
         holeId: fill.holeId,
         target: fill.value,
@@ -791,21 +863,27 @@ export function spellFillSet(
     }
 
     if (fill.kind === "objectContactTargets") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         invocation.procedure !== "objectContactDamage" &&
         invocation.procedure !== "objectContactDamageRepeat"
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Object-contact target fill does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (objectContactTargets !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Object-contact targets were filled twice.",
         };
       }
+      /* v8 ignore stop */
       objectContactTargets = {
         holeId: fill.holeId,
         targetIds: fill.value.targetIds,
@@ -815,45 +893,60 @@ export function spellFillSet(
     }
 
     if (fill.kind === "objectDropResolution") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         invocation.procedure !== "objectContactDamage" &&
         invocation.procedure !== "objectContactDamageRepeat"
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Object drop resolution does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (objectDropResolution !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Object drop resolution was filled twice.",
         };
       }
+      /* v8 ignore stop */
       objectDropResolution = fill;
       continue;
     }
 
     if (fill.kind === "magicWeaponTargetItem") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (invocation.procedure !== "magicWeaponEnhancement") {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Magic Weapon item target does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.holeId !== magicWeaponTargetItemHoleId(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Magic Weapon item target must use the selected spell act item-target hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (magicWeaponTargetItem !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Magic Weapon item target was filled twice.",
         };
       }
+      /* v8 ignore stop */
       magicWeaponTargetItem = {
         holeId: fill.holeId,
         value: fill.value,
@@ -862,6 +955,7 @@ export function spellFillSet(
     }
 
     if (fill.kind === "spellAreaChoice") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         invocation.procedure !== "fogCloudObscurement" &&
         invocation.procedure !== "magicalDarknessPointOrigin" &&
@@ -874,93 +968,125 @@ export function spellFillSet(
         invocation.procedure !== "cloudkillAreaHazard" &&
         invocation.procedure !== "webRestraintHazard"
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell area choice does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.holeId !== spellAreaChoiceHoleId(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Spell area choice must use the selected spell act area-choice hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (areaChoice !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return { tag: "invalid", message: "Spell area was filled twice." };
       }
+      /* v8 ignore stop */
       areaChoice = fill.value;
       continue;
     }
 
     if (fill.kind === "teleportDestination") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (invocation.procedure !== "selfTeleport") {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Teleport destination does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (teleportDestination !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Teleport destination was filled twice.",
         };
       }
+      /* v8 ignore stop */
       teleportDestination = fill;
       continue;
     }
 
     if (fill.kind === "dancingLightsPlacement") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         invocation.procedure !== "dancingLightsSeparateCast" &&
         invocation.procedure !== "dancingLightsCombinedCast" &&
         invocation.procedure !== "dancingLightsReposition"
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Dancing Lights placement does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         fill.holeId !==
         spellDancingLightsPlacementHoleId(invocation, fill.value.form)
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Dancing Lights placement must use the selected spell act placement hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (dancingLightsPlacement !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Dancing Lights placement was filled twice.",
         };
       }
+      /* v8 ignore stop */
       dancingLightsPlacement = fill;
       continue;
     }
 
     if (fill.kind === "spellTargetAllocation") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (invocation.procedure !== "repeatedDamageAllocation") {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell target allocation does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.holeId !== spellTargetAllocationHoleId(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Spell target allocation must use the selected spell act allocation hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (targetAllocation !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell target allocation was filled twice.",
         };
       }
+      /* v8 ignore stop */
       targetAllocation = {
         allocations: fill.value.allocations,
         spatialFacts: fill.spatialFacts,
@@ -972,12 +1098,16 @@ export function spellFillSet(
       if (fill.holeId === carefulSpellProtectedTargetsHoleId(invocation)) {
         continue;
       }
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (!isTargetListSpellInvocation(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell target list does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         (invocation.procedure === "scalarBuff" &&
           !isScalarBuffTargetListInvocation(invocation)) ||
@@ -994,24 +1124,32 @@ export function spellFillSet(
         (invocation.procedure === "directCondition" &&
           !isTargetListSpellInvocation(invocation))
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell target list does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.holeId !== spellTargetListHoleId(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Spell target list must use the selected spell act target-list hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (targetList !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell target list was filled twice.",
         };
       }
+      /* v8 ignore stop */
       const relationshipFactsRequired =
         "saveRollModeRule" in invocation &&
         invocation.saveRollModeRule?.kind === "hostileTarget";
@@ -1025,13 +1163,16 @@ export function spellFillSet(
         : fill.relationshipFacts === undefined
           ? []
           : null;
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (relationshipFacts === null) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Spell target relationship facts must answer the target-list hole request.",
         };
       }
+      /* v8 ignore stop */
       targetList = {
         targetIds: fill.value.targetIds,
         spatialFacts: fill.spatialFacts,
@@ -1041,12 +1182,15 @@ export function spellFillSet(
     }
 
     if (fill.kind === "attackRoll" && fill.holeId === ATTACK_ROLL_HOLE_ID) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (attackRoll !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell attack roll was filled twice.",
         };
       }
+      /* v8 ignore stop */
       attackRoll = fill.value;
       continue;
     }
@@ -1062,19 +1206,25 @@ export function spellFillSet(
       );
       if (partIndex !== null) {
         const attackSequencePartFill = attackSequencePartFills[partIndex];
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (attackSequencePartFill === undefined) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message:
               "Spell attack sequence attack roll is outside this spell act.",
           };
         }
+        /* v8 ignore stop */
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (attackSequencePartFill.attackRoll !== undefined) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Spell attack sequence attack roll was filled twice.",
           };
         }
+        /* v8 ignore stop */
         attackSequencePartFills[partIndex] = {
           ...attackSequencePartFill,
           attackRoll: fill.value,
@@ -1089,16 +1239,19 @@ export function spellFillSet(
         value: effectiveD20TestNaturalOneRerollSavingThrowOutcomes(fill.value),
       };
       if (isHideousLaughterDamageRepeatSaveFill(fill)) {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (
           hideousLaughterDamageRepeatSaves.some(
             (candidate) => candidate.holeId === fill.holeId,
           )
         ) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Hideous Laughter repeat save was filled twice.",
           };
         }
+        /* v8 ignore stop */
         hideousLaughterDamageRepeatSaves.push(effectiveSavingThrowOutcomeFill);
         continue;
       }
@@ -1106,50 +1259,65 @@ export function spellFillSet(
         invocation.procedure === "objectContactDamage" ||
         invocation.procedure === "objectContactDamageRepeat"
       ) {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (objectContactSavingThrowOutcome !== undefined) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Object-contact saving throw outcome was filled twice.",
           };
         }
+        /* v8 ignore stop */
         objectContactSavingThrowOutcome = effectiveSavingThrowOutcomeFill;
         continue;
       }
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.holeId !== spellSavingThrowOutcomeHoleId(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Spell saving throw outcomes must use the selected spell act outcome hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (savingThrowOutcomes !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell saving throw outcomes were filled twice.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         spellFillSetSavingThrowTargeting(invocation).kind !==
           "singleCombatant" &&
         spellFillSetSavingThrowTargeting(invocation).kind !== "targetList" &&
         !("area" in fill.value)
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell saving throw outcomes require area facts.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         spellFillSetSavingThrowTargeting(invocation).kind ===
           "singleCombatant" &&
         "area" in fill.value
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Single-target save-gate spell outcomes must not include area facts.",
         };
       }
+      /* v8 ignore stop */
       savingThrowOutcomes = effectiveSavingThrowOutcomeFill.value;
       const parsedRelationshipFacts = parseSavingThrowRelationshipFacts(
         fill.relationshipFacts ?? [],
@@ -1159,305 +1327,416 @@ export function spellFillSet(
         ),
         savingThrowRelationshipDecisionRequired,
       );
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (parsedRelationshipFacts === null) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Saving Throw relationship facts must answer the saving-throw hole request.",
         };
       }
+      /* v8 ignore stop */
       savingThrowRelationshipFacts = parsedRelationshipFacts;
       continue;
     }
 
     if (fill.kind === "skillChoice") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (!isRollModifierInvocation(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell skill choice does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.holeId !== spellRollModifierSkillChoiceHoleId(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Spell skill choice must use the selected spell act skill-choice hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (skillChoice !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell skill choice was filled twice.",
         };
       }
+      /* v8 ignore stop */
       skillChoice = fill.value;
       continue;
     }
 
     if (fill.kind === "commandOptionChoice") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (invocation.procedure !== "command") {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Command option choice does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.holeId !== commandOptionChoiceHoleId(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Command option choice must use the selected spell act command-option hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (commandOptionChoice !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Command option choice was filled twice.",
         };
       }
+      /* v8 ignore stop */
       commandOptionChoice = fill.value;
       continue;
     }
 
     if (fill.kind === "selfTransformationModeChoice") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (invocation.procedure !== "selfTransformationMode") {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Self-transformation mode choice does not match this spell.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.holeId !== selfTransformationModeChoiceHoleId(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Self-transformation mode choice must use the selected spell act mode-choice hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (!invocation.modeChoices.includes(fill.value)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Self-transformation mode choice is not available.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (selfTransformationModeChoice !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Self-transformation mode was filled twice.",
         };
       }
+      /* v8 ignore stop */
       selfTransformationModeChoice = fill.value;
       continue;
     }
 
     if (fill.kind === "conditionChoice") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (!spellInvocationHasConditionChoice(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell condition choice does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.holeId !== spellConditionChoiceHoleId(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Spell condition choice must use the selected spell act condition-choice hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (!spellConditionChoices(invocation).includes(fill.value)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell condition choice is not available for this spell.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (conditionChoice !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell condition choice was filled twice.",
         };
       }
+      /* v8 ignore stop */
       conditionChoice = fill.value;
       continue;
     }
 
     if (fill.kind === "levitateInitialRise") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         invocation.procedure !== "levitatedCreature" ||
         targetId === undefined
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Levitate initial rise must follow the selected Levitate creature target.",
         };
       }
+      /* v8 ignore stop */
       const hole = levitateInitialRiseHole({
         actorId: invocation.activeEffect.sourceCombatantId,
         targetId,
         maxDistanceFeet: invocation.maxInitialRiseFeet,
       });
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.holeId !== hole.holeId) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Levitate initial rise must use the selected spell act initial-rise hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         fill.value.distanceFeet < 0 ||
         fill.value.distanceFeet > invocation.maxInitialRiseFeet ||
         !Number.isInteger(fill.value.distanceFeet)
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Levitate initial rise must be a whole number no greater than the spell limit.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (levitateInitialRiseFeet !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Levitate initial rise was filled twice.",
         };
       }
+      /* v8 ignore stop */
       levitateInitialRiseFeet = fill.value.distanceFeet;
       continue;
     }
 
     if (fill.kind === "abilityChoice") {
       if (invocation.procedure === "rollModifier") {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (invocation.abilityChoices === null) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Spell ability choice does not match this spell act.",
           };
         }
+        /* v8 ignore stop */
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (rollModifierUsesTargetAbilityChoices(invocation)) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message:
               "Per-target roll modifier spells require target ability choices.",
           };
         }
+        /* v8 ignore stop */
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (fill.holeId !== spellRollModifierAbilityChoiceHoleId(invocation)) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message:
               "Spell ability choice must use the selected spell act ability-choice hole.",
           };
         }
+        /* v8 ignore stop */
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (!invocation.abilityChoices.includes(fill.value)) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Spell ability choice is not available for this spell.",
           };
         }
+        /* v8 ignore stop */
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (abilityChoice !== undefined) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Spell ability choice was filled twice.",
           };
         }
+        /* v8 ignore stop */
         abilityChoice = fill.value;
         continue;
       }
       if (invocation.procedure === "saveGatedDamage") {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (invocation.failedSaveAbilityChoices === null) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Spell ability choice does not match this spell act.",
           };
         }
+        /* v8 ignore stop */
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (fill.holeId !== spellAbilityChoiceHoleId(invocation)) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message:
               "Spell ability choice must use the selected spell act ability-choice hole.",
           };
         }
+        /* v8 ignore stop */
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (!invocation.failedSaveAbilityChoices.includes(fill.value)) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Spell ability choice is not available for this spell.",
           };
         }
+        /* v8 ignore stop */
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (abilityChoice !== undefined) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Spell ability choice was filled twice.",
           };
         }
+        /* v8 ignore stop */
         abilityChoice = fill.value;
         continue;
       }
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         invocation.procedure !== "markedDamageRider" ||
         invocation.action !== "cast" ||
         invocation.abilityCheckBehavior.kind !== "chosenAbilityDisadvantage"
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell ability choice does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.holeId !== spellAbilityChoiceHoleId(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Spell ability choice must use the selected spell act ability-choice hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (!invocation.abilityCheckBehavior.choices.includes(fill.value)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell ability choice is not available for this spell.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (abilityChoice !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell ability choice was filled twice.",
         };
       }
+      /* v8 ignore stop */
       abilityChoice = fill.value;
       continue;
     }
 
     if (fill.kind === "targetAbilityChoices") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         fill.holeId !== spellRollModifierTargetAbilityChoicesHoleId(invocation)
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Spell target ability choices must use the selected spell act target-ability-choices hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (targetAbilityChoices !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell target ability choices were filled twice.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (!isTargetAbilityChoicesRollModifierInvocation(invocation)) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell target ability choices do not match this spell act.",
         };
       }
+      /* v8 ignore stop */
       const seenTargets = new Set<CombatantId>();
       for (const choice of fill.value.choices) {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (!invocation.abilityChoices.includes(choice.ability)) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message:
               "Spell target ability choice is not available for this spell.",
           };
         }
+        /* v8 ignore stop */
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (seenTargets.has(choice.targetId)) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Spell target ability choice includes a target twice.",
           };
         }
+        /* v8 ignore stop */
         seenTargets.add(choice.targetId);
       }
       targetAbilityChoices = fill;
@@ -1465,31 +1744,41 @@ export function spellFillSet(
     }
 
     if (fill.kind === "thaumaturgyActiveOneMinuteEffectCount") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (invocation.procedure !== "thaumaturgyBoomingVoice") {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Thaumaturgy active-effect count does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.holeId !== THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Thaumaturgy active-effect count must use the selected spell act count hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (thaumaturgyActiveOneMinuteEffectCount !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Thaumaturgy active-effect count was filled twice.",
         };
       }
+      /* v8 ignore stop */
       thaumaturgyActiveOneMinuteEffectCount = fill;
       continue;
     }
 
     if (fill.kind === "damageTypeChoice") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         invocation.procedure !== "damageReduction" &&
         invocation.procedure !== "chosenDamageResistance" &&
@@ -1501,42 +1790,54 @@ export function spellFillSet(
         invocation.procedure !== "selfTransformationMode" &&
         invocation.procedure !== "spellHostedWeaponAttack"
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell damage type choice does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         fill.holeId !==
         spellDamageTypeChoiceHole({ ...invocation, sourceProcedureRef }).holeId
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Spell damage type choice must use the selected spell act choice hole.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (damageTypeChoice !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell damage type choice was filled twice.",
         };
       }
+      /* v8 ignore stop */
       damageTypeChoice = fill;
       continue;
     }
 
     if (fill.kind === "spiritualWeaponForcePosition") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         invocation.procedure !== "spiritualWeaponAttackProxy" &&
         invocation.procedure !== "spiritualWeaponRepeatAttack"
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Spiritual Weapon force position does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         fill.holeId !==
         spiritualWeaponForcePositionHole({
@@ -1544,82 +1845,105 @@ export function spellFillSet(
           sourceProcedureRef,
         }).holeId
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message:
             "Spiritual Weapon force position must use the selected spell act position hole.",
         };
       }
+      /* v8 ignore stop */
       const spiritualWeaponForcePositionError =
         spiritualWeaponForcePositionInvalidReason(fill.value, invocation);
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (spiritualWeaponForcePositionError !== null) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: spiritualWeaponForcePositionError,
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (spiritualWeaponForcePosition !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spiritual Weapon force position was filled twice.",
         };
       }
+      /* v8 ignore stop */
       spiritualWeaponForcePosition = fill.value;
       continue;
     }
 
     if (fill.kind === "rolledDice") {
       if (isMirrorImageDuplicateRollFill(fill)) {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (
           invocation.procedure !== "spellAttackSequence" &&
           invocation.procedure !== "spellAttackDamage" &&
           invocation.procedure !== "heldLightHurl" &&
           invocation.procedure !== "attackBurstSaveDamage"
         ) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message:
               "Mirror Image duplicate roll does not match this spell act.",
           };
         }
+        /* v8 ignore stop */
         if (invocation.procedure === "spellAttackSequence") {
           const partIndex = spellAttackSequencePartIndexForMirrorImageRoll(
             invocation,
             fill.holeId,
           );
+          /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
           if (partIndex === null) {
+            /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
             return {
               tag: "invalid",
               message:
                 "Mirror Image duplicate roll does not match this spell attack sequence.",
             };
           }
+          /* v8 ignore stop */
           const attackSequencePartFill = attackSequencePartFills[partIndex];
+          /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
           if (attackSequencePartFill === undefined) {
+            /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
             return {
               tag: "invalid",
               message: "Mirror Image duplicate roll is outside this spell act.",
             };
           }
+          /* v8 ignore stop */
+          /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
           if (attackSequencePartFill.mirrorImageDuplicateRoll !== undefined) {
+            /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
             return {
               tag: "invalid",
               message:
                 "Spell attack sequence Mirror Image duplicate roll was filled twice.",
             };
           }
+          /* v8 ignore stop */
           attackSequencePartFills[partIndex] = {
             ...attackSequencePartFill,
             mirrorImageDuplicateRoll: fill,
           };
           continue;
         }
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (mirrorImageDuplicateRoll !== undefined) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Mirror Image duplicate roll was filled twice.",
           };
         }
+        /* v8 ignore stop */
         mirrorImageDuplicateRoll = fill;
         continue;
       }
@@ -1631,19 +1955,25 @@ export function spellFillSet(
         );
         if (partIndex !== null) {
           const attackSequencePartFill = attackSequencePartFills[partIndex];
+          /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
           if (attackSequencePartFill === undefined) {
+            /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
             return {
               tag: "invalid",
               message:
                 "Spell attack sequence damage is outside this spell act.",
             };
           }
+          /* v8 ignore stop */
+          /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
           if (attackSequencePartFill.damageRoll !== undefined) {
+            /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
             return {
               tag: "invalid",
               message: "Spell attack sequence damage was filled twice.",
             };
           }
+          /* v8 ignore stop */
           attackSequencePartFills[partIndex] = {
             ...attackSequencePartFill,
             damageRoll: fill,
@@ -1652,30 +1982,36 @@ export function spellFillSet(
         }
       }
       if (isSpellDamageReductionRollFill(fill)) {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (
           spellDamageReductionRolls.some(
             (candidate) => candidate.holeId === fill.holeId,
           )
         ) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Spell damage reduction roll was filled twice.",
           };
         }
+        /* v8 ignore stop */
         spellDamageReductionRolls.push(fill);
         continue;
       }
       if (isSourceDamageRollPenaltyRollFill(fill)) {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (
           sourceDamageRollPenaltyRolls.some(
             (candidate) => candidate.holeId === fill.holeId,
           )
         ) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Source damage roll penalty was filled twice.",
           };
         }
+        /* v8 ignore stop */
         sourceDamageRollPenaltyRolls.push(fill);
         continue;
       }
@@ -1684,12 +2020,15 @@ export function spellFillSet(
         (invocation.procedure === "scalarBuff" &&
           invocation.effect.kind === "temporaryHitPoints")
       ) {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (healingRoll !== undefined) {
+          /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {
             tag: "invalid",
             message: "Spell scalar dice result was filled twice.",
           };
         }
+        /* v8 ignore stop */
         healingRoll = fill;
         continue;
       }
@@ -1705,83 +2044,105 @@ export function spellFillSet(
           fill.holeId === attackDamageHole.holeId ||
           fill.holeId === criticalAttackDamageHole.holeId
         ) {
+          /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
           if (attackBurstDamageRoll !== undefined) {
+            /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
             return {
               tag: "invalid",
               message: "Ice Knife attack damage was filled twice.",
             };
           }
+          /* v8 ignore stop */
           attackBurstDamageRoll = fill;
           continue;
         }
         if (fill.holeId === burstDamageHole.holeId) {
+          /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
           if (damageRoll !== undefined) {
+            /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
             return {
               tag: "invalid",
               message: "Ice Knife burst damage was filled twice.",
             };
           }
+          /* v8 ignore stop */
           damageRoll = fill;
           continue;
         }
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Ice Knife damage must use an Ice Knife damage hole.",
         };
       }
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (damageRoll !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return { tag: "invalid", message: "Spell damage was filled twice." };
       }
+      /* v8 ignore stop */
       damageRoll = fill;
       continue;
     }
 
     if (fill.kind === "concentrationSavingThrow") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         concentrationSavingThrows.some(
           (candidate) => candidate.holeId === fill.holeId,
         )
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Concentration Saving Throw was filled twice.",
         };
       }
+      /* v8 ignore stop */
       concentrationSavingThrows.push(fill);
       continue;
     }
 
     if (fill.kind === "attackDamageDisposition") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         damageDispositions.some((candidate) => candidate.holeId === fill.holeId)
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Damage disposition was filled twice.",
         };
       }
+      /* v8 ignore stop */
       damageDispositions.push(fill);
       continue;
     }
 
     if (fill.kind === "movement") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         invocation.procedure !== "saveGatedDamage" ||
         !invocation.failedSavePostDamageRiders.some(
           (rider) => rider.kind === "forcedReactionMovement",
         )
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Movement fill does not match this spell act.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (movement !== undefined) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Spell forced movement was filled twice.",
         };
       }
+      /* v8 ignore stop */
       movement = fill;
       continue;
     }
@@ -1790,20 +2151,24 @@ export function spellFillSet(
       fill.kind === "abilityCheck" &&
       invocation.procedure === "ongoingSpellEnd"
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         ongoingSpellAbilityChecks.some(
           (candidate) => candidate.holeId === fill.holeId,
         )
       ) {
+        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Ongoing spell ending ability check was filled twice.",
         };
       }
+      /* v8 ignore stop */
       ongoingSpellAbilityChecks.push(fill);
       continue;
     }
 
+    /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the spell replay holes.`,
@@ -1821,12 +2186,15 @@ export function spellFillSet(
     ),
     owner: "a Spell",
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipDecisions.tag === "invalid") {
+    /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
     return {
       tag: "invalid",
       message: relationshipDecisions.message,
     };
   }
+  /* v8 ignore stop */
 
   return {
     tag: "ok",

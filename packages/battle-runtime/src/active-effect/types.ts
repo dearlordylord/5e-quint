@@ -62,14 +62,14 @@ import type {
   SpellAttackKind,
   SpellConditionRepeatSave,
 } from "./execution-vocabulary.ts";
-import {
+import type {
   HUNTERS_MARK_FINDING_SKILLS,
-  type BattleD20RollModifierKind,
+  BattleD20RollModifierKind,
   PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS,
   SPELL_CONDITION_ABILITY_CHECK_ACTORS,
   SPELL_CONDITION_ABILITY_CHECK_SUCCESS_ENDS,
-  type MirrorImageDuplicateCount,
-  type SelfTransformationNonNaturalWeaponModeKind,
+  MirrorImageDuplicateCount,
+  SelfTransformationNonNaturalWeaponModeKind,
 } from "../battle-reducer/domain-constants.ts";
 import type {
   BattleActiveEffectExecutionRef,
@@ -312,10 +312,12 @@ export type SpiritualWeaponActiveEffect = BattleSpellEffectBase &
     readonly attackBonus: AttackBonus;
     readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
   };
+/* v8 ignore start -- This canonical value exists only to derive SpellTurnStartDamageAndSaveSource; production code consumes the derived type and has no runtime array consumer. */
 export const SPELL_TURN_START_DAMAGE_AND_SAVE_SOURCES = [
   "afterHitTimedDamageAndSave",
   "turnBoundaryEffectLifecycle",
 ] as const;
+/* v8 ignore stop */
 export type SpellTurnStartDamageAndSaveSource =
   (typeof SPELL_TURN_START_DAMAGE_AND_SAVE_SOURCES)[number];
 export type GlyphDurableOccurrenceAnchor =

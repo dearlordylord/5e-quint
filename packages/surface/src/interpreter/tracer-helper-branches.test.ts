@@ -177,7 +177,7 @@ describe("Surface trace helper branches", () => {
         ) {
           // The decoded Unit and local family guard establish the requested
           // generic Extract branch; TypeScript does not preserve the correlation.
-          return unit.mechanics as unknown as Extract<
+          return unit.mechanics as Extract<
             MagicItemMechanics,
             { readonly family: Family }
           >;
@@ -185,7 +185,7 @@ describe("Surface trace helper branches", () => {
         if (unit.kind === "class_feature" && unit.mechanics.family === family) {
           // Magic-item composite components reuse this decoded mechanics shape;
           // the local family guard establishes the requested Extract branch.
-          return unit.mechanics as unknown as Extract<
+          return unit.mechanics as Extract<
             MagicItemMechanics,
             { readonly family: Family }
           >;

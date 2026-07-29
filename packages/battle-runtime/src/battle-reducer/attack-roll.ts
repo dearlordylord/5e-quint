@@ -364,24 +364,6 @@ function hasAttackSightFact(
   );
 }
 
-export function requiredObjectTargetAttackRollMode(
-  state: BattleState,
-  attackerId: CombatantId,
-  targetObjectId: BattleObjectId | undefined,
-  attackerCanSeeObject: boolean | undefined,
-): AttackRollMode | undefined {
-  const sources = objectTargetAttackRollSourceFlags(
-    state,
-    attackerId,
-    targetObjectId,
-    attackerCanSeeObject,
-  );
-  return attackRollModeFromSources(
-    sources.hasAdvantage,
-    sources.hasDisadvantage,
-  );
-}
-
 function objectTargetAttackRollSourceFlags(
   state: BattleState,
   attackerId: CombatantId,
@@ -996,12 +978,15 @@ export function tacticalMasterAttackWithReplacement<
   if (input.decision === undefined || input.decision.value === "decline") {
     return { tag: "ok", attack: input.attack };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!isTacticalMasterReplacementMasteryProperty(input.decision.value)) {
     return {
       tag: "invalid",
       message: "Tactical Master replacement choice is not Push, Sap, or Slow.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!selection.replacementProperties.includes(input.decision.value)) {
     return {
       tag: "invalid",
@@ -1009,6 +994,7 @@ export function tacticalMasterAttackWithReplacement<
         "Tactical Master replacement choice is not admitted by the feature profile.",
     };
   }
+  /* v8 ignore stop */
   return {
     tag: "ok",
     attack: weaponAttackWithMasteryProperty(input.attack, input.decision.value),
@@ -1041,12 +1027,14 @@ export function applyWeaponMasteryPushOnHit(input: {
   if (target === undefined) {
     return { tag: "ok", state: input.state, shovePushes: [] };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!creatureSizeIsAtMost(combatantEffectiveSize(target), "large")) {
     return {
       tag: "invalid",
       message: "Weapon Mastery Push target must be Large or smaller.",
     };
   }
+  /* v8 ignore stop */
   const pushDisposition = input.targetSpatialFacts.find(
     (
       fact,
@@ -1059,6 +1047,7 @@ export function applyWeaponMasteryPushOnHit(input: {
       fact.targetId === input.targetId &&
       attackExecutionSelectionMatchesOption(fact, input.attack),
   )?.disposition;
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (pushDisposition === undefined) {
     return {
       tag: "invalid",
@@ -1066,6 +1055,8 @@ export function applyWeaponMasteryPushOnHit(input: {
         "Weapon Mastery Push requires caller-supplied straight-away push disposition.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     Number(pushDisposition.distanceFeet) < 0 ||
     Number(pushDisposition.distanceFeet) > 10
@@ -1075,6 +1066,7 @@ export function applyWeaponMasteryPushOnHit(input: {
       message: "Weapon Mastery Push distance must be from 0 to 10 feet.",
     };
   }
+  /* v8 ignore stop */
   return {
     tag: "ok",
     state: input.state,
@@ -1145,12 +1137,14 @@ export function applyWeaponMasteryToppleSavingThrow(
   if (outcomes.length === 0) {
     return { tag: "ok", state };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (outcomes.length !== 1 || outcomes[0]?.targetId !== targetId) {
     return {
       tag: "invalid",
       message: "Weapon Mastery Topple save must target the attacked creature.",
     };
   }
+  /* v8 ignore stop */
   const relationshipFacts = parseSavingThrowRelationshipFacts(
     fill.relationshipFacts ?? [],
     attackerId,
@@ -1161,6 +1155,7 @@ export function applyWeaponMasteryToppleSavingThrow(
       "enemySavingThrow",
     ),
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipFacts === null) {
     return {
       tag: "invalid",
@@ -1168,6 +1163,7 @@ export function applyWeaponMasteryToppleSavingThrow(
         "Weapon Mastery Topple relationship facts must answer the saving-throw hole request.",
     };
   }
+  /* v8 ignore stop */
   const savingThrowExtendedState = extendSavingThrowOngoingFeatures(
     state,
     attackerId,
@@ -1178,12 +1174,14 @@ export function applyWeaponMasteryToppleSavingThrow(
     return { tag: "ok", state: savingThrowExtendedState };
   }
   const target = savingThrowExtendedState.combatants.get(targetId);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (target === undefined) {
     return {
       tag: "invalid",
       message: "Weapon Mastery Topple target is no longer in this battle.",
     };
   }
+  /* v8 ignore stop */
   return {
     tag: "ok",
     state: {

@@ -6356,6 +6356,9 @@ function serializedSubjectProcedureReference(
   return { ref, ownerId, subjectProcedure };
 }
 
+const noSerializedExecutionReferences =
+  (): readonly SerializedExecutionReferenceOwnership[] => [];
+
 function serializedBattleHoleExecutionReferences(
   hole: EncodedBattleHole,
 ): readonly SerializedExecutionReferenceOwnership[] {
@@ -6598,8 +6601,8 @@ function serializedBattleHoleExecutionReferences(
 
   return Match.value(hole).pipe(
     Match.discriminatorsExhaustive("kind")({
-      helpAttackAllyDecision: () => [],
-      helpAttackEnemyDecision: () => [],
+      helpAttackAllyDecision: noSerializedExecutionReferences,
+      helpAttackEnemyDecision: noSerializedExecutionReferences,
       damageRelationshipDecisions: (value) =>
         value.questions.flatMap((question) =>
           question.kind === "enemyZeroHitPointTemporaryHitPoints"
@@ -6675,7 +6678,7 @@ function serializedBattleHoleExecutionReferences(
           value.objectDrop.sourceCombatantId,
         ),
       ],
-      heldObjectFacts: () => [],
+      heldObjectFacts: noSerializedExecutionReferences,
       magicWeaponTargetItem: (value) => [source(value.sourceProcedureRef)],
       damageTypeChoice: (value) => [source(value.sourceProcedureRef)],
       spellTargetAllocation: (value) => [source(value.sourceProcedureRef)],
@@ -6745,36 +6748,36 @@ function serializedBattleHoleExecutionReferences(
         owned(value.sourceProcedureRef, value.sourceCombatantId),
         source(value.triggeringProcedureRef, value.triggeringCombatantId),
       ],
-      abilityCheck: () => [],
+      abilityCheck: noSerializedExecutionReferences,
       attackDamageDisposition: (value) =>
         value.choices.flatMap((choice) =>
           choice.kind === "zeroHitPointReplacement"
             ? [owned(choice.procedureRef, value.targetId)]
             : [],
         ),
-      companionReappearanceInitiative: () => [],
-      companionReappearancePlacement: () => [],
+      companionReappearanceInitiative: noSerializedExecutionReferences,
+      companionReappearancePlacement: noSerializedExecutionReferences,
       concentrationSavingThrow: (value) =>
         value.targetFlatBonuses.map((bonus) =>
           owned(bonus.sourceProcedureRef, bonus.sourceCombatantId),
         ),
-      cunningStrikeEndTurnCoverFacts: () => [],
-      deathSavingThrow: () => [],
-      findFamiliarConnection: () => [],
-      grappleOutcome: () => [],
-      interruptDecision: () => [],
-      levitateAltitudeChange: () => [],
-      levitateInitialRise: () => [],
-      movement: () => [],
+      cunningStrikeEndTurnCoverFacts: noSerializedExecutionReferences,
+      deathSavingThrow: noSerializedExecutionReferences,
+      findFamiliarConnection: noSerializedExecutionReferences,
+      grappleOutcome: noSerializedExecutionReferences,
+      interruptDecision: noSerializedExecutionReferences,
+      levitateAltitudeChange: noSerializedExecutionReferences,
+      levitateInitialRise: noSerializedExecutionReferences,
+      movement: noSerializedExecutionReferences,
       movableZoneRamMovement: (value) => [
         source(
           value.movableZone.sourceProcedureRef,
           value.movableZone.sourceCombatantId,
         ),
       ],
-      shoveOutcome: () => [],
-      toolPossessionFacts: () => [],
-      unitFeatureDecision: () => [],
+      shoveOutcome: noSerializedExecutionReferences,
+      toolPossessionFacts: noSerializedExecutionReferences,
+      unitFeatureDecision: noSerializedExecutionReferences,
     }),
   );
 }

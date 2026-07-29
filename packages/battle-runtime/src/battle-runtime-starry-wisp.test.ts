@@ -96,7 +96,7 @@ describe("battle runtime: Starry Wisp", () => {
       fills: [
         targetFill(target, skeletonId),
         attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
-        damageRollFillWithGroups(damage, [[5, 6]]),
+        damageRollFillWithGroups(damage, [[2, 3]]),
       ],
     });
 
@@ -118,7 +118,7 @@ describe("battle runtime: Starry Wisp", () => {
         ],
         combatants: [
           { combatantId: wizardId, hp: 12 },
-          { combatantId: skeletonId, hp: 2 },
+          { combatantId: skeletonId, hp: 8 },
         ],
         turn: { actionResources: [] },
       },
@@ -142,13 +142,81 @@ describe("battle runtime: Starry Wisp", () => {
     );
     expect(afterSkeletonTurn.state.lightEmitters).toHaveLength(1);
 
-    const afterWizardNextTurn = requireResolved(
-      endTurn({
+    const refreshedSession = battleRuntimeSessionForTest({
+      state: afterSkeletonTurn.state,
+      context: state.context,
+    });
+    const refreshedSubject = findAct(
+      refreshedSession,
+      magicSubject("starry_wisp"),
+    ).subject;
+    const refreshedTarget = findHole(
+      findAct(refreshedSession, refreshedSubject).initialHoles,
+      "targetChoice",
+    );
+    const refreshedTargetFill = targetFill(refreshedTarget, skeletonId);
+    const refreshedAttackRoll = requireHole(
+      resolveBattleSubject({
         state: afterSkeletonTurn.state,
+        subject: refreshedSubject,
+        fills: [refreshedTargetFill],
+      }),
+      "attackRoll",
+    );
+    const refreshedAttackRollFill = attackRollFill(refreshedAttackRoll, {
+      total: 18,
+      naturalD20: 12,
+    });
+    const refreshedDamage = requireHole(
+      resolveBattleSubject({
+        state: afterSkeletonTurn.state,
+        subject: refreshedSubject,
+        fills: [refreshedTargetFill, refreshedAttackRollFill],
+      }),
+      "rolledDice",
+    );
+    const refreshed = requireResolved(
+      resolveBattleSubject({
+        state: afterSkeletonTurn.state,
+        subject: refreshedSubject,
+        fills: [
+          refreshedTargetFill,
+          refreshedAttackRollFill,
+          damageRollFillWithGroups(refreshedDamage, [[1, 1]]),
+        ],
+      }),
+    );
+    expect(refreshed.state.lightEmitters).toEqual([
+      expect.objectContaining({
+        attachment: { kind: "combatant", combatantId: skeletonId },
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: wizardId,
+          round: 3,
+        },
+      }),
+    ]);
+
+    const afterRefreshedWizardTurn = requireResolved(
+      endTurn({
+        state: refreshed.state,
         actorId: wizardId,
       }),
     );
-    expect(afterWizardNextTurn.state.lightEmitters).toEqual([]);
+    expect(afterRefreshedWizardTurn.state.lightEmitters).toHaveLength(1);
+    const afterSecondSkeletonTurn = requireResolved(
+      endTurn({
+        state: afterRefreshedWizardTurn.state,
+        actorId: skeletonId,
+      }),
+    );
+    const afterWizardThirdTurn = requireResolved(
+      endTurn({
+        state: afterSecondSkeletonTurn.state,
+        actorId: wizardId,
+      }),
+    );
+    expect(afterWizardThirdTurn.state.lightEmitters).toEqual([]);
   });
 
   test("Starry Wisp hit denies Invisible benefit without removing the condition until the caster's next turn ends", () => {

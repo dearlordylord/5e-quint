@@ -14,7 +14,6 @@ import {
   type ConditionState,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { type Condition } from "@dnd/shared/types";
-import type { StatBlockValue } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 import { CONDITIONS as ALL_CONDITIONS } from "@dnd/shared/types";
 import { characterProcedureBindingSnapshots } from "../character-execution-queries.ts";
@@ -50,14 +49,6 @@ export {
   nonKnockOutLifecycleFields,
 } from "./creature-hit-point-state.ts";
 
-export function literalStatBlockNumber(value: StatBlockValue): number {
-  if (value.kind !== "literal") {
-    throw new Error(
-      "Battle runtime initialization requires literal Stat Block numeric values.",
-    );
-  }
-  return value.value;
-}
 import {
   SLOW_ACTIVE_PENALTIES_ARMOR_CLASS_DELTA,
   WARDING_BOND_ARMOR_CLASS_BONUS,

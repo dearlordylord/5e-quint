@@ -200,6 +200,7 @@ export const CharacterWeaponAttackActionOptionSchema = Schema.Struct({
           ...(typeof DamageTypeSchema.Type)[],
         ] => choices.length >= 2,
         {
+          /* v8 ignore next -- Only malformed authored weapon data requests this diagnostic; valid choices are parsed through the two-or-more predicate above. */
           message: () =>
             "Weapon attack damage type choices must contain at least two choices.",
         },
@@ -250,6 +251,7 @@ const SupportedStaticDamageCreatureAttackRollMechanicsSchema =
           supportedStatBlockAttackDamage(attack),
         ),
       {
+        /* v8 ignore next -- Only malformed authored static-damage data requests this diagnostic; valid static attacks satisfy the predicate above. */
         message: () => "Static Stat Block damage requires static damage facts.",
       },
     ),

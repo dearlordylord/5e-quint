@@ -491,13 +491,6 @@ function uniqueAttackExecutionSelectionOptions(
   });
 }
 
-export function offHandAttackActionOptionForActor(
-  state: BattleState,
-  actorId: CombatantId,
-): BoundCharacterWeaponAttackActionOption | undefined {
-  return offHandAttackActionOptionsForActor(state, actorId)[0];
-}
-
 export function offHandAttackActionOptionsForActor(
   state: BattleState,
   actorId: CombatantId,

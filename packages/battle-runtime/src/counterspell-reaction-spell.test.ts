@@ -46,6 +46,7 @@ import {
   spellSlotInvocationRef,
 } from "./battle-subjects.ts";
 import {
+  assertBattleSnapshotCodecRoundTripForTest,
   characterSpellInvocationRefForProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
@@ -388,6 +389,9 @@ describe("Counterspell Reaction spell", () => {
       counterspellerId,
       3,
       session,
+    );
+    assertBattleSnapshotCodecRoundTripForTest(
+      awaitingFirstCounterspell.snapshot,
     );
     expect(
       requireHole(firstChoice.initialHoles, "targetSpatialFacts"),

@@ -11784,6 +11784,7 @@ function createAdrenalineRushDriverWithRoute<
   return defineDriver(schema, () => {
     let session = adrenalineRushBattle();
     let state = session.state;
+    let subject = adrenalineRushDashSubject(session);
     let lastResult: AdrenalineRushMbtProjection["lastResult"] = "init";
     let lastInvalidReason: AdrenalineRushMbtProjection["lastInvalidReason"] =
       "";
@@ -11792,6 +11793,7 @@ function createAdrenalineRushDriverWithRoute<
     function reset(): void {
       session = adrenalineRushBattle();
       state = session.state;
+      subject = adrenalineRushDashSubject(session);
       lastResult = "init";
       lastInvalidReason = "";
       route = initialAdrenalineRushRoute();
@@ -11854,12 +11856,7 @@ function createAdrenalineRushDriverWithRoute<
         recordResult(
           resolveBattleSubject({
             state,
-            subject: adrenalineRushDashSubject(
-              battleRuntimeSessionForTest({
-                state,
-                context: session.context,
-              }),
-            ),
+            subject,
             fills: [],
           }),
           FEATURE_DASH_TEMPORARY_HIT_POINT_RESOLVED_OWNERS,
@@ -11869,12 +11866,7 @@ function createAdrenalineRushDriverWithRoute<
         recordResult(
           resolveBattleSubject({
             state,
-            subject: adrenalineRushDashSubject(
-              battleRuntimeSessionForTest({
-                state,
-                context: session.context,
-              }),
-            ),
+            subject,
             fills: [],
           }),
           FEATURE_DASH_TEMPORARY_HIT_POINT_STALE_OWNERS,
@@ -12141,6 +12133,7 @@ export function createRogueSteadyAimDriver(
   return defineDriver(schema, () => {
     let session = rogueSteadyAimBattle();
     let state = session.state;
+    let steadyAimSubject = rogueSteadyAimSubject(session);
     let lastResult: RogueSteadyAimMbtProjection["lastResult"] = "init";
     let lastInvalidReason: RogueSteadyAimMbtProjection["lastInvalidReason"] =
       "";
@@ -12148,6 +12141,7 @@ export function createRogueSteadyAimDriver(
     function reset(): void {
       session = rogueSteadyAimBattle();
       state = session.state;
+      steadyAimSubject = rogueSteadyAimSubject(session);
       lastResult = "init";
       lastInvalidReason = "";
     }
@@ -12207,12 +12201,7 @@ export function createRogueSteadyAimDriver(
         recordResult(
           resolveBattleSubject({
             state,
-            subject: rogueSteadyAimSubject(
-              battleRuntimeSessionForTest({
-                state,
-                context: session.context,
-              }),
-            ),
+            subject: steadyAimSubject,
             fills: [],
           }),
         );
@@ -12223,12 +12212,7 @@ export function createRogueSteadyAimDriver(
         recordResult(
           resolveBattleSubject({
             state,
-            subject: rogueSteadyAimSubject(
-              battleRuntimeSessionForTest({
-                state,
-                context: session.context,
-              }),
-            ),
+            subject: steadyAimSubject,
             fills: [],
           }),
         );
@@ -12237,12 +12221,7 @@ export function createRogueSteadyAimDriver(
         recordResult(
           resolveBattleSubject({
             state,
-            subject: rogueSteadyAimSubject(
-              battleRuntimeSessionForTest({
-                state,
-                context: session.context,
-              }),
-            ),
+            subject: steadyAimSubject,
             fills: [],
           }),
         );
@@ -16491,9 +16470,7 @@ function independentSpellAttackSequenceTargetFill(
         kind: "spellTarget",
         casterId: spellCasterId,
         targetId: spellTargetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          INDEPENDENT_SPELL_ATTACK_SEQUENCE_SPELL_ID,
-        ),
+        sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
       },
     ],
   };
@@ -17362,6 +17339,7 @@ function activeFeatureSpellBenefitCasterCreatureInit(input: {
   readonly initiative: number;
   readonly sourceClassName: ActiveFeatureSpellBenefitSourceClassName;
 }): BattleCreatureInit {
+  const featureUnit = activeFeatureSpellBenefitUnit();
   const classLevels =
     input.sourceClassName === "sorcerer"
       ? ([{ className: "sorcerer" as const, level: classLevel(1) }] as const)
@@ -17376,7 +17354,7 @@ function activeFeatureSpellBenefitCasterCreatureInit(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId("active-feature-spell-benefit-caster"),
-      characterUnitRefs: [],
+      characterUnitRefs: [unitRefWithSupportProfilesForMbt(featureUnit)],
       classLevels,
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
@@ -17390,7 +17368,10 @@ function activeFeatureSpellBenefitCasterCreatureInit(input: {
       selectedLoadout: {},
       attack: null,
       unarmedStrike: baseUnarmedStrike(),
-      resources: [activeFeatureSpellBenefitResource()],
+      resources: [{ unit: featureUnit }],
+      unitFeatures: [
+        characterBattleFeatureInitForTest(featureUnit, classLevels),
+      ],
       spellcasting: {
         sourceClassName: input.sourceClassName,
         spellcastingAbilityModifier: 3,
@@ -17888,12 +17869,10 @@ function adrenalineRushUnitRef(
   return unitRef.right;
 }
 
-function activeFeatureSpellBenefitResource(): NonNullable<
-  Extract<
-    BattleCreatureInit["creatureInit"],
-    { readonly kind: "character" }
-  >["resources"]
->[number] {
+function activeFeatureSpellBenefitUnit(): Extract<
+  UnitRecord,
+  { readonly kind: "class_feature" }
+> {
   const unit = unitLibrary.requireUnit(sorcererInnateSorceryUnitId);
   if (
     unit.kind !== "class_feature" ||
@@ -17902,7 +17881,23 @@ function activeFeatureSpellBenefitResource(): NonNullable<
   ) {
     throw new Error("Expected active feature spell benefit resource Unit.");
   }
-  return { unit };
+  return unit;
+}
+
+function unitRefWithSupportProfilesForMbt(
+  unit: UnitRecord,
+): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"][number] {
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  return unitRef.right;
 }
 
 function rogueSteadyAimUnitRef(
@@ -18199,8 +18194,7 @@ function chainedAttackProcedureTargetFill(
         kind: "spellTarget",
         casterId: spellCasterId,
         targetId,
-        sourceProcedureRef:
-          battleProcedureExecutionRefForTest(chromaticOrbUnitId),
+        sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
       },
     ],
   };
@@ -18218,12 +18212,24 @@ function chainedAttackProcedureLeapTargetFill(
         kind: "spellLeapTargetWithinRange",
         previousTargetId: spellTargetId,
         targetId: chainedAttackProcedureSecondTargetId,
-        sourceProcedureRef:
-          battleProcedureExecutionRefForTest(chromaticOrbUnitId),
+        sourceProcedureRef: spellTargetProcedureRefForMbtHole(hole),
         rangeFeet: movementFeet(30),
       },
     ],
   };
+}
+
+function spellTargetProcedureRefForMbtHole(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+): BattleProcedureExecutionRef {
+  const sourceProcedureRef =
+    hole.spellTargetSpatialFactRequest?.sourceProcedureRef ?? hole.procedureRef;
+  if (sourceProcedureRef === undefined) {
+    throw new Error(
+      "Expected spell target MBT hole to retain its execution-bound procedure reference.",
+    );
+  }
+  return sourceProcedureRef;
 }
 
 function spellTargetListFill(

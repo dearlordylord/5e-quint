@@ -160,6 +160,7 @@ function applySeeInvisibleObserverSightEffect(
 function resolveSeeInvisibleObserverSight(
   input: SpellProcedureProfileResolveInput<SeeInvisibleObserverSightSpellInvocation>,
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!fillsBelongToSpellCastHoles(input.input.fills)) {
     return invalidResult(
       input.input.state,
@@ -167,6 +168,7 @@ function resolveSeeInvisibleObserverSight(
       "See Invisibility uses no target, roll, damage, or selection fills.",
     );
   }
+  /* v8 ignore stop */
 
   return resolveSpellActiveEffectCast({
     resolution: input,

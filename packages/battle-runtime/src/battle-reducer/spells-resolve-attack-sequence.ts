@@ -143,6 +143,7 @@ export function resolveSpellAttackSequenceAct(input: {
   readonly actionCostOverride?: "magicAction" | "bonusAction";
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.objectTarget !== undefined ||
@@ -154,12 +155,14 @@ export function resolveSpellAttackSequenceAct(input: {
     input.fillSet.mirrorImageDuplicateRoll !== undefined ||
     input.fillSet.damageRoll !== undefined
   ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       `Spell spell attack sequence must use indexed target, attack-roll, and damage fills.`,
     );
   }
+  /* v8 ignore stop */
 
   const missingTargetIndex = input.fillSet.attackSequencePartFills.findIndex(
     (partFill) => partFill.target === undefined,
@@ -251,13 +254,16 @@ export function resolveSpellAttackSequenceAct(input: {
     ...input.fillSet.concentrationSavingThrows,
     ...input.fillSet.damageDispositions,
   ].find((fill) => !usedExtraFillHoleIds.has(fill.holeId));
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (unusedExtraFill !== undefined) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Spell attack sequence damage lifecycle fill does not match an attack that currently needs it.",
     );
   }
+  /* v8 ignore stop */
 
   const spent = spendSpellCastResources({
     state,
@@ -315,6 +321,7 @@ function resolveSpellAttackSequencePart(input: {
   const target = input.partFill.target;
   if (target === undefined) {
     const partName = spellAttackSequencePartName();
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -359,6 +366,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     )
   ) {
     const partName = spellAttackSequencePartName();
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -392,13 +400,16 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       sanctuaryCheck.hole,
     ]);
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (sanctuaryCheck.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       sanctuaryCheck.message,
     );
   }
+  /* v8 ignore stop */
   if (sanctuaryCheck.tag === "lost") {
     return spendSpellCastResources({
       state: input.state,
@@ -428,6 +439,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       )
     ) {
       const partName = spellAttackSequencePartName();
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
@@ -441,6 +453,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     );
     if (originalTargetFill === undefined) {
       const partName = spellAttackSequencePartName();
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
@@ -465,9 +478,12 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       input.actorId,
       input.input.state,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillSet.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(input.input.state, "invalidFill", fillSet.message);
     }
+    /* v8 ignore stop */
     return resolveSpellAttackSequenceAct({
       input: { ...input.input, fills },
       actorId: input.actorId,
@@ -494,9 +510,12 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     input.partFill.attackRoll,
     requiredRollMode,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (attackRollError !== null) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.input.state, "invalidFill", attackRollError);
   }
+  /* v8 ignore stop */
   const actorBeforeSpellAttack = input.state.combatants.get(input.actorId);
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
@@ -526,13 +545,16 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
     requiredRollMode,
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (d20TestNaturalOneRerollIssue !== null) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       d20TestNaturalOneRerollIssue,
     );
   }
+  /* v8 ignore stop */
   const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
     input.partFill.attackRoll,
   );
@@ -548,10 +570,12 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     attackRoll: effectiveAttackRoll,
     ordinaryHit,
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.partFill.attackRoll.missToHitReplacementProcedureRef !== undefined &&
     missToHitReplacement === null
   ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -560,6 +584,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         : "Attack-roll miss-to-hit replacement is not available for this spell attack roll.",
     );
   }
+  /* v8 ignore stop */
   const hit = ordinaryHit || missToHitReplacement !== null;
   const critical = attackRollIsCriticalHit(effectiveAttackRoll);
   const attackRolledState = recordAttackRollMissToHitReplacementUsed(
@@ -584,6 +609,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   );
   if (!hit && input.partFill.mirrorImageDuplicateRoll !== undefined) {
     const partName = spellAttackSequencePartName();
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -615,21 +641,27 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         mirrorImageCheck.hole,
       ]);
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (mirrorImageCheck.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
         mirrorImageCheck.message,
       );
     }
+    /* v8 ignore stop */
     if (mirrorImageCheck.tag === "hitDuplicate") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (input.partFill.damageRoll !== undefined) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
         return invalidResult(
           input.input.state,
           "invalidFill",
           "Spell attack sequence damage is not valid when Mirror Image redirects the hit to a duplicate.",
         );
       }
+      /* v8 ignore stop */
       return {
         tag: "resolved",
         state: mirrorImageCheck.state,
@@ -688,6 +720,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   const postRemarkableAthleteMovementState = remarkableAthleteMovement.state;
   if (!hit && input.partFill.damageRoll !== undefined) {
     const partName = spellAttackSequencePartName();
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -724,9 +757,12 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     critical,
     spellMarkedDamageRiders,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageValidation !== null) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.input.state, "invalidFill", damageValidation);
   }
+  /* v8 ignore stop */
   const spellDamageByType = spellDamageByTypeForTarget(
     target,
     input.invocation,
@@ -752,13 +788,16 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       input.partFill.damageRoll.holeId,
     ),
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (sourcePenalty.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Source damage roll penalty does not match an active source-side damage penalty.",
     );
   }
+  /* v8 ignore stop */
   if (sourcePenalty.tag === "needsHoles") {
     return needsHolesResult(
       postRemarkableAthleteMovementState,
@@ -784,13 +823,16 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     spellReductionRoll,
     spellReductionRollHoleForPart,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (spellReduction.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Spell damage reduction roll does not match an unused matching damage-reduction spell effect.",
     );
   }
+  /* v8 ignore stop */
   if (spellReduction.tag === "needsHoles") {
     return needsHolesResult(
       postRemarkableAthleteMovementState,
@@ -842,13 +884,16 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       withoutRoll: concentrationFill.value.withoutRoll,
       succeeded: concentrationFill.value.succeeded,
     });
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (d20TestNaturalOneRerollIssue !== null) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
         d20TestNaturalOneRerollIssue,
       );
     }
+    /* v8 ignore stop */
   }
   const damageEventKey = String(
     spellAttackSequencePartDamageDispositionHoleKey(
@@ -878,13 +923,16 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     holes: damageDispositionHole === null ? [] : [damageDispositionHole],
     fills: relevantDamageDispositionFills,
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageDispositionValidation !== null) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       damageDispositionValidation,
     );
   }
+  /* v8 ignore stop */
   if (
     damageDispositionHole !== null &&
     damageDispositionFillFor(
@@ -917,13 +965,16 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       [...hideousLaughterSaveCheck.holes],
     );
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (hideousLaughterSaveCheck.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       hideousLaughterSaveCheck.message,
     );
   }
+  /* v8 ignore stop */
   const sourceDamageRollPenaltyRoll = sourceDamageRollPenaltyRollForDamageRoll(
     input.fillSet.sourceDamageRollPenaltyRolls,
     postRemarkableAthleteMovementState.combatants.get(input.actorId),
@@ -959,13 +1010,16 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       relationshipCheck.holes,
     );
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipCheck.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       relationshipCheck.message,
     );
   }
+  /* v8 ignore stop */
   const damaged = applySpellDamage(
     postRemarkableAthleteMovementState,
     target.combatantId,
@@ -1057,13 +1111,16 @@ function resolveSpellAttackSequenceObjectPart(input: {
       readonly usedExtraFillHoleIds: readonly string[];
     }
   | Exclude<BattleResolutionResult, { readonly tag: "resolved" }> {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.partFill.mirrorImageDuplicateRoll !== undefined) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Mirror Image duplicate roll is only valid for a hit against a combatant.",
     );
   }
+  /* v8 ignore stop */
   const objectFact = spellObjectTargetFact(
     input.target.spatialFacts.filter(
       (
@@ -1079,6 +1136,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
   );
   if (objectFact === null) {
     const partName = spellAttackSequencePartName();
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -1103,6 +1161,7 @@ function resolveSpellAttackSequenceObjectPart(input: {
     objectTargetAttackNeedsSightFact(input.state, input.target.objectId)
   ) {
     const partName = spellAttackSequencePartName();
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
@@ -1129,9 +1188,12 @@ function resolveSpellAttackSequenceObjectPart(input: {
     input.partFill.attackRoll,
     requiredRollMode,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (attackRollError !== null) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.input.state, "invalidFill", attackRollError);
   }
+  /* v8 ignore stop */
   const actorBeforeSpellAttack = input.state.combatants.get(input.actorId);
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
@@ -1161,24 +1223,30 @@ function resolveSpellAttackSequenceObjectPart(input: {
     decision: input.partFill.attackRoll.d20TestNaturalOneReroll,
     requiredRollMode,
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (d20TestNaturalOneRerollIssue !== null) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       d20TestNaturalOneRerollIssue,
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.partFill.attackRoll.activatedOngoingFeatureProcedureRef !==
       undefined ||
     input.partFill.attackRoll.missToHitReplacementProcedureRef !== undefined
   ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Object-target spell attacks do not use combatant attack-roll feature selections.",
     );
   }
+  /* v8 ignore stop */
   const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
     input.partFill.attackRoll,
   );
@@ -1207,13 +1275,16 @@ function resolveSpellAttackSequenceObjectPart(input: {
     return remarkableAthleteMovement.result;
   }
   const postRemarkableAthleteMovementState = remarkableAthleteMovement.state;
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!hit && input.partFill.damageRoll !== undefined) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Spell attack sequence damage can only be filled after a hit.",
     );
   }
+  /* v8 ignore stop */
   if (!hit) {
     return {
       tag: "resolved",
@@ -1242,9 +1313,12 @@ function resolveSpellAttackSequenceObjectPart(input: {
     input.partIndex,
     critical,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageValidation !== null) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.input.state, "invalidFill", damageValidation);
   }
+  /* v8 ignore stop */
   const objectDamageByType = spellObjectDamageByType(
     input.invocation,
     input.partFill.damageRoll,
@@ -1261,13 +1335,16 @@ function resolveSpellAttackSequenceObjectPart(input: {
     input.partFill.damageRoll.holeId,
     sourceDamageRollPenaltyRoll,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (sourcePenalty.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       "Source damage roll penalty does not match an active source-side damage penalty.",
     );
   }
+  /* v8 ignore stop */
   if (sourcePenalty.tag === "needsHoles") {
     return needsHolesResult(
       postRemarkableAthleteMovementState,

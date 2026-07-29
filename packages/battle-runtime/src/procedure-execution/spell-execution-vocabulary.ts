@@ -1,3 +1,7 @@
+// This module contains only TypeScript type vocabulary, which is erased before
+// runtime and therefore has no executable behavior for tests to cover.
+/* v8 ignore file */
+
 // Authored-free mechanical vocabulary shared by spell admission and execution.
 
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -20,9 +24,9 @@ import type {
   SpellAttackKind,
   SpellConditionRepeatSave,
 } from "../active-effect/execution-vocabulary.ts";
-import {
-  type EldritchBlastBeamCount,
-  type ScorchingRayRayCount,
+import type {
+  EldritchBlastBeamCount,
+  ScorchingRayRayCount,
 } from "../battle-reducer/domain-constants.ts";
 import type { SpellTargeting } from "./spell-invocation-vocabulary.ts";
 

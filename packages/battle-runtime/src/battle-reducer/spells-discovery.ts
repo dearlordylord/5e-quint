@@ -47,7 +47,6 @@ import {
   type BattleActDiscoveryCandidate,
   type BattleCreatureState,
   type BattleExecutableSpellInvocation,
-  type BattleSpellAdmissionSource,
   type BattleHole,
   type BattleState,
   type ReadiedSpellInvocation,
@@ -135,6 +134,7 @@ function discoverRegisteredSpellProcedureCastAct(
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       jumpMovementReplacement: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
+      /* v8 ignore next -- Triggered Feather Fall invocations are removed by isTriggeredReactionSpellInvocation before ordinary cast-act dispatch. */
       featherFallMitigation: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       selfTeleport: (value) =>
@@ -205,8 +205,10 @@ function discoverRegisteredSpellProcedureCastAct(
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       command: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
+      /* v8 ignore next -- Triggered Counterspell invocations are removed by isTriggeredReactionSpellInvocation before ordinary cast-act dispatch. */
       counterspell: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
+      /* v8 ignore next -- Shield is removed explicitly before ordinary cast-act dispatch and is discovered only from an attack trigger. */
       shieldReaction: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       spellAttackDamage: (value) =>
@@ -658,12 +660,6 @@ export function spellInvocationCasterPrerequisiteIsMet(
           effect.sourceCombatantId === actor.combatantId,
       ))
   );
-}
-
-export function spellRequiresVerbal(
-  spell: BattleSpellAdmissionSource,
-): boolean {
-  return "components" in spell.mechanics && spell.mechanics.components.v;
 }
 
 export function isReadiedSpellInvocation<

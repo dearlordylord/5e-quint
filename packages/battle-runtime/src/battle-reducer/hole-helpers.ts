@@ -1095,48 +1095,6 @@ export function alternateActionCostActionAvailable(
   );
 }
 
-export function actorHasAlternateActionCost(
-  combatant: BattleCreatureState | undefined,
-  sourceProcedureRef: BattleProcedureExecutionRef | undefined,
-  action: AlternateActionCostAction,
-): boolean {
-  return alternateActionCostProfilesForActor(combatant).some(
-    (entry) =>
-      entry.source.kind === "procedure" &&
-      entry.source.procedureRef === sourceProcedureRef &&
-      entry.profile.to.kind === "bonusAction" &&
-      entry.profile.from.actions.some((candidate) => candidate === action),
-  );
-}
-
-export function bonusActionDashTemporaryHitPointsForActor(
-  combatant: BattleCreatureState | undefined,
-  sourceProcedureRef: BattleProcedureExecutionRef,
-): {
-  readonly profile: Extract<
-    UnitSupportProcedureExecution,
-    { readonly kind: "bonusActionDashTemporaryHitPoints" }
-  >;
-  readonly resource: CharacterBattleResourceState;
-} | null {
-  return (
-    bonusActionDashTemporaryHitPointsProfilesForActor(combatant).find(
-      (entry) => entry.procedureRef === sourceProcedureRef,
-    ) ?? null
-  );
-}
-
-export function alternateActionCostActionLabel(
-  action: AlternateActionCostAction,
-): string {
-  return Match.value(action).pipe(
-    Match.when("dash", () => "Dash"),
-    Match.when("disengage", () => "Disengage"),
-    Match.when("hide", () => "Hide"),
-    Match.exhaustive,
-  );
-}
-
 export function canHideInCurrentCircumstances(
   state: BattleState,
   combatantId: CombatantId,

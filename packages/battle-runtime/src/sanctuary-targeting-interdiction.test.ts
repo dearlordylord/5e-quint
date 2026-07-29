@@ -43,6 +43,7 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   resolveBattleSubject,
   attackExecutionSelectionForSubjectForTest,
 } from "./battle-runtime.test-support.ts";
@@ -208,6 +209,11 @@ describe("Sanctuary targeting interdiction", () => {
     if (needsSanctuary.tag !== "needsHoles") {
       throw new Error("Expected Sanctuary interdiction hole.");
     }
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: needsSanctuary.snapshot,
+      subject: attack.subject,
+      holes: needsSanctuary.holes,
+    });
     const sanctuaryHole = requireHole(
       needsSanctuary.holes,
       "sanctuaryInterdictionOutcome",

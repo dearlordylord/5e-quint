@@ -2,11 +2,15 @@ import {
   unitId as parseSharedUnitId,
   statBlockId as parseSharedStatBlockId,
 } from "@dnd/shared/game-facts";
-import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import {
+  battleRuntimeContextForTest,
+  battleRuntimeSessionForTest,
+} from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.find-familiar-lifecycle unit-feature.d20-test-natural-one-reroll
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84I5 find_familiar
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { findFamiliarCurrentHitPoints } from "./find-familiar-lifecycle-execution.ts";
 import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
 import * as Either from "effect/Either";
 import { Schema } from "effect";
@@ -27,10 +31,12 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import {
   findFamiliarFormEligibilityForSpell,
+  pactOfTheChainFindFamiliarFormEligibilityForSpell,
   type FindFamiliarFormEligibility,
 } from "@dnd/surface/surface/find-familiar-forms";
 import {
   admitCompanionToBattle,
+  admitCompanionToBattleRuntime,
   applyFindFamiliarZeroHitPointDisappearance,
   battleAvailableDruidWildShapeKnownForms,
   battleCreaturePresentationDisplayName,
@@ -40,6 +46,7 @@ import {
   battleUnitSupportProfilesForUnit,
   BattleSnapshotSchema,
   castFindFamiliar,
+  castRetainedFindFamiliarRuntime,
   castWildCompanion,
   characterId,
   combatantId,
@@ -120,6 +127,11 @@ const familiarEligibility: FindFamiliarFormEligibility =
   requireFindFamiliarEligibility(
     findFamiliarFormEligibilityForSpell(findFamiliarSpell),
   );
+const pactFamiliarEligibility =
+  pactOfTheChainFindFamiliarFormEligibilityForSpell(findFamiliarSpell);
+if (pactFamiliarEligibility === null) {
+  throw new Error("Expected Pact of the Chain familiar form eligibility.");
+}
 
 function requireFindFamiliarEligibility(
   eligibility: FindFamiliarFormEligibility | null,
@@ -589,6 +601,14 @@ function literalHp(statBlock: StatBlockRecord): Hp {
   return Hp(hp.value);
 }
 
+function positiveCompanionHp(value: number) {
+  const currentHp = findFamiliarCurrentHitPoints(Hp(value));
+  if (typeof currentHp === "string") {
+    throw new Error(currentHp);
+  }
+  return currentHp;
+}
+
 function withFreshMagicAction(state: BattleState): BattleState {
   return {
     ...state,
@@ -931,6 +951,218 @@ function pactScratchSubject(
 }
 
 describe("Find Familiar lifecycle", () => {
+  test("retained companion presentation follows admission and recast transitions", () => {
+    const initial = startBattle({
+      battleId: battleId("retained-companion-presentation"),
+      combatants: [
+        characterCreature({
+          combatantId: casterId,
+          displayName: "Wizard",
+          initiative: 12,
+        }),
+      ],
+    });
+    expect(Either.isRight(initial)).toBe(true);
+    if (Either.isLeft(initial)) return;
+
+    const session = battleRuntimeSessionForTest({
+      state: initial.right.state,
+      context: battleRuntimeContextForTest(
+        new Map([
+          [
+            casterId,
+            {
+              resourceOwnership: [],
+              spellPresentationSources: [],
+              unitProcedureOwnership: [],
+              unitPresentationSources: [],
+            },
+          ],
+        ]),
+      ),
+    });
+    expect(
+      castRetainedFindFamiliarRuntime({
+        session,
+        casterId,
+        familiarId,
+        catalog: statBlockCatalog,
+        eligibility: familiarEligibility,
+        selection: { tag: "normalNamedForm", formId: "rat" },
+        creatureTypeOverrideChoiceId: firstTypeOverride.optionId,
+        initiative: initiativeScore(14),
+        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Retained Find Familiar recast requires a battle-owned authored form selection.",
+    });
+
+    const absentPactFamiliarInput = {
+      ownerId: casterId,
+      identity: {
+        tag: "retainedBetweenBattles",
+        durableCompanionId: "durable:presentation-sprite",
+      },
+      protocol: { tag: "attackExceptionFamiliarLikeOneAtATime" },
+      catalog: statBlockCatalog,
+      formEligibility: {
+        formAccess: "pactOfTheChain",
+        eligibility: pactFamiliarEligibility,
+      },
+      manifestation: {
+        tag: "disappearedAtZeroHitPoints",
+        storedForm: {
+          formAccess: "pactOfTheChain",
+          formSelection: {
+            tag: "pactOfTheChainSpecialForm",
+            formId: "sprite",
+          },
+          resolvedStatBlockId: parseSharedStatBlockId("stat_block_sprite"),
+        },
+        creatureTypeOverride: "fey",
+      },
+      initialCombatantOrder: initialCombatantOrder(casterId),
+    } satisfies Omit<
+      Parameters<typeof admitCompanionToBattleRuntime>[0],
+      "session"
+    >;
+    const admittedAbsentPactFamiliar = admitCompanionToBattleRuntime({
+      session,
+      ...absentPactFamiliarInput,
+    });
+    expect(Either.isRight(admittedAbsentPactFamiliar)).toBe(true);
+    if (Either.isRight(admittedAbsentPactFamiliar)) {
+      expect(
+        admittedAbsentPactFamiliar.right.context.characters.get(casterId),
+      ).toMatchObject({
+        retainedCompanionSelection: {
+          formAccess: "pactOfTheChain",
+          selectedForm: {
+            tag: "pactOfTheChainSpecialForm",
+            formId: "sprite",
+          },
+        },
+      });
+    }
+    const charactersWithoutOwner = new Map(session.context.characters);
+    charactersWithoutOwner.delete(casterId);
+    expect(
+      admitCompanionToBattleRuntime({
+        session: battleRuntimeSessionForTest({
+          state: session.state,
+          context: battleRuntimeContextForTest(
+            charactersWithoutOwner,
+            session.context.statBlocks,
+          ),
+        }),
+        ...absentPactFamiliarInput,
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleStateInitIssue",
+        message:
+          "Retained companion admission owner has no authored runtime context.",
+      }),
+    );
+
+    const admitted = admitCompanionToBattleRuntime({
+      session,
+      ownerId: casterId,
+      companionId: familiarId,
+      identity: {
+        tag: "retainedBetweenBattles",
+        durableCompanionId: "durable:presentation-cat",
+      },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
+      catalog: statBlockCatalog,
+      formEligibility: {
+        formAccess: "findFamiliar",
+        eligibility: familiarEligibility,
+      },
+      manifestation: {
+        tag: "embodiedOutsideBattle",
+        storedForm: {
+          formAccess: "findFamiliar",
+          formSelection: { tag: "normalNamedForm", formId: "cat" },
+          resolvedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
+        },
+        creatureTypeOverride: firstTypeOverride.creatureType,
+        hitPoints: {
+          currentHp: positiveCompanionHp(1),
+          tempHp: Hp(0),
+        },
+        initiative: initiativeScore(14),
+        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      },
+      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
+    });
+    expect(Either.isRight(admitted)).toBe(true);
+    if (Either.isLeft(admitted)) return;
+    expect(admitted.right.context.characters.get(casterId)).toMatchObject({
+      retainedCompanionSelection: {
+        formAccess: "findFamiliar",
+        selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      },
+    });
+    expect(admitted.right.context.statBlocks.get(familiarId)).toMatchObject({
+      displayName: "Cat",
+    });
+    expect(
+      castRetainedFindFamiliarRuntime({
+        session: admitted.right,
+        casterId,
+        familiarId,
+        catalog: statBlockCatalog,
+        eligibility: familiarEligibility,
+        selection: {
+          tag: "challengeRatingZeroBeast",
+          statBlockId: parseSharedStatBlockId("stat_block_missing"),
+        },
+        creatureTypeOverrideChoiceId: firstTypeOverride.optionId,
+        initiative: initiativeScore(14),
+        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      }),
+    ).toMatchObject({ tag: "invalid" });
+    expect(
+      castRetainedFindFamiliarRuntime({
+        session: admitted.right,
+        casterId,
+        familiarId: casterId,
+        catalog: statBlockCatalog,
+        eligibility: familiarEligibility,
+        selection: { tag: "normalNamedForm", formId: "rat" },
+        creatureTypeOverrideChoiceId: firstTypeOverride.optionId,
+        initiative: initiativeScore(14),
+        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      }),
+    ).toMatchObject({ tag: "invalid" });
+
+    const recast = castRetainedFindFamiliarRuntime({
+      session: admitted.right,
+      casterId,
+      familiarId,
+      catalog: statBlockCatalog,
+      eligibility: familiarEligibility,
+      selection: { tag: "normalNamedForm", formId: "rat" },
+      creatureTypeOverrideChoiceId: firstTypeOverride.optionId,
+      initiative: initiativeScore(14),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+    });
+    expect(recast.tag).toBe("resolved");
+    if (recast.tag !== "resolved") return;
+    expect(recast.session.context.characters.get(casterId)).toMatchObject({
+      retainedCompanionSelection: {
+        formAccess: "findFamiliar",
+        selectedForm: { tag: "normalNamedForm", formId: "rat" },
+      },
+    });
+    expect(recast.session.context.statBlocks.get(familiarId)).toMatchObject({
+      displayName: "Rat",
+    });
+  });
+
   test("casts a familiar as owner-linked companion combatant state", () => {
     const initial = startFixtureBattle();
     const result = castCatFamiliar(initial);

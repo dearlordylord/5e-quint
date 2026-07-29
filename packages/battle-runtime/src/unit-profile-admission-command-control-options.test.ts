@@ -35,6 +35,7 @@ import type {
   BattleSubject,
 } from "./unit-profile-admission.test-support.ts";
 import {
+  assertBattleSnapshotCodecRoundTripForTest,
   battleObjectId,
   combatantId,
   discoverBattleActCandidates,
@@ -68,6 +69,15 @@ describe("QMBT14 deterministic Command control option admission", () => {
       spellId: commandUnitId,
       slotLevel: 2,
     });
+    const awaitingCommandChoices = resolveBattleSubject({
+      state: session.state,
+      subject: levelOne.subject,
+      fills: [],
+    });
+    if (awaitingCommandChoices.tag !== "needsHoles") {
+      throw new Error("Expected Command target and option choices.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(awaitingCommandChoices.snapshot);
 
     expect({
       ...levelOne.subject,

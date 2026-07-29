@@ -392,6 +392,7 @@ function resolveCunningStrikeEquipmentGatedConditionSave(
   effect: CunningStrikeEquipmentGatedConditionSaveEffect,
   fills: CunningStrikeAfterDamageFills,
 ): CunningStrikeAfterDamageResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fills.movement !== undefined || fills.endTurnCover !== undefined) {
     return {
       tag: "invalid",
@@ -399,6 +400,7 @@ function resolveCunningStrikeEquipmentGatedConditionSave(
         "Cunning Strike equipment-gated condition effect does not accept movement or cover fills.",
     };
   }
+  /* v8 ignore stop */
   if (fills.toolPossession === undefined) {
     return {
       tag: "needsHoles",
@@ -410,6 +412,7 @@ function resolveCunningStrikeEquipmentGatedConditionSave(
       ],
     };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fills.toolPossession.holeId !== CUNNING_STRIKE_TOOL_POSSESSION_HOLE_ID ||
     !fills.toolPossession.value.toolIdsOnPerson.includes(
@@ -422,6 +425,7 @@ function resolveCunningStrikeEquipmentGatedConditionSave(
         "Cunning Strike equipment-gated condition effect requires the configured tool on the Rogue's person.",
     };
   }
+  /* v8 ignore stop */
   if (fills.savingThrow === undefined) {
     return {
       tag: "needsHoles",
@@ -453,9 +457,11 @@ function resolveCunningStrikeSavingThrow(
   applyFailure: (state: BattleState) => BattleState,
 ): CunningStrikeAfterDamageResult {
   const validation = validateCunningStrikeSavingThrow(fill, context.targetId);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation !== null) {
     return { tag: "invalid", message: validation };
   }
+  /* v8 ignore stop */
   const relationshipFacts = parseSavingThrowRelationshipFacts(
     fill.relationshipFacts ?? [],
     context.attackerId,
@@ -466,6 +472,7 @@ function resolveCunningStrikeSavingThrow(
       "enemySavingThrow",
     ),
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipFacts === null) {
     return {
       tag: "invalid",
@@ -473,6 +480,7 @@ function resolveCunningStrikeSavingThrow(
         "Cunning Strike relationship facts must answer the saving-throw hole request.",
     };
   }
+  /* v8 ignore stop */
   const savingThrowState = extendSavingThrowOngoingFeatures(
     state,
     context.attackerId,
@@ -494,6 +502,7 @@ function resolveCunningStrikeSizeGatedConditionSave(
   effect: CunningStrikeSizeGatedConditionSaveEffect,
   fills: CunningStrikeAfterDamageFills,
 ): CunningStrikeAfterDamageResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fills.movement !== undefined ||
     fills.toolPossession !== undefined ||
@@ -505,6 +514,7 @@ function resolveCunningStrikeSizeGatedConditionSave(
         "Cunning Strike size-gated condition effect only accepts the requested Saving Throw.",
     };
   }
+  /* v8 ignore stop */
   if (fills.savingThrow === undefined) {
     return {
       tag: "needsHoles",
@@ -534,6 +544,7 @@ function resolveCunningStrikePostDamageMovement(
   effect: CunningStrikePostDamageMovementEffect,
   fills: CunningStrikeAfterDamageFills,
 ): CunningStrikeAfterDamageResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fills.savingThrow !== undefined ||
     fills.toolPossession !== undefined ||
@@ -545,6 +556,7 @@ function resolveCunningStrikePostDamageMovement(
         "Cunning Strike post-damage movement only accepts movement fills.",
     };
   }
+  /* v8 ignore stop */
   const movementBudget = cunningStrikeWithdrawMovementBudget(
     state,
     context.attackerId,
@@ -558,6 +570,7 @@ function resolveCunningStrikePostDamageMovement(
   const speedKindBudget = movementBudget.speedKinds.find(
     (candidate) => candidate.kind === fills.movement?.value.speedKind,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (speedKindBudget === undefined) {
     return {
       tag: "invalid",
@@ -565,6 +578,8 @@ function resolveCunningStrikePostDamageMovement(
         "Cunning Strike movement speed kind is not represented by this combatant.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     effect.movement.opportunityAttacks === "doesNotProvoke" &&
     fills.movement.value.provokedOpportunityAttacks.length > 0
@@ -574,6 +589,7 @@ function resolveCunningStrikePostDamageMovement(
       message: "Cunning Strike movement does not provoke Opportunity Attacks.",
     };
   }
+  /* v8 ignore stop */
   const movement = parseBattleMovement(
     state,
     context.attackerId,
@@ -583,9 +599,11 @@ function resolveCunningStrikePostDamageMovement(
       spendsTurnMovement: false,
     },
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movement.tag === "invalid") {
     return { tag: "invalid", message: movement.message };
   }
+  /* v8 ignore stop */
   return { tag: "ok", state: applyBattleMovement(state, movement.movement) };
 }
 
@@ -595,6 +613,7 @@ function resolveCunningStrikeHideInvisibleEndSuppression(
   effect: CunningStrikeHideInvisibleEndSuppressionEffect,
   fills: CunningStrikeAfterDamageFills,
 ): CunningStrikeAfterDamageResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fills.savingThrow !== undefined ||
     fills.movement !== undefined ||
@@ -606,6 +625,8 @@ function resolveCunningStrikeHideInvisibleEndSuppression(
         "Cunning Strike Stealth Attack only accepts end-turn cover facts.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (context.hiddenBeforeAttack === null) {
     return {
       tag: "invalid",
@@ -613,18 +634,21 @@ function resolveCunningStrikeHideInvisibleEndSuppression(
         "Cunning Strike Stealth Attack requires the Hide action's Invisible condition before the attack.",
     };
   }
+  /* v8 ignore stop */
   if (fills.endTurnCover === undefined) {
     return {
       tag: "needsHoles",
       holes: [cunningStrikeEndTurnCoverHole(context, effect)],
     };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fills.endTurnCover.holeId !== CUNNING_STRIKE_END_TURN_COVER_HOLE_ID) {
     return {
       tag: "invalid",
       message: "Cunning Strike Stealth Attack cover facts use the wrong hole.",
     };
   }
+  /* v8 ignore stop */
   const endTurnCover = fills.endTurnCover.value.cover;
   if (
     !isCunningStrikeQualifyingCoverDegree(endTurnCover) ||

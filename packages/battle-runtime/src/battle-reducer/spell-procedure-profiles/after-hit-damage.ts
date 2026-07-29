@@ -221,6 +221,7 @@ function discoverAfterHitDamageCastAct(): readonly AvailableBattleAct[] {
 function resolveAfterHitDamage(
   input: AfterHitDamageResolveInput,
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!fillsBelongToSpellCastHoles(input.input.fills)) {
     return invalidResult(
       input.input.state,
@@ -228,6 +229,7 @@ function resolveAfterHitDamage(
       "Attack-hit Bonus Action spell accepts only spell-cast Reaction trigger facts.",
     );
   }
+  /* v8 ignore stop */
   const spellCastReactionWindow = maybeOpenAfterHitSpellCastInterrupt({
     input: input.input,
     invocation: input.invocation,

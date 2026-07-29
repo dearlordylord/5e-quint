@@ -78,6 +78,7 @@ import {
   supportedPreparedSleepTargetAdmissionProfile,
 } from "./unit-profile-admission.test-support.ts";
 import {
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
@@ -957,6 +958,19 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     });
     const targetHole = requireHole(act.initialHoles, "spellTargetList");
     const conditionHole = requireHole(act.initialHoles, "conditionChoice");
+    const initialResolution = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [],
+    });
+    if (initialResolution.tag !== "needsHoles") {
+      throw new Error("Expected Blindness/Deafness casting holes.");
+    }
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: initialResolution.snapshot,
+      subject: act.subject,
+      holes: initialResolution.holes,
+    });
     expect(targetHole).toEqual(
       expect.objectContaining({
         minTargets: 1,

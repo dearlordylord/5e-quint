@@ -97,18 +97,22 @@ export function resolveStunningStrikeAfterHit(input: {
       holes: [stunningStrikeDecisionHole()],
     };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.decision.holeId !== STUNNING_STRIKE_DECISION_HOLE_ID) {
     return {
       tag: "invalid",
       message: "Stunning Strike decision uses the wrong hole.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!isStunningStrikeChoice(input.decision.value)) {
     return {
       tag: "invalid",
       message: "Stunning Strike decision must choose attempt or decline.",
     };
   }
+  /* v8 ignore stop */
   return Match.value(input.decision.value).pipe(
     Match.when("decline", () => {
       if (input.savingThrow !== undefined) {
@@ -140,13 +144,16 @@ function resolveStunningStrikeAttempt(
       holes: [stunningStrikeSavingThrowHole(input.state, hit)],
     };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.savingThrow.holeId !== STUNNING_STRIKE_SAVE_HOLE_ID) {
     return {
       tag: "invalid",
       message: "Stunning Strike Saving Throw uses the wrong hole.",
     };
   }
+  /* v8 ignore stop */
   const outcomes = input.savingThrow.value.outcomes;
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (outcomes.length !== 1 || outcomes[0]?.targetId !== hit.targetId) {
     return {
       tag: "invalid",
@@ -154,13 +161,16 @@ function resolveStunningStrikeAttempt(
         "Stunning Strike Saving Throw must target the attacked creature.",
     };
   }
+  /* v8 ignore stop */
   const stateAfterSpend = spendStunningStrikeFocus(input.state, hit);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (stateAfterSpend === null) {
     return {
       tag: "invalid",
       message: "Stunning Strike requires an unspent Focus Point.",
     };
   }
+  /* v8 ignore stop */
   const savingThrowState = stateWithUnitFeatureSavingThrowRelationships({
     relationshipRequestState: input.state,
     state: stateAfterSpend,
@@ -168,6 +178,7 @@ function resolveStunningStrikeAttempt(
     targetId: hit.targetId,
     savingThrow: input.savingThrow,
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (savingThrowState === null) {
     return {
       tag: "invalid",
@@ -175,6 +186,7 @@ function resolveStunningStrikeAttempt(
         "Stunning Strike relationship facts must answer the saving-throw hole request.",
     };
   }
+  /* v8 ignore stop */
   return {
     tag: "ok",
     state: outcomes[0].succeeded

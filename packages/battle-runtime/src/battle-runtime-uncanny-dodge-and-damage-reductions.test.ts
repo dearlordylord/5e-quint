@@ -1,4 +1,5 @@
 import { attackDamageInterruptionFrame } from "./battle-reducer/attack-damage-events.ts";
+import { Schema } from "effect";
 import {
   classLevel,
   DieRollResult,
@@ -16,6 +17,10 @@ import type {
   BattleState,
 } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
+import {
+  BattleInterruptProcedureChoiceSchema,
+  BattleSnapshotSchema,
+} from "./index.ts";
 import {
   characterBattleFeatureInitForTest,
   applyCondition,
@@ -254,6 +259,20 @@ describe("battle runtime: Uncanny Dodge and damage reductions", () => {
       hitReaction.result.snapshot.pendingInterrupt!.choices.filter(
         (choice) => choice.kind === "reactionRollOrDamageReduction",
       );
+    const firstHitModifierChoice = hitModifierChoices[0];
+    if (firstHitModifierChoice === undefined) {
+      throw new Error("Expected an attack-hit Reaction modifier choice.");
+    }
+    expect(() =>
+      Schema.decodeUnknownSync(BattleInterruptProcedureChoiceSchema)(
+        firstHitModifierChoice,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        Schema.encodeSync(BattleSnapshotSchema)(hitReaction.result.snapshot),
+      ),
+    ).not.toThrow();
     expect(hitModifierChoices).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

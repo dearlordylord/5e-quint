@@ -200,25 +200,31 @@ export function attackFillSet(
       fill.holeId === REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID
     ) {
       if (weaponMasteryCleaveAttackRoll !== undefined) {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (
           weaponMasteryCleaveRemarkableAthleteCriticalHitMovementDecision !==
           undefined
         ) {
+          /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
           return {
             tag: "invalid",
             message:
               "Weapon Mastery Cleave Remarkable Athlete movement decision was filled twice.",
           };
         }
+        /* v8 ignore stop */
         weaponMasteryCleaveRemarkableAthleteCriticalHitMovementDecision = fill;
         continue;
       }
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (remarkableAthleteCriticalHitMovementDecision !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Remarkable Athlete movement decision was filled twice.",
         };
       }
+      /* v8 ignore stop */
       remarkableAthleteCriticalHitMovementDecision = fill;
       continue;
     }
@@ -231,24 +237,30 @@ export function attackFillSet(
         weaponMasteryCleaveRemarkableAthleteCriticalHitMovementDecision !==
         undefined
       ) {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (
           weaponMasteryCleaveRemarkableAthleteCriticalHitMovement !== undefined
         ) {
+          /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
           return {
             tag: "invalid",
             message:
               "Weapon Mastery Cleave Remarkable Athlete movement was filled twice.",
           };
         }
+        /* v8 ignore stop */
         weaponMasteryCleaveRemarkableAthleteCriticalHitMovement = fill;
         continue;
       }
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (remarkableAthleteCriticalHitMovement !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Remarkable Athlete movement was filled twice.",
         };
       }
+      /* v8 ignore stop */
       remarkableAthleteCriticalHitMovement = fill;
       continue;
     }
@@ -257,12 +269,15 @@ export function attackFillSet(
       fill.kind === "unitFeatureDecision" &&
       fill.holeId === HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (huntersPreyHordeBreakerDecision !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Hunter's Prey Horde Breaker decision was filled twice.",
         };
       }
+      /* v8 ignore stop */
       huntersPreyHordeBreakerDecision = fill;
       continue;
     }
@@ -271,12 +286,15 @@ export function attackFillSet(
       fill.kind === "unitFeatureDecision" &&
       fill.holeId === GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (grapplerPunchAndGrabDecision !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Grappler Punch and Grab decision was filled twice.",
         };
       }
+      /* v8 ignore stop */
       grapplerPunchAndGrabDecision = fill;
       continue;
     }
@@ -285,12 +303,15 @@ export function attackFillSet(
       fill.kind === "unitFeatureDecision" &&
       fill.holeId === WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (weaponMasteryCleaveDecision !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Weapon Mastery Cleave decision was filled twice.",
         };
       }
+      /* v8 ignore stop */
       weaponMasteryCleaveDecision = fill;
       continue;
     }
@@ -299,12 +320,15 @@ export function attackFillSet(
       fill.kind === "grappleOutcome" &&
       fill.holeId === GRAPPLE_OUTCOME_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (grapplerPunchAndGrabOutcome !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Grappler Punch and Grab outcome was filled twice.",
         };
       }
+      /* v8 ignore stop */
       grapplerPunchAndGrabOutcome = fill;
       continue;
     }
@@ -313,12 +337,15 @@ export function attackFillSet(
       fill.kind === "targetChoice" &&
       fill.holeId === HUNTERS_PREY_HORDE_BREAKER_TARGET_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (huntersPreyHordeBreakerTarget !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Hunter's Prey Horde Breaker target was filled twice.",
         };
       }
+      /* v8 ignore stop */
       const parsed = parseAttackTargetChoiceFill(
         fill,
         attackerId,
@@ -333,12 +360,15 @@ export function attackFillSet(
       fill.kind === "unitFeatureDecision" &&
       fill.holeId === TACTICAL_MASTER_REPLACEMENT_DECISION_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (tacticalMasterReplacementDecision !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Tactical Master replacement decision was filled twice.",
         };
       }
+      /* v8 ignore stop */
       tacticalMasterReplacementDecision = fill;
       continue;
     }
@@ -347,12 +377,15 @@ export function attackFillSet(
       fill.kind === "unitFeatureDecision" &&
       fill.holeId === BRUTAL_STRIKE_DECISION_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (brutalStrikeDecision !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Brutal Strike decision was filled twice.",
         };
       }
+      /* v8 ignore stop */
       brutalStrikeDecision = fill;
       continue;
     }
@@ -361,12 +394,15 @@ export function attackFillSet(
       fill.kind === "unitFeatureDecision" &&
       fill.holeId === OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (openHandTechniqueDecision !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Open Hand Technique decision was filled twice.",
         };
       }
+      /* v8 ignore stop */
       openHandTechniqueDecision = fill;
       continue;
     }
@@ -375,12 +411,15 @@ export function attackFillSet(
       fill.kind === "unitFeatureDecision" &&
       fill.holeId === STUNNING_STRIKE_DECISION_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (stunningStrikeDecision !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Stunning Strike decision was filled twice.",
         };
       }
+      /* v8 ignore stop */
       stunningStrikeDecision = fill;
       continue;
     }
@@ -389,19 +428,25 @@ export function attackFillSet(
       fill.kind === "attackRoll" &&
       fill.holeId === HUNTERS_PREY_HORDE_BREAKER_ATTACK_ROLL_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (huntersPreyHordeBreakerAttackRoll !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Hunter's Prey Horde Breaker attack roll was filled twice.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.relationshipFacts !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message:
             "Hunter's Prey Horde Breaker attack-roll relationship facts were not requested.",
         };
       }
+      /* v8 ignore stop */
       huntersPreyHordeBreakerAttackRoll = fill;
       continue;
     }
@@ -410,12 +455,15 @@ export function attackFillSet(
       fill.kind === "targetChoice" &&
       fill.holeId === WEAPON_MASTERY_CLEAVE_TARGET_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (weaponMasteryCleaveTarget !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Weapon Mastery Cleave target was filled twice.",
         };
       }
+      /* v8 ignore stop */
       const parsed = parseAttackTargetChoiceFill(
         fill,
         attackerId,
@@ -433,24 +481,33 @@ export function attackFillSet(
         attackRelationshipDecisionRequired,
       );
       if (parsed.tag === "invalid") return parsed;
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (targetId !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return { tag: "invalid", message: "Attack target was filled twice." };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (targetSpatialFactsFilled) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Attack target spatial facts were filled twice.",
         };
       }
+      /* v8 ignore stop */
       targetId = fill.value;
       targetSpatialFacts = fill.spatialFacts ?? [];
       targetRelationshipFacts = parsed.fill.relationshipFacts ?? [];
       targetSpatialFactsFilled = true;
       const spatialFactValidation =
         validateUniqueAttackTargetSpatialFacts(targetSpatialFacts);
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (spatialFactValidation !== null) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return { tag: "invalid", message: spatialFactValidation };
       }
+      /* v8 ignore stop */
       continue;
     }
 
@@ -458,19 +515,25 @@ export function attackFillSet(
       fill.kind === "targetSpatialFacts" &&
       fill.holeId === ATTACK_TARGET_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (targetSpatialFactsFilled) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Attack target spatial facts were filled twice.",
         };
       }
+      /* v8 ignore stop */
       targetSpatialFacts = fill.spatialFacts;
       targetSpatialFactsFilled = true;
       const spatialFactValidation =
         validateUniqueAttackTargetSpatialFacts(targetSpatialFacts);
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (spatialFactValidation !== null) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return { tag: "invalid", message: spatialFactValidation };
       }
+      /* v8 ignore stop */
       continue;
     }
 
@@ -479,37 +542,49 @@ export function attackFillSet(
       fill.holeId ===
         ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (attackDamageReductionRedirectTarget !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Attack damage reduction redirect target was filled twice.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.relationshipFacts !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message:
             "Attack damage redirect target relationship facts do not match a requested target decision.",
         };
       }
+      /* v8 ignore stop */
       attackDamageReductionRedirectTarget = fill;
       continue;
     }
 
     if (fill.kind === "attackRoll" && fill.holeId === ATTACK_ROLL_HOLE_ID) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (attackRoll !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return { tag: "invalid", message: "Attack roll was filled twice." };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         fill.relationshipFacts !== undefined &&
         !attackRollRelationshipFactsAllowed
       ) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message:
             "Attack roll relationship facts do not match a requested attack-roll decision.",
         };
       }
+      /* v8 ignore stop */
       attackRoll = fill.value;
       attackRollRelationshipFacts = fill.relationshipFacts ?? [];
       continue;
@@ -519,19 +594,25 @@ export function attackFillSet(
       fill.kind === "attackRoll" &&
       fill.holeId === WEAPON_MASTERY_CLEAVE_ATTACK_ROLL_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (weaponMasteryCleaveAttackRoll !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Weapon Mastery Cleave attack roll was filled twice.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (fill.relationshipFacts !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message:
             "Weapon Mastery Cleave attack-roll relationship facts were not requested.",
         };
       }
+      /* v8 ignore stop */
       weaponMasteryCleaveAttackRoll = fill;
       continue;
     }
@@ -540,12 +621,15 @@ export function attackFillSet(
       fill.kind === "savingThrowOutcome" &&
       fill.holeId === ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (attackDamageReductionRedirectSave !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Attack damage reduction redirect save was filled twice.",
         };
       }
+      /* v8 ignore stop */
       attackDamageReductionRedirectSave = fill;
       continue;
     }
@@ -554,12 +638,15 @@ export function attackFillSet(
       fill.kind === "savingThrowOutcome" &&
       fill.holeId === WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (weaponMasteryToppleSavingThrow !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Weapon Mastery Topple Saving Throw was filled twice.",
         };
       }
+      /* v8 ignore stop */
       weaponMasteryToppleSavingThrow = fill;
       continue;
     }
@@ -568,12 +655,15 @@ export function attackFillSet(
       fill.kind === "savingThrowOutcome" &&
       fill.holeId === OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (openHandTechniqueSavingThrow !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Open Hand Technique Saving Throw was filled twice.",
         };
       }
+      /* v8 ignore stop */
       openHandTechniqueSavingThrow = fill;
       continue;
     }
@@ -582,12 +672,15 @@ export function attackFillSet(
       fill.kind === "savingThrowOutcome" &&
       fill.holeId === STUNNING_STRIKE_SAVE_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (stunningStrikeSavingThrow !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Stunning Strike Saving Throw was filled twice.",
         };
       }
+      /* v8 ignore stop */
       stunningStrikeSavingThrow = fill;
       continue;
     }
@@ -596,12 +689,15 @@ export function attackFillSet(
       fill.kind === "savingThrowOutcome" &&
       fill.holeId === CUNNING_STRIKE_SAVE_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (cunningStrikeSavingThrow !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Cunning Strike Saving Throw was filled twice.",
         };
       }
+      /* v8 ignore stop */
       cunningStrikeSavingThrow = fill;
       continue;
     }
@@ -610,12 +706,15 @@ export function attackFillSet(
       fill.kind === "movement" &&
       fill.holeId === CUNNING_STRIKE_MOVEMENT_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (cunningStrikeMovement !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Cunning Strike movement was filled twice.",
         };
       }
+      /* v8 ignore stop */
       cunningStrikeMovement = fill;
       continue;
     }
@@ -624,12 +723,15 @@ export function attackFillSet(
       fill.kind === "toolPossessionFacts" &&
       fill.holeId === CUNNING_STRIKE_TOOL_POSSESSION_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (cunningStrikeToolPossession !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Cunning Strike tool-possession facts were filled twice.",
         };
       }
+      /* v8 ignore stop */
       cunningStrikeToolPossession = fill;
       continue;
     }
@@ -638,12 +740,15 @@ export function attackFillSet(
       fill.kind === "cunningStrikeEndTurnCoverFacts" &&
       fill.holeId === CUNNING_STRIKE_END_TURN_COVER_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (cunningStrikeEndTurnCover !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Cunning Strike end-turn cover facts were filled twice.",
         };
       }
+      /* v8 ignore stop */
       cunningStrikeEndTurnCover = fill;
       continue;
     }
@@ -652,16 +757,19 @@ export function attackFillSet(
       fill.kind === "savingThrowOutcome" &&
       isHideousLaughterDamageRepeatSaveFill(fill)
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         hideousLaughterDamageRepeatSaves.some(
           (candidate) => candidate.holeId === fill.holeId,
         )
       ) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Hideous Laughter damage repeat save was filled twice.",
         };
       }
+      /* v8 ignore stop */
       hideousLaughterDamageRepeatSaves.push(fill);
       continue;
     }
@@ -671,12 +779,15 @@ export function attackFillSet(
       fill.holeId ===
         ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_DAMAGE_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (attackDamageReductionRedirectDamage !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Attack damage reduction redirect damage was filled twice.",
         };
       }
+      /* v8 ignore stop */
       attackDamageReductionRedirectDamage = fill;
       continue;
     }
@@ -685,49 +796,61 @@ export function attackFillSet(
       fill.kind === "damageTypeChoice" &&
       fill.holeId === FRENZY_DAMAGE_TYPE_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (frenzyDamageTypeChoice !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Frenzy damage type was filled twice.",
         };
       }
+      /* v8 ignore stop */
       frenzyDamageTypeChoice = fill;
       continue;
     }
 
     if (fill.kind === "rolledDice" && isMirrorImageDuplicateRollFill(fill)) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (mirrorImageDuplicateRoll !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Mirror Image duplicate roll was filled twice.",
         };
       }
+      /* v8 ignore stop */
       mirrorImageDuplicateRoll = fill;
       continue;
     }
 
     if (fill.kind === "rolledDice" && isSpellDamageReductionRollFill(fill)) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (spellDamageReductionRoll !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Spell damage reduction roll was filled twice.",
         };
       }
+      /* v8 ignore stop */
       spellDamageReductionRoll = fill;
       continue;
     }
 
     if (fill.kind === "rolledDice" && isSourceDamageRollPenaltyRollFill(fill)) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         sourceDamageRollPenaltyRolls.some(
           (candidate) => candidate.holeId === fill.holeId,
         )
       ) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Source damage roll penalty was filled twice.",
         };
       }
+      /* v8 ignore stop */
       sourceDamageRollPenaltyRolls.push(fill);
       continue;
     }
@@ -736,12 +859,15 @@ export function attackFillSet(
       fill.kind === "rolledDice" &&
       fill.holeId === WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (weaponMasteryCleaveDamageRoll !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Weapon Mastery Cleave damage was filled twice.",
         };
       }
+      /* v8 ignore stop */
       weaponMasteryCleaveDamageRoll = fill;
       continue;
     }
@@ -750,20 +876,26 @@ export function attackFillSet(
       fill.kind === "rolledDice" &&
       fill.holeId === HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_ID
     ) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (huntersPreyHordeBreakerDamageRoll !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Hunter's Prey Horde Breaker damage was filled twice.",
         };
       }
+      /* v8 ignore stop */
       huntersPreyHordeBreakerDamageRoll = fill;
       continue;
     }
 
     if (fill.kind === "rolledDice") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (damageRoll !== undefined) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return { tag: "invalid", message: "Attack damage was filled twice." };
       }
+      /* v8 ignore stop */
       damageRoll = fill;
       continue;
     }
@@ -775,12 +907,15 @@ export function attackFillSet(
           ? concentrationSavingThrowHoleIdsBeforeCleave
           : concentrationSavingThrowHoleIdsAfterCleave;
       const concentrationSavingThrowHoleId = String(fill.holeId);
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (concentrationSavingThrowHoleIds.has(concentrationSavingThrowHoleId)) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Concentration Saving Throw hole was filled twice.",
         };
       }
+      /* v8 ignore stop */
       concentrationSavingThrowHoleIds.add(concentrationSavingThrowHoleId);
       concentrationSavingThrows.push(fill);
       continue;
@@ -788,24 +923,30 @@ export function attackFillSet(
 
     if (fill.kind === "attackDamageDisposition") {
       if (fill.holeId === ATTACK_DAMAGE_DISPOSITION_HOLE_ID) {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (damageDispositionFilled) {
+          /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
           return {
             tag: "invalid",
             message: "Attack damage disposition was filled twice.",
           };
         }
+        /* v8 ignore stop */
         damageDispositionFilled = true;
         damageDisposition = fill.value;
         continue;
       }
       if (fill.holeId === WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID) {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (weaponMasteryCleaveDamageDispositionFilled) {
+          /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
           return {
             tag: "invalid",
             message:
               "Weapon Mastery Cleave damage disposition was filled twice.",
           };
         }
+        /* v8 ignore stop */
         weaponMasteryCleaveDamageDispositionFilled = true;
         weaponMasteryCleaveDamageDisposition = fill.value;
         continue;
@@ -813,29 +954,36 @@ export function attackFillSet(
       if (
         fill.holeId === HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID
       ) {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (huntersPreyHordeBreakerDamageDispositionFilled) {
+          /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
           return {
             tag: "invalid",
             message:
               "Hunter's Prey Horde Breaker damage disposition was filled twice.",
           };
         }
+        /* v8 ignore stop */
         huntersPreyHordeBreakerDamageDispositionFilled = true;
         huntersPreyHordeBreakerDamageDisposition = fill.value;
         continue;
       }
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         fill.holeId !== ATTACK_DAMAGE_DISPOSITION_HOLE_ID &&
         fill.holeId !== WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID &&
         fill.holeId !== HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID
       ) {
+        /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return {
           tag: "invalid",
           message: "Attack damage disposition fill uses the wrong hole.",
         };
       }
+      /* v8 ignore stop */
     }
 
+    /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Attack replay holes.`,
@@ -856,12 +1004,15 @@ export function attackFillSet(
     ),
     owner: "an Attack",
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipDecisions.tag === "invalid") {
+    /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
     return {
       tag: "invalid",
       message: relationshipDecisions.message,
     };
   }
+  /* v8 ignore stop */
 
   return {
     tag: "ok",

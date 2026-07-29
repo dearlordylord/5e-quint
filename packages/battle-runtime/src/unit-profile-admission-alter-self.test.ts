@@ -6,6 +6,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
   alterSelfUnitId,
+  assertBattleSnapshotCodecRoundTripForTest,
   battleCreatureCanBreatheUnderwater,
   breakBattleConcentration,
   discoverBattleActs,
@@ -45,6 +46,15 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
       act.initialHoles,
       "selfTransformationModeChoice",
     );
+    const awaitingMode = resolveBattleSubject({
+      state: state.state,
+      subject: act.subject,
+      fills: [],
+    });
+    if (awaitingMode.tag !== "needsHoles") {
+      throw new Error("Expected Alter Self transformation mode choice.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(awaitingMode.snapshot);
 
     expect({
       ...act.subject,

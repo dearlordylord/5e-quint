@@ -38,6 +38,7 @@ import type {
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
+  preparedSpellSlotInvocationsFrom,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -90,24 +91,17 @@ export function supportedPreparedHideousLaughterProfile(
     return [];
   }
 
-  return spellSlots.flatMap(
-    (slot): readonly HideousLaughterSpellInvocation[] => {
-      if (Number(slot.spellLevel) < spell.mechanics.level) {
-        return [];
-      }
-      return [
-        {
-          access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-          procedure: "hideousLaughter",
-          spell,
-          actionCost: "magicAction",
-          ability: hideousLaughter.phase.ability,
-          dc: hideousLaughter.phase.dc,
-          targeting: hideousLaughter.targeting(slot.spellLevel),
-        },
-      ];
-    },
+  return preparedSpellSlotInvocationsFrom(
+    spell,
+    spellSlots,
+    (base, slotLevel) => ({
+      ...base,
+      procedure: "hideousLaughter",
+      actionCost: "magicAction",
+      ability: hideousLaughter.phase.ability,
+      dc: hideousLaughter.phase.dc,
+      targeting: hideousLaughter.targeting(slotLevel),
+    }),
   );
 }
 

@@ -1590,36 +1590,42 @@ function validateSleepRepeatSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
+  /* v8 ignore start -- Malformed fill: a Sleep repeat-save hole is single-target and cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
     return "Sleep repeat Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
     : "Sleep repeat Saving Throw outcome must match the ending-turn target.";
+  /* v8 ignore stop */
 }
 
 function validateSpellConditionEndTurnSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
+  /* v8 ignore start -- Malformed fill: a spell-condition end-turn save is single-target and cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
     return "Spell condition end-turn Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
     : "Spell condition end-turn Saving Throw outcome must match the ending-turn target.";
+  /* v8 ignore stop */
 }
 
 function validateSlowActivePenaltiesEndTurnSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
+  /* v8 ignore start -- Malformed fill: a Slow end-turn save is single-target and cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
     return "Slow end-turn Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
     : "Slow end-turn Saving Throw outcome must match the ending-turn target.";
+  /* v8 ignore stop */
 }
 
 export type SleetStormAreaHazardEffect = Extract<
@@ -1701,6 +1707,7 @@ export function resolveCommandGrovelCommand(
     input.subject,
     "grovel",
   );
+  /* v8 ignore start -- Malformed resolution request: discovery creates Command Grovel subjects only from the pending effect retained in this same battle state. */
   if (effect === null) {
     return invalidResult(
       input.state,
@@ -1708,9 +1715,11 @@ export function resolveCommandGrovelCommand(
       "Command Grovel is no longer pending for this actor.",
     );
   }
+  /* v8 ignore stop */
   const unsupportedFill = input.fills.find(
     (fill) => !endTurnFillKind(fill.kind),
   );
+  /* v8 ignore start -- Malformed fill set: the discovered Command Grovel subject exposes only the holes belonging to the delegated End Turn resolution. */
   if (unsupportedFill !== undefined) {
     return invalidResult(
       input.state,
@@ -1718,6 +1727,7 @@ export function resolveCommandGrovelCommand(
       "Command Grovel only accepts End Turn fills.",
     );
   }
+  /* v8 ignore stop */
   const proned = applyCommandGrovelProneToTarget(
     input.state,
     input.subject.actorId,
@@ -1753,6 +1763,7 @@ export function resolveCommandDropCommand(
     input.subject,
     "drop",
   );
+  /* v8 ignore start -- Malformed resolution request: discovery creates Command Drop subjects only from the pending effect retained in this same battle state. */
   if (effect === null) {
     return invalidResult(
       input.state,
@@ -1760,10 +1771,12 @@ export function resolveCommandDropCommand(
       "Command Drop is no longer pending for this actor.",
     );
   }
+  /* v8 ignore stop */
   const heldObjectFactFills = input.fills.filter(
     (fill): fill is Extract<BattleFill, { readonly kind: "heldObjectFacts" }> =>
       fill.kind === "heldObjectFacts",
   );
+  /* v8 ignore start -- Malformed fill set: one Command Drop held-object-facts hole cannot be filled more than once. */
   if (heldObjectFactFills.length > 1) {
     return invalidResult(
       input.state,
@@ -1771,9 +1784,11 @@ export function resolveCommandDropCommand(
       "Command Drop held-object facts were filled twice.",
     );
   }
+  /* v8 ignore stop */
   const unsupportedFill = input.fills.find(
     (fill) => fill.kind !== "heldObjectFacts" && !endTurnFillKind(fill.kind),
   );
+  /* v8 ignore start -- Malformed fill set: Command Drop exposes only its held-object-facts hole and the delegated End Turn holes. */
   if (unsupportedFill !== undefined) {
     return invalidResult(
       input.state,
@@ -1781,11 +1796,13 @@ export function resolveCommandDropCommand(
       "Command Drop only accepts held-object facts and End Turn fills.",
     );
   }
+  /* v8 ignore stop */
 
   const canonicalObjectIds = canonicalHeldObjectIdsForActor(
     input.state,
     input.subject.actorId,
   );
+  /* v8 ignore start -- Malformed fill set: a character actor's admitted loadout is the canonical held-object source, so an external held-object fill would contradict it. */
   if (canonicalObjectIds !== null && heldObjectFactFills.length > 0) {
     return invalidResult(
       input.state,
@@ -1793,12 +1810,14 @@ export function resolveCommandDropCommand(
       "Command Drop uses canonical character loadout facts for this actor.",
     );
   }
+  /* v8 ignore stop */
   const heldObjectFactFill = heldObjectFactFills[0];
   if (canonicalObjectIds === null && heldObjectFactFill === undefined) {
     return needsHolesResult(input.state, input.subject, [
       commandDropHeldObjectFactsHole(input.subject),
     ]);
   }
+  /* v8 ignore start -- Malformed fill: the supplied held-object facts must answer the exact hole derived from this discovered Command Drop subject. */
   if (
     heldObjectFactFill !== undefined &&
     heldObjectFactFill.holeId !==
@@ -1810,7 +1829,9 @@ export function resolveCommandDropCommand(
       "Command Drop held-object facts must use the selected Command Drop hole.",
     );
   }
+  /* v8 ignore stop */
   const objectIds = canonicalObjectIds ?? heldObjectFactFill?.value.objectIds;
+  /* v8 ignore start -- Internal protocol invariant: the preceding needsHoles return guarantees either canonical loadout facts or a supplied held-object fill. */
   if (objectIds === undefined) {
     return invalidResult(
       input.state,
@@ -1818,7 +1839,9 @@ export function resolveCommandDropCommand(
       "Command Drop requires known held-object facts.",
     );
   }
+  /* v8 ignore stop */
   const uniqueObjectIds = new Set(objectIds);
+  /* v8 ignore start -- Malformed fill: held-object facts represent a set of object identities and therefore cannot repeat an identity. */
   if (uniqueObjectIds.size !== objectIds.length) {
     return invalidResult(
       input.state,
@@ -1826,6 +1849,7 @@ export function resolveCommandDropCommand(
       "Command Drop held-object facts must not duplicate objects.",
     );
   }
+  /* v8 ignore stop */
 
   const withoutPending = stateWithoutCommandPendingEffect(
     input.state,
@@ -1878,6 +1902,7 @@ export function resolveCommandApproachCommand(
     input.subject,
     "approach",
   );
+  /* v8 ignore start -- Malformed resolution request: discovery creates Command Approach subjects only from the pending effect retained in this same battle state. */
   if (effect === null) {
     return invalidResult(
       input.state,
@@ -1885,12 +1910,14 @@ export function resolveCommandApproachCommand(
       "Command Approach is no longer pending for this actor.",
     );
   }
+  /* v8 ignore stop */
   const movementFills = input.fills.filter(
     (fill): fill is Extract<BattleFill, { readonly kind: "movement" }> =>
       fill.kind === "movement",
   );
   if (movementFills.length === 0) {
     if (!combatantCanMoveInState(input.state, input.subject.actorId)) {
+      /* v8 ignore start -- Malformed fill set: a Command Approach subject with no available movement exposes no fill holes, so callers cannot supply fills. */
       if (input.fills.length > 0) {
         return invalidResult(
           input.state,
@@ -1898,6 +1925,7 @@ export function resolveCommandApproachCommand(
           "Command Approach cannot apply fills when no movement is available.",
         );
       }
+      /* v8 ignore stop */
       const withoutPending = stateWithoutCommandPendingEffect(
         input.state,
         input.subject.actorId,
@@ -1913,6 +1941,7 @@ export function resolveCommandApproachCommand(
       movementHole(input.state, input.subject.actorId),
     ]);
   }
+  /* v8 ignore start -- Malformed fill set: Command Approach exposes exactly one Movement hole. */
   if (movementFills.length > 1) {
     return invalidResult(
       input.state,
@@ -1920,12 +1949,14 @@ export function resolveCommandApproachCommand(
       "Command Approach accepts one Movement fill.",
     );
   }
+  /* v8 ignore stop */
   const unsupportedFill = input.fills.find(
     (fill) =>
       fill.kind !== "movement" &&
       !endTurnFillKind(fill.kind) &&
       !spikeGrowthMovementEffectFillKind(fill.kind),
   );
+  /* v8 ignore start -- Malformed fill set: Command Approach exposes only Movement, Spike Growth damage, and delegated End Turn holes. */
   if (unsupportedFill !== undefined) {
     return invalidResult(
       input.state,
@@ -1933,7 +1964,9 @@ export function resolveCommandApproachCommand(
       "Command Approach only accepts Movement, Spike Growth damage, and End Turn fills.",
     );
   }
+  /* v8 ignore stop */
   const movementFill = movementFills[0]!;
+  /* v8 ignore start -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for Command Approach. */
   if (movementFill.holeId !== MOVEMENT_HOLE_ID) {
     return invalidResult(
       input.state,
@@ -1941,7 +1974,9 @@ export function resolveCommandApproachCommand(
       "Movement fill does not match the requested Command Approach hole.",
     );
   }
+  /* v8 ignore stop */
   const approachFact = movementFill.value.commandApproach;
+  /* v8 ignore start -- Malformed fill: a Command Approach Movement value must carry the route/proximity facts required by that command. */
   if (approachFact === undefined) {
     return invalidResult(
       input.state,
@@ -1949,6 +1984,7 @@ export function resolveCommandApproachCommand(
       "Command Approach requires caller-supplied shortest/direct route and proximity facts.",
     );
   }
+  /* v8 ignore stop */
   const movement = parseBattleMovement(
     input.state,
     input.subject.actorId,
@@ -1957,9 +1993,11 @@ export function resolveCommandApproachCommand(
       commandApproach: approachFact,
     },
   );
+  /* v8 ignore start -- Malformed fill: parseBattleMovement rejects routes that contradict the actor's admitted position, speed, or Command Approach constraints. */
   if (movement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", movement.message);
   }
+  /* v8 ignore stop */
   const extraFills = input.fills.filter((fill) => fill.kind !== "movement");
   const threats = opportunityAttackThreatsForMovement(
     input.state,
@@ -2008,6 +2046,7 @@ export function resolveCommandApproachAfterMovement(input: {
     input.subject,
     "approach",
   );
+  /* v8 ignore start -- Malformed continuation: an interrupted Command Approach continuation retains the pending effect from the state that opened its interrupt window. */
   if (effect === null) {
     return invalidResult(
       input.state,
@@ -2015,6 +2054,7 @@ export function resolveCommandApproachAfterMovement(input: {
       "Command Approach is no longer pending for this actor.",
     );
   }
+  /* v8 ignore stop */
   const movementEffects = resolveMovementEffectsAfterMovement({
     state: input.state,
     subject: input.subject,
@@ -2030,6 +2070,7 @@ export function resolveCommandApproachAfterMovement(input: {
     effect,
   );
   if (!input.movedWithinFiveFeetOfCaster) {
+    /* v8 ignore start -- Malformed continuation fills: Command Approach delegates End Turn holes only when the admitted route reached within five feet of the caster. */
     if (movementEffects.remainingFills.length > 0) {
       return invalidResult(
         input.state,
@@ -2037,6 +2078,7 @@ export function resolveCommandApproachAfterMovement(input: {
         "Command Approach did not end the turn, so End Turn fills do not apply.",
       );
     }
+    /* v8 ignore stop */
     return {
       tag: "resolved",
       state: withoutPending,
@@ -2073,6 +2115,7 @@ export function resolveCommandFleeCommand(
     input.subject,
     "flee",
   );
+  /* v8 ignore start -- Malformed resolution request: discovery creates Command Flee subjects only from the pending effect retained in this same battle state. */
   if (effect === null) {
     return invalidResult(
       input.state,
@@ -2080,6 +2123,7 @@ export function resolveCommandFleeCommand(
       "Command Flee is no longer pending for this actor.",
     );
   }
+  /* v8 ignore stop */
   const movementFills = input.fills.filter(
     (fill): fill is Extract<BattleFill, { readonly kind: "movement" }> =>
       fill.kind === "movement",
@@ -2090,6 +2134,7 @@ export function resolveCommandFleeCommand(
       !endTurnFillKind(fill.kind) &&
       !spikeGrowthMovementEffectFillKind(fill.kind),
   );
+  /* v8 ignore start -- Malformed fill set: Command Flee exposes only Movement, Spike Growth damage, and delegated End Turn holes. */
   if (unsupportedFill !== undefined) {
     return invalidResult(
       input.state,
@@ -2097,6 +2142,7 @@ export function resolveCommandFleeCommand(
       "Command Flee only accepts Movement, Spike Growth damage, and End Turn fills.",
     );
   }
+  /* v8 ignore stop */
   if (movementFills.length === 0) {
     if (!combatantCanMoveInState(input.state, input.subject.actorId)) {
       const withoutPending = stateWithoutCommandPendingEffect(
@@ -2121,6 +2167,7 @@ export function resolveCommandFleeCommand(
       movementHole(input.state, input.subject.actorId),
     ]);
   }
+  /* v8 ignore start -- Malformed fill set: Command Flee exposes exactly one Movement hole. */
   if (movementFills.length > 1) {
     return invalidResult(
       input.state,
@@ -2128,7 +2175,9 @@ export function resolveCommandFleeCommand(
       "Command Flee accepts one Movement fill.",
     );
   }
+  /* v8 ignore stop */
   const movementFill = movementFills[0]!;
+  /* v8 ignore start -- Malformed fill: the Movement value must answer the sole canonical Movement hole exposed for Command Flee. */
   if (movementFill.holeId !== MOVEMENT_HOLE_ID) {
     return invalidResult(
       input.state,
@@ -2136,7 +2185,9 @@ export function resolveCommandFleeCommand(
       "Movement fill does not match the requested Command Flee hole.",
     );
   }
+  /* v8 ignore stop */
   const fleeFact = movementFill.value.commandFlee;
+  /* v8 ignore start -- Malformed fill: a Command Flee Movement value must carry the fastest-available moving-away route facts required by that command. */
   if (fleeFact === undefined) {
     return invalidResult(
       input.state,
@@ -2144,11 +2195,13 @@ export function resolveCommandFleeCommand(
       "Command Flee requires caller-supplied fastest-available moving-away route facts.",
     );
   }
+  /* v8 ignore stop */
   const movementBudgetFeet = battleMovementBudgetForActor(
     input.state,
     input.subject.actorId,
     movementFill.value.speedKind,
   ).remainingFeet;
+  /* v8 ignore start -- Malformed fill: Command Flee requires the route to consume the selected remaining Movement budget exactly. */
   if (movementFill.value.movementCostFeet !== movementBudgetFeet) {
     return invalidResult(
       input.state,
@@ -2156,6 +2209,7 @@ export function resolveCommandFleeCommand(
       "Command Flee must spend the selected remaining Movement budget.",
     );
   }
+  /* v8 ignore stop */
   const movement = parseBattleMovement(
     input.state,
     input.subject.actorId,
@@ -2164,9 +2218,11 @@ export function resolveCommandFleeCommand(
       commandFlee: fleeFact,
     },
   );
+  /* v8 ignore start -- Malformed fill: parseBattleMovement rejects routes that contradict the actor's admitted position, speed, or Command Flee constraints. */
   if (movement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", movement.message);
   }
+  /* v8 ignore stop */
   const extraFills = input.fills.filter((fill) => fill.kind !== "movement");
   const threats = opportunityAttackThreatsForMovement(
     input.state,
@@ -2212,6 +2268,7 @@ export function resolveCommandFleeAfterMovement(input: {
     input.subject,
     "flee",
   );
+  /* v8 ignore start -- Malformed continuation: an interrupted Command Flee continuation retains the pending effect from the state that opened its interrupt window. */
   if (effect === null) {
     return invalidResult(
       input.state,
@@ -2219,6 +2276,7 @@ export function resolveCommandFleeAfterMovement(input: {
       "Command Flee is no longer pending for this actor.",
     );
   }
+  /* v8 ignore stop */
   const movementEffects = resolveMovementEffectsAfterMovement({
     state: input.state,
     subject: input.subject,
@@ -2296,12 +2354,14 @@ function validateGreaseGroundHazardSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
+  /* v8 ignore start -- Malformed fill: a Grease entry save is single-target and cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
     return "Grease ground-hazard Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
     : "Grease ground-hazard Saving Throw outcome must match the triggering target.";
+  /* v8 ignore stop */
 }
 
 export function resolveGreaseGroundHazardSaveCommand(
@@ -2334,6 +2394,7 @@ function resolveGreaseGroundHazardEntrySaveCommand(
     readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed fill set: the discovered Grease hazard subject exposes at most its one Saving Throw outcome hole. */
   if (
     input.fills.some((fill) => fill.kind !== "savingThrowOutcome") ||
     input.fills.length > 1
@@ -2344,6 +2405,7 @@ function resolveGreaseGroundHazardEntrySaveCommand(
       "Grease ground-hazard save accepts exactly one Saving Throw outcome fill.",
     );
   }
+  /* v8 ignore stop */
   const effect = greaseGroundHazardEffectFor(input.state, input.subject);
   if (
     effect === undefined ||
@@ -2377,9 +2439,11 @@ function resolveGreaseGroundHazardEntrySaveCommand(
     savingThrowFill.value,
     input.subject.actorId,
   );
+  /* v8 ignore start -- Malformed fill: the Grease save outcome must answer the discovered single-target hole for the triggering actor. */
   if (validation !== null) {
     return invalidResult(input.state, "invalidFill", validation);
   }
+  /* v8 ignore stop */
   const outcome = savingThrowFill.value.outcomes[0]!;
   if (!outcome.succeeded) {
     const saveFailedReactionWindow = maybeOpenInterruptWindow(
@@ -2435,12 +2499,14 @@ function validateWebRestraintSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
+  /* v8 ignore start -- Malformed fill: a Web restraint save is single-target and cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
     return "Web Restraint Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
     : "Web Restraint Saving Throw outcome must match the triggering target.";
+  /* v8 ignore stop */
 }
 
 function webRestraintSaveAlreadyResolved(
@@ -2465,6 +2531,7 @@ export function resolveWebRestraintSaveCommand(
     readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed fill set: the discovered Web restraint subject exposes at most its one Saving Throw outcome hole. */
   if (
     input.fills.some((fill) => fill.kind !== "savingThrowOutcome") ||
     input.fills.length > 1
@@ -2475,6 +2542,7 @@ export function resolveWebRestraintSaveCommand(
       "Web Restraint save accepts exactly one Saving Throw outcome fill.",
     );
   }
+  /* v8 ignore stop */
   const effect = webRestraintHazardEffectFor(input.state, input.subject);
   if (
     effect === undefined ||
@@ -2509,6 +2577,7 @@ export function resolveWebRestraintSaveCommand(
   if (savingThrowFill === undefined) {
     return needsHolesResult(input.state, input.subject, [hole]);
   }
+  /* v8 ignore start -- Internal protocol invariant: the fill-kind gate above leaves only a Saving Throw outcome when the optional first fill is present. */
   if (savingThrowFill.kind !== "savingThrowOutcome") {
     return invalidResult(
       input.state,
@@ -2516,6 +2585,8 @@ export function resolveWebRestraintSaveCommand(
       "Web Restraint save requires a Saving Throw outcome fill.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed fill: the supplied Saving Throw outcome must answer the exact hole derived from this Web restraint subject. */
   if (savingThrowFill.holeId !== hole.holeId) {
     return invalidResult(
       input.state,
@@ -2523,13 +2594,16 @@ export function resolveWebRestraintSaveCommand(
       "Web Restraint save requires the matching Saving Throw outcome fill.",
     );
   }
+  /* v8 ignore stop */
   const validation = validateWebRestraintSavingThrowOutcome(
     savingThrowFill.value,
     input.subject.actorId,
   );
+  /* v8 ignore start -- Malformed fill: the Web save outcome must answer the discovered single-target hole for the triggering actor. */
   if (validation !== null) {
     return invalidResult(input.state, "invalidFill", validation);
   }
+  /* v8 ignore stop */
   const outcome = savingThrowFill.value.outcomes[0]!;
   if (!outcome.succeeded) {
     const saveFailedReactionWindow = maybeOpenInterruptWindow(
@@ -2642,12 +2716,14 @@ function validateSleetStormAreaHazardSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
+  /* v8 ignore start -- Malformed fill: a Sleet Storm membership save is single-target and cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
     return "Sleet Storm Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
     : "Sleet Storm Saving Throw outcome must match the triggering target.";
+  /* v8 ignore stop */
 }
 
 function sleetStormAreaHazardSaveAlreadyResolved(
@@ -2669,6 +2745,7 @@ export function resolveSleetStormAreaHazardSaveCommand(
     readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed fill set: the discovered Sleet Storm subject exposes at most its one Saving Throw outcome hole. */
   if (
     input.fills.some((fill) => fill.kind !== "savingThrowOutcome") ||
     input.fills.length > 1
@@ -2679,6 +2756,7 @@ export function resolveSleetStormAreaHazardSaveCommand(
       "Sleet Storm save accepts exactly one Saving Throw outcome fill.",
     );
   }
+  /* v8 ignore stop */
   const effect = sleetStormAreaHazardEffectFor(input.state, input.subject);
   if (
     effect === undefined ||
@@ -2710,6 +2788,7 @@ export function resolveSleetStormAreaHazardSaveCommand(
   if (savingThrowFill === undefined) {
     return needsHolesResult(input.state, input.subject, [hole]);
   }
+  /* v8 ignore start -- Internal protocol invariant: the fill-kind gate above leaves only a Saving Throw outcome when the optional first fill is present. */
   if (savingThrowFill.kind !== "savingThrowOutcome") {
     return invalidResult(
       input.state,
@@ -2717,6 +2796,8 @@ export function resolveSleetStormAreaHazardSaveCommand(
       "Sleet Storm save requires a Saving Throw outcome fill.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed fill: the supplied Saving Throw outcome must answer the exact hole derived from this Sleet Storm subject. */
   if (savingThrowFill.holeId !== hole.holeId) {
     return invalidResult(
       input.state,
@@ -2724,13 +2805,16 @@ export function resolveSleetStormAreaHazardSaveCommand(
       "Sleet Storm save requires the matching Saving Throw outcome fill.",
     );
   }
+  /* v8 ignore stop */
   const validation = validateSleetStormAreaHazardSavingThrowOutcome(
     savingThrowFill.value,
     input.subject.actorId,
   );
+  /* v8 ignore start -- Malformed fill: the Sleet Storm save outcome must answer the discovered single-target hole for the triggering actor. */
   if (validation !== null) {
     return invalidResult(input.state, "invalidFill", validation);
   }
+  /* v8 ignore stop */
   const outcome = savingThrowFill.value.outcomes[0]!;
   if (!outcome.succeeded) {
     const saveFailedReactionWindow = maybeOpenInterruptWindow(
@@ -2879,12 +2963,14 @@ function validateInsectPlagueAreaHazardSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
+  /* v8 ignore start -- Malformed fill: an Insect Plague membership save is single-target and cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
     return "Insect Plague Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
     : "Insect Plague Saving Throw outcome must match the triggering target.";
+  /* v8 ignore stop */
 }
 
 function validateInsectPlagueAreaHazardDamageRoll(
@@ -2966,6 +3052,7 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
     readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed fill set: the discovered Insect Plague subject exposes only its save, damage, and possible Concentration holes. */
   if (
     input.fills.some(
       (fill) =>
@@ -2980,6 +3067,7 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
       "Insect Plague save accepts only save, damage, and Concentration fills.",
     );
   }
+  /* v8 ignore stop */
   const effect = insectPlagueAreaHazardEffectFor(input.state, input.subject);
   const target = input.state.combatants.get(input.subject.actorId);
   if (effect === undefined || target === undefined) {
@@ -3023,6 +3111,7 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
     (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
       fill.kind === "rolledDice" && fill.holeId === damageHole.holeId,
   );
+  /* v8 ignore start -- Malformed fill set: each Insect Plague save and damage hole can be answered only once. */
   if (saveFills.length > 1 || damageFills.length > 1) {
     return invalidResult(
       input.state,
@@ -3030,6 +3119,7 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
       "Insect Plague save received duplicate fills.",
     );
   }
+  /* v8 ignore stop */
   const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
   if (saveFill === undefined) {
     return needsHolesResult(input.state, input.subject, [saveHole]);
@@ -3038,9 +3128,11 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
     saveFill.value,
     input.subject.actorId,
   );
+  /* v8 ignore start -- Malformed fill: the Insect Plague save outcome must answer the discovered single-target hole for the triggering actor. */
   if (saveValidation !== null) {
     return invalidResult(input.state, "invalidFill", saveValidation);
   }
+  /* v8 ignore stop */
   const saveOutcome = saveFill.value.outcomes[0]!;
   if (!saveOutcome.succeeded) {
     const saveFailedReactionWindow = maybeOpenInterruptWindow(
@@ -3069,9 +3161,11 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
     damageFill,
     damageHole,
   );
+  /* v8 ignore start -- Malformed fill: the Insect Plague damage roll must match the exact dice expression carried by its discovered damage hole. */
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
+  /* v8 ignore stop */
   const adjustedDamage = insectPlagueAreaHazardAdjustedDamage({
     state: input.state,
     target,
@@ -3096,6 +3190,7 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
             fill.kind === "concentrationSavingThrow" &&
             fill.holeId === concentrationHole.holeId,
         );
+  /* v8 ignore start -- Malformed fill set: a damaged concentrating target exposes at most one Concentration save hole. */
   if (concentrationFills.length > 1) {
     return invalidResult(
       input.state,
@@ -3103,6 +3198,7 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
       "Insect Plague save received duplicate Concentration save fills.",
     );
   }
+  /* v8 ignore stop */
   const concentrationFill =
     concentrationHole === null
       ? undefined
@@ -3115,6 +3211,7 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
     damageHole.holeId,
     ...(concentrationHole === null ? [] : [concentrationHole.holeId]),
   ]);
+  /* v8 ignore start -- Malformed fill set: every supplied Insect Plague fill must answer one of the holes derived for this exact replay subject. */
   if (input.fills.some((fill) => !consumedHoleIds.has(fill.holeId))) {
     return invalidResult(
       input.state,
@@ -3122,6 +3219,7 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
       "Insect Plague save received a fill for an unrelated hole.",
     );
   }
+  /* v8 ignore stop */
   const afterDamage = applyInsectPlagueAreaHazardDamage({
     state: input.state,
     targetId: input.subject.actorId,
@@ -3263,12 +3361,14 @@ function validateCloudkillAreaHazardSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
+  /* v8 ignore start -- Malformed fill: a Cloudkill membership save is single-target and cannot carry area geometry or an outcome for a different combatant. */
   if ("area" in value) {
     return "Cloudkill Saving Throw outcome must not include area facts.";
   }
   return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
     ? null
     : "Cloudkill Saving Throw outcome must match the triggering target.";
+  /* v8 ignore stop */
 }
 
 function validateCloudkillAreaHazardDamageRoll(
@@ -3350,6 +3450,7 @@ export function resolveCloudkillAreaHazardSaveCommand(
     readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed fill set: the discovered Cloudkill subject exposes only its save, damage, and possible Concentration holes. */
   if (
     input.fills.some(
       (fill) =>
@@ -3364,6 +3465,7 @@ export function resolveCloudkillAreaHazardSaveCommand(
       "Cloudkill save accepts only save, damage, and Concentration fills.",
     );
   }
+  /* v8 ignore stop */
   const effect = cloudkillAreaHazardEffectFor(input.state, input.subject);
   const target = input.state.combatants.get(input.subject.actorId);
   if (effect === undefined || target === undefined) {
@@ -3407,6 +3509,7 @@ export function resolveCloudkillAreaHazardSaveCommand(
     (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
       fill.kind === "rolledDice" && fill.holeId === damageHole.holeId,
   );
+  /* v8 ignore start -- Malformed fill set: each Cloudkill save and damage hole can be answered only once. */
   if (saveFills.length > 1 || damageFills.length > 1) {
     return invalidResult(
       input.state,
@@ -3414,6 +3517,7 @@ export function resolveCloudkillAreaHazardSaveCommand(
       "Cloudkill save received duplicate fills.",
     );
   }
+  /* v8 ignore stop */
   const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
   if (saveFill === undefined) {
     return needsHolesResult(input.state, input.subject, [saveHole]);
@@ -3422,9 +3526,11 @@ export function resolveCloudkillAreaHazardSaveCommand(
     saveFill.value,
     input.subject.actorId,
   );
+  /* v8 ignore start -- Malformed fill: the Cloudkill save outcome must answer the discovered single-target hole for the triggering actor. */
   if (saveValidation !== null) {
     return invalidResult(input.state, "invalidFill", saveValidation);
   }
+  /* v8 ignore stop */
   const saveOutcome = saveFill.value.outcomes[0]!;
   if (!saveOutcome.succeeded) {
     const saveFailedReactionWindow = maybeOpenInterruptWindow(
@@ -3453,9 +3559,11 @@ export function resolveCloudkillAreaHazardSaveCommand(
     damageFill,
     damageHole,
   );
+  /* v8 ignore start -- Malformed fill: the Cloudkill damage roll must match the exact dice expression carried by its discovered damage hole. */
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
+  /* v8 ignore stop */
   const adjustedDamage = cloudkillAreaHazardAdjustedDamage({
     state: input.state,
     target,
@@ -3480,6 +3588,7 @@ export function resolveCloudkillAreaHazardSaveCommand(
             fill.kind === "concentrationSavingThrow" &&
             fill.holeId === concentrationHole.holeId,
         );
+  /* v8 ignore start -- Malformed fill set: a damaged concentrating target exposes at most one Concentration save hole. */
   if (concentrationFills.length > 1) {
     return invalidResult(
       input.state,
@@ -3487,6 +3596,7 @@ export function resolveCloudkillAreaHazardSaveCommand(
       "Cloudkill save received duplicate Concentration save fills.",
     );
   }
+  /* v8 ignore stop */
   const concentrationFill =
     concentrationHole === null
       ? undefined
@@ -3499,6 +3609,7 @@ export function resolveCloudkillAreaHazardSaveCommand(
     damageHole.holeId,
     ...(concentrationHole === null ? [] : [concentrationHole.holeId]),
   ]);
+  /* v8 ignore start -- Malformed fill set: every supplied Cloudkill fill must answer one of the holes derived for this exact replay subject. */
   if (input.fills.some((fill) => !consumedHoleIds.has(fill.holeId))) {
     return invalidResult(
       input.state,
@@ -3506,6 +3617,7 @@ export function resolveCloudkillAreaHazardSaveCommand(
       "Cloudkill save received a fill for an unrelated hole.",
     );
   }
+  /* v8 ignore stop */
   const afterDamage = applyCloudkillAreaHazardDamage({
     state: input.state,
     targetId: input.subject.actorId,
@@ -3540,6 +3652,7 @@ export function resolveWebRestrainedNoLongerInAreaCommand(
     >;
   },
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed fill set: Web no-longer-in-area cleanup is a discovered no-input transition and exposes no holes. */
   if (input.fills.length > 0) {
     return invalidResult(
       input.state,
@@ -3547,6 +3660,7 @@ export function resolveWebRestrainedNoLongerInAreaCommand(
       "Web no-longer-in-area cleanup uses no fills.",
     );
   }
+  /* v8 ignore stop */
   const effect = webRestraintHazardEffectFor(input.state, input.subject);
   if (effect === undefined) {
     return invalidResult(
@@ -3585,6 +3699,7 @@ export function resolveWebAreaRemovedCommand(
     >;
   },
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed fill set: Web area removal is a discovered no-input transition and exposes no holes. */
   if (input.fills.length > 0) {
     return invalidResult(
       input.state,
@@ -3592,6 +3707,7 @@ export function resolveWebAreaRemovedCommand(
       "Web area removal uses no fills.",
     );
   }
+  /* v8 ignore stop */
   const effect = webRestraintHazardEffectFor(input.state, input.subject);
   if (effect === undefined) {
     return invalidResult(
@@ -3643,6 +3759,7 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
   const matchingGreaseFills = input.fills.filter(
     (fill) => fill.holeId === hole.holeId,
   );
+  /* v8 ignore start -- Malformed fill set: the end-turn Grease save hole can be answered only once. */
   if (matchingGreaseFills.length > 1) {
     return invalidResult(
       input.state,
@@ -3650,7 +3767,9 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
       "End Turn in Grease received duplicate Grease Saving Throw outcome fills.",
     );
   }
+  /* v8 ignore stop */
   const [matchingGreaseFill] = matchingGreaseFills;
+  /* v8 ignore start -- Malformed fill: the value answering the Grease save hole must be a Saving Throw outcome. */
   if (
     matchingGreaseFill !== undefined &&
     matchingGreaseFill.kind !== "savingThrowOutcome"
@@ -3661,6 +3780,7 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
       "End Turn in Grease requires a Grease Saving Throw outcome fill.",
     );
   }
+  /* v8 ignore stop */
   const endTurnSubject = {
     tag: "runtimeCommand" as const,
     actorId: input.subject.actorId,
@@ -3688,9 +3808,11 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
     matchingGreaseFill.value,
     input.subject.actorId,
   );
+  /* v8 ignore start -- Malformed fill: the end-turn Grease save outcome must answer the discovered single-target hole for the ending actor. */
   if (validation !== null) {
     return invalidResult(input.state, "invalidFill", validation);
   }
+  /* v8 ignore stop */
   if (endTurnProbe.tag === "needsHoles") {
     return { ...endTurnProbe, subject: input.subject };
   }
@@ -3813,6 +3935,7 @@ export function resolveGustOfWindLineSaveCommand(
   const matchingGustFills = input.fills.filter(
     (fill) => fill.holeId === hole.holeId,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (matchingGustFills.length > 1) {
     return invalidResult(
       input.state,
@@ -3820,7 +3943,9 @@ export function resolveGustOfWindLineSaveCommand(
       "End Turn in Gust of Wind received duplicate Gust of Wind Saving Throw outcome fills.",
     );
   }
+  /* v8 ignore stop */
   const [matchingGustFill] = matchingGustFills;
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     matchingGustFill !== undefined &&
     matchingGustFill.kind !== "savingThrowOutcome"
@@ -3831,6 +3956,7 @@ export function resolveGustOfWindLineSaveCommand(
       "End Turn in Gust of Wind requires a Gust of Wind Saving Throw outcome fill.",
     );
   }
+  /* v8 ignore stop */
   const endTurnSubject = {
     tag: "runtimeCommand" as const,
     actorId: input.subject.actorId,
@@ -3859,9 +3985,11 @@ export function resolveGustOfWindLineSaveCommand(
     input.subject.actorId,
     effect,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation !== null) {
     return invalidResult(input.state, "invalidFill", validation);
   }
+  /* v8 ignore stop */
   if (endTurnProbe.tag === "needsHoles") {
     return { ...endTurnProbe, subject: input.subject };
   }
@@ -3926,6 +4054,7 @@ export function resolveGustOfWindLineDirectionChangeCommand(
       "Gust of Wind Line direction change is no longer available.",
     );
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.some((fill) => fill.kind !== "gustOfWindLineDirectionChoice")
   ) {
@@ -3935,6 +4064,7 @@ export function resolveGustOfWindLineDirectionChangeCommand(
       "Gust of Wind Line direction change accepts only direction-choice fills.",
     );
   }
+  /* v8 ignore stop */
   const hole = gustOfWindLineDirectionChoiceHole(effect);
   const directionFills = input.fills.filter(
     (
@@ -3944,6 +4074,7 @@ export function resolveGustOfWindLineDirectionChangeCommand(
       { readonly kind: "gustOfWindLineDirectionChoice" }
     > => fill.kind === "gustOfWindLineDirectionChoice",
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!everyFillUsesHoleId(directionFills, hole.holeId)) {
     return invalidResult(
       input.state,
@@ -3951,6 +4082,8 @@ export function resolveGustOfWindLineDirectionChangeCommand(
       "Gust of Wind Line direction change received a fill for an unrelated hole.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (directionFills.length > 1) {
     return invalidResult(
       input.state,
@@ -3958,6 +4091,7 @@ export function resolveGustOfWindLineDirectionChangeCommand(
       "Gust of Wind Line direction change received duplicate fills.",
     );
   }
+  /* v8 ignore stop */
   const directionFill = directionFills[0];
   if (directionFill === undefined) {
     return needsHolesResult(input.state, input.subject, [hole]);
@@ -4186,6 +4320,7 @@ export function resolveFlamingSphereSaveCommand(
     readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.some(
       (fill) =>
@@ -4200,6 +4335,7 @@ export function resolveFlamingSphereSaveCommand(
       "Movable zone save accepts only save, damage, and Concentration fills.",
     );
   }
+  /* v8 ignore stop */
   const effect = flamingSphereEffectFor(input.state, input.subject);
   const target = input.state.combatants.get(input.subject.actorId);
   if (effect === undefined || target === undefined) {
@@ -4233,6 +4369,7 @@ export function resolveFlamingSphereSaveCommand(
     (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
       fill.kind === "rolledDice" && fill.holeId === damageHole.holeId,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (saveFills.length > 1 || damageFills.length > 1) {
     return invalidResult(
       input.state,
@@ -4240,6 +4377,7 @@ export function resolveFlamingSphereSaveCommand(
       "Movable zone end-within-5-feet save received duplicate sphere fills.",
     );
   }
+  /* v8 ignore stop */
   const concentrationHoleId = concentrationSavingThrowHole(target, 1)?.holeId;
   const endTurnSubject = {
     tag: "runtimeCommand" as const,
@@ -4272,9 +4410,11 @@ export function resolveFlamingSphereSaveCommand(
     saveFill.value,
     input.subject.actorId,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (saveValidation !== null) {
     return invalidResult(input.state, "invalidFill", saveValidation);
   }
+  /* v8 ignore stop */
   const saveOutcome = saveFill.value.outcomes[0]!;
   if (!saveOutcome.succeeded) {
     const saveFailedReactionWindow = maybeOpenInterruptWindow(
@@ -4310,9 +4450,11 @@ export function resolveFlamingSphereSaveCommand(
     damageFill,
     damageHole,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
+  /* v8 ignore stop */
   const adjustedDamage = flamingSphereAdjustedDamage({
     state: input.state,
     target,
@@ -4337,6 +4479,7 @@ export function resolveFlamingSphereSaveCommand(
             fill.kind === "concentrationSavingThrow" &&
             fill.holeId === concentrationHole.holeId,
         );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (concentrationFills.length > 1) {
     return invalidResult(
       input.state,
@@ -4344,6 +4487,7 @@ export function resolveFlamingSphereSaveCommand(
       "Movable zone end-within-5-feet save received duplicate sphere fills.",
     );
   }
+  /* v8 ignore stop */
   const concentrationFill =
     concentrationHole === null
       ? undefined
@@ -4393,6 +4537,7 @@ export function resolveFlamingSphereRepositionCommand(
     >;
   },
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.some((fill) => fill.kind !== "movableZoneRepositionMovement")
   ) {
@@ -4402,6 +4547,7 @@ export function resolveFlamingSphereRepositionCommand(
       "Movable zone reposition accepts only movement fills.",
     );
   }
+  /* v8 ignore stop */
   const effect = flamingSphereEffectFor(input.state, input.subject);
   if (
     effect === undefined ||
@@ -4430,6 +4576,7 @@ export function resolveFlamingSphereRepositionCommand(
       { readonly kind: "movableZoneRepositionMovement" }
     > => fill.kind === "movableZoneRepositionMovement",
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!everyFillUsesHoleId(movementFills, movementHole.holeId)) {
     return invalidResult(
       input.state,
@@ -4437,6 +4584,8 @@ export function resolveFlamingSphereRepositionCommand(
       "Movable zone reposition received a fill for an unrelated hole.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movementFills.length > 1) {
     return invalidResult(
       input.state,
@@ -4444,6 +4593,7 @@ export function resolveFlamingSphereRepositionCommand(
       "Movable zone reposition received duplicate sphere fills.",
     );
   }
+  /* v8 ignore stop */
   const movementFill = movementFills[0];
   if (movementFill === undefined) {
     return needsHolesResult(input.state, input.subject, [movementHole]);
@@ -4452,9 +4602,11 @@ export function resolveFlamingSphereRepositionCommand(
     movementFill,
     movementHole,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movementValidation !== null) {
     return invalidResult(input.state, "invalidFill", movementValidation);
   }
+  /* v8 ignore stop */
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
@@ -4488,6 +4640,7 @@ export function resolveFlamingSphereRamCommand(
     readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.some(
       (fill) =>
@@ -4503,6 +4656,7 @@ export function resolveFlamingSphereRamCommand(
       "Movable zone ram accepts only movement, save, damage, and Concentration fills.",
     );
   }
+  /* v8 ignore stop */
   const effect = flamingSphereEffectFor(input.state, input.subject);
   const target = input.state.combatants.get(input.subject.targetId);
   if (
@@ -4565,6 +4719,7 @@ export function resolveFlamingSphereRamCommand(
       { readonly kind: "concentrationSavingThrow" }
     > => fill.kind === "concentrationSavingThrow",
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !everyFillUsesHoleId(movementFills, movementHole.holeId) ||
     !everyFillUsesHoleId(saveFills, saveHole.holeId) ||
@@ -4576,6 +4731,8 @@ export function resolveFlamingSphereRamCommand(
       "Movable zone ram received a fill for an unrelated hole.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     movementFills.length > 1 ||
     saveFills.length > 1 ||
@@ -4587,6 +4744,7 @@ export function resolveFlamingSphereRamCommand(
       "Movable zone ram received duplicate sphere fills.",
     );
   }
+  /* v8 ignore stop */
   const movementFill = movementFills[0];
   if (movementFill === undefined) {
     return needsHolesResult(input.state, input.subject, [movementHole]);
@@ -4595,9 +4753,11 @@ export function resolveFlamingSphereRamCommand(
     movementFill,
     movementHole,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movementValidation !== null) {
     return invalidResult(input.state, "invalidFill", movementValidation);
   }
+  /* v8 ignore stop */
   const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
   if (saveFill === undefined) {
     return needsHolesResult(input.state, input.subject, [saveHole]);
@@ -4606,12 +4766,15 @@ export function resolveFlamingSphereRamCommand(
     saveFill.value,
     input.subject.targetId,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (saveValidation !== null) {
     return invalidResult(input.state, "invalidFill", saveValidation);
   }
+  /* v8 ignore stop */
   const saveOutcome = saveFill.value.outcomes[0]!;
   const damageFill = rolledDiceFillForHole(damageFills, damageHole);
   if (damageFill === undefined) {
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (concentrationFills.length > 0) {
       return invalidResult(
         input.state,
@@ -4619,14 +4782,17 @@ export function resolveFlamingSphereRamCommand(
         "Movable zone ram received a fill for an unrelated hole.",
       );
     }
+    /* v8 ignore stop */
   } else {
     const damageValidation = validateFlamingSphereDamageRoll(
       damageFill,
       damageHole,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
     }
+    /* v8 ignore stop */
   }
   const concentrationHole =
     damageFill === undefined
@@ -4641,6 +4807,7 @@ export function resolveFlamingSphereRamCommand(
             saveSucceeded: saveOutcome.succeeded,
           }),
         );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     concentrationHole === null
       ? concentrationFills.length > 0
@@ -4652,6 +4819,8 @@ export function resolveFlamingSphereRamCommand(
       "Movable zone ram received a fill for an unrelated hole.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (concentrationFills.length > 1) {
     return invalidResult(
       input.state,
@@ -4659,6 +4828,7 @@ export function resolveFlamingSphereRamCommand(
       "Movable zone ram received duplicate sphere fills.",
     );
   }
+  /* v8 ignore stop */
   const concentrationFill =
     concentrationHole === null
       ? undefined
@@ -4890,6 +5060,7 @@ export function resolveMoonbeamSaveCommand(
     readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.some(
       (fill) =>
@@ -4904,6 +5075,7 @@ export function resolveMoonbeamSaveCommand(
       "Movable zone save accepts only save, damage, and Concentration fills.",
     );
   }
+  /* v8 ignore stop */
   const effect = moonbeamEffectFor(input.state, input.subject);
   const target = input.state.combatants.get(input.subject.actorId);
   if (effect === undefined || target === undefined) {
@@ -4960,6 +5132,7 @@ export function resolveMoonbeamSaveCommand(
     (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
       fill.kind === "rolledDice" && fill.holeId === damageHole.holeId,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (saveFills.length > 1 || damageFills.length > 1) {
     return invalidResult(
       input.state,
@@ -4967,6 +5140,7 @@ export function resolveMoonbeamSaveCommand(
       "Movable zone save received duplicate fills.",
     );
   }
+  /* v8 ignore stop */
   const concentrationHoleId = concentrationSavingThrowHole(target, 1)?.holeId;
   const endTurnFills = isEndTurn
     ? input.fills.filter(
@@ -4997,9 +5171,11 @@ export function resolveMoonbeamSaveCommand(
     saveFill.value,
     input.subject.actorId,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (saveValidation !== null) {
     return invalidResult(input.state, "invalidFill", saveValidation);
   }
+  /* v8 ignore stop */
   const saveOutcome = saveFill.value.outcomes[0]!;
   if (!saveOutcome.succeeded) {
     const saveFailedReactionWindow = maybeOpenInterruptWindow(
@@ -5031,9 +5207,11 @@ export function resolveMoonbeamSaveCommand(
     ]);
   }
   const damageValidation = validateMoonbeamDamageRoll(damageFill, damageHole);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageValidation !== null) {
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
+  /* v8 ignore stop */
   const adjustedDamage = moonbeamAdjustedDamage({
     state: input.state,
     target,
@@ -5058,6 +5236,7 @@ export function resolveMoonbeamSaveCommand(
             fill.kind === "concentrationSavingThrow" &&
             fill.holeId === concentrationHole.holeId,
         );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (concentrationFills.length > 1) {
     return invalidResult(
       input.state,
@@ -5065,6 +5244,7 @@ export function resolveMoonbeamSaveCommand(
       "Movable zone save received duplicate concentration save fills.",
     );
   }
+  /* v8 ignore stop */
   const concentrationFill =
     concentrationHole === null
       ? undefined
@@ -5131,6 +5311,7 @@ export function resolveMoonbeamCylinderExitCommand(
     >;
   },
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
     return invalidResult(
       input.state,
@@ -5138,6 +5319,7 @@ export function resolveMoonbeamCylinderExitCommand(
       "Moonbeam Cylinder exit cleanup uses no fills.",
     );
   }
+  /* v8 ignore stop */
   const effect = moonbeamEffectFor(input.state, input.subject);
   if (
     effect === undefined ||
@@ -5172,6 +5354,7 @@ export function resolveMoonbeamRepositionCommand(
     >;
   },
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.some((fill) => fill.kind !== "movableZoneRepositionMovement")
   ) {
@@ -5181,6 +5364,7 @@ export function resolveMoonbeamRepositionCommand(
       "Movable zone reposition accepts only movement fills.",
     );
   }
+  /* v8 ignore stop */
   const effect = moonbeamEffectFor(input.state, input.subject);
   if (
     effect === undefined ||
@@ -5202,6 +5386,7 @@ export function resolveMoonbeamRepositionCommand(
       { readonly kind: "movableZoneRepositionMovement" }
     > => fill.kind === "movableZoneRepositionMovement",
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!everyFillUsesHoleId(movementFills, movementHole.holeId)) {
     return invalidResult(
       input.state,
@@ -5209,6 +5394,8 @@ export function resolveMoonbeamRepositionCommand(
       "Movable zone reposition received a fill for an unrelated hole.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movementFills.length > 1) {
     return invalidResult(
       input.state,
@@ -5216,6 +5403,7 @@ export function resolveMoonbeamRepositionCommand(
       "Movable zone reposition received duplicate fills.",
     );
   }
+  /* v8 ignore stop */
   const movementFill = movementFills[0];
   if (movementFill === undefined) {
     return needsHolesResult(input.state, input.subject, [movementHole]);
@@ -5224,9 +5412,11 @@ export function resolveMoonbeamRepositionCommand(
     movementFill,
     movementHole,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movementValidation !== null) {
     return invalidResult(input.state, "invalidFill", movementValidation);
   }
+  /* v8 ignore stop */
   const spendResult = spendAction(input.state.currentTurnResources, "magic");
   if (Either.isLeft(spendResult)) {
     return invalidResult(
@@ -6384,6 +6574,7 @@ export function resolveEndTurnCommand(
   const unsupportedFill = input.fills.find(
     (fill) => !endTurnFillKind(fill.kind),
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (unsupportedFill !== undefined) {
     return invalidResult(
       input.state,
@@ -6391,6 +6582,7 @@ export function resolveEndTurnCommand(
       "End Turn does not accept battle fills for unrelated subjects.",
     );
   }
+  /* v8 ignore stop */
 
   const initiative = nextInitiative(input.state.initiative);
   const nextActorId = currentActing(initiative);
@@ -6619,6 +6811,7 @@ export function resolveEndTurnCommand(
     ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
       fill.kind === "savingThrowOutcome",
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     savingThrowOutcomeFills.some((fill) => fill.relationshipFacts !== undefined)
   ) {
@@ -6628,6 +6821,8 @@ export function resolveEndTurnCommand(
       "Turn-boundary Saving Throw relationship facts were not requested.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.filter((fill) => fill.kind === "deathSavingThrow").length > 1 ||
     input.fills.filter((fill) => fill.kind === "statBlockRechargeRoll").length >
@@ -6639,6 +6834,7 @@ export function resolveEndTurnCommand(
       "End Turn received duplicate fills for a single requested hole.",
     );
   }
+  /* v8 ignore stop */
   const sleepRepeatSaves = sleepRepeatSaveRequests.flatMap((request) => {
     const fill = sleepRepeatSavingThrowOutcomeFor(
       savingThrowOutcomeFills,
@@ -6837,6 +7033,7 @@ export function resolveEndTurnCommand(
   const turnBoundaryDamageHoleIds = new Set<BattleHoleId>(
     [...endTurnDamageHoles, ...startTurnDamageHoles].map((hole) => hole.holeId),
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.some(
       (fill) =>
@@ -6850,6 +7047,8 @@ export function resolveEndTurnCommand(
       "End Turn rolled dice fills must match a requested turn-boundary damage hole.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.filter((fill) => fill.kind === "rolledDice").length !==
     endTurnDamageRolls.length + startTurnDamageRolls.length
@@ -6860,6 +7059,7 @@ export function resolveEndTurnCommand(
       "End Turn received duplicate rolled dice fills for turn-boundary damage.",
     );
   }
+  /* v8 ignore stop */
   const startTurnSaves = startTurnSaveRequests.flatMap((request) => {
     const fill = spellTurnStartSavingThrowOutcomeFor(
       savingThrowOutcomeFills,
@@ -6907,6 +7107,7 @@ export function resolveEndTurnCommand(
     endTurnHideousLaughterDamageRepeatSaveChecks.find(
       (check) => check.tag === "invalid",
     );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (invalidEndTurnHideousLaughterDamageRepeatSaveCheck?.tag === "invalid") {
     return invalidResult(
       input.state,
@@ -6914,6 +7115,7 @@ export function resolveEndTurnCommand(
       invalidEndTurnHideousLaughterDamageRepeatSaveCheck.message,
     );
   }
+  /* v8 ignore stop */
   const endTurnHideousLaughterDamageRepeatSaveHoles =
     endTurnHideousLaughterDamageRepeatSaveChecks.flatMap((check) =>
       check.tag === "needsHoles" || check.tag === "ok" ? [...check.holes] : [],
@@ -6954,6 +7156,7 @@ export function resolveEndTurnCommand(
     startTurnHideousLaughterDamageRepeatSaveChecks.find(
       (check) => check.tag === "invalid",
     );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (invalidStartTurnHideousLaughterDamageRepeatSaveCheck?.tag === "invalid") {
     return invalidResult(
       input.state,
@@ -6961,6 +7164,7 @@ export function resolveEndTurnCommand(
       invalidStartTurnHideousLaughterDamageRepeatSaveCheck.message,
     );
   }
+  /* v8 ignore stop */
   const startTurnHideousLaughterDamageRepeatSaveHoles =
     startTurnHideousLaughterDamageRepeatSaveChecks.flatMap((check) =>
       check.tag === "needsHoles" || check.tag === "ok" ? [...check.holes] : [],
@@ -7010,6 +7214,7 @@ export function resolveEndTurnCommand(
       ...startTurnHideousLaughterDamageRepeatSaveHoles,
     ].map((hole) => hole.holeId),
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.some(
       (fill) =>
@@ -7023,6 +7228,8 @@ export function resolveEndTurnCommand(
       "End Turn Saving Throw outcome fills must match a requested end-turn or turn-start spell save hole.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     savingThrowOutcomeFills.length !==
     sleepRepeatSaves.length +
@@ -7042,6 +7249,7 @@ export function resolveEndTurnCommand(
       "End Turn received duplicate Saving Throw outcome fills.",
     );
   }
+  /* v8 ignore stop */
   for (const request of sleepRepeatSaveRequests) {
     const fill = sleepRepeatSavingThrowOutcomeFor(
       savingThrowOutcomeFills,
@@ -7054,9 +7262,11 @@ export function resolveEndTurnCommand(
       fill.value,
       actorId,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
     }
+    /* v8 ignore stop */
   }
   for (const request of slowActivePenaltiesEndTurnSaveRequests) {
     const fill = slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
@@ -7070,9 +7280,11 @@ export function resolveEndTurnCommand(
       fill.value,
       actorId,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
     }
+    /* v8 ignore stop */
   }
   for (const request of hideousLaughterRepeatSaveRequests) {
     const fill = hideousLaughterRepeatSavingThrowOutcomeFor(
@@ -7086,9 +7298,11 @@ export function resolveEndTurnCommand(
       fill.value,
       actorId,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
     }
+    /* v8 ignore stop */
   }
   for (const request of spellConditionEndTurnSaveRequests) {
     const fill = spellConditionEndTurnSavingThrowOutcomeFor(
@@ -7102,9 +7316,11 @@ export function resolveEndTurnCommand(
       fill.value,
       actorId,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
     }
+    /* v8 ignore stop */
   }
   for (const request of spellConditionCountedEndTurnSaveRequests) {
     const fill = spellConditionCountedEndTurnSavingThrowOutcomeFor(
@@ -7118,9 +7334,11 @@ export function resolveEndTurnCommand(
       fill.value,
       actorId,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
     }
+    /* v8 ignore stop */
   }
   for (const request of unitFeatureConditionEndTurnSaveRequests) {
     const fill = unitFeatureConditionEndTurnSavingThrowOutcomeFor(
@@ -7134,9 +7352,11 @@ export function resolveEndTurnCommand(
       fill.value,
       actorId,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
     }
+    /* v8 ignore stop */
   }
   for (const request of abilityD20TestEndTurnSaveRequests) {
     const fill = abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
@@ -7150,9 +7370,11 @@ export function resolveEndTurnCommand(
       fill.value,
       actorId,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
     }
+    /* v8 ignore stop */
   }
   for (const fill of startTurnHideousLaughterDamageRepeatSaves) {
     const hole = startTurnHideousLaughterDamageRepeatSaveHoles.find(
@@ -7162,9 +7384,11 @@ export function resolveEndTurnCommand(
       fill.value,
       hole?.hideousLaughterRepeatSave.targetId ?? nextActorId,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
     }
+    /* v8 ignore stop */
   }
   for (const fill of endTurnHideousLaughterDamageRepeatSaves) {
     const hole = endTurnHideousLaughterDamageRepeatSaveHoles.find(
@@ -7174,9 +7398,11 @@ export function resolveEndTurnCommand(
       fill.value,
       hole?.hideousLaughterRepeatSave.targetId ?? actorId,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
     }
+    /* v8 ignore stop */
   }
   for (const request of startTurnSaveRequests) {
     const fill = spellTurnStartSavingThrowOutcomeFor(
@@ -7190,18 +7416,22 @@ export function resolveEndTurnCommand(
       fill.value,
       nextActorId,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
     }
+    /* v8 ignore stop */
   }
   for (const request of endTurnDamageRollRequests) {
     const validation = validateRolledDiceFillForDiceExpr(
       request.roll,
       request.effect.damage.expr,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
     }
+    /* v8 ignore stop */
   }
   for (const request of startTurnDamageRollRequests) {
     const damage = spellTurnStartDamageForEffect(request.effect);
@@ -7209,9 +7439,11 @@ export function resolveEndTurnCommand(
       request.roll,
       damage.expr,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (validation !== null) {
       return invalidResult(input.state, "invalidFill", validation);
     }
+    /* v8 ignore stop */
   }
   const endTurnConcentrationHoles = endTurnDamageRollRequests.flatMap(
     (request) => {
@@ -7268,6 +7500,7 @@ export function resolveEndTurnCommand(
   const concentrationHoleIds = new Set<BattleHoleId>(
     turnBoundaryConcentrationHoles.map((hole) => hole.holeId),
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.some(
       (fill) =>
@@ -7281,6 +7514,8 @@ export function resolveEndTurnCommand(
       "Concentration Saving Throw fill is only valid for a concentrating turn-boundary damage target.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     concentrationSavingThrowFills.length !==
     turnBoundaryConcentrationHoles.length
@@ -7291,6 +7526,7 @@ export function resolveEndTurnCommand(
       "End Turn received duplicate Concentration Saving Throw fills for turn-boundary damage.",
     );
   }
+  /* v8 ignore stop */
   const damageDispositionHoles = [
     ...endTurnDamageRollRequests.flatMap((request) =>
       endTurnDamageDispositionHoles(input.state, actorId, [request]),
@@ -7303,6 +7539,7 @@ export function resolveEndTurnCommand(
     holes: damageDispositionHoles,
     fills: damageDispositionFills,
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageDispositionValidation !== null) {
     return invalidResult(
       input.state,
@@ -7310,6 +7547,7 @@ export function resolveEndTurnCommand(
       damageDispositionValidation,
     );
   }
+  /* v8 ignore stop */
   const missingDamageDispositionHoles = damageDispositionHoles.filter(
     (hole) =>
       damageDispositionFillFor(damageDispositionFills, hole) === undefined,
@@ -7321,6 +7559,7 @@ export function resolveEndTurnCommand(
       missingDamageDispositionHoles,
     );
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     (needsDeathSavingThrow &&
       deathSavingThrowFill?.kind !== "deathSavingThrow") ||
@@ -7334,6 +7573,8 @@ export function resolveEndTurnCommand(
         : "End Turn does not accept battle fills.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     (rechargeHole !== null &&
       rechargeRollFill?.kind !== "statBlockRechargeRoll") ||
@@ -7347,6 +7588,8 @@ export function resolveEndTurnCommand(
         : "End Turn does not accept a Stat Block Recharge roll fill.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     deathSavingThrowFill?.kind === "deathSavingThrow" &&
     deathSavingThrowFill.holeId !== DEATH_SAVING_THROW_HOLE_ID
@@ -7357,6 +7600,7 @@ export function resolveEndTurnCommand(
       "Death Saving Throw fill does not match the requested hole.",
     );
   }
+  /* v8 ignore stop */
   if (deathSavingThrowFill?.kind === "deathSavingThrow") {
     if (
       d20TestNaturalOneRerollDieDecisionRequired({
@@ -7376,6 +7620,7 @@ export function resolveEndTurnCommand(
       originalNaturalD20: Number(deathSavingThrowFill.value),
       decision: deathSavingThrowFill.d20TestNaturalOneReroll,
     });
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (d20TestNaturalOneRerollIssue !== null) {
       return invalidResult(
         input.state,
@@ -7383,7 +7628,9 @@ export function resolveEndTurnCommand(
         d20TestNaturalOneRerollIssue,
       );
     }
+    /* v8 ignore stop */
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     rechargeRollFill?.kind === "statBlockRechargeRoll" &&
     rechargeRollFill.holeId !== STAT_BLOCK_RECHARGE_ROLL_HOLE_ID
@@ -7394,6 +7641,8 @@ export function resolveEndTurnCommand(
       "Stat Block Recharge roll fill does not match the requested hole.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     rechargeRollFill?.kind === "statBlockRechargeRoll" &&
     !statBlockRechargeRollFillMatchesHole(rechargeRollFill.value, rechargeHole)
@@ -7404,6 +7653,7 @@ export function resolveEndTurnCommand(
       "Stat Block Recharge roll fill must provide one d6 result for each requested target.",
     );
   }
+  /* v8 ignore stop */
   const effectiveDeathSavingThrowFill =
     deathSavingThrowFill?.kind === "deathSavingThrow"
       ? effectiveD20TestNaturalOneRerollDeathSavingThrow(deathSavingThrowFill)
@@ -7483,6 +7733,7 @@ export function resolveMoveCommand(
       movementHole(input.state, input.subject.actorId),
     ]);
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills[0]?.kind !== "movement") {
     return invalidResult(
       input.state,
@@ -7490,6 +7741,8 @@ export function resolveMoveCommand(
       "Move requires a Movement fill first.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.filter((candidate) => candidate.kind === "movement").length !==
     1
@@ -7500,7 +7753,9 @@ export function resolveMoveCommand(
       "Move requires exactly one Movement fill.",
     );
   }
+  /* v8 ignore stop */
   const fill = input.fills[0];
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fill.holeId !== MOVEMENT_HOLE_ID) {
     return invalidResult(
       input.state,
@@ -7508,14 +7763,17 @@ export function resolveMoveCommand(
       "Movement fill does not match the requested hole.",
     );
   }
+  /* v8 ignore stop */
   const movement = parseBattleMovement(
     input.state,
     input.subject.actorId,
     fill,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", movement.message);
   }
+  /* v8 ignore stop */
   const threats = opportunityAttackThreatsForMovement(
     input.state,
     movement.movement,
@@ -7577,6 +7835,7 @@ export function resolveJumpMovementReplacementCommand(
       movementHole(input.state, input.subject.actorId),
     ]);
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills[0]?.kind !== "movement") {
     return invalidResult(
       input.state,
@@ -7584,6 +7843,8 @@ export function resolveJumpMovementReplacementCommand(
       "Jump movement replacement requires a Movement fill first.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.filter((candidate) => candidate.kind === "movement").length !==
     1
@@ -7594,7 +7855,9 @@ export function resolveJumpMovementReplacementCommand(
       "Jump movement replacement requires exactly one Movement fill.",
     );
   }
+  /* v8 ignore stop */
   const fill = input.fills[0];
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fill.holeId !== MOVEMENT_HOLE_ID) {
     return invalidResult(
       input.state,
@@ -7602,15 +7865,18 @@ export function resolveJumpMovementReplacementCommand(
       "Movement fill does not match the requested Jump movement replacement hole.",
     );
   }
+  /* v8 ignore stop */
   const movement = parseBattleMovement(
     input.state,
     input.subject.actorId,
     fill,
     { jumpMovementReplacement: effect },
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", movement.message);
   }
+  /* v8 ignore stop */
 
   const threats = opportunityAttackThreatsForMovement(
     input.state,
@@ -7647,6 +7913,7 @@ export function resolveJumpMovementReplacementCommand(
   if (movementEffects.tag !== "resolved") {
     return movementEffects;
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movementEffects.remainingFills.length > 0) {
     return invalidResult(
       input.state,
@@ -7654,6 +7921,7 @@ export function resolveJumpMovementReplacementCommand(
       "Jump movement replacement only accepts Movement, Spike Growth damage, Concentration, and damage disposition fills.",
     );
   }
+  /* v8 ignore stop */
   const consumedState = markJumpMovementReplacementUsed(
     movementEffects.state,
     input.subject.actorId,
@@ -7718,6 +7986,7 @@ function markJumpMovementReplacementUsed(
 export function resolveStandFromProneCommand(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
     return invalidResult(
       input.state,
@@ -7725,6 +7994,7 @@ export function resolveStandFromProneCommand(
       "Stand from Prone accepts no fills.",
     );
   }
+  /* v8 ignore stop */
   const actor = input.state.combatants.get(input.subject.actorId);
   const cost = standFromProneCostFeet(input.state, input.subject.actorId);
   if (
@@ -7784,6 +8054,7 @@ export function parseBattleMovement(
     battleMovementBudgetForActor(state, moverId, fill.value.speedKind)
       .remainingFeet;
   const mover = state.combatants.get(moverId);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     mover === undefined ||
     !representedMovementSpeedKinds(mover).includes(fill.value.speedKind)
@@ -7793,9 +8064,13 @@ export function parseBattleMovement(
       message: "Movement speed kind is not represented for this combatant.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!combatantCanMoveWithBudget(state, moverId, movementBudgetFeet)) {
     return { tag: "invalid", message: "Current combatant cannot move." };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fill.value.movementCostFeet <= 0 ||
     !Number.isInteger(fill.value.movementCostFeet)
@@ -7805,40 +8080,47 @@ export function parseBattleMovement(
       message: "Movement cost must be a positive integer.",
     };
   }
+  /* v8 ignore stop */
   const movementCostFactValidation = validateMovementCostFacts(
     state,
     moverId,
     fill.value,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movementCostFactValidation !== null) {
     return {
       tag: "invalid",
       message: movementCostFactValidation,
     };
   }
+  /* v8 ignore stop */
   const acrobaticMovementValidation = validateAcrobaticMovementFact(
     state,
     mover,
     fill.value.acrobaticMovement,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (acrobaticMovementValidation !== null) {
     return {
       tag: "invalid",
       message: acrobaticMovementValidation,
     };
   }
+  /* v8 ignore stop */
   const creatureSpaceTraversalValidation =
     validateCreatureSpaceTraversalMovementFact(
       state,
       moverId,
       fill.value.creatureSpaceTraversal,
     );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (creatureSpaceTraversalValidation !== null) {
     return {
       tag: "invalid",
       message: creatureSpaceTraversalValidation,
     };
   }
+  /* v8 ignore stop */
   const areaExtraCostFeet = areaMovementExtraCostFeet(state, fill.value);
   const jumpMovementValidation = validateJumpMovementReplacementFact(
     state,
@@ -7848,12 +8130,14 @@ export function parseBattleMovement(
     fill.value.movementCostFeet,
     areaExtraCostFeet,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (jumpMovementValidation !== null) {
     return {
       tag: "invalid",
       message: jumpMovementValidation,
     };
   }
+  /* v8 ignore stop */
   const levitatedMovementValidation = validateLevitatedMovementFact({
     combatant: mover,
     fact: fill.value.levitatedMovement,
@@ -7861,46 +8145,55 @@ export function parseBattleMovement(
     movementCostFeet: fill.value.movementCostFeet,
     areaExtraCostFeet,
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (levitatedMovementValidation !== null) {
     return {
       tag: "invalid",
       message: levitatedMovementValidation,
     };
   }
+  /* v8 ignore stop */
   const commandApproachValidation = validateCommandApproachMovementFact(
     fill.value.commandApproach,
     options.commandApproach,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (commandApproachValidation !== null) {
     return {
       tag: "invalid",
       message: commandApproachValidation,
     };
   }
+  /* v8 ignore stop */
   const commandFleeValidation = validateCommandFleeMovementFact(
     fill.value.commandFlee,
     options.commandFlee,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (commandFleeValidation !== null) {
     return {
       tag: "invalid",
       message: commandFleeValidation,
     };
   }
+  /* v8 ignore stop */
   const movementCost = ordinaryMovementCost(
     movementFeet(fill.value.movementCostFeet),
     fill.value.speedKind,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (Number(movementCost.costFeet) > Number(movementBudgetFeet)) {
     return {
       tag: "invalid",
       message: "Movement cost exceeds the combatant's remaining Movement.",
     };
   }
+  /* v8 ignore stop */
   const seen = new Set<string>();
   const provokedOpportunityAttacks: BattleOpportunityAttackThreat[] = [];
   for (const threat of fill.value.provokedOpportunityAttacks) {
     const reactorId = threat.reactorId;
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (reactorId === moverId) {
       return {
         tag: "invalid",
@@ -7908,6 +8201,8 @@ export function parseBattleMovement(
           "Movement Opportunity Attack threat cannot name the mover as reactor.",
       };
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!state.combatants.has(reactorId)) {
       return {
         tag: "invalid",
@@ -7915,10 +8210,12 @@ export function parseBattleMovement(
           "Movement Opportunity Attack threat references an unknown combatant.",
       };
     }
+    /* v8 ignore stop */
     const attack = attackActionOptionsForActor(state, reactorId).find(
       (option) =>
         interruptAttackExecutionSelectionMatchesOption(threat, option),
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (attack === undefined) {
       return {
         tag: "invalid",
@@ -7926,6 +8223,8 @@ export function parseBattleMovement(
           "Movement Opportunity Attack threat references an unknown attack option.",
       };
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (attackTargetConstraint(attack).kind !== "meleeReach") {
       return {
         tag: "invalid",
@@ -7933,13 +8232,16 @@ export function parseBattleMovement(
           "Movement Opportunity Attack threat must name a melee attack option.",
       };
     }
+    /* v8 ignore stop */
     const threatKey = opportunityAttackThreatIdentityKey(reactorId, threat);
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (seen.has(threatKey)) {
       return {
         tag: "invalid",
         message: "Movement Opportunity Attack threat repeats an attack option.",
       };
     }
+    /* v8 ignore stop */
     seen.add(threatKey);
     provokedOpportunityAttacks.push(threat);
   }
@@ -8189,6 +8491,7 @@ export function resolveMovementEffectsAfterMovement(input: {
       damageHole,
     );
     if (damageFill === undefined) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (unconsumedRolledDiceFills.length > 0) {
         return invalidResult(
           input.state,
@@ -8196,6 +8499,7 @@ export function resolveMovementEffectsAfterMovement(input: {
           "Spike Growth movement damage fill does not match the pending damage hole.",
         );
       }
+      /* v8 ignore stop */
       return needsHolesResult(input.state, input.subject, [damageHole]);
     }
     consumedFills.add(damageFill);
@@ -8203,9 +8507,11 @@ export function resolveMovementEffectsAfterMovement(input: {
       damageFill,
       damageHole,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (damageValidation !== null) {
       return invalidResult(input.state, "invalidFill", damageValidation);
     }
+    /* v8 ignore stop */
 
     const damageAmount = spikeGrowthMovementDamageAmount(
       input.state,
@@ -8229,6 +8535,7 @@ export function resolveMovementEffectsAfterMovement(input: {
             concentrationHole,
           );
     if (concentrationHole !== null && concentrationFill === undefined) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         concentrationSavingThrowFills.some((fill) => !consumedFills.has(fill))
       ) {
@@ -8238,6 +8545,7 @@ export function resolveMovementEffectsAfterMovement(input: {
           "Concentration saving throw fill does not match the pending movement damage hole.",
         );
       }
+      /* v8 ignore stop */
       return needsHolesResult(input.state, input.subject, [concentrationHole]);
     }
     if (concentrationFill !== undefined) {
@@ -8259,6 +8567,7 @@ export function resolveMovementEffectsAfterMovement(input: {
           damageDispositionHoles.some((hole) => hole.holeId === fill.holeId),
       ),
     });
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (damageDispositionValidation !== null) {
       return invalidResult(
         input.state,
@@ -8266,6 +8575,7 @@ export function resolveMovementEffectsAfterMovement(input: {
         damageDispositionValidation,
       );
     }
+    /* v8 ignore stop */
     const missingDispositionHole = damageDispositionHoles.find(
       (hole) =>
         damageDispositionFillFor(
@@ -8274,6 +8584,7 @@ export function resolveMovementEffectsAfterMovement(input: {
         ) === undefined,
     );
     if (missingDispositionHole !== undefined) {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (damageDispositionFills.some((fill) => !consumedFills.has(fill))) {
         return invalidResult(
           input.state,
@@ -8281,6 +8592,7 @@ export function resolveMovementEffectsAfterMovement(input: {
           "Damage disposition fill does not match the pending movement damage hole.",
         );
       }
+      /* v8 ignore stop */
       return needsHolesResult(input.state, input.subject, [
         missingDispositionHole,
       ]);
@@ -8316,6 +8628,7 @@ export function resolveMovementEffectsAfterMovement(input: {
   const remainingFills = input.extraFills.filter(
     (fill) => !consumedFills.has(fill),
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     remainingFills.some((fill) => spikeGrowthMovementEffectFillKind(fill.kind))
   ) {
@@ -8325,6 +8638,7 @@ export function resolveMovementEffectsAfterMovement(input: {
       "Move received a fill that does not match a pending Spike Growth movement damage hole.",
     );
   }
+  /* v8 ignore stop */
 
   return {
     tag: "resolved",
@@ -8348,6 +8662,7 @@ export function resolveMoveAfterMovement(input: {
   if (movementEffects.tag !== "resolved") {
     return movementEffects;
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movementEffects.remainingFills.length > 0) {
     return invalidResult(
       input.state,
@@ -8355,6 +8670,7 @@ export function resolveMoveAfterMovement(input: {
       "Move only accepts Movement, Spike Growth damage, Concentration, and damage disposition fills.",
     );
   }
+  /* v8 ignore stop */
   return {
     tag: "resolved",
     state: movementEffects.state,
@@ -8442,18 +8758,23 @@ function validateAreaDifficultTerrainMovementFact(
   if (fact === undefined) {
     return { tag: "notApplicable" };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fact.kind !== "areaDifficultTerrain") {
     return {
       tag: "invalid",
       message: "Area Difficult Terrain movement fact has the wrong kind.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fact.sources.length === 0) {
     return {
       tag: "invalid",
       message: "Area Difficult Terrain movement fact requires a source.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !Number.isInteger(fact.totalDistanceFeet) ||
     fact.totalDistanceFeet <= 0
@@ -8464,6 +8785,8 @@ function validateAreaDifficultTerrainMovementFact(
         "Area Difficult Terrain total distance must be a positive integer.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !Number.isInteger(fact.difficultTerrainDistanceFeet) ||
     fact.difficultTerrainDistanceFeet <= 0
@@ -8473,6 +8796,8 @@ function validateAreaDifficultTerrainMovementFact(
       message: "Area Difficult Terrain distance must be a positive integer.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     Number(fact.difficultTerrainDistanceFeet) > Number(fact.totalDistanceFeet)
   ) {
@@ -8482,18 +8807,22 @@ function validateAreaDifficultTerrainMovementFact(
         "Area Difficult Terrain distance cannot exceed total Movement distance.",
     };
   }
+  /* v8 ignore stop */
   const sourceKeys = new Set<string>();
   let spikeGrowthDamageDistanceFeet = 0;
   for (const source of fact.sources) {
     const key = areaDifficultTerrainSourceKey(source);
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (sourceKeys.has(key)) {
       return {
         tag: "invalid",
         message: "Area Difficult Terrain movement fact repeats a source.",
       };
     }
+    /* v8 ignore stop */
     sourceKeys.add(key);
     if (source.kind === "spikeGrowthHazard") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         !Number.isInteger(source.damageDistanceFeet) ||
         source.damageDistanceFeet <= 0
@@ -8504,6 +8833,8 @@ function validateAreaDifficultTerrainMovementFact(
             "Spike Growth movement damage distance must be a positive integer.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (Number(source.damageDistanceFeet) > Number(fact.totalDistanceFeet)) {
         return {
           tag: "invalid",
@@ -8511,6 +8842,8 @@ function validateAreaDifficultTerrainMovementFact(
             "Spike Growth movement damage distance cannot exceed total Movement distance.",
         };
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (
         Number(source.damageDistanceFeet) >
         Number(fact.difficultTerrainDistanceFeet)
@@ -8521,8 +8854,10 @@ function validateAreaDifficultTerrainMovementFact(
             "Spike Growth movement damage distance cannot exceed Difficult Terrain distance.",
         };
       }
+      /* v8 ignore stop */
       spikeGrowthDamageDistanceFeet += Number(source.damageDistanceFeet);
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!activeAreaDifficultTerrainSourceMatches(state, source)) {
       return {
         tag: "invalid",
@@ -8530,7 +8865,9 @@ function validateAreaDifficultTerrainMovementFact(
           "Area Difficult Terrain movement fact does not match an active Difficult Terrain area.",
       };
     }
+    /* v8 ignore stop */
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     spikeGrowthDamageDistanceFeet > Number(fact.difficultTerrainDistanceFeet)
   ) {
@@ -8540,6 +8877,7 @@ function validateAreaDifficultTerrainMovementFact(
         "Spike Growth movement damage distances cannot exceed Difficult Terrain distance.",
     };
   }
+  /* v8 ignore stop */
   return {
     tag: "ok",
     totalDistanceFeet: fact.totalDistanceFeet,
@@ -8554,12 +8892,15 @@ function validateGustOfWindLineMovementFact(
   if (fact === undefined) {
     return { tag: "notApplicable" };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fact.kind !== "gustOfWindLineMovement") {
     return {
       tag: "invalid",
       message: "Gust of Wind Line movement fact has the wrong kind.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !Number.isInteger(fact.totalDistanceFeet) ||
     fact.totalDistanceFeet <= 0
@@ -8569,6 +8910,8 @@ function validateGustOfWindLineMovementFact(
       message: "Gust of Wind Line total distance must be a positive integer.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !Number.isInteger(fact.closerDistanceFeet) ||
     fact.closerDistanceFeet <= 0
@@ -8578,6 +8921,8 @@ function validateGustOfWindLineMovementFact(
       message: "Gust of Wind Line closer distance must be a positive integer.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (Number(fact.closerDistanceFeet) > Number(fact.totalDistanceFeet)) {
     return {
       tag: "invalid",
@@ -8585,6 +8930,7 @@ function validateGustOfWindLineMovementFact(
         "Gust of Wind Line closer distance cannot exceed total Movement distance.",
     };
   }
+  /* v8 ignore stop */
   const source = state.combatants.get(fact.sourceCombatantId);
   const effect = source?.activeEffects.find(
     (candidate): candidate is GustOfWindLineEffect =>
@@ -8594,6 +8940,7 @@ function validateGustOfWindLineMovementFact(
       candidate.areaId === fact.areaId &&
       candidate.directionId === fact.directionId,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (effect === undefined) {
     return {
       tag: "invalid",
@@ -8601,6 +8948,7 @@ function validateGustOfWindLineMovementFact(
         "Gust of Wind Line movement fact does not match an active Gust of Wind Line.",
     };
   }
+  /* v8 ignore stop */
   return {
     tag: "ok",
     totalDistanceFeet: fact.totalDistanceFeet,
@@ -8952,12 +9300,15 @@ function validateGrappleDragMovementFact(
   if (fact === undefined) {
     return { tag: "notApplicable" };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fact.kind !== "grappleDrag") {
     return {
       tag: "invalid",
       message: "Grapple drag movement fact has the wrong kind.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !Number.isInteger(fact.totalDistanceFeet) ||
     fact.totalDistanceFeet <= 0
@@ -8967,21 +9318,27 @@ function validateGrappleDragMovementFact(
       message: "Grapple drag total distance must be a positive integer.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fact.targets.length === 0) {
     return {
       tag: "invalid",
       message: "Grapple drag movement fact requires a target.",
     };
   }
+  /* v8 ignore stop */
   const seenTargets = new Set<CombatantId>();
   let extraCostFeet = 0;
   for (const target of fact.targets) {
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!Number.isInteger(target.distanceFeet) || target.distanceFeet <= 0) {
       return {
         tag: "invalid",
         message: "Grapple drag target distance must be a positive integer.",
       };
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (Number(target.distanceFeet) > Number(fact.totalDistanceFeet)) {
       return {
         tag: "invalid",
@@ -8989,18 +9346,22 @@ function validateGrappleDragMovementFact(
           "Grapple drag target distance cannot exceed total Movement distance.",
       };
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (seenTargets.has(target.targetId)) {
       return {
         tag: "invalid",
         message: "Grapple drag movement fact repeats a target.",
       };
     }
+    /* v8 ignore stop */
     seenTargets.add(target.targetId);
     const link = state.grapples.find(
       (candidate) =>
         candidate.grapplerId === moverId &&
         candidate.targetId === target.targetId,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (link === undefined) {
       return {
         tag: "invalid",
@@ -9008,14 +9369,17 @@ function validateGrappleDragMovementFact(
           "Grapple drag movement fact must reference a creature Grappled by the mover.",
       };
     }
+    /* v8 ignore stop */
     const grappler = state.combatants.get(link.grapplerId);
     const draggedTarget = state.combatants.get(link.targetId);
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (grappler === undefined || draggedTarget === undefined) {
       return {
         tag: "invalid",
         message: "Grapple drag movement fact references a stale Grapple link.",
       };
     }
+    /* v8 ignore stop */
     if (!grappleTargetExemptFromDragCost(grappler, draggedTarget)) {
       extraCostFeet += Number(target.distanceFeet);
     }

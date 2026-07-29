@@ -19,6 +19,7 @@ import {
 } from "./battle-state-execution.ts";
 import { battleFillEquals } from "./battle-reducer/dispatcher.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { classLevel, difficultyClass, movementFeet } from "@dnd/shared/types";
 import type { BattleRuntimeSession } from "./index.ts";
 import {
@@ -220,6 +221,18 @@ describe("battle runtime: Cunning Strike", () => {
           procedureRef: poisonProcedureRef,
           optionId: "poison",
         },
+      }),
+    ).toBe(false);
+    const toolPossession = {
+      kind: "toolPossessionFacts",
+      holeId: holeId("cunning-strike-tool-possession"),
+      value: { toolIdsOnPerson: ["poisoners_kit"] },
+    } satisfies Extract<BattleFill, { readonly kind: "toolPossessionFacts" }>;
+    expect(battleFillEquals(toolPossession, { ...toolPossession })).toBe(true);
+    expect(
+      battleFillEquals(toolPossession, {
+        ...toolPossession,
+        value: { toolIdsOnPerson: [] },
       }),
     ).toBe(false);
   });

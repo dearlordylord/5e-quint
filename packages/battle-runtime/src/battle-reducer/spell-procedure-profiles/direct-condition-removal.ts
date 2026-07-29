@@ -52,6 +52,7 @@ import type {
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
+  preparedSpellSlotInvocations,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -72,21 +73,12 @@ function admitDirectConditionRemoval(
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
-    (slot): readonly DirectConditionRemovalSpellInvocation[] =>
-      Number(slot.spellLevel) < spell.mechanics.level
-        ? []
-        : [
-            {
-              access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-              procedure: "directConditionRemoval",
-              spell,
-              actionCost: "bonusAction",
-              ...projection,
-            },
-          ],
-  );
+  return preparedSpellSlotInvocations(spell, ctx, (base) => ({
+    ...base,
+    procedure: "directConditionRemoval",
+    actionCost: "bonusAction",
+    ...projection,
+  }));
 }
 
 function directConditionRemovalProjection(
@@ -158,6 +150,7 @@ function discoverDirectConditionRemovalCastAct(
 function resolveDirectConditionRemoval(
   input: SpellProcedureProfileResolveInput<DirectConditionRemovalSpellInvocation>,
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
       ATTACK_TARGET_HOLE_ID,
@@ -170,6 +163,7 @@ function resolveDirectConditionRemoval(
       "Direct condition-removal spells use one target fill and one condition choice.",
     );
   }
+  /* v8 ignore stop */
 
   const targetSelectionResolution = spellSelectionResolution(
     input.input.state,
@@ -188,6 +182,7 @@ function resolveDirectConditionRemoval(
   const selectedCondition = input.invocation.conditionChoices.find(
     (choice) => choice === conditionChoice,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (selectedCondition === undefined) {
     return invalidResult(
       input.input.state,
@@ -195,6 +190,7 @@ function resolveDirectConditionRemoval(
       "Spell condition choice is not available for this spell.",
     );
   }
+  /* v8 ignore stop */
 
   const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
     input,

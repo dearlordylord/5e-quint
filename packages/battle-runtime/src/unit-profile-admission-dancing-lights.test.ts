@@ -22,6 +22,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   abilityModifier,
+  assertBattleSnapshotCodecRoundTripForTest,
   battleTablePositionId,
   breakBattleConcentration,
   canSpendAction,
@@ -69,6 +70,15 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     if (castAct === undefined) {
       throw new Error("Expected Dancing Lights separate-cast act.");
     }
+    const awaitingPlacement = resolveBattleSubject({
+      state: session.state,
+      subject: castAct.subject,
+      fills: [],
+    });
+    if (awaitingPlacement.tag !== "needsHoles") {
+      throw new Error("Expected Dancing Lights placement.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(awaitingPlacement.snapshot);
 
     const resolved = resolveBattleSubject({
       state: session.state,

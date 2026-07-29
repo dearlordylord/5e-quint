@@ -1,6 +1,9 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
+import {
+  assertBattleSnapshotCodecRoundTripForTest,
+  resolveBattleSubject,
+} from "./battle-runtime.test-support.ts";
 import { battleObjectId } from "./identity.ts";
 import { describe, expect, it } from "vitest";
 
@@ -680,6 +683,17 @@ describe("weapon-hosted reducer route call segments", () => {
       holderCombatantId: spellCasterId,
       itemId: battleObjectId("main:weapon_longsword"),
     });
+    const awaitingMagicWeaponTarget = resolveBattleSubject({
+      state: magicState,
+      subject: magicAct.subject,
+      fills: [],
+    });
+    if (awaitingMagicWeaponTarget.tag !== "needsHoles") {
+      throw new Error("Expected Magic Weapon item target.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(
+      awaitingMagicWeaponTarget.snapshot,
+    );
     const magicResolution = requireResolved(
       resolveBattleSubject({
         state: magicState,

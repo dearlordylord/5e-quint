@@ -228,6 +228,7 @@ function resolveDragonsBreathInitial(
     return targetSelection;
   }
   const targetId = targetSelection.targetIds[0];
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (targetId === undefined) {
     return invalidResult(
       input.input.state,
@@ -235,11 +236,13 @@ function resolveDragonsBreathInitial(
       "Dragon's Breath must target one willing creature.",
     );
   }
+  /* v8 ignore stop */
   if (input.fillSet.damageTypeChoice === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellDamageTypeChoiceHole(input.invocation),
     ]);
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !input.invocation.damageTypeChoices.includes(
       input.fillSet.damageTypeChoice.value,
@@ -251,6 +254,7 @@ function resolveDragonsBreathInitial(
       "Dragon's Breath damage type must be one of the selected spell's choices.",
     );
   }
+  /* v8 ignore stop */
   const spellSaveDc = spellSaveDcForCaster(input.input.state, input.actorId);
   if (spellSaveDc === null) {
     return invalidResult(

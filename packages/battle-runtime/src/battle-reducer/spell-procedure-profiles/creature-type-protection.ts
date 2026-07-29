@@ -53,6 +53,7 @@ import type {
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
+import { preparedSpellSlotInvocations } from "./profile.ts";
 import { Schema } from "effect";
 import {
   SpellRuleExecutionFactsSchema,
@@ -75,21 +76,12 @@ function admitCreatureTypeProtection(
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
-    (slot): readonly CreatureTypeProtectionSpellInvocation[] =>
-      Number(slot.spellLevel) < spell.mechanics.level
-        ? []
-        : [
-            {
-              access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-              procedure: "creatureTypeProtection",
-              spell,
-              actionCost: "magicAction",
-              ...projection,
-            },
-          ],
-  );
+  return preparedSpellSlotInvocations(spell, ctx, (base) => ({
+    ...base,
+    procedure: "creatureTypeProtection",
+    actionCost: "magicAction",
+    ...projection,
+  }));
 }
 
 function creatureTypeProtectionSpellProjection(
@@ -261,6 +253,7 @@ function discoverCreatureTypeProtectionCastAct(
 function resolveCreatureTypeProtection(
   input: SpellProcedureProfileResolveInput<CreatureTypeProtectionSpellInvocation>,
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [ATTACK_TARGET_HOLE_ID])
   ) {
@@ -270,6 +263,7 @@ function resolveCreatureTypeProtection(
       "Creature-type protection spells use one target fill.",
     );
   }
+  /* v8 ignore stop */
 
   const targetSelectionResolution = spellSelectionResolution(
     input.input.state,

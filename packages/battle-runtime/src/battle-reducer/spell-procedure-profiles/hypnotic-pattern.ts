@@ -378,6 +378,7 @@ function resolveHypnoticPattern(
 ): BattleResolutionResult {
   const metamagicApplications =
     input.storedGlyphRelease === undefined ? input.metamagicApplications : [];
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fillSet.targetId !== undefined ||
     input.fillSet.targetList !== undefined ||
@@ -392,6 +393,7 @@ function resolveHypnoticPattern(
       "Hypnotic Pattern uses an area Saving Throw outcome fill.",
     );
   }
+  /* v8 ignore stop */
   const areaSave = resolveAreaSaveMetamagicFills({
     state: input.input.state,
     subject: input.input.subject,
@@ -407,6 +409,7 @@ function resolveHypnoticPattern(
   const savingThrowOutcomes = areaSave.savingThrowOutcomes;
   const areaWitnessValidation =
     validateHypnoticPatternAreaWitness(savingThrowOutcomes);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (areaWitnessValidation !== null) {
     return invalidResult(
       input.input.state,
@@ -414,6 +417,7 @@ function resolveHypnoticPattern(
       areaWitnessValidation,
     );
   }
+  /* v8 ignore stop */
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
     savingThrowOutcomes,

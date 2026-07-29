@@ -24,6 +24,7 @@ import {
   type BattleTrackedOngoingSpellLightEmitter,
 } from "./battle-state-execution.ts";
 import { BattleFillSchema } from "./battle-reducer/battle-codecs.ts";
+import { battleFillEquals } from "./battle-reducer/dispatcher.ts";
 import {
   D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE,
@@ -973,24 +974,37 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       "savingThrowOutcome",
     );
 
+    const rerolledSave = savingThrowOutcomeFill(savingThrow, [
+      {
+        targetId: spellTargetId,
+        succeeded: false,
+        naturalD20: 1,
+        d20TestNaturalOneReroll: rerollOutcome({
+          succeeded: true,
+          naturalD20: 10,
+        }),
+      },
+    ]);
+    expect(battleFillEquals(rerolledSave, { ...rerolledSave })).toBe(true);
+    expect(
+      battleFillEquals(rerolledSave, {
+        ...rerolledSave,
+        value: {
+          ...rerolledSave.value,
+          outcomes: [
+            {
+              ...rerolledSave.value.outcomes[0],
+              succeeded: true,
+            },
+          ],
+        },
+      }),
+    ).toBe(false);
     const resolved = requireResolved(
       resolveBattleSubject({
         state: state.state,
         subject: act.subject,
-        fills: [
-          targetSelection,
-          savingThrowOutcomeFill(savingThrow, [
-            {
-              targetId: spellTargetId,
-              succeeded: false,
-              naturalD20: 1,
-              d20TestNaturalOneReroll: rerollOutcome({
-                succeeded: true,
-                naturalD20: 10,
-              }),
-            },
-          ]),
-        ],
+        fills: [targetSelection, rerolledSave],
       }),
     );
 
@@ -1423,16 +1437,27 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     });
     expectD20TestNaturalOneRerollHole(missingDecision, "deathSavingThrow");
 
+    const restoredDeathSave = deathSavingThrowFill(deathSave, {
+      roll: 1,
+      d20TestNaturalOneReroll: rerollDie(20),
+    });
+    if (restoredDeathSave.kind !== "deathSavingThrow") {
+      throw new Error("Expected a Death Saving Throw fill.");
+    }
+    expect(battleFillEquals(restoredDeathSave, { ...restoredDeathSave })).toBe(
+      true,
+    );
+    expect(
+      battleFillEquals(restoredDeathSave, {
+        ...restoredDeathSave,
+        d20TestNaturalOneReroll: rerollDie(12),
+      }),
+    ).toBe(false);
     const restored = requireResolved(
       endTurn({
         state,
         actorId: fighterId,
-        fills: [
-          deathSavingThrowFill(deathSave, {
-            roll: 1,
-            d20TestNaturalOneReroll: rerollDie(20),
-          }),
-        ],
+        fills: [restoredDeathSave],
       }),
     );
     expect(Number(restored.state.combatants.get(spellTargetId)?.hp)).toBe(1);

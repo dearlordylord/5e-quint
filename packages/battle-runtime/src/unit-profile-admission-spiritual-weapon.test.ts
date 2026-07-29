@@ -36,6 +36,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   abilityModifier,
+  assertBattleSnapshotCodecRoundTripForTest,
   type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
@@ -82,6 +83,15 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       spellId: spiritualWeaponUnitId,
       slotLevel: 4,
     });
+    const awaitingForcePosition = resolveBattleSubject({
+      state: session.state,
+      subject: secondLevelAct.subject,
+      fills: [],
+    });
+    if (awaitingForcePosition.tag !== "needsHoles") {
+      throw new Error("Expected Spiritual Weapon force position.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(awaitingForcePosition.snapshot);
 
     expect({
       ...secondLevelAct.subject,

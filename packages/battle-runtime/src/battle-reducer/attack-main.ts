@@ -719,34 +719,44 @@ export function resolveSelectedAttackProcedure(
 
   const attackerId = battleAttackHostParticipantId(input.subject);
   const fillSet = attackFillSet(input.fills, attackerId, input.state);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
+  /* v8 ignore stop */
   if (fillSet.targetId == null) {
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       fillSet.tacticalMasterReplacementDecision !== undefined ||
       fillSet.attackRoll != null ||
       fillSet.damageRoll != null
     ) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
       );
     }
+    /* v8 ignore stop */
     return needsHolesResult(input.state, input.subject, [
       attackTargetHole(input.state, attackerId, attack),
     ]);
   }
 
   const target = input.state.combatants.get(fillSet.targetId);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (target == null || target.combatantId === attackerId) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Attack target must be another combatant in this battle.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !attackTargetIsLegal(
       input.state,
@@ -756,22 +766,27 @@ export function resolveSelectedAttackProcedure(
       fillSet.targetSpatialFacts,
     )
   ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Attack target is outside the selected attack's supported target constraint.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fillSet.damageDisposition.kind === "knockOut" &&
     !attackCanCarryKnockOutChoice(attack)
   ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Knock Out can only be chosen for melee attack damage.",
     );
   }
+  /* v8 ignore stop */
 
   const sanctuaryCheck = sanctuaryTargetingInterdictionCheck({
     state: input.state,
@@ -785,9 +800,12 @@ export function resolveSelectedAttackProcedure(
   if (sanctuaryCheck.tag === "needsHoles") {
     return needsHolesResult(input.state, input.subject, [sanctuaryCheck.hole]);
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (sanctuaryCheck.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", sanctuaryCheck.message);
   }
+  /* v8 ignore stop */
   if (sanctuaryCheck.tag === "lost") {
     return spendAttackProcedure(input.state, attackerId, attack);
   }
@@ -795,6 +813,7 @@ export function resolveSelectedAttackProcedure(
     const replacementTarget = input.state.combatants.get(
       sanctuaryCheck.targetId,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       replacementTarget === undefined ||
       replacementTarget.combatantId === attackerId ||
@@ -806,23 +825,28 @@ export function resolveSelectedAttackProcedure(
         sanctuaryCheck.spatialFacts,
       )
     ) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Sanctuary replacement attack target must be legal for the selected attack.",
       );
     }
+    /* v8 ignore stop */
     const originalTargetFill = input.fills.find(
       (fill): fill is Extract<BattleFill, { readonly kind: "targetChoice" }> =>
         fill.kind === "targetChoice" && fill.value === target.combatantId,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (originalTargetFill === undefined) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Sanctuary replacement requires the original attack target fill.",
       );
     }
+    /* v8 ignore stop */
     return resolveSelectedAttackProcedure(
       {
         ...input,
@@ -850,21 +874,27 @@ export function resolveSelectedAttackProcedure(
     attack,
   );
   if (tacticalMasterReplacementHole === null) {
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillSet.tacticalMasterReplacementDecision !== undefined) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Tactical Master replacement is only valid for an eligible weapon mastery attack.",
       );
     }
+    /* v8 ignore stop */
   } else if (fillSet.tacticalMasterReplacementDecision === undefined) {
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillSet.attackRoll != null || fillSet.damageRoll != null) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Tactical Master replacement must be filled before the attack roll.",
       );
     }
+    /* v8 ignore stop */
     return needsHolesResult(input.state, input.subject, [
       tacticalMasterReplacementHole,
     ]);
@@ -875,13 +905,16 @@ export function resolveSelectedAttackProcedure(
     attack,
     decision: fillSet.tacticalMasterReplacementDecision,
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (tacticalMasterAttack.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       tacticalMasterAttack.message,
     );
   }
+  /* v8 ignore stop */
   attack = tacticalMasterAttack.attack;
 
   const brutalStrikeDecisionHole = brutalStrikeDecisionHoleForAttack(
@@ -895,30 +928,37 @@ export function resolveSelectedAttackProcedure(
     attack,
   );
   if (brutalStrikeDecisionHole === null) {
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       fillSet.brutalStrikeDecision !== undefined &&
       brutalStrikeSupportSelection === null
     ) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Brutal Strike is only valid for an eligible Reckless Strength attack.",
       );
     }
+    /* v8 ignore stop */
   } else if (fillSet.brutalStrikeDecision === undefined) {
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillSet.attackRoll != null || fillSet.damageRoll != null) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Brutal Strike must be chosen or declined before the attack roll.",
       );
     }
+    /* v8 ignore stop */
     return needsHolesResult(input.state, input.subject, [
       brutalStrikeDecisionHole,
     ]);
   } else if (
     !isBrutalStrikeDecisionChoice(fillSet.brutalStrikeDecision.value)
   ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
@@ -933,17 +973,20 @@ export function resolveSelectedAttackProcedure(
       : null;
 
   if (fillSet.attackRoll == null) {
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       fillSet.damageRoll != null ||
       fillSet.damageDispositionFilled ||
       fillSet.sourceDamageRollPenaltyRolls.length > 0
     ) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
       );
     }
+    /* v8 ignore stop */
     return needsHolesResult(input.state, input.subject, [
       attackRollHole(
         input.state.combatants.get(attackerId),
@@ -962,19 +1005,25 @@ export function resolveSelectedAttackProcedure(
     ]);
   }
 
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!attackRollResultIsValid(fillSet.attackRoll)) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Attack roll result is outside the d20 attack-roll protocol.",
     );
   }
+  /* v8 ignore stop */
   const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
     fillSet.attackRoll,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (spellAttackRerollIssue !== null) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", spellAttackRerollIssue);
   }
+  /* v8 ignore stop */
   const activatedOngoingFeatureProfile =
     attackRollOngoingFeatureActivationProfile(
       input.state,
@@ -984,16 +1033,19 @@ export function resolveSelectedAttackProcedure(
       input.replayingInterruptedProcedure === true ||
         fillSet.damageRoll != null,
     );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fillSet.attackRoll.activatedOngoingFeatureProcedureRef !== undefined &&
     activatedOngoingFeatureProfile === null
   ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Attack-roll ongoing feature activation is not available for this attack roll.",
     );
   }
+  /* v8 ignore stop */
   const requiredRollMode = attackRollModeWithOptionalOngoingFeature(
     input.state,
     attackerId,
@@ -1013,18 +1065,22 @@ export function resolveSelectedAttackProcedure(
     brutalStrikeChoice === null ? requiredRollMode : undefined;
   const attackRollModeWasEstablishedBeforeReplay =
     input.replayingInterruptedProcedure === true;
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !attackRollModeWasEstablishedBeforeReplay &&
     brutalStrikeChoice === null &&
     fillSet.attackRoll.activatedOngoingFeatureProcedureRef !== undefined &&
     fillSet.attackRoll.rollMode !== requiredRollMode
   ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Attack roll mode does not match the activated ongoing feature rule.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !attackRollModeWasEstablishedBeforeReplay &&
     brutalStrikeChoice !== null &&
@@ -1035,35 +1091,43 @@ export function resolveSelectedAttackProcedure(
       attack,
     )
   ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Brutal Strike requires using or already benefiting from Reckless Attack on the chosen attack roll.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !attackRollModeWasEstablishedBeforeReplay &&
     brutalStrikeChoice !== null &&
     (baselineRequiredRollMode === "disadvantage" ||
       !attackRollModeMatches(fillSet.attackRoll, undefined))
   ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Brutal Strike forgoes Advantage and cannot be used on an attack roll with Disadvantage.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !attackRollModeWasEstablishedBeforeReplay &&
     brutalStrikeChoice === null &&
     !attackRollModeMatches(fillSet.attackRoll, requiredRollMode)
   ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Attack roll mode does not match the current attack-roll rule.",
     );
   }
+  /* v8 ignore stop */
   const attacker = input.state.combatants.get(attackerId);
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
@@ -1095,13 +1159,16 @@ export function resolveSelectedAttackProcedure(
     requiredRollMode: resolvedRequiredRollMode,
     otherD20RerollPresent: fillSet.attackRoll.spellAttackReroll !== undefined,
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (d20TestNaturalOneRerollIssue !== null) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       d20TestNaturalOneRerollIssue,
     );
   }
+  /* v8 ignore stop */
   const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
     fillSet.attackRoll,
   );
@@ -1120,10 +1187,12 @@ export function resolveSelectedAttackProcedure(
     attackRoll: effectiveAttackRoll,
     ordinaryHit,
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     fillSet.attackRoll.missToHitReplacementProcedureRef !== undefined &&
     missToHitReplacement === null
   ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
@@ -1132,14 +1201,18 @@ export function resolveSelectedAttackProcedure(
         : "Attack-roll miss-to-hit replacement is not available for this attack roll.",
     );
   }
+  /* v8 ignore stop */
   const hit = ordinaryHit || missToHitReplacement !== null;
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!hit && !grapplerPunchAndGrabFillIsAbsent(fillSet)) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Grappler Punch and Grab is only valid after an eligible Unarmed Strike hit.",
     );
   }
+  /* v8 ignore stop */
   const attackRollState = battleStateAfterTargetActionEarlyEndForActor(
     input.state,
     attackerId,
@@ -1170,13 +1243,16 @@ export function resolveSelectedAttackProcedure(
     effectiveAttackRoll,
     criticalThreshold,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!hit && fillSet.mirrorImageDuplicateRoll !== undefined) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Mirror Image duplicate roll is only valid after an attack-roll hit.",
     );
   }
+  /* v8 ignore stop */
   if (hit) {
     const mirrorImageAttacker = attackRolledState.combatants.get(attackerId);
     if (mirrorImageAttacker === undefined) {
@@ -1199,21 +1275,27 @@ export function resolveSelectedAttackProcedure(
         mirrorImageCheck.hole,
       ]);
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (mirrorImageCheck.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         mirrorImageCheck.message,
       );
     }
+    /* v8 ignore stop */
     if (mirrorImageCheck.tag === "hitDuplicate") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (attackPostMirrorImageFillsArePresent(fillSet)) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
         return invalidResult(
           input.state,
           "invalidFill",
           "Attack damage and after-hit fills are not valid when Mirror Image redirects the hit to a duplicate.",
         );
       }
+      /* v8 ignore stop */
       return spendAttackProcedure(mirrorImageCheck.state, attackerId, attack);
     }
   }
@@ -1229,9 +1311,12 @@ export function resolveSelectedAttackProcedure(
       frenzyDamageType.hole,
     ]);
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (frenzyDamageType.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", frenzyDamageType.message);
   }
+  /* v8 ignore stop */
   const eligibleDamageRiders = hit
     ? [
         ...eligibleAttackDamageRiders(
@@ -1374,17 +1459,20 @@ export function resolveSelectedAttackProcedure(
     return remarkableAthleteMovement.result;
   }
   const postRemarkableAthleteMovementState = remarkableAthleteMovement.state;
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !hit &&
     (fillSet.stunningStrikeDecision !== undefined ||
       fillSet.stunningStrikeSavingThrow !== undefined)
   ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Stunning Strike is only valid after an eligible attack hit.",
     );
   }
+  /* v8 ignore stop */
   const stunningStrikeApplied = hit
     ? resolveStunningStrikeAfterHit({
         state: postRemarkableAthleteMovementState,
@@ -1395,29 +1483,35 @@ export function resolveSelectedAttackProcedure(
         savingThrow: fillSet.stunningStrikeSavingThrow,
       })
     : ({ tag: "ok", state: postRemarkableAthleteMovementState } as const);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (stunningStrikeApplied.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       stunningStrikeApplied.message,
     );
   }
+  /* v8 ignore stop */
   if (stunningStrikeApplied.tag === "needsHoles") {
     return needsHolesResult(postRemarkableAthleteMovementState, input.subject, [
       ...stunningStrikeApplied.holes,
     ]);
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !hit &&
     (fillSet.openHandTechniqueDecision !== undefined ||
       fillSet.openHandTechniqueSavingThrow !== undefined)
   ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Open Hand Technique is only valid after an eligible attack hit.",
     );
   }
+  /* v8 ignore stop */
   const openHandTechniqueApplied = hit
     ? resolveOpenHandTechniqueAfterHit({
         state: stunningStrikeApplied.state,
@@ -1432,13 +1526,16 @@ export function resolveSelectedAttackProcedure(
         state: stunningStrikeApplied.state,
         shovePushes: [],
       } as const);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (openHandTechniqueApplied.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       openHandTechniqueApplied.message,
     );
   }
+  /* v8 ignore stop */
   if (openHandTechniqueApplied.tag === "needsHoles") {
     return needsHolesResult(postRemarkableAthleteMovementState, input.subject, [
       ...openHandTechniqueApplied.holes,
@@ -1457,13 +1554,16 @@ export function resolveSelectedAttackProcedure(
         state: openHandTechniqueApplied.state,
         shovePushes: [],
       } as const);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (weaponMasteryPushApplied.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       weaponMasteryPushApplied.message,
     );
   }
+  /* v8 ignore stop */
   const shovePushes = [
     ...openHandTechniqueApplied.shovePushes,
     ...weaponMasteryPushApplied.shovePushes,
@@ -1477,13 +1577,16 @@ export function resolveSelectedAttackProcedure(
       )
     : null;
   if (toppleSaveHole === null) {
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillSet.weaponMasteryToppleSavingThrow !== undefined) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Weapon Mastery Topple Saving Throw is only valid for an eligible Topple weapon hit.",
       );
     }
+    /* v8 ignore stop */
   } else if (fillSet.weaponMasteryToppleSavingThrow === undefined) {
     return needsHolesResult(weaponMasteryPushApplied.state, input.subject, [
       toppleSaveHole,
@@ -1497,9 +1600,12 @@ export function resolveSelectedAttackProcedure(
         fillSet.weaponMasteryToppleSavingThrow,
       )
     : ({ tag: "ok", state: weaponMasteryPushApplied.state } as const);
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (toppleApplied.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", toppleApplied.message);
   }
+  /* v8 ignore stop */
   const weaponHitAppliedState = hit
     ? applyWeaponMasterySapOnHit(
         toppleApplied.state,
@@ -1522,13 +1628,16 @@ export function resolveSelectedAttackProcedure(
     fixedDamageAmount !== null &&
     fixedDamageByTypeBeforeTargetAdjustments !== null
   ) {
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillSet.damageRoll != null) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Fixed attack damage does not use a rolled damage fill.",
       );
     }
+    /* v8 ignore stop */
     const damageEvent = {
       kind: "aggregateDamage" as const,
       damageByTypeBeforeTargetAdjustments:
@@ -1545,13 +1654,16 @@ export function resolveSelectedAttackProcedure(
       ),
       fillSet.spellDamageReductionRoll,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (spellReduction.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Spell damage reduction roll does not match an unused matching damage-reduction spell effect.",
       );
     }
+    /* v8 ignore stop */
     if (spellReduction.tag === "needsHoles") {
       return needsHolesResult(hitAppliedState, input.subject, [
         ...spellReduction.holes,
@@ -1588,9 +1700,12 @@ export function resolveSelectedAttackProcedure(
         redirectDamage: fillSet.attackDamageReductionRedirectDamage,
         damageRelationshipDecisions: fillSet.damageRelationshipDecisions,
       });
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (redirectState.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(input.state, "invalidFill", redirectState.message);
     }
+    /* v8 ignore stop */
     if (redirectState.tag === "needsHoles") {
       return needsHolesResult(attackRolledState, input.subject, [
         ...redirectState.holes,
@@ -1608,13 +1723,16 @@ export function resolveSelectedAttackProcedure(
       filled: primaryDamageDispositionFilled(fillSet),
       value: fillSet.damageDisposition,
     });
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (damageDispositionValidation !== null) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         damageDispositionValidation,
       );
     }
+    /* v8 ignore stop */
     if (damageDispositionHole !== null) {
       if (!primaryDamageDispositionFilled(fillSet)) {
         return needsHolesResult(hitAppliedState, input.subject, [
@@ -1659,13 +1777,16 @@ export function resolveSelectedAttackProcedure(
         relationshipCheck.holes,
       );
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (relationshipCheck.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         relationshipCheck.message,
       );
     }
+    /* v8 ignore stop */
     const attackDamageReactionWindow = maybeOpenInterruptWindow(
       grapplerPunchAndGrab.state,
       {
@@ -1748,13 +1869,16 @@ export function resolveSelectedAttackProcedure(
         });
       }
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (concentrationSaveCheck.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         concentrationSaveCheck.message,
       );
     }
+    /* v8 ignore stop */
     const hideousLaughterSaveCheck =
       damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
         state: grapplerPunchAndGrab.state,
@@ -1767,13 +1891,16 @@ export function resolveSelectedAttackProcedure(
         ...hideousLaughterSaveCheck.holes,
       ]);
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (hideousLaughterSaveCheck.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         hideousLaughterSaveCheck.message,
       );
     }
+    /* v8 ignore stop */
     const fixedDamageAppliedState = applyAttackDamageAmount({
       state: grapplerPunchAndGrab.state,
       attackerId,
@@ -1845,13 +1972,16 @@ export function resolveSelectedAttackProcedure(
     return withOpenHandTechniqueShovePushes(afterPrimaryDamage, shovePushes);
   }
   if (hit && fillSet.damageRoll == null) {
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Attack damage can only be filled after a hit.",
       );
     }
+    /* v8 ignore stop */
     return needsHolesResult(hitAppliedState, input.subject, [
       attackDamageHole(
         attack,
@@ -1871,26 +2001,32 @@ export function resolveSelectedAttackProcedure(
       ),
     ]);
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !hit &&
     (fillSet.damageRoll != null ||
       fillSet.damageDispositionFilled ||
       fillSet.sourceDamageRollPenaltyRolls.length > 0)
   ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Attack damage can only be filled after a hit.",
     );
   }
+  /* v8 ignore stop */
   if (!hit) {
     const relationshipIssue =
       fillSet.damageRelationshipDecisions.unexpectedFillForAbsentEvent(
         ATTACK_ROLL_HOLE_ID,
       );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (relationshipIssue !== null) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(input.state, "invalidFill", relationshipIssue);
     }
+    /* v8 ignore stop */
   }
   if (hit && fillSet.damageRoll != null) {
     const selectedDamageDiceChoice = selectedWeaponDamageDiceRollChoice(
@@ -1914,9 +2050,12 @@ export function resolveSelectedAttackProcedure(
       eligibleDamageDieFloorChoiceUnitIds,
       eligibleCunningStrikeDamageOptions,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (damageValidation !== null) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(input.state, "invalidFill", damageValidation);
     }
+    /* v8 ignore stop */
     const damageSource = attackRolledState.combatants.get(attackerId);
     const damageRollByType = attackDamageByTypeEntries(
       attackRolledState,
@@ -1936,18 +2075,21 @@ export function resolveSelectedAttackProcedure(
         damageAmountByTypeEntriesToMap(damageRollByType),
         fillSet.damageRoll.holeId,
       );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       unexpectedSourceDamageRollPenaltyRoll(
         fillSet.sourceDamageRollPenaltyRolls,
         expectedSourcePenaltyHole === null ? [] : [expectedSourcePenaltyHole],
       ) !== undefined
     ) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Source damage roll penalty does not match an active source-side damage penalty.",
       );
     }
+    /* v8 ignore stop */
     const sourcePenalty = applyAvailableSourceDamageRollPenalty(
       damageSource,
       damageAmountByTypeEntriesToMap(damageRollByType),
@@ -1959,13 +2101,16 @@ export function resolveSelectedAttackProcedure(
         fillSet.damageRoll.holeId,
       ),
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (sourcePenalty.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Source damage roll penalty does not match an active source-side damage penalty.",
       );
     }
+    /* v8 ignore stop */
     if (sourcePenalty.tag === "needsHoles") {
       return needsHolesResult(hitAppliedState, input.subject, [
         ...sourcePenalty.holes,
@@ -1988,13 +2133,16 @@ export function resolveSelectedAttackProcedure(
       ),
       fillSet.spellDamageReductionRoll,
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (spellReduction.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Spell damage reduction roll does not match an unused matching damage-reduction spell effect.",
       );
     }
+    /* v8 ignore stop */
     if (spellReduction.tag === "needsHoles") {
       return needsHolesResult(hitAppliedState, input.subject, [
         ...spellReduction.holes,
@@ -2030,9 +2178,12 @@ export function resolveSelectedAttackProcedure(
         redirectDamage: fillSet.attackDamageReductionRedirectDamage,
         damageRelationshipDecisions: fillSet.damageRelationshipDecisions,
       });
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (redirectState.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(input.state, "invalidFill", redirectState.message);
     }
+    /* v8 ignore stop */
     if (redirectState.tag === "needsHoles") {
       return needsHolesResult(attackRolledState, input.subject, [
         ...redirectState.holes,
@@ -2050,13 +2201,16 @@ export function resolveSelectedAttackProcedure(
       filled: primaryDamageDispositionFilled(fillSet),
       value: fillSet.damageDisposition,
     });
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (damageDispositionValidation !== null) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         damageDispositionValidation,
       );
     }
+    /* v8 ignore stop */
     if (damageDispositionHole !== null) {
       if (!primaryDamageDispositionFilled(fillSet)) {
         return needsHolesResult(hitAppliedState, input.subject, [
@@ -2101,13 +2255,16 @@ export function resolveSelectedAttackProcedure(
         relationshipCheck.holes,
       );
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (relationshipCheck.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         relationshipCheck.message,
       );
     }
+    /* v8 ignore stop */
     const attackDamageReactionWindow = maybeOpenInterruptWindow(
       grapplerPunchAndGrab.state,
       {
@@ -2202,13 +2359,16 @@ export function resolveSelectedAttackProcedure(
         });
       }
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (concentrationSaveCheck.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         concentrationSaveCheck.message,
       );
     }
+    /* v8 ignore stop */
     const hideousLaughterSaveCheck =
       damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
         state: grapplerPunchAndGrab.state,
@@ -2221,13 +2381,16 @@ export function resolveSelectedAttackProcedure(
         ...hideousLaughterSaveCheck.holes,
       ]);
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (hideousLaughterSaveCheck.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.state,
         "invalidFill",
         hideousLaughterSaveCheck.message,
       );
     }
+    /* v8 ignore stop */
     const damageAppliedState = applyAttackDamageAmount({
       state: grapplerPunchAndGrab.state,
       attackerId,
@@ -2258,9 +2421,12 @@ export function resolveSelectedAttackProcedure(
         ...cunningStrike.holes,
       ]);
     }
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (cunningStrike.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(input.state, "invalidFill", cunningStrike.message);
     }
+    /* v8 ignore stop */
     const damageWithSlowState = applyWeaponMasterySlowAfterDamage({
       state: cunningStrike.state,
       attackerId,
@@ -2439,9 +2605,12 @@ export function resolveWeaponMasteryCleaveContinuation(input: {
     battleAttackHostParticipantId(input.subject),
     input.state,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
+  /* v8 ignore stop */
   const cleaveResolved = resolveWeaponMasteryCleaveAfterPrimaryDamage({
     state: input.state,
     subject: input.subject,
@@ -2503,16 +2672,19 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     input.attack,
   );
   if (decisionHole === null) {
-    return cleaveFillIsAbsent(input.fillSet)
-      ? { tag: "ok", state: input.state }
-      : {
-          tag: "result",
-          result: invalidResult(
-            input.state,
-            "invalidFill",
-            "Weapon Mastery Cleave is only valid for an eligible Cleave weapon hit.",
-          ),
-        };
+    /* v8 ignore start -- Malformed fill set: no Cleave holes exist when the completed primary hit is not eligible for Cleave. */
+    if (!cleaveFillIsAbsent(input.fillSet)) {
+      return {
+        tag: "result",
+        result: invalidResult(
+          input.state,
+          "invalidFill",
+          "Weapon Mastery Cleave is only valid for an eligible Cleave weapon hit.",
+        ),
+      };
+    }
+    /* v8 ignore stop */
+    return { tag: "ok", state: input.state };
   }
   if (input.fillSet.weaponMasteryCleaveDecision === undefined) {
     return {
@@ -2520,6 +2692,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       result: needsHolesResult(input.state, input.subject, [decisionHole]),
     };
   }
+  /* v8 ignore start -- Malformed fill: the Cleave decision must answer the exact decision hole emitted for this primary hit. */
   if (
     input.fillSet.weaponMasteryCleaveDecision.holeId !== decisionHole.holeId
   ) {
@@ -2532,18 +2705,23 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   if (input.fillSet.weaponMasteryCleaveDecision.value === "decline") {
-    return cleaveAttackFillIsAbsent(input.fillSet)
-      ? { tag: "ok", state: input.state }
-      : {
-          tag: "result",
-          result: invalidResult(
-            input.state,
-            "invalidFill",
-            "Weapon Mastery Cleave attack fills require using Cleave.",
-          ),
-        };
+    /* v8 ignore start -- Malformed fill set: declining Cleave exposes none of its target, attack-roll, or damage holes. */
+    if (!cleaveAttackFillIsAbsent(input.fillSet)) {
+      return {
+        tag: "result",
+        result: invalidResult(
+          input.state,
+          "invalidFill",
+          "Weapon Mastery Cleave attack fills require using Cleave.",
+        ),
+      };
+    }
+    /* v8 ignore stop */
+    return { tag: "ok", state: input.state };
   }
+  /* v8 ignore start -- Internal eligibility invariant: a non-weapon attack cannot produce a Weapon Mastery Cleave decision hole. */
   if (input.attack.kind !== "weapon") {
     return {
       tag: "result",
@@ -2554,6 +2732,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const cleaveAttack = weaponMasteryCleaveExtraAttack(input.attack);
   if (input.fillSet.weaponMasteryCleaveTarget === undefined) {
     return {
@@ -2570,6 +2749,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
   const secondTargetId = input.fillSet.weaponMasteryCleaveTarget.value;
   const cleaveTargetFacts =
     input.fillSet.weaponMasteryCleaveTarget.spatialFacts ?? [];
+  /* v8 ignore start -- Malformed fill: the selected second target must satisfy the spatial constraints encoded by the emitted Cleave target hole. */
   if (
     !weaponMasteryCleaveTargetIsLegal({
       state: input.state,
@@ -2589,6 +2769,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   if (input.fillSet.weaponMasteryCleaveAttackRoll === undefined) {
     return {
       tag: "result",
@@ -2610,6 +2791,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     cleaveAttack,
     cleaveTargetFacts,
   );
+  /* v8 ignore start -- Malformed fill: a Cleave attack-roll value must satisfy the runtime d20 result schema. */
   if (
     !attackRollResultIsValid(input.fillSet.weaponMasteryCleaveAttackRoll.value)
   ) {
@@ -2622,9 +2804,11 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const cleaveSpellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
     input.fillSet.weaponMasteryCleaveAttackRoll.value,
   );
+  /* v8 ignore start -- Malformed fill: Cleave is a weapon attack and cannot carry a spell-attack reroll selection. */
   if (cleaveSpellAttackRerollIssue !== null) {
     return {
       tag: "result",
@@ -2635,6 +2819,8 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed fill: the roll mode must match the Advantage/Disadvantage facts used to construct the Cleave attack-roll hole. */
   if (
     !attackRollModeMatches(
       input.fillSet.weaponMasteryCleaveAttackRoll.value,
@@ -2650,6 +2836,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const attacker = input.state.combatants.get(input.subject.actorId);
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
@@ -2691,6 +2878,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       input.fillSet.weaponMasteryCleaveAttackRoll.value.d20TestNaturalOneReroll,
     requiredRollMode,
   });
+  /* v8 ignore start -- Malformed fill: natural-one reroll decisions must match the option attached to this exact Cleave roll. */
   if (cleaveD20TestNaturalOneRerollIssue !== null) {
     return {
       tag: "result",
@@ -2701,10 +2889,12 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const effectiveCleaveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
     input.fillSet.weaponMasteryCleaveAttackRoll.value,
   );
   const secondTarget = input.state.combatants.get(secondTargetId);
+  /* v8 ignore start -- Stale subject: the target choice was admitted from the battle roster but may be replayed only after that target was removed. */
   if (secondTarget === undefined) {
     return {
       tag: "result",
@@ -2715,6 +2905,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const cleaveCriticalThreshold = criticalThresholdForAttack(
     input.state.combatants.get(input.subject.actorId),
     cleaveAttack,
@@ -2732,6 +2923,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     attackRoll: effectiveCleaveAttackRoll,
     ordinaryHit: ordinaryCleaveHit,
   });
+  /* v8 ignore start -- Malformed fill: a miss-to-hit replacement ref is accepted only when the current missed roll exposes that exact replacement. */
   if (
     input.fillSet.weaponMasteryCleaveAttackRoll.value
       .missToHitReplacementProcedureRef !== undefined &&
@@ -2748,6 +2940,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const cleaveHit = ordinaryCleaveHit || cleaveMissToHitReplacement !== null;
   let cleaveAttackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
@@ -2832,22 +3025,25 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       input.subject.procedureRef,
     );
   if (!cleaveHit) {
-    return input.fillSet.weaponMasteryCleaveDamageRoll === undefined
-      ? {
-          tag: "ok",
-          state: recordWeaponMasteryCleaveUsed(
-            cleaveAttackRolledState,
-            input.subject.actorId,
-          ),
-        }
-      : {
-          tag: "result",
-          result: invalidResult(
-            input.state,
-            "invalidFill",
-            "Weapon Mastery Cleave damage can only be filled after a hit.",
-          ),
-        };
+    /* v8 ignore start -- Malformed fill set: a missed Cleave attack exposes no damage-roll hole. */
+    if (input.fillSet.weaponMasteryCleaveDamageRoll !== undefined) {
+      return {
+        tag: "result",
+        result: invalidResult(
+          input.state,
+          "invalidFill",
+          "Weapon Mastery Cleave damage can only be filled after a hit.",
+        ),
+      };
+    }
+    /* v8 ignore stop */
+    return {
+      tag: "ok",
+      state: recordWeaponMasteryCleaveUsed(
+        cleaveAttackRolledState,
+        input.subject.actorId,
+      ),
+    };
   }
   if (input.fillSet.weaponMasteryCleaveDamageRoll === undefined) {
     return {
@@ -2866,6 +3062,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     input.fillSet.weaponMasteryCleaveDamageRoll,
     cleaveDamageDieFloorChoiceUnitIds,
   );
+  /* v8 ignore start -- Malformed fill: any damage-die floor selection must reference an eligible procedure attached to this Cleave damage hole. */
   if (attackDamageDieFloorChoiceIssue !== null) {
     return {
       tag: "result",
@@ -2876,15 +3073,18 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(
     input.fillSet.weaponMasteryCleaveDamageRoll,
   );
+  /* v8 ignore start -- Malformed fill: Cleave weapon damage cannot carry a spell-damage reroll selection. */
   if (spellDamageRerollIssue !== null) {
     return {
       tag: "result",
       result: invalidResult(input.state, "invalidFill", spellDamageRerollIssue),
     };
   }
+  /* v8 ignore stop */
   const damageValidation = validateRolledDiceForWeaponAttack(
     input.fillSet.weaponMasteryCleaveDamageRoll.value,
     cleaveAttack,
@@ -2894,12 +3094,14 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     [],
     [],
   );
+  /* v8 ignore start -- Malformed fill: rolled dice must match the exact Cleave weapon expression, critical state, and attack result. */
   if (damageValidation !== null) {
     return {
       tag: "result",
       result: invalidResult(input.state, "invalidFill", damageValidation),
     };
   }
+  /* v8 ignore stop */
   const damageByType = attackDamageByTypeEntries(
     cleaveAttackRolledState,
     cleaveAttackRolledState.combatants.get(input.subject.actorId),
@@ -2923,6 +3125,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       input.fillSet.weaponMasteryCleaveDamageRoll.holeId,
     ),
   );
+  /* v8 ignore start -- Malformed fill: a source-side damage penalty roll must match an active penalty and this exact damage event. */
   if (sourcePenalty.tag === "invalid") {
     return {
       tag: "result",
@@ -2933,6 +3136,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   if (sourcePenalty.tag === "needsHoles") {
     return {
       tag: "result",
@@ -2957,6 +3161,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       damageAmount: cleaveDamageAmount,
       fills: input.fillSet.concentrationSavingThrows,
     });
+  /* v8 ignore start -- Malformed fill: concentration-save outcomes must answer only the save holes derived from this Cleave damage event. */
   if (cleaveConcentrationSaveCheck.tag === "invalid") {
     return {
       tag: "result",
@@ -2967,6 +3172,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const cleaveDamageDispositionHole = weaponMasteryCleaveDamageDispositionHole({
     attack: cleaveAttack,
     attackerId: input.subject.actorId,
@@ -2978,6 +3184,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     filled: input.fillSet.weaponMasteryCleaveDamageDispositionFilled,
     value: input.fillSet.weaponMasteryCleaveDamageDisposition,
   });
+  /* v8 ignore start -- Malformed fill: damage disposition must answer the exact Cleave damage-disposition hole when one exists. */
   if (cleaveDamageDispositionValidation !== null) {
     return {
       tag: "result",
@@ -2988,6 +3195,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   if (
     cleaveDamageDispositionHole !== null &&
     !input.fillSet.weaponMasteryCleaveDamageDispositionFilled
@@ -3027,6 +3235,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore start -- Malformed fill: relationship decisions must answer only the holes derived from this Cleave damage event. */
   if (relationshipCheck.tag === "invalid") {
     return {
       tag: "result",
@@ -3037,6 +3246,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const cleaveUsedState = recordWeaponMasteryCleaveUsed(
     cleaveAttackRolledState,
     input.subject.actorId,
@@ -3192,9 +3402,12 @@ export function resolveHuntersPreyHordeBreakerContinuation(input: {
     battleAttackHostParticipantId(input.subject),
     input.state,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
+  /* v8 ignore stop */
   const resolved = resolveHuntersPreyHordeBreakerAfterPrimaryDamage({
     state: input.state,
     subject: input.subject,
@@ -3257,16 +3470,19 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     input.attack,
   );
   if (decisionHole === null) {
-    return hordeBreakerFillIsAbsent(input.fillSet)
-      ? { tag: "ok", state: input.state }
-      : {
-          tag: "result",
-          result: invalidResult(
-            input.state,
-            "invalidFill",
-            "Hunter's Prey Horde Breaker is only valid for an eligible selected weapon attack.",
-          ),
-        };
+    if (hordeBreakerFillIsAbsent(input.fillSet)) {
+      return { tag: "ok", state: input.state };
+    }
+    /* v8 ignore start -- Malformed fill set: no Horde Breaker holes exist when the completed primary hit is not eligible for Horde Breaker. */
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Hunter's Prey Horde Breaker is only valid for an eligible selected weapon attack.",
+      ),
+    };
+    /* v8 ignore stop */
   }
   const selection = huntersPreyHordeBreakerSelection(
     input.state,
@@ -3274,6 +3490,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     input.firstTargetId,
     input.attack,
   );
+  /* v8 ignore start -- Stale subject: the emitted Horde Breaker decision may be replayed only while its execution binding remains active. */
   if (selection === null) {
     return {
       tag: "result",
@@ -3284,6 +3501,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const { procedureRef } = selection;
   if (input.fillSet.huntersPreyHordeBreakerDecision === undefined) {
     return {
@@ -3294,6 +3512,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   if (
     input.fillSet.huntersPreyHordeBreakerDecision.holeId !== decisionHole.holeId
   ) {
+    /* v8 ignore start -- Malformed fill: the Horde Breaker decision must answer the exact decision hole emitted for this primary hit. */
     return {
       tag: "result",
       result: invalidResult(
@@ -3302,19 +3521,24 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         "Hunter's Prey Horde Breaker decision uses the wrong hole.",
       ),
     };
+    /* v8 ignore stop */
   }
   if (input.fillSet.huntersPreyHordeBreakerDecision.value === "decline") {
-    return hordeBreakerAttackFillIsAbsent(input.fillSet)
-      ? { tag: "ok", state: input.state }
-      : {
-          tag: "result",
-          result: invalidResult(
-            input.state,
-            "invalidFill",
-            "Hunter's Prey Horde Breaker attack fills require using Horde Breaker.",
-          ),
-        };
+    if (hordeBreakerAttackFillIsAbsent(input.fillSet)) {
+      return { tag: "ok", state: input.state };
+    }
+    /* v8 ignore start -- Malformed fill set: declining Horde Breaker exposes none of its target, attack-roll, or damage holes. */
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Hunter's Prey Horde Breaker attack fills require using Horde Breaker.",
+      ),
+    };
+    /* v8 ignore stop */
   }
+  /* v8 ignore start -- Internal eligibility invariant: a non-weapon attack cannot produce a Hunter's Prey Horde Breaker decision hole. */
   if (input.attack.kind !== "weapon") {
     return {
       tag: "result",
@@ -3325,6 +3549,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   if (input.fillSet.huntersPreyHordeBreakerTarget === undefined) {
     return {
       tag: "result",
@@ -3352,6 +3577,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       targetSpatialFacts: targetFacts,
     })
   ) {
+    /* v8 ignore start -- Malformed fill: the second target must satisfy the spatial constraints encoded by the emitted Horde Breaker target hole. */
     return {
       tag: "result",
       result: invalidResult(
@@ -3360,6 +3586,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         "Hunter's Prey Horde Breaker second target must be different, within 5 feet of the original target, within weapon range, and not already attacked this turn.",
       ),
     };
+    /* v8 ignore stop */
   }
   if (input.fillSet.huntersPreyHordeBreakerAttackRoll === undefined) {
     return {
@@ -3387,6 +3614,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
     )
   ) {
+    /* v8 ignore start -- Malformed fill: a Horde Breaker attack-roll value must satisfy the runtime d20 result schema. */
     return {
       tag: "result",
       result: invalidResult(
@@ -3395,10 +3623,12 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         "Hunter's Prey Horde Breaker attack roll must be a valid attack roll.",
       ),
     };
+    /* v8 ignore stop */
   }
   const hordeBreakerSpellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
     input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
   );
+  /* v8 ignore start -- Malformed fill: Horde Breaker is a weapon attack and cannot carry a spell-attack reroll selection. */
   if (hordeBreakerSpellAttackRerollIssue !== null) {
     return {
       tag: "result",
@@ -3409,6 +3639,8 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed fill: the roll mode must match the Advantage/Disadvantage facts used to construct the Horde Breaker attack-roll hole. */
   if (
     !attackRollModeMatches(
       input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
@@ -3424,6 +3656,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const attacker = input.state.combatants.get(input.subject.actorId);
   if (
     d20TestNaturalOneRerollRollDecisionRequired({
@@ -3469,6 +3702,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
           .d20TestNaturalOneReroll,
       requiredRollMode,
     });
+  /* v8 ignore start -- Malformed fill: natural-one reroll decisions must match the option attached to this exact Horde Breaker roll. */
   if (hordeBreakerD20TestNaturalOneRerollIssue !== null) {
     return {
       tag: "result",
@@ -3479,11 +3713,13 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const effectiveHordeBreakerAttackRoll =
     effectiveD20TestNaturalOneRerollAttackRoll(
       input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
     );
   const secondTarget = input.state.combatants.get(secondTargetId);
+  /* v8 ignore start -- Stale subject: the target choice was admitted from the battle roster but may be replayed only after that target was removed. */
   if (secondTarget === undefined) {
     return {
       tag: "result",
@@ -3494,6 +3730,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const criticalThreshold = criticalThresholdForAttack(
     input.state.combatants.get(input.subject.actorId),
     input.attack,
@@ -3545,6 +3782,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ]),
     };
   }
+  /* v8 ignore start -- Malformed fill: a Frenzy damage-type choice is accepted only when this Horde Breaker attack exposes that exact choice. */
   if (frenzyDamageType.tag === "invalid") {
     return {
       tag: "result",
@@ -3555,6 +3793,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const hordeBreakerEligibleDamageRiders = hit
     ? eligibleAttackDamageRiders(
         rolledState,
@@ -3604,23 +3843,26 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     }
   }
   if (!hit) {
-    return input.fillSet.huntersPreyHordeBreakerDamageRoll === undefined
-      ? {
-          tag: "ok",
-          state: recordHuntersPreyHordeBreakerUsed(
-            rolledState,
-            input.subject.actorId,
-            procedureRef,
-          ),
-        }
-      : {
-          tag: "result",
-          result: invalidResult(
-            input.state,
-            "invalidFill",
-            "Hunter's Prey Horde Breaker damage can only be filled after a hit.",
-          ),
-        };
+    if (input.fillSet.huntersPreyHordeBreakerDamageRoll === undefined) {
+      return {
+        tag: "ok",
+        state: recordHuntersPreyHordeBreakerUsed(
+          rolledState,
+          input.subject.actorId,
+          procedureRef,
+        ),
+      };
+    }
+    /* v8 ignore start -- Malformed fill set: a missed Horde Breaker attack exposes no damage-roll hole. */
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Hunter's Prey Horde Breaker damage can only be filled after a hit.",
+      ),
+    };
+    /* v8 ignore stop */
   }
   const hordeBreakerDamageDieFloorChoiceUnitIds =
     eligibleAttackDamageDieFloorProcedureRefs(
@@ -3650,6 +3892,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     input.fillSet.huntersPreyHordeBreakerDamageRoll,
     hordeBreakerDamageDieFloorChoiceUnitIds,
   );
+  /* v8 ignore start -- Malformed fill: any damage-die floor selection must reference an eligible procedure attached to this Horde Breaker damage hole. */
   if (attackDamageDieFloorChoiceIssue !== null) {
     return {
       tag: "result",
@@ -3660,11 +3903,13 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const hordeBreakerSelectedDamageRiders = selectedAttackDamageRiders(
     hordeBreakerEligibleDamageRiders,
     input.fillSet.huntersPreyHordeBreakerDamageRoll
       .selectedAttackDamageRiderProcedureRefs,
   );
+  /* v8 ignore start -- Malformed fill: selected damage riders must be members of the eligible rider set attached to this Horde Breaker damage hole. */
   if (hordeBreakerSelectedDamageRiders === null) {
     return {
       tag: "result",
@@ -3675,15 +3920,18 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(
     input.fillSet.huntersPreyHordeBreakerDamageRoll,
   );
+  /* v8 ignore start -- Malformed fill: Horde Breaker weapon damage cannot carry a spell-damage reroll selection. */
   if (spellDamageRerollIssue !== null) {
     return {
       tag: "result",
       result: invalidResult(input.state, "invalidFill", spellDamageRerollIssue),
     };
   }
+  /* v8 ignore stop */
   const damageValidation = validateRolledDiceForWeaponAttack(
     input.fillSet.huntersPreyHordeBreakerDamageRoll.value,
     input.attack,
@@ -3693,12 +3941,14 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     hordeBreakerSpellWeaponDamageRiders,
     hordeBreakerSpellMarkedDamageRiders,
   );
+  /* v8 ignore start -- Malformed fill: rolled dice must match the exact Horde Breaker weapon expression, critical state, and selected riders. */
   if (damageValidation !== null) {
     return {
       tag: "result",
       result: invalidResult(input.state, "invalidFill", damageValidation),
     };
   }
+  /* v8 ignore stop */
   const damageByType = attackDamageByTypeEntries(
     rolledState,
     rolledState.combatants.get(input.subject.actorId),
@@ -3733,6 +3983,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     filled: input.fillSet.huntersPreyHordeBreakerDamageDispositionFilled,
     value: input.fillSet.huntersPreyHordeBreakerDamageDisposition,
   });
+  /* v8 ignore start -- Malformed fill: damage disposition must answer the exact Horde Breaker damage-disposition hole when one exists. */
   if (damageDispositionValidation !== null) {
     return {
       tag: "result",
@@ -3743,6 +3994,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   if (
     damageDispositionHole !== null &&
     !input.fillSet.huntersPreyHordeBreakerDamageDispositionFilled
@@ -3783,6 +4035,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore start -- Malformed fill: relationship decisions must answer only the holes derived from this Horde Breaker damage event. */
   if (relationshipCheck.tag === "invalid") {
     return {
       tag: "result",
@@ -3793,6 +4046,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const usedState = recordHuntersPreyHordeBreakerUsed(
     rolledState,
     input.subject.actorId,

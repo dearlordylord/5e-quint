@@ -18,7 +18,7 @@ import {
   resolveWardingBondSharedDamage,
   wardingBondDamageSharingInitialState,
   type WardingBondDamageSharingState,
-} from "./battle-reducer/warding-bond.ts";
+} from "./battle-reducer/warding-bond-damage-sharing.test-support.ts";
 
 function initialState(input: {
   readonly sourceHitPoints: number;

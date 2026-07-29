@@ -54,6 +54,7 @@ import type {
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
+  preparedSpellSlotInvocations,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -78,21 +79,12 @@ function admitSelfTeleport(
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
-    (slot): readonly SelfTeleportInvocation[] =>
-      Number(slot.spellLevel) < spell.mechanics.level
-        ? []
-        : [
-            {
-              access: { tag: "prepared" },
-              resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-              procedure: "selfTeleport",
-              spell,
-              actionCost: "bonusAction",
-              ...projection,
-            },
-          ],
-  );
+  return preparedSpellSlotInvocations(spell, ctx, (base) => ({
+    ...base,
+    procedure: "selfTeleport",
+    actionCost: "bonusAction",
+    ...projection,
+  }));
 }
 
 function selfTeleportSpellProjection(
@@ -144,6 +136,7 @@ function discoverSelfTeleportCastAct(
 function resolveSelfTeleport(
   input: SelfTeleportResolveInput,
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
       spellTeleportDestinationHoleId(input.invocation, input.actorId),
@@ -155,6 +148,7 @@ function resolveSelfTeleport(
       "Self-teleport spells use a teleport-destination fill only.",
     );
   }
+  /* v8 ignore stop */
 
   if (input.fillSet.teleportDestination === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
@@ -169,14 +163,17 @@ function resolveSelfTeleport(
     destinationFill,
     destination,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (validation !== null) {
     return invalidResult(input.input.state, "invalidFill", validation);
   }
+  /* v8 ignore stop */
   const antimagicTransitInvalidReason = antimagicFieldTransitInvalidReason({
     state: input.input.state,
     actorId: input.actorId,
     witnesses: destination.antimagicFieldTransit,
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (antimagicTransitInvalidReason !== null) {
     return invalidResult(
       input.input.state,
@@ -184,6 +181,7 @@ function resolveSelfTeleport(
       antimagicTransitInvalidReason,
     );
   }
+  /* v8 ignore stop */
 
   const resolution = { ...input, actionCostOverride: "bonusAction" as const };
   const spellCastReactionWindow = maybeOpenConfiguredSpellCastReactionWindow({

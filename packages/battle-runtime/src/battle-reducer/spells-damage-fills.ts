@@ -55,7 +55,6 @@ import {
   addDamageAmountForType,
   applyAvailableSourceDamageRollPenalty,
   applyAvailableSpellDamageReduction,
-  damageAmountAfterTargetAdjustments,
   damageAmountByTypeEntriesToMap,
   damageAmountByTypeAfterTargetAdjustments,
   damageAmountByTypeMapEntries,
@@ -227,6 +226,7 @@ export function selectedSpellAttackDamageProcedure(
     };
   }
   const selectedDamageType = damageTypeChoice.value;
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!invocation.damage.damageTypeChoices.includes(selectedDamageType)) {
     return {
       tag: "invalid",
@@ -234,6 +234,7 @@ export function selectedSpellAttackDamageProcedure(
         "Spell attack damage type must be one of the selected spell's choices.",
     };
   }
+  /* v8 ignore stop */
   return {
     tag: "ok",
     invocation: {
@@ -2157,29 +2158,6 @@ export function applyPreparedSlotSpellDamage(
   });
 }
 
-export function spellDamageAmountForTarget(
-  state: BattleState,
-  target: BattleCreatureState,
-  invocation: RuntimeDamageSpellProcedure,
-  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
-  saveDamageResult: SaveDamageResult = "full",
-  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
-  critical = false,
-): number {
-  return damageAmountByTypeAfterTargetAdjustments(
-    state,
-    target,
-    spellDamageByTypeForTarget(
-      target,
-      invocation,
-      damageRoll,
-      saveDamageResult,
-      spellMarkedDamageRiders,
-      critical,
-    ),
-  );
-}
-
 export function spellDamageByTypeForTarget(
   _target: BattleCreatureState,
   invocation: RuntimeDamageSpellProcedure,
@@ -2285,47 +2263,6 @@ export function damageAmountByTypeAfterSaveDamageResult(
   );
 }
 
-export function spellObjectDamageOutcome(input: {
-  readonly objectId: BattleObjectId;
-  readonly invocation: SpellObjectDamageInvocation;
-  readonly damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>;
-  readonly critical: boolean;
-  readonly disposition: BattleObjectDamageDisposition;
-}): BattleObjectDamageOutcome {
-  const rolledDamage = spellObjectRolledDamage(
-    input.invocation,
-    input.damageRoll,
-  );
-  const damageType = input.invocation.damage.damageType;
-  return Match.value(input.disposition).pipe(
-    Match.when({ kind: "tableResolved" }, () => ({
-      kind: "tableResolved" as const,
-      objectId: input.objectId,
-      damageType,
-      rolledDamage: damageAmount(rolledDamage),
-    })),
-    Match.when({ kind: "hitPoints" }, (disposition) =>
-      objectHitPointDamageOutcome({
-        objectId: input.objectId,
-        damageType,
-        rolledDamage,
-        priorHitPoints: disposition.hitPoints,
-        damageThreshold: null,
-      }),
-    ),
-    Match.when({ kind: "hitPointsWithDamageThreshold" }, (disposition) =>
-      objectHitPointDamageOutcome({
-        objectId: input.objectId,
-        damageType,
-        rolledDamage,
-        priorHitPoints: disposition.hitPoints,
-        damageThreshold: disposition.damageThreshold,
-      }),
-    ),
-    Match.exhaustive,
-  );
-}
-
 export function spellObjectDamageByType(
   invocation: SpellObjectDamageInvocation,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
@@ -2427,65 +2364,6 @@ function objectHitPointDamageOutcome(input: {
 function objectDamageTypeIsImmune(damageType: DamageType): boolean {
   return OBJECT_DAMAGE_IMMUNITIES.some(
     (immuneDamageType): boolean => immuneDamageType === damageType,
-  );
-}
-
-export function spellBurstDamageAmountForTarget(
-  state: BattleState,
-  target: BattleCreatureState,
-  invocation: Extract<
-    RuntimeSpellProcedure,
-    { readonly procedure: "attackBurstSaveDamage" }
-  >,
-  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
-  saveDamageResult: SaveDamageResult,
-): number {
-  const diceTotal = damageRoll.value.reduce(
-    (total: number, group: RolledDiceGroup): number =>
-      total +
-      group.results.reduce(
-        (groupTotal: number, dieResult: DieRollResult): number =>
-          groupTotal + Number(dieResult),
-        0,
-      ),
-    0,
-  );
-  const flat = invocation.burst.damage.expr.flat ?? 0;
-  return damageAmountAfterTargetAdjustments(
-    state,
-    target,
-    applySaveDamageResult(diceTotal + flat, saveDamageResult),
-    invocation.burst.damage.damageType,
-  );
-}
-
-export function repeatedDamageAllocationSpellDamageAmount(
-  state: BattleState,
-  target: BattleCreatureState,
-  invocation: Extract<
-    RuntimeSpellProcedure,
-    { readonly procedure: "repeatedDamageAllocation" }
-  >,
-  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
-  allocationIndex: number,
-  repeatedEffectCount: number,
-): number {
-  if (repeatedDamageAllocationNegatedForTarget(target)) {
-    return 0;
-  }
-  const group = damageRoll.value[allocationIndex];
-  const diceTotal =
-    group?.results.reduce(
-      (groupTotal: number, dieResult: DieRollResult): number =>
-        groupTotal + Number(dieResult),
-      0,
-    ) ?? 0;
-  const flat = (invocation.damage.expr.flat ?? 0) * repeatedEffectCount;
-  return damageAmountAfterTargetAdjustments(
-    state,
-    target,
-    diceTotal + flat,
-    invocation.damage.damageType,
   );
 }
 

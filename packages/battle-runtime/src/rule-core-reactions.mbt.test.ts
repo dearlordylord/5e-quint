@@ -27,7 +27,7 @@ import {
   decodeRuleCoreComponentRoute,
   type RuleCoreComponentRoutedProjection,
   withRuleCoreComponentRoute,
-} from "./rule-core-component-route.ts";
+} from "./rule-core-component-route.test-support.ts";
 import { Either } from "effect";
 import { describe, it } from "vitest";
 

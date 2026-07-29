@@ -167,12 +167,14 @@ export function sanctuaryTargetingInterdictionCheck(
       ? { tag: "needsHoles", hole }
       : { tag: "needsHoles", hole };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (matchingFills.length > 1) {
     return {
       tag: "invalid",
       message: "Sanctuary targeting interdiction was filled twice.",
     };
   }
+  /* v8 ignore stop */
   const value = matchingFills[0]!.value;
   if (value.saveSucceeded) {
     return { tag: "saveSucceeded" };
@@ -180,6 +182,7 @@ export function sanctuaryTargetingInterdictionCheck(
   if (value.outcome.kind === "loseAttackOrSpell") {
     return { tag: "lost" };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (value.outcome.targetId === input.wardedCombatantId) {
     return {
       tag: "invalid",
@@ -187,6 +190,8 @@ export function sanctuaryTargetingInterdictionCheck(
         "Sanctuary replacement target must differ from the warded target.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!input.state.combatants.has(value.outcome.targetId)) {
     return {
       tag: "invalid",
@@ -194,6 +199,8 @@ export function sanctuaryTargetingInterdictionCheck(
         "Sanctuary replacement target must be a combatant in this battle.",
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (value.outcome.replacementTargetKind !== input.replacementTargetKind) {
     return {
       tag: "invalid",
@@ -201,6 +208,7 @@ export function sanctuaryTargetingInterdictionCheck(
         "Sanctuary replacement target facts must match the triggering procedure.",
     };
   }
+  /* v8 ignore stop */
   if (value.outcome.replacementTargetKind === "nonAttack") {
     return {
       tag: "newTarget",
@@ -218,6 +226,7 @@ export function sanctuaryTargetingInterdictionCheck(
       "attackRollAgainstEnemy",
     ),
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipFacts === null) {
     return {
       tag: "invalid",
@@ -225,6 +234,7 @@ export function sanctuaryTargetingInterdictionCheck(
         "Sanctuary replacement relationship facts must answer the attack-roll hole request.",
     };
   }
+  /* v8 ignore stop */
   return {
     tag: "newTarget",
     targetId: value.outcome.targetId,

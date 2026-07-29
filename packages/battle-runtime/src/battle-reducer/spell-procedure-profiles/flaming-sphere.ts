@@ -41,6 +41,7 @@ import type {
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
+  preparedSpellSlotInvocations,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -102,25 +103,17 @@ function admitFlamingSphere(
     return [];
   }
 
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
-    (slot): readonly FlamingSphereSpellInvocation[] => {
-      if (Number(slot.spellLevel) < spell.mechanics.level) {
-        return [];
-      }
-      const damageExpr = supportedDamageAmountExpr({
-        amount: sphere.damageAmount,
-        spellLevel: spell.mechanics.level,
-        slotLevel: slot.spellLevel,
-      });
-      if (damageExpr === null) {
-        return [];
-      }
-      return [
-        {
-          access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+  return preparedSpellSlotInvocations(spell, ctx, (base, slotLevel) => {
+    const damageExpr = supportedDamageAmountExpr({
+      amount: sphere.damageAmount,
+      spellLevel: spell.mechanics.level,
+      slotLevel,
+    });
+    return damageExpr === null
+      ? null
+      : {
+          ...base,
           procedure: "flamingSphere",
-          spell,
           ability: "dex",
           dc: { kind: "caster_spell_save_dc" },
           targeting: {
@@ -131,10 +124,8 @@ function admitFlamingSphere(
           rangeFeet: movementFeet(FLAMING_SPHERE_RANGE_FEET),
           ramMaxMoveFeet: movementFeet(sphere.ramMaxMoveFeet),
           damage: { expr: damageExpr, damageType: "fire" },
-        },
-      ];
-    },
-  );
+        };
+  });
 }
 
 function flamingSphereSpell(

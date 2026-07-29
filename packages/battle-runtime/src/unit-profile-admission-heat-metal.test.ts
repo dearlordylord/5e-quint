@@ -36,6 +36,7 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleObjectId,
   breakBattleConcentration,
   elapsedTimeTicks,
@@ -95,14 +96,23 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       spellId: heatMetalUnitId,
       casterId: spellCasterId,
     });
+    const needsContactTarget = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [objectFill],
+    });
     const contactTarget = requireResultHole(
-      resolveBattleSubject({
-        state,
-        subject: act.subject,
-        fills: [objectFill],
-      }),
+      needsContactTarget,
       "objectContactTargets",
     );
+    if (needsContactTarget.tag !== "needsHoles") {
+      throw new Error("Expected Heat Metal contact targets.");
+    }
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: needsContactTarget.snapshot,
+      subject: act.subject,
+      holes: needsContactTarget.holes,
+    });
     const damage = requireResultHole(
       resolveBattleSubject({
         state,
@@ -513,6 +523,14 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       ],
     });
     const dropHole = requireResultHole(needsDrop, "objectDropResolution");
+    if (needsDrop.tag !== "needsHoles") {
+      throw new Error("Expected Heat Metal object-drop resolution.");
+    }
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: needsDrop.snapshot,
+      subject: act.subject,
+      holes: needsDrop.holes,
+    });
 
     const resolved = resolveBattleSubject({
       state,

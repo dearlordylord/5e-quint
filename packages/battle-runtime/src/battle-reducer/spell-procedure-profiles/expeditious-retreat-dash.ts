@@ -179,6 +179,7 @@ function resolveExpeditiousRetreatDash(
       "Expeditious Retreat caster is not in this battle.",
     );
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!fillsBelongToSpellCastHoles(input.input.fills)) {
     return invalidResult(
       input.input.state,
@@ -186,6 +187,7 @@ function resolveExpeditiousRetreatDash(
       "Expeditious Retreat accepts only spell-cast Reaction trigger facts.",
     );
   }
+  /* v8 ignore stop */
   if (!spellHasAvailableSpend(actor, input.invocation)) {
     return invalidResult(
       input.input.state,

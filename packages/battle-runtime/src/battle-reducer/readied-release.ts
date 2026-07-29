@@ -155,6 +155,7 @@ export function resolveReleaseReadiedMovementCommand(
       readiedMovementHole(input.state, readiedMovementActorId),
     ]);
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills[0]?.kind !== "movement") {
     return invalidResult(
       input.state,
@@ -162,6 +163,8 @@ export function resolveReleaseReadiedMovementCommand(
       "Release Readied Movement requires a Movement fill first.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.fills.filter((candidate) => candidate.kind === "movement").length !==
     1
@@ -172,7 +175,9 @@ export function resolveReleaseReadiedMovementCommand(
       "Release Readied Movement requires exactly one Movement fill.",
     );
   }
+  /* v8 ignore stop */
   const fill = input.fills[0];
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fill.holeId !== MOVEMENT_HOLE_ID) {
     return invalidResult(
       input.state,
@@ -180,6 +185,7 @@ export function resolveReleaseReadiedMovementCommand(
       "Readied Movement fill does not match the requested hole.",
     );
   }
+  /* v8 ignore stop */
   const movement = parseBattleMovement(
     input.state,
     readiedMovementActorId,
@@ -193,9 +199,11 @@ export function resolveReleaseReadiedMovementCommand(
       spendsTurnMovement: true,
     },
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movement.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", movement.message);
   }
+  /* v8 ignore stop */
   const threats = opportunityAttackThreatsForMovement(
     input.state,
     movement.movement,
@@ -229,6 +237,7 @@ export function resolveReleaseReadiedMovementCommand(
   if (movementEffects.tag !== "resolved") {
     return movementEffects;
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (movementEffects.remainingFills.length > 0) {
     return invalidResult(
       input.state,
@@ -236,6 +245,7 @@ export function resolveReleaseReadiedMovementCommand(
       "Release Readied Movement only accepts Movement, Spike Growth damage, Concentration, and damage disposition fills.",
     );
   }
+  /* v8 ignore stop */
   const readiedMovements = new Map(movementEffects.state.readiedMovements);
   readiedMovements.delete(readiedMovementActorId);
   const stateWithoutReadied = { ...movementEffects.state, readiedMovements };

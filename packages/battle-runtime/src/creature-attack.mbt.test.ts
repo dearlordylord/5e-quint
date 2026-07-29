@@ -40,10 +40,10 @@ import type {
   BattleCreatureAttackDamageRollHole,
 } from "./battle-state-execution.ts";
 import {
-  CREATURE_ATTACK_DAMAGE_HOLE_ID,
   resolveCreatureAttack,
   type CreatureAttackState,
-} from "./battle-reducer/creature-attack.ts";
+} from "./battle-reducer/creature-attack.test-support.ts";
+import { CREATURE_ATTACK_DAMAGE_HOLE_ID } from "./battle-reducer/creature-attack.ts";
 import {
   resolveBattleSubject,
   battleId,

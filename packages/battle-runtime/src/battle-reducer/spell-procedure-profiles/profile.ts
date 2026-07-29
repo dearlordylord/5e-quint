@@ -16,6 +16,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 
 import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import type { CharacterLevel } from "@dnd/shared/types";
+import type { SpellSlotLevel } from "@dnd/shared/types";
 import type {
   BattleAntimagicFieldOngoingSpellEffectRef,
   BattleCreatureState,
@@ -25,6 +26,10 @@ import type {
 export { SpellRuleExecutionFactsSchema } from "../../procedure-execution/spell-rule-facts.ts";
 import type { CombatantId } from "../../identity.ts";
 import type { CharacterBattleSpellcastingExecutionState } from "../../character-battle-resource-execution.ts";
+import type {
+  PreparedSpellAccess,
+  SpellSlotInvocationResource,
+} from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   antimagicFieldSuppressedOngoingSpellEffectKeys,
   ongoingSpellEffectRefKey,
@@ -59,6 +64,68 @@ export type SpellAdmissionContext = {
   readonly actor: SpellAdmissionActor;
   readonly battle: SpellAdmissionBattleProjection | undefined;
 };
+
+export type PreparedSpellSlotInvocationBase<
+  S extends Pick<BattleSpellAdmissionSource, "mechanics"> =
+    BattleSpellAdmissionSource,
+> = {
+  readonly access: PreparedSpellAccess;
+  readonly resource: SpellSlotInvocationResource;
+  readonly spell: S;
+};
+type PreparedSpellSlots =
+  SpellAdmissionContext["actor"]["origin"]["spellcasting"]["spellSlots"];
+
+// Callers use this when their prepared spell admission exposes one executable
+// choice per slot level that can cast the spell. The helper keeps that level
+// comparison and the paired access/resource facts together for those callers.
+export function preparedSpellSlotInvocations<
+  S extends Pick<BattleSpellAdmissionSource, "mechanics">,
+  I,
+>(
+  spell: S,
+  ctx: SpellAdmissionContext,
+  complete: (
+    base: PreparedSpellSlotInvocationBase<S>,
+    slotLevel: SpellSlotLevel,
+  ) => I | null,
+): readonly I[] {
+  return preparedSpellSlotInvocationsFrom(
+    spell,
+    ctx.actor.origin.spellcasting.spellSlots,
+    complete,
+  );
+}
+
+export function preparedSpellSlotInvocationsFrom<
+  S extends Pick<BattleSpellAdmissionSource, "mechanics">,
+  I,
+>(
+  spell: S,
+  spellSlots: PreparedSpellSlots,
+  complete: (
+    base: PreparedSpellSlotInvocationBase<S>,
+    slotLevel: SpellSlotLevel,
+  ) => I | null,
+): readonly I[] {
+  return spellSlots.flatMap((slot): readonly I[] => {
+    if (Number(slot.spellLevel) < spell.mechanics.level) {
+      return [];
+    }
+    const invocation = complete(
+      {
+        access: { tag: "prepared" },
+        resource: {
+          tag: "spellSlot",
+          slotLevel: slot.spellLevel,
+        },
+        spell,
+      },
+      slot.spellLevel,
+    );
+    return invocation === null ? [] : [invocation];
+  });
+}
 
 // Registry admission is existential over each profile's concrete invocation.
 // This common view preserves the shared input contract while projecting each

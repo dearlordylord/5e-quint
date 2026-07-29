@@ -24,6 +24,7 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
+  assertBattleSnapshotCodecRoundTripForTest,
   battleAreaId,
   elapsedTimeTicks,
   endTurn,
@@ -370,6 +371,15 @@ describe("L12G deterministic Flaming Sphere admission", () => {
         requiresTableSpatialFact: true,
       }),
     ]);
+    const awaitingReposition = resolveBattleSubject({
+      state: cast.state,
+      subject: reposition.subject,
+      fills: [],
+    });
+    if (awaitingReposition.tag !== "needsHoles") {
+      throw new Error("Expected Flaming Sphere reposition movement.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(awaitingReposition.snapshot);
     const resolved = resolveBattleSubject({
       state: cast.state,
       subject: reposition.subject,

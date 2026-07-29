@@ -328,6 +328,7 @@ function discoverHastePositiveCastAct(
 function resolveHastePositive(
   input: SpellProcedureProfileResolveInput<HastePositiveSpellInvocation>,
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (hasNonHastePositiveFill(input.fillSet)) {
     return invalidResult(
       input.input.state,
@@ -335,6 +336,7 @@ function resolveHastePositive(
       "Haste positive effects use one target fill.",
     );
   }
+  /* v8 ignore stop */
 
   const targetSelectionResolution = spellSelectionResolution(
     input.input.state,

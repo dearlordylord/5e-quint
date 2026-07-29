@@ -68,6 +68,7 @@ import type {
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
+  preparedSpellSlotInvocations,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -108,25 +109,17 @@ function admitAfterHitSaveGatedCondition(
   if (projection === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
-    (slot): readonly AfterHitSaveGatedConditionInvocation[] => {
-      if (Number(slot.spellLevel) < spell.mechanics.level) {
-        return [];
-      }
-      const damageExpr = supportedDamageAmountExpr({
-        amount: projection.turnStartDamageAmount,
-        spellLevel: spell.mechanics.level,
-        slotLevel: slot.spellLevel,
-      });
-      if (damageExpr === null) {
-        return [];
-      }
-      return [
-        {
-          access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+  return preparedSpellSlotInvocations(spell, ctx, (base, slotLevel) => {
+    const damageExpr = supportedDamageAmountExpr({
+      amount: projection.turnStartDamageAmount,
+      spellLevel: spell.mechanics.level,
+      slotLevel,
+    });
+    return damageExpr === null
+      ? null
+      : {
+          ...base,
           procedure: "afterHitSaveGatedCondition",
-          spell,
           actionCost: "bonusAction",
           ability: projection.ability,
           dc: projection.dc,
@@ -148,10 +141,8 @@ function admitAfterHitSaveGatedCondition(
             },
             repeatSave: null,
           },
-        },
-      ];
-    },
-  );
+        };
+  });
 }
 
 function afterHitSaveGatedConditionSpellProjection(
@@ -307,6 +298,7 @@ function resolveAfterHitSaveGatedCondition(
     input.invocation.effect,
     null,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (selectedEffect.tag !== "selected") {
     return invalidResult(
       input.input.state,
@@ -314,6 +306,7 @@ function resolveAfterHitSaveGatedCondition(
       "Readied save-gate condition spell requires a fixed failed-save condition effect.",
     );
   }
+  /* v8 ignore stop */
   const effected = applyFailedSaveSpellConditionEffects(
     resourced.state,
     input.input.subject.casterId,

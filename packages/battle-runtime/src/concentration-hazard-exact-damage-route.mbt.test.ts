@@ -28,7 +28,7 @@ import {
   decodeRuleCoreComponentRoute,
   ruleCoreComponentRoute,
   type RuleCoreComponentRoutedProjection,
-} from "./rule-core-component-route.ts";
+} from "./rule-core-component-route.test-support.ts";
 
 type ConcentrationHazardExactDamageScenario =
   | "fresh"

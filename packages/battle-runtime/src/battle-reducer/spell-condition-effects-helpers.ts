@@ -302,19 +302,6 @@ export function protectionRelevantEffects(
   return combatant.activeEffects.filter(isProtectionRelevantEffect);
 }
 
-export function protectionRelevantEffectFor(
-  state: BattleState,
-  targetId: CombatantId,
-  sourceCombatantId: CombatantId,
-  relevantEffect: ProtectionRelevantEffectKind,
-): ProtectionRelevantEffect | undefined {
-  return protectionRelevantEffectsForTarget(state, targetId).find(
-    (effect) =>
-      effect.sourceCombatantId === sourceCombatantId &&
-      protectionRelevantEffectKind(effect) === relevantEffect,
-  );
-}
-
 export function protectionRelevantEffectsForTarget(
   state: BattleState,
   targetId: CombatantId,
@@ -692,12 +679,6 @@ function isSleepEffect(effect: BattleActiveEffect): boolean {
   );
 }
 
-export function combatantHasHideousLaughterEffect(
-  combatant: BattleCreatureState | undefined,
-): combatant is BattleCreatureState {
-  return combatant?.activeEffects.some(isHideousLaughterEffect) === true;
-}
-
 export function removeHypnoticPatternControlEffectsFromTarget(
   state: BattleState,
   targetId: CombatantId,
@@ -851,12 +832,6 @@ export function combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSourc
       ),
     combatants,
   );
-}
-
-function isHideousLaughterEffect(
-  effect: BattleActiveEffect,
-): effect is Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }> {
-  return effect.kind === "hideousLaughter";
 }
 
 function isHypnoticPatternControlEffect(

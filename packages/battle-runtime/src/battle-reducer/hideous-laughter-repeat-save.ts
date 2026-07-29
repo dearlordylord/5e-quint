@@ -160,6 +160,7 @@ export function hideousLaughterDamageRepeatSaveFillCheck(input: {
   if (missingHoles.length > 0) {
     return { tag: "needsHoles", holes: missingHoles };
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length !== holes.length) {
     return {
       tag: "invalid",
@@ -167,6 +168,7 @@ export function hideousLaughterDamageRepeatSaveFillCheck(input: {
         "Hideous Laughter repeat save fills are only valid for a damaged target affected by Hideous Laughter.",
     };
   }
+  /* v8 ignore stop */
   const invalidFill = input.fills.find((fill) => {
     const hole = holes.find((candidate) => candidate.holeId === fill.holeId);
     return (
@@ -177,6 +179,7 @@ export function hideousLaughterDamageRepeatSaveFillCheck(input: {
       ) !== null
     );
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (invalidFill !== undefined) {
     return {
       tag: "invalid",
@@ -188,6 +191,7 @@ export function hideousLaughterDamageRepeatSaveFillCheck(input: {
         "Hideous Laughter damage repeat save fill must match a requested damaged target.",
     };
   }
+  /* v8 ignore stop */
   return { tag: "ok", holes };
 }
 

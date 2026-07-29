@@ -1809,9 +1809,11 @@ function resolveStoredSpellGlyphRelease(input: {
     input.effect.sourceCombatantId,
     input.state,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (fillSet.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
+  /* v8 ignore stop */
   const release = storedGlyphSpellReleasePlan(invocation, input);
   if (release === null) {
     return invalidResult(

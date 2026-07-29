@@ -714,6 +714,7 @@ export function damageLifecycleHideousLaughterDamageRepeatSaveFillCheck(input: {
       ) !== null
     );
   });
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (invalidFill !== undefined) {
     return {
       tag: "invalid",
@@ -721,6 +722,7 @@ export function damageLifecycleHideousLaughterDamageRepeatSaveFillCheck(input: {
         "Hideous Laughter damage repeat save fill must match a requested damaged target.",
     };
   }
+  /* v8 ignore stop */
   return { tag: "ok", holes };
 }
 

@@ -29,6 +29,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { characterSpellProcedure } from "./character-execution-admission.ts";
 import {
+  assertBattleSnapshotCodecRoundTripForTest,
   battleTablePositionId,
   combatantId,
   discoverBattleActs,
@@ -101,6 +102,15 @@ describe("L12G-SPELL-MISTY-STEP deterministic Misty Step admission", () => {
       destinationId: "misty-step-30-foot-destination",
       distanceFeet: 30,
     });
+    const awaitingDestination = resolveBattleSubject({
+      state: state.state,
+      subject: act.subject,
+      fills: [],
+    });
+    if (awaitingDestination.tag !== "needsHoles") {
+      throw new Error("Expected Misty Step destination.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(awaitingDestination.snapshot);
     const resolved = resolveBattleSubject({
       state: state.state,
       subject: act.subject,

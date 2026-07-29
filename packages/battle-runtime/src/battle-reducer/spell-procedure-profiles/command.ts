@@ -40,6 +40,7 @@ import type {
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
+  preparedSpellSlotInvocationsFrom,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -120,23 +121,18 @@ export function supportedPreparedCommandProfile(
     return [];
   }
 
-  return spellSlots.flatMap((slot): readonly CommandSpellInvocation[] => {
-    if (Number(slot.spellLevel) < spell.mechanics.level) {
-      return [];
-    }
-    return [
-      {
-        access: { tag: "prepared" },
-        resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
-        procedure: "command",
-        spell,
-        actionCost: "magicAction",
-        ability: command.phase.ability,
-        dc: command.phase.dc,
-        targeting: command.targeting(slot.spellLevel),
-      },
-    ];
-  });
+  return preparedSpellSlotInvocationsFrom(
+    spell,
+    spellSlots,
+    (base, slotLevel) => ({
+      ...base,
+      procedure: "command",
+      actionCost: "magicAction",
+      ability: command.phase.ability,
+      dc: command.phase.dc,
+      targeting: command.targeting(slotLevel),
+    }),
+  );
 }
 
 function commandSpell(spell: CommandSpellInvocation["spell"]): {

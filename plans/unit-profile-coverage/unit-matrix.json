@@ -5533,7 +5533,7 @@
         },
         {
           "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/paladin-sacred-weapon-activation.mbt.test.ts"
+          "ownerPath": "packages/battle-runtime/src/paladin-sacred-weapon-activation.test.ts"
         },
         {
           "kind": "focused-mbt",
@@ -29899,7 +29899,7 @@
             },
             {
               "kind": "runtime-test",
-              "ownerPath": "packages/battle-runtime/src/paladin-sacred-weapon-activation.mbt.test.ts"
+              "ownerPath": "packages/battle-runtime/src/paladin-sacred-weapon-activation.test.ts"
             },
             {
               "kind": "focused-mbt",

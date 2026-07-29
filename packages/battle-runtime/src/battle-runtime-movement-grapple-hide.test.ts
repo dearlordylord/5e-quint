@@ -11,6 +11,10 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { abilityModifier } from "@dnd/shared/types";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
+import {
+  BattleInterruptProcedureChoiceSchema,
+  BattleSnapshotSchema,
+} from "./index.ts";
 import { deriveCreatureSpaceTraversalMovementFactFromTableRoute } from "./battle-reducer/creature-space-table-route.ts";
 import { resolveReplayContinuationFromState } from "./battle-execution-composition.ts";
 import {
@@ -1298,6 +1302,16 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     if (readiedChoice === undefined) {
       throw new Error("Expected a readied movement Reaction choice.");
     }
+    expect(() =>
+      Schema.decodeUnknownSync(BattleInterruptProcedureChoiceSchema)(
+        readiedChoice,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        Schema.encodeSync(BattleSnapshotSchema)(awaitingReaction.snapshot),
+      ),
+    ).not.toThrow();
     const readiedMovementHole = readiedChoice.initialHoles[0];
     if (readiedMovementHole === undefined) {
       throw new Error("Expected readied movement Reaction movement hole.");
@@ -2041,6 +2055,39 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         }),
       ]),
     );
+    const pushDestinationId = battleTablePositionId("shove-push-destination");
+    const pushed = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          shoveOutcomeFill(outcome, {
+            succeeded: false,
+            failedEffect: {
+              kind: "pushAway",
+              disposition: {
+                kind: "pushed",
+                distanceFeet: movementFeet(5),
+                destinationId: pushDestinationId,
+                provokesOpportunityAttacks: false,
+              },
+            },
+          }),
+        ],
+      }),
+    );
+    expect(pushed.shovePushes).toEqual([
+      {
+        targetId: goblinId,
+        disposition: {
+          kind: "pushed",
+          distanceFeet: movementFeet(5),
+          destinationId: pushDestinationId,
+          provokesOpportunityAttacks: false,
+        },
+      },
+    ]);
   });
 
   test("true-form Shove DC uses the projected Unarmed Strike ability modifier", () => {

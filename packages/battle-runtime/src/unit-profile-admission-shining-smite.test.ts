@@ -2,7 +2,12 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SHINING-SMITE shining_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage-illumination
+import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
+import {
+  BattleInterruptProcedureChoiceSchema,
+  BattleSnapshotSchema,
+} from "./index.ts";
 import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime.test-support.ts";
 import { characterAttackSubjectForTest } from "./battle-runtime.test-support.ts";
 import {
@@ -328,6 +333,16 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     if (unarmedChoice?.kind !== "castAttackHitBonusActionSpell") {
       throw new Error("Expected Shining Smite after-hit choice.");
     }
+    expect(() =>
+      Schema.decodeUnknownSync(BattleInterruptProcedureChoiceSchema)(
+        unarmedChoice,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        Schema.encodeSync(BattleSnapshotSchema)(unarmedHit.snapshot),
+      ),
+    ).not.toThrow();
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
         battleRuntimeSessionForTest({

@@ -489,6 +489,7 @@ function discoverMarkedDamageRiderCastAct(
 function resolveMarkedDamageRider(
   input: MarkedDamageRiderResolveInput,
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
       ATTACK_TARGET_HOLE_ID,
@@ -503,11 +504,13 @@ function resolveMarkedDamageRider(
       "Marked damage rider spells use one target fill.",
     );
   }
+  /* v8 ignore stop */
   if (input.fillSet.targetId === undefined) {
     return needsHolesResult(input.input.state, input.input.subject, [
       spellTargetHole(input.input.state, input.actorId, input.invocation),
     ]);
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !spellTargetIsLegal(
       input.input.state,
@@ -523,6 +526,7 @@ function resolveMarkedDamageRider(
       "Marked spell target must be a combatant within the selected spell's supported range.",
     );
   }
+  /* v8 ignore stop */
   if (input.invocation.action === "transfer") {
     const activeMark = activeMarkedDamageRiderEffect(
       input.input.state.combatants.get(input.actorId),

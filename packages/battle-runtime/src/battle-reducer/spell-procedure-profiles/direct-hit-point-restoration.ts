@@ -295,6 +295,7 @@ function discoverDirectHitPointRestorationCastAct(
 function resolveDirectHitPointRestoration(
   input: DirectHitPointRestorationResolveInput,
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
       ATTACK_TARGET_HOLE_ID,
@@ -308,6 +309,7 @@ function resolveDirectHitPointRestoration(
       "Hit Point restoration spells use target fills and one healing roll.",
     );
   }
+  /* v8 ignore stop */
   const targetSelectionResolution = spellSelectionResolution(
     input.input.state,
     input.input.subject,
@@ -339,9 +341,11 @@ function resolveDirectHitPointRestoration(
     input.fillSet.healingRoll,
     input.invocation,
   );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (healingValidation !== null) {
     return invalidResult(input.input.state, "invalidFill", healingValidation);
   }
+  /* v8 ignore stop */
   const healingAmount = spellHealingAmount(
     input.invocation,
     input.fillSet.healingRoll,

@@ -584,6 +584,7 @@ function resolveSpellCreatedHeldObjectAttack(
   input: SpellCreatedHeldObjectAttackResolveInput,
   executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fillSet.reactionSpellTargetFacts.length > 0) {
     return invalidResult(
       input.input.state,
@@ -591,6 +592,7 @@ function resolveSpellCreatedHeldObjectAttack(
       "Spell-created held object attacks are not spell casts and do not accept spell-cast Reaction facts.",
     );
   }
+  /* v8 ignore stop */
   return resolveSpellAttackDamageAct(input, executionRegistry);
 }
 

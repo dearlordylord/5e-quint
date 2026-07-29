@@ -27,7 +27,7 @@ import {
   type MoonbeamMovableZoneState,
   type MoonbeamSaveTrigger,
   type MoonbeamTargetShapeShiftState,
-} from "./battle-reducer/moonbeam-movable-zone.ts";
+} from "./battle-reducer/moonbeam-movable-zone.test-support.ts";
 import {
   battleSpellEffectOccurrenceId,
   combatantId,

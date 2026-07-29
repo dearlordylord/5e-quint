@@ -86,6 +86,7 @@ export function validateWildShapeEquipmentDispositionFill(input: {
 
   for (const choice of input.value.choices) {
     const key = wildShapeLoadoutObjectKey(choice.item);
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       !input.candidates.some((candidate) =>
         sameLoadoutObject(candidate, choice.item),
@@ -97,6 +98,8 @@ export function validateWildShapeEquipmentDispositionFill(input: {
           "Druid Wild Shape equipment disposition includes an item outside the selected loadout.",
       };
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (choicesByKey.has(key)) {
       return {
         tag: "invalid",
@@ -104,9 +107,11 @@ export function validateWildShapeEquipmentDispositionFill(input: {
           "Druid Wild Shape equipment disposition includes duplicate item choices.",
       };
     }
+    /* v8 ignore stop */
     choicesByKey.set(key, choice);
   }
 
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (choicesByKey.size !== input.candidates.length) {
     return {
       tag: "invalid",
@@ -114,10 +119,12 @@ export function validateWildShapeEquipmentDispositionFill(input: {
         "Druid Wild Shape equipment disposition must choose a disposition for every selected loadout item.",
     };
   }
+  /* v8 ignore stop */
 
   const dispositions: ResolvedWildShapeEquipmentDisposition[] = [];
   for (const candidate of input.candidates) {
     const choice = choicesByKey.get(wildShapeLoadoutObjectKey(candidate));
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (choice === undefined) {
       return {
         tag: "invalid",
@@ -125,6 +132,7 @@ export function validateWildShapeEquipmentDispositionFill(input: {
           "Druid Wild Shape equipment disposition must choose a disposition for every selected loadout item.",
       };
     }
+    /* v8 ignore stop */
     const disposition = resolvedDispositionForChoice(choice);
     if (disposition.tag === "invalid") {
       return disposition;

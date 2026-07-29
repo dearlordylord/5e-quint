@@ -737,15 +737,6 @@ export function characterBattleResourceSupportedForUnit(
   return characterBattleResourceForUnitOrNull(unit) !== null;
 }
 
-export function unitIsFavoredEnemyHuntersMarkFreeCastResource(
-  unit: UnitRecord,
-): boolean {
-  return (
-    classFeatureSpellFreeCastProfileForUnit(unit)?.resourceTag ===
-    "favoredEnemyHuntersMarkFreeCasts"
-  );
-}
-
 export function unitIsSupportedClassFeatureSpellFreeCastResource(
   unit: UnitRecord,
 ): boolean {
@@ -829,15 +820,6 @@ function classFeatureSpellFreeCastResource(
     kind: "use_count",
     cap: { kind: "fixed", uses: freeCastGrant.count },
   };
-}
-
-export function characterResourceIsFavoredEnemyFreeCast(
-  resource: CharacterBattleResourceOwnership,
-): boolean {
-  return (
-    classFeatureSpellFreeCastProfileForResource(resource)?.resourceTag ===
-    "favoredEnemyHuntersMarkFreeCasts"
-  );
 }
 
 export function classFeatureSpellFreeCastProfileForResource(

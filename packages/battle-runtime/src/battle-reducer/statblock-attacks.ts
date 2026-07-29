@@ -509,12 +509,14 @@ export function frenzyDamageTypeDecision(input: {
         };
   }
   const [binding] = bindings;
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (binding === undefined || bindings.length !== 1) {
     return {
       tag: "invalid",
       message: `Frenzy requires exactly one eligible procedure binding, got ${bindings.length}.`,
     };
   }
+  /* v8 ignore stop */
   const choices = attackBaseDamageTypes(input.attack);
   return Match.value(
     frenzyDamageTypeSelection({

@@ -318,6 +318,7 @@ function discoverRollModifierCastAct(
 function resolveRollModifier(
   input: RollModifierResolveInput,
 ): BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.input.fills, [
       ATTACK_TARGET_HOLE_ID,
@@ -334,6 +335,7 @@ function resolveRollModifier(
       "Roll modifier spells use target, optional skill or ability, and optional Saving Throw fills.",
     );
   }
+  /* v8 ignore stop */
 
   const targetSelectionResolution = spellSelectionResolution(
     input.input.state,

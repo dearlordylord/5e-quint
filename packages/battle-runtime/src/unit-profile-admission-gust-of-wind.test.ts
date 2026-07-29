@@ -34,6 +34,7 @@ import {
   spellRecord,
 } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
+  assertBattleSnapshotCodecRoundTripForTest,
   battleId,
   breakBattleConcentration,
   discoverBattleActCandidates,
@@ -438,6 +439,15 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       directionAct.initialHoles,
       "gustOfWindLineDirectionChoice",
     );
+    const awaitingDirection = resolveBattleSubject({
+      state: laterTurn,
+      subject: directionAct.subject,
+      fills: [],
+    });
+    if (awaitingDirection.tag !== "needsHoles") {
+      throw new Error("Expected Gust of Wind direction choice.");
+    }
+    assertBattleSnapshotCodecRoundTripForTest(awaitingDirection.snapshot);
 
     const resolved = resolveBattleSubject({
       state: laterTurn,

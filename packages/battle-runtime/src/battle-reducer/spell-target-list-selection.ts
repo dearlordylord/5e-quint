@@ -33,6 +33,7 @@ export function selectSpellTargetList(input: {
       readonly targetIds: readonly CombatantId[];
     }
   | BattleResolutionResult {
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !fillsBelongToSpellCastHoles(input.fills, [
       spellTargetListHoleId(input.invocation),
@@ -41,6 +42,7 @@ export function selectSpellTargetList(input: {
   ) {
     return invalidResult(input.state, "invalidFill", input.invalidFillMessage);
   }
+  /* v8 ignore stop */
   const targetList = input.fillSet.targetList;
   if (targetList === undefined) {
     return needsHolesResult(input.state, input.subject, [

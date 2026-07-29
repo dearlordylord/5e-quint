@@ -1,6 +1,6 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
-import { classLevel } from "@dnd/shared/types";
+import { attackBonus, classLevel } from "@dnd/shared/types";
 import {
   characterBattleFeatureInitForTest,
   startBattleRight,
@@ -70,6 +70,7 @@ import type {
   CombatantId,
 } from "./battle-runtime.test-support.ts";
 import { wardingBondUnitId } from "./unit-profile-admission-catalog.test-support.ts";
+import { weaponMasteryCleaveExtraAttack } from "./battle-reducer/attack-roll.ts";
 import { WEAPON_MASTERY_SAP_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -1044,6 +1045,44 @@ describe("battle runtime: Weapon Mastery", () => {
       resolved.state.currentTurnResources
         .weaponMasteryCleaveAttackersUsedThisTurn,
     ).toEqual([fighterId]);
+  });
+
+  test("Weapon Mastery Cleave removes positive damage modifiers from every ability choice", () => {
+    const cleaveAttack = weaponMasteryCleaveExtraAttack({
+      ...testGreataxeAttack(),
+      alternateAbilityChoices: [
+        {
+          ability: "dex",
+          abilityModifier: battleAbilityModifier(2),
+          attackBonus: attackBonus(4),
+          damageAbilityModifier: battleAbilityModifier(2),
+        },
+        {
+          ability: "int",
+          abilityModifier: battleAbilityModifier(-1),
+          attackBonus: attackBonus(1),
+          damageAbilityModifier: battleAbilityModifier(-1),
+        },
+      ],
+    });
+
+    expect(cleaveAttack).toMatchObject({
+      damageAbilityModifier: battleAbilityModifier(0),
+      alternateAbilityChoices: [
+        {
+          ability: "dex",
+          abilityModifier: battleAbilityModifier(2),
+          attackBonus: attackBonus(4),
+          damageAbilityModifier: battleAbilityModifier(0),
+        },
+        {
+          ability: "int",
+          abilityModifier: battleAbilityModifier(-1),
+          attackBonus: attackBonus(1),
+          damageAbilityModifier: battleAbilityModifier(-1),
+        },
+      ],
+    });
   });
 
   test("Weapon Mastery Cleave preserves a negative ability modifier on second-hit damage", () => {

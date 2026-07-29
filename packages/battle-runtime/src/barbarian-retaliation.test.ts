@@ -1,7 +1,12 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.retaliation-reaction-attack
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-01-BARBARIAN-RETALIATION barbarian_retaliation
 import { describe, expect, test } from "vitest";
+import { Schema } from "effect";
 import { classLevel } from "@dnd/shared/types";
+import {
+  BattleInterruptProcedureChoiceSchema,
+  BattleSnapshotSchema,
+} from "./index.ts";
 import {
   Either,
   attackRollFill,
@@ -70,6 +75,31 @@ describe("battle runtime: Barbarian Retaliation", () => {
     if (awaitingRetaliation.tag !== "needsHoles") {
       throw new Error("Expected Retaliation interrupt decision.");
     }
+    const retaliationChoice =
+      awaitingRetaliation.snapshot.pendingInterrupt?.choices.find(
+        (choice) => choice.kind === "retaliationAttack",
+      );
+    if (retaliationChoice === undefined) {
+      throw new Error("Expected a Retaliation codec fixture.");
+    }
+    expect(() =>
+      Schema.decodeUnknownSync(BattleInterruptProcedureChoiceSchema)(
+        retaliationChoice,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        Schema.encodeSync(BattleSnapshotSchema)(awaitingRetaliation.snapshot),
+      ),
+    ).not.toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleInterruptProcedureChoiceSchema)({
+        ...retaliationChoice,
+        reactorId: goblinId,
+      }),
+    ).toThrow(
+      "Interrupt choices must own the matching reference-bearing runtime subject.",
+    );
     const longswordSelection = attackExecutionSelectionForSubjectForTest(
       fighterAttackSubject(awaitingRetaliation.state, "Longsword"),
     );

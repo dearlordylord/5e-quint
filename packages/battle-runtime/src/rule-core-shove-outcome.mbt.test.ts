@@ -30,7 +30,7 @@ import {
   decodeRuleCoreComponentRoute,
   type RuleCoreComponentRoutedProjection,
   withRuleCoreComponentRoute,
-} from "./rule-core-component-route.ts";
+} from "./rule-core-component-route.test-support.ts";
 import type {
   BattleFill,
   BattleSubject,

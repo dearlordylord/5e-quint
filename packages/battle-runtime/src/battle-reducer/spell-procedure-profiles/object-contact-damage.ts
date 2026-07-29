@@ -80,6 +80,7 @@ import {
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import {
+  preparedSpellSlotInvocations,
   spellAdmissionBattleTurn,
   spellAdmissionOngoingSpellEffectSuppressed,
   SpellRuleExecutionFactsSchema,
@@ -120,25 +121,17 @@ function admitObjectContactDamage(
   if (profile === null) {
     return [];
   }
-  return ctx.actor.origin.spellcasting.spellSlots.flatMap(
-    (slot): readonly ObjectContactDamageInvocation[] => {
-      if (Number(slot.spellLevel) < spell.mechanics.level) {
-        return [];
-      }
-      const damageExpr = supportedDamageAmountExpr({
-        amount: profile.damageAmount,
-        spellLevel: spell.mechanics.level,
-        slotLevel: slot.spellLevel,
-      });
-      if (damageExpr === null) {
-        return [];
-      }
-      return [
-        {
-          access: { tag: "prepared" },
-          resource: { tag: "spellSlot", slotLevel: slot.spellLevel },
+  return preparedSpellSlotInvocations(spell, ctx, (base, slotLevel) => {
+    const damageExpr = supportedDamageAmountExpr({
+      amount: profile.damageAmount,
+      spellLevel: spell.mechanics.level,
+      slotLevel,
+    });
+    return damageExpr === null
+      ? null
+      : {
+          ...base,
           procedure: "objectContactDamage",
-          spell,
           actionCost: "magicAction",
           targeting: { kind: "singleManufacturedMetalObject" },
           damage: {
@@ -147,10 +140,8 @@ function admitObjectContactDamage(
           },
           rangeFeet: profile.rangeFeet,
           durationTicks: profile.durationTicks,
-        },
-      ];
-    },
-  );
+        };
+  });
 }
 
 function admitObjectContactDamageRepeat(
