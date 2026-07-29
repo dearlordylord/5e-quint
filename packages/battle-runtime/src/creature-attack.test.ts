@@ -1,13 +1,17 @@
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { DieRollResult } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
-import type {
-  BattleFill,
-  BattleHole,
-  BattleState,
-  BattleSubject,
+import {
+  BattleFillSchema,
+  BattleHoleSchema,
+  type BattleFill,
+  type BattleHole,
+  type BattleState,
+  type BattleSubject,
 } from "./index.ts";
 import type {
   BattleActDiscoveryCandidate,
@@ -18,10 +22,14 @@ import {
   characterSeed,
   combatantId,
   discoverBattleActCandidates,
+  endTurn,
   resolveBattleSubject,
   startBattleRight,
   statBlockCreatureInit,
+  testBattleCreatureStateWithConditions,
 } from "./battle-runtime.test-support.ts";
+import { resolvedAnimalFriendshipState } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellCasterId } from "./unit-profile-admission-catalog.test-support.ts";
 
 const INITIAL_HP = 20;
 const ATTACKER_ID = combatantId("creature-attack-a");
@@ -115,6 +123,164 @@ describe("creature attack public reducer", () => {
           { combatantId: TARGET_ID, hp: 13 },
         ],
       },
+    });
+  });
+
+  test("a zero-damage hit resolves without changing the target's hit points", () => {
+    const state = startCreatureAttackBattle();
+    const subject = creatureAttackSubject();
+    const attackRoll = attackRollFill(
+      attackRollHole(discoverCreatureAttackAct(state, subject)),
+      true,
+    );
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject,
+      fills: [attackRoll],
+    });
+    if (awaitingDamage.tag !== "needsHoles") {
+      throw new Error("Expected hit Creature Attack to request damage.");
+    }
+    const damageHole = creatureAttackDamageHole(awaitingDamage.holes[0]);
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [attackRoll, damageRollFill(damageHole, 0)],
+      }),
+    ).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: ATTACKER_ID, hp: INITIAL_HP },
+          { combatantId: TARGET_ID, hp: INITIAL_HP },
+        ],
+      },
+    });
+  });
+
+  test("carries charm-ending damage relationships through resolution", () => {
+    const charmed = resolvedAnimalFriendshipState(TARGET_ID, [
+      {
+        combatantId: ATTACKER_ID,
+        statBlock: creatureAttackStatBlock("creature_attack_a"),
+        initiative: 19,
+      },
+    ]);
+    const attackerTurn = endTurn({
+      state: charmed,
+      actorId: spellCasterId,
+    });
+    if (attackerTurn.tag !== "resolved") {
+      throw new Error("Expected Creature Attack pilot turn.");
+    }
+    const charmedState = attackerTurn.state;
+    const targetHp = charmedState.combatants.get(TARGET_ID)?.hp;
+    if (targetHp === undefined) {
+      throw new Error("Expected Animal Friendship target.");
+    }
+    const subject = creatureAttackSubject();
+    const attackRoll = attackRollFill(
+      attackRollHole(discoverCreatureAttackAct(charmedState, subject)),
+      true,
+    );
+    const awaitingDamage = resolveBattleSubject({
+      state: charmedState,
+      subject,
+      fills: [attackRoll],
+    });
+    if (awaitingDamage.tag !== "needsHoles") {
+      throw new Error("Expected hit Creature Attack to request damage.");
+    }
+    const damageHole = creatureAttackDamageHole(awaitingDamage.holes[0]);
+    const damageFill = damageRollFill(damageHole, 1);
+    const awaitingRelationship = resolveBattleSubject({
+      state: charmedState,
+      subject,
+      fills: [attackRoll, damageFill],
+    });
+    if (awaitingRelationship.tag !== "needsHoles") {
+      throw new Error("Expected Creature Attack damage relationship decision.");
+    }
+    const relationshipHole = awaitingRelationship.holes.find(
+      (hole) => hole.kind === "damageRelationshipDecisions",
+    );
+    if (relationshipHole?.kind !== "damageRelationshipDecisions") {
+      throw new Error("Expected Creature Attack relationship hole.");
+    }
+    expect(
+      Schema.encodeSync(BattleHoleSchema)(
+        Schema.decodeUnknownSync(BattleHoleSchema)(relationshipHole),
+      ),
+    ).toEqual(relationshipHole);
+    const [question, ...additionalQuestions] = relationshipHole.questions;
+    const relationshipFill: Extract<
+      BattleFill,
+      { readonly kind: "damageRelationshipDecisions" }
+    > = {
+      kind: "damageRelationshipDecisions",
+      holeId: relationshipHole.holeId,
+      answers: [
+        { questionId: question.questionId, answer: true },
+        ...additionalQuestions.map((additionalQuestion) => ({
+          questionId: additionalQuestion.questionId,
+          answer: true,
+        })),
+      ],
+    };
+    expect(
+      Schema.decodeUnknownSync(BattleFillSchema)(relationshipFill),
+    ).toEqual(relationshipFill);
+
+    const resolved = resolveBattleSubject({
+      state: charmedState,
+      subject,
+      fills: [attackRoll, damageFill, relationshipFill],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Creature Attack damage to resolve.");
+    }
+    const resolvedTarget = resolved.state.combatants.get(TARGET_ID);
+    expect(resolvedTarget).toMatchObject({
+      hp: Number(targetHp) - 1,
+      conditions: expect.not.objectContaining({ charmed: true }),
+    });
+    expect(resolvedTarget?.activeEffects).toEqual([]);
+  });
+
+  test("rejects an incapacitated pilot actor", () => {
+    const state = startCreatureAttackBattle();
+    const actor = state.combatants.get(ATTACKER_ID);
+    if (actor === undefined) {
+      throw new Error("Expected Creature Attack actor.");
+    }
+    const incapacitatedState: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(
+        ATTACKER_ID,
+        testBattleCreatureStateWithConditions(
+          actor,
+          applyCondition(actor.conditions, "incapacitated"),
+        ),
+      ),
+    };
+
+    expect(
+      discoverBattleActCandidates(incapacitatedState).some(
+        (candidate) => candidate.subject.tag === "creatureAttack",
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state: incapacitatedState,
+        subject: creatureAttackSubject(),
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Creature Attack requires an actor that can take actions.",
     });
   });
 
@@ -288,7 +454,19 @@ function attackRollFill(
 function damageRollFill(
   hole: BattleCreatureAttackDamageRollHole,
   damage: number,
-): Extract<BattleFill, { readonly kind: "rolledDice" }> {
+): Extract<
+  BattleFill,
+  { readonly kind: "creatureAttackZeroDamage" | "rolledDice" }
+> {
+  if (damage === 0) {
+    const fill = {
+      kind: "creatureAttackZeroDamage",
+      holeId: hole.holeId,
+      creatureAttack: hole.creatureAttack,
+    } as const;
+    expect(Schema.decodeUnknownSync(BattleFillSchema)(fill)).toEqual(fill);
+    return fill;
+  }
   return {
     kind: "rolledDice",
     holeId: hole.holeId,

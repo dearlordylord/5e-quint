@@ -2,19 +2,16 @@ import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.MINIMAL_RESOLUTION
 import { describe, expect, it } from "vitest";
-import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { DieRollResult } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 
 import {
   BattleFillSchema,
-  BattleHoleSchema,
   battleReducerStartRouteEvent,
   discoverBattleActCandidates,
   endTurn,
   snapshotBattle,
-  type BattleCreatureState,
   type BattleFill,
   type BattleHole,
   type BattleState,
@@ -50,10 +47,7 @@ import {
   combatantId,
   statBlockCreatureInit,
   startBattleRight,
-  testBattleCreatureStateWithConditions,
 } from "./battle-runtime.test-support.ts";
-import { resolvedAnimalFriendshipState } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellCasterId } from "./unit-profile-admission-catalog.test-support.ts";
 
 const INITIAL_HP = 20;
 const ATTACKER_A_ID = combatantId("creature-attack-a");
@@ -165,195 +159,6 @@ const creatureAttackRouteStateCheck = stateCheck(
 );
 
 describe("creature-attack public reducer boundaries", () => {
-  it("carries a damage-event ally decision through Creature Attack effect cleanup", () => {
-    const charmWitness = resolvedAnimalFriendshipState(
-      combatantId("creature-attack-charm-witness"),
-      [],
-    );
-    const charmEffect = [...charmWitness.combatants.values()]
-      .flatMap((combatant) => combatant.activeEffects)
-      .find((effect) => effect.kind === "spellCondition");
-    if (charmEffect === undefined) {
-      throw new Error("Expected an Animal Friendship effect witness.");
-    }
-    const state = updateCreatureAttackCombatant(
-      startCreatureAttackBattle(),
-      ATTACKER_B_ID,
-      (target) => {
-        if (target.positiveHpUnconscious !== null) {
-          throw new Error("Expected a conscious Creature Attack target.");
-        }
-        return {
-          ...target,
-          activeEffects: [
-            charmEffect,
-            {
-              ...charmEffect,
-              sourceCombatantId: combatantId(
-                "creature-attack-second-charm-source",
-              ),
-            },
-          ],
-          conditions: applyCondition(target.conditions, "charmed"),
-        };
-      },
-    );
-    const subject = creatureAttackSubject(ATTACKER_A_ID, ATTACKER_B_ID);
-    const discovered = discoverCreatureAttackAct(state, subject);
-    const attackRoll = creatureAttackRollFill(
-      expectCreatureAttackRollHole(discovered.initialHoles[0]),
-      true,
-    );
-    const awaitingDamage = resolveBattleSubject({
-      state,
-      subject,
-      fills: [attackRoll],
-    });
-    if (awaitingDamage.tag !== "needsHoles") {
-      throw new Error("Expected Creature Attack damage hole.");
-    }
-    const damageHole = expectCreatureAttackDamageHole(awaitingDamage.holes[0]);
-    const damageFill = creatureAttackDamageRollFill(damageHole, 1);
-    const awaitingRelationships = resolveBattleSubject({
-      state,
-      subject,
-      fills: [attackRoll, damageFill],
-    });
-    if (awaitingRelationships.tag !== "needsHoles") {
-      throw new Error("Expected Creature Attack relationship hole.");
-    }
-    const relationshipHole = awaitingRelationships.holes.find(
-      (hole) => hole.kind === "damageRelationshipDecisions",
-    );
-    if (relationshipHole?.kind !== "damageRelationshipDecisions") {
-      throw new Error("Expected event-scoped relationship decisions.");
-    }
-    expect(relationshipHole).toMatchObject({
-      damageEventHoleId: damageHole.holeId,
-      damageSourceId: ATTACKER_A_ID,
-      questions: [
-        {
-          kind: "targetDamagedByCasterOrAlly",
-          targetId: ATTACKER_B_ID,
-          effectSourceId: spellCasterId,
-        },
-        {
-          kind: "targetDamagedByCasterOrAlly",
-          targetId: ATTACKER_B_ID,
-          effectSourceId: combatantId("creature-attack-second-charm-source"),
-        },
-      ],
-    });
-    expect(relationshipHole).not.toHaveProperty("targetIds");
-    expect([
-      ...new Set(relationshipHole.questions.map(({ targetId }) => targetId)),
-    ]).toEqual([ATTACKER_B_ID]);
-    expect(
-      Schema.encodeSync(BattleHoleSchema)(
-        Schema.decodeUnknownSync(BattleHoleSchema)(relationshipHole),
-      ),
-    ).toEqual(relationshipHole);
-    const relationshipFill = {
-      kind: "damageRelationshipDecisions",
-      holeId: relationshipHole.holeId,
-      answers: [
-        {
-          questionId: relationshipHole.questions[0].questionId,
-          answer: true,
-        },
-      ],
-    } satisfies Extract<
-      BattleFill,
-      { readonly kind: "damageRelationshipDecisions" }
-    >;
-    expect(
-      Schema.decodeUnknownSync(BattleFillSchema)(relationshipFill),
-    ).toEqual(relationshipFill);
-    expect(() =>
-      Schema.decodeUnknownSync(BattleFillSchema)({
-        ...relationshipFill,
-        answers: [],
-      }),
-    ).toThrow();
-    expect(
-      resolveBattleSubject({
-        state,
-        subject,
-        fills: [
-          attackRoll,
-          damageFill,
-          { ...relationshipFill, holeId: damageHole.holeId },
-        ],
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
-    expect(
-      resolveBattleSubject({
-        state,
-        subject,
-        fills: [attackRoll, damageFill, relationshipFill],
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
-    const declined = resolveBattleSubject({
-      state,
-      subject,
-      fills: [
-        attackRoll,
-        damageFill,
-        {
-          ...relationshipFill,
-          answers: [
-            {
-              ...relationshipFill.answers[0],
-              answer: false,
-            },
-            {
-              questionId: relationshipHole.questions[1].questionId,
-              answer: false,
-            },
-          ],
-        },
-      ],
-    });
-    if (declined.tag !== "resolved") {
-      throw new Error(
-        "Expected an explicit no relationship decision to resolve.",
-      );
-    }
-    expect(declined.state.combatants.get(ATTACKER_B_ID)).toMatchObject({
-      conditions: expect.objectContaining({ charmed: true }),
-    });
-    const resolved = resolveBattleSubject({
-      state,
-      subject,
-      fills: [
-        attackRoll,
-        damageFill,
-        {
-          ...relationshipFill,
-          answers: [
-            ...relationshipFill.answers,
-            {
-              questionId: relationshipHole.questions[1].questionId,
-              answer: false,
-            },
-          ],
-        },
-      ],
-    });
-    if (resolved.tag !== "resolved") {
-      throw new Error("Expected Creature Attack damage to resolve.");
-    }
-
-    expect(resolved.state.combatants.get(ATTACKER_B_ID)).toMatchObject({
-      activeEffects: [
-        expect.objectContaining({
-          sourceCombatantId: combatantId("creature-attack-second-charm-source"),
-        }),
-      ],
-      conditions: expect.objectContaining({ charmed: true }),
-    });
-  });
-
   it("rejects a damage fill after a missed attack roll", () => {
     const state = startCreatureAttackBattle();
     const subject = creatureAttackSubject(ATTACKER_A_ID, ATTACKER_B_ID);
@@ -377,34 +182,6 @@ describe("creature-attack public reducer boundaries", () => {
     });
 
     expect(result).toMatchObject({ tag: "invalid", reason: "invalidFill" });
-  });
-
-  it("represents copied zero damage as a creature-attack zero-damage fill", () => {
-    const subject = creatureAttackSubject(ATTACKER_A_ID, ATTACKER_B_ID);
-    const fill = creatureAttackDamageRollFill(
-      {
-        holeId: CREATURE_ATTACK_DAMAGE_HOLE_ID,
-        creatureAttack: subject,
-      },
-      0,
-    );
-
-    expect(fill).toEqual({
-      kind: "creatureAttackZeroDamage",
-      holeId: CREATURE_ATTACK_DAMAGE_HOLE_ID,
-      creatureAttack: {
-        actorId: ATTACKER_A_ID,
-        targetId: ATTACKER_B_ID,
-      },
-    });
-    expect(Schema.decodeUnknownSync(BattleFillSchema)(fill)).toEqual(fill);
-    expect(() =>
-      Schema.decodeUnknownSync(BattleFillSchema)({
-        kind: "rolledDice",
-        holeId: CREATURE_ATTACK_DAMAGE_HOLE_ID,
-        value: [],
-      }),
-    ).toThrow();
   });
 
   it("round-trips the damage source on enemy-zero-HP range facts", () => {
@@ -450,31 +227,6 @@ describe("creature-attack public reducer boundaries", () => {
           act.subject.actorId === ATTACKER_B_ID,
       ),
     ).toBe(false);
-  });
-
-  it("does not discover or resolve creature attacks for incapacitated pilot actors", () => {
-    const state = updateCreatureAttackCombatant(
-      startCreatureAttackBattle(),
-      ATTACKER_A_ID,
-      (actor) =>
-        testBattleCreatureStateWithConditions(
-          actor,
-          applyCondition(actor.conditions, "incapacitated"),
-        ),
-    );
-    const subject = creatureAttackSubject(ATTACKER_A_ID, ATTACKER_B_ID);
-
-    expect(
-      discoverBattleActCandidates(state).some(
-        (act) =>
-          act.subject.tag === "creatureAttack" &&
-          act.subject.actorId === ATTACKER_A_ID,
-      ),
-    ).toBe(false);
-    expect(resolveBattleSubject({ state, subject, fills: [] })).toMatchObject({
-      tag: "invalid",
-      reason: "staleSubject",
-    });
   });
 
   it("does not discover or resolve creature attacks for terminal zero-HP pilot actors", () => {
@@ -523,39 +275,6 @@ describe("creature-attack public reducer boundaries", () => {
       tag: "invalid",
       reason: "unsupportedSubject",
     });
-  });
-
-  it("spends the Attack action when a creature attack resolves", () => {
-    const state = startCreatureAttackBattle();
-    const subject = creatureAttackSubject(ATTACKER_A_ID, ATTACKER_B_ID);
-    const discovered = discoverCreatureAttackAct(state, subject);
-    const attackRollHole = expectCreatureAttackRollHole(
-      discovered.initialHoles[0],
-    );
-
-    const result = resolveBattleSubject({
-      state,
-      subject,
-      fills: [creatureAttackRollFill(attackRollHole, false)],
-    });
-
-    if (result.tag !== "resolved") {
-      throw new Error("Expected missed Creature Attack to resolve.");
-    }
-    expect(
-      discoverBattleActCandidates(result.state).some(
-        (act) =>
-          act.subject.tag === "creatureAttack" &&
-          act.subject.actorId === ATTACKER_A_ID,
-      ),
-    ).toBe(false);
-    expect(
-      resolveBattleSubject({
-        state: result.state,
-        subject,
-        fills: [],
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 });
 
@@ -657,21 +376,6 @@ function startCreatureAttackBattle(input?: {
       }),
     ],
   });
-}
-
-function updateCreatureAttackCombatant(
-  state: BattleState,
-  combatantId: typeof ATTACKER_A_ID | typeof ATTACKER_B_ID,
-  update: (combatant: BattleCreatureState) => BattleCreatureState,
-): BattleState {
-  const combatant = state.combatants.get(combatantId);
-  if (combatant === undefined) {
-    throw new Error(`Expected combatant ${combatantId}.`);
-  }
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(combatantId, update(combatant)),
-  };
 }
 
 function creatureAttackStatBlock(id: string): StatBlockRecord {

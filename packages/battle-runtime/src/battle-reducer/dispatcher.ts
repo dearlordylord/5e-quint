@@ -387,6 +387,7 @@ import type {
   BattleSnapshot,
   BattleState,
   BattleTargetSpatialFact,
+  BattleTurnResources,
   AttackSpellDamageAddition,
   EndedFlySpeedGrant,
   SpellSlotInvocationResource,
@@ -1287,17 +1288,11 @@ export function resolveBattleSubjectInternal(
           );
         }
         /* v8 ignore stop */
-        const spent = spendAction(input.state.currentTurnResources, "attack");
-        if (Either.isLeft(spent)) {
-          return invalidResult(
-            input.state,
-            "staleSubject",
-            "Creature Attack requires an available Attack action.",
-          );
-        }
         const nextState = {
           ...input.state,
-          currentTurnResources: spent.right,
+          currentTurnResources: spendAdmittedCreatureAttackAction(
+            input.state.currentTurnResources,
+          ),
         };
         return {
           tag: "resolved" as const,
@@ -1358,16 +1353,13 @@ export function resolveBattleSubjectInternal(
         );
       }
       /* v8 ignore stop */
-      const spent = spendAction(input.state.currentTurnResources, "attack");
-      if (Either.isLeft(spent)) {
-        return invalidResult(
-          input.state,
-          "staleSubject",
-          "Creature Attack requires an available Attack action.",
-        );
-      }
       const nextState = battleStateAfterCreatureAttackDamage({
-        state: { ...input.state, currentTurnResources: spent.right },
+        state: {
+          ...input.state,
+          currentTurnResources: spendAdmittedCreatureAttackAction(
+            input.state.currentTurnResources,
+          ),
+        },
         actor: combatants.actor,
         target: combatants.target,
         damage: creatureAttackDamageTotal(fills.damageRoll),
@@ -1886,6 +1878,12 @@ export function resolveBattleSubjectInternal(
     return _exhaustive;
   })();
   return consumeOrCloseLegendaryActionWindow(input.subject, result);
+}
+
+function spendAdmittedCreatureAttackAction(
+  resources: BattleTurnResources,
+): BattleTurnResources {
+  return Either.getOrThrow(spendAction(resources, "attack"));
 }
 
 function resolveCompanionLifecycleSubject(
