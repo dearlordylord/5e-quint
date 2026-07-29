@@ -5,9 +5,13 @@ import { describe, expect, test } from "vitest";
 import animalMessengerInput from "../../content/animal_messenger.json";
 import arcanistsMagicAuraInput from "../../content/arcanists_magic_aura.json";
 import auguryInput from "../../content/augury.json";
+import barkskinInput from "../../content/barkskin.json";
+import blinkInput from "../../content/blink.json";
+import chillTouchInput from "../../content/chill_touch.json";
 import classFighterInput from "../../content/class_fighter.json";
 import conjureAnimalsInput from "../../content/conjure_animals.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
+import enlargeReduceInput from "../../content/enlarge_reduce.json";
 import flameBladeInput from "../../content/flame_blade.json";
 import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json";
 import hasteInput from "../../content/haste.json";
@@ -26,8 +30,10 @@ import phantasmalForceInput from "../../content/phantasmal_force.json";
 import prayerOfHealingInput from "../../content/prayer_of_healing.json";
 import ropeTrickInput from "../../content/rope_trick.json";
 import silenceInput from "../../content/silence.json";
+import searingSmiteInput from "../../content/searing_smite.json";
 import spiritualWeaponInput from "../../content/spiritual_weapon.json";
 import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
+import webInput from "../../content/web.json";
 import zoneOfTruthInput from "../../content/zone_of_truth.json";
 import wardingBondInput from "../../content/warding_bond.json";
 import {
@@ -219,6 +225,66 @@ describe("Surface trace interpreter", () => {
     expect(trace.edges).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ relation: "transfers_to" }),
+      ]),
+    );
+  });
+
+  test("traces every ongoing-effect shape offered by an effect-mode choice", () => {
+    const phase = enlargeReduceInput.mechanics.phases[0];
+    const unit = decodeUnitRecordSync({
+      ...enlargeReduceInput,
+      id: "synthetic_ongoing_effect_mode_shapes",
+      name: "Synthetic Ongoing Effect Mode Shapes",
+      provenance: {
+        kind: "synthetic-test",
+        section: "Synthetic Tests/Ongoing Effect Modes",
+      },
+      mechanics: {
+        ...enlargeReduceInput.mechanics,
+        phases: [
+          {
+            ...phase,
+            onFail: {
+              kind: "choose_effect_mode",
+              label: "Synthetic ongoing effect shapes",
+              options: [
+                {
+                  id: "synthetic_ongoing_shapes",
+                  displayName: "Synthetic Ongoing Shapes",
+                  effects: [
+                    {
+                      ...webInput.mechanics.operations[6].effect,
+                      onFail: { kind: "none" },
+                    },
+                    {
+                      kind: chillTouchInput.mechanics.phases[0].kind,
+                      attackKind:
+                        chillTouchInput.mechanics.phases[0].attackKind,
+                      onHit: chillTouchInput.mechanics.phases[0].onHit,
+                      onMiss: chillTouchInput.mechanics.phases[0].onMiss,
+                    },
+                    searingSmiteInput.mechanics.operations[0].effect,
+                    barkskinInput.mechanics.operations[0].effect,
+                    blinkInput.mechanics.operations[0].effect,
+                  ],
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
+
+    const trace = traceUnit(unit);
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ atomKind: "ability_check_gate" }),
+        expect.objectContaining({ atomKind: "attack_roll" }),
+        expect.objectContaining({ atomKind: "composite_ongoing" }),
+        expect.objectContaining({ atomKind: "modify_ac" }),
+        expect.objectContaining({ atomKind: "random_table" }),
+        expect.objectContaining({ atomKind: "table_result" }),
       ]),
     );
   });
