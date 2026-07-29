@@ -10,7 +10,11 @@ import {
 } from "../battle-runtime.test-support.ts";
 import {
   addBattleCombatant,
+  addBattleRuntimeCombatant,
   battleStateInitIssueFromAdmissionIssues,
+  createInitialInitiativeForCombatants,
+  removeBattleRuntimeCombatants,
+  requiredInitiativeRollModeForCombatant,
   startBattle,
 } from "./api-lifecycle.ts";
 
@@ -67,6 +71,67 @@ describe("battle lifecycle admission issue aggregation", () => {
     }
   });
 
+  test("startBattle rejects empty and duplicate combatant rosters as typed boundary issues", () => {
+    const empty = startBattle({
+      battleId: battleId("empty-roster"),
+      combatants: [],
+    });
+    expect(Either.isLeft(empty)).toBe(true);
+    if (Either.isLeft(empty)) {
+      expect(empty.left).toEqual({
+        tag: "battleStateInitIssue",
+        message: "startBattle requires at least one combatant.",
+      });
+    }
+
+    const duplicate = startBattle({
+      battleId: battleId("duplicate-roster"),
+      combatants: [baseCombatant, baseCombatant],
+    });
+    expect(Either.isLeft(duplicate)).toBe(true);
+    if (Either.isLeft(duplicate)) {
+      expect(duplicate.left).toEqual({
+        tag: "battleStateInitIssue",
+        message: `Duplicate combatant id: ${baseCombatant.combatantId}`,
+      });
+    }
+  });
+
+  test("initial Initiative rejects incomplete caller ordering and empty rosters", () => {
+    const state = startBattleRight({
+      battleId: battleId("initiative-order-boundary"),
+      combatants: [baseCombatant],
+    });
+    const combatant = state.combatants.get(baseCombatant.combatantId);
+    expect(combatant).toBeDefined();
+    if (combatant === undefined) return;
+
+    const incompleteOrder = createInitialInitiativeForCombatants({
+      combatants: [combatant],
+      initialCombatantOrder: new Map(),
+      emptyRosterMessage: "synthetic empty roster",
+    });
+    expect(Either.isLeft(incompleteOrder)).toBe(true);
+    if (Either.isLeft(incompleteOrder)) {
+      expect(incompleteOrder.left).toEqual({
+        tag: "battleStateInitIssue",
+        message: "Initial combatant order must include every combatant.",
+      });
+    }
+
+    const empty = createInitialInitiativeForCombatants({
+      combatants: [],
+      emptyRosterMessage: "synthetic empty roster",
+    });
+    expect(Either.isLeft(empty)).toBe(true);
+    if (Either.isLeft(empty)) {
+      expect(empty.left).toEqual({
+        tag: "battleStateInitIssue",
+        message: "synthetic empty roster",
+      });
+    }
+  });
+
   test("startBattle returns a flat aggregate retaining both slots when there are two admission failures", () => {
     const result = startBattle({
       battleId: battleId("aggregate-issue"),
@@ -117,6 +182,51 @@ describe("battle lifecycle admission issue aggregation", () => {
         ],
       });
     }
+  });
+
+  test("runtime add/remove keeps character context aligned with the combatant roster", () => {
+    const started = startBattle({
+      battleId: battleId("runtime-roster-context"),
+      combatants: [baseCombatant],
+    });
+    expect(Either.isRight(started)).toBe(true);
+    if (Either.isLeft(started)) return;
+
+    const addedCombatant = characterSeed({
+      combatantId: combatantId("runtime-added-character"),
+      initiative: 18,
+    });
+    const added = addBattleRuntimeCombatant({
+      session: started.right,
+      combatant: addedCombatant,
+    });
+    expect(Either.isRight(added)).toBe(true);
+    if (Either.isLeft(added)) return;
+    expect(added.right.state.combatants.has(addedCombatant.combatantId)).toBe(
+      true,
+    );
+    expect(added.right.context.characters.has(addedCombatant.combatantId)).toBe(
+      true,
+    );
+
+    const removed = removeBattleRuntimeCombatants({
+      session: added.right,
+      combatantIds: [addedCombatant.combatantId],
+    });
+    expect(Either.isRight(removed)).toBe(true);
+    if (Either.isLeft(removed)) return;
+    expect(removed.right.state.combatants.has(addedCombatant.combatantId)).toBe(
+      false,
+    );
+    expect(
+      removed.right.context.characters.has(addedCombatant.combatantId),
+    ).toBe(false);
+    expect(
+      requiredInitiativeRollModeForCombatant(
+        removed.right.state,
+        baseCombatant.combatantId,
+      ),
+    ).toBeUndefined();
   });
 
   test("battleStateInitIssueFromAdmissionIssues returns a single leaf for one issue", () => {
