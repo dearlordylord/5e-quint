@@ -151,8 +151,8 @@ function admitMarkedDamageRider(
     // RAW permits replacing Concentration by casting the spell again and
     // choosing a new quarry; this branch currently exposes only the slotless
     // Bonus Action transfer after the marked target drops to 0 Hit Points.
-    return markedDamageRiderTransferIsDiscoverable(
-      activeMark,
+    return markedDamageRiderTransferIsAvailableOnTurn(
+      activeMark.transfer,
       spellAdmissionBattleTurn(ctx),
     )
       ? [
@@ -238,20 +238,20 @@ function admitMarkedDamageRider(
   return [...freeCastInvocations, ...slotInvocations];
 }
 
-function markedDamageRiderTransferIsDiscoverable(
-  activeMark: SpellMarkedDamageRider,
+function markedDamageRiderTransferIsAvailableOnTurn(
+  transfer: MarkedDamageRiderTransferState,
   battleTurn: SpellAdmissionBattleTurn | undefined,
 ): boolean {
-  if (activeMark.transfer.kind === "available") {
+  if (transfer.kind === "available") {
     return true;
   }
-  if (activeMark.transfer.kind === "awaitingTargetDrop") {
+  if (transfer.kind === "awaitingTargetDrop") {
     return false;
   }
   return (
     battleTurn !== undefined &&
-    (battleTurn.currentActorId !== activeMark.transfer.droppedOnTurn.actorId ||
-      battleTurn.round !== activeMark.transfer.droppedOnTurn.round)
+    (battleTurn.currentActorId !== transfer.droppedOnTurn.actorId ||
+      battleTurn.round !== transfer.droppedOnTurn.round)
   );
 }
 
@@ -697,16 +697,10 @@ function markedDamageRiderTransferIsAvailable(
   state: BattleState,
   activeMark: SpellMarkedDamageRider,
 ): boolean {
-  if (activeMark.transfer.kind === "available") {
-    return true;
-  }
-  if (activeMark.transfer.kind === "awaitingTargetDrop") {
-    return false;
-  }
-  return (
-    currentActorId(state) !== activeMark.transfer.droppedOnTurn.actorId ||
-    state.initiative.round !== activeMark.transfer.droppedOnTurn.round
-  );
+  return markedDamageRiderTransferIsAvailableOnTurn(activeMark.transfer, {
+    currentActorId: currentActorId(state),
+    round: state.initiative.round,
+  });
 }
 
 function applyMarkedDamageRiderSpellEffect(
