@@ -53,6 +53,7 @@ import {
   startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
+  testCharacterD20Statistics,
   tickDurationEffects,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
@@ -693,19 +694,10 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     }
   });
 
-  test("Hex applies Necrotic attack-hit damage and chosen-ability check Disadvantage", () => {
+  test("Hex routes target and ability choices independently before applying Necrotic attack-hit damage and chosen-ability check Disadvantage", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-hex"),
-      combatants: [
-        characterSeed({
-          displayName: "Wizard",
-          initiative: 20,
-          spellcasting: wizardSpellcasting({
-            preparedSpells: [spellRecord("hex")],
-          }),
-        }),
-        statBlockCreatureInit({ initiative: 10 }),
-      ],
+      combatants: [hexWarlockSeed(), statBlockCreatureInit({ initiative: 10 })],
     });
     const state = session.state;
     const hexAct = discoverBattleActs(session).find(
@@ -729,14 +721,59 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       "wis",
       "cha",
     ]);
+    const targetSelection = targetFill(hexTarget, goblinId);
+    const abilitySelection = {
+      kind: "abilityChoice" as const,
+      holeId: hexAbility.holeId,
+      value: "wis" as const,
+    };
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: hexAct.subject,
+        fills: [targetSelection],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      routeEvents: [
+        {
+          kind: "resolveBattleSubject",
+          subject: "markedDamageRiderEffect",
+          fill: "targetChoice",
+          holes: ["abilityChoice"],
+          owner: "battleTargetSelection",
+        },
+      ],
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: hexAct.subject,
+        fills: [abilitySelection],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      routeEvents: [
+        {
+          kind: "resolveBattleSubject",
+          subject: "markedDamageRiderEffect",
+          fill: { kind: "abilityChoice", ability: "wis" },
+          holes: ["targetChoice"],
+          owner: "battleActiveEffect",
+        },
+        {
+          kind: "discoverBattleActs",
+          subject: "markedDamageRiderEffect",
+          holes: ["targetChoice"],
+          owner: "battleTargetSelection",
+        },
+      ],
+    });
     const hexed = requireResolved(
       resolveBattleSubject({
         state,
         subject: hexAct.subject,
-        fills: [
-          targetFill(hexTarget, goblinId),
-          { kind: "abilityChoice", holeId: hexAbility.holeId, value: "wis" },
-        ],
+        fills: [targetSelection, abilitySelection],
       }),
     );
 
@@ -810,12 +847,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-hex-later-turn-retarget"),
       combatants: [
-        characterSeed({
-          initiative: 20,
-          spellcasting: wizardSpellcasting({
-            preparedSpells: [spellRecord("hex")],
-          }),
-        }),
+        hexWarlockSeed(),
         statBlockCreatureInit({
           combatantId: goblinId,
           initiative: 10,
@@ -1100,3 +1132,19 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     ).toBe(true);
   });
 });
+
+function hexWarlockSeed() {
+  return characterSeed({
+    displayName: "Warlock",
+    initiative: 20,
+    d20Statistics: testCharacterD20Statistics({ str: 16, cha: 16 }),
+    spellcasting: {
+      ...wizardSpellcasting({
+        cantrips: [],
+        preparedSpells: [spellRecord("hex")],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      }),
+      sourceClassName: "warlock",
+    },
+  });
+}
