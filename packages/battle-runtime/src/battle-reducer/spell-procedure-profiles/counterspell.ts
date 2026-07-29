@@ -145,6 +145,7 @@ function counterspellSpellProjection(
   };
 }
 
+/* v8 ignore next -- Reaction-only profile: Counterspell candidates are admitted from matching spell-cast interrupt frames, so ordinary turn discovery must return no acts. */
 function discoverCounterspellCastAct(): readonly BattleActDiscoveryCandidate[] {
   return [];
 }

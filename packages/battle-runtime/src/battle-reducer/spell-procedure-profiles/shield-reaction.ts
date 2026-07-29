@@ -144,6 +144,7 @@ function shieldReactionSpellProjection(
   };
 }
 
+/* v8 ignore next -- Reaction-only profile: Shield candidates are admitted from attack-hit or Magic Missile interrupt frames, so ordinary turn discovery must return no acts. */
 function discoverShieldReactionCastAct(): readonly AvailableBattleAct[] {
   return [];
 }
