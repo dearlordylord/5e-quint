@@ -8,10 +8,14 @@ import {
   classUnitId,
 } from "./index.ts";
 import {
+  abilityScoreFillIssues,
   applyCreationFills,
   applyLoadoutFill,
   applyUnitFill,
+  choiceFillIssues,
   creationFillIssues,
+  fillIssuesForHole,
+  fillKindMatchesHole,
   getHole,
   indexCreationHoles,
   requireChoiceOptionIndex,
@@ -37,6 +41,7 @@ import {
   type CharacterDraft,
   type ChoiceCreationHole,
   type CreationFill,
+  type CreationHole,
   type FinalizedCharacterSelections,
 } from "./types.ts";
 import {
@@ -69,6 +74,111 @@ const draft: CharacterDraft = {
 };
 
 describe("creation fill reducer boundaries", () => {
+  test("reports choice cardinality, identity, kind, and ability-score issues", () => {
+    const choice = backgroundHoleWithoutUnitRef();
+    const option = choice.options[0];
+    if (option === undefined) {
+      throw new Error("The background fixture must retain its option.");
+    }
+    const optionId = option.optionId;
+    const optionById = new Map([[optionId, option]]);
+    const choiceFill = (
+      optionIds: readonly ReturnType<typeof creationChoiceOptionId>[],
+    ): Extract<CreationFill, { readonly kind: "choice" }> => ({
+      kind: "choice",
+      holeId: choice.holeId,
+      optionIds,
+    });
+    const abilityHole = {
+      kind: "abilityScores",
+      holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+      source: draftSource("draft.abilityScoreGeneration"),
+      methods: ["standardArray"],
+    } as const satisfies Extract<
+      CreationHole,
+      { readonly kind: "abilityScores" }
+    >;
+    const validAbilityFill = {
+      kind: "abilityScores",
+      holeId: abilityHole.holeId,
+      method: "standardArray",
+      value: {
+        str: abilityScore(15),
+        dex: abilityScore(14),
+        con: abilityScore(13),
+        int: abilityScore(12),
+        wis: abilityScore(10),
+        cha: abilityScore(8),
+      },
+    } as const satisfies Extract<
+      CreationFill,
+      { readonly kind: "abilityScores" }
+    >;
+
+    expect(
+      choiceFillIssues(
+        choiceFill([optionId]),
+        creationFillIndex(0),
+        choice,
+        optionById,
+      ),
+    ).toEqual([]);
+    expect(
+      choiceFillIssues(
+        choiceFill([]),
+        creationFillIndex(0),
+        choice,
+        optionById,
+      ),
+    ).toMatchObject([{ code: "tooFewChoices" }]);
+    expect(
+      choiceFillIssues(
+        choiceFill([optionId, creationChoiceOptionId("synthetic_unknown")]),
+        creationFillIndex(0),
+        choice,
+        optionById,
+      ),
+    ).toMatchObject([{ code: "tooManyChoices" }, { code: "invalidChoice" }]);
+    expect(
+      choiceFillIssues(
+        choiceFill([optionId, optionId]),
+        creationFillIndex(0),
+        choice,
+        optionById,
+      ),
+    ).toMatchObject([{ code: "tooManyChoices" }, { code: "invalidChoice" }]);
+
+    expect(fillKindMatchesHole(choiceFill([optionId]), choice)).toBe(true);
+    expect(fillKindMatchesHole(validAbilityFill, choice)).toBe(false);
+    expect(
+      fillIssuesForHole(validAbilityFill, creationFillIndex(0), choice),
+    ).toMatchObject([{ code: "wrongFillKind" }]);
+    expect(
+      abilityScoreFillIssues(
+        validAbilityFill,
+        creationFillIndex(0),
+        abilityHole,
+      ),
+    ).toEqual([]);
+    expect(
+      abilityScoreFillIssues(
+        {
+          ...validAbilityFill,
+          value: {
+            str: abilityScore(8),
+            dex: abilityScore(8),
+            con: abilityScore(8),
+            int: abilityScore(8),
+            wis: abilityScore(8),
+            cha: abilityScore(8),
+          },
+        },
+        creationFillIndex(0),
+        abilityHole,
+      ),
+    ).toMatchObject([{ code: "invalidAbilityScores" }]);
+  });
+
   test("indexes known holes and reports unknown fills consistently", () => {
     const hole = backgroundHoleWithoutUnitRef();
     const holeIndex = indexCreationHoles([hole]);

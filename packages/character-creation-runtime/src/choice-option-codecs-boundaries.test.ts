@@ -217,6 +217,18 @@ describe("choice-option codec boundaries", () => {
       left: { cause: { tag: "duplicateAbilities" } },
     });
     expect(
+      decodeAbilityScoreIncreaseOptionId("ability_scores:str:+1;dex:+1:max31"),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        cause: {
+          tag: "invalidAbilityScoreIncreaseValue",
+          field: "maximum",
+          reason: "maximumOutOfRange",
+        },
+      },
+    });
+    expect(
       decodeAbilityScoreIncreaseOptionId("synthetic_unknown"),
     ).toMatchObject({
       _tag: "Left",

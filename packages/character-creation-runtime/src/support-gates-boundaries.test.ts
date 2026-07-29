@@ -2,14 +2,21 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { SUPPORTED_ABILITY_SCORE_METHODS } from "@dnd/shared-algebras/ability-score-algebra";
 import { describe, expect, test } from "vitest";
 
-import { draftSource, unitSource } from "./hole-factories.ts";
 import {
+  choiceHole,
+  draftSource,
+  loadoutSource,
+  unitSource,
+} from "./hole-factories.ts";
+import {
+  CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_EQUIPMENT_CHOICE_KEY,
   progressionOptionId,
 } from "./phase1-manifest.ts";
 import {
   creationChoiceOptionId,
   creationHoleId,
+  exactChoiceCardinality,
   type CreationHole,
 } from "./types.ts";
 import {
@@ -28,8 +35,10 @@ import {
   supportedPurchasableEquipmentUnitIds,
   supportedPurchasableEquipmentUnitIdsForClass,
   supportedSpeciesUnitIds,
+  supportedUnitOptionIds,
   supportedUnitOptionIdsForSource,
   supportsCharacterBuildResourceUnitId,
+  unitRefsForSupportedSelectedUnitChoice,
   unsupportedHoleSelectionOptionId,
 } from "./support-gates.ts";
 
@@ -171,5 +180,46 @@ describe("character creation support-profile boundaries", () => {
         CHARACTER_CREATION_SUPPORT_PROFILE,
       ),
     ).toEqual([]);
+
+    const unsupportedLoadoutHole = choiceHole({
+      source: loadoutSource(
+        authoredUnitId("synthetic_unsupported_equipment"),
+        "weapon",
+      ),
+      cardinality: exactChoiceCardinality(1),
+      options: [
+        {
+          optionId: creationChoiceOptionId("synthetic_unsupported_equipment"),
+          label: "Synthetic unsupported equipment",
+        },
+      ],
+    });
+    if (unsupportedLoadoutHole?.kind !== "choice") {
+      throw new Error("The unsupported loadout fixture must be a choice hole.");
+    }
+    expect(
+      supportedHoleOptionIds(
+        unsupportedLoadoutHole,
+        CHARACTER_CREATION_SUPPORT_PROFILE,
+      ),
+    ).toBeUndefined();
+
+    expect(
+      supportedUnitOptionIds(CLASS_FEATURE_FEAT_CHOICE_KEY, {
+        ...CHARACTER_CREATION_SUPPORT_PROFILE,
+        unitOptionIdsByChoiceKey: {},
+      }),
+    ).toEqual([]);
+
+    const referencedUnitId = authoredUnitId("synthetic_referenced_unit");
+    expect(
+      unitRefsForSupportedSelectedUnitChoice(
+        unitSource(
+          authoredUnitId("synthetic_feature"),
+          CLASS_FEATURE_FEAT_CHOICE_KEY,
+        ),
+        [{}, { unitRef: { unitId: referencedUnitId } }],
+      ),
+    ).toEqual([referencedUnitId]);
   });
 });

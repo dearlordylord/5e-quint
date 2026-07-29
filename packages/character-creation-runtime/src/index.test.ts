@@ -8379,6 +8379,94 @@ describe("character creation finalization", () => {
     );
   });
 
+  test("rejects incoherent Warlock invocation advancement counts", () => {
+    const build = finalizedWarlockBuild(
+      "draft:warlock-invocation-advancement-count-errors",
+    );
+    const warlockClassUnitId = testClassUnitId(authoredUnitId("class_warlock"));
+    const levelGain = (
+      gainedInvocations: readonly CharacterBuildWarlockEldritchInvocationSelectionInput[],
+    ): CharacterBuildClassLevelGain =>
+      expectRight(
+        warlockLevelGain({
+          unitLibrary,
+          classUnitId: warlockClassUnitId,
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+          pactMagic: warlockPactMagicLevelGain({
+            gainedPreparedSpells: [authoredUnitId("hex")],
+          }),
+          gainedInvocations,
+        }),
+      );
+    const expectedGains = [
+      nonRepeatableEldritchInvocation("pact_of_the_blade"),
+      nonRepeatableEldritchInvocation("devils_sight"),
+    ];
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: {
+          ...build,
+          features: build.features.filter(
+            (feature) => feature.kind !== "selectedEldritchInvocation",
+          ),
+        },
+        unitLibrary,
+        levelGain: levelGain(expectedGains),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidEldritchInvocationSelectionCount",
+        expectedCount: 1,
+        actualCount: 0,
+      },
+    });
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: levelGain([]),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidEldritchInvocationGainCount",
+        expectedGains: 2,
+        actualGains: 0,
+      },
+    });
+    const missingReplacement = expectRight(
+      warlockLevelGain({
+        unitLibrary,
+        classUnitId: warlockClassUnitId,
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        pactMagic: warlockPactMagicLevelGain({
+          gainedPreparedSpells: [authoredUnitId("hex")],
+        }),
+        gainedInvocations: expectedGains,
+        replacement: {
+          replaceInvocation: nonRepeatableEldritchInvocation("eldritch_mind"),
+          selectedInvocation:
+            nonRepeatableEldritchInvocation("pact_of_the_tome"),
+        },
+      }),
+    );
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: missingReplacement,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "missingSelectedEldritchInvocation",
+        invocationId: "eldritch_mind",
+      },
+    });
+  });
+
   test("routes accepted and support-profile-rejected Warlock level gains", () => {
     const build = finalizedWarlockBuild("draft:warlock-level-gain-route");
     const acceptedLevelGain = expectRight(

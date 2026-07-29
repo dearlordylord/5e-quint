@@ -3089,31 +3089,22 @@ function replaceEldritchInvocationSelection(input: {
         ? [index]
         : [],
   );
-  if (matchingIndexes.length === 0) {
-    return Either.left({
-      code: "missingSelectedEldritchInvocation",
-      invocationId: replacement.replaceInvocation.invocationId,
-      message:
-        "Cannot replace an Eldritch Invocation that the build has not selected.",
-    });
-  }
-  if (matchingIndexes.length > 1) {
-    return Either.left({
-      code: "ambiguousSelectedEldritchInvocation",
-      invocationId: replacement.replaceInvocation.invocationId,
-      count: matchingIndexes.length,
-      message:
-        "Cannot replace an Eldritch Invocation selection when multiple matching selections exist.",
-    });
-  }
-
-  const replaceIndex = matchingIndexes[0];
+  const [replaceIndex, ...remainingMatchingIndexes] = matchingIndexes;
   if (replaceIndex === undefined) {
     return Either.left({
       code: "missingSelectedEldritchInvocation",
       invocationId: replacement.replaceInvocation.invocationId,
       message:
         "Cannot replace an Eldritch Invocation that the build has not selected.",
+    });
+  }
+  if (remainingMatchingIndexes.length > 0) {
+    return Either.left({
+      code: "ambiguousSelectedEldritchInvocation",
+      invocationId: replacement.replaceInvocation.invocationId,
+      count: matchingIndexes.length,
+      message:
+        "Cannot replace an Eldritch Invocation selection when multiple matching selections exist.",
     });
   }
 
