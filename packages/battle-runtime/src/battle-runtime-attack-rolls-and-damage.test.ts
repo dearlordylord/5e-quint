@@ -3,6 +3,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import {
   startBattleRight,
   startBattleSessionRight,
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   fighterVsGoblinBattle,
   criticalRange19UnitRefs,
   fighterAttackSubject,
@@ -45,12 +46,26 @@ import { describe, expect, test } from "vitest";
 describe("battle runtime: attack rolls and damage", () => {
   test("attack miss spends the action without asking for weapon damage", () => {
     const state = fighterVsGoblinBattle();
-    const targetHole = attackInitialTargetHole(state);
-    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+    const subject = fighterAttackSubject(state, "Longsword");
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+    const awaitingRoll = resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill(targetHole, goblinId)],
+    });
+    if (awaitingRoll.tag !== "needsHoles") {
+      throw new Error("Expected the weapon attack to await its attack roll.");
+    }
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: awaitingRoll.snapshot,
+      subject,
+      holes: awaitingRoll.holes,
+    });
 
     const result = resolveBattleSubject({
       state,
-      subject: fighterAttackSubject(state, "Longsword"),
+      subject,
       fills: [
         targetFill(targetHole, goblinId),
         attackRollFill(rollHole, { total: 14, naturalD20: 9 }),
@@ -408,6 +423,19 @@ describe("battle runtime: attack rolls and damage", () => {
     );
     const targetHole = attackInitialTargetHole(state, subject);
     const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+    const awaitingRoll = resolveBattleSubject({
+      state,
+      subject,
+      fills: [targetFill(targetHole, goblinId)],
+    });
+    if (awaitingRoll.tag !== "needsHoles") {
+      throw new Error("Expected the Unarmed Strike to await its attack roll.");
+    }
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: awaitingRoll.snapshot,
+      subject,
+      holes: awaitingRoll.holes,
+    });
     const damageHole = attackDamageHoleAfterHit(
       state,
       targetHole,

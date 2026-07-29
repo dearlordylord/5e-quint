@@ -1,6 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   startBattleSessionRight,
+  assertBattleSnapshotCodecRoundTripForTest,
   testBattleCreatureStateWithConditions,
   requireResolved,
   requireHole,
@@ -650,6 +651,7 @@ describe("battle runtime: Starry Wisp", () => {
       },
     });
     const resolved = requireResolved(result);
+    assertBattleSnapshotCodecRoundTripForTest(resolved.snapshot);
     expect(objectInvisibleBenefitDenied(resolved.state, objectId)).toBe(true);
     expect(resolved.state.objectOutlines).toEqual([]);
 
