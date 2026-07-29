@@ -95,6 +95,7 @@ import {
   wizardVsSkeletonBattle,
 } from "./battle-runtime.test-support.ts";
 import {
+  assertBattleSnapshotCodecRoundTripForTest,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
   requireCharacterUnitProcedureRefForTest,
@@ -2966,9 +2967,10 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         characterSeed({
           initiative: 20,
           classLevels: [
-            { className: "fighter", level: 1 },
+            { className: "rogue", level: 2 },
             { className: "barbarian", level: 1 },
           ],
+          d20Statistics: testCharacterD20Statistics({ str: 16, dex: 16 }),
           resources: [rageResource()],
           characterUnitRefs: [
             {
@@ -3012,17 +3014,13 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     if (dashAct.subject.tag !== "bonusActionStandardAction") {
       throw new Error("Expected a Bonus Action Dash subject.");
     }
+    assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(state));
     const dashSubject = dashAct.subject;
-    const actor = state.combatants.get(fighterId);
-    if (actor?.origin.kind !== "character") {
-      throw new Error("Expected the Cunning Action actor to be a character.");
-    }
-    const unrelatedProcedureRef = actor.origin.execution.procedureBindings.find(
-      (binding) => binding.procedureRef !== dashSubject.procedureRef,
-    )?.procedureRef;
-    if (unrelatedProcedureRef === undefined) {
-      throw new Error("Expected an unrelated character procedure binding.");
-    }
+    const unrelatedProcedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      fighterId,
+      "barbarian_rage",
+    );
     expect(
       resolveReplayContinuationFromState(
         state,
@@ -3063,7 +3061,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       combatants: [
         characterSeed({
           initiative: 20,
-          classLevels: [{ className: "fighter", level: 1 }],
+          classLevels: [{ className: "rogue", level: 2 }],
           characterUnitRefs: [
             {
               unit: unitLibrary.requireUnit("rogue_cunning_action"),

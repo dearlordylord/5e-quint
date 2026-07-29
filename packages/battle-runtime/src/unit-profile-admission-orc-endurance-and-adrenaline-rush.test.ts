@@ -1,6 +1,7 @@
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 import { unitId } from "@dnd/shared/game-facts";
 import {
+  assertBattleSnapshotCodecRoundTripForTest,
   battleProcedureExecutionRefForTest,
   requireCharacterUnitProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -53,6 +54,7 @@ import {
   Either,
   parseSupportedUnitFeatureProfile,
   resolveBattleSubject,
+  snapshotBattle,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 } from "./unit-profile-admission.test-support.ts";
 
@@ -504,6 +506,7 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
       throw new Error("Expected Adrenaline Rush resource.");
     }
     const act = adrenalineRushDashAct(session);
+    assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(session.state));
     const result = resolveBattleSubject({
       state: session.state,
       subject: act.subject,
