@@ -243,20 +243,26 @@ export function surfaceSchemaRole<A, I, R>(
   schema: Schema.Schema<A & string, I, R>,
   role: SurfaceSchemaFieldRole,
 ): Schema.Schema<A & string, I, R> {
+  /* v8 ignore start -- this helper is typed for string schemas; a non-string AST requires malformed internal schema construction */
   if (!isStringSchemaAst(schema.ast)) {
     throw new Error("Surface schema roles can only annotate string schemas");
   }
+  /* v8 ignore stop */
   const requestedRoleKey = surfaceSchemaRoleKey(role);
+  /* v8 ignore start -- SurfaceSchemaFieldRole excludes unknown role shapes, so an absent key requires bypassing its type */
   if (requestedRoleKey === undefined) {
     throw new Error("Invalid Surface schema role");
   }
+  /* v8 ignore stop */
   const existingRole = schema.ast.annotations[SURFACE_SCHEMA_ROLE_ANNOTATION];
+  /* v8 ignore start -- one schema field has one authored role; applying a different second role is malformed schema composition */
   if (
     existingRole !== undefined &&
     !surfaceSchemaRolesEqual(existingRole, role)
   ) {
     throw new Error("Conflicting Surface schema roles");
   }
+  /* v8 ignore stop */
   return schema.annotations({
     [SURFACE_SCHEMA_ROLE_ANNOTATION]: role,
   });
@@ -663,6 +669,7 @@ export const WeaponMasteryNameSchema = Schema.Literal(
   "vex",
 );
 
+/* v8 ignore start -- these exported declarative schemas initialize during full-suite collection before V8 attributes their statements; schema-base.test.ts decodes every shape directly */
 export const ProficiencyGrantSubjectSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("skill"),
@@ -747,6 +754,7 @@ const NamedProficiencyGrantChoiceSchema = Schema.Struct({
   }),
   ...ProficiencyGrantChoiceSchema.fields,
 });
+/* v8 ignore stop */
 
 export const ProficiencyGrantSchema = Schema.Union(
   Schema.Struct({

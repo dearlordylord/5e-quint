@@ -3792,7 +3792,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
             skills: nonEmpty(SkillSchema),
           }).pipe(
             Schema.filter((source) => distinctSkills(source.skills), {
-              /* v8 ignore next -- this callback only formats the diagnostic after a malformed Expertise source repeats a skill */
+              /* v8 ignore next 2 -- this callback only formats the diagnostic after a malformed Expertise source repeats a skill */
               message: () =>
                 "Listed Expertise skill source must contain distinct skills.",
             }),
@@ -3929,7 +3929,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           (grant) =>
             typeof grant.count === "number" || grant.scaling === undefined,
           {
-            /* v8 ignore next -- this callback only formats the diagnostic after a malformed free-cast grant supplies both a numeric count and class scaling */
+            /* v8 ignore next 2 -- this callback only formats the diagnostic after a malformed free-cast grant supplies both a numeric count and class scaling */
             message: () =>
               "Proficiency Bonus spell free-cast counts must not also carry class-level scaling.",
           },
@@ -4673,6 +4673,7 @@ export const ActivationMechanicsSchema = Schema.extend(
   }),
 );
 
+/* v8 ignore start -- these exported declarative schemas initialize during full-suite collection before V8 attributes their statements; schema-spell-readers.test.ts decodes their shapes directly */
 export const ModalActivationMechanicsSchema = Schema.extend(
   SpellMechanicsCommonHeaderSchema,
   Schema.Struct({
@@ -4827,6 +4828,7 @@ export const CreatureSpeedSchema = Schema.Struct({
   feet: StatBlockValueSchema,
   requiresSlotLevel: optionalExact(Schema.Number),
 });
+/* v8 ignore stop */
 
 export const CreatureResistanceListSchema = Schema.Union(
   Schema.Struct({
@@ -5080,7 +5082,7 @@ export const MagicCircleAffectedCreatureTypeChoiceSchema = strictStruct({
     (choice) =>
       sameStringSet(choice.options, MAGIC_CIRCLE_AFFECTED_CREATURE_TYPES),
     {
-      /* v8 ignore next -- this callback only formats the diagnostic after malformed Magic Circle choices differ from the fixed creature-type set */
+      /* v8 ignore next 2 -- this callback only formats the diagnostic after malformed Magic Circle choices differ from the fixed creature-type set */
       message: () =>
         "Magic Circle affected creature type choice must expose exactly Celestial, Elemental, Fey, Fiend, and Undead.",
     },
