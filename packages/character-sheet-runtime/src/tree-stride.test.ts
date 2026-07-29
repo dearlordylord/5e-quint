@@ -193,6 +193,40 @@ describe("Character Sheet runtime / Tree Stride", () => {
         "Tree Stride can be used only once per turn.",
       );
     }
+
+    expect(
+      resolveTreeStrideTransit({
+        invocation: cast.invocation,
+        entryTree,
+        movementAvailableFeet: 4,
+        usedThisTurn: false,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Tree Stride requires 5 feet of movement to enter a tree.",
+      },
+    });
+
+    expect(
+      resolveTreeStrideTransit({
+        invocation: cast.invocation,
+        entryTree,
+        destinationTree: {
+          ...destinationTree,
+          treeKind: requireRight(
+            characterSheetTreeStrideTreeKind("synthetic-different-kind"),
+          ),
+        },
+        movementAvailableFeet: 10,
+        usedThisTurn: false,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Tree Stride destination must be a tree of the same kind.",
+      },
+    });
   });
 
   test("Tree Stride requires prepared class Spell Access", () => {

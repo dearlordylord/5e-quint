@@ -40,6 +40,7 @@ import {
   finishShortRest,
   interruptLongRest,
   interruptShortRest,
+  parseCharacterSheet,
   requireRight,
   resourceCount,
   selectedClassChoiceUnitIds,
@@ -541,20 +542,31 @@ describe("Character Sheet runtime / rests", () => {
   });
 
   test("uses the class-level Weapon Mastery count for Long Rest reselection", () => {
+    const masteryBuild = weaponMasteryBuild({
+      startingClass: "class_fighter",
+      advancements: ["class_fighter", "class_fighter", "class_fighter"],
+      featureUnitId: "fighter_weapon_mastery",
+      selectedWeaponUnitIds: [
+        "weapon_longsword",
+        "weapon_dagger",
+        "weapon_spear",
+        "weapon_shortbow",
+      ],
+    });
     const sheet = requireRight(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:fighter-level-4-mastery"),
-        build: weaponMasteryBuild({
-          startingClass: "class_fighter",
-          advancements: ["class_fighter", "class_fighter", "class_fighter"],
-          featureUnitId: "fighter_weapon_mastery",
-          selectedWeaponUnitIds: [
-            "weapon_longsword",
-            "weapon_dagger",
-            "weapon_spear",
-            "weapon_shortbow",
+        build: {
+          ...masteryBuild,
+          features: [
+            ...masteryBuild.features,
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: authoredUnitId("class_fighter"),
+              unitId: authoredUnitId("subclass_fighter_champion"),
+            },
           ],
-        }),
+        },
         currentHp: Hp(8),
         tempHp: Hp(0),
         unitLibrary,
@@ -586,6 +598,9 @@ describe("Character Sheet runtime / rests", () => {
       "weapon_dagger",
       "weapon_spear",
       "weapon_flail",
+    ]);
+    expect(selectedClassChoiceUnitIds(rested.build, "class_fighter")).toEqual([
+      "subclass_fighter_champion",
     ]);
   });
 
@@ -626,6 +641,12 @@ describe("Character Sheet runtime / rests", () => {
         spellSlotExpenditures: [
           { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
         ],
+        spentHitDice: [
+          {
+            classUnitId: authoredUnitId("class_wizard"),
+            spent: resourceCount(1),
+          },
+        ],
       }),
     );
 
@@ -648,7 +669,7 @@ describe("Character Sheet runtime / rests", () => {
       tempHp: 2,
     });
     expect(requireRight(characterSheetHitDice(rested, unitLibrary))).toEqual([
-      { classUnitId: "class_wizard", dieSize: 6, total: 2, spent: 1 },
+      { classUnitId: "class_wizard", dieSize: 6, total: 2, spent: 2 },
     ]);
     expect(characterSheetSpellSlots(rested)).toEqual([
       { spellLevel: 1, count: 3, expended: 1 },
@@ -1028,6 +1049,55 @@ describe("Character Sheet runtime / rests", () => {
     });
   });
 
+  test("Long Rest Arcane Recovery route reports both reset and rejected completion outcomes", () => {
+    const wizard = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:synthetic-arcane-recovery-reset-route",
+        ),
+        build: wizardBuild({ wizardAdvancements: 1 }),
+        tempHp: Hp(0),
+        unitLibrary,
+        restFeatureUses: [
+          {
+            tag: "arcaneRecovery",
+            usedSinceLongRest: true,
+          },
+        ],
+      }),
+    );
+    expect(
+      completeLongRestArcaneRecoveryResetWithRoute({
+        sheet: wizard,
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      tag: "accepted",
+      route: "arcaneRecovery",
+      qRoute: [
+        {
+          kind: "completeCharacterSheetRest",
+          subject: "spellResource",
+          fill: "recoverySelection",
+          holes: [],
+          owner: "spellSlot",
+        },
+      ],
+    });
+
+    expect(
+      completeLongRestArcaneRecoveryResetWithRoute({
+        sheet: wizard,
+        unitLibrary,
+        druidCircleLandChoice: "arid",
+      }),
+    ).toMatchObject({
+      tag: "rejected",
+      route: "none",
+      qRoute: [],
+    });
+  });
+
   test("Arcane Recovery rejects refunds above its level budget", () => {
     const sheet = requireRight(
       rebuildCharacterSheetFixture({
@@ -1056,6 +1126,73 @@ describe("Character Sheet runtime / rests", () => {
       left: {
         message: "Arcane Recovery refund exceeds half Wizard level rounded up.",
       },
+    });
+  });
+
+  test("Arcane Recovery attributes a Pact-level-only refund rejection to Pact Slots", () => {
+    const baseBuild = wizardWarlockBuild();
+    if (baseBuild.spellcasting === undefined) {
+      throw new Error("Synthetic Wizard/Warlock build requires spellcasting.");
+    }
+    const warlockSource = warlockMagicalCunningBuild({
+      warlockAdvancements: 1,
+      pactSlotCount: 1,
+      pactSlotLevel: 2,
+    }).spellcasting?.sources[0];
+    if (warlockSource === undefined) {
+      throw new Error(
+        "Synthetic Warlock build requires a spellcasting source.",
+      );
+    }
+    const pactLevelTwoBuild: CharacterBuild = {
+      ...baseBuild,
+      progression: armorClassBuild({
+        startingClass: "class_wizard",
+        advancements: ["class_wizard", "class_wizard", "class_warlock"],
+      }).progression,
+      spellcasting: {
+        ...baseBuild.spellcasting,
+        sources: [...baseBuild.spellcasting.sources, warlockSource],
+        slotPools: {
+          ...baseBuild.spellcasting.slotPools,
+          pactMagic: {
+            kind: "pactMagic" as const,
+            slotLevel: spellSlotLevel(2),
+            count: resourceCount(1),
+          },
+        },
+      },
+    };
+    const sheet = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:synthetic-arcane-recovery-pact-boundary",
+        ),
+        build: pactLevelTwoBuild,
+        tempHp: Hp(0),
+        unitLibrary,
+        pactSlots: { expended: resourceCount(1) },
+      }),
+    );
+
+    expect(
+      completeShortRestArcaneRecoveryWithRoute({
+        sheet,
+        unitLibrary,
+        arcaneRecovery: {
+          refundSpellSlots: [
+            { spellLevel: spellSlotLevel(2), count: resourceCount(1) },
+          ],
+        },
+      }),
+    ).toMatchObject({
+      tag: "rejected",
+      route: "arcaneRecovery",
+      issue: {
+        message:
+          "Arcane Recovery refund must match existing Spell Slot levels.",
+      },
+      qRoute: [{ owner: "pactSlot" }],
     });
   });
 
@@ -1110,6 +1247,9 @@ describe("Character Sheet runtime / rests", () => {
       { tag: "magicalCunning", usedSinceLongRest: true },
     ]);
     expect(
+      requireRight(parseCharacterSheet(recovered, unitLibrary)).restFeatureUses,
+    ).toEqual(recovered.restFeatureUses);
+    expect(
       completeMagicalCunningRite({ sheet: recovered, unitLibrary }),
     ).toMatchObject({
       _tag: "Left",
@@ -1154,6 +1294,29 @@ describe("Character Sheet runtime / rests", () => {
       count: 3,
       expended: 1,
     });
+  });
+
+  test("Magical Cunning omits Pact Slot expenditure after recovering the only slot", () => {
+    const sheet = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:synthetic-magical-cunning-full-recovery",
+        ),
+        build: warlockMagicalCunningBuild({
+          warlockAdvancements: 1,
+          pactSlotCount: 1,
+          pactSlotLevel: 1,
+        }),
+        tempHp: Hp(0),
+        unitLibrary,
+        pactSlots: { expended: resourceCount(1) },
+      }),
+    );
+
+    expect(
+      requireRight(completeMagicalCunningRite({ sheet, unitLibrary }))
+        .pactSlotExpenditure,
+    ).toBeUndefined();
   });
 
   test(magicalCunningFeatureOwnershipTestName, () => {

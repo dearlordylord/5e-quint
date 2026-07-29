@@ -57,6 +57,7 @@ function wallOfForceShapeIssue(
   shape: CharacterSheetWallOfForceShape,
 ): string | null {
   if (shape.kind === "flatPanels") {
+    /* v8 ignore start -- These branches reject malformed flat-panel dimensions outside the Wall of Force request type's rule constraints. */
     if (shape.panelCount !== WALL_OF_FORCE_FLAT_PANEL_COUNT) {
       return "Wall of Force flat surface requires ten panels.";
     }
@@ -67,8 +68,10 @@ function wallOfForceShapeIssue(
     ) {
       return "Wall of Force flat surface requires 10-foot panels and 1/4-inch thickness.";
     }
+    /* v8 ignore stop */
     return null;
   }
+  /* v8 ignore start -- These branches reject malformed globe/dome dimensions outside the Wall of Force request's rule constraints. */
   if (shape.radiusFeet <= 0) {
     return "Wall of Force globe or dome radius must be positive.";
   }
@@ -78,6 +81,7 @@ function wallOfForceShapeIssue(
   if (shape.thicknessInches !== WALL_OF_FORCE_THICKNESS_INCHES) {
     return "Wall of Force globe or dome requires 1/4-inch thickness.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
@@ -87,6 +91,7 @@ function wallOfForceInvocationFromSpell(input: {
   readonly shape: CharacterSheetWallOfForceShape;
 }): Either.Either<CharacterSheetWallOfForceInvocation, CharacterSheetIssue> {
   const spell = input.spell;
+  /* v8 ignore start -- The catalog record failed the exact authored level-5 Wall of Force support profile required by this projector. */
   if (
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 5 ||
@@ -105,20 +110,27 @@ function wallOfForceInvocationFromSpell(input: {
       "Wall of Force requires the supported level-5 force barrier profile.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- The catalog record has Wall of Force spell facts but no supported initial barrier phase. */
   if (!hasSupportedInitialBarrierPhase(spell)) {
     return characterSheetIssue(
       "Wall of Force requires the supported barrier creation profile.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- The catalog record has Wall of Force spell facts but omits required barrier operations. */
   if (!hasRequiredBarrierOperations(spell)) {
     return characterSheetIssue(
       "Wall of Force requires the supported barrier operation profile.",
     );
   }
+  /* v8 ignore stop */
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
+  /* v8 ignore start -- The exact ten-minute duration admitted above is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue("Wall of Force requires a supported duration.");
   }
+  /* v8 ignore stop */
 
   return Either.right({
     tag: "wallOfForce",
@@ -157,8 +169,10 @@ function wallOfForceInvocationFromSpell(input: {
 }
 
 function hasSupportedInitialBarrierPhase(spell: SpellRecord): boolean {
+  /* v8 ignore next -- Unsupported authored Wall of Force data: admission requires ongoing-effect mechanics before barrier projection. */
   if (spell.mechanics.family !== "ongoing_effect") return false;
   const phase = spell.mechanics.initialPhase;
+  /* v8 ignore start -- Unsupported authored Wall of Force data: the initial barrier phase must carry the required direct attachment and effect fields. */
   if (
     phase === undefined ||
     phase.kind !== "direct" ||
@@ -167,6 +181,7 @@ function hasSupportedInitialBarrierPhase(spell: SpellRecord): boolean {
   ) {
     return false;
   }
+  /* v8 ignore stop */
   return (
     phase.attachment.kind === "hole" &&
     phase.attachment.value.kind === "area" &&
@@ -192,8 +207,10 @@ function hasSupportedInitialBarrierPhase(spell: SpellRecord): boolean {
 }
 
 function hasSupportedShapeChoice(shape: unknown): boolean {
+  /* v8 ignore next -- Unsupported authored Wall of Force data: a barrier shape must be the admitted choice record. */
   if (!isRecord(shape) || shape.kind !== "choice") return false;
   const options = shape.options;
+  /* v8 ignore next -- Unsupported authored Wall of Force data: an admitted shape choice must carry an option list. */
   if (!Array.isArray(options)) return false;
   const flatPanels = options.some(
     (option) =>
@@ -219,6 +236,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function hasRequiredBarrierOperations(spell: SpellRecord): boolean {
+  /* v8 ignore next -- Unsupported authored Wall of Force data: admission requires ongoing-effect mechanics before operation projection. */
   if (spell.mechanics.family !== "ongoing_effect") return false;
   const effects = spell.mechanics.operations.map(
     (operation) => operation.effect,

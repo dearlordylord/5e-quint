@@ -29,7 +29,10 @@ import {
   warlockMagicalCunningBuild,
   type CharacterBuild,
 } from "./test-support.test-support.ts";
-import { characterSheetPassiveDefenseProjection } from "./passive-defenses.ts";
+import {
+  characterSheetPassiveDefenseProjection,
+  parseStoredFiendishResilience,
+} from "./passive-defenses.ts";
 
 const statBlockCatalogResult = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
@@ -244,6 +247,13 @@ describe("Character Sheet runtime / passive defenses", () => {
           "Fiendish Resilience selection requires the Fiendish Resilience feature.",
       },
     });
+
+    expect(parseStoredFiendishResilience({ damageType: "cold" })).toMatchObject(
+      {
+        _tag: "Right",
+        right: { damageType: "cold" },
+      },
+    );
   });
 
   test(naturesWardPassiveDefenseProjectionTestName, () => {

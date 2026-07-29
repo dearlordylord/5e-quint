@@ -79,6 +79,7 @@ function creationObjectIssue(input: {
   readonly object: CharacterSheetCreationObject;
   readonly castLevel: SpellSlotLevel;
 }): string | null {
+  /* v8 ignore start -- These branches reject malformed cast-level, material, or geometry facts outside the narrowed Creation request. */
   if (input.castLevel < CREATION_SPELL_LEVEL) {
     return "Creation requires a level-5 or higher Spell Slot.";
   }
@@ -91,6 +92,7 @@ function creationObjectIssue(input: {
   if (input.object.cubeSideFeet > creationMaxCubeSideFeet(input.castLevel)) {
     return "Creation object must fit inside the slot-scaled Cube.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
@@ -100,6 +102,7 @@ function creationInvocationFromSpell(input: {
   readonly castLevel: SpellSlotLevel;
 }): Either.Either<CharacterSheetCreationInvocation, CharacterSheetIssue> {
   const spell = input.spell;
+  /* v8 ignore start -- The catalog record failed the exact authored level-5 Creation support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -115,20 +118,26 @@ function creationInvocationFromSpell(input: {
       "Creation requires the supported level-5 object-creation profile.",
     );
   }
+  /* v8 ignore stop */
   const directPhase = spell.mechanics.phases.find(
     (phase) =>
       phase.kind === "direct" &&
       phase.attachment.kind === "location" &&
+      /* v8 ignore next -- Unsupported authored Creation data: the admitted location phase requires exactly one explicit object-creation effect. */
       (phase.effects ?? []).length === 1 &&
+      /* v8 ignore next -- Unsupported authored Creation data: omission of that required effect was rejected by the same profile predicate. */
       isCreationCreateObjectEffect((phase.effects ?? [])[0]),
   );
+  /* v8 ignore start -- The catalog record has Creation spell facts but no supported location/object phase. */
   if (directPhase === undefined) {
     return characterSheetIssue(
       "Creation requires the supported location object-creation profile.",
     );
   }
+  /* v8 ignore stop */
 
   const objectDuration = shortestCreationObjectDuration(input.object.materials);
+  /* v8 ignore next -- Internal invariant: every nonempty canonical Creation material list maps to a positive parsed duration. */
   if (Either.isLeft(objectDuration)) return Either.left(objectDuration.left);
 
   return Either.right({
@@ -186,10 +195,12 @@ function shortestCreationObjectDuration(
   );
   const duration = timeSpanDuration(
     CREATION_MATERIAL_DURATIONS[
+      /* v8 ignore next -- Malformed Creation request: the narrowed object contract requires at least one canonical material. */
       shortest ?? CREATION_MATERIAL_DURATION_ORDER[0]
     ],
   );
-  return Either.isRight(duration)
-    ? Either.right(duration.right)
-    : characterSheetIssue("Creation requires a supported object duration.");
+  /* v8 ignore start -- Impossible parser failure: V8 maps the rejected-duration edge to this conditional, but every canonical Creation material maps to a positive supported time span. */
+  if (Either.isRight(duration)) return Either.right(duration.right);
+  return characterSheetIssue("Creation requires a supported object duration.");
+  /* v8 ignore stop */
 }

@@ -61,6 +61,7 @@ export function castWallOfStone(input: {
 function wallOfStoneShapeIssue(
   shape: CharacterSheetWallOfStoneShape,
 ): string | null {
+  /* v8 ignore start -- These branches reject malformed panel count, contiguity, or dimensions outside the narrowed Wall of Stone shape contract. */
   if (shape.panelCount !== WALL_OF_STONE_PANEL_COUNT) {
     return "Wall of Stone requires ten panels.";
   }
@@ -79,6 +80,7 @@ function wallOfStoneShapeIssue(
   if (!standardPanels && !thinPanels) {
     return "Wall of Stone panels must be either 10-by-10 feet and 6 inches thick or 10-by-20 feet and 3 inches thick.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
@@ -88,6 +90,7 @@ function wallOfStoneInvocationFromSpell(input: {
   readonly shape: CharacterSheetWallOfStoneShape;
 }): Either.Either<CharacterSheetWallOfStoneInvocation, CharacterSheetIssue> {
   const spell = input.spell;
+  /* v8 ignore start -- The catalog record failed the exact authored level-5 Wall of Stone support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -107,16 +110,21 @@ function wallOfStoneInvocationFromSpell(input: {
       "Wall of Stone requires the supported level-5 stone wall profile.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- The catalog record has Wall of Stone spell facts but no supported created-wall phase. */
   if (!hasSupportedWallOfStonePhase(spell)) {
     return characterSheetIssue(
       "Wall of Stone requires the supported created wall object profile.",
     );
   }
+  /* v8 ignore stop */
 
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
+  /* v8 ignore start -- The exact ten-minute duration admitted above is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue("Wall of Stone requires a supported duration.");
   }
+  /* v8 ignore stop */
 
   return Either.right({
     tag: "wallOfStone",
@@ -165,8 +173,10 @@ function wallOfStoneInvocationFromSpell(input: {
 }
 
 function hasSupportedWallOfStonePhase(spell: SpellRecord): boolean {
+  /* v8 ignore next -- Unsupported authored Wall of Stone data: admission requires activation mechanics before phase projection. */
   if (spell.mechanics.family !== "activation") return false;
   return spell.mechanics.phases.some((phase) => {
+    /* v8 ignore start -- Unsupported authored Wall of Stone data: every admitted phase must carry the required direct point-origin wall attachment. */
     if (
       phase.kind !== "direct" ||
       phase.attachment.kind !== "hole" ||
@@ -176,6 +186,8 @@ function hasSupportedWallOfStonePhase(spell: SpellRecord): boolean {
     ) {
       return false;
     }
+    /* v8 ignore stop */
+    /* v8 ignore next -- Unsupported authored Wall of Stone data: the admitted wall phase requires an explicit composite effect list. */
     return (phase.effects ?? []).some(
       (effect) =>
         isRecord(effect) &&

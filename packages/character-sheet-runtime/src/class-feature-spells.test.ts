@@ -31,6 +31,17 @@ describe("Character Sheet runtime / class feature prepared spells", () => {
               selectedFromUnitId: authoredUnitId("class_cleric"),
               unitId: authoredUnitId("subclass_cleric_life_domain"),
             },
+            {
+              kind: "abilityCheckBonus",
+              selectedFromUnitId: authoredUnitId("class_cleric"),
+              ability: "wis",
+              skills: [],
+              bonus: {
+                kind: "abilityModifier",
+                ability: "wis",
+                minimum: 1,
+              },
+            },
           ],
         }),
         currentHp: Hp(8),

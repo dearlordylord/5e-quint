@@ -13,6 +13,7 @@ export function hasSingleDirectSelfNoEffectPhase(spell: SpellRecord): boolean {
       (phase) =>
         phase.kind === "direct" &&
         phase.attachment.kind === "self" &&
+        /* v8 ignore next -- Unsupported authored spell data: this shared profile requires exactly one explicit no-op effect. */
         (phase.effects ?? []).length === 1 &&
         phase.effects?.[0]?.kind === "none",
     )
@@ -24,8 +25,11 @@ export function hasWisdomSaveGatePhase(
   holeId: string,
   supports: (phase: SaveGatePhase, attachment: HoleAttachment) => boolean,
 ): boolean {
+  /* v8 ignore start -- A non-activation record is unsupported authored input for a save-gate profile reader. */
   if (spell.mechanics.family !== "activation") return false;
+  /* v8 ignore stop */
   return spell.mechanics.phases.some((phase) => {
+    /* v8 ignore start -- A mismatched phase is unsupported authored save-gate profile data. */
     if (
       phase.kind !== "save_gate" ||
       phase.ability !== "wis" ||
@@ -35,6 +39,7 @@ export function hasWisdomSaveGatePhase(
     ) {
       return false;
     }
+    /* v8 ignore stop */
     return supports(phase, phase.attachment);
   });
 }

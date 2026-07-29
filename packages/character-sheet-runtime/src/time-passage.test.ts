@@ -1,13 +1,66 @@
 import { describe, expect, test } from "vitest";
+import { deathSaveCount } from "@dnd/shared/types";
 import {
   DieRollResult,
+  Hp,
+  characterSheetId,
+  rebuildCharacterSheetFixture,
   requireRight,
   stableSheet,
   timePassed,
   timeSpanDuration,
+  unitLibrary,
+  wizardBuild,
 } from "./test-support.test-support.ts";
+import type { CharacterSheetPendingDeathSaveCount } from "./sheet-types.ts";
 
 describe("Character Sheet runtime / time passage", () => {
+  test.each([
+    {
+      name: "positive HP",
+      hitPoints: {
+        tag: "positive",
+        currentHp: Hp(1),
+        tempHp: Hp(0),
+      } as const,
+    },
+    {
+      name: "unstable zero HP",
+      hitPoints: {
+        tag: "zero",
+        tempHp: Hp(0),
+        lifecycle: {
+          tag: "unstable",
+          deathSaves: {
+            // deathSaveCount parses these literal 1 values; the cast only carries
+            // the immediately established nonterminal fact into the narrower type.
+            successes: deathSaveCount(1) as CharacterSheetPendingDeathSaveCount,
+            failures: deathSaveCount(1) as CharacterSheetPendingDeathSaveCount,
+          },
+        },
+      } as const,
+    },
+  ])(
+    "leaves $name unchanged during Stable-only time passage",
+    ({ hitPoints }) => {
+      const sheet = {
+        ...stableSheet("character:synthetic-no-stable-recovery"),
+        hitPoints,
+      };
+      const result = timePassed({
+        sheet,
+        duration: requireRight(timeSpanDuration({ unit: "round", amount: 1 })),
+        fills: [],
+      });
+
+      expect(result).toMatchObject({
+        tag: "resolved",
+        elapsedTicks: 1,
+        sheet: { hitPoints },
+      });
+    },
+  );
+
   test("timePassed accumulates Stable recovery time before one hour can pass", () => {
     const result = timePassed({
       sheet: stableSheet("character:stable-round"),
@@ -158,6 +211,54 @@ describe("Character Sheet runtime / time passage", () => {
       tag: "resolved",
       elapsedTicks: 600,
       sheet: { hitPoints: { tag: "positive", currentHp: 1, tempHp: 0 } },
+    });
+  });
+
+  test("preserves spell-slot state when Stable recovery restores 1 HP", () => {
+    const spellcaster = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:synthetic-spellcaster-stable-recovery",
+        ),
+        build: wizardBuild({ wizardAdvancements: 0 }),
+        currentHp: Hp(1),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const sheet = {
+      ...spellcaster,
+      hitPoints: stableSheet("character:synthetic-spellcaster-stable-recovery")
+        .hitPoints,
+    };
+    const awaitingRoll = timePassed({
+      sheet,
+      duration: requireRight(timeSpanDuration({ unit: "hour", amount: 1 })),
+      fills: [],
+    });
+    if (awaitingRoll.tag !== "needsHoles") {
+      throw new Error(`Expected needsHoles, got ${awaitingRoll.tag}.`);
+    }
+
+    const result = timePassed({
+      sheet,
+      duration: requireRight(timeSpanDuration({ unit: "hour", amount: 1 })),
+      fills: [
+        {
+          kind: "rolledDice",
+          holeId: awaitingRoll.holes[0].holeId,
+          value: [{ results: [DieRollResult(1)] }],
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      sheet: {
+        hitPoints: { tag: "positive", currentHp: 1 },
+        spellSlotExpenditures: [],
+        createdSpellSlots: [],
+      },
     });
   });
 });

@@ -5,6 +5,9 @@ import { describe, expect, test } from "vitest";
 
 import {
   armorClassBuild,
+  characterEquipmentItemId,
+  characterEquipmentItemUnitId,
+  requireRight,
   sorcererFontOfMagicBuild,
   unitLibrary,
   warlockSpellcastingWithCantrips,
@@ -168,6 +171,10 @@ describe("stored Character Sheet Spell Slot parsers", () => {
     expect(parseStoredPactSlots(fighterBuild, {})).toEqual(
       Either.right(undefined),
     );
+  });
+
+  test("accepts omitted Pact Slot expenditure for a Pact Magic build", () => {
+    expect(parseStoredPactSlots(warlock, {})).toEqual(Either.right(undefined));
   });
 
   test.each([
@@ -617,6 +624,33 @@ describe("stored Character Build parser", () => {
     });
     expect(parseCharacterBuild(equipped, unitLibrary)).toEqual(
       Either.right(equipped),
+    );
+
+    const mainWeaponUnitId = authoredUnitId("weapon_longsword");
+    const offHandWeaponUnitId = authoredUnitId("weapon_dagger");
+    const mainWeaponItemId = characterEquipmentItemId({
+      slot: "main",
+      unitId: requireRight(characterEquipmentItemUnitId(mainWeaponUnitId)),
+    });
+    const offHandWeaponItemId = characterEquipmentItemId({
+      slot: "off",
+      unitId: requireRight(characterEquipmentItemUnitId(offHandWeaponUnitId)),
+    });
+    const armed = {
+      ...fighterBuild,
+      equipment: {
+        owned: [
+          { itemId: mainWeaponItemId, unitId: mainWeaponUnitId },
+          { itemId: offHandWeaponItemId, unitId: offHandWeaponUnitId },
+        ],
+        loadout: {
+          weapon: { itemId: mainWeaponItemId, grip: "one_handed" as const },
+          offHandWeapon: { itemId: offHandWeaponItemId },
+        },
+      },
+    };
+    expect(parseCharacterBuild(armed, unitLibrary)).toEqual(
+      Either.right(armed),
     );
   });
 

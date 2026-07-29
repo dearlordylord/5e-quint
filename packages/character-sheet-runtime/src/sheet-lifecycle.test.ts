@@ -2,6 +2,7 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
+  CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
   CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
   Either,
   Hp,
@@ -27,6 +28,11 @@ import {
   unitLibrary,
   warlockSpellcastingWithCantrips,
 } from "./test-support.test-support.ts";
+import {
+  characterSheetHitPoints,
+  characterSheetHitPointsCurrentHp,
+  recoverCharacterSheetHitPoints,
+} from "./hit-points.ts";
 import { parseStoredHitPoints } from "./stored-sheet-parser.ts";
 
 export const sorcererMetamagicKnownOptionsSheetParsingRuntimeTestName =
@@ -35,6 +41,64 @@ export const sorcererMetamagicKnownOptionsGateRuntimeTestName =
   sorcererMetamagicKnownOptionsGateTestName;
 
 describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
+  test("projects Knocked Out HP and treats zero healing as an identity operation", () => {
+    const knockedOut = requireRight(
+      characterSheetHitPoints({
+        currentHp: Hp(1),
+        tempHp: Hp(0),
+        positiveHpUnconscious: { tag: "knockedOut" },
+      }),
+    );
+    expect(knockedOut).toEqual({ tag: "knockedOut", tempHp: Hp(0) });
+    expect(characterSheetHitPointsCurrentHp(knockedOut)).toBe(Hp(1));
+
+    const sheet = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:synthetic-zero-healing"),
+        build,
+        currentHp: Hp(5),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    expect(
+      requireRight(
+        recoverCharacterSheetHitPoints({
+          sheet,
+          unitLibrary,
+          healing: Hp(0),
+          overflow: { tag: "capAtMaximum" },
+          deadCharacterMessage: "Synthetic zero healing cannot revive.",
+        }),
+      ),
+    ).toBe(sheet);
+  });
+
+  test("retains nondefault stored sheet state", () => {
+    const parsed = requireRight(
+      parseCharacterSheet(
+        {
+          ...storedAvailableSheetInput({
+            characterId: "character:synthetic-retained-state",
+            build,
+          }),
+          heroicInspiration: CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
+          exhaustionLevel: 2,
+          conditions: ["charmed", "poisoned"],
+          spentHitDice: [{ classUnitId: "class_fighter", spent: 1 }],
+        },
+        unitLibrary,
+      ),
+    );
+
+    expect(parsed).toMatchObject({
+      heroicInspiration: CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
+      exhaustionLevel: 2,
+      conditions: ["charmed", "poisoned"],
+      spentHitDice: [{ classUnitId: "class_fighter", spent: 1 }],
+    });
+  });
+
   test.each([
     { value: null, expectedTag: "Left" },
     { value: {}, expectedTag: "Left" },

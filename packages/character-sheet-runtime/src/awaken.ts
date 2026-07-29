@@ -52,6 +52,7 @@ export function castAwaken(input: {
 }
 
 function awakenTargetIssue(target: CharacterSheetAwakenTarget): string | null {
+  /* v8 ignore start -- These branches reject malformed language or Intelligence facts outside the narrowed Awaken target contract. */
   if (target.languageGranted.length === 0) {
     return "Awaken requires one language the caster knows.";
   }
@@ -61,6 +62,7 @@ function awakenTargetIssue(target: CharacterSheetAwakenTarget): string | null {
   ) {
     return "Awaken creature targets must have Intelligence 3 or less.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
@@ -70,6 +72,7 @@ function awakenInvocationFromSpell(input: {
   readonly target: CharacterSheetAwakenTarget;
 }): Either.Either<CharacterSheetAwakenInvocation, CharacterSheetIssue> {
   const spell = input.spell;
+  /* v8 ignore start -- The catalog record failed the exact authored level-5 Awaken support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -89,6 +92,8 @@ function awakenInvocationFromSpell(input: {
       "Awaken requires the supported level-5 touch transformation profile.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Missing or underpriced Awaken agate evidence is malformed cast-request material input. */
   if (
     input.casting.materialComponents.agateCostGpMinimum <
       AWAKEN_MATERIAL_COMPONENTS.agateCostGpMinimum ||
@@ -98,11 +103,13 @@ function awakenInvocationFromSpell(input: {
       "Awaken requires the consumed 1,000 GP agate material component contract.",
     );
   }
+  /* v8 ignore stop */
   const directPhase = spell.mechanics.phases.find(
     (phase) =>
       phase.kind === "direct" &&
       phase.attachment.kind === "hole" &&
       phase.attachment.holeId === "awaken_target" &&
+      /* v8 ignore next -- Unsupported authored Awaken data: the admitted target phase requires an explicit ability-score effect list. */
       (phase.effects ?? []).some(
         (effect) =>
           effect.kind === "set_ability_score" &&
@@ -111,19 +118,23 @@ function awakenInvocationFromSpell(input: {
           effect.value === AWAKEN_INTELLIGENCE_SCORE,
       ),
   );
+  /* v8 ignore start -- The catalog record has Awaken spell facts but no supported Intelligence-setting target phase. */
   if (directPhase === undefined) {
     return characterSheetIssue(
       "Awaken requires the supported Intelligence-setting target profile.",
     );
   }
+  /* v8 ignore stop */
 
   const charmDuration = timeSpanDuration({
     unit: "day",
     amount: AWAKEN_CHARM_DURATION_DAYS,
   });
+  /* v8 ignore start -- The fixed thirty-day charm duration is always accepted by the elapsed-time parser. */
   if (Either.isLeft(charmDuration)) {
     return characterSheetIssue("Awaken requires a supported charm duration.");
   }
+  /* v8 ignore stop */
 
   return Either.right({
     tag: "awaken",

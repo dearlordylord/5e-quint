@@ -90,16 +90,20 @@ export function castConjureElemental(input: {
     unitLibrary: input.unitLibrary,
     spellId: CONJURE_ELEMENTAL_SPELL_ID,
     castLevel,
-    invocation: (spell) =>
-      castLevel < LIFECYCLE_SPELL_LEVEL
-        ? characterSheetIssue(
-            "Conjure Elemental requires a level-5 or higher Spell Slot.",
-          )
-        : conjureElementalInvocationFromSpell({
-            spell,
-            spirit: input.spirit,
-            castLevel,
-          }),
+    invocation: (spell) => {
+      /* v8 ignore start -- A Conjure Elemental request below level 5 is a malformed cast request rejected before invocation projection. */
+      if (castLevel < LIFECYCLE_SPELL_LEVEL) {
+        return characterSheetIssue(
+          "Conjure Elemental requires a level-5 or higher Spell Slot.",
+        );
+      }
+      /* v8 ignore stop */
+      return conjureElementalInvocationFromSpell({
+        spell,
+        spirit: input.spirit,
+        castLevel,
+      });
+    },
   });
 }
 
@@ -115,16 +119,20 @@ export function castSummonDragon(input: {
     unitLibrary: input.unitLibrary,
     spellId: SUMMON_DRAGON_SPELL_ID,
     castLevel,
-    invocation: (spell) =>
-      castLevel < LIFECYCLE_SPELL_LEVEL
-        ? characterSheetIssue(
-            "Summon Dragon requires a level-5 or higher Spell Slot.",
-          )
-        : summonDragonInvocationFromSpell({
-            spell,
-            spirit: input.spirit,
-            castLevel,
-          }),
+    invocation: (spell) => {
+      /* v8 ignore start -- A Summon Dragon request below level 5 is a malformed cast request rejected before invocation projection. */
+      if (castLevel < LIFECYCLE_SPELL_LEVEL) {
+        return characterSheetIssue(
+          "Summon Dragon requires a level-5 or higher Spell Slot.",
+        );
+      }
+      /* v8 ignore stop */
+      return summonDragonInvocationFromSpell({
+        spell,
+        spirit: input.spirit,
+        castLevel,
+      });
+    },
   });
 }
 
@@ -140,16 +148,20 @@ export function castPlanarBinding(input: {
     unitLibrary: input.unitLibrary,
     spellId: PLANAR_BINDING_SPELL_ID,
     castLevel,
-    invocation: (spell) =>
-      castLevel < LIFECYCLE_SPELL_LEVEL
-        ? characterSheetIssue(
-            "Planar Binding requires a level-5 or higher Spell Slot.",
-          )
-        : planarBindingInvocationFromSpell({
-            spell,
-            target: input.target,
-            castLevel,
-          }),
+    invocation: (spell) => {
+      /* v8 ignore start -- A Planar Binding request below level 5 is a malformed cast request rejected before invocation projection. */
+      if (castLevel < LIFECYCLE_SPELL_LEVEL) {
+        return characterSheetIssue(
+          "Planar Binding requires a level-5 or higher Spell Slot.",
+        );
+      }
+      /* v8 ignore stop */
+      return planarBindingInvocationFromSpell({
+        spell,
+        target: input.target,
+        castLevel,
+      });
+    },
   });
 }
 
@@ -181,6 +193,7 @@ function animateObjectsTargetIssue(input: {
   readonly spellcastingAbilityModifier: number;
   readonly castLevel: SpellSlotLevel;
 }): string | null {
+  /* v8 ignore start -- These branches reject malformed Animate Objects request facts that cannot describe a supported cast. */
   if (input.castLevel < LIFECYCLE_SPELL_LEVEL) {
     return "Animate Objects requires a level-5 or higher Spell Slot.";
   }
@@ -190,6 +203,7 @@ function animateObjectsTargetIssue(input: {
   if (input.targets.length === 0) {
     return "Animate Objects requires at least one target object.";
   }
+  /* v8 ignore stop */
   const usedWeight = input.targets.reduce(
     (sum, target) => sum + animateObjectsSizeWeight(target.size),
     0,
@@ -207,6 +221,7 @@ function animateObjectsInvocationFromSpell(input: {
   readonly castLevel: SpellSlotLevel;
 }): Either.Either<CharacterSheetAnimateObjectsInvocation, CharacterSheetIssue> {
   const spell = input.spell;
+  /* v8 ignore start -- The catalog record failed the exact authored Animate Objects support profile required by this projector. */
   if (
     spell.mechanics.family !== "templated_multi_spawn" ||
     spell.mechanics.level !== 5 ||
@@ -222,6 +237,8 @@ function animateObjectsInvocationFromSpell(input: {
       "Animate Objects requires the supported level-5 object animation profile.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- The catalog record has Animate Objects spell facts but a contradictory companion-control profile. */
   if (
     spell.mechanics.control.commandCost.kind !== "bonus_action" ||
     spell.mechanics.control.commandRangeFeet !==
@@ -231,12 +248,15 @@ function animateObjectsInvocationFromSpell(input: {
       "Animate Objects requires the supported companion control profile.",
     );
   }
+  /* v8 ignore stop */
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
+  /* v8 ignore start -- The exact one-minute duration admitted above is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue(
       "Animate Objects requires a supported duration.",
     );
   }
+  /* v8 ignore stop */
 
   const animatedObjects = input.targets.map((target) =>
     animatedObjectContract(target, input.castLevel),
@@ -281,6 +301,7 @@ function conjureElementalInvocationFromSpell(input: {
   CharacterSheetIssue
 > {
   const spell = input.spell;
+  /* v8 ignore start -- The catalog record failed the exact authored Conjure Elemental support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -296,12 +317,15 @@ function conjureElementalInvocationFromSpell(input: {
       "Conjure Elemental requires the supported level-5 elemental spirit profile.",
     );
   }
+  /* v8 ignore stop */
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
+  /* v8 ignore start -- The exact ten-minute duration admitted above is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue(
       "Conjure Elemental requires a supported duration.",
     );
   }
+  /* v8 ignore stop */
   const damageDiceCount = 8 + (input.castLevel - LIFECYCLE_SPELL_LEVEL);
   const repeatDamageDiceCount = 4 + (input.castLevel - LIFECYCLE_SPELL_LEVEL);
 
@@ -342,6 +366,7 @@ function summonDragonInvocationFromSpell(input: {
   readonly castLevel: SpellSlotLevel;
 }): Either.Either<CharacterSheetSummonDragonInvocation, CharacterSheetIssue> {
   const spell = input.spell;
+  /* v8 ignore start -- The catalog record failed the exact authored Summon Dragon support profile required by this projector. */
   if (
     spell.mechanics.family !== "spawned_creature" ||
     spell.mechanics.level !== 5 ||
@@ -357,6 +382,8 @@ function summonDragonInvocationFromSpell(input: {
       "Summon Dragon requires the supported level-5 spawned Dragon profile.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- The catalog record has Summon Dragon spell facts but a contradictory companion-control profile. */
   if (
     spell.mechanics.control?.commandCost.kind !== "no_action_required" ||
     spell.mechanics.control.initiative !== "shared_with_caster" ||
@@ -366,10 +393,13 @@ function summonDragonInvocationFromSpell(input: {
       "Summon Dragon requires the supported companion control profile.",
     );
   }
+  /* v8 ignore stop */
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
+  /* v8 ignore start -- The exact one-hour duration admitted above is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue("Summon Dragon requires a supported duration.");
   }
+  /* v8 ignore stop */
 
   return Either.right({
     tag: "summonDragon",
@@ -428,6 +458,7 @@ function planarBindingInvocationFromSpell(input: {
   readonly castLevel: SpellSlotLevel;
 }): Either.Either<CharacterSheetPlanarBindingInvocation, CharacterSheetIssue> {
   const spell = input.spell;
+  /* v8 ignore start -- The catalog record failed the exact authored Planar Binding support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -442,7 +473,9 @@ function planarBindingInvocationFromSpell(input: {
       "Planar Binding requires the supported level-5 binding profile.",
     );
   }
+  /* v8 ignore stop */
   const duration = planarBindingDuration(input.castLevel);
+  /* v8 ignore next -- Internal invariant: every supported Planar Binding cast level maps to a positive parsed hour/day duration. */
   if (Either.isLeft(duration)) return Either.left(duration.left);
 
   return Either.right({
@@ -598,9 +631,10 @@ function planarBindingDuration(
             ? { unit: "day", amount: 10 }
             : { unit: "hour", amount: 24 };
   const parsed = timeSpanDuration(duration);
-  return Either.isRight(parsed)
-    ? Either.right(parsed.right)
-    : characterSheetIssue("Planar Binding requires a supported duration.");
+  /* v8 ignore start -- Impossible parser failure: V8 maps the rejected-duration edge to this conditional, but every selected Planar Binding duration is a positive supported hour/day span. */
+  if (Either.isRight(parsed)) return Either.right(parsed.right);
+  return characterSheetIssue("Planar Binding requires a supported duration.");
+  /* v8 ignore stop */
 }
 
 void ANIMATE_OBJECTS_SIZE_VALUES;

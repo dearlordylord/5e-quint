@@ -4,6 +4,9 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION modify_memory
 // UNIT-IDENTITY-REPLAY: L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION modify_memory doCastModifyMemory
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import type { UnitCatalog } from "@dnd/character-creation-runtime";
+import type { ActivationPhase, SpellRecord } from "@dnd/surface/surface/types";
+import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -240,6 +243,64 @@ describe("Character Sheet runtime / Modify Memory", () => {
         "Modify Memory requires prepared class Spell Access.",
       );
     }
+  });
+
+  it("admits the equivalent composite condition-effect profile", () => {
+    const spellId = authoredUnitId("modify_memory");
+    const base = unitLibrary.requireUnit(spellId);
+    if (base.kind !== "spell" || base.mechanics.family !== "activation") {
+      throw new Error("Modify Memory fixture must be an activation Spell.");
+    }
+    const withCompositeConditionEffect = (
+      phase: (typeof base.mechanics.phases)[number],
+    ): ActivationPhase =>
+      phase.kind === "save_gate"
+        ? {
+            ...phase,
+            onFail: {
+              kind: "composite",
+              effects: [
+                { kind: "apply_condition", condition: "charmed" },
+                {
+                  kind: "apply_condition",
+                  condition: "incapacitated",
+                },
+              ],
+            },
+          }
+        : phase;
+    const compositeSpell: SpellRecord = {
+      ...base,
+      mechanics: {
+        ...base.mechanics,
+        phases: [
+          withCompositeConditionEffect(base.mechanics.phases[0]),
+          ...base.mechanics.phases.slice(1).map(withCompositeConditionEffect),
+        ],
+      },
+    };
+    const compositeCatalog: UnitCatalog = {
+      getUnit: (id) =>
+        id === spellId ? Option.some(compositeSpell) : unitLibrary.getUnit(id),
+      listUnits: () =>
+        unitLibrary
+          .listUnits()
+          .map((unit) => (unit.id === spellId ? compositeSpell : unit)),
+      requireUnit: (id) =>
+        id === spellId ? compositeSpell : unitLibrary.requireUnit(id),
+    };
+
+    expect(
+      castModifyMemory({
+        sheet: modifyMemoryWizardSheet({
+          preparedSpells: ["modify_memory"],
+          slots: 1,
+        }),
+        unitLibrary: compositeCatalog,
+        target: modifyMemoryTarget({ savingThrowOutcome: { tag: "failed" } }),
+        memoryEdit: modifyMemoryEdit(),
+      }),
+    ).toMatchObject({ _tag: "Right" });
   });
 });
 

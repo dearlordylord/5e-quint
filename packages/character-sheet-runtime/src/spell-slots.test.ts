@@ -4,6 +4,7 @@ import { describe, expect, test } from "vitest";
 import {
   Hp,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
+  armorClassBuild,
   characterSheetId,
   characterSheetPactSlots,
   characterSheetResources,
@@ -28,8 +29,32 @@ import {
   warlockMagicalCunningBuild,
   wizardBuild,
 } from "./test-support.test-support.ts";
+import { replaceOrdinarySpellSlotExpenditure } from "./spell-slots.ts";
 
 describe("Character Sheet runtime / spell slots", () => {
+  test("projects no Spell Slot state for a non-spellcasting sheet", () => {
+    const sheet = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:synthetic-no-spell-slots"),
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    expect(characterSheetSpellSlots(sheet)).toBeUndefined();
+    expect(characterSheetSpellSlotSourceState(sheet)).toBeUndefined();
+    expect(
+      replaceOrdinarySpellSlotExpenditure({
+        expenditures: [
+          { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
+        ],
+        spellLevel: spellSlotLevel(1),
+        expended: resourceCount(0),
+      }),
+    ).toEqual([]);
+  });
+
   test("projects absent ordinary Spell Slot expenditure as zero against build capacity", () => {
     const sheet = requireRight(
       rebuildCharacterSheetFixture({
@@ -553,5 +578,36 @@ describe("Character Sheet runtime / spell slots", () => {
           "Font of Magic Spell Slot creation requires a Creating Spell Slots table entry.",
       },
     });
+  });
+
+  test("adds another created slot at an existing created level", () => {
+    const sheet = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:synthetic-repeat-created-slot",
+        ),
+        build: sorcererFontOfMagicBuild({ sorcererAdvancements: 4 }),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const first = requireRight(
+      convertFontOfMagicSorceryPointsToSpellSlot({
+        sheet,
+        unitLibrary,
+        spellLevel: spellSlotLevel(1),
+      }),
+    );
+    const second = requireRight(
+      convertFontOfMagicSorceryPointsToSpellSlot({
+        sheet: first,
+        unitLibrary,
+        spellLevel: spellSlotLevel(1),
+      }),
+    );
+
+    expect(
+      characterSheetSpellSlotSourceState(second)?.createdSpellSlots,
+    ).toEqual([{ spellLevel: 1, count: 2, expended: 0 }]);
   });
 });

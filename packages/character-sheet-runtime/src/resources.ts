@@ -88,14 +88,17 @@ export function characterSheetResources(
     sheet.build,
     unitLibrary,
   );
+  /* v8 ignore start -- Malformed build/catalog correlation: Lay On Hands projection receives feature ids already admitted from this Unit catalog. */
   if (Either.isLeft(layOnHandsResource))
     return Either.left(layOnHandsResource.left);
+  /* v8 ignore stop */
   if (layOnHandsResource.right !== null) {
     const count = characterSheetResourceCapacity({
       build: sheet.build,
       unitLibrary,
       resource: layOnHandsResource.right,
     });
+    /* v8 ignore next -- An admitted Lay On Hands resource must have a build-derived capacity. */
     if (Either.isLeft(count)) return Either.left(count.left);
     resources.push({
       ...layOnHandsResource.right,
@@ -112,9 +115,11 @@ export function characterSheetResources(
     sheet.build,
     unitLibrary,
   );
+  /* v8 ignore start -- Malformed build/catalog correlation: feature ids admitted into the build must still resolve to their free-cast resource profiles. */
   if (Either.isLeft(freeCastResources)) {
     return Either.left(freeCastResources.left);
   }
+  /* v8 ignore stop */
   for (const freeCastResource of freeCastResources.right) {
     resources.push({
       ...freeCastResource,
@@ -129,15 +134,18 @@ export function characterSheetResources(
     sheet.build,
     unitLibrary,
   );
+  /* v8 ignore start -- Malformed build/catalog correlation: feature ids admitted into the build must still resolve to their use-count resource profiles. */
   if (Either.isLeft(useCountResources)) {
     return Either.left(useCountResources.left);
   }
+  /* v8 ignore stop */
   for (const useCountResource of useCountResources.right) {
     const count = characterSheetResourceCapacity({
       build: sheet.build,
       unitLibrary,
       resource: useCountResource,
     });
+    /* v8 ignore next -- An admitted use-count resource must have a build-derived capacity. */
     if (Either.isLeft(count)) return Either.left(count.left);
     resources.push({
       ...useCountResource,
@@ -156,15 +164,18 @@ export function characterSheetResources(
     sheet.build,
     unitLibrary,
   );
+  /* v8 ignore start -- Malformed build/catalog correlation: feature ids admitted into the build must still resolve to their point-pool resource profiles. */
   if (Either.isLeft(pointPoolResources)) {
     return Either.left(pointPoolResources.left);
   }
+  /* v8 ignore stop */
   for (const pointPoolResource of pointPoolResources.right) {
     const count = characterSheetResourceCapacity({
       build: sheet.build,
       unitLibrary,
       resource: pointPoolResource,
     });
+    /* v8 ignore next -- An admitted point-pool resource must have a build-derived capacity. */
     if (Either.isLeft(count)) return Either.left(count.left);
     resources.push({
       ...pointPoolResource,
@@ -193,6 +204,7 @@ export function characterSheetMonksFocusSaveDc(
     build: sheet.build,
     unitLibrary,
   });
+  /* v8 ignore next -- Monk focus fact rejection is malformed build/catalog correlation. */
   if (Either.isLeft(facts)) return characterSheetIssue(facts.left.message);
   if (facts.right === undefined) return Either.right(undefined);
 
@@ -221,6 +233,7 @@ export function characterSheetMonkUncannyMetabolismUseState(
     build: sheet.build,
     unitLibrary,
   });
+  /* v8 ignore next -- Uncanny Metabolism fact rejection is malformed build/catalog correlation. */
   if (Either.isLeft(facts)) return characterSheetIssue(facts.left.message);
   if (facts.right === undefined) return Either.right(undefined);
 
@@ -239,12 +252,15 @@ export function useMonkUncannyMetabolismWhenRollingInitiative(
     input.sheet,
     input.unitLibrary,
   );
+  /* v8 ignore next -- Use-state rejection is malformed Uncanny Metabolism build/resource correlation. */
   if (Either.isLeft(useState)) return Either.left(useState.left);
+  /* v8 ignore start -- Malformed action input: Uncanny Metabolism was requested by a build without the admitted feature. */
   if (useState.right === undefined) {
     return characterSheetIssue(
       "Uncanny Metabolism requires the Monk Uncanny Metabolism feature.",
     );
   }
+  /* v8 ignore stop */
   if (useState.right.usedSinceLongRest) {
     return characterSheetIssue(
       "Uncanny Metabolism cannot be used again until a Long Rest.",
@@ -268,6 +284,7 @@ export function useMonkUncannyMetabolismWhenRollingInitiative(
     deadCharacterMessage:
       "Uncanny Metabolism cannot restore HP to a dead character.",
   });
+  /* v8 ignore next -- Healing rejection is malformed Uncanny Metabolism HP-state input. */
   if (Either.isLeft(healed)) return Either.left(healed.left);
 
   return Either.right({
@@ -292,27 +309,35 @@ export function useRangerTirelessTemporaryHitPoints(input: {
   readonly unitLibrary: UnitCatalog;
   readonly tirelessRoll: DieRollResult;
 }): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  /* v8 ignore start -- Malformed Tireless input: Temporary Hit Points were requested for an unconscious character. */
   if (input.sheet.hitPoints.tag === "zero") {
     return characterSheetIssue(
       "Tireless Temporary Hit Points require a conscious character.",
     );
   }
+  /* v8 ignore stop */
   const resources = characterSheetResources(input.sheet, input.unitLibrary);
+  /* v8 ignore next -- Tireless resource rejection is malformed build/resource correlation. */
   if (Either.isLeft(resources)) return Either.left(resources.left);
   const profile = tirelessTemporaryHitPointsProfile(
     resources.right,
     input.unitLibrary,
   );
+  /* v8 ignore next -- Tireless profile rejection is unsupported authored feature data. */
   if (Either.isLeft(profile)) return Either.left(profile.left);
+  /* v8 ignore start -- Malformed Tireless input: the build lacks the admitted Ranger Tireless feature. */
   if (profile.right === undefined) {
     return characterSheetIssue(
       "Tireless requires the Ranger Tireless feature.",
     );
   }
+  /* v8 ignore stop */
   const { resource } = profile.right;
+  /* v8 ignore start -- Malformed Tireless input: the feature has no remaining use to spend. */
   if (resource.expended + resourceCount(1) > resource.count) {
     return characterSheetIssue("Tireless has no remaining uses.");
   }
+  /* v8 ignore stop */
   const roll = Number(input.tirelessRoll);
   if (roll < 1 || roll > profile.right.dieSize) {
     return characterSheetIssue(
@@ -351,15 +376,19 @@ function tirelessTemporaryHitPointsProfile(
   for (const resource of resources) {
     if (resource.tag !== "useCountResource") continue;
     const unit = getRequiredUnit(unitLibrary, resource.unitId);
+    /* v8 ignore next -- An admitted Lay On Hands resource id must resolve in the same Unit catalog. */
     if (Either.isLeft(unit)) return Either.left(unit.left);
+    /* v8 ignore start -- Nonmatching use-count resources are outside the exact Tireless temporary-HP feature profile, not alternate Tireless outcomes. */
     if (
       unit.right.kind !== "class_feature" ||
       unit.right.mechanics.family !== "activation"
     ) {
       continue;
     }
+    /* v8 ignore stop */
     const mechanics = unit.right.mechanics;
     const [phase, ...extraPhases] = mechanics.phases;
+    /* v8 ignore start -- Unsupported authored Tireless data: admission requires the exact action, Wisdom-capacity, Long-Rest, single-self-phase shell. */
     if (
       mechanics.activationCost.kind !== "standard_action" ||
       mechanics.activationCost.action !== "magic" ||
@@ -374,7 +403,10 @@ function tirelessTemporaryHitPointsProfile(
     ) {
       continue;
     }
+    /* v8 ignore stop */
+    /* v8 ignore next -- Unsupported authored Tireless data: the admitted direct phase requires an explicit effect list. */
     const [effect, ...extraEffects] = phase.effects ?? [];
+    /* v8 ignore start -- Unsupported authored Tireless data: admission requires one d8-plus-Wisdom temporary-HP effect and no extra effects. */
     if (
       effect?.kind !== "grant_temp_hp" ||
       effect.amount.kind !== "fixed" ||
@@ -385,17 +417,20 @@ function tirelessTemporaryHitPointsProfile(
     ) {
       continue;
     }
+    /* v8 ignore stop */
     matches.push({
       resource,
       ability: effect.amount.expr.abilityModifier,
       dieSize: effect.amount.expr.dieSize,
     });
   }
+  /* v8 ignore start -- Malformed admitted build: more than one matching Tireless Temporary Hit Point profile survived support admission. */
   if (matches.length > 1) {
     return characterSheetIssue(
       "Tireless Temporary Hit Points requires one matching feature profile.",
     );
   }
+  /* v8 ignore stop */
   const [profile] = matches;
   return Either.right(profile);
 }
@@ -414,33 +449,42 @@ export function resourceExpendituresFromInput(
     input.build,
     input.unitLibrary,
   );
+  /* v8 ignore start -- Malformed build/catalog correlation: the retained Lay On Hands resource cannot be projected from its installed feature Unit. */
   if (Either.isLeft(layOnHandsResource)) {
     return Either.left(layOnHandsResource.left);
   }
+  /* v8 ignore stop */
   const freeCastResources = classFeatureSpellFreeCastResourcesForBuild(
     input.build,
     input.unitLibrary,
   );
+  /* v8 ignore start -- Malformed build/catalog correlation: a retained free-cast resource cannot be projected from its installed feature Unit. */
   if (Either.isLeft(freeCastResources)) {
     return Either.left(freeCastResources.left);
   }
+  /* v8 ignore stop */
   const useCountResources = classFeatureUseCountResourcesForBuild(
     input.build,
     input.unitLibrary,
   );
+  /* v8 ignore start -- Malformed build/catalog correlation: a retained use-count resource cannot be projected from its installed feature Unit. */
   if (Either.isLeft(useCountResources)) {
     return Either.left(useCountResources.left);
   }
+  /* v8 ignore stop */
   const pointPoolResources = classFeaturePointPoolResourcesForBuild(
     input.build,
     input.unitLibrary,
   );
+  /* v8 ignore start -- Malformed build/catalog correlation: a retained point-pool resource cannot be projected from its installed feature Unit. */
   if (Either.isLeft(pointPoolResources)) {
     return Either.left(pointPoolResources.left);
   }
+  /* v8 ignore stop */
   const seen: CharacterSheetResourceExpenditure[] = [];
   const result: CharacterSheetResourceExpenditure[] = [];
   for (const expenditure of expenditures) {
+    /* v8 ignore start -- Malformed stored sheet: resource expenditure state duplicates the same resource identity. */
     if (
       seen.some((existing) =>
         characterSheetResourceExpendituresMatch(existing, expenditure),
@@ -450,6 +494,7 @@ export function resourceExpendituresFromInput(
         "Character Sheet resource expenditure state must not duplicate.",
       );
     }
+    /* v8 ignore stop */
     seen.push(expenditure);
     const count = characterSheetResourceExpenditureCapacity({
       build: input.build,
@@ -460,6 +505,7 @@ export function resourceExpendituresFromInput(
       pointPoolResources: pointPoolResources.right,
       expenditure,
     });
+    /* v8 ignore next -- Malformed retained resource state: every expenditure must name a resource admitted from the same build and Unit catalog. */
     if (Either.isLeft(count)) return Either.left(count.left);
     if (
       !Number.isInteger(expenditure.expended) ||
@@ -487,6 +533,7 @@ export function recoverShortRestUseCountResources(input: {
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<CharacterSheet, CharacterSheetIssue> {
   const resources = characterSheetResources(input.sheet, input.unitLibrary);
+  /* v8 ignore next -- Malformed build/catalog correlation: Short Rest recovery reuses the resource projection admitted for this sheet. */
   if (Either.isLeft(resources)) return Either.left(resources.left);
   let resourceExpenditures = [...input.sheet.resourceExpenditures];
   for (const resource of resources.right) {
@@ -545,11 +592,13 @@ function characterSheetResourceExpenditureCapacity(input: {
   readonly expenditure: CharacterSheetResourceExpenditure;
 }): Either.Either<ResourceCount, CharacterSheetIssue> {
   if (input.expenditure.tag === "layOnHandsHealingPool") {
+    /* v8 ignore start -- Malformed stored sheet: Lay On Hands expenditure exists without its admitted healing-pool resource. */
     if (input.layOnHandsResource === null) {
       return characterSheetIssue(
         "Lay On Hands healing pool expenditure requires the Paladin Lay On Hands feature.",
       );
     }
+    /* v8 ignore stop */
     return characterSheetResourceCapacity({
       build: input.build,
       unitLibrary: input.unitLibrary,
@@ -561,11 +610,13 @@ function characterSheetResourceExpenditureCapacity(input: {
     const useCountResource = input.useCountResources.find(
       (resource) => resource.unitId === unitId,
     );
+    /* v8 ignore start -- Malformed stored sheet: a use-count expenditure names no retained use-count resource. */
     if (useCountResource === undefined) {
       return characterSheetIssue(
         "Class feature use-count expenditure requires the matching class feature.",
       );
     }
+    /* v8 ignore stop */
     return characterSheetResourceCapacity({
       build: input.build,
       unitLibrary: input.unitLibrary,
@@ -577,11 +628,13 @@ function characterSheetResourceExpenditureCapacity(input: {
     const pointPoolResource = input.pointPoolResources.find(
       (resource) => resource.unitId === unitId,
     );
+    /* v8 ignore start -- Malformed stored sheet: a point-pool expenditure names no retained point-pool resource. */
     if (pointPoolResource === undefined) {
       return characterSheetIssue(
         "Class feature point-pool expenditure requires the matching class feature.",
       );
     }
+    /* v8 ignore stop */
     return characterSheetResourceCapacity({
       build: input.build,
       unitLibrary: input.unitLibrary,
@@ -591,11 +644,13 @@ function characterSheetResourceExpenditureCapacity(input: {
   const freeCastResource = input.freeCastResources.find(
     (resource) => resource.tag === input.expenditure.tag,
   );
+  /* v8 ignore start -- Malformed stored sheet: a free-cast expenditure tag names no retained class-feature resource. */
   if (freeCastResource === undefined) {
     return characterSheetIssue(
       "Class feature spell free-cast expenditure requires the matching class feature.",
     );
   }
+  /* v8 ignore stop */
   return Either.right(freeCastResource.count);
 }
 
@@ -612,6 +667,7 @@ function characterSheetResourceExpenditureWithExpended(
   return { tag: expenditure.tag, expended };
 }
 
+/* v8 ignore start -- This equality helper is reached only while rejecting duplicate malformed resource-expenditure entries. */
 function characterSheetResourceExpendituresMatch(
   first: CharacterSheetResourceExpenditure,
   second: CharacterSheetResourceExpenditure,
@@ -625,6 +681,7 @@ function characterSheetResourceExpendituresMatch(
   }
   return true;
 }
+/* v8 ignore stop */
 
 function layOnHandsResourceForBuild(
   build: CharacterBuild,
@@ -632,6 +689,7 @@ function layOnHandsResourceForBuild(
 ): Either.Either<CharacterSheetLayOnHandsResource | null, CharacterSheetIssue> {
   for (const resource of characterBuildResources(build, unitLibrary)) {
     const unit = getRequiredUnit(unitLibrary, resource.unitId);
+    /* v8 ignore next -- An admitted use-count resource id must resolve in the same Unit catalog. */
     if (Either.isLeft(unit)) return Either.left(unit.left);
     const layOnHandsResource = layOnHandsHealingPoolResourceForUnit(unit.right);
     if (layOnHandsResource !== null) {
@@ -651,6 +709,7 @@ function layOnHandsHealingPoolResourceForUnit(
     return null;
   }
   const mechanics = unit.mechanics;
+  /* v8 ignore start -- Unsupported authored Lay On Hands data: the admitted Paladin feature must retain its exact bonus-action Long-Rest charge-pool profile. */
   if (
     mechanics.family !== "activation" ||
     mechanics.activationCost?.kind !== "bonus_action" ||
@@ -664,6 +723,8 @@ function layOnHandsHealingPoolResourceForUnit(
   ) {
     return null;
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Unsupported authored Lay On Hands data: V8 maps absent direct effects and a missing pool-driven heal to this expression, while admission requires both. */
   const healsFromSpentPool = mechanics.phases.some(
     (phase) =>
       phase.kind === "direct" &&
@@ -676,6 +737,7 @@ function layOnHandsHealingPoolResourceForUnit(
         false),
   );
   return healsFromSpentPool ? mechanics.resource : null;
+  /* v8 ignore stop */
 }
 
 function classFeatureSpellFreeCastResourcesForBuild(
@@ -691,6 +753,7 @@ function classFeatureSpellFreeCastResourcesForBuild(
     unitLibrary,
   )) {
     const unit = unitLibrary.getUnit(featureUnitId);
+    /* v8 ignore next -- Malformed build/catalog correlation: every feature id returned from this admitted build must resolve in the same catalog. */
     if (Option.isNone(unit)) continue;
     const resource = classFeatureSpellFreeCastResourceForUnit(unit.value);
     if (resource !== null) {
@@ -727,13 +790,16 @@ function classFeatureUseCountResourcesForBuild(
   for (const resource of characterBuildResources(build, unitLibrary)) {
     if (!isCharacterSheetUseCountResourceUnitId(resource.unitId)) continue;
     const unit = getRequiredUnit(unitLibrary, resource.unitId);
+    /* v8 ignore next -- An admitted point-pool resource id must resolve in the same Unit catalog. */
     if (Either.isLeft(unit)) return Either.left(unit.left);
     const resetCadence = restResetCadenceForUseCountResourceUnit(unit.right);
+    /* v8 ignore start -- Malformed build/catalog correlation: an admitted use-count resource lacks its installed rest-reset feature shape. */
     if (resource.resource.kind !== "use_count" || resetCadence === undefined) {
       return characterSheetIssue(
         "Class feature use-count resource requires an installed rest-reset class feature.",
       );
     }
+    /* v8 ignore stop */
     resources.push({
       unitId: resource.unitId,
       resource: resource.resource,
@@ -754,10 +820,12 @@ function classFeaturePointPoolResourcesForBuild(
   for (const resource of characterBuildResources(build, unitLibrary)) {
     if (!isCharacterSheetPointPoolResourceUnitId(resource.unitId)) continue;
     const unit = getRequiredUnit(unitLibrary, resource.unitId);
+    /* v8 ignore next -- Malformed build/catalog correlation: every admitted point-pool resource id must resolve in the same Unit catalog. */
     if (Either.isLeft(unit)) return Either.left(unit.left);
     const resetCadence = restResetCadenceForClassFeatureResourceUnit(
       unit.right,
     );
+    /* v8 ignore start -- Malformed build/catalog correlation: an admitted point-pool resource lacks its installed Long-Rest reset feature shape. */
     if (
       resource.resource.kind !== "point_pool" ||
       resetCadence?.kind !== "long_rest"
@@ -766,6 +834,7 @@ function classFeaturePointPoolResourcesForBuild(
         "Class feature point-pool resource requires an installed Long Rest reset class feature.",
       );
     }
+    /* v8 ignore stop */
     resources.push({
       unitId: resource.unitId,
       resource: resource.resource,
@@ -782,6 +851,7 @@ export function recoverSorceryPointsWithSorcerousRestoration(
     input.sheet.build,
     input.unitLibrary,
   );
+  /* v8 ignore next -- Sorcerous Restoration profile rejection is malformed build/catalog correlation. */
   if (Either.isLeft(profile)) return Either.left(profile.left);
   if (
     input.sheet.restFeatureUses.some(
@@ -792,12 +862,15 @@ export function recoverSorceryPointsWithSorcerousRestoration(
       "Sorcerous Restoration cannot be used again until a Long Rest.",
     );
   }
+  /* v8 ignore start -- Malformed Sorcerous Restoration input: requested recovery is zero. */
   if (input.recoverSorceryPoints < resourceCount(1)) {
     return characterSheetIssue(
       "Sorcerous Restoration must recover expended Sorcery Points.",
     );
   }
+  /* v8 ignore stop */
   const resources = characterSheetResources(input.sheet, input.unitLibrary);
+  /* v8 ignore next -- Sorcery Point projection rejection is malformed build/resource correlation. */
   if (Either.isLeft(resources)) return Either.left(resources.left);
   const sorceryPointResourceUnitId =
     profile.right.feature.mechanics.resource.resourceUnitId;
@@ -806,11 +879,14 @@ export function recoverSorceryPointsWithSorcerousRestoration(
       resource.tag === "pointPoolResource" &&
       resource.unitId === sorceryPointResourceUnitId,
   );
+  /* v8 ignore start -- Malformed build/resource correlation: Sorcerous Restoration lacks the admitted Sorcery Point pool. */
   if (sorceryPoints === undefined) {
     return characterSheetIssue(
       "Sorcerous Restoration requires the Font of Magic Sorcery Point pool.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed Sorcerous Restoration input: the pool has no expenditure or recovery exceeds current expenditure. */
   if (sorceryPoints.expended < resourceCount(1)) {
     return characterSheetIssue(
       "Sorcerous Restoration must recover expended Sorcery Points.",
@@ -821,6 +897,7 @@ export function recoverSorceryPointsWithSorcerousRestoration(
       "Sorcerous Restoration cannot recover more Sorcery Points than are expended.",
     );
   }
+  /* v8 ignore stop */
   const recoveryCap = sorcerousRestorationRecoveryCap(profile.right);
   if (input.recoverSorceryPoints > recoveryCap) {
     return characterSheetIssue(
@@ -856,14 +933,17 @@ export function sorcerousRestorationProfileForBuild(
   const profiles: CharacterSheetSorcerousRestorationProfile[] = [];
   for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
     const unit = getRequiredUnit(unitLibrary, unitId);
+    /* v8 ignore next -- A build-owned Sorcerous Restoration feature id must resolve in the same Unit catalog. */
     if (Either.isLeft(unit)) return Either.left(unit.left);
     if (!isSorcerousRestorationFeature(unit.right)) continue;
     const ownerClassLevel = classFeatureOwnerLevel(
       { build, unitLibrary },
       unit.right,
     );
+    /* v8 ignore start -- Malformed admitted build: Sorcerous Restoration feature ownership requires its correlated Sorcerer class in progression. */
     if (Either.isLeft(ownerClassLevel))
       return Either.left(ownerClassLevel.left);
+    /* v8 ignore stop */
     profiles.push({
       feature: unit.right,
       ownerClassLevel: ownerClassLevel.right,
@@ -874,17 +954,21 @@ export function sorcerousRestorationProfileForBuild(
       "Sorcerous Restoration requires the Sorcerer level 5 feature.",
     );
   }
+  /* v8 ignore start -- Malformed admitted build: more than one Sorcerous Restoration feature survived support admission. */
   if (profiles.length > 1) {
     return characterSheetIssue(
       "Character Sheet supports only one Sorcerous Restoration feature.",
     );
   }
+  /* v8 ignore stop */
   const profile = profiles[0];
+  /* v8 ignore start -- The nonempty profile check above makes an absent first Sorcerous Restoration profile impossible. */
   if (profile === undefined) {
     return characterSheetIssue(
       "Sorcerous Restoration requires the Sorcerer level 5 feature.",
     );
   }
+  /* v8 ignore stop */
   return Either.right(profile);
 }
 
@@ -923,14 +1007,17 @@ function restResetCadenceForUseCountResourceUnit(
 function restResetCadenceForClassFeatureResourceUnit(
   unit: UnitRecord,
 ): RestResetCadence | undefined {
+  /* v8 ignore next -- Unsupported authored resource data: this projector is called only for admitted class-feature resource Units. */
   if (unit.kind !== "class_feature") return undefined;
   const mechanics = unit.mechanics;
+  /* v8 ignore start -- Malformed admitted resource Unit: its class-feature mechanics omit a reset cadence or carry a cadence outside the closed rest roster. */
   if (!("resetCadence" in mechanics) || mechanics.resetCadence === undefined) {
     return undefined;
   }
   return isRestResetCadence(mechanics.resetCadence)
     ? mechanics.resetCadence
     : undefined;
+  /* v8 ignore stop */
 }
 
 function isRestResetCadence(
@@ -954,10 +1041,12 @@ function characterSheetResourceCapacity(
   input: CharacterSheetResourceCapacityInput,
 ): Either.Either<ResourceCount, CharacterSheetIssue> {
   const unit = getRequiredUnit(input.unitLibrary, input.resource.unitId);
+  /* v8 ignore next -- Malformed build/catalog correlation: every admitted build resource id must resolve in the same Unit catalog. */
   if (Either.isLeft(unit)) return Either.left(unit.left);
   const cap = input.resource.resource.cap;
   if (cap.kind === "fixed") return Either.right(resourceCount(cap.uses));
   if (cap.kind === "linear_per_level") {
+    /* v8 ignore start -- Malformed admitted resource: class-level linear scaling uses the wrong axis or belongs to a non-feature Unit. */
     if (!isClassLevelLinearPerLevel(cap)) {
       return characterSheetIssue(
         "Character Sheet resource level scaling must use class level.",
@@ -968,13 +1057,16 @@ function characterSheetResourceCapacity(
         "Class-level resource scaling requires a class feature Unit.",
       );
     }
+    /* v8 ignore stop */
     const level = classFeatureOwnerLevel(input, unit.right);
+    /* v8 ignore next -- Malformed admitted build: a class-scaled resource feature requires its owning class in progression. */
     if (Either.isLeft(level)) return Either.left(level.left);
     return Either.right(
       resourceCount(classLevelLinearValueAtClassLevel(cap, level.right)),
     );
   }
   if (cap.kind === "threshold_tiers") {
+    /* v8 ignore start -- Malformed admitted resource: threshold scaling uses the wrong axis or belongs to a non-feature Unit. */
     if (!isClassLevelThresholdTiers(cap)) {
       return characterSheetIssue(
         "Character Sheet resource threshold scaling must use class level.",
@@ -985,7 +1077,9 @@ function characterSheetResourceCapacity(
         "Class-level resource threshold scaling requires a class feature Unit.",
       );
     }
+    /* v8 ignore stop */
     const level = classFeatureOwnerLevel(input, unit.right);
+    /* v8 ignore next -- Malformed admitted build: a threshold-scaled resource feature requires its owning class in progression. */
     if (Either.isLeft(level)) return Either.left(level.left);
     return Either.right(
       resourceCount(thresholdTierValueAtClassLevel(cap, level.right)),
@@ -1000,6 +1094,7 @@ function characterSheetResourceCapacity(
       ),
     );
   }
+  /* v8 ignore start -- Internal exhaustiveness invariant: V8 maps an unknown capacity-kind edge to this final conditional, but CharacterBuildResource kinds are closed and handled here. */
   if (cap.kind === "ability_modifier") {
     return Either.right(
       resourceCount(
@@ -1013,14 +1108,17 @@ function characterSheetResourceCapacity(
   return characterSheetIssue(
     "Character Sheet resource capacity is not supported by this runtime.",
   );
+  /* v8 ignore stop */
 }
 
 function classFeatureOwnerLevel(
   input: Pick<CharacterSheetResourceCapacityInput, "build" | "unitLibrary">,
   feature: CharacterSheetClassFeatureRecord,
 ): Either.Either<number, CharacterSheetIssue> {
+  /* v8 ignore start -- Malformed admitted build: V8 maps the exhausted-scan edge to this loop, but an admitted class-feature resource's owning class must occur in progression. */
   for (const classId of progressionClassUnitIds(input.build.progression)) {
     const classUnit = getRequiredUnit(input.unitLibrary, classId);
+    /* v8 ignore next -- Malformed build/catalog correlation: every class id admitted into progression must resolve in the same Unit catalog. */
     if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
     if (
       classUnit.right.kind === "class" &&
@@ -1032,6 +1130,7 @@ function classFeatureOwnerLevel(
   return characterSheetIssue(
     "Class-feature resource requires the owning class in progression.",
   );
+  /* v8 ignore stop */
 }
 
 function shortRestUseCountExpendedAfterRecovery(

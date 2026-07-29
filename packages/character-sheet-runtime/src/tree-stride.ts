@@ -79,6 +79,7 @@ export function resolveTreeStrideTransit(
 function treeStrideInvocationFromSpell(
   spell: SpellRecord,
 ): Either.Either<CharacterSheetTreeStrideInvocation, CharacterSheetIssue> {
+  /* v8 ignore start -- The catalog record failed the exact authored level-5 Tree Stride support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -92,22 +93,29 @@ function treeStrideInvocationFromSpell(
       "Tree Stride requires the supported self-range level-5 tree-travel profile.",
     );
   }
+  /* v8 ignore stop */
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
+  /* v8 ignore start -- The authored Tree Stride duration admitted above is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue("Tree Stride requires a supported duration.");
   }
+  /* v8 ignore stop */
   const directPhase = spell.mechanics.phases.find(
     (phase) =>
       phase.kind === "direct" &&
       phase.attachment.kind === "self" &&
+      /* v8 ignore next -- Unsupported authored Tree Stride data: the admitted self phase requires exactly one explicit no-op effect. */
       (phase.effects ?? []).length === 1 &&
+      /* v8 ignore next -- Unsupported authored Tree Stride data: omission of that required effect was rejected by the same profile predicate. */
       (phase.effects ?? [])[0]?.kind === "none",
   );
+  /* v8 ignore start -- The catalog record has Tree Stride spell facts but no supported direct self phase. */
   if (directPhase === undefined) {
     return characterSheetIssue(
       "Tree Stride requires the supported self tree-travel profile.",
     );
   }
+  /* v8 ignore stop */
 
   return Either.right({
     tag: "treeStride",

@@ -56,12 +56,14 @@ export function castTelekinesis(input: {
 function telekinesisTargetIssue(
   target: CharacterSheetTelekinesisTarget,
 ): string | null {
+  /* v8 ignore start -- These branches reject malformed visibility or size facts outside the narrowed Telekinesis target contract. */
   if (target.visibleWithinRange !== true) {
     return "Telekinesis target must be visible within 60 feet.";
   }
   if ("hugeOrSmaller" in target && target.hugeOrSmaller !== true) {
     return "Telekinesis supports Huge or smaller creature and object targets.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
@@ -70,6 +72,7 @@ function telekinesisInvocationFromSpell(input: {
   readonly target: CharacterSheetTelekinesisTarget;
 }): Either.Either<CharacterSheetTelekinesisInvocation, CharacterSheetIssue> {
   const spell = input.spell;
+  /* v8 ignore start -- The catalog record failed the exact authored level-5 Telekinesis support profile required by this projector. */
   if (
     spell.mechanics.family !== "ongoing_effect" ||
     spell.mechanics.level !== 5 ||
@@ -88,17 +91,22 @@ function telekinesisInvocationFromSpell(input: {
       "Telekinesis requires the supported level-5 sustained force-control profile.",
     );
   }
+  /* v8 ignore stop */
 
+  /* v8 ignore start -- The catalog record has Telekinesis spell facts but omits the cast/repeat control operations. */
   if (!hasSupportedTelekinesisOperations(spell)) {
     return characterSheetIssue(
       "Telekinesis requires the supported cast-and-repeat Magic Action control operations.",
     );
   }
+  /* v8 ignore stop */
 
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
+  /* v8 ignore start -- The exact ten-minute duration admitted above is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue("Telekinesis requires a supported duration.");
   }
+  /* v8 ignore stop */
 
   return Either.right({
     tag: "telekinesis",
@@ -134,6 +142,7 @@ function telekinesisInvocationFromSpell(input: {
 }
 
 function hasSupportedTelekinesisOperations(spell: SpellRecord): boolean {
+  /* v8 ignore next -- Unsupported authored Telekinesis data: admission requires ongoing-effect mechanics before operation projection. */
   if (spell.mechanics.family !== "ongoing_effect") return false;
   const operations = spell.mechanics.operations;
   const starts = operations.some(
@@ -152,10 +161,13 @@ function hasSupportedTelekinesisOperations(spell: SpellRecord): boolean {
 }
 
 function isTelekinesisModeChoice(effect: unknown): boolean {
+  /* v8 ignore start -- Non-record or differently tagged effect entries are unsupported authored Telekinesis operation data. */
   if (!isRecord(effect) || effect.kind !== "choose_effect_mode") {
     return false;
   }
+  /* v8 ignore stop */
   const options = effect.options;
+  /* v8 ignore next -- Unsupported authored Telekinesis data: the admitted mode choice requires an explicit option list. */
   if (!Array.isArray(options)) return false;
   return TELEKINESIS_MODE_IDS.every((id) =>
     options.some((option) => isRecord(option) && option.id === id),

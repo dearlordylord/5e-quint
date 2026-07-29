@@ -171,6 +171,52 @@ describe("Character Sheet runtime / Telekinesis", () => {
     ]);
   });
 
+  test("Telekinesis projects successful saves and both worn-object outcomes", () => {
+    const creatureSave = requireRight(
+      castTelekinesis({
+        sheet: telekinesisWizardSheet({
+          preparedSpells: ["telekinesis"],
+          slots: 3,
+        }),
+        unitLibrary,
+        target: {
+          ...failedCreatureTarget,
+          savingThrowOutcome: { tag: "succeeded" },
+        },
+      }),
+    );
+    expect(creatureSave.invocation.initialExertion).toEqual({
+      tag: "creatureSaveSucceeded",
+      affected: false,
+    });
+
+    const wornSave = requireRight(
+      castTelekinesis({
+        sheet: creatureSave.sheet,
+        unitLibrary,
+        target: wornObjectTarget("succeeded"),
+      }),
+    );
+    expect(wornSave.invocation.initialExertion).toEqual({
+      tag: "wornOrCarriedObjectSaveSucceeded",
+      affected: false,
+    });
+
+    const wornFailure = requireRight(
+      castTelekinesis({
+        sheet: wornSave.sheet,
+        unitLibrary,
+        target: wornObjectTarget("failed"),
+      }),
+    );
+    expect(wornFailure.invocation.initialExertion).toEqual({
+      tag: "wornOrCarriedObjectSaveFailed",
+      pullAway: true,
+      moveUpToFeet: 30,
+      tableObjectOwner: "table",
+    });
+  });
+
   test("Telekinesis rejects invalid target facts before spending a spell slot", () => {
     const sheet = telekinesisWizardSheet({
       preparedSpells: ["telekinesis"],
@@ -263,6 +309,23 @@ const fineObjectTarget = {
   objectId: requireRight(characterSheetTelekinesisTargetId("object:lock")),
   visibleWithinRange: true,
 } as const satisfies CharacterSheetTelekinesisTarget;
+
+function wornObjectTarget(
+  outcome: "succeeded" | "failed",
+): CharacterSheetTelekinesisTarget {
+  return {
+    tag: "wornOrCarriedObject",
+    objectId: requireRight(
+      characterSheetTelekinesisTargetId("object:synthetic-carried-token"),
+    ),
+    carrierId: requireRight(
+      characterSheetTelekinesisTargetId("creature:synthetic-carrier"),
+    ),
+    visibleWithinRange: true,
+    hugeOrSmaller: true,
+    carrierSavingThrowOutcome: { tag: outcome },
+  };
+}
 
 function expectedTelekinesisProjection(): TelekinesisSelectedIdentityProjection {
   return {

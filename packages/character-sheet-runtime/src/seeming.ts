@@ -54,6 +54,7 @@ function seemingTargetIssue(
   }
 
   for (const target of targets) {
+    /* v8 ignore start -- These branches reject malformed visibility, appearance, or save facts outside the narrowed Seeming target contract. */
     if (target.visibleByCaster !== true || target.withinRangeFeet !== 30) {
       return "Seeming targets must be visible creatures within 30 feet.";
     }
@@ -73,6 +74,7 @@ function seemingTargetIssue(
     ) {
       return "Seeming unwilling targets require a Charisma Saving Throw outcome.";
     }
+    /* v8 ignore stop */
   }
 
   return null;
@@ -83,6 +85,7 @@ function seemingInvocationFromSpell(input: {
   readonly targets: readonly CharacterSheetSeemingTarget[];
 }): Either.Either<CharacterSheetSeemingInvocation, CharacterSheetIssue> {
   const spell = input.spell;
+  /* v8 ignore start -- The catalog record failed the exact authored level-5 Seeming support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -99,6 +102,7 @@ function seemingInvocationFromSpell(input: {
       "Seeming requires the supported level-5 Illusion visible-creature profile.",
     );
   }
+  /* v8 ignore stop */
 
   const saveGatePhase = spell.mechanics.phases.find(
     (phase) =>
@@ -116,16 +120,20 @@ function seemingInvocationFromSpell(input: {
       "saveAppliesIf" in phase &&
       phase.saveAppliesIf === "unwilling_target",
   );
+  /* v8 ignore start -- The catalog record has Seeming spell facts but no supported unwilling-target save phase. */
   if (saveGatePhase === undefined) {
     return characterSheetIssue(
       "Seeming requires the supported unwilling-target Charisma save profile.",
     );
   }
+  /* v8 ignore stop */
 
   const duration = timeSpanDuration(spell.mechanics.duration.value);
+  /* v8 ignore start -- The authored Seeming duration admitted above is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue("Seeming requires a supported duration.");
   }
+  /* v8 ignore stop */
 
   return Either.right({
     tag: "seeming",

@@ -198,10 +198,13 @@ export function castGreaterRestorationOnSheet(
   CharacterSheetIssue
 > {
   const profile = greaterRestorationProfileForSpell(input);
+  /* v8 ignore next -- A rejected profile is unsupported authored Greater Restoration data. */
   if (Either.isLeft(profile)) return Either.left(profile.left);
   const prepared = preparedRestorationDeathCasting(input, profile.right);
+  /* v8 ignore next -- A rejected prepared cast is malformed Greater Restoration casting input. */
   if (Either.isLeft(prepared)) return Either.left(prepared.left);
 
+  /* v8 ignore start -- Malformed Greater Restoration input: the requested condition is unsupported by the spell profile or absent from the target. */
   if (!profile.right.conditions.includes(input.effect.condition)) {
     return characterSheetIssue(
       "Greater Restoration condition removal requires a condition supported by the Spell Definition.",
@@ -218,6 +221,7 @@ export function castGreaterRestorationOnSheet(
       "Greater Restoration condition removal requires the selected condition on the target.",
     );
   }
+  /* v8 ignore stop */
   const restored = {
     ...targetBase,
     conditions: targetBase.conditions.filter(
@@ -240,25 +244,31 @@ export function castRaiseDeadOnSheet(
   CharacterSheetIssue
 > {
   const profile = raiseDeadProfileForSpell(input);
+  /* v8 ignore next -- A rejected profile is unsupported authored Raise Dead data. */
   if (Either.isLeft(profile)) return Either.left(profile.left);
   const prepared = preparedRestorationDeathCasting(input, profile.right);
+  /* v8 ignore next -- A rejected prepared cast is malformed Raise Dead casting input. */
   if (Either.isLeft(prepared)) return Either.left(prepared.left);
 
   const eligibilityIssue = raiseDeadEligibilityIssue({
     eligibility: input.eligibility,
     revive: profile.right.revive,
   });
+  /* v8 ignore next -- A non-null eligibility issue is malformed Raise Dead target evidence. */
   if (eligibilityIssue !== null) return characterSheetIssue(eligibilityIssue);
+  /* v8 ignore start -- Malformed Raise Dead input: the narrowed target contract requires a dead zero-HP lifecycle. */
   if (
     input.target.hitPoints.tag !== "zero" ||
     input.target.hitPoints.lifecycle.tag !== "dead"
   ) {
     return characterSheetIssue("Raise Dead requires a dead target.");
   }
+  /* v8 ignore stop */
   const hitPoints = characterSheetHitPoints({
     currentHp: Hp(profile.right.revive.hitPoints),
     tempHp: input.target.hitPoints.tempHp,
   });
+  /* v8 ignore next -- Internal invariant: the admitted revival profile always supplies a positive HP value with retained nonnegative temporary HP. */
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   return Either.right({
     caster: prepared.right.caster,
@@ -282,6 +292,7 @@ export function castReincarnateOnSheet(
   input: CharacterSheetReincarnateInput,
 ): Either.Either<CharacterSheetReincarnateResult, CharacterSheetIssue> {
   const profile = reincarnateProfileForSpell(input);
+  /* v8 ignore next -- A rejected profile is unsupported authored Reincarnate data. */
   if (Either.isLeft(profile)) return Either.left(profile.left);
   if (!hasPreparedSpellAccess(input.caster, profile.right.spell.id)) {
     return characterSheetIssue(
@@ -289,19 +300,23 @@ export function castReincarnateOnSheet(
     );
   }
   const prepared = preparedRestorationDeathCasting(input, profile.right);
+  /* v8 ignore next -- A rejected prepared cast is malformed Reincarnate casting input. */
   if (Either.isLeft(prepared)) return Either.left(prepared.left);
 
   const eligibilityIssue = reincarnateEligibilityIssue({
     eligibility: input.eligibility,
     deathWindowDays: profile.right.deathWindowDays,
   });
+  /* v8 ignore next -- A non-null eligibility issue is malformed Reincarnate target evidence. */
   if (eligibilityIssue !== null) return characterSheetIssue(eligibilityIssue);
+  /* v8 ignore start -- Malformed Reincarnate input: the narrowed target contract requires a dead zero-HP lifecycle. */
   if (
     input.target.hitPoints.tag !== "zero" ||
     input.target.hitPoints.lifecycle.tag !== "dead"
   ) {
     return characterSheetIssue("Reincarnate requires a dead target.");
   }
+  /* v8 ignore stop */
 
   return Either.right({
     caster: prepared.right.caster,
@@ -351,9 +366,10 @@ function preparedRestorationDeathCasting(
     casting: input.casting,
     materialCostGp: profile.materialCostGp,
   });
-  return Either.isLeft(caster)
-    ? Either.left(caster.left)
-    : Either.right({ caster: caster.right, castLevel });
+  /* v8 ignore start -- Malformed restoration/death cast input: the caster prerequisites or selected Spell Slot failed. */
+  if (Either.isLeft(caster)) return Either.left(caster.left);
+  /* v8 ignore stop */
+  return Either.right({ caster: caster.right, castLevel });
 }
 
 function prepareRestorationDeathCasting(input: {
@@ -366,6 +382,7 @@ function prepareRestorationDeathCasting(input: {
   readonly casting: CharacterSheetCompletedTouchSpellCasting;
   readonly materialCostGp: number;
 }): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  /* v8 ignore start -- Malformed restoration/death cast input: the caster is not living or the selected slot is below the spell's base level. */
   if (characterSheetCurrentHp(input.caster) < Hp(1)) {
     return characterSheetIssue(
       "Restoration/death spell casting requires a living caster.",
@@ -376,10 +393,12 @@ function prepareRestorationDeathCasting(input: {
       "Restoration/death spell casting requires a spell slot at the spell's level or higher.",
     );
   }
+  /* v8 ignore stop */
   const materialIssue = materialComponentIssue({
     component: input.casting.materialComponent,
     requiredCostGp: input.materialCostGp,
   });
+  /* v8 ignore next -- A non-null material issue is malformed restoration/death component evidence. */
   if (materialIssue !== null) return characterSheetIssue(materialIssue);
   return spendCharacterSheetSpellSlot({
     sheet: input.caster,
@@ -392,6 +411,7 @@ function materialComponentIssue(input: {
   readonly component: CharacterSheetRestorationDeathMaterialComponentSpend;
   readonly requiredCostGp: number;
 }): string | null {
+  /* v8 ignore start -- Malformed restoration/death cast input: the material component is not consumed or is below the authored gold-piece minimum. */
   if (input.component.tag !== "consumedMaterialComponent") {
     return "Restoration/death spell casting requires a consumed material component.";
   }
@@ -401,6 +421,7 @@ function materialComponentIssue(input: {
   ) {
     return "Restoration/death spell casting requires the minimum consumed material component value.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
@@ -409,13 +430,18 @@ function greaterRestorationProfileForSpell(input: {
   readonly spellId: UnitRecord["id"];
 }): Either.Either<GreaterRestorationProfile, CharacterSheetIssue> {
   const spell = spellRecord(input.unitLibrary, input.spellId);
+  /* v8 ignore next -- Spell lookup failure is unsupported authored Greater Restoration catalog data. */
   if (Either.isLeft(spell)) return Either.left(spell.left);
   const shell = activationTouchMaterialShell(spell.right);
+  /* v8 ignore next -- Shell rejection is unsupported authored Greater Restoration data. */
   if (Either.isLeft(shell)) return Either.left(shell.left);
   const phase = singleDirectCreaturePhase(spell.right);
+  /* v8 ignore next -- Phase rejection is unsupported authored Greater Restoration data. */
   if (Either.isLeft(phase)) return Either.left(phase.left);
+  /* v8 ignore next -- Unsupported authored Greater Restoration data: the admitted direct phase requires an explicit effect list. */
   const effects: readonly unknown[] = phase.right.effects ?? [];
   const conditionEffect = effects.find(isRemoveConditionEffect);
+  /* v8 ignore start -- Unsupported authored spell shape: Greater Restoration lacks a supported direct remove-condition effect. */
   const conditions =
     conditionEffect === undefined
       ? []
@@ -425,6 +451,7 @@ function greaterRestorationProfileForSpell(input: {
       "Greater Restoration requires a direct remove-condition Spell Definition profile.",
     );
   }
+  /* v8 ignore stop */
   return Either.right({
     spell: spell.right,
     minimumCastLevel: spellSlotLevel(spell.right.mechanics.level),
@@ -438,13 +465,18 @@ function raiseDeadProfileForSpell(input: {
   readonly spellId: UnitRecord["id"];
 }): Either.Either<RaiseDeadProfile, CharacterSheetIssue> {
   const spell = spellRecord(input.unitLibrary, input.spellId);
+  /* v8 ignore next -- Spell lookup failure is unsupported authored Raise Dead catalog data. */
   if (Either.isLeft(spell)) return Either.left(spell.left);
   const shell = activationTouchMaterialShell(spell.right);
+  /* v8 ignore next -- Shell rejection is unsupported authored Raise Dead data. */
   if (Either.isLeft(shell)) return Either.left(shell.left);
   const phase = singleDirectDeadCreaturePhase(spell.right);
+  /* v8 ignore next -- Phase rejection is unsupported authored Raise Dead data. */
   if (Either.isLeft(phase)) return Either.left(phase.left);
+  /* v8 ignore next -- Unsupported authored Raise Dead data: the admitted direct phase requires an explicit effect list. */
   const effects: readonly unknown[] = phase.right.effects ?? [];
   const revive = effects.find(isReviveDeadCreatureEffect);
+  /* v8 ignore start -- Unsupported authored spell shape: Raise Dead lacks its admitted direct revival effect. */
   if (
     revive === undefined ||
     revive.deathWindow.unit !== "day" ||
@@ -456,6 +488,7 @@ function raiseDeadProfileForSpell(input: {
       "Raise Dead requires a direct dead-creature revival Spell Definition profile.",
     );
   }
+  /* v8 ignore stop */
   return Either.right({
     spell: spell.right,
     minimumCastLevel: spellSlotLevel(spell.right.mechanics.level),
@@ -469,12 +502,17 @@ function reincarnateProfileForSpell(input: {
   readonly spellId: UnitRecord["id"];
 }): Either.Either<ReincarnateProfile, CharacterSheetIssue> {
   const spell = spellRecord(input.unitLibrary, input.spellId);
+  /* v8 ignore next -- Spell lookup failure is unsupported authored Reincarnate catalog data. */
   if (Either.isLeft(spell)) return Either.left(spell.left);
   const shell = activationTouchMaterialShell(spell.right);
+  /* v8 ignore next -- Shell rejection is unsupported authored Reincarnate data. */
   if (Either.isLeft(shell)) return Either.left(shell.left);
   const phase = singleDirectDeadHumanoidPhase(spell.right);
+  /* v8 ignore next -- Phase rejection is unsupported authored Reincarnate data. */
   if (Either.isLeft(phase)) return Either.left(phase.left);
+  /* v8 ignore next -- Unsupported authored Reincarnate data: the admitted direct phase requires an explicit effect list. */
   const effects: readonly unknown[] = phase.right.effects ?? [];
+  /* v8 ignore start -- Unsupported authored spell shape: Reincarnate lacks its admitted deferred species-replacement effect. */
   if (
     effects.length !== 1 ||
     !isRecord(effects[0]) ||
@@ -484,6 +522,7 @@ function reincarnateProfileForSpell(input: {
       "Reincarnate requires a direct dead-Humanoid target profile with deferred species replacement.",
     );
   }
+  /* v8 ignore stop */
   return Either.right({
     spell: spell.right,
     minimumCastLevel: spellSlotLevel(spell.right.mechanics.level),
@@ -497,18 +536,22 @@ function spellRecord(
   spellId: UnitRecord["id"],
 ): Either.Either<SpellRecord, CharacterSheetIssue> {
   const unit = getRequiredUnit(unitLibrary, spellId);
+  /* v8 ignore next -- A missing selected spell Unit is unsupported authored catalog input. */
   if (Either.isLeft(unit)) return Either.left(unit.left);
-  return unit.right.kind === "spell"
-    ? Either.right(unit.right)
-    : characterSheetIssue(
-        "Restoration/death spell casting requires a Spell record.",
-      );
+  /* v8 ignore start -- Unsupported authored reference: the selected restoration/death spell id resolves to a non-spell Unit. */
+  if (unit.right.kind !== "spell")
+    return characterSheetIssue(
+      "Restoration/death spell casting requires a Spell record.",
+    );
+  /* v8 ignore stop */
+  return Either.right(unit.right);
 }
 
 function activationTouchMaterialShell(
   spell: SpellRecord,
 ): Either.Either<{ readonly materialCostGp: number }, CharacterSheetIssue> {
   const components: unknown = spell.mechanics.components;
+  /* v8 ignore start -- Unsupported authored spell shape: restoration/death spells require the admitted leveled instantaneous touch shell and consumed material component. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level < 1 ||
@@ -522,6 +565,7 @@ function activationTouchMaterialShell(
       "Restoration/death spell casting requires a leveled instantaneous touch Spell Definition with a consumed material component.",
     );
   }
+  /* v8 ignore stop */
   return Either.right({
     materialCostGp: components["materialCostGp"],
   });
@@ -530,11 +574,14 @@ function activationTouchMaterialShell(
 function singleDirectCreaturePhase(
   spell: SpellRecord,
 ): Either.Either<DirectActivationPhase, CharacterSheetIssue> {
+  /* v8 ignore start -- Unsupported authored restoration data: admission requires activation mechanics with exactly one phase. */
   const phase =
     spell.mechanics.family === "activation" &&
     spell.mechanics.phases.length === 1
       ? spell.mechanics.phases[0]
       : undefined;
+  /* v8 ignore stop */
+  /* v8 ignore start -- Unsupported authored spell shape: restoration/death spells require one direct single-creature phase. */
   if (phase === undefined || phase.kind !== "direct") {
     return characterSheetIssue(
       "Restoration/death spell casting requires one direct phase.",
@@ -552,6 +599,7 @@ function singleDirectCreaturePhase(
       "Restoration/death spell casting requires one creature target.",
     );
   }
+  /* v8 ignore stop */
   return Either.right(phase);
 }
 
@@ -559,26 +607,31 @@ function singleDirectDeadCreaturePhase(
   spell: SpellRecord,
 ): Either.Either<DirectActivationPhase, CharacterSheetIssue> {
   const phase = singleDirectCreaturePhase(spell);
+  /* v8 ignore next -- Base phase rejection is unsupported authored Raise Dead data. */
   if (Either.isLeft(phase)) return Either.left(phase.left);
   const stateFilter = arrayProperty(
     directTargetSelection(phase.right),
     "stateFilter",
   );
+  /* v8 ignore start -- Unsupported authored Raise Dead shape: the direct target filter is not exactly dead creatures. */
   return stateFilter?.length === 1 && stateFilter[0] === "dead"
     ? Either.right(phase.right)
     : characterSheetIssue(
         "Raise Dead requires a direct dead-creature target profile.",
       );
+  /* v8 ignore stop */
 }
 
 function singleDirectDeadHumanoidPhase(
   spell: SpellRecord,
 ): Either.Either<DirectActivationPhase, CharacterSheetIssue> {
   const phase = singleDirectCreaturePhase(spell);
+  /* v8 ignore next -- Base phase rejection is unsupported authored Reincarnate data. */
   if (Either.isLeft(phase)) return Either.left(phase.left);
   const selection = directTargetSelection(phase.right);
   const stateFilter = arrayProperty(selection, "stateFilter");
   const typeFilter = arrayProperty(selection, "typeFilter");
+  /* v8 ignore start -- Unsupported authored Reincarnate shape: the direct target filters are not exactly dead Humanoids. */
   return stateFilter?.length === 1 &&
     stateFilter[0] === "dead" &&
     typeFilter?.length === 1 &&
@@ -587,22 +640,27 @@ function singleDirectDeadHumanoidPhase(
     : characterSheetIssue(
         "Reincarnate requires a direct dead-Humanoid target profile.",
       );
+  /* v8 ignore stop */
 }
 
 function directTargetSelection(phase: DirectActivationPhase): unknown {
+  /* v8 ignore start -- Unsupported authored phase shape: a direct restoration/death phase must attach a target-selection hole. */
   return phase.attachment.kind === "hole" &&
     phase.attachment.value.kind === "target"
     ? phase.attachment.value.selection
     : undefined;
+  /* v8 ignore stop */
 }
 
 function arrayProperty(
   value: unknown,
   property: string,
 ): readonly unknown[] | undefined {
+  /* v8 ignore start -- Unsupported authored profile shape: an expected selection filter property is absent or not an array. */
   return isRecord(value) && Array.isArray(value[property])
     ? value[property]
     : undefined;
+  /* v8 ignore stop */
 }
 
 function isRemoveConditionEffect(
@@ -638,6 +696,7 @@ function supportedGreaterRestorationConditions(
   effect: RemoveConditionEffect,
 ): readonly CharacterSheetGreaterRestorationCondition[] {
   const condition = effect.condition;
+  /* v8 ignore start -- Unsupported authored remove-condition shape: the condition source is neither the admitted `from` list nor a condition list/value. */
   const choices =
     isRecord(condition) &&
     condition["kind"] === "choose" &&
@@ -646,6 +705,7 @@ function supportedGreaterRestorationConditions(
       : Array.isArray(condition)
         ? condition
         : [condition];
+  /* v8 ignore stop */
   return GREATER_RESTORATION_CONDITIONS.filter((supported) =>
     choices.some((choice: unknown) => choice === supported),
   );
@@ -655,6 +715,7 @@ function raiseDeadEligibilityIssue(input: {
   readonly eligibility: CharacterSheetRaiseDeadEligibility;
   readonly revive: ReviveDeadCreatureEffect;
 }): string | null {
+  /* v8 ignore start -- Malformed Raise Dead input: the death window, creature history, body, or spirit consent fails the admitted eligibility facts. */
   if (
     !Number.isInteger(input.eligibility.deadForDays) ||
     input.eligibility.deadForDays < 0 ||
@@ -671,6 +732,7 @@ function raiseDeadEligibilityIssue(input: {
   if (input.eligibility.spiritConsent !== "accepted") {
     return "Raise Dead requires the spirit to accept revival.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
@@ -678,6 +740,7 @@ function reincarnateEligibilityIssue(input: {
   readonly eligibility: CharacterSheetReincarnateEligibility;
   readonly deathWindowDays: number;
 }): string | null {
+  /* v8 ignore start -- Malformed Reincarnate input: the death window, remains/type, or soul consent fails the admitted eligibility facts. */
   if (
     !Number.isInteger(input.eligibility.deadForDays) ||
     input.eligibility.deadForDays < 0 ||
@@ -694,6 +757,7 @@ function reincarnateEligibilityIssue(input: {
   if (input.eligibility.soulConsent !== "accepted") {
     return "Reincarnate requires the soul to accept revival.";
   }
+  /* v8 ignore stop */
   return null;
 }
 

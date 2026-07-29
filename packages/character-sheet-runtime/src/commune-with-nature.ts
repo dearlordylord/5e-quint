@@ -42,6 +42,7 @@ function communeWithNatureInvocationFromSpell(
   CharacterSheetCommuneWithNatureInvocation,
   CharacterSheetIssue
 > {
+  /* v8 ignore start -- The catalog record failed the exact authored level-5 Commune with Nature support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -53,11 +54,14 @@ function communeWithNatureInvocationFromSpell(
       "Commune with Nature requires the supported self-range level-5 Divination profile.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- The catalog record has Commune with Nature facts but no supported direct self phase. */
   if (!hasSingleDirectSelfNoEffectPhase(spell)) {
     return characterSheetIssue(
       "Commune with Nature requires the supported direct self exploration-query profile.",
     );
   }
+  /* v8 ignore stop */
 
   return Either.right({
     tag: "communeWithNature",

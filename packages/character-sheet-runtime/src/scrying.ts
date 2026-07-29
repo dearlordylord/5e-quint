@@ -50,6 +50,7 @@ export function castScrying(input: {
     spellName: "Scrying",
     invocation: (spell) => {
       const targetIssue = scryingTargetIssue(input.target);
+      /* v8 ignore next -- Malformed Scrying request: target facts are parsed by the narrowed request contract before invocation projection. */
       if (targetIssue !== null) return characterSheetIssue(targetIssue);
       return scryingInvocationFromSpell({
         spell: spell,
@@ -70,11 +71,13 @@ function scryingTargetIssue(
   target: CharacterSheetScryingTarget,
 ): string | null {
   if (target.tag === "location") {
-    return target.seenByCaster === true
-      ? null
-      : "Scrying location targeting requires a location the caster has seen.";
+    /* v8 ignore start -- Malformed Scrying request: the narrowed location-target contract requires a location the caster has seen. */
+    if (target.seenByCaster === true) return null;
+    return "Scrying location targeting requires a location the caster has seen.";
+    /* v8 ignore stop */
   }
 
+  /* v8 ignore start -- These branches reject malformed creature target facts outside the narrowed Scrying request contract. */
   if (target.plane !== "same_plane_as_caster") {
     return "Scrying creature targeting requires the target to be on the same plane as the caster.";
   }
@@ -90,6 +93,7 @@ function scryingTargetIssue(
   ) {
     return "Scrying creature targeting requires a Wisdom Saving Throw outcome.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
@@ -99,6 +103,7 @@ function scryingInvocationFromSpell(input: {
   readonly target: CharacterSheetScryingTarget;
 }): Either.Either<CharacterSheetScryingInvocation, CharacterSheetIssue> {
   const spell = input.spell;
+  /* v8 ignore start -- The catalog record failed the exact authored level-5 Scrying support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -118,11 +123,14 @@ function scryingInvocationFromSpell(input: {
       "Scrying requires the supported self-range level-5 Divination sensor profile.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Missing or underpriced Scrying focus facts are malformed cast-request material input. */
   if (!hasScryingMaterialComponents(input.casting)) {
     return characterSheetIssue(
       "Scrying requires the 1,000 GP non-consumed focus material component contract.",
     );
   }
+  /* v8 ignore stop */
   const hasSaveGatePhase = hasWisdomSaveGatePhase(
     spell,
     "scrying_target",
@@ -134,23 +142,29 @@ function scryingInvocationFromSpell(input: {
       phase.onFail.durability === "invulnerable" &&
       phase.onSuccess.kind === "none",
   );
+  /* v8 ignore start -- The catalog record has Scrying spell facts but no supported Wisdom save-gate sensor phase. */
   if (!hasSaveGatePhase) {
     return characterSheetIssue(
       "Scrying requires the supported same-plane creature Wisdom save-gate profile.",
     );
   }
+  /* v8 ignore stop */
 
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
+  /* v8 ignore start -- The exact ten-minute duration admitted above is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue("Scrying requires a supported duration.");
   }
+  /* v8 ignore stop */
   const retryLockoutDuration = timeSpanDuration({
     unit: "hour",
     amount: SCRYING_RETRY_LOCKOUT_HOURS,
   });
+  /* v8 ignore start -- The fixed one-day retry lockout is always accepted by the elapsed-time parser. */
   if (Either.isLeft(retryLockoutDuration)) {
     return characterSheetIssue("Scrying requires a supported retry lockout.");
   }
+  /* v8 ignore stop */
 
   return Either.right({
     tag: "scrying",

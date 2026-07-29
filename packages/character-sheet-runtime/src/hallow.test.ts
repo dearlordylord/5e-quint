@@ -193,6 +193,21 @@ describe("Character Sheet runtime / Hallow", () => {
       );
     }
   });
+
+  test("Hallow accepts an extra effect with no creature-type selection", () => {
+    const result = requireRight(
+      castHallow({
+        sheet: hallowClericSheet({ preparedSpells: ["hallow"], slots: 1 }),
+        unitLibrary,
+        casting: completedHallowCasting,
+        area: hallowArea,
+        wardCreatureTypes,
+        extraEffect: { kind: "darkness" },
+      }),
+    );
+
+    expect(result.invocation.extraEffect).toEqual({ kind: "darkness" });
+  });
 });
 
 const hallowSelectedIdentityActions = {

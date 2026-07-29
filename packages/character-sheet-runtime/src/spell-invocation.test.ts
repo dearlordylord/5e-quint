@@ -3,6 +3,7 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
+  armorClassBuild,
   characterBuildHasSpellbookSpell,
   characterSheetSpellInvocation,
   characterSheetSpellbookRitualAccessesForBuild,
@@ -20,8 +21,33 @@ import {
   storedAvailableSheetInput,
   unitLibrary,
 } from "./test-support.test-support.ts";
+import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 
 describe("Character Sheet runtime / spell invocation", () => {
+  test("a non-spellcasting build has no spellbook Ritual Access", () => {
+    const build = armorClassBuild({ startingClass: "class_fighter" });
+    expect(
+      requireRight(
+        characterSheetSpellbookRitualAccessesForBuild({
+          build,
+          unitLibrary,
+        }),
+      ),
+    ).toEqual([]);
+    expect(
+      characterBuildHasSpellbookSpell({
+        build,
+        spellId: authoredUnitId("synthetic_nonspellbook_spell"),
+      }),
+    ).toBe(false);
+    expect(
+      hasPreparedClassSpellAccess(
+        { build },
+        authoredUnitId("synthetic_unprepared_spell"),
+      ),
+    ).toBe(false);
+  });
+
   test("invokes a Book of Shadows Ritual only while the book is on the character", () => {
     const bookSheet = (presence: "onPerson" | "notOnPerson") =>
       requireRight(

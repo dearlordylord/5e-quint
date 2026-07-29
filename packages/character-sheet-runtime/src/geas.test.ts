@@ -187,6 +187,22 @@ describe("Character Sheet runtime / Geas", () => {
     ]);
   });
 
+  test("Geas leaves a target unaffected after a successful save", () => {
+    const result = requireRight(
+      castGeas({
+        sheet: geasWizardSheet({ preparedSpells: ["geas"], slots: 1 }),
+        unitLibrary,
+        target: geasTarget({ savingThrowOutcome: { tag: "succeeded" } }),
+        command: geasCommand(),
+      }),
+    );
+
+    expect(result.invocation.outcome).toEqual({
+      tag: "savingThrowSucceeded",
+      affected: false,
+    });
+  });
+
   test("Geas rejects empty commands before spending the spell slot", () => {
     const sheet = geasWizardSheet({ preparedSpells: ["geas"], slots: 1 });
     const result = castGeas({

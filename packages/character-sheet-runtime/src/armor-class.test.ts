@@ -133,15 +133,17 @@ describe("Character Sheet runtime / armor class", () => {
   });
 
   test("requires an Armor Class base choice when multiple class formulas apply", () => {
-    const result = characterSheetArmorClassState({
+    const input = {
       build: armorClassBuild({
         startingClass: "class_barbarian",
         advancements: ["class_monk"],
       }),
       unitLibrary,
-    });
+    };
+    const result = characterSheetArmorClassState(input);
 
     expect(Either.isLeft(result)).toBe(true);
+    expect(Either.isLeft(characterSheetArmorClass(input))).toBe(true);
   });
 
   test("rejects missing class-feature Units while deriving Armor Class base formulas", () => {

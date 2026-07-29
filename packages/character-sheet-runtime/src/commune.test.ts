@@ -12,6 +12,7 @@ import {
   armorClassBuild,
   castCommune,
   characterSheetId,
+  parseCharacterSheet,
   completeLongRest,
   rebuildCharacterSheetFixture,
   requireRight,
@@ -131,6 +132,10 @@ describe("Character Sheet runtime / Commune", () => {
         castCount: 1,
       },
     ]);
+    expect(
+      requireRight(parseCharacterSheet(first.sheet, unitLibrary))
+        .restFeatureUses,
+    ).toEqual(first.sheet.restFeatureUses);
 
     const second = requireRight(
       castCommune({ sheet: first.sheet, unitLibrary }),

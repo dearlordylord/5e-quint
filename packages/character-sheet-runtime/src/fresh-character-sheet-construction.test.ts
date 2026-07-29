@@ -95,6 +95,9 @@ describe("fresh Character Sheet construction", () => {
       ]),
     );
     if (Either.isLeft(result)) {
+      expect(characterSheetConstructionIssuesSummary(result.left)).toBe(
+        "hitPointStateInvalid; spellSlotStateUnexpected; pactSlotStateUnexpected; wildShapeKnownFormsUnexpected",
+      );
       expect(
         Either.isRight(
           Schema.decodeUnknownEither(CharacterSheetConstructionIssuesSchema, {

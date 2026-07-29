@@ -201,6 +201,22 @@ describe("Character Sheet runtime / Divine Intervention", () => {
     });
   });
 
+  test("admits an action-time Cleric cantrip without a Spell Slot", () => {
+    const invocation = requireRight(
+      castDivineIntervention({
+        sheet: divineInterventionClericSheet(),
+        unitLibrary,
+        spellId: authoredUnitId("sacred_flame"),
+      }),
+    ).invocation;
+
+    expect(invocation).toMatchObject({
+      spellId: "sacred_flame",
+      spellLevel: 0,
+      spellSlotCost: { kind: "none" },
+    });
+  });
+
   test("rejects non-action or non-Cleric spell handoffs", () => {
     const sheet = divineInterventionClericSheet();
 
@@ -225,6 +241,33 @@ describe("Character Sheet runtime / Divine Intervention", () => {
     if (Either.isLeft(nonClericReactionSpell)) {
       expect(nonClericReactionSpell.left.message).toBe(
         "Divine Intervention requires a Cleric spell of level 5 or lower.",
+      );
+    }
+  });
+
+  test("rejects a sheet without the Divine Intervention feature", () => {
+    const sheet = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:synthetic-no-divine-intervention",
+        ),
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        currentHp: Hp(11),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    const result = castDivineIntervention({
+      sheet,
+      unitLibrary,
+      spellId: authoredUnitId("sacred_flame"),
+    });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isLeft(result)) {
+      expect(result.left.message).toBe(
+        "Divine Intervention requires the Cleric Divine Intervention feature.",
       );
     }
   });

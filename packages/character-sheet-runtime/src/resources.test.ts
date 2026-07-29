@@ -63,6 +63,25 @@ type OverCapacityResourceCase = {
 };
 
 describe("Character Sheet runtime / resources", () => {
+  test("projects no Monk-only facts for a non-Monk build", () => {
+    const sheet = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:synthetic-no-monk-resources"),
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    expect(characterSheetMonksFocusSaveDc(sheet, unitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: undefined,
+    });
+    expect(
+      characterSheetMonkUncannyMetabolismUseState(sheet, unitLibrary),
+    ).toMatchObject({ _tag: "Right", right: undefined });
+  });
+
   test("projects omitted class-feature resource expenditures as zero from build-derived capacity", () => {
     const cases = [
       {
@@ -726,6 +745,10 @@ describe("Character Sheet runtime / resources", () => {
     expect(shortRested.restFeatureUses).toEqual([
       { tag: "sorcerousRestoration", usedSinceLongRest: true },
     ]);
+    expect(
+      requireRight(parseCharacterSheet(shortRested, unitLibrary))
+        .restFeatureUses,
+    ).toEqual(shortRested.restFeatureUses);
     expect(characterSheetResources(shortRested, unitLibrary)).toMatchObject({
       _tag: "Right",
       right: expect.arrayContaining([

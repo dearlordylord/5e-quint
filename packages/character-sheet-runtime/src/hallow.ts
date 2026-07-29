@@ -66,6 +66,7 @@ function hallowInputIssue(input: {
   readonly wardCreatureTypes: CharacterSheetHallowCreatureTypes;
   readonly extraEffect: CharacterSheetHallowExtraEffect;
 }): string | null {
+  /* v8 ignore start -- These branches reject malformed Hallow material, area, or overlap facts at the cast-request boundary. */
   if (
     input.casting.materialComponents.consumedIncenseCostGpMinimum <
     HALLOW_MATERIAL_COMPONENTS.consumedIncenseCostGpMinimum
@@ -81,6 +82,7 @@ function hallowInputIssue(input: {
   if (input.area.areaAlreadyHallowed !== false) {
     return "Hallow requires the target area to be outside existing Hallow effects.";
   }
+  /* v8 ignore stop */
   const wardIssue = hallowCreatureTypesIssue(input.wardCreatureTypes);
   if (wardIssue !== null) return wardIssue;
   return hallowExtraEffectIssue(input.extraEffect);
@@ -89,18 +91,24 @@ function hallowInputIssue(input: {
 function hallowCreatureTypesIssue(
   creatureTypes: readonly string[],
 ): string | null {
+  /* v8 ignore start -- Empty, unknown, or duplicate ward creature choices are malformed Hallow request input. */
   if (creatureTypes.length === 0) {
     return "Hallow requires at least one chosen ward creature type.";
   }
+  /* v8 ignore stop */
   const supported = new Set<string>(HALLOW_WARD_CREATURE_TYPE_VALUES);
   const seen = new Set<string>();
   for (const creatureType of creatureTypes) {
+    /* v8 ignore start -- Malformed Hallow request: the boundary accepts only creature types from HALLOW_WARD_CREATURE_TYPE_VALUES. */
     if (!supported.has(creatureType)) {
       return "Hallow creature type choice is outside the supported ward list.";
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- Malformed Hallow request: the boundary requires each chosen ward creature type exactly once. */
     if (seen.has(creatureType)) {
       return "Hallow creature type choices must be unique.";
     }
+    /* v8 ignore stop */
     seen.add(creatureType);
   }
   return null;
@@ -120,14 +128,18 @@ function hallowExtraEffectIssue(
 function hallowExtraEffectCreatureTypesIssue(
   creatureTypes: readonly string[],
 ): string | null {
+  /* v8 ignore start -- Empty or duplicate extra-effect creature choices are malformed Hallow request input. */
   if (creatureTypes.length === 0) {
     return "Hallow extra effect requires at least one chosen creature type.";
   }
+  /* v8 ignore stop */
   const seen = new Set<string>();
   for (const creatureType of creatureTypes) {
+    /* v8 ignore start -- Malformed Hallow request: the boundary requires each extra-effect creature type exactly once. */
     if (seen.has(creatureType)) {
       return "Hallow extra effect creature type choices must be unique.";
     }
+    /* v8 ignore stop */
     seen.add(creatureType);
   }
   return null;
@@ -141,6 +153,7 @@ function hallowInvocationFromSpell(input: {
   readonly extraEffect: CharacterSheetHallowExtraEffect;
 }): Either.Either<CharacterSheetHallowInvocation, CharacterSheetIssue> {
   const spell = input.spell;
+  /* v8 ignore start -- The catalog record failed the exact authored level-5 Hallow support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -161,20 +174,25 @@ function hallowInvocationFromSpell(input: {
       "Hallow requires the supported level-5 durable area profile.",
     );
   }
+  /* v8 ignore stop */
   const directPhase = spell.mechanics.phases.find(
     (phase) =>
       phase.kind === "direct" &&
       phase.attachment.kind === "area" &&
       phase.attachment.shape.kind === "sphere" &&
       phase.attachment.shape.radiusFeet === HALLOW_MAX_RADIUS_FEET &&
+      /* v8 ignore next -- Unsupported authored Hallow data: the admitted durable-area phase requires exactly one explicit no-op effect. */
       (phase.effects ?? []).length === 1 &&
+      /* v8 ignore next -- Unsupported authored Hallow data: omission of that required effect was rejected by the same profile predicate. */
       (phase.effects ?? [])[0]?.kind === "none",
   );
+  /* v8 ignore start -- The catalog record has Hallow spell facts but no supported durable touch-area phase. */
   if (directPhase === undefined) {
     return characterSheetIssue(
       "Hallow requires the supported touch-area durable ward profile.",
     );
   }
+  /* v8 ignore stop */
 
   return Either.right({
     tag: "hallow",

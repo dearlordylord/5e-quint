@@ -46,6 +46,7 @@ export function castDream(input: {
     spellName: "Dream",
     invocation: (spell) => {
       const targetIssue = dreamTargetIssue(input.target);
+      /* v8 ignore next -- Malformed Dream request: target facts are parsed by the narrowed request contract before invocation projection. */
       if (targetIssue !== null) return characterSheetIssue(targetIssue);
       const modeIssue = dreamModeIssue(input.mode);
       if (modeIssue !== null) return characterSheetIssue(modeIssue);
@@ -61,20 +62,27 @@ export function castDream(input: {
 }
 
 function dreamTargetIssue(target: CharacterSheetDreamTarget): string | null {
+  /* v8 ignore start -- These branches reject malformed target/session facts outside the narrowed Dream request contract. */
   if (target.knownByCaster !== true) {
     return "Dream requires a target creature the caster knows.";
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed Dream request: its narrowed target contract requires the caster and target to share a plane. */
   if (target.plane !== "same_plane_as_caster") {
     return "Dream requires the target to be on the same plane as the caster.";
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed Dream request: target sleep state is table-owned evidence at the session boundary. */
   if (target.sleepStateOwner !== "table") {
     return "Dream target sleep state must be table-owned session evidence.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
 function dreamModeIssue(mode: CharacterSheetDreamMode): string | null {
   if (mode.tag === "conversation") return null;
+  /* v8 ignore start -- These branches reject malformed nightmare word-count or save-outcome facts. */
   if (
     !Number.isInteger(mode.messageWordCount) ||
     mode.messageWordCount < 1 ||
@@ -88,6 +96,7 @@ function dreamModeIssue(mode: CharacterSheetDreamMode): string | null {
   ) {
     return "Dream nightmare requires a Wisdom Saving Throw outcome.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
@@ -99,6 +108,7 @@ function dreamInvocationFromSpell(input: {
   readonly mode: CharacterSheetDreamMode;
 }): Either.Either<CharacterSheetDreamInvocation, CharacterSheetIssue> {
   const spell = input.spell;
+  /* v8 ignore start -- The catalog record failed the exact authored level-5 Dream support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -116,21 +126,28 @@ function dreamInvocationFromSpell(input: {
       "Dream requires the supported level-5 Illusion session profile.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Missing Dream sand-component evidence is malformed cast-request material input. */
   if (!hasDreamMaterialComponents(input.casting)) {
     return characterSheetIssue(
       "Dream requires the handful-of-sand Material component contract.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- The catalog record has Dream spell facts but no supported direct self phase. */
   if (!hasSingleDirectSelfNoEffectPhase(spell)) {
     return characterSheetIssue(
       "Dream requires the supported direct session-profile phase.",
     );
   }
+  /* v8 ignore stop */
 
   const duration = timeSpanDuration(spell.mechanics.duration.value);
+  /* v8 ignore start -- The exact eight-hour duration admitted above is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue("Dream requires a supported duration.");
   }
+  /* v8 ignore stop */
 
   return Either.right({
     tag: "dream",

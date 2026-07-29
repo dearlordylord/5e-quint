@@ -332,6 +332,114 @@ describe("Character Sheet runtime / summoned and object lifecycle spells", () =>
       },
     });
   });
+
+  test("projects every valid object, elemental, save, and upcast duration variant", () => {
+    const hugeObject = {
+      objectId: requireRight(
+        characterSheetSpellLifecycleObjectId("object:synthetic-statue"),
+      ),
+      size: "huge",
+      nonmagical: true,
+      withinRange: true,
+      notWornOrCarried: true,
+      notFixedToSurface: true,
+    } as const satisfies CharacterSheetAnimateObjectsTarget;
+    const animated = requireRight(
+      castAnimateObjects({
+        sheet: lifecycleWizardSheet({
+          preparedSpells: ["animate_objects"],
+          slots: 1,
+        }),
+        unitLibrary,
+        targets: [hugeObject],
+        spellcastingAbilityModifier: 3,
+      }),
+    );
+    expect(animated.invocation.animatedObjects).toEqual([
+      expect.objectContaining({
+        size: "huge",
+        capacityWeight: 3,
+        hitPointMaximum: Hp(40),
+        slam: expect.objectContaining({ dice: { count: 2, die: 12 } }),
+      }),
+    ]);
+
+    const waterSpirit = {
+      ...elementalSpirit,
+      spiritId: requireRight(
+        characterSheetSpellLifecycleCreatureId("spirit:synthetic-water"),
+      ),
+      element: "water",
+    } as const satisfies CharacterSheetConjureElementalSpirit;
+    expect(
+      requireRight(
+        castConjureElemental({
+          sheet: lifecycleWizardSheet({
+            preparedSpells: ["conjure_elemental"],
+            slots: 1,
+          }),
+          unitLibrary,
+          spirit: waterSpirit,
+        }),
+      ).invocation.spirit.damageType,
+    ).toBe("cold");
+
+    for (const [element, damageType] of [
+      ["air", "lightning"],
+      ["earth", "thunder"],
+    ] as const) {
+      expect(
+        requireRight(
+          castConjureElemental({
+            sheet: lifecycleWizardSheet({
+              preparedSpells: ["conjure_elemental"],
+              slots: 1,
+            }),
+            unitLibrary,
+            spirit: {
+              ...elementalSpirit,
+              spiritId: requireRight(
+                characterSheetSpellLifecycleCreatureId(
+                  `spirit:synthetic-${element}`,
+                ),
+              ),
+              element,
+            },
+          }),
+        ).invocation.spirit.damageType,
+      ).toBe(damageType);
+    }
+
+    const expectedDurations = [
+      [5, { kind: "timeSpan", unit: "hour", amount: 24 }],
+      [6, { kind: "timeSpan", unit: "day", amount: 10 }],
+      [7, { kind: "timeSpan", unit: "day", amount: 30 }],
+      [8, { kind: "timeSpan", unit: "day", amount: 180 }],
+      [9, { kind: "timeSpan", unit: "day", amount: 366 }],
+    ] as const;
+    for (const [level, duration] of expectedDurations) {
+      const result = requireRight(
+        castPlanarBinding({
+          sheet: lifecycleWizardSheet({
+            preparedSpells: ["planar_binding"],
+            slots: 1,
+            slotLevel: level,
+          }),
+          unitLibrary,
+          castLevel: spellSlotLevel(level),
+          target: {
+            ...planarBindingTarget,
+            savingThrowOutcome: { tag: "succeeded" },
+          },
+        }),
+      );
+      expect(result.invocation.duration).toEqual(duration);
+      expect(result.invocation.outcome).toEqual({
+        tag: "saveSucceeded",
+        bound: false,
+      });
+    }
+  });
 });
 
 const lifecycleSelectedIdentityActions = {
@@ -480,14 +588,18 @@ function slotExpended(sheet: {
 function lifecycleWizardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
+  readonly slotLevel?: number;
 }) {
+  const slotLevel = input.slotLevel ?? 5;
   return requireRight(
     rebuildCharacterSheetFixture({
-      characterId: characterSheetId("character:lifecycle-wizard-9"),
+      characterId: characterSheetId(
+        `character:lifecycle-wizard-slot-${slotLevel}`,
+      ),
       build: {
         ...armorClassBuild({
           startingClass: "class_wizard",
-          advancements: Array.from({ length: 8 }, () => "class_wizard"),
+          advancements: Array.from({ length: 16 }, () => "class_wizard"),
         }),
         spellcasting: {
           sources: [
@@ -512,7 +624,7 @@ function lifecycleWizardSheet(input: {
           slotPools: {
             spellcasting: {
               kind: "spellcasting",
-              slots: [{ spellLevel: 5, count: input.slots }],
+              slots: [{ spellLevel: slotLevel, count: input.slots }],
             },
           },
         },

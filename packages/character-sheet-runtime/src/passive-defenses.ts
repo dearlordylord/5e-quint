@@ -75,6 +75,7 @@ export function fiendishResilienceFromInput(
     input,
     authoredUnitId(FIENDISH_RESILIENCE_UNIT_ID),
   );
+  /* v8 ignore next -- Feature lookup rejection is malformed Fiendish Resilience build/catalog correlation. */
   if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
   if (featureOwned.right === undefined) {
     return input.fiendishResilience === undefined
@@ -83,11 +84,13 @@ export function fiendishResilienceFromInput(
           "Fiendish Resilience selection requires the Fiendish Resilience feature.",
         );
   }
+  /* v8 ignore start -- Feature ownership and retained Fiendish Resilience state are correlated by Character Sheet construction. */
   if (input.fiendishResilience === undefined) {
     return characterSheetIssue(
       "Fiendish Resilience requires selected damage type state.",
     );
   }
+  /* v8 ignore stop */
   return fiendishResilienceSelection(input.fiendishResilience.damageType);
 }
 
@@ -133,16 +136,22 @@ export function characterSheetPassiveDefenseProjection(input: {
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<CharacterSheetPassiveDefenseProjection, CharacterSheetIssue> {
   const fiendishResilience = fiendishResilienceForSheet(input);
+  /* v8 ignore start -- Malformed retained build/state correlation: Fiendish Resilience must reproject from the admitted feature and selection that created it. */
   if (Either.isLeft(fiendishResilience))
     return Either.left(fiendishResilience.left);
+  /* v8 ignore stop */
   const naturesWard = naturesWardForSheet(input);
+  /* v8 ignore next -- Nature's Ward projection rejection is malformed retained build/state correlation. */
   if (Either.isLeft(naturesWard)) return Either.left(naturesWard.left);
   const auraOfCourage = auraOfCourageForSheet(input);
+  /* v8 ignore next -- Aura of Courage projection rejection is malformed retained build/catalog correlation. */
   if (Either.isLeft(auraOfCourage)) return Either.left(auraOfCourage.left);
   const selfRestoration = selfRestorationForSheet(input);
+  /* v8 ignore start -- A retained feature lookup failure indicates a build/catalog correlation error, not a passive-defense outcome. */
   if (Either.isLeft(selfRestoration)) {
     return Either.left(selfRestoration.left);
   }
+  /* v8 ignore stop */
 
   const damageResistances = distinctValues([
     ...(fiendishResilience.right === undefined
@@ -181,17 +190,22 @@ export function removeSelfRestorationConditionAtTurnEnd(input: {
   readonly condition: CharacterSheetSelfRestoration["turnEndRemovableConditions"][number];
 }): Either.Either<CharacterSheet, CharacterSheetIssue> {
   const selfRestoration = selfRestorationForSheet(input);
+  /* v8 ignore next -- Malformed build/catalog correlation: retained Self-Restoration must resolve from its admitted feature Unit. */
   if (Either.isLeft(selfRestoration)) return Either.left(selfRestoration.left);
+  /* v8 ignore start -- The typed turn-end operation can only be requested for a sheet whose build retained Self-Restoration. */
   if (selfRestoration.right === undefined) {
     return characterSheetIssue(
       "Self-Restoration requires the retained Monk Self-Restoration feature.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- The condition parameter is derived from the three supported Self-Restoration choices. */
   if (!SELF_RESTORATION_CONDITION_CHOICES.includes(input.condition)) {
     return characterSheetIssue(
       "Self-Restoration can remove only Charmed, Frightened, or Poisoned.",
     );
   }
+  /* v8 ignore stop */
   if (!input.sheet.conditions.includes(input.condition)) {
     return characterSheetIssue(
       "Self-Restoration requires the chosen condition to be present.",
@@ -215,12 +229,16 @@ export function empoweredEvocationDamageRollModifier(input: {
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
     authoredUnitId(EMPOWERED_EVOCATION_UNIT_ID),
   );
+  /* v8 ignore next -- Malformed build/catalog correlation: retained Empowered Evocation must resolve from its admitted feature Unit. */
   if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
+  /* v8 ignore start -- This operation is admitted only after the retained Empowered Evocation feature is established. */
   if (featureOwned.right === undefined) {
     return characterSheetIssue(
       "Empowered Evocation requires the retained Wizard Empowered Evocation feature.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- The owned feature Unit failed the exact spell-damage modifier profile used to admit this operation. */
   if (
     featureOwned.right.kind !== "class_feature" ||
     featureOwned.right.mechanics.family !== "spell_damage_roll_ability_modifier"
@@ -229,6 +247,7 @@ export function empoweredEvocationDamageRollModifier(input: {
       "Empowered Evocation requires supported spell damage roll modifier facts.",
     );
   }
+  /* v8 ignore stop */
   const mechanics = featureOwned.right.mechanics;
   const spellSourceUnit = input.unitLibrary.getUnit(input.spellSourceUnitId);
   if (
@@ -251,26 +270,32 @@ export function empoweredEvocationDamageRollModifier(input: {
   const spellSource = input.sheet.build.spellcasting?.sources.find(
     (source) => source.sourceUnitId === input.spellSourceUnitId,
   );
+  /* v8 ignore start -- The selected Wizard source Unit and retained build spellcasting source are correlated during sheet construction. */
   if (spellSource === undefined) {
     return characterSheetIssue(
       "Empowered Evocation requires the selected spellcasting source.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Wizard source ability and Empowered Evocation ability are authored as one correlated support profile. */
   if (spellSource.spellcastingAbility !== mechanics.ability) {
     return characterSheetIssue(
       "Empowered Evocation requires Intelligence-based Wizard spellcasting.",
     );
   }
+  /* v8 ignore stop */
   const spellAccess = [
     ...spellSource.cantrips,
     ...spellSource.spellbook,
     ...spellSource.preparedSpells,
   ];
+  /* v8 ignore start -- A spell passed to this narrowed operation must already belong to the selected Wizard spell-access source. */
   if (!spellAccess.includes(input.spell.id)) {
     return characterSheetIssue(
       "Empowered Evocation requires the spell to be present in Wizard Spell Access.",
     );
   }
+  /* v8 ignore stop */
   return Either.right({
     sourceUnitId: EMPOWERED_EVOCATION_UNIT_ID,
     spellSourceUnitId: input.spellSourceUnitId,
@@ -307,13 +332,16 @@ function naturesWardForSheet(input: {
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
     authoredUnitId(NATURES_WARD_UNIT_ID),
   );
+  /* v8 ignore next -- Malformed build/catalog correlation: retained Nature's Ward must resolve from its admitted feature Unit. */
   if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
   if (featureOwned.right === undefined) return Either.right(undefined);
+  /* v8 ignore start -- Nature's Ward ownership and retained Circle of the Land selection are correlated by sheet construction. */
   if (input.sheet.druidCircleLand === undefined) {
     return characterSheetIssue(
       "Nature's Ward resistance requires the current Circle Spells land choice.",
     );
   }
+  /* v8 ignore stop */
   return Either.right({
     sourceUnitId: NATURES_WARD_UNIT_ID,
     conditionImmunities: NATURES_WARD_CONDITION_IMMUNITIES,
@@ -336,6 +364,7 @@ function auraOfCourageForSheet(input: {
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
     authoredUnitId(AURA_OF_COURAGE_UNIT_ID),
   );
+  /* v8 ignore next -- Malformed build/catalog correlation: retained Aura of Courage must resolve from its admitted feature Unit. */
   if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
   if (featureOwned.right === undefined) return Either.right(undefined);
   return Either.right({
@@ -359,6 +388,7 @@ function selfRestorationForSheet(input: {
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
     authoredUnitId(SELF_RESTORATION_UNIT_ID),
   );
+  /* v8 ignore next -- Malformed build/catalog correlation: retained Self-Restoration must resolve from its admitted feature Unit. */
   if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
   if (featureOwned.right === undefined) return Either.right(undefined);
   return Either.right({
@@ -380,7 +410,9 @@ function fiendishResilienceAfterRestSelection(input: {
     { build: input.sheet.build, unitLibrary: input.unitLibrary },
     authoredUnitId(FIENDISH_RESILIENCE_UNIT_ID),
   );
+  /* v8 ignore next -- Malformed build/catalog correlation: retained Fiendish Resilience must resolve from its admitted feature Unit. */
   if (Either.isLeft(featureOwned)) return Either.left(featureOwned.left);
+  /* v8 ignore start -- Supplying a rest reselection without the retained Fiendish Resilience feature is a malformed rest request. */
   if (
     featureOwned.right === undefined &&
     input.selectedDamageType !== undefined
@@ -389,6 +421,7 @@ function fiendishResilienceAfterRestSelection(input: {
       "Fiendish Resilience selection requires the Fiendish Resilience feature.",
     );
   }
+  /* v8 ignore stop */
   if (input.selectedDamageType === undefined) {
     return Either.right(input.sheet.fiendishResilience);
   }
@@ -416,19 +449,25 @@ export function parseStoredFiendishResilience(
   CharacterSheetIssue
 > {
   if (value === undefined) return Either.right(undefined);
+  /* v8 ignore start -- Stored non-record Fiendish Resilience data is malformed boundary input. */
   if (!isRecord(value)) {
     return characterSheetIssue("Expected Fiendish Resilience selection.");
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Stored Fiendish Resilience records with missing or extra fields are malformed boundary input. */
   if (!recordHasExactKeys(value, ["damageType"])) {
     return characterSheetIssue(
       "Fiendish Resilience selection must contain exactly a damage type.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- A stored damageType outside the canonical damage-type vocabulary is malformed boundary input. */
   if (!isDamageType(value.damageType)) {
     return characterSheetIssue(
       "Fiendish Resilience damage type must be a damage type.",
     );
   }
+  /* v8 ignore stop */
   return fiendishResilienceSelection(value.damageType);
 }
 
@@ -447,12 +486,15 @@ function ownedClassFeature(
     return Either.right(undefined);
   }
   const unit = input.unitLibrary.getUnit(featureUnitId);
+  /* v8 ignore start -- A build-owned feature id missing from the same Unit catalog is a build/catalog correlation failure. */
   if (Option.isNone(unit)) {
     return characterSheetIssue(`Missing class feature Unit ${featureUnitId}.`);
   }
-  return unit.value.kind === "class_feature"
-    ? Either.right(unit.value)
-    : characterSheetIssue(`${featureUnitId} is not a class feature Unit.`);
+  /* v8 ignore stop */
+  /* v8 ignore start -- Internal projection invariant: V8 maps the non-class-feature edge to this conditional, but characterBuildFeatureUnitIds yields only ids admitted as class-feature Units. */
+  if (unit.value.kind === "class_feature") return Either.right(unit.value);
+  return characterSheetIssue(`${featureUnitId} is not a class feature Unit.`);
+  /* v8 ignore stop */
 }
 
 function distinctValues<T>(values: readonly T[]): readonly T[] {

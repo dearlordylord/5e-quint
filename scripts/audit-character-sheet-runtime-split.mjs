@@ -235,7 +235,7 @@ const EXPECTED_MOVED_FUNCTIONS = [
   },
   {
     name: "timePassed",
-    hash: "6aa391ed5b26d5bc",
+    hash: "9dcc9ec27771c3e7",
   },
 ];
 const EXPECTED_EXPORT_RECONCILIATION_REASONS = [

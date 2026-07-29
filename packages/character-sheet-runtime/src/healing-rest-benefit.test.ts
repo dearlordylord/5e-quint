@@ -21,6 +21,7 @@ import {
   characterSheetSpellSlots,
   characterSheetTempHp,
   completeLongRest,
+  convertFontOfMagicSorceryPointsToSpellSlot,
   rebuildCharacterSheetFixture,
   layOnHandsLongRestRecoveryTestName,
   layOnHandsRejectsDivergentPoolsTestName,
@@ -38,8 +39,11 @@ import {
   spellSlotLevel,
   storedAvailableSheetInput,
   unitLibrary,
+  wizardBuild,
   wizardWarlockBuild,
 } from "./test-support.test-support.ts";
+import { completeShortRestBenefits } from "./healing-rest-benefit.ts";
+import { isCharacterSheetWithSpellSlots } from "./spell-slots.ts";
 
 describe("Character Sheet runtime / healing and rest benefit spells", () => {
   test(layOnHandsSpendsHealingPoolTestName, () => {
@@ -112,6 +116,100 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         }),
       ]),
     });
+  });
+
+  test("Lay On Hands can spend only for Poisoned removal without restoring HP", () => {
+    const source = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:synthetic-paladin-poison-removal",
+        ),
+        build: armorClassBuild({ startingClass: "class_paladin" }),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const target = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:synthetic-poisoned-no-healing",
+        ),
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        currentHp: Hp(5),
+        tempHp: Hp(0),
+        conditions: ["poisoned"],
+        unitLibrary,
+      }),
+    );
+
+    const result = requireRight(
+      applyLayOnHands({
+        source,
+        target,
+        unitLibrary,
+        restoreHp: Hp(0),
+        removePoisoned: true,
+      }),
+    );
+
+    expect(result.target.conditions).toEqual([]);
+    expect(characterSheetCurrentHp(result.target)).toBe(Hp(5));
+  });
+
+  test("Short Rest benefit composition propagates an Arcane Recovery rejection", () => {
+    const fighter = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:synthetic-arcane-recovery-rejection",
+        ),
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    expect(
+      completeShortRestBenefits({
+        sheet: fighter,
+        unitLibrary,
+        hpGate: "requiresShortRestStartHp",
+        arcaneRecovery: { refundSpellSlots: [] },
+      }),
+    ).toMatchObject({ _tag: "Left" });
+  });
+
+  test("Short Rest benefit composition returns an accepted Arcane Recovery sheet", () => {
+    const wizard = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:synthetic-arcane-recovery-accepted",
+        ),
+        build: wizardBuild({ wizardAdvancements: 3 }),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(2), expended: resourceCount(1) },
+        ],
+      }),
+    );
+
+    const result = requireRight(
+      completeShortRestBenefits({
+        sheet: wizard,
+        unitLibrary,
+        hpGate: "requiresShortRestStartHp",
+        arcaneRecovery: {
+          refundSpellSlots: [
+            { spellLevel: spellSlotLevel(2), count: resourceCount(1) },
+          ],
+        },
+      }),
+    );
+
+    expect(characterSheetSpellSlots(result)).toEqual([
+      { spellLevel: 1, count: 4, expended: 0 },
+      { spellLevel: 2, count: 3, expended: 0 },
+    ]);
   });
 
   test(layOnHandsRejectsDivergentPoolsTestName, () => {
@@ -368,6 +466,138 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       completeLongRest({ sheet: result.recipients[0], unitLibrary }),
     );
     expect(longRestedRecipient.restFeatureUses).toEqual([]);
+  });
+
+  test("Prayer of Healing can spend a Font of Magic-created Spell Slot", () => {
+    const sorcererBuild = sorcererFontOfMagicBuild({
+      sorcererAdvancements: 4,
+      spellSlots: [
+        { spellLevel: 1, count: 4 },
+        { spellLevel: 2, count: 3 },
+      ],
+    });
+    const clericBuild = prayerOfHealingClericBuild();
+    const clericAdvancement = clericBuild.progression.advancements[0];
+    const sorcererSource = sorcererBuild.spellcasting?.sources[0];
+    const clericSource = clericBuild.spellcasting?.sources[0];
+    if (
+      clericAdvancement === undefined ||
+      sorcererSource === undefined ||
+      clericSource === undefined
+    ) {
+      throw new Error(
+        "Synthetic multiclass fixture requires both spellcasting sources and a Cleric advancement.",
+      );
+    }
+    const multiclassBuild = {
+      ...sorcererBuild,
+      progression: {
+        ...sorcererBuild.progression,
+        advancements: [
+          ...sorcererBuild.progression.advancements,
+          ...clericBuild.progression.advancements,
+          clericAdvancement,
+        ],
+      },
+      spellcasting: {
+        sources: [sorcererSource, clericSource] as const,
+        slotPools: {
+          spellcasting: {
+            kind: "spellcasting" as const,
+            slots: [
+              { spellLevel: 1, count: 4 },
+              { spellLevel: 2, count: 3 },
+            ],
+          },
+        },
+      },
+    };
+    const caster = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:synthetic-created-slot-prayer-caster",
+        ),
+        build: multiclassBuild,
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const recipient = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:synthetic-created-slot-prayer-recipient",
+        ),
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        currentHp: Hp(5),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const ordinaryResult = requireRight(
+      applyCharacterSheetSpellRestBenefit({
+        caster,
+        spellId: authoredUnitId("prayer_of_healing"),
+        unitLibrary,
+        castLevel: spellSlotLevel(2),
+        spellSlotSource: "ordinary",
+        recipients: [
+          {
+            sheet: recipient,
+            eligibility: { remainedWithinRangeForEntireCasting: true },
+            healingRolls: [DieRollResult(1), DieRollResult(1)],
+          },
+        ],
+      }),
+    );
+    expect(ordinaryResult.caster.spellSlotExpenditures).toEqual([
+      { spellLevel: 2, expended: 1 },
+    ]);
+
+    const casterWithFirstCreatedSlot = requireRight(
+      convertFontOfMagicSorceryPointsToSpellSlot({
+        sheet: caster,
+        unitLibrary,
+        spellLevel: spellSlotLevel(1),
+      }),
+    );
+    const casterWithCreatedSlot = requireRight(
+      convertFontOfMagicSorceryPointsToSpellSlot({
+        sheet: casterWithFirstCreatedSlot,
+        unitLibrary,
+        spellLevel: spellSlotLevel(2),
+      }),
+    );
+    if (!isCharacterSheetWithSpellSlots(casterWithCreatedSlot)) {
+      throw new Error(
+        "Synthetic created-slot caster must retain ordinary Spell Slot state.",
+      );
+    }
+
+    const result = requireRight(
+      applyCharacterSheetSpellRestBenefit({
+        caster: {
+          ...casterWithCreatedSlot,
+          spellSlotExpenditures: [
+            { spellLevel: spellSlotLevel(2), expended: resourceCount(3) },
+          ],
+        },
+        spellId: authoredUnitId("prayer_of_healing"),
+        unitLibrary,
+        castLevel: spellSlotLevel(2),
+        recipients: [
+          {
+            sheet: recipient,
+            eligibility: { remainedWithinRangeForEntireCasting: true },
+            healingRolls: [DieRollResult(1), DieRollResult(1)],
+          },
+        ],
+      }),
+    );
+
+    expect(result.caster.createdSpellSlots).toEqual([
+      { spellLevel: 1, count: 1, expended: 0 },
+      { spellLevel: 2, count: 1, expended: 1 },
+    ]);
   });
 
   test(prayerOfHealingRestBenefitAdmissionGateTestName, () => {

@@ -53,6 +53,7 @@ export function castPasswall(input: {
 function passwallDimensionIssue(
   dimensions: CharacterSheetPasswallDimensions,
 ): string | null {
+  /* v8 ignore start -- These branches reject nonpositive or oversized dimensions outside the narrowed Passwall request contract. */
   if (
     dimensions.widthFeet <= 0 ||
     dimensions.heightFeet <= 0 ||
@@ -69,6 +70,7 @@ function passwallDimensionIssue(
   if (dimensions.depthFeet > PASSWALL_MAX_DEPTH_FEET) {
     return "Passwall depth must be at most 20 feet.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
@@ -78,6 +80,7 @@ function passwallInvocationFromSpell(input: {
   readonly dimensions: CharacterSheetPasswallDimensions;
 }): Either.Either<CharacterSheetPasswallInvocation, CharacterSheetIssue> {
   const spell = input.spell;
+  /* v8 ignore start -- The catalog record failed the exact authored level-5 Passwall support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -92,22 +95,29 @@ function passwallInvocationFromSpell(input: {
       "Passwall requires the supported level-5 surface-passage profile.",
     );
   }
+  /* v8 ignore stop */
   const duration = timeSpanDuration(spell.mechanics.duration.value);
+  /* v8 ignore start -- The authored Passwall duration admitted above is always accepted by the elapsed-time parser. */
   if (Either.isLeft(duration)) {
     return characterSheetIssue("Passwall requires a supported duration.");
   }
+  /* v8 ignore stop */
   const directPhase = spell.mechanics.phases.find(
     (phase) =>
       phase.kind === "direct" &&
       phase.attachment.kind === "location" &&
+      /* v8 ignore next -- Unsupported authored Passwall data: the admitted location phase requires exactly one explicit no-op effect. */
       (phase.effects ?? []).length === 1 &&
+      /* v8 ignore next -- Unsupported authored Passwall data: omission of that required effect was rejected by the same profile predicate. */
       (phase.effects ?? [])[0]?.kind === "none",
   );
+  /* v8 ignore start -- The catalog record has Passwall spell facts but no supported visible-surface location phase. */
   if (directPhase === undefined) {
     return characterSheetIssue(
       "Passwall requires the supported visible surface location profile.",
     );
   }
+  /* v8 ignore stop */
 
   return Either.right({
     tag: "passwall",

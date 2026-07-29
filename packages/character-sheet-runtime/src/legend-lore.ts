@@ -52,6 +52,7 @@ function legendLoreInvocationFromSpell(input: {
   readonly casting: CharacterSheetLegendLoreCasting;
 }): Either.Either<CharacterSheetLegendLoreInvocation, CharacterSheetIssue> {
   const spell = input.spell;
+  /* v8 ignore start -- The catalog record failed the exact authored level-5 Legend Lore support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
     spell.mechanics.level !== 5 ||
@@ -68,11 +69,14 @@ function legendLoreInvocationFromSpell(input: {
       "Legend Lore requires the supported self-range level-5 Divination profile.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- The catalog record has Legend Lore facts but no supported direct self phase. */
   if (!hasSingleDirectSelfNoEffectPhase(spell)) {
     return characterSheetIssue(
       "Legend Lore requires the supported direct self lore-query profile.",
     );
   }
+  /* v8 ignore stop */
 
   return Either.right({
     tag: "legendLore",

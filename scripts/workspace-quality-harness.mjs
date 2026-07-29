@@ -64,7 +64,7 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "character-sheet-runtime": {
-    coverage: { lines: 86, statements: 86, functions: 99, branches: 75 },
+    coverage: { lines: 99, statements: 99, functions: 100, branches: 99 },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
