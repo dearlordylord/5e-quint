@@ -169,6 +169,48 @@ describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {
     expect(expiredCombatants.get(spellCasterId)?.concentration).toBeNull();
   });
 
+  test("recasting Invisibility replaces the same spell-owned condition effect", () => {
+    const session = spellBattle({
+      preparedSpells: [spellRecord(invisibilityUnitId)],
+      spellSlots: [{ spellLevel: 2, count: 2 }],
+    });
+    const firstCast = castInvisibilityOnTargets(session, [spellTargetId]);
+    const targetTurn = requireResolved(
+      endTurn({ state: firstCast.state, actorId: spellCasterId }),
+    );
+    const casterTurn = requireResolved(
+      endTurn({ state: targetTurn.state, actorId: spellTargetId }),
+    );
+    const agedEffect = invisibilityEffects(casterTurn.state, spellTargetId)[0];
+    if (agedEffect === undefined) {
+      throw new Error("Expected aged Invisibility effect before recast.");
+    }
+    expect(agedEffect.expiresAt).toEqual({
+      kind: "concentration",
+      combatantId: spellCasterId,
+      durationTicks: elapsedTimeTicks(Number(invisibilityDurationTicks) - 1),
+    });
+    const recast = castInvisibilityOnTargets(
+      battleRuntimeSessionForTest({
+        state: casterTurn.state,
+        context: session.context,
+      }),
+      [spellTargetId],
+    );
+
+    expectInvisibilityEffect(recast.state, spellTargetId);
+    const recastEffect = invisibilityEffects(recast.state, spellTargetId)[0];
+    if (recastEffect === undefined) {
+      throw new Error("Expected recast Invisibility effect.");
+    }
+    expect(requireCombatant(recast.state, spellCasterId).concentration).toEqual(
+      {
+        sourceProcedureRef: recastEffect.sourceProcedureRef,
+        effectKind: "spellEffect",
+      },
+    );
+  });
+
   test("invisibility ends immediately after the target makes an attack roll", () => {
     const attackerId = combatantId("unit-profile-invisibility-attacker");
     const session = spellBattle({
@@ -842,9 +884,17 @@ function expectNoInvisibilityEffect(
 function invisibilityEffects(
   state: BattleState,
   targetId: CombatantId,
-): readonly BattleActiveEffect[] {
+): readonly Extract<
+  BattleActiveEffect,
+  { readonly kind: "targetActionEndedSpellCondition" }
+>[] {
   return requireCombatant(state, targetId).activeEffects.filter(
-    (effect) =>
+    (
+      effect,
+    ): effect is Extract<
+      BattleActiveEffect,
+      { readonly kind: "targetActionEndedSpellCondition" }
+    > =>
       effect.kind === "targetActionEndedSpellCondition" &&
       effect.sourceCombatantId === spellCasterId,
   );
