@@ -11,6 +11,7 @@ import {
   paladinSacredWeaponUnitId,
   produceFlameUnitId,
   rangerHuntersPreyUnitId,
+  scorchingRayUnitId,
   spellCasterId,
   spellTargetId,
   subclassFighterChampionUnitId,
@@ -42,6 +43,7 @@ import {
   PALADIN_SACRED_WEAPON_SUPPORT_PROFILE,
   parseSupportedUnitFeatureProfile,
   POTENT_CANTRIP_SUPPORT_PROFILE,
+  proficiencyBonus,
   REMARKABLE_ATHLETE_SUPPORT_PROFILE,
   requiredInitiativeRollModeForCombatant,
   movementFill,
@@ -53,7 +55,10 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
-import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import {
+  characterCreature,
+  damageRollFillWithGroups,
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
@@ -848,6 +853,120 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       tag: "needsHoles",
       holes: [expect.objectContaining({ kind: "rolledDice" })],
     });
+  });
+
+  test("Remarkable Athlete resumes an independent spell attack sequence after Critical Hit movement", () => {
+    const { unit, unitRef } = remarkableAthleteSelectedUnit();
+    const spell = spellRecord(scorchingRayUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterSpellcastingSourceClassName: "wizard",
+      casterProficiencyBonus: proficiencyBonus(3),
+      casterClassLevels: [
+        { className: "fighter", level: classLevel(3) },
+        { className: "wizard", level: classLevel(3) },
+      ],
+      casterUnitRefs: [unitRef],
+      casterUnitFeatures: [
+        characterBattleFeatureInitForTest(unit, [
+          { className: "fighter", level: classLevel(3) },
+        ]),
+      ],
+    });
+    const act = spellAct({
+      session,
+      spellId: scorchingRayUnitId,
+      slotLevel: 2,
+    });
+    const targets = act.initialHoles.filter(
+      (
+        hole,
+      ): hole is Extract<
+        (typeof act.initialHoles)[number],
+        {
+          readonly kind: "targetChoice";
+        }
+      > => hole.kind === "targetChoice",
+    );
+    const targetFills = targets.map((target) =>
+      spellTargetFill(target, scorchingRayUnitId, spellCasterId, spellTargetId),
+    );
+    const attack = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: targetFills,
+      }),
+      "attackRoll",
+    );
+    const critical = attackRollFill(attack, {
+      total: 26,
+      naturalD20: 20,
+    });
+    const decision = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [...targetFills, critical],
+      }),
+      "unitFeatureDecision",
+    );
+    const movement = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          ...targetFills,
+          critical,
+          unitFeatureDecisionFill(decision, "use"),
+        ],
+      }),
+      "movement",
+    );
+
+    expect(decision).toMatchObject({
+      label: "Use Remarkable Athlete movement",
+    });
+    expect(movement).toMatchObject({
+      actorId: spellCasterId,
+      movementBudgetFeet: movementFeet(15),
+    });
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          ...targetFills,
+          critical,
+          unitFeatureDecisionFill(decision, "use"),
+          movementFill(movement, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({ critical: true });
+    const nextAttack = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          ...targetFills,
+          critical,
+          unitFeatureDecisionFill(decision, "use"),
+          movementFill(movement, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+          }),
+          damageRollFillWithGroups(damage, [[1, 1, 1, 1]]),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(nextAttack.holeId).not.toBe(attack.holeId);
   });
 
   test("Remarkable Athlete offers immediate movement after a chained spell attack Critical Hit", () => {

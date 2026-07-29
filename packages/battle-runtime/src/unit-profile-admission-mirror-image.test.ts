@@ -4,10 +4,14 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-MISSING-MIRROR-IMAGE mirror_image
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-mirror-image-hit-interception
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
+import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
+import { proficiencyBonus } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import {
   mirrorImageUnitId,
+  scorchingRayUnitId,
   spellCasterId,
+  spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackRollFill,
@@ -19,7 +23,10 @@ import {
   statBlockWithCreatureType,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
+import {
+  spellAct,
+  spellTargetFill,
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   applyCondition,
@@ -186,6 +193,134 @@ describe("L12G-MISSING-MIRROR-IMAGE deterministic Mirror Image admission", () =>
     expect(activeMirrorImage(caster.activeEffects)?.remainingDuplicates).toBe(
       3,
     );
+  });
+
+  test("Mirror Image redirects a hit within an independent spell attack sequence and resumes the next attack", () => {
+    const mirrorImage = spellRecord(mirrorImageUnitId);
+    const scorchingRay = spellRecord(scorchingRayUnitId);
+    const session = spellBattle({
+      preparedSpells: [mirrorImage],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetClassLevels: [{ className: "wizard", level: 3 }],
+      targetSpellcasting: {
+        sourceClassName: "wizard",
+        spellcastingAbilityModifier: abilityModifier(3),
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [scorchingRay],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      },
+    });
+    const cast = castMirrorImage(session);
+    const attackerTurn = attackerTurnState(cast.state);
+    const attackerSession = battleRuntimeSessionForTest({
+      ...cast,
+      state: attackerTurn.state,
+    });
+    const act = spellAct({
+      session: attackerSession,
+      spellId: scorchingRayUnitId,
+      slotLevel: 2,
+    });
+    const targetFills = act.initialHoles
+      .filter(
+        (
+          hole,
+        ): hole is Extract<
+          (typeof act.initialHoles)[number],
+          {
+            readonly kind: "targetChoice";
+          }
+        > => hole.kind === "targetChoice",
+      )
+      .map((target) =>
+        spellTargetFill(
+          target,
+          scorchingRayUnitId,
+          spellTargetId,
+          spellCasterId,
+        ),
+      );
+    const attack = requireResultHole(
+      resolveBattleSubject({
+        state: attackerTurn.state,
+        subject: act.subject,
+        fills: targetFills,
+      }),
+      "attackRoll",
+    );
+    const attackFill = attackRollFill(attack, {
+      total: 20,
+      naturalD20: 15,
+      ...(attack.rollMode === undefined ? {} : { rollMode: attack.rollMode }),
+    });
+    const duplicateRoll = requireMirrorImageDuplicateRollHole(
+      resolveBattleSubject({
+        state: attackerTurn.state,
+        subject: act.subject,
+        fills: [...targetFills, attackFill],
+      }),
+    );
+    const firstAttackFills = [
+      ...targetFills,
+      attackFill,
+      damageRollFillWithGroups(duplicateRoll, [[1, 2, 3]]),
+    ];
+    const nextAttack = requireResultHole(
+      resolveBattleSubject({
+        state: attackerTurn.state,
+        subject: act.subject,
+        fills: firstAttackFills,
+      }),
+      "attackRoll",
+    );
+    const secondAttackFills = [
+      ...firstAttackFills,
+      attackRollFill(nextAttack, {
+        total: 6,
+        naturalD20: 1,
+        ...(nextAttack.rollMode === undefined
+          ? {}
+          : { rollMode: nextAttack.rollMode }),
+      }),
+    ];
+    const finalAttack = requireResultHole(
+      resolveBattleSubject({
+        state: attackerTurn.state,
+        subject: act.subject,
+        fills: secondAttackFills,
+      }),
+      "attackRoll",
+    );
+    const resolved = resolveBattleSubject({
+      state: attackerTurn.state,
+      subject: act.subject,
+      fills: [
+        ...secondAttackFills,
+        attackRollFill(finalAttack, {
+          total: 6,
+          naturalD20: 1,
+          ...(finalAttack.rollMode === undefined
+            ? {}
+            : { rollMode: finalAttack.rollMode }),
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected the remaining Scorching Ray attacks to miss.");
+    }
+    expect(
+      activeMirrorImage(
+        requireCombatant(resolved.state, spellCasterId).activeEffects,
+      )?.remainingDuplicates,
+    ).toBe(2);
+    expect(nextAttack.holeId).not.toBe(attack.holeId);
   });
 
   test("successful roll with the final duplicate removes the active effect", () => {
