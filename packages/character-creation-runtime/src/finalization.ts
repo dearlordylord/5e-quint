@@ -67,6 +67,7 @@ import {
   classSpellcastingChoiceHoles,
   choiceSelectionOptionIds,
   choiceSelectionMatchesHole,
+  doNotIgnoreSelection,
   eligibleExpertiseSkills,
   grantExpertiseSkillSourceForSelection,
   sameCreationHoleSource,
@@ -1033,6 +1034,9 @@ export function illegalFinalizationIssue(
   };
 }
 
+// Supported selections have already passed the option codecs; this translator
+// exists only to preserve a typed diagnostic for malformed direct projections.
+/* v8 ignore start */
 function choiceOptionCodecProjectionIssue(
   issue: ChoiceOptionCodecIssue,
 ): CharacterBuildProjectionIssue {
@@ -1045,6 +1049,7 @@ function choiceOptionCodecProjectionIssue(
     },
   };
 }
+/* v8 ignore stop */
 
 export function unsupportedFinalizationIssue(
   cause: CreationFinalizationUnsupportedCause,
@@ -4312,7 +4317,7 @@ function selectedSkillProficiencies(
   unitLibrary: UnitCatalog,
   shouldIgnoreSelection: (
     selection: CharacterChoiceSelection,
-  ) => boolean = () => false,
+  ) => boolean = doNotIgnoreSelection,
 ): readonly Skill[] {
   const backgroundSkills = backgroundSkillProficiencies(
     selections.background,
@@ -4373,7 +4378,7 @@ function selectedToolProficiencies(
   selections: FinalizedCharacterSelections,
   shouldIgnoreSelection: (
     selection: CharacterChoiceSelection,
-  ) => boolean = () => false,
+  ) => boolean = doNotIgnoreSelection,
 ): readonly ToolProficiencyId[] {
   return uniqueValues([
     ...selectedBackgroundToolProficiencies(selections),
@@ -4408,7 +4413,7 @@ function toolProficienciesFromChoiceSelections(
   choices: readonly CharacterChoiceSelection[],
   shouldIgnoreSelection: (
     selection: CharacterChoiceSelection,
-  ) => boolean = () => false,
+  ) => boolean = doNotIgnoreSelection,
 ): readonly ToolProficiencyId[] {
   return uniqueValues(
     choices.flatMap((selection) =>

@@ -185,6 +185,10 @@ const SRD_GAMING_SET_OPTIONS = [
   },
 ] as const satisfies ReadonlyArray<CreationChoiceOption>;
 
+export const doNotIgnoreSelection: (
+  selection: CharacterChoiceSelection,
+) => boolean = () => false;
+
 export function discoverCreationHoles(input: {
   readonly draft: CharacterDraft;
   readonly unitLibrary: UnitCatalog;
@@ -2269,7 +2273,7 @@ export function skillExpertiseFromChoiceSelections(
   unitLibrary: UnitCatalog,
   shouldIgnoreSelection: (
     selection: CharacterChoiceSelection,
-  ) => boolean = () => false,
+  ) => boolean = doNotIgnoreSelection,
 ): readonly Skill[] {
   return uniqueSkills(
     choices.flatMap((selection) => {
@@ -2346,7 +2350,7 @@ function draftOwnedToolProficiencies(
   unitLibrary: UnitCatalog,
   shouldIgnoreSelection: (
     selection: CharacterChoiceSelection,
-  ) => boolean = () => false,
+  ) => boolean = doNotIgnoreSelection,
 ): readonly ToolProficiencyId[] {
   return uniqueToolProficiencies([
     ...draftBackgroundToolProficiencies(draft),
@@ -2417,7 +2421,7 @@ export function skillProficienciesFromChoiceSelections(
   choices: readonly CharacterChoiceSelection[],
   shouldIgnoreSelection: (
     selection: CharacterChoiceSelection,
-  ) => boolean = () => false,
+  ) => boolean = doNotIgnoreSelection,
 ): readonly Skill[] {
   return uniqueSkills(
     choices.flatMap((selection) =>
@@ -2443,7 +2447,7 @@ function toolProficienciesFromChoiceSelections(
   choices: readonly CharacterChoiceSelection[],
   shouldIgnoreSelection: (
     selection: CharacterChoiceSelection,
-  ) => boolean = () => false,
+  ) => boolean = doNotIgnoreSelection,
 ): readonly ToolProficiencyId[] {
   return uniqueToolProficiencies(
     choices.flatMap((selection) =>
