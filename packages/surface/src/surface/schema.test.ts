@@ -153,6 +153,10 @@ describe("SRD Surface publication schema", () => {
       (unit) => unit.id === "class_fighter",
       "Fighter class",
     );
+    const dangerSense = requireSrdUnit(
+      (unit) => unit.id === "barbarian_danger_sense",
+      "Barbarian Danger Sense feature",
+    );
     expect(
       isSupportedClassFeatureSpellFreeCastResourceTag(
         "favoredEnemyHuntersMarkFreeCasts",
@@ -179,6 +183,35 @@ describe("SRD Surface publication schema", () => {
     ).toBeNull();
     expect(
       supportedClassFeatureSpellFreeCastGrantsForUnit(fighterClass),
+    ).toBeNull();
+    expect(
+      supportedClassFeatureSpellFreeCastGrantsForUnit(dangerSense),
+    ).toBeNull();
+    expect(
+      supportedClassFeatureSpellFreeCastGrantsForUnit({
+        ...dangerSense,
+        provenance: {
+          kind: "synthetic-test",
+          section: "Synthetic Tests/Unsupported Free Cast Profile",
+        },
+      }),
+    ).toBeNull();
+    if (
+      favoredEnemy.kind !== "class_feature" ||
+      favoredEnemy.mechanics.family !== "passive"
+    ) {
+      throw new Error("Favored Enemy support-profile fixture changed shape");
+    }
+    expect(
+      supportedClassFeatureSpellFreeCastGrantsForUnit({
+        ...favoredEnemy,
+        mechanics: {
+          ...favoredEnemy.mechanics,
+          grants: favoredEnemy.mechanics.grants.filter(
+            (grant) => grant.kind !== "grant_spell_free_casts",
+          ),
+        },
+      }),
     ).toBeNull();
   });
 

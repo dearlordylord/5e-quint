@@ -12,11 +12,14 @@ import {
   describeAreaShape,
   describeAreaShapeFixed,
   describeAttachmentHole,
+  describeAttachmentRange,
+  describeBonusActionTrigger,
   describeClassLevelChoiceCount,
   describeConditionChoice,
   describeConditionList,
   describeContainerStorage,
   describeDc,
+  describeDamageTypeRef,
   describeDelta,
   describeDelta_,
   describeDiceAmount,
@@ -74,6 +77,19 @@ function decodeSyntheticOngoingAttachment(value: unknown) {
 
 describe("Surface trace rule labels", () => {
   test("describes optional reaction constraints", () => {
+    expect(describeBonusActionTrigger(undefined)).toBe("");
+    expect(
+      describeBonusActionTrigger({
+        kind: "after_hit_with",
+        attack: "weapon",
+      }),
+    ).toBe("after hit with weapon");
+    expect(
+      describeBonusActionTrigger({
+        kind: "after_hit_with",
+        attack: "melee_weapon_or_unarmed_strike",
+      }),
+    ).toBe("after hit with Melee weapon or Unarmed Strike");
     expect(
       describeReactionTrigger({
         kind: "creature_casts_spell",
@@ -100,6 +116,11 @@ describe("Surface trace rule labels", () => {
         outcome: "success",
       }),
     ).toBe("success on spell save");
+    expect(
+      describeReactionTrigger({
+        kind: "takes_damage_from_creature",
+      }),
+    ).toBe("takes damage from creature");
   });
 
   test("describes object filters and area variants", () => {
@@ -121,6 +142,21 @@ describe("Surface trace rule labels", () => {
     expect(
       describeObjectFilter({ targetRelation: "not_worn_or_carried" }),
     ).toBe("\nfilter: not_worn_or_carried");
+    expect(describeObjectFilter({})).toBe("");
+    expect(
+      describeDamageTypeRef({
+        kind: "hole",
+        holeId: "synthetic_damage_type",
+        value: "fire",
+      }),
+    ).toBe("fire [hole]");
+    expect(
+      describeDamageTypeRef({
+        kind: "choice",
+        label: "Synthetic damage",
+        options: ["cold", "fire"],
+      }),
+    ).toBe("Synthetic damage (choose: cold | fire)");
     expect(describeAreaOccupantDispositionFilter("hostile_to_source")).toBe(
       "\naffects: hostile creatures",
     );
@@ -157,6 +193,25 @@ describe("Surface trace rule labels", () => {
         sideFeet: 10,
       }),
     ).toBe("up to 2 cubes (10 ft side)");
+    expect(
+      describeAreaShape({
+        kind: "cube_cluster",
+        maxCubes: 2,
+        sideFeet: 10,
+      }),
+    ).toBe("up to 2 cubes (10 ft side)");
+    expect(
+      describeAreaShapeFixed({
+        kind: "cube_cluster",
+        maxCubes: 2,
+        sideFeet: 10,
+        contiguous: true,
+      }),
+    ).toBe("up to 2 cubes (10 ft side, contiguous)");
+    expect(describeAttachmentRange({ kind: "self" }, undefined)).toBe("Self");
+    expect(describeAttachmentRange({ kind: "self" }, "spell_sensor")).toBe(
+      "Self from spell sensor",
+    );
   });
 
   test("describes decoded attachment-hole variants", () => {
@@ -228,6 +283,13 @@ describe("Surface trace rule labels", () => {
         upcastTiers: [{ atSlot: 3, amount: 2 }],
       }),
     ).toContain("2 minutes @ slot ≥ 3");
+    expect(
+      describeDurationValue({
+        amount: 2,
+        unit: "hour",
+        upcastTiers: [{ atSlot: 3, amount: 1 }],
+      }),
+    ).toContain("1 hour @ slot ≥ 3");
     expect(describeRandomTableRoll({ die: 20, modifier: 2 })).toBe("d20+2");
     expect(describeRandomTableRoll({ die: 6, modifier: -1 })).toBe("d6-1");
     expect(describeRandomTableOutcomeRange({ min: 4, max: 4 })).toBe("4");
@@ -323,6 +385,14 @@ describe("Surface trace rule labels", () => {
       }),
     ).toBe("\ntarget: visible target within 30 ft of spell sensor");
     expect(
+      describeGrantedSpellTargetRestriction({
+        kind: "visible_target_within_feet",
+        feet: 30,
+        origin: "caster",
+      }),
+    ).toBe("\ntarget: visible target within 30 ft of caster");
+    expect(describeGrantedSpellDurationOverride({})).toBe("");
+    expect(
       describeGrantedSpellDurationOverride({
         removeConcentration: true,
         endsWhenGrantedSpellEnds: "source_spell",
@@ -346,6 +416,10 @@ describe("Surface trace rule labels", () => {
         weaponFilter: { kind: "weapon_category", category: "melee" },
       }),
     ).toBe("\nfrom: attacks [melee weapons only], nonmagical only");
+    expect(describeResistanceSourceFilter({ kind: "attack" })).toBe(
+      "\nfrom: attacks",
+    );
+    expect(describeSkillFilter(undefined)).toBe("");
   });
 
   test("describes dice and numeric variants", () => {
@@ -369,6 +443,20 @@ describe("Surface trace rule labels", () => {
       "+bonus by item rarity (common=1, uncommon=1, rare=2, very_rare=3, legendary=4, artifact=5)",
     );
     expect(
+      describeDelta({
+        kind: "proficiency_bonus",
+        sign: "+",
+        scale: "half",
+      }),
+    ).toBe("+½ PB");
+    expect(
+      describeDelta({
+        kind: "ability_modifier",
+        sign: "+",
+        ability: "wis",
+      }),
+    ).toBe("+WIS mod");
+    expect(
       describeDiceAmount({
         kind: "threshold_tiers_exploding_max_die",
         axis: "character",
@@ -391,6 +479,14 @@ describe("Surface trace rule labels", () => {
     expect(describeSignedNumber(2)).toBe("+2");
     expect(describeSignedNumber(-2)).toBe("-2");
     expect(describeNumericBounds(1, 20)).toBe("\nmin 1, max 20");
+    expect(describeNumericBounds(undefined, undefined)).toBe("");
+    expect(
+      describeDiceAmount({
+        kind: "resource_spent_linear",
+        base: { dice: 1, dieSize: 6 },
+        perResource: { dice: 1 },
+      }),
+    ).toBe("1d6 + 1d6 per resource spent");
     expect(describeAbilityCheck("caster_spellcasting_ability", "arcana")).toBe(
       "SPELLCASTING (arcana)",
     );
@@ -421,6 +517,9 @@ describe("Surface trace rule labels", () => {
       }),
     ).toBe("charmed OR frightened (caster choice)");
     expect(describeConditionList(["prone"])).toBe("prone");
+    expect(describeConditionList(["blinded", "prone"])).toBe(
+      "[blinded, prone]",
+    );
     expect(capitalizeWords("synthetic rule label")).toBe(
       "Synthetic Rule Label",
     );

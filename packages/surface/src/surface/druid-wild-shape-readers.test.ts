@@ -4,7 +4,7 @@ import {
   druidWildShapeKnownFormRosterFromPhase,
   isDruidWildShapeFeatureRecord,
 } from "./druid-wild-shape-readers.ts";
-import type { UnitRecord } from "./types.ts";
+import { isEffectAtom, type UnitRecord } from "./types.ts";
 import { srdUnitCollection } from "./unit-catalog.ts";
 
 describe("Druid Wild Shape readers", () => {
@@ -25,6 +25,34 @@ describe("Druid Wild Shape readers", () => {
         atLevel: 8,
       },
     });
+    const phase = wildShape.mechanics.phases[0];
+    if (phase.kind !== "direct") {
+      throw new Error("Wild Shape activation phase changed shape");
+    }
+    const transformEffect = phase.effects?.[0];
+    if (transformEffect === undefined || !isEffectAtom(transformEffect)) {
+      throw new Error("Wild Shape transform effect is absent");
+    }
+    expect(
+      druidWildShapeKnownFormRosterFromPhase({
+        ...phase,
+        effects: [{ kind: "none" }, transformEffect],
+      }),
+    ).toEqual(roster);
+    expect(
+      druidWildShapeKnownFormRosterFromPhase({
+        ...phase,
+        effects: [{ kind: "none" }],
+      }),
+    ).toBeUndefined();
+    const { duration: _duration, ...mechanicsWithoutDuration } =
+      wildShape.mechanics;
+    expect(
+      isDruidWildShapeFeatureRecord({
+        ...wildShape,
+        mechanics: mechanicsWithoutDuration,
+      }),
+    ).toBe(false);
   });
 
   test("rejects unrelated Units and absent phases", () => {

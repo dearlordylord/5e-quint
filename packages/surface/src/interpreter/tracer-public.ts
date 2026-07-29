@@ -66,10 +66,12 @@ export function traceUnit(unit: UnitRecord): Trace {
       return traceWeaponUnit(unit);
     case "weapon_template":
       return traceWeaponTemplateUnit(unit);
+    /* v8 ignore start -- UnitRecord is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = unit;
       throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);
     }
+    /* v8 ignore stop */
   }
 }
 

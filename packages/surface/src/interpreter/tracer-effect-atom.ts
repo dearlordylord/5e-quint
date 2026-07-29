@@ -281,9 +281,11 @@ export function traceEffectAtom(
         edges,
         traceEffectAtom,
       );
+    /* v8 ignore start -- EffectAtom is a decoded tagged union exhausted by the routed subsets above */
     default: {
       const _exhaustive: never = e;
       throw new Error(`unhandled effect atom: ${String(_exhaustive)}`);
     }
+    /* v8 ignore stop */
   }
 }

@@ -832,11 +832,13 @@ export function traceAttachmentAndAreaEffectAtom(
       });
       return id;
     }
+    /* v8 ignore start -- this attachment/area effect subset is decoder-narrowed to the handled tags */
     default: {
       const _exhaustive: never = e;
       throw new Error(
         `unhandled attachment or area effect atom: ${String(_exhaustive)}`,
       );
     }
+    /* v8 ignore stop */
   }
 }

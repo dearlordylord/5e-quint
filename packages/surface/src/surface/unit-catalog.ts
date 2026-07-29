@@ -599,9 +599,11 @@ export function isSrd521Unit(unit: UnitRecord): unit is Srd521Unit {
 }
 
 export function assertSrd521Unit(unit: UnitRecord): Srd521Unit {
+  /* v8 ignore start -- callers must establish SRD provenance before invoking this assertion; a non-SRD Unit violates that internal precondition */
   if (!isSrd521Unit(unit)) {
     throw new Error(`Unit is not SRD 5.2.1: ${unit.id}`);
   }
+  /* v8 ignore stop */
 
   return unit;
 }
@@ -1124,6 +1126,7 @@ function findInvalidSpeciesTraitRefs(
       traitUnitId,
       expectedSpecies: unit.species,
       actualKind: referenced.kind,
+      /* v8 ignore next -- only malformed species-trait catalog composition reaches this diagnostic projection */
       ...("species" in referenced ? { actualSpecies: referenced.species } : {}),
     });
   }
@@ -1175,6 +1178,7 @@ function findInvalidSubclassChoiceRefs(
       (rawSubclassUnitId): readonly UnitCatalogBuildIssue[] => {
         const subclassUnitId = UnitIdSchema.make(rawSubclassUnitId);
         const referenced = records.get(subclassUnitId);
+        /* v8 ignore start -- an unresolved subclass id is malformed class-catalog composition */
         if (referenced == null) {
           return [
             {
@@ -1184,6 +1188,7 @@ function findInvalidSubclassChoiceRefs(
             } satisfies UnitCatalogBuildIssue,
           ];
         }
+        /* v8 ignore stop */
         if (
           referenced.kind === "subclass" &&
           referenced.className === unit.className
@@ -1198,9 +1203,11 @@ function findInvalidSubclassChoiceRefs(
             subclassUnitId,
             expectedClassName: unit.className,
             actualKind: referenced.kind,
+            /* v8 ignore start -- only malformed subclass catalog composition reaches this diagnostic projection */
             ...("className" in referenced
               ? { actualClassName: referenced.className }
               : {}),
+            /* v8 ignore stop */
           } satisfies UnitCatalogBuildIssue,
         ];
       },

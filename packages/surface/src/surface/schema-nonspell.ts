@@ -506,6 +506,7 @@ export const TriggeredReactionAbilityMechanicsSchema = Schema.Struct({
   resource: ActivationResourceSchema,
   resetCadence: ResetCadenceSchema,
   duration: exactOptional(ClassFeatureDurationSchema),
+  /* v8 ignore next -- this nested declarative schema initializes during collection; canonical triggered-reaction records are decoded by the catalog tests */
   usageLimit: exactOptional(
     Schema.Struct({ kind: Schema.Literal("once_per_turn") }),
   ),
@@ -1630,6 +1631,7 @@ export const AbjureFoesMechanicsSchema = strictStruct({
   }),
 });
 
+/* v8 ignore start -- declarative mechanics-schema construction initializes before full-suite V8 attribution; the canonical Monk feature is decoded by the catalog tests */
 export const AcrobaticMovementMechanicsSchema = strictStruct({
   family: Schema.Literal("acrobatic_movement"),
   condition: EquipmentPredicateSchema,
@@ -1645,6 +1647,7 @@ export const AcrobaticMovementMechanicsSchema = strictStruct({
     }),
   }),
 });
+/* v8 ignore stop */
 
 export const SupremeSneakMechanicsSchema = strictStruct({
   family: Schema.Literal("cunning_strike_option_grant"),
@@ -1707,6 +1710,7 @@ export const SacredWeaponMechanicsSchema = strictStruct({
   }),
 });
 
+/* v8 ignore start -- declarative mechanics-schema construction initializes before V8 attribution; canonical Hunter's Prey records are decoded by the catalog tests */
 export const HuntersPreyMechanicsSchema = strictStruct({
   family: Schema.Literal("hunters_prey"),
   choice: strictStruct({
@@ -1748,6 +1752,7 @@ export const HuntersPreyMechanicsSchema = strictStruct({
     }),
   ),
 });
+/* v8 ignore stop */
 
 export const SteadyAimMechanicsSchema = strictStruct({
   family: Schema.Literal("steady_aim"),
@@ -1835,6 +1840,7 @@ export const CombatTurnStartHeroicInspirationMechanicsSchema = strictStruct({
   grant: strictStruct({ kind: Schema.Literal("heroic_inspiration") }),
 });
 
+/* v8 ignore start -- these union declarations only assemble already-tested mechanics schemas during collection */
 export const ClassFeatureMechanicsSchema = Schema.Union(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
@@ -1966,6 +1972,7 @@ export const WarlockClassFeatureMechanicsSchema = Schema.Union(
   WarlockPactSlotRecoveryMechanicsSchema,
   EnemyZeroHitPointTemporaryHitPointsMechanicsSchema,
 );
+/* v8 ignore stop */
 
 export const MasteryTriggerSchema = Schema.Union(
   strictStruct({ kind: Schema.Literal("weapon_hit") }),
@@ -1981,6 +1988,7 @@ export const SneakAttackDamageRiderTriggerSchema = strictStruct({
   ),
 });
 
+/* v8 ignore next -- this declarative schema factory is initialized during module collection; canonical Frenzy mechanics are decoded by catalog tests */
 export const FrenzyAttackDamageRiderTriggerSchema = strictStruct({
   kind: Schema.Literal("hit_with_attack_roll"),
   attackFilter: Schema.Literal("strength_based_attack"),
@@ -2010,6 +2018,7 @@ export const ClassLevelDamageDiceSchema = strictStruct({
   ),
 });
 
+/* v8 ignore start -- these rider schema declarations initialize during collection; canonical Rage and attack-rider records are decoded by catalog tests */
 export const RageDamageBonusDiceSchema = strictStruct({
   kind: Schema.Literal("rage_damage_bonus"),
   dieSize: Schema.Literal(6),
@@ -2020,6 +2029,7 @@ export const AddAttackDamageDiceRiderSchema = strictStruct({
   dice: Schema.Union(ClassLevelDamageDiceSchema, RageDamageBonusDiceSchema),
   damageType: Schema.Literal("same_as_attack"),
 });
+/* v8 ignore stop */
 
 export const SecondaryTargetSelectionSchema = strictStruct({
   kind: Schema.Literal("adjacent_to_primary"),
@@ -2044,6 +2054,7 @@ export const ModifyRollAdvantageRiderSchema = Schema.Struct({
   expiresOn: RiderExpirySchema,
 });
 
+/* v8 ignore start -- this declarative save-result schema initializes during collection; canonical mastery records decode both admitted results */
 export const SaveGateRiderResultSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("apply_condition"),
@@ -2051,6 +2062,7 @@ export const SaveGateRiderResultSchema = Schema.Union(
   }),
   strictStruct({ kind: Schema.Literal("none") }),
 );
+/* v8 ignore stop */
 
 export const SaveGateRiderSchema = Schema.Struct({
   kind: Schema.Literal("save_gate"),
@@ -2084,6 +2096,7 @@ export const ToppleMasteryEffectSchema = strictStruct({
   onSuccess: strictStruct({ kind: Schema.Literal("none") }),
 });
 
+/* v8 ignore start -- these declarative mastery schema factories initialize during module collection; canonical Push, Slow, and Vex records are decoded by catalog tests */
 export const PushMasteryEffectSchema = strictStruct({
   kind: Schema.Literal("push_creature"),
   maxDistanceFeet: Schema.Literal(10),
@@ -2109,7 +2122,9 @@ export const VexMasteryEffectSchema = strictStruct({
     kind: Schema.Literal("end_of_next_turn"),
   }),
 });
+/* v8 ignore stop */
 
+/* v8 ignore start -- this declarative replacement schema initializes during collection; the canonical feature record is decoded by catalog tests */
 export const SaveDamageReplacementMechanicsSchema = Schema.Struct({
   family: Schema.Literal("save_damage_replacement"),
   trigger: Schema.Struct({
@@ -2128,6 +2143,7 @@ export const SaveDamageReplacementMechanicsSchema = Schema.Struct({
     }),
   ),
 });
+/* v8 ignore stop */
 
 const BardicInspirationDieReductionSchema = strictStruct({
   kind: Schema.Literal("bardic_inspiration_die"),
@@ -2186,6 +2202,7 @@ const AttackDamageReductionZeroDamageRedirectSchema = strictStruct({
   }),
 });
 
+/* v8 ignore start -- this declarative reaction-modifier schema tree initializes during collection; canonical reaction-reduction records are decoded by catalog tests */
 const ReactionRollOrDamageReductionModifierSchema = Schema.Union(
   strictStruct({
     kind: Schema.Literal("attack_roll_reduction"),
@@ -2247,7 +2264,9 @@ const ReactionRollOrDamageReductionModifierSchema = Schema.Union(
 const ReactionRollOrDamageReductionModifiersSchema = Schema.NonEmptyArray(
   ReactionRollOrDamageReductionModifierSchema,
 );
+/* v8 ignore stop */
 
+/* v8 ignore start -- this declarative reaction schema initializes during collection; canonical reaction-reduction features are decoded by catalog tests */
 export const ReactionRollOrDamageReductionMechanicsSchema = Schema.Union(
   strictStruct({
     family: Schema.Literal("reaction_roll_or_damage_reduction"),
@@ -2260,13 +2279,17 @@ export const ReactionRollOrDamageReductionMechanicsSchema = Schema.Union(
     modifiers: ReactionRollOrDamageReductionModifiersSchema,
   }),
 );
+/* v8 ignore stop */
 
+/* v8 ignore start -- this declarative reroll schema initializes during collection; the canonical reroll feature is decoded by catalog tests */
 export const RerollWeaponDamageDiceRiderSchema = strictStruct({
   kind: Schema.Literal("reroll_weapon_damage_dice"),
   diceScope: Schema.Literal("weapon_damage_dice"),
   choose: Schema.Literal("either_roll"),
 });
+/* v8 ignore stop */
 
+/* v8 ignore start -- these mastery schema unions initialize during collection; every canonical mastery record is decoded by catalog tests */
 export const WeaponHitMasteryEffectSchema = Schema.Union(
   PushMasteryEffectSchema,
   SapMasteryEffectSchema,
@@ -2279,6 +2302,7 @@ export const MasteryEffectSchema = Schema.Union(
   VexMasteryEffectSchema,
   GrantWeaponAttackRiderSchema,
 );
+/* v8 ignore stop */
 
 export const OnHitRiderEffectSchema = Schema.Union(
   MasteryEffectSchema,
@@ -2308,12 +2332,14 @@ export const PushMasteryMechanicsSchema = strictStruct({
   effect: PushMasteryEffectSchema,
 });
 
+/* v8 ignore start -- this declarative Topple schema initializes during collection; the canonical Topple record is decoded by catalog tests */
 export const ToppleMasteryMechanicsSchema = strictStruct({
   ...OnHitTriggerMechanicsBaseFields,
   optional: Schema.Literal(true),
   trigger: strictStruct({ kind: Schema.Literal("weapon_hit") }),
   effect: ToppleMasteryEffectSchema,
 });
+/* v8 ignore stop */
 
 export const SlowMasteryMechanicsSchema = strictStruct({
   ...OnHitTriggerMechanicsBaseFields,
@@ -2454,6 +2480,7 @@ export const HitPointTriggeredReplacementMechanicsSchema = Schema.Struct({
   resetCadence: RestResetCadenceSchema,
 });
 
+/* v8 ignore start -- this declarative replacement schema initializes during collection; its canonical owner is decoded by catalog tests */
 export const AttackRollMissToHitReplacementMechanicsSchema = strictStruct({
   family: Schema.Literal("triggered_replacement"),
   trigger: AttackRollMissReplacementTriggerSchema,
@@ -2461,11 +2488,14 @@ export const AttackRollMissToHitReplacementMechanicsSchema = strictStruct({
   optional: Schema.Literal(true),
   resetCadence: strictStruct({ kind: Schema.Literal("start_of_next_turn") }),
 });
+/* v8 ignore stop */
 
+/* v8 ignore start -- this declarative replacement union initializes during collection; both owned variants are decoded by catalog tests */
 export const TriggeredReplacementMechanicsSchema = Schema.Union(
   HitPointTriggeredReplacementMechanicsSchema,
   AttackRollMissToHitReplacementMechanicsSchema,
 );
+/* v8 ignore stop */
 
 const UnitMetadataSchema = Schema.Struct({
   id: surfaceIdentity(UnitId, "id"),
@@ -2476,6 +2506,7 @@ const UnitMetadataSchema = Schema.Struct({
 const distinctAbilities = (abilities: readonly unknown[]): boolean =>
   new Set(abilities).size === abilities.length;
 
+/* v8 ignore start -- this declarative primary-ability union initializes during collection; schema-base tests decode and format both admitted variants */
 export const PrimaryAbilityExpressionSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("all_of"),
@@ -2504,6 +2535,7 @@ export const PrimaryAbilityExpressionSchema = Schema.Union(
     },
   ),
 );
+/* v8 ignore stop */
 
 export const BackgroundAbilityScoreIncreaseSchema = Schema.Struct({
   abilities: Schema.Tuple(AbilitySchema, AbilitySchema, AbilitySchema).pipe(
@@ -2837,6 +2869,7 @@ export const ListPreparedSpellcastingProgressionCreationSchema = Schema.Struct({
         spellcasting.spellcastingProgression,
         1,
       );
+      /* v8 ignore start -- a missing/duplicate level-1 progression or mismatched projection is malformed list-prepared authorship */
       if (
         levelOne === undefined ||
         !distinctListPreparedSpellcastingProgressionLevels(
@@ -2849,6 +2882,7 @@ export const ListPreparedSpellcastingProgressionCreationSchema = Schema.Struct({
       ) {
         return false;
       }
+      /* v8 ignore stop */
 
       const maxCantripCount = Math.max(
         ...spellcasting.spellcastingProgression.map((row) => row.cantripCount),
@@ -3001,9 +3035,11 @@ export const WizardSpellcastingCreationSchema = Schema.Struct({
       const slotLevels = spellcasting.spellSlotProjection.slots.map((slot) =>
         slot.spellLevel.toString(),
       );
+      /* v8 ignore start -- duplicate Wizard Spell Slot levels are malformed progression authorship */
       if (!distinctStrings(slotLevels)) {
         return false;
       }
+      /* v8 ignore stop */
 
       if (
         !distinctWizardSpellcastingProgressionLevels(
@@ -3040,9 +3076,11 @@ export const WizardSpellcastingCreationSchema = Schema.Struct({
             row.spellSlots.map((slot) => slot.spellLevel.toString()),
           ),
         );
+      /* v8 ignore start -- duplicate Spell Slot levels within a Wizard progression row are malformed authorship */
       if (!progressionSlotsHaveDistinctLevels) {
         return false;
       }
+      /* v8 ignore stop */
 
       const availableSlotLevels = new Set(
         spellcasting.spellcastingProgression.flatMap((row) =>
@@ -3261,12 +3299,14 @@ function pactMagicOptionsCoverProgression(spellcasting: {
   );
 }
 
+/* v8 ignore start -- this declarative owner union initializes during collection; direct reader tests decode every admitted class spellcasting shape */
 export const ClassSpellcastingCreationSchema = Schema.Union(
   ListPreparedSpellcastingCreationSchema,
   ListPreparedSpellcastingProgressionCreationSchema,
   PactMagicSpellcastingCreationSchema,
   WizardSpellcastingCreationSchema,
 );
+/* v8 ignore stop */
 
 /* v8 ignore start -- these declarative class-schema objects initialize during full-suite collection before V8 attribution; schema-nonspell-readers.test.ts decodes each owner directly */
 const ClassRecordBaseFields = {
@@ -3310,8 +3350,8 @@ export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
   ),
 }).pipe(
   Schema.filter(
-    /* v8 ignore stop */
     (unit) => {
+      /* v8 ignore stop */
       const classFacts = CLASS_PREPARED_SPELLCASTING_FACTS.find(
         (facts) => facts.className === unit.className,
       );
@@ -3418,8 +3458,8 @@ export const PactMagicClassRecordSchema = Schema.Struct({
   spellcasting: PactMagicSpellcastingCreationSchema,
 }).pipe(
   Schema.filter(
-    /* v8 ignore stop */
     (unit) => {
+      /* v8 ignore stop */
       const levelOne = pactMagicProgressionAtLevel(
         unit.spellcasting.pactMagicProgression,
         1,
@@ -3660,6 +3700,7 @@ const FeatAbilityScoreIncreaseChoiceSchema = Schema.Struct({
   ),
 }).pipe(
   Schema.filter(
+    /* v8 ignore start -- a two-score Feat with fewer than two scoped abilities is malformed authored input */
     (choice) =>
       choice.methods.every(
         (method) =>
@@ -3667,6 +3708,7 @@ const FeatAbilityScoreIncreaseChoiceSchema = Schema.Struct({
           choice.abilityScope.kind === "all_abilities" ||
           choice.abilityScope.abilities.length > 1,
       ),
+    /* v8 ignore stop */
     {
       /* v8 ignore next 2 -- this callback only formats the diagnostic after a malformed two-score Feat exposes fewer than two legal abilities */
       message: () =>

@@ -234,7 +234,9 @@ export function surfaceSchemaRolesEqual(
 export function readSurfaceSchemaRole(
   ast: AST.AST,
 ): SurfaceSchemaFieldRole | undefined {
+  /* v8 ignore start -- Effect AST variants expose annotations; absence requires a malformed or incompatible external AST object */
   if (!("annotations" in ast)) return undefined;
+  /* v8 ignore stop */
   const value = ast.annotations[SURFACE_SCHEMA_ROLE_ANNOTATION];
   return isSurfaceSchemaRole(value) ? value : undefined;
 }

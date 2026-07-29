@@ -111,10 +111,12 @@ export function describeOnHitTrigger(
       return "weaponFilter" in t
         ? `(hit with attack roll, ${t.weaponFilter}, ${t.eligibility})`
         : `(hit with attack roll, ${t.attackFilter}, ${t.prerequisite}, ${t.hitLimit})`;
+    /* v8 ignore start -- the decoded on-hit trigger union is exhausted above */
     default: {
       const _: never = t;
       throw new Error(`unhandled on-hit trigger: ${String(_)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -256,10 +258,12 @@ export function traceOnHitRiderEffect(
       traceRiderExpiry(e.expiresOn, speedId, nodes, edges, ids);
       return;
     }
+    /* v8 ignore start -- OnHitRiderEffect is a decoded tagged union exhausted above */
     default: {
       const _: never = e;
       throw new Error(`unhandled on-hit rider effect: ${String(_)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -287,10 +291,12 @@ export function traceSaveGateResult(
       edges.push({ from: eId, to: targetId, relation: "attaches_to" });
       return;
     }
+    /* v8 ignore start -- SaveGateRiderResult is a decoded tagged union exhausted above */
     default: {
       const _: never = r;
       throw new Error(`unhandled save gate result: ${String(_)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -335,10 +341,12 @@ export function traceRiderExpiry(
         label: "turn_start_window\n(attacker's next turn)",
       });
       break;
+    /* v8 ignore start -- RiderExpiry is a decoded tagged union exhausted above */
     default: {
       const _: never = x;
       throw new Error(`unhandled rider expiry: ${String(_)}`);
     }
+    /* v8 ignore stop */
   }
   edges.push({ from: effId, to: winId, relation: "persists_until" });
 }

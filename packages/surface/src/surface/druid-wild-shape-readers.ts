@@ -156,7 +156,9 @@ function druidWildShapeRevertTriggersAreSupported(
 function druidWildShapeTemporaryHitPoints(
   effect: AreaDirectEffectAtom,
 ): boolean {
+  /* v8 ignore start -- admitted Wild Shape phases contain EffectAtom values; an area-scoped atom here requires malformed internal phase composition */
   if (!isEffectAtom(effect)) return false;
+  /* v8 ignore stop */
   return (
     effect.kind === "grant_temp_hp" &&
     effect.amount.kind === "linear_per_level" &&

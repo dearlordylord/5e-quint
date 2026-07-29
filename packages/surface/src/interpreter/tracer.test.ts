@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 
 import { describe, expect, test } from "vitest";
+import { unitId } from "@dnd/shared/game-facts";
 
 import animalMessengerInput from "../../content/animal_messenger.json";
 import arcanistsMagicAuraInput from "../../content/arcanists_magic_aura.json";
@@ -10,6 +11,7 @@ import blinkInput from "../../content/blink.json";
 import chillTouchInput from "../../content/chill_touch.json";
 import classFighterInput from "../../content/class_fighter.json";
 import conjureAnimalsInput from "../../content/conjure_animals.json";
+import dispelMagicInput from "../../content/dispel_magic.json";
 import dragonsBreathInput from "../../content/dragons_breath.json";
 import enlargeReduceInput from "../../content/enlarge_reduce.json";
 import flameBladeInput from "../../content/flame_blade.json";
@@ -41,13 +43,128 @@ import {
   decodeUnitRecordSync,
 } from "../surface/schema.ts";
 import { srdSurface } from "../surface/surface-catalog.ts";
+import type { AreaDirectEffectAtom } from "../surface/types.ts";
 import {
   renderStatBlockTraceDocument,
   renderTraceDocument,
 } from "./mermaid.ts";
+import { traceEffectAtom } from "./tracer-effect-atom.ts";
+import { describeMagicItemAttunement } from "./tracer-feature-sources.ts";
+import type { TraceEdge, TraceNode } from "./tracer-model.ts";
+import { idGen } from "./tracer-rule-labels.ts";
 import { traceStatBlock, traceUnit } from "./tracer.ts";
 
 describe("Surface trace interpreter", () => {
+  test("traces optional effect-label facts in both domain states", () => {
+    const effects = [
+      { kind: "scale_attack_count", additional: 1 },
+      { kind: "scale_attack_count", additional: 2 },
+      { kind: "cap_attack_action_attacks", maxAttacks: 1 },
+      { kind: "cap_attack_action_attacks", maxAttacks: 2 },
+      { kind: "force_fall", direction: "downward" },
+      {
+        kind: "force_fall",
+        direction: "upward",
+        maxDistanceFeet: 20,
+        impactAsNormalFall: true,
+      },
+      { kind: "fall_when_effect_ends", direction: "downward" },
+      {
+        kind: "fall_when_effect_ends",
+        direction: "downward",
+        unlessCanStopFall: true,
+      },
+      {
+        kind: "move_area",
+        direction: "away_from_caster",
+        distanceFeet: 10,
+      },
+      {
+        kind: "move_area",
+        direction: "away_from_caster",
+        distanceFeet: 10,
+        includeCreaturesInArea: true,
+      },
+      { kind: "block_flying_movement", maxSize: "small" },
+      {
+        kind: "block_flying_movement",
+        maxSize: "small",
+        includesObjects: true,
+      },
+      { kind: "prevent_drop_to_0_hp", replacementHp: 1 },
+      {
+        kind: "prevent_drop_to_0_hp",
+        replacementHp: 1,
+        consumesEffect: true,
+      },
+      { kind: "negate_instant_death" },
+      { kind: "negate_instant_death", consumesEffect: true },
+      {
+        kind: "offer_ability_substitution_for_ability_checks",
+        use: "str",
+        skillFilter: { kind: "fixed", skills: ["athletics"] },
+      },
+      {
+        kind: "offer_ability_substitution_for_ability_checks",
+        use: "str",
+        skillFilter: { kind: "fixed", skills: ["athletics"] },
+        requiredActiveFeature: {
+          kind: "class_feature",
+          unitId: unitId("synthetic_active_feature"),
+        },
+      },
+      { kind: "make_weapon_attack", weapon: "material_component" },
+      {
+        kind: "make_weapon_attack",
+        weapon: "material_component",
+        abilityOverride: "spellcasting",
+        damageTypeChoice: ["radiant"],
+        bonusDamage: {
+          damageType: "radiant",
+          amount: { kind: "fixed", expr: { dice: 1, dieSize: 6 } },
+        },
+      },
+      { kind: "lock_object" },
+      { kind: "lock_object", password: "synthetic password" },
+      { kind: "force_drop_item" },
+      {
+        kind: "delayed_save",
+        ability: "wis",
+        dc: { kind: "innate_dc", base: 8, ability: "wis" },
+        cadence: "start_of_caster_next_turn",
+        onSuccess: { kind: "none" },
+        onFailure: { kind: "none" },
+      },
+      {
+        kind: "delayed_save",
+        condition: "charmed",
+        ability: "wis",
+        dc: { kind: "innate_dc", base: 8, ability: "wis" },
+        cadence: "start_of_caster_next_turn",
+        onSuccess: { kind: "none" },
+        onFailure: { kind: "none" },
+      },
+      {
+        kind: "reduce_damage_taken",
+        amount: { kind: "fixed", expr: { dice: 0, dieSize: 1, flat: 1 } },
+      },
+      {
+        kind: "reduce_damage_taken",
+        amount: { kind: "fixed", expr: { dice: 0, dieSize: 1, flat: 1 } },
+        damageType: "fire",
+      },
+    ] as const satisfies ReadonlyArray<AreaDirectEffectAtom>;
+    const nodes: TraceNode[] = [];
+    const edges: TraceEdge[] = [];
+    const ids = idGen();
+
+    for (const effect of effects) {
+      expect(traceEffectAtom(effect, nodes, ids, edges)).not.toBeNull();
+    }
+
+    expect(nodes).toHaveLength(effects.length);
+  });
+
   test("traces every shipped SRD Unit and Stat Block", () => {
     for (const unit of srdSurface.units) {
       const trace = traceUnit(unit);
@@ -159,6 +276,15 @@ describe("Surface trace interpreter", () => {
 
     const trace = traceUnit(unit);
 
+    if (unit.kind !== "magic_item") {
+      throw new Error("Synthetic magic-item collection changed kind");
+    }
+    expect(describeMagicItemAttunement(unit)).toBe("");
+    expect(renderTraceDocument(trace, unit)).not.toContain("5e.tools:");
+    const srdMagicItem = decodeUnitRecordSync(bagOfHoldingInput);
+    expect(
+      renderTraceDocument(traceUnit(srdMagicItem), srdMagicItem),
+    ).toContain("5e.tools: <https://5e.tools/items.html");
     expect(trace.nodes).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -254,14 +380,22 @@ describe("Surface trace interpreter", () => {
                   effects: [
                     {
                       ...webInput.mechanics.operations[6].effect,
-                      onFail: { kind: "none" },
+                      onFail: {
+                        kind: "apply_condition",
+                        condition: "prone",
+                      },
                     },
                     {
                       kind: chillTouchInput.mechanics.phases[0].kind,
                       attackKind:
                         chillTouchInput.mechanics.phases[0].attackKind,
                       onHit: chillTouchInput.mechanics.phases[0].onHit,
-                      onMiss: chillTouchInput.mechanics.phases[0].onMiss,
+                      onMiss: [
+                        {
+                          kind: "apply_condition",
+                          condition: "prone",
+                        },
+                      ],
                     },
                     searingSmiteInput.mechanics.operations[0].effect,
                     barkskinInput.mechanics.operations[0].effect,
@@ -285,6 +419,73 @@ describe("Surface trace interpreter", () => {
         expect.objectContaining({ atomKind: "modify_ac" }),
         expect.objectContaining({ atomKind: "random_table" }),
         expect.objectContaining({ atomKind: "table_result" }),
+      ]),
+    );
+  });
+
+  test("traces activation ability-check failures and nested random-table phases", () => {
+    const directPhase = dispelMagicInput.mechanics.phases[0];
+    const abilityCheckPhase = dispelMagicInput.mechanics.phases[1];
+    const unit = decodeUnitRecordSync({
+      ...dispelMagicInput,
+      id: "synthetic_activation_random_table",
+      name: "Synthetic Activation Random Table",
+      provenance: {
+        kind: "synthetic-test",
+        section: "Synthetic Tests/Activation Random Table",
+      },
+      mechanics: {
+        ...dispelMagicInput.mechanics,
+        phases: [
+          {
+            ...abilityCheckPhase,
+            onFail: {
+              kind: "apply_condition",
+              condition: "prone",
+            },
+          },
+          {
+            kind: "random_table",
+            roll: { die: 2 },
+            outcomes: [
+              { min: 1, max: 1, label: "No nested phase" },
+              {
+                min: 2,
+                max: 2,
+                label: "Resolve nested phase",
+                phases: [
+                  {
+                    ...directPhase,
+                    effects: [
+                      {
+                        kind: "negate_triggering_spell",
+                        maxSpellLevel: 3,
+                      },
+                      { kind: "reflect_triggering_spell" },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    const trace = traceUnit(unit);
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ atomKind: "ability_check" }),
+        expect.objectContaining({ atomKind: "apply_condition" }),
+        expect.objectContaining({ atomKind: "random_table" }),
+        expect.objectContaining({ atomKind: "table_result" }),
+      ]),
+    );
+    expect(trace.edges).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ relation: "branches_on_completion" }),
+        expect.objectContaining({ relation: "branches_on_roll" }),
       ]),
     );
   });

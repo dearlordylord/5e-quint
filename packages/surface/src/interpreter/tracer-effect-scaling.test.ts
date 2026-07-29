@@ -15,6 +15,12 @@ import {
   traceUsageLimit,
 } from "./tracer-effect-scaling.ts";
 import { idGen } from "./tracer-rule-labels.ts";
+import {
+  describeTierOverride,
+  scalingAtomFor,
+  traceDiceAmountScaling,
+  traceTargetCountScaling,
+} from "./tracer-scaling.ts";
 
 function scalingTraceState(): {
   readonly nodes: TraceNode[];
@@ -24,6 +30,196 @@ function scalingTraceState(): {
 }
 
 describe("Surface trace effect scaling", () => {
+  test("classifies every dice-scaling dimension", () => {
+    expect(
+      scalingAtomFor({ kind: "fixed", expr: { dice: 1, dieSize: 6 } }),
+    ).toBe("scale_numeric_bonus");
+    expect(
+      scalingAtomFor({
+        kind: "threshold_tiers",
+        axis: "character",
+        base: { dice: 1, dieSize: 6 },
+        tiers: [{ atLevel: 5, override: { dieSize: 8 } }],
+      }),
+    ).toBe("scale_die_size");
+    expect(
+      scalingAtomFor({
+        kind: "threshold_tiers",
+        axis: "character",
+        base: { dice: 1, dieSize: 6 },
+        tiers: [{ atLevel: 5, override: { dice: 2 } }],
+      }),
+    ).toBe("scale_die_count");
+    expect(
+      scalingAtomFor({
+        kind: "threshold_tiers",
+        axis: "character",
+        base: { dice: 1, dieSize: 6 },
+        tiers: [{ atLevel: 5, override: { flat: 1 } }],
+      }),
+    ).toBe("scale_numeric_bonus");
+    expect(scalingAtomFor({ kind: "proficiency_bonus" })).toBe(
+      "scale_numeric_bonus",
+    );
+    expect(
+      scalingAtomFor({
+        kind: "linear_per_level",
+        axis: "slot",
+        base: { dice: 1, dieSize: 6 },
+        perLevel: { dieSize: 2 },
+        startingAtLevel: 2,
+      }),
+    ).toBe("scale_die_size");
+    expect(
+      scalingAtomFor({
+        kind: "linear_per_level",
+        axis: "slot",
+        base: { dice: 1, dieSize: 6 },
+        perLevel: { dice: 1 },
+        startingAtLevel: 2,
+      }),
+    ).toBe("scale_die_count");
+    expect(
+      scalingAtomFor({
+        kind: "resource_spent_linear",
+        base: { dice: 1, dieSize: 6 },
+        perResource: { dieSize: 2 },
+      }),
+    ).toBe("scale_die_size");
+    expect(
+      scalingAtomFor({
+        kind: "resource_spent_linear",
+        base: { dice: 1, dieSize: 6 },
+        perResource: { dice: 1 },
+      }),
+    ).toBe("scale_die_count");
+    expect(
+      scalingAtomFor({
+        kind: "resource_spent_linear",
+        base: { dice: 1, dieSize: 6 },
+        perResource: { flat: 1 },
+      }),
+    ).toBe("scale_numeric_bonus");
+    expect(
+      describeTierOverride(
+        { dice: 2, dieSize: 8, flat: 0 },
+        { dice: 1, dieSize: 6, flat: 3 },
+      ),
+    ).toBe("2d8");
+    expect(describeTierOverride({}, { dice: 1, dieSize: 6, flat: 2 })).toBe(
+      "1d6+2",
+    );
+  });
+
+  test("threads slot scaling only when a slot node exists", () => {
+    const { nodes, edges } = scalingTraceState();
+    const ids = idGen();
+
+    traceDiceAmountScaling(
+      {
+        kind: "threshold_tiers",
+        axis: "character",
+        base: { dice: 1, dieSize: 6 },
+        tiers: [{ atLevel: 5, override: { dice: 2 } }],
+      },
+      "character-effect",
+      "slot",
+      nodes,
+      edges,
+      ids,
+    );
+    traceDiceAmountScaling(
+      {
+        kind: "threshold_tiers",
+        axis: "slot",
+        base: { dice: 1, dieSize: 6 },
+        tiers: [{ atLevel: 5, override: { dice: 2 } }],
+      },
+      "slot-tier-without-slot",
+      null,
+      nodes,
+      edges,
+      ids,
+    );
+    traceDiceAmountScaling(
+      {
+        kind: "threshold_tiers",
+        axis: "slot",
+        base: { dice: 1, dieSize: 6 },
+        tiers: [{ atLevel: 5, override: { dice: 2 } }],
+      },
+      "slot-tier-with-slot",
+      "slot",
+      nodes,
+      edges,
+      ids,
+    );
+    traceDiceAmountScaling(
+      {
+        kind: "linear_per_level",
+        axis: "slot",
+        base: { dice: 1, dieSize: 6 },
+        perLevel: { dice: 1 },
+        startingAtLevel: 2,
+      },
+      "slot-effect",
+      null,
+      nodes,
+      edges,
+      ids,
+    );
+    traceDiceAmountScaling(
+      {
+        kind: "threshold_tiers_exploding_max_die",
+        axis: "slot",
+        baseDice: 1,
+        dieSize: 6,
+        tiers: [{ atLevel: 5, dice: 2 }],
+        maxAdditionalDice: "spellcasting_ability_modifier",
+      },
+      "exploding-effect",
+      "slot",
+      nodes,
+      edges,
+      ids,
+    );
+    traceDiceAmountScaling(
+      {
+        kind: "resource_spent_linear",
+        base: { dice: 1, dieSize: 6 },
+        perResource: { flat: 1 },
+      },
+      "resource-effect",
+      null,
+      nodes,
+      edges,
+      ids,
+    );
+
+    expect(nodes).toHaveLength(6);
+    expect(
+      edges.filter(
+        (edge) => edge.from === "slot" && edge.relation === "modifies",
+      ),
+    ).toHaveLength(2);
+  });
+
+  test("omits target-count scaling for attachments without target selection", () => {
+    const { nodes, edges } = scalingTraceState();
+
+    traceTargetCountScaling(
+      { kind: "self" },
+      "attachment",
+      null,
+      nodes,
+      edges,
+      idGen(),
+    );
+
+    expect(nodes).toEqual([]);
+    expect(edges).toEqual([]);
+  });
+
   test("walks nested activation effect scaling", () => {
     const unit = decodeUnitRecordSync(powerWordKillInput);
     if (

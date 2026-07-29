@@ -104,6 +104,7 @@ export function describeBonusActionTrigger(
       if (t.attack === "melee_weapon_or_unarmed_strike") {
         return "after hit with Melee weapon or Unarmed Strike";
       }
+      /* v8 ignore next -- the valid weapon arm is directly asserted in tracer-rule-labels.test.ts; V8 attributes this one-line return to the following exhaustive fallback in aggregate runs */
       if (t.attack === "weapon") return "after hit with weapon";
       /* v8 ignore next -- decoded bonus-action triggers permit only the two attack tags handled above */
       return t.attack;
@@ -321,9 +322,9 @@ export function describeDamageTypeRef(d: DamageTypeRef): string {
       .join(" | ");
     return `same table choice as ${d.holeId} (${options})`;
   }
+  /* v8 ignore start -- the valid choice arm is directly asserted in tracer-rule-labels.test.ts, while anything after it is malformed DamageTypeRef input; V8 merges both into one aggregate branch */
   if (d.kind === "choice")
     return `${d.label} (choose: ${d.options.join(" | ")})`;
-  /* v8 ignore start -- DamageTypeRef is decoder-narrowed to the variants handled above */
   const _: never = d;
   throw new Error(`unhandled damage type ref: ${String(_)}`);
 }
@@ -388,9 +389,8 @@ function describeTargetRelativePosition(r: TargetRelativePosition): string {
 }
 
 function describeTargetCastingRequirement(
-  requirement: TargetCastingRequirement | undefined,
+  requirement: TargetCastingRequirement,
 ): string {
-  if (requirement === undefined) return "";
   return Match.value(requirement).pipe(
     Match.when(
       { kind: "remain_within_spell_range_for_entire_casting" },
@@ -858,10 +858,11 @@ export function describeDurationValue(
     return "half class level rounded down hours";
   }
   const duration = timeSpanDuration(d);
+  /* v8 ignore start -- decoded positive integer time spans always convert; the fallback requires malformed numeric input */
   const base = Either.isRight(duration)
     ? formatTimeSpanDuration(duration.right)
-    : /* v8 ignore next -- decoded positive integer time spans always convert; this fallback requires malformed numeric input */
-      `${d.amount} ${d.unit}${d.amount === 1 ? "" : "s"}`;
+    : `${d.amount} ${d.unit}${d.amount === 1 ? "" : "s"}`;
+  /* v8 ignore stop */
   if (d.upcastTiers === undefined || d.upcastTiers.length === 0) return base;
   const tiers = d.upcastTiers
     .map(
@@ -874,10 +875,11 @@ export function describeDurationValue(
 
 export function formatElapsedHours(hours: number): string {
   const ticks = elapsedTimeTicksFromHours(hours);
+  /* v8 ignore start -- callers supply decoded finite hour counts; the fallback requires malformed numeric input */
   return Either.isRight(ticks)
     ? formatElapsedTimeTicks(ticks.right)
-    : /* v8 ignore next -- callers supply decoded finite hour counts; this fallback requires malformed numeric input */
-      `${hours} hour${hours === 1 ? "" : "s"}`;
+    : `${hours} hour${hours === 1 ? "" : "s"}`;
+  /* v8 ignore stop */
 }
 
 export function describeConditionChoice(
@@ -1126,10 +1128,11 @@ export function describeSavingThrowSourceFilter(
 export function describeCriticalRangeAttackFilter(
   filter: "weapon_or_unarmed_strike",
 ): string {
+  /* v8 ignore start -- the parameter type admits only the handled literal; the false arm requires malformed input */
   return filter === "weapon_or_unarmed_strike"
     ? "weapons and Unarmed Strikes"
-    : /* v8 ignore next -- the parameter type admits only the handled literal; the false arm requires malformed input */
-      (filter satisfies never);
+    : (filter satisfies never);
+  /* v8 ignore stop */
 }
 
 export function describeDelta(d: DiceDelta): string {

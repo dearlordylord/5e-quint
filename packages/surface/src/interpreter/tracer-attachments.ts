@@ -131,10 +131,12 @@ export function traceAttachment(
       });
       return id;
     }
+    /* v8 ignore start -- Attachment is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = a;
       throw new Error(`unhandled attachment: ${String(_exhaustive)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -148,9 +150,11 @@ export function describeOngoingActionCost(
       return "Bonus Action";
     case "standard_action":
       return `${cost.action} action`;
+    /* v8 ignore start -- OngoingActionCost is a decoded tagged union exhausted above */
     default: {
       const _: never = cost;
       throw new Error(`unhandled ongoing action cost: ${String(_)}`);
     }
+    /* v8 ignore stop */
   }
 }

@@ -244,11 +244,13 @@ export function describeStartingEquipmentItem(
       return item.quantity === undefined
         ? item.itemName
         : `${item.quantity} ${item.itemName}`;
+    /* v8 ignore start -- starting-equipment item is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = item;
       throw new Error(
         `unhandled starting equipment item: ${String(_exhaustive)}`,
       );
     }
+    /* v8 ignore stop */
   }
 }

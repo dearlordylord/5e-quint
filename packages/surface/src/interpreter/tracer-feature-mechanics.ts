@@ -496,20 +496,24 @@ export function traceClassFeatureMechanics(
               nodes,
               ids,
             );
+          /* v8 ignore start -- component mechanics are decoder-narrowed to the handled families */
           default: {
             const _exhaustive: never = part;
             throw new Error(
               `unhandled class-feature component family: ${String((_exhaustive as { family: string }).family)}`,
             );
           }
+          /* v8 ignore stop */
         }
       });
+    /* v8 ignore start -- ClassFeatureMechanics is decoder-narrowed to the handled families */
     default: {
       const _exhaustive: never = m;
       throw new Error(
         `unhandled class-feature family: ${String((_exhaustive as { family: string }).family)}`,
       );
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -882,10 +886,12 @@ export function describeFeatureChoiceChange(
       return "no replacement";
     case "class_level":
       return `change ${changeOn.count} on class_level`;
+    /* v8 ignore start -- the decoded prepared-spell change trigger union is exhausted above */
     default: {
       const _exhaustive: never = changeOn;
       return _exhaustive;
     }
+    /* v8 ignore stop */
   }
 }
 

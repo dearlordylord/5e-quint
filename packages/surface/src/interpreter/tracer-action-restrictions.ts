@@ -49,9 +49,11 @@ export function traceActionRestriction(
       edges.push({ from: rid, to: targetId, relation: "modifies" });
       return;
     }
+    /* v8 ignore start -- ActionRestriction is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = r;
       throw new Error(`unhandled action restriction: ${String(_exhaustive)}`);
     }
+    /* v8 ignore stop */
   }
 }

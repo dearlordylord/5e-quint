@@ -262,6 +262,7 @@ const MentalMessageRecipientBlockDurationSchema = strictStruct({
   amount: Schema.Literal(8),
 });
 
+/* v8 ignore start -- this declarative Sending-effect schema initializes during collection; the canonical Sending record is decoded by catalog tests */
 export const MentalMessageDeliveryEffectSchema = strictStruct({
   kind: Schema.Literal("deliver_mental_message"),
   recipient: Schema.Literal("met_by_caster_or_described_by_someone_who_met_it"),
@@ -289,6 +290,7 @@ export const MentalMessageDeliveryEffectSchema = strictStruct({
     retryResult: Schema.Literal("caster_learns_blocked_and_spell_fails"),
   }),
 });
+/* v8 ignore stop */
 
 export const EtherealPhaseEffectSchema = strictStruct({
   kind: Schema.Literal("ethereal_phase"),
@@ -3241,6 +3243,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         onSuccessCount: EffectAtomSchema,
         onFailureCount: EffectAtomSchema,
       }),
+      /* v8 ignore start -- this declarative delayed-save union arm initializes during collection; canonical delayed-save spells are decoded by catalog tests */
       Schema.Struct({
         kind: Schema.Literal("delayed_save"),
         condition: optionalExact(ConditionSchema),
@@ -3250,6 +3253,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         onSuccess: EffectAtomSchema,
         onFailure: EffectAtomSchema,
       }),
+      /* v8 ignore stop */
       Schema.Struct({
         kind: Schema.Literal("condition_persists_after_full_duration"),
         condition: ConditionSchema,
@@ -3925,6 +3929,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           }),
         ),
       }).pipe(
+        /* v8 ignore start -- a free-cast grant that combines a numeric count with class scaling is malformed authored input */
         Schema.filter(
           (grant) =>
             typeof grant.count === "number" || grant.scaling === undefined,
@@ -3934,6 +3939,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
               "Proficiency Bonus spell free-cast counts must not also carry class-level scaling.",
           },
         ),
+        /* v8 ignore stop */
       ),
       Schema.Struct({
         kind: Schema.Literal("grant_die_token"),

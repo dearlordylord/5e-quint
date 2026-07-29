@@ -138,9 +138,11 @@ export function traceDuration(
       edges.push({ from: procId, to: tierId, relation: "grants" });
       return;
     }
+    /* v8 ignore start -- Duration is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = d;
       throw new Error(`unhandled duration: ${String(_exhaustive)}`);
     }
+    /* v8 ignore stop */
   }
 }

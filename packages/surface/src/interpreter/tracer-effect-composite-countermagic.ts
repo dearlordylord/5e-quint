@@ -728,11 +728,13 @@ export function traceCompositeAndCountermagicEffectAtom(
       });
       return id;
     }
+    /* v8 ignore start -- this effect subset is decoder-narrowed to the handled tags */
     default: {
       const _exhaustive: never = e;
       throw new Error(
         `unhandled composite or countermagic effect atom: ${String(_exhaustive)}`,
       );
     }
+    /* v8 ignore stop */
   }
 }

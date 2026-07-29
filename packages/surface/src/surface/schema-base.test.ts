@@ -6,9 +6,11 @@ import {
   isSurfaceSchemaRole,
   ProficiencyGrantSchema,
   ProficiencyGrantSubjectSchema,
+  readSurfaceSchemaRole,
   ReadonlyNonEmptyArrayProficiencyGrantSubjectSchema,
   ReadonlyNonEmptyArrayToolProficiencyGrantSubjectSchema,
   ToolProficiencyGrantSubjectSchema,
+  surfaceSchemaRolesEqual,
 } from "./schema-base.ts";
 
 const decode = <A, I>(schema: Schema.Schema<A, I>, input: I): A =>
@@ -84,11 +86,20 @@ describe("Surface base schemas", () => {
   });
 
   test("recognizes the vocabulary role", () => {
+    expect(isSurfaceSchemaRole(null)).toBe(false);
+    expect(isSurfaceSchemaRole({ category: 1 })).toBe(false);
     expect(
       isSurfaceSchemaRole({ category: "vocabulary", kind: "literal" }),
     ).toBe(true);
     expect(
       isSurfaceSchemaRole({ category: "vocabulary", kind: "authored" }),
     ).toBe(false);
+    expect(
+      surfaceSchemaRolesEqual(
+        { category: "vocabulary", kind: "literal" },
+        { category: "vocabulary", kind: "literal" },
+      ),
+    ).toBe(true);
+    expect(readSurfaceSchemaRole(Schema.String.ast)).toBeUndefined();
   });
 });
