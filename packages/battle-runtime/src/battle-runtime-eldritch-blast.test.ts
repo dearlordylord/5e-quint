@@ -6,6 +6,7 @@ import type {
   BattleState,
 } from "./battle-runtime.test-support.ts";
 import type { BattleRuntimeSession } from "./index.ts";
+import { proficiencyBonus } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import {
   armorClass,
@@ -37,6 +38,7 @@ import {
   spellRecord,
   startBattleSessionRight,
   targetFill,
+  testCharacterD20Statistics,
   unitLibrary,
   wizardId,
   wizardSpellcasting,
@@ -490,6 +492,167 @@ describe("battle runtime: Eldritch Blast", () => {
         (effect) => effect.kind === "spellDamageReduction",
       ),
     ).toMatchObject({ usedThisTurn: true });
+  });
+
+  test("Eldritch Blast zero-HP damage routes spell-effect concentration teardown before the next beam", () => {
+    const concentratingProcedureRef = battleProcedureExecutionRefForTest(
+      "synthetic_concentrating_armor",
+    );
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-eldritch-blast-zero-hp-teardown-route"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Warlock",
+          initiative: 20,
+          attack: null,
+          classLevels: [{ className: "warlock", level: 5 }],
+          d20Statistics: testCharacterD20Statistics({ cha: 16 }),
+          spellcasting: {
+            ...wizardSpellcasting({
+              cantrips: [spellRecord("eldritch_blast")],
+              preparedSpells: [],
+              spellSlots: [{ spellLevel: 3, count: 2 }],
+            }),
+            sourceClassName: "warlock",
+            proficiencyBonus: proficiencyBonus(3),
+          },
+        }),
+        characterSeed({
+          combatantId: skeletonId,
+          displayName: "Concentrating Target",
+          initiative: 10,
+          attack: null,
+          currentHp: 4,
+          maxHp: 12,
+        }),
+        characterSeed({
+          combatantId: secondWizardId,
+          displayName: "Protected Target",
+          initiative: 8,
+          attack: null,
+        }),
+      ],
+    });
+    const concentratingTarget = session.state.combatants.get(skeletonId);
+    const protectedTarget = session.state.combatants.get(secondWizardId);
+    if (concentratingTarget === undefined || protectedTarget === undefined) {
+      throw new Error("Expected both teardown-route targets.");
+    }
+    const state = {
+      ...session.state,
+      combatants: new Map(session.state.combatants)
+        .set(skeletonId, {
+          ...concentratingTarget,
+          concentration: {
+            sourceProcedureRef: concentratingProcedureRef,
+            effectKind: "spellEffect" as const,
+          },
+        })
+        .set(secondWizardId, {
+          ...protectedTarget,
+          activeEffects: [
+            ...protectedTarget.activeEffects,
+            {
+              kind: "spellArmorClassBonus" as const,
+              sourceProcedureRef: concentratingProcedureRef,
+              sourceCombatantId: skeletonId,
+              bonus: 2,
+              negatesRepeatedDamageAllocation: false,
+              expiresAt: {
+                kind: "concentration" as const,
+                combatantId: skeletonId,
+              },
+            },
+          ],
+        }),
+    } satisfies BattleState;
+    const act = findAct(
+      battleRuntimeSessionForTest({ ...session, state }),
+      magicSubject("eldritch_blast"),
+    );
+    const targetHoles = act.initialHoles.filter(
+      (hole): hole is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
+        hole.kind === "targetChoice",
+    );
+    const firstTargetHole = targetHoles.find(
+      (hole) => hole.label === "Spell attack 1 target",
+    );
+    const secondTargetHole = targetHoles.find(
+      (hole) => hole.label === "Spell attack 2 target",
+    );
+    if (firstTargetHole === undefined || secondTargetHole === undefined) {
+      throw new Error("Expected two Eldritch Blast creature-target holes.");
+    }
+    const targetFills = [
+      targetFill(firstTargetHole, skeletonId),
+      targetFill(secondTargetHole, secondWizardId),
+    ] as const;
+    const firstAttack = requireHole(
+      resolveBattleSubject({ state, subject: act.subject, fills: targetFills }),
+      "attackRoll",
+    );
+    const firstAttackFill = attackRollFill(firstAttack, {
+      total: 18,
+      naturalD20: 12,
+    });
+    const firstDamage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [...targetFills, firstAttackFill],
+      }),
+      "rolledDice",
+    );
+    const firstDamageFill = damageRollFillWithGroups(firstDamage, [[4]]);
+    const concentration = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [...targetFills, firstAttackFill, firstDamageFill],
+      }),
+      "concentrationSavingThrow",
+    );
+    const nextBeam = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        ...targetFills,
+        firstAttackFill,
+        firstDamageFill,
+        concentrationSavingThrowFill(concentration, true),
+      ],
+    });
+
+    expect(
+      nextBeam.routeEvents?.filter(
+        (event) =>
+          "subject" in event &&
+          event.subject === "zeroHitPointSpellEffectTeardown",
+      ),
+    ).toEqual([
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "zeroHitPointSpellEffectTeardown",
+        holes: [],
+        owner: "battleConditionLifecycle",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "zeroHitPointSpellEffectTeardown",
+        holes: [],
+        owner: "battleConcentration",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "zeroHitPointSpellEffectTeardown",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+    ]);
+    expect(requireHole(nextBeam, "attackRoll")).toMatchObject({
+      label: "Spell attack 2 spell attack roll",
+    });
   });
 
   test("Eldritch Blast beam count scales at levels 1, 5, 11, and 17", () => {
