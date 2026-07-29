@@ -1,4 +1,9 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.stunning-strike
+import {
+  characterLevel,
+  classLevel,
+  proficiencyBonusForCharacterLevel,
+} from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import type {
   BattleFill,
@@ -7,7 +12,11 @@ import type {
 } from "./battle-state-execution.ts";
 import { requiredAttackRollMode } from "./battle-reducer/attack-roll.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
-import { battleStunningStrikeSupportForUnit } from "./unit-feature-support.ts";
+import { characterExecutionWithSpellInvocations } from "./character-execution-admission.ts";
+import {
+  battleStunningStrikeSupportForUnit,
+  parseSupportedUnitFeatureProfile,
+} from "./unit-feature-support.ts";
 import {
   attackRollFill,
   battleId,
@@ -22,6 +31,7 @@ import {
   requireResolved,
   resolveBattleSubject,
   savingThrowOutcomeFill,
+  spellRecord,
   startBattleRight,
   statBlockCreatureInit,
   targetFill,
@@ -29,10 +39,37 @@ import {
   testLongswordAttack,
   unitFeatureDecisionFill,
   unitLibrary,
+  wizardSpellcasting,
   type BattleSubject,
 } from "./battle-runtime.test-support.ts";
 
+const STUNNING_STRIKE_MONK_CLASS_LEVEL = {
+  className: "monk",
+  level: classLevel(5),
+} as const;
+const STUNNING_STRIKE_SPELLCASTING_CLASS_LEVEL = {
+  className: "wizard",
+  level: classLevel(1),
+} as const;
+
 describe("battle runtime: Stunning Strike", () => {
+  test("offers the parsed Unit Feature rider alongside available and unavailable spell bindings", () => {
+    const availableSpellWindow = stunningStrikeHitWindow(
+      stunningStrikeUnitFeatureBattle(),
+    );
+    const unavailableSpellWindow = stunningStrikeHitWindow(
+      stateWithUnavailableSpellBindings(stunningStrikeUnitFeatureBattle()),
+    );
+
+    for (const window of [availableSpellWindow, unavailableSpellWindow]) {
+      expect(window.decision).toMatchObject({
+        kind: "unitFeatureDecision",
+        label: "Stunning Strike",
+        choices: ["attempt", "decline"],
+      });
+    }
+  });
+
   test("failed save spends Focus and Stuns until the start of the Monk's next turn", () => {
     const window = stunningStrikeHitWindow();
     const save = requireHole(
@@ -270,6 +307,57 @@ function stunningStrikeBattle(
     readonly attack?: ReturnType<typeof testLongswordAttack> | null;
   } = {},
 ): BattleState {
+  return stunningStrikeBattleWithAdmission({
+    ...input,
+    admission: {
+      kind: "supportProfile",
+      characterUnitRef: stunningStrikeUnitRef(),
+    },
+  });
+}
+
+function stunningStrikeUnitFeatureBattle(): BattleState {
+  return stunningStrikeBattleWithAdmission({
+    admission: {
+      kind: "unitFeature",
+      unitFeature: stunningStrikeUnitFeature(),
+    },
+    spellcasting: {
+      classLevel: STUNNING_STRIKE_SPELLCASTING_CLASS_LEVEL,
+      facts: {
+        ...wizardSpellcasting({
+          cantrips: [],
+          preparedSpells: [spellRecord("magic_missile")],
+          spellSlots: [{ spellLevel: 1, count: 2 }],
+        }),
+        proficiencyBonus: proficiencyBonusForCharacterLevel(
+          characterLevel(
+            Number(STUNNING_STRIKE_MONK_CLASS_LEVEL.level) +
+              Number(STUNNING_STRIKE_SPELLCASTING_CLASS_LEVEL.level),
+          ),
+        ),
+      },
+    },
+  });
+}
+
+function stunningStrikeBattleWithAdmission(input: {
+  readonly focusUsesRemaining?: number;
+  readonly attack?: ReturnType<typeof testLongswordAttack> | null;
+  readonly admission:
+    | {
+        readonly kind: "supportProfile";
+        readonly characterUnitRef: ReturnType<typeof stunningStrikeUnitRef>;
+      }
+    | {
+        readonly kind: "unitFeature";
+        readonly unitFeature: ReturnType<typeof stunningStrikeUnitFeature>;
+      };
+  readonly spellcasting?: {
+    readonly classLevel: typeof STUNNING_STRIKE_SPELLCASTING_CLASS_LEVEL;
+    readonly facts: ReturnType<typeof wizardSpellcasting>;
+  };
+}): BattleState {
   return startBattleRight({
     battleId: battleId("battle-stunning-strike"),
     combatants: [
@@ -277,17 +365,63 @@ function stunningStrikeBattle(
         displayName: "Stunning Strike Monk",
         initiative: 20,
         attack: input.attack ?? null,
-        classLevels: [{ className: "monk", level: 5 }],
+        classLevels: [
+          STUNNING_STRIKE_MONK_CLASS_LEVEL,
+          ...(input.spellcasting === undefined
+            ? []
+            : [input.spellcasting.classLevel]),
+        ],
         knownLanguages: ["Common"],
-        d20Statistics: testCharacterD20Statistics({ str: 16, wis: 16 }),
+        d20Statistics: testCharacterD20Statistics({
+          str: 16,
+          dex: 16,
+          int: 16,
+          wis: 16,
+        }),
         resources: [
           monksFocusResource({ usesRemaining: input.focusUsesRemaining ?? 2 }),
         ],
-        characterUnitRefs: [stunningStrikeUnitRef()],
+        ...(input.admission.kind === "supportProfile"
+          ? { characterUnitRefs: [input.admission.characterUnitRef] }
+          : { unitFeatures: [input.admission.unitFeature] }),
+        ...(input.spellcasting === undefined
+          ? {}
+          : { spellcasting: input.spellcasting.facts }),
       }),
       statBlockCreatureInit({ initiative: 10 }),
     ],
   });
+}
+
+function stunningStrikeUnitFeature() {
+  const profile = parseSupportedUnitFeatureProfile(
+    unitLibrary.requireUnit("monk_stunning_strike"),
+    [STUNNING_STRIKE_MONK_CLASS_LEVEL],
+  );
+  if (profile?.kind !== "stunningStrike") {
+    throw new Error("Expected parsed Stunning Strike Unit Feature.");
+  }
+  return profile;
+}
+
+function stateWithUnavailableSpellBindings(state: BattleState): BattleState {
+  const actor = state.combatants.get(fighterId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Stunning Strike Monk character.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(fighterId, {
+      ...actor,
+      origin: {
+        ...actor.origin,
+        execution: characterExecutionWithSpellInvocations(
+          actor.origin.execution,
+          [],
+        ),
+      },
+    }),
+  };
 }
 
 function stunningStrikeUnitRef() {
