@@ -46,6 +46,56 @@ import {
   type CombatantId,
   type SpellInvocationRef,
 } from "./index.ts";
+
+type SavingThrowOutcomeValue = Extract<
+  BattleFill,
+  { readonly kind: "savingThrowOutcome" }
+>["value"]["outcomes"][number];
+type SavingThrowNaturalOneReroll = NonNullable<
+  SavingThrowOutcomeValue["d20TestNaturalOneReroll"]
+>;
+type SavingThrowSingleRollNaturalOneReroll = Extract<
+  SavingThrowNaturalOneReroll,
+  { readonly kind: "decline" | "reroll" }
+>;
+type SavingThrowRawDiceNaturalOneReroll = Extract<
+  SavingThrowNaturalOneReroll,
+  { readonly kind: "decline" | "rerollRolledDie" }
+>;
+
+type SavingThrowOutcomeInput =
+  | {
+      readonly targetId: CombatantId;
+      readonly succeeded: boolean;
+      readonly withoutRoll: true;
+      readonly naturalD20?: never;
+      readonly rolledD20s?: never;
+      readonly d20TestNaturalOneReroll?: never;
+    }
+  | {
+      readonly targetId: CombatantId;
+      readonly succeeded: boolean;
+      readonly withoutRoll?: never;
+      readonly naturalD20?: number;
+      readonly rolledD20s?: never;
+      readonly d20TestNaturalOneReroll?: never;
+    }
+  | {
+      readonly targetId: CombatantId;
+      readonly succeeded: boolean;
+      readonly withoutRoll?: never;
+      readonly naturalD20: 1;
+      readonly rolledD20s?: never;
+      readonly d20TestNaturalOneReroll: SavingThrowSingleRollNaturalOneReroll;
+    }
+  | {
+      readonly targetId: CombatantId;
+      readonly succeeded: boolean;
+      readonly withoutRoll?: never;
+      readonly naturalD20?: never;
+      readonly rolledD20s: NonNullable<SavingThrowOutcomeValue["rolledD20s"]>;
+      readonly d20TestNaturalOneReroll?: SavingThrowRawDiceNaturalOneReroll;
+    };
 import type {
   ActionSpellAct,
   BonusActionDashSpellAct,
@@ -920,16 +970,7 @@ export function jumpSpellTargetListFill(
 
 export function savingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
-  outcomes: readonly {
-    readonly targetId: CombatantId;
-    readonly succeeded: boolean;
-    readonly naturalD20?: number;
-    readonly withoutRoll?: true;
-    readonly d20TestNaturalOneReroll?: Extract<
-      BattleFill,
-      { readonly kind: "savingThrowOutcome" }
-    >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
-  }[],
+  outcomes: readonly SavingThrowOutcomeInput[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
   const projectedOutcomes = outcomes.map(d20TestSavingThrowOutcomeValue);
   const relationshipFactRequest =
@@ -971,19 +1012,9 @@ export function savingThrowOutcomeFill(
   };
 }
 
-function d20TestSavingThrowOutcomeValue(outcome: {
-  readonly targetId: CombatantId;
-  readonly succeeded: boolean;
-  readonly naturalD20?: number;
-  readonly withoutRoll?: true;
-  readonly d20TestNaturalOneReroll?: Extract<
-    BattleFill,
-    { readonly kind: "savingThrowOutcome" }
-  >["value"]["outcomes"][number]["d20TestNaturalOneReroll"];
-}): Extract<
-  BattleFill,
-  { readonly kind: "savingThrowOutcome" }
->["value"]["outcomes"][number] {
+function d20TestSavingThrowOutcomeValue(
+  outcome: SavingThrowOutcomeInput,
+): SavingThrowOutcomeValue {
   if (outcome.withoutRoll === true) {
     return {
       targetId: outcome.targetId,
@@ -991,12 +1022,19 @@ function d20TestSavingThrowOutcomeValue(outcome: {
       withoutRoll: true,
     };
   }
+  const naturalD20 =
+    outcome.rolledD20s === undefined
+      ? outcome.naturalD20 === undefined
+        ? undefined
+        : DieRollResult(outcome.naturalD20)
+      : outcome.rolledD20s[outcome.rolledD20s.selected];
   return {
     targetId: outcome.targetId,
     succeeded: outcome.succeeded,
-    ...(outcome.naturalD20 === undefined
+    ...(naturalD20 === undefined ? {} : { naturalD20 }),
+    ...(outcome.rolledD20s === undefined
       ? {}
-      : { naturalD20: DieRollResult(outcome.naturalD20) }),
+      : { rolledD20s: outcome.rolledD20s }),
     ...(outcome.d20TestNaturalOneReroll === undefined
       ? {}
       : { d20TestNaturalOneReroll: outcome.d20TestNaturalOneReroll }),

@@ -9,6 +9,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.d20-test-natural-one-reroll
 
 import {
+  classLevel,
   DieRollResult,
   difficultyClass,
   movementFeet,
@@ -42,6 +43,7 @@ import {
   battleId,
   battleObjectId,
   battleUnitRefWithSupportProfiles,
+  barbarianDangerSenseUnitId,
   D20_TEST_NATURAL_ONE_REROLL_SUPPORT_PROFILE,
   Either,
   parseSupportedUnitFeatureProfile,
@@ -52,9 +54,13 @@ import {
   unitMechanicsVariant,
   viciousMockeryUnitId,
 } from "./unit-profile-admission.test-support.ts";
-import { dispelMagicUnitId } from "./unit-profile-admission-catalog.test-support.ts";
+import {
+  acidSplashUnitId,
+  dispelMagicUnitId,
+} from "./unit-profile-admission-catalog.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
+  savingThrowOutcomeFill,
   spellAct,
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
@@ -89,7 +95,6 @@ import {
   requireResolved,
   resolveBattleInterrupt,
   resolveBattleSubject,
-  savingThrowOutcomeFill,
   skeletonId,
   startBattleRight,
   startBattleSessionRight,
@@ -1013,6 +1018,68 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     );
   });
 
+  test("Saving Throw Advantage rerolls a natural-1 die and projects the newly selected outcome", () => {
+    const halflingLuck = halflingLuckSelection();
+    const dangerSense = unitLibrary.requireUnit(barbarianDangerSenseUnitId);
+    const dangerSenseRef = battleUnitRefWithSupportProfiles({
+      unitRef: { unitId: dangerSense.id },
+      unit: dangerSense,
+    });
+    expect(Either.isRight(dangerSenseRef)).toBe(true);
+    if (Either.isLeft(dangerSenseRef)) {
+      throw new Error(dangerSenseRef.left.message);
+    }
+    const spell = spellRecord(acidSplashUnitId);
+    const session = spellBattle({
+      cantrips: [spell],
+      targetClassLevels: [{ className: "barbarian", level: classLevel(2) }],
+      targetUnitRefs: [halflingLuck.unitRef, dangerSenseRef.right],
+      targetUnitFeatures: [
+        characterBattleFeatureInitForTest(halflingLuck.unit),
+        characterBattleFeatureInitForTest(dangerSense, [
+          { className: "barbarian", level: classLevel(2) },
+        ]),
+      ],
+    });
+    const act = spellAct({ session, spellId: acidSplashUnitId });
+    const savingThrow = requireInitialHole(
+      act.initialHoles,
+      "savingThrowOutcome",
+    );
+    expect(savingThrow.targetRollModes).toEqual([
+      { targetId: spellTargetId, rollMode: "advantage" },
+    ]);
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          savingThrowOutcomeFill(savingThrow, [
+            {
+              targetId: spellTargetId,
+              succeeded: false,
+              rolledD20s: rolledD20s({
+                first: 1,
+                second: 10,
+                selected: "second",
+              }),
+              d20TestNaturalOneReroll: rerollRolledDieOutcome({
+                die: "first",
+                naturalD20: 20,
+                result: { succeeded: true, naturalD20: 20 },
+              }),
+            },
+          ]),
+        ],
+      }),
+    );
+
+    expect(Number(resolved.state.combatants.get(spellTargetId)?.hp)).toBe(
+      Number(session.state.combatants.get(spellTargetId)?.hp),
+    );
+  });
+
   test("D20 Test natural-1 reroll decisions require the selected profile and a natural 1", () => {
     const state = halflingLuckFighterBattle();
     const subject = attackSubject(state);
@@ -1739,11 +1806,14 @@ function seekingMetamagicOption() {
 function rerollOutcome(input: {
   readonly succeeded: boolean;
   readonly naturalD20: number;
-}): NonNullable<
-  Extract<
-    BattleFill,
-    { readonly kind: "savingThrowOutcome" }
-  >["value"]["outcomes"][number]["d20TestNaturalOneReroll"]
+}): Extract<
+  NonNullable<
+    Extract<
+      BattleFill,
+      { readonly kind: "savingThrowOutcome" }
+    >["value"]["outcomes"][number]["d20TestNaturalOneReroll"]
+  >,
+  { readonly kind: "reroll" }
 > {
   return {
     kind: "reroll",
@@ -1762,11 +1832,14 @@ function rerollRolledDieOutcome(input: {
     readonly succeeded: boolean;
     readonly naturalD20: number;
   };
-}): NonNullable<
-  Extract<
-    BattleFill,
-    { readonly kind: "savingThrowOutcome" }
-  >["value"]["outcomes"][number]["d20TestNaturalOneReroll"]
+}): Extract<
+  NonNullable<
+    Extract<
+      BattleFill,
+      { readonly kind: "savingThrowOutcome" }
+    >["value"]["outcomes"][number]["d20TestNaturalOneReroll"]
+  >,
+  { readonly kind: "rerollRolledDie" }
 > {
   return {
     kind: "rerollRolledDie",

@@ -22,8 +22,10 @@ import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import {
+  characterLevel,
   movementFeet,
   proficiencyBonus,
+  proficiencyBonusForCharacterLevel,
   resourceCount,
 } from "@dnd/shared/types";
 import type { Size } from "@dnd/surface/surface/types";
@@ -163,15 +165,21 @@ function extendedCreatureSizeAct(
 function quickenedCreatureSizeAct(input?: {
   readonly targetCanCounterspell?: true;
   readonly castSlotLevel?: 2 | 4;
+  readonly procedure?: "creatureSizeIncrease" | "creatureSizeDecrease";
 }): {
   readonly session: ReturnType<typeof spellBattle>;
   readonly act: BonusActionSpellAct;
 } {
   const spell = spellRecord(enlargeReduceUnitId);
+  const castSlotLevel = input?.castSlotLevel ?? 2;
+  const casterLevel = castSlotLevel === 4 ? 7 : 3;
   const session = spellBattle({
     preparedSpells: [spell],
-    spellSlots: [{ spellLevel: input?.castSlotLevel ?? 2, count: 1 }],
-    casterClassLevels: [{ className: "sorcerer", level: 2 }],
+    spellSlots: [{ spellLevel: castSlotLevel, count: 1 }],
+    casterClassLevels: [{ className: "sorcerer", level: casterLevel }],
+    casterProficiencyBonus: proficiencyBonusForCharacterLevel(
+      characterLevel(casterLevel),
+    ),
     casterResources: [
       {
         unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
@@ -206,14 +214,16 @@ function quickenedCreatureSizeAct(input?: {
       battleActSpellPresentation(candidate)?.invocation.spellId ===
         enlargeReduceUnitId &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===
-        "creatureSizeIncrease" &&
+        (input?.procedure ?? "creatureSizeIncrease") &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
       ) === true,
   );
   expect(act).toBeDefined();
   if (act === undefined) {
-    throw new Error("Expected Quickened Enlarge spell act.");
+    throw new Error(
+      `Expected Quickened ${input?.procedure ?? "creatureSizeIncrease"} spell act.`,
+    );
   }
   return { session, act };
 }
@@ -257,6 +267,39 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     expect(
       combatantEffectiveSize(requireCombatant(resolved.state, spellTargetId)),
     ).toBe("large");
+  });
+
+  test("Quickened Reduce uses the Bonus Action spell route and applies the willing target's size decrease", () => {
+    const { session, act } = quickenedCreatureSizeAct({
+      procedure: "creatureSizeDecrease",
+    });
+    const target = requireHole(act.initialHoles, "targetChoice");
+    const resolved = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          target,
+          enlargeReduceUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Quickened Reduce cast to resolve.");
+    }
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
+      true,
+    );
+    expect(
+      combatantEffectiveSize(requireCombatant(resolved.state, spellTargetId)),
+    ).toBe("small");
   });
 
   test("countered Quickened Enlarge spends its Bonus Action and Sorcery Points and records the same-turn governor without expending its Spell Slot", () => {
