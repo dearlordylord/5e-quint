@@ -1,4 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { assertBattleSnapshotCodecRoundTripForTest } from "./battle-runtime.test-support.ts";
 import {
   battleActSpellPresentation,
   battleActSpellSlotPresentation,
@@ -148,6 +149,7 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
     if (nextCasterTurn.tag !== "resolved") {
       throw new Error("Expected Expeditious Retreat target end turn.");
     }
+    assertBattleSnapshotCodecRoundTripForTest(nextCasterTurn.snapshot);
     const laterDashAct = discoverBattleActs(
       battleRuntimeSessionForTest({
         state: nextCasterTurn.state,
