@@ -18,7 +18,6 @@ import {
   type BattleAttackDamageDisposition,
   type BattleAttackDamageDispositionHole,
   type BattleConcentrationSavingThrowHole,
-  type BattleCreatureState,
   type BattleDamageRelationshipDecisions,
   type BattleFill,
   type BattleResolutionResult,
@@ -69,7 +68,6 @@ import {
   addDamageAmountForType,
   applyAvailableSourceDamageRollPenalty,
   damageAmountByTypeAfterTargetAdjustments,
-  damageAmountAfterTargetAdjustments,
   isSourceDamageRollPenaltyRollFill,
   sourceDamageRollPenaltyRollForDamageRoll,
 } from "./damage-helpers.ts";
@@ -1508,33 +1506,6 @@ export function validateChainedSpellDamageFill(
     dice: invocation.damage.expr.dice * (step.critical ? 2 : 1),
     dieSize: invocation.damage.expr.dieSize,
   });
-}
-
-export function chainedSpellDamageAmountForTarget(
-  state: BattleState,
-  target: BattleCreatureState,
-  invocation: Extract<
-    BattleExecutableSpellInvocation,
-    { readonly procedure: "chainedSpellAttackDamage" }
-  >,
-  damageType: DamageType,
-  damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
-): number {
-  const diceTotal = damageRoll.value.reduce(
-    (total, group) =>
-      total +
-      group.results.reduce(
-        (groupTotal, dieResult) => groupTotal + Number(dieResult),
-        0,
-      ),
-    0,
-  );
-  return damageAmountAfterTargetAdjustments(
-    state,
-    target,
-    diceTotal + (invocation.damage.expr.flat ?? 0),
-    damageType,
-  );
 }
 
 function chainedSpellDamageByType(

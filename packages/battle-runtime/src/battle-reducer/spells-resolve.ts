@@ -232,7 +232,6 @@ export {
 export { resolveAttackBurstSaveDamageSpellAct } from "./spells-resolve-attack-burst.ts";
 export {
   applyChainedSpellDamage,
-  chainedSpellDamageAmountForTarget,
   chainedSpellFillSet,
   chainedSpellLaterStepsAreEmpty,
   chainedSpellStepIndexForFill,
