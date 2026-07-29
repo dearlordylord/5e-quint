@@ -83,6 +83,7 @@ import { attackFillsForAttackHitReplay } from "./battle-reducer/attack-damage-ev
 import { FRENZY_DAMAGE_TYPE_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import { attackTargetHole } from "./battle-reducer/hole-helpers.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-queries.ts";
+import { activeFeatureSpellSaveDcRouteEvents } from "./battle-reducer/reducer-route.ts";
 import {
   eligibleAttackDamageRiders,
   frenzyDamageTypeDecision,
@@ -2046,6 +2047,12 @@ describe("battle runtime: class action features", () => {
       ],
     });
     const state = session.state;
+    expect(
+      activeFeatureSpellSaveDcRouteEvents({
+        state,
+        casterId: fighterId,
+      }),
+    ).toBeUndefined();
     const activated = requireResolved(
       resolveBattleSubject({
         state,
@@ -2063,6 +2070,25 @@ describe("battle runtime: class action features", () => {
     ).state;
 
     expect(spellSaveDcForCaster(activated, fighterId)).toBe(14);
+    expect(
+      activeFeatureSpellSaveDcRouteEvents({
+        state: activated,
+        casterId: fighterId,
+      }),
+    ).toEqual([
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "activeFeatureSpellSaveDc",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "activeFeatureSpellSaveDc",
+        holes: [],
+        owner: "battleSpellSlotAndActionEconomy",
+      },
+    ]);
 
     const subject: BattleSubject = {
       tag: "actionSpell",

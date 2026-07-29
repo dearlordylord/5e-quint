@@ -1,5 +1,6 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { passiveSavingThrowRollModeRouteEvents } from "./index.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-CLASS-BARBARIAN-DANGER-SENSE barbarian_danger_sense
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-saving-throw-roll-mode
 import {
@@ -138,6 +139,72 @@ describe("L12G deterministic Danger Sense admission", () => {
     expect(savingThrowRollModeProjections(incapacitatedState, "dex")).toEqual(
       [],
     );
+  });
+
+  test("Danger Sense routes matching saves through projection and Incapacitated suppression owners", () => {
+    const session = dangerSenseBattle();
+
+    expect(
+      passiveSavingThrowRollModeRouteEvents({
+        state: session.state,
+        ability: "con",
+      }),
+    ).toBeUndefined();
+    expect(
+      passiveSavingThrowRollModeRouteEvents({
+        state: session.state,
+        ability: "dex",
+      }),
+    ).toEqual([
+      { kind: "startBattle", owner: "battleSavingThrowRollMode" },
+      {
+        kind: "discoverBattleActs",
+        subject: "passiveSavingThrowRollMode",
+        holes: ["savingThrowOutcome"],
+        owner: "battleSavingThrowRollMode",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "passiveSavingThrowRollMode",
+        fill: "savingThrowOutcome",
+        holes: [],
+        owner: "battleSavingThrowRollMode",
+      },
+    ]);
+
+    const target = session.state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected Danger Sense target combatant.");
+    }
+    const incapacitatedState: BattleState = {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellTargetId, {
+        ...battleCreatureStateWithKnockOutPreservedConditions(
+          target,
+          applyCondition(target.conditions, "incapacitated"),
+        ),
+      }),
+    };
+    expect(
+      passiveSavingThrowRollModeRouteEvents({
+        state: incapacitatedState,
+        ability: "dex",
+      }),
+    ).toEqual([
+      { kind: "startBattle", owner: "battleSavingThrowRollMode" },
+      {
+        kind: "discoverBattleActs",
+        subject: "passiveSavingThrowRollMode",
+        holes: [],
+        owner: "battleSavingThrowRollMode",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "passiveSavingThrowRollMode",
+        holes: [],
+        owner: "battleConditionLifecycle",
+      },
+    ]);
   });
 
   test("Danger Sense projects through Grease entry and end-turn Dexterity save holes", () => {
