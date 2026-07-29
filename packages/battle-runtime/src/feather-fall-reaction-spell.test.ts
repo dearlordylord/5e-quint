@@ -24,7 +24,9 @@ import {
   FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
   initiativeScore,
   openCreatureFallsInterruptWindow,
+  openCreatureFallsRuntimeInterruptWindow,
   resolveBattleInterrupt,
+  resolveBattleRuntimeInterrupt,
   resolveFeatherFallLanding,
   startBattle,
   type BattleCreatureInit,
@@ -33,6 +35,7 @@ import {
   type BattleResolutionResult,
   type BattleRuntimeSession,
   type BattleState,
+  type BattleTargetSpatialFact,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
@@ -64,7 +67,15 @@ const fallingFId = combatantId("feather-fall-target-f");
 describe("Feather Fall Reaction spell", () => {
   test("opens from a table-supplied falling trigger and applies per-target mitigation effects", () => {
     const state = battleWithFeatherFall();
-    const awaitingReaction = openFeatherFallWindow(state, fallingAId, true);
+    const awaitingReaction = openCreatureFallsRuntimeInterruptWindow({
+      session: state,
+      fallingCreatureId: fallingAId,
+      reactionSpellTargetFacts: featherFallTriggerFacts(
+        state,
+        fallingAId,
+        true,
+      ),
+    });
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
@@ -78,10 +89,7 @@ describe("Feather Fall Reaction spell", () => {
       (candidate) => {
         if (candidate.kind !== "castTriggeredReactionSpell") return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
-          battleRuntimeSessionForTest({
-            ...state,
-            state: awaitingReaction.state,
-          }),
+          awaitingReaction.session,
           candidate.reactorId,
           candidate.subject.procedureRef,
         );
@@ -98,8 +106,8 @@ describe("Feather Fall Reaction spell", () => {
     const targetList = requireHole(choice.initialHoles, "spellTargetList");
     expect(targetList).toMatchObject({ minTargets: 1, maxTargets: 5 });
 
-    const resolved = resolveBattleInterrupt({
-      state: awaitingReaction.state,
+    const resolved = resolveBattleRuntimeInterrupt({
+      session: awaitingReaction.session,
       fill: interruptDecisionFill(
         requireHole(awaitingReaction.holes, "interruptDecision"),
         {
@@ -127,7 +135,7 @@ describe("Feather Fall Reaction spell", () => {
       throw new Error("Expected Feather Fall Reaction to resolve.");
     }
 
-    const caster = requireCombatant(resolved.state, casterId);
+    const caster = requireCombatant(resolved.session.state, casterId);
     expect(caster.reactionAvailable).toBe(false);
     expect(caster.origin.kind).toBe("character");
     if (caster.origin.kind !== "character") {
@@ -140,7 +148,7 @@ describe("Feather Fall Reaction spell", () => {
     );
 
     for (const targetId of [fallingAId, fallingBId]) {
-      const target = requireCombatant(resolved.state, targetId);
+      const target = requireCombatant(resolved.session.state, targetId);
       expect(target.activeEffects).toContainEqual(
         expect.objectContaining({
           kind: "featherFallMitigation",
@@ -456,26 +464,38 @@ function openFeatherFallWindow(
   return openCreatureFallsInterruptWindow({
     state: session.state,
     fallingCreatureId,
-    reactionSpellTargetFacts: includeTriggerFact
-      ? [
-          {
-            kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
-            reactorId: casterId,
-            fallingCreatureId,
-            sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
-              session,
-              casterId,
-              spellSlotInvocationRef(
-                featherFallUnitId,
-                1,
-                "featherFallMitigation",
-              ),
-            ),
-            rangeFeet: movementFeet(60),
-          },
-        ]
-      : [],
+    reactionSpellTargetFacts: featherFallTriggerFacts(
+      session,
+      fallingCreatureId,
+      includeTriggerFact,
+    ),
   });
+}
+
+function featherFallTriggerFacts(
+  session: BattleRuntimeSession,
+  fallingCreatureId: CombatantId,
+  includeTriggerFact: boolean,
+): readonly BattleTargetSpatialFact[] {
+  return includeTriggerFact
+    ? [
+        {
+          kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
+          reactorId: casterId,
+          fallingCreatureId,
+          sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+            session,
+            casterId,
+            spellSlotInvocationRef(
+              featherFallUnitId,
+              1,
+              "featherFallMitigation",
+            ),
+          ),
+          rangeFeet: movementFeet(60),
+        },
+      ]
+    : [];
 }
 
 function featherFallTargetListFill(

@@ -2506,8 +2506,11 @@ describe("Find Familiar lifecycle", () => {
       return;
     }
 
-    const shared = resolveBattleSubject({
-      state: cast.state,
+    const shared = resolveBattleRuntimeSubject({
+      session: battleRuntimeSessionForTest({
+        state: cast.state,
+        context: session.context,
+      }),
       subject: shareSenses.subject,
       fills: [
         findFamiliarConnectionFill(
@@ -2517,7 +2520,9 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(shared.tag).toBe("resolved");
     if (shared.tag !== "resolved") return;
-    expect(shared.state.currentTurnResources.currentHasBonusAction).toBe(false);
+    expect(
+      shared.session.state.currentTurnResources.currentHasBonusAction,
+    ).toBe(false);
 
     const dismissed = resolveBattleSubject({
       state: cast.state,
@@ -2572,6 +2577,34 @@ describe("Find Familiar lifecycle", () => {
       state: reappearanceReadyState,
       context: session.context,
     });
+    const missingCatalog = resolveBattleRuntimeSubject({
+      session: reappearanceSession,
+      subject: reappearanceAct.subject,
+      fills: [],
+    });
+    expect(missingCatalog).toMatchObject({
+      tag: "invalid",
+      session: reappearanceSession,
+      reason: "invalidFill",
+      message: "Familiar reappearance requires a Stat Block catalog.",
+    });
+
+    const wrongOwner = resolveBattleRuntimeSubject({
+      session: reappearanceSession,
+      subject: {
+        ...reappearanceAct.subject,
+        actorId: otherCombatantId,
+      },
+      fills: [],
+      statBlockCatalog,
+    });
+    expect(wrongOwner).toMatchObject({
+      tag: "invalid",
+      session: reappearanceSession,
+      reason: "invalidFill",
+      message: "Find Familiar can reappear only from temporary dismissal.",
+    });
+
     const reappeared = resolveBattleRuntimeSubject({
       session: reappearanceSession,
       subject: reappearanceAct.subject,
