@@ -1,7 +1,6 @@
 import type { CharacterBattleLoadoutRef } from "../character-creature-execution-facts.ts";
 import type { BattleObjectId } from "../identity.ts";
 import {
-  WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS,
   type ActiveWildShapeEquipmentDisposition,
   type ResolvedWildShapeEquipmentDisposition,
   type WildShapeEffectiveLoadoutWornKind,
@@ -134,10 +133,7 @@ export function validateWildShapeEquipmentDispositionFill(input: {
     }
     /* v8 ignore stop */
     const disposition = resolvedDispositionForChoice(choice);
-    if (disposition.tag === "invalid") {
-      return disposition;
-    }
-    dispositions.push(disposition.value);
+    dispositions.push(disposition);
   }
 
   return {
@@ -148,12 +144,7 @@ export function validateWildShapeEquipmentDispositionFill(input: {
 
 function resolvedDispositionForChoice(
   choice: WildShapeEquipmentDispositionChoice,
-):
-  | {
-      readonly tag: "valid";
-      readonly value: ResolvedWildShapeEquipmentDisposition;
-    }
-  | { readonly tag: "invalid"; readonly message: string } {
+): ResolvedWildShapeEquipmentDisposition {
   if (choice.disposition === "worn") {
     if (choice.practicality.kind === "notPracticalToWear") {
       if (choice.practicality.fallback.disposition === "falls") {
@@ -163,9 +154,6 @@ function resolvedDispositionForChoice(
         );
       }
       return resolvedEquipmentDisposition(choice.item, "merges");
-    }
-    if (!wildShapeLoadoutObjectSupportsEffectiveWornProjection(choice.item)) {
-      return unsupportedWornEquipmentDisposition();
     }
     return resolvedEquipmentDisposition(choice.item, "worn");
   }
@@ -184,16 +172,10 @@ function resolvedEquipmentDisposition(
     ResolvedWildShapeEquipmentDisposition["disposition"],
     "falls"
   >,
-): {
-  readonly tag: "valid";
-  readonly value: ResolvedWildShapeEquipmentDisposition;
-} {
+): ResolvedWildShapeEquipmentDisposition {
   return {
-    tag: "valid",
-    value: {
-      item,
-      disposition,
-    },
+    item,
+    disposition,
   };
 }
 
@@ -203,28 +185,11 @@ function resolvedFallenEquipmentDisposition(
     ResolvedWildShapeEquipmentDisposition,
     { readonly disposition: "falls" }
   >["fallInActorSpace"],
-): {
-  readonly tag: "valid";
-  readonly value: ResolvedWildShapeEquipmentDisposition;
-} {
+): ResolvedWildShapeEquipmentDisposition {
   return {
-    tag: "valid",
-    value: {
-      item,
-      disposition: "falls",
-      fallInActorSpace,
-    },
-  };
-}
-
-function unsupportedWornEquipmentDisposition(): {
-  readonly tag: "invalid";
-  readonly message: string;
-} {
-  return {
-    tag: "invalid",
-    message:
-      "Druid Wild Shape practical worn equipment support requires a selected loadout object with promoted worn-object behavior.",
+    item,
+    disposition: "falls",
+    fallInActorSpace,
   };
 }
 
@@ -329,14 +294,6 @@ export function wildShapeFormLimbsCanHandleObjects(
   witness: WildShapeFormLimbObjectHandlingWitness,
 ): boolean {
   return witness.kind === "canHandleObjects";
-}
-
-function wildShapeLoadoutObjectSupportsEffectiveWornProjection(
-  item: WildShapeLoadoutObjectRef,
-): item is WildShapeWornLoadoutObjectRef {
-  return WILD_SHAPE_EFFECTIVE_LOADOUT_WORN_KINDS.includes(
-    item.kind as WildShapeEffectiveLoadoutWornKind,
-  );
 }
 
 function sameLoadoutObject(
