@@ -881,6 +881,7 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
   };
 }
 
+/* v8 ignore start -- Malformed cross-record state repair: runtime admission creates present familiars with matching Stat Block combatants; this branch defensively removes an independently decoded or forged inconsistent companion record. */
 function removeInvalidPresentFindFamiliarAfterZeroHitPointDamage(input: {
   readonly state: BattleState;
   readonly companionId: CombatantId;
@@ -897,6 +898,7 @@ function removeInvalidPresentFindFamiliarAfterZeroHitPointDamage(input: {
   companions.delete(input.ownerId);
   return { ...stateWithoutCombatant, companions };
 }
+/* v8 ignore stop */
 
 function applyHideousLaughterDamageRepeatSaves(
   state: BattleState,

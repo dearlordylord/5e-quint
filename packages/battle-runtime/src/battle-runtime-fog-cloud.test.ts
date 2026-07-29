@@ -3,6 +3,7 @@ import {
   battleActSpellSlotPresentation,
   battleActSpellPresentation,
 } from "./battle-act-composition.ts";
+import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import {
   startBattleSessionRight,
   requireElapsedHours,
@@ -164,6 +165,30 @@ describe("battle runtime: Fog Cloud", () => {
     expect(dispersed.state.combatants.get(wizardId)?.activeEffects).toEqual([]);
     expect(dispersed.state.combatants.get(wizardId)?.concentration).toBeNull();
     expect(dispersed.snapshot.obscurementZones).toEqual([]);
+  });
+
+  test("damage to zero Hit Points tears down Fog Cloud Concentration ownership", () => {
+    const cast = castFogCloudSession(
+      "battle-fog-cloud-damage-teardown",
+      battleAreaId("fog-1"),
+    );
+    const priorCaster = cast.session.state.combatants.get(wizardId);
+    if (priorCaster?.concentration === null || priorCaster === undefined) {
+      throw new Error("Expected the Fog Cloud caster to be concentrating.");
+    }
+    const damaged = applyBattleHitPointDamage({
+      state: cast.session.state,
+      target: priorCaster,
+      damageAmount: Number(priorCaster.hp),
+      deathFailuresAtZeroHp: 1,
+    });
+
+    expect(damaged.combatants.get(wizardId)).toMatchObject({
+      hp: 0,
+      concentration: null,
+      activeEffects: [],
+    });
+    expect(battleObscurementZones(damaged)).toEqual([]);
   });
 
   test("Fog Cloud source zone does not impose attack-roll Disadvantage without a sight witness", () => {

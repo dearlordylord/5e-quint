@@ -3,6 +3,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.remarkable-athlete unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.hunters-prey unit-feature.rogue-steady-aim unit-feature.potent-cantrip
 import { describe, expect, test } from "vitest";
 import {
+  chromaticOrbUnitId,
   classRogueUnitId,
   fighterRemarkableAthleteUnitId,
   fighterSecondWindUnitId,
@@ -56,6 +57,7 @@ import { characterCreature } from "./unit-profile-admission-creature-fixture.tes
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
+  damageTypeChoiceFill,
   spellAct,
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
@@ -846,6 +848,113 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       tag: "needsHoles",
       holes: [expect.objectContaining({ kind: "rolledDice" })],
     });
+  });
+
+  test("Remarkable Athlete offers immediate movement after a chained spell attack Critical Hit", () => {
+    const { unit, unitRef } = remarkableAthleteSelectedUnit();
+    const spell = spellRecord(chromaticOrbUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+      casterSpellcastingSourceClassName: "wizard",
+      casterClassLevels: [
+        { className: "fighter", level: classLevel(3) },
+        { className: "wizard", level: classLevel(1) },
+      ],
+      casterUnitRefs: [unitRef],
+      casterUnitFeatures: [
+        characterBattleFeatureInitForTest(unit, [
+          { className: "fighter", level: classLevel(3) },
+        ]),
+      ],
+    });
+    const act = spellAct({
+      session,
+      spellId: chromaticOrbUnitId,
+      slotLevel: 1,
+    });
+    const damageType = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [],
+      }),
+      "damageTypeChoice",
+    );
+    const damageTypeFill = damageTypeChoiceFill(damageType, "thunder");
+    const target = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [damageTypeFill],
+      }),
+      "targetChoice",
+    );
+    const targetFill = spellTargetFill(
+      target,
+      chromaticOrbUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const attack = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [damageTypeFill, targetFill],
+      }),
+      "attackRoll",
+    );
+    const critical = attackRollFill(attack, {
+      total: 20,
+      naturalD20: 20,
+    });
+    const decision = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [damageTypeFill, targetFill, critical],
+      }),
+      "unitFeatureDecision",
+    );
+    const movement = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          damageTypeFill,
+          targetFill,
+          critical,
+          unitFeatureDecisionFill(decision, "use"),
+        ],
+      }),
+      "movement",
+    );
+
+    expect(decision).toMatchObject({
+      label: "Use Remarkable Athlete movement",
+    });
+    expect(movement).toMatchObject({
+      actorId: spellCasterId,
+      movementBudgetFeet: movementFeet(15),
+    });
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          damageTypeFill,
+          targetFill,
+          critical,
+          unitFeatureDecisionFill(decision, "use"),
+          movementFill(movement, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(damage).toMatchObject({ critical: true });
   });
 
   test("Remarkable Athlete critical movement can be declined without leaving a movement hole", () => {

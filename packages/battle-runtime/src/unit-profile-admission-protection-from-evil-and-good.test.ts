@@ -770,5 +770,30 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     expect(
       requireCombatant(afterSuccessfulSave.state, spellTargetId).activeEffects,
     ).toContainEqual(charmedEffect);
+
+    if (feyPossessionSave.tag !== "needsHoles") {
+      throw new Error("Expected an already-applied possession save act.");
+    }
+    const feyPossessionHole = requireHole(
+      feyPossessionSave.holes,
+      "savingThrowOutcome",
+    );
+    const afterSuccessfulPossessionSave = resolveBattleSubject({
+      state: activeEffectState,
+      subject: feyPossessionSave.subject,
+      fills: [
+        savingThrowOutcomeFill(feyPossessionHole, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(afterSuccessfulPossessionSave).toMatchObject({ tag: "resolved" });
+    if (afterSuccessfulPossessionSave.tag !== "resolved") {
+      throw new Error("Expected possession repeat save to resolve.");
+    }
+    expect(
+      requireCombatant(afterSuccessfulPossessionSave.state, spellTargetId)
+        .activeEffects,
+    ).not.toContainEqual(possessionEffect);
   });
 });
