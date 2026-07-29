@@ -1,5 +1,9 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { abilityScore } from "@dnd/shared/types";
+import {
+  buildUnitCatalog,
+  srdUnitCollection,
+} from "@dnd/surface/surface/unit-catalog";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -14,6 +18,7 @@ import {
   applyUnitFill,
   choiceFillIssues,
   creationFillIssues,
+  fillCreationHoles,
   fillIssuesForHole,
   fillKindMatchesHole,
   getHole,
@@ -73,7 +78,30 @@ const draft: CharacterDraft = {
   selections: { choices: [] },
 };
 
+const catalogResult = buildUnitCatalog({ collections: [srdUnitCollection] });
+if (catalogResult.tag !== "ok") {
+  throw new Error("The SRD Unit catalog fill fixture must compose.");
+}
+const unitLibrary = catalogResult.catalog;
+
 describe("creation fill reducer boundaries", () => {
+  test("accepts an empty batch by advancing only the draft revision", () => {
+    expect(
+      fillCreationHoles({
+        draft,
+        expectedRevision: draft.revision,
+        fills: [],
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      tag: "accepted",
+      draft: {
+        ...draft,
+        revision: draftRevision(1),
+      },
+    });
+  });
+
   test("reports choice cardinality, identity, kind, and ability-score issues", () => {
     const choice = backgroundHoleWithoutUnitRef();
     const option = choice.options[0];

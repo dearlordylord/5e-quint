@@ -38,6 +38,7 @@ import {
   characterDraftId,
   creationChoiceOptionId,
   draftRevision,
+  toolProficiencyId,
 } from "./types.ts";
 
 const catalogResult = buildUnitCatalog({ collections: [srdUnitCollection] });
@@ -280,6 +281,43 @@ describe("character finalization boundaries", () => {
     ).toMatchObject({
       _tag: "Left",
       left: [{ cause: { tag: "unreadableUnit", role: "background" } }],
+    });
+  });
+
+  test("projects selected skill, expertise, weapon, tool, and armor proficiencies", () => {
+    const fighterBuild = projectionBuild(
+      classUnitId(authoredUnitId("class_fighter")),
+    );
+    const proficiencyChoices = [
+      { kind: "skill", skill: "arcana" },
+      { kind: "skill_expertise", skill: "athletics" },
+      { kind: "weapon_category", category: "simple" },
+      { kind: "tool", toolId: toolProficiencyId("thieves_tools") },
+      { kind: "armor_category", category: "heavy" },
+    ] as const satisfies CharacterBuild["proficiencyChoices"];
+
+    expect(
+      characterBuildProficiencies(
+        { ...fighterBuild, proficiencyChoices },
+        unitLibrary,
+      ),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        skills: expect.arrayContaining(["arcana", "athletics"]),
+        expertise: ["athletics"],
+        weapon: expect.arrayContaining(["simple"]),
+        tools: expect.arrayContaining(["thieves_tools"]),
+      },
+    });
+    expect(
+      characterBuildArmorTraining(
+        { ...fighterBuild, proficiencyChoices },
+        unitLibrary,
+      ),
+    ).toMatchObject({
+      _tag: "Right",
+      right: expect.arrayContaining(["heavy"]),
     });
   });
 

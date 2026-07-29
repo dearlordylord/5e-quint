@@ -56,6 +56,9 @@ const sorcererUnitId = parsedClassUnitId("class_sorcerer");
 const warlockUnitId = parsedClassUnitId("class_warlock");
 const wizardUnitId = parsedClassUnitId("class_wizard");
 const fixedHitPoints = { tag: "fixedHigherLevelGain" } as const;
+const fighterWeaponMasterySourceUnitId = authoredUnitId(
+  "fighter_weapon_mastery",
+);
 
 function buildForClass(
   classId: ClassUnitId,
@@ -89,6 +92,16 @@ function fighterBuild(
   features: readonly CharacterBuildFeature[] = [],
 ): CharacterBuild {
   return buildForClass(fighterUnitId, features);
+}
+
+function fighterWeaponMasteryFeatures(
+  weaponUnitIds: readonly UnitRecord["id"][],
+): readonly CharacterBuildFeature[] {
+  return weaponUnitIds.map((unitId) => ({
+    kind: "selectedClassChoice",
+    selectedFromUnitId: fighterWeaponMasterySourceUnitId,
+    unitId,
+  }));
 }
 
 function fightingStyleReplacement(
@@ -366,6 +379,114 @@ describe("Character Build advancement typed boundaries", () => {
               hitPointRule: fixedHitPoints,
             },
           ],
+        },
+      },
+    });
+  });
+
+  test("keeps valid Fighter Weapon Mastery selections across a plain level gain", () => {
+    const selectedWeapons = fighterWeaponMasteryFeatures(
+      ["weapon_longsword", "weapon_dagger", "weapon_shortbow"].map((unitId) =>
+        authoredUnitId(unitId),
+      ),
+    );
+    const levelGain = {
+      tag: "classLevelGain",
+      classUnitId: fighterUnitId,
+      hitPointRule: fixedHitPoints,
+    } as const;
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: fighterBuild(selectedWeapons.slice(0, 2)),
+        unitLibrary,
+        levelGain,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidWeaponMasterySelectionCount",
+        classLevel: 1,
+        expectedCount: 3,
+        actualCount: 2,
+      },
+    });
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: fighterBuild(selectedWeapons),
+        unitLibrary,
+        levelGain,
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        features: selectedWeapons,
+        progression: {
+          advancements: [
+            {
+              classUnitId: "class_fighter",
+              hitPointRule: fixedHitPoints,
+            },
+          ],
+        },
+      },
+    });
+  });
+
+  test("adds the Fighter level-four Weapon Mastery choice without replacing retained choices", () => {
+    const retainedWeaponUnitIds = [
+      authoredUnitId("weapon_longsword"),
+      authoredUnitId("weapon_dagger"),
+      authoredUnitId("weapon_shortbow"),
+    ];
+    const selectedWeaponUnitIds = [
+      ...retainedWeaponUnitIds,
+      authoredUnitId("weapon_greataxe"),
+    ];
+    const build = fighterBuild(
+      fighterWeaponMasteryFeatures(retainedWeaponUnitIds),
+    );
+    const levelGain = weaponMasteryLevelGain({
+      unitLibrary,
+      classUnitId: fighterUnitId,
+      hitPointRule: fixedHitPoints,
+      featureUnitId: fighterWeaponMasterySourceUnitId,
+      selectedWeaponUnitIds,
+    });
+    if (Either.isLeft(levelGain)) {
+      throw new Error(
+        `The Fighter level-four Weapon Mastery gain must parse: ${JSON.stringify(levelGain.left)}`,
+      );
+    }
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: {
+          ...build,
+          progression: {
+            ...build.progression,
+            advancements: [
+              {
+                classUnitId: fighterUnitId,
+                hitPointRule: fixedHitPoints,
+              },
+              {
+                classUnitId: fighterUnitId,
+                hitPointRule: fixedHitPoints,
+              },
+            ],
+          },
+        },
+        unitLibrary,
+        levelGain: levelGain.right,
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        features: fighterWeaponMasteryFeatures(selectedWeaponUnitIds),
+        progression: {
+          advancements: [{}, {}, {}],
         },
       },
     });
