@@ -1509,10 +1509,16 @@ export function buildCharacterBuild(input: {
     progression,
     input.unitLibrary,
   );
+  // ExecutableSupportSelections has already established these synchronous
+  // projection prerequisites against the same selections and Unit catalog.
+  /* v8 ignore start */
   if (Either.isLeft(classFactsByUnitId)) {
     return Either.left(classFactsByUnitId.left);
   }
+  /* v8 ignore stop */
   const classFacts = classFactsByUnitId.right.get(selectedClassUnitId);
+  // The support gate requires facts for the progression's starting class.
+  /* v8 ignore start */
   if (classFacts == null) {
     return Either.left([
       characterBuildProjectionIssue({
@@ -1522,68 +1528,96 @@ export function buildCharacterBuild(input: {
       }),
     ]);
   }
+  /* v8 ignore stop */
   const backgroundUnit = unitForFinalization(
     input.unitLibrary,
     selections.background,
     "background",
   );
+  // The support gate has already resolved the selected background Unit.
+  /* v8 ignore start */
   if (Either.isLeft(backgroundUnit)) return Either.left([backgroundUnit.left]);
+  /* v8 ignore stop */
   const backgroundFacts = readableForFinalization(
     readBackgroundCreationFacts(backgroundUnit.right),
     selections.background,
     "background",
   );
+  // The support gate has already parsed the selected background facts.
+  /* v8 ignore start */
   if (Either.isLeft(backgroundFacts))
     return Either.left([backgroundFacts.left]);
+  /* v8 ignore stop */
   const speciesUnit = unitForFinalization(
     input.unitLibrary,
     selections.species,
     "species",
   );
+  // The support gate has already resolved the selected species Unit.
+  /* v8 ignore start */
   if (Either.isLeft(speciesUnit)) return Either.left([speciesUnit.left]);
+  /* v8 ignore stop */
   const speciesFacts = readableForFinalization(
     readSpeciesCreationFacts(speciesUnit.right),
     selections.species,
     "species",
   );
+  // The support gate has already parsed the selected species facts.
+  /* v8 ignore start */
   if (Either.isLeft(speciesFacts)) return Either.left([speciesFacts.left]);
+  /* v8 ignore stop */
   const speciesChoiceFacts = finalizedSpeciesChoiceFacts(
     selections,
     speciesUnit.right,
     input.unitLibrary,
   );
+  // The support gate checks species-source and selected-choice agreement.
+  /* v8 ignore start */
   if (Either.isLeft(speciesChoiceFacts)) {
     return Either.left(speciesChoiceFacts.left);
   }
+  /* v8 ignore stop */
   const baseScores = selections.abilityScoreGeneration.assignedScores;
   const finalScores = applyBackgroundAbilityScoreIncrease(
     baseScores,
     selections.backgroundAbilityScoreIncrease,
     backgroundFacts.right.abilityScoreIncrease.abilities,
   );
+  // The support gate has already applied and admitted this background increase.
+  /* v8 ignore start */
   if (Either.isLeft(finalScores)) return Either.left([finalScores.left]);
+  /* v8 ignore stop */
   const featureScores = applyClassFeatureAbilityScoreIncreases(
     finalScores.right,
     selections,
   );
+  // Supported choice holes and feat prerequisites establish these increases.
+  /* v8 ignore start */
   if (Either.isLeft(featureScores)) return Either.left(featureScores.left);
+  /* v8 ignore stop */
   const finalAbilityScores = featureScores.right;
   const proficiencyChoices = selectedBuildProficiencyChoiceSubjects(
     selections,
     input.unitLibrary,
   );
+  // Supported proficiency choices have already passed their typed codecs.
+  /* v8 ignore start */
   if (Either.isLeft(proficiencyChoices)) {
     return Either.left(proficiencyChoices.left);
   }
+  /* v8 ignore stop */
   const buildSpellcasting = finalizedBuildSpellcasting({
     classFactsByUnitId: classFactsByUnitId.right,
     selections,
     supportedSelections: input.supportedSelections,
     unitLibrary: input.unitLibrary,
   });
+  // The support gate checks authored spellcasting facts and spell selections.
+  /* v8 ignore start */
   if (Either.isLeft(buildSpellcasting)) {
     return Either.left(buildSpellcasting.left);
   }
+  /* v8 ignore stop */
   const abilityCheckBonusFeatures =
     finalizedClassFeatureAcquisitionAbilityCheckBonusFeatures(
       input.supportedSelections.unitChoices,

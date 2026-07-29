@@ -50,7 +50,9 @@ function parsedClassUnitId(
   return parsed.right;
 }
 
+const barbarianUnitId = parsedClassUnitId("class_barbarian");
 const fighterUnitId = parsedClassUnitId("class_fighter");
+const monkUnitId = parsedClassUnitId("class_monk");
 const paladinUnitId = parsedClassUnitId("class_paladin");
 const sorcererUnitId = parsedClassUnitId("class_sorcerer");
 const warlockUnitId = parsedClassUnitId("class_warlock");
@@ -102,6 +104,22 @@ function fighterWeaponMasteryFeatures(
     selectedFromUnitId: fighterWeaponMasterySourceUnitId,
     unitId,
   }));
+}
+
+function fighterLevelThreeBuild(
+  weaponUnitIds: readonly UnitRecord["id"][],
+): CharacterBuild {
+  const build = fighterBuild(fighterWeaponMasteryFeatures(weaponUnitIds));
+  return {
+    ...build,
+    progression: {
+      ...build.progression,
+      advancements: [
+        { classUnitId: fighterUnitId, hitPointRule: fixedHitPoints },
+        { classUnitId: fighterUnitId, hitPointRule: fixedHitPoints },
+      ],
+    },
+  };
 }
 
 function fightingStyleReplacement(
@@ -488,6 +506,203 @@ describe("Character Build advancement typed boundaries", () => {
         progression: {
           advancements: [{}, {}, {}],
         },
+      },
+    });
+  });
+
+  test("rejects incoherent Fighter level-four Weapon Mastery selections", () => {
+    const retainedWeaponUnitIds = [
+      authoredUnitId("weapon_longsword"),
+      authoredUnitId("weapon_dagger"),
+      authoredUnitId("weapon_shortbow"),
+    ];
+    const selectedWeaponUnitIds = [
+      ...retainedWeaponUnitIds,
+      authoredUnitId("weapon_greataxe"),
+    ];
+    const parsedLevelGain = (input: {
+      readonly featureUnitId: UnitRecord["id"];
+      readonly selectedWeaponUnitIds: readonly UnitRecord["id"][];
+    }) => {
+      const result = weaponMasteryLevelGain({
+        unitLibrary,
+        classUnitId: fighterUnitId,
+        hitPointRule: fixedHitPoints,
+        ...input,
+      });
+      if (Either.isLeft(result)) {
+        throw new Error(
+          `The Weapon Mastery rejection fixture must parse: ${JSON.stringify(result.left)}`,
+        );
+      }
+      return result.right;
+    };
+
+    const cases = [
+      {
+        buildWeaponUnitIds: retainedWeaponUnitIds,
+        levelGain: parsedLevelGain({
+          featureUnitId: authoredUnitId("paladin_weapon_mastery"),
+          selectedWeaponUnitIds,
+        }),
+        code: "weaponMasteryFeatureClassMismatch",
+      },
+      {
+        buildWeaponUnitIds: retainedWeaponUnitIds.slice(0, 2),
+        levelGain: parsedLevelGain({
+          featureUnitId: fighterWeaponMasterySourceUnitId,
+          selectedWeaponUnitIds,
+        }),
+        code: "invalidWeaponMasterySelectionCount",
+      },
+      {
+        buildWeaponUnitIds: retainedWeaponUnitIds,
+        levelGain: parsedLevelGain({
+          featureUnitId: fighterWeaponMasterySourceUnitId,
+          selectedWeaponUnitIds: retainedWeaponUnitIds,
+        }),
+        code: "invalidWeaponMasterySelectionCount",
+      },
+      {
+        buildWeaponUnitIds: [
+          retainedWeaponUnitIds[0],
+          retainedWeaponUnitIds[0],
+          retainedWeaponUnitIds[2],
+        ],
+        levelGain: parsedLevelGain({
+          featureUnitId: fighterWeaponMasterySourceUnitId,
+          selectedWeaponUnitIds,
+        }),
+        code: "duplicateWeaponMasterySelection",
+      },
+      {
+        buildWeaponUnitIds: retainedWeaponUnitIds,
+        levelGain: parsedLevelGain({
+          featureUnitId: fighterWeaponMasterySourceUnitId,
+          selectedWeaponUnitIds: [
+            ...retainedWeaponUnitIds,
+            retainedWeaponUnitIds[0],
+          ],
+        }),
+        code: "duplicateWeaponMasterySelection",
+      },
+      {
+        buildWeaponUnitIds: retainedWeaponUnitIds,
+        levelGain: parsedLevelGain({
+          featureUnitId: fighterWeaponMasterySourceUnitId,
+          selectedWeaponUnitIds: [
+            authoredUnitId("weapon_longsword"),
+            authoredUnitId("weapon_dagger"),
+            authoredUnitId("weapon_greataxe"),
+            authoredUnitId("weapon_flail"),
+          ],
+        }),
+        code: "missingExistingWeaponMasterySelection",
+      },
+    ] as const;
+
+    for (const testCase of cases) {
+      expect(
+        advanceCharacterBuildClassLevel({
+          build: fighterLevelThreeBuild(testCase.buildWeaponUnitIds),
+          unitLibrary,
+          levelGain: testCase.levelGain,
+        }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: { code: testCase.code },
+      });
+    }
+  });
+
+  test("rejects a ranged weapon from the Barbarian melee Weapon Mastery roster", () => {
+    const retainedWeaponUnitIds = [
+      authoredUnitId("weapon_longsword"),
+      authoredUnitId("weapon_dagger"),
+    ];
+    const levelGain = weaponMasteryLevelGain({
+      unitLibrary,
+      classUnitId: barbarianUnitId,
+      hitPointRule: fixedHitPoints,
+      featureUnitId: authoredUnitId("barbarian_weapon_mastery"),
+      selectedWeaponUnitIds: [
+        ...retainedWeaponUnitIds,
+        authoredUnitId("weapon_shortbow"),
+      ],
+    });
+    if (Either.isLeft(levelGain)) {
+      throw new Error(
+        `The Barbarian Weapon Mastery rejection fixture must parse: ${JSON.stringify(levelGain.left)}`,
+      );
+    }
+
+    const build = buildForClass(
+      barbarianUnitId,
+      retainedWeaponUnitIds.map((unitId) => ({
+        kind: "selectedClassChoice",
+        selectedFromUnitId: authoredUnitId("barbarian_weapon_mastery"),
+        unitId,
+      })),
+    );
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: {
+          ...build,
+          progression: {
+            ...build.progression,
+            advancements: [
+              {
+                classUnitId: barbarianUnitId,
+                hitPointRule: fixedHitPoints,
+              },
+              {
+                classUnitId: barbarianUnitId,
+                hitPointRule: fixedHitPoints,
+              },
+            ],
+          },
+        },
+        unitLibrary,
+        levelGain: levelGain.right,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidWeaponMasterySelection",
+        weaponUnitId: "weapon_shortbow",
+      },
+    });
+  });
+
+  test("rejects Weapon Mastery selection for a class without that feature", () => {
+    const levelGain = weaponMasteryLevelGain({
+      unitLibrary,
+      classUnitId: monkUnitId,
+      hitPointRule: fixedHitPoints,
+      featureUnitId: fighterWeaponMasterySourceUnitId,
+      selectedWeaponUnitIds: [
+        authoredUnitId("weapon_longsword"),
+        authoredUnitId("weapon_dagger"),
+        authoredUnitId("weapon_shortbow"),
+      ],
+    });
+    if (Either.isLeft(levelGain)) {
+      throw new Error(
+        `The unsupported Monk Weapon Mastery fixture must parse: ${JSON.stringify(levelGain.left)}`,
+      );
+    }
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: buildForClass(monkUnitId),
+        unitLibrary,
+        levelGain: levelGain.right,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "missingWeaponMasteryFeatureChoice",
+        classUnitId: "class_monk",
       },
     });
   });

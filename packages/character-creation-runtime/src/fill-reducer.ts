@@ -924,6 +924,8 @@ export function applyDraftFill(
     });
   }
 
+  // AcceptedDraftFill is exhaustive above; this compile-time never harness
+  // cannot receive a runtime value through the typed reducer entrypoint.
   /* v8 ignore start */
   const exhaustive: never = acceptedFill;
   return exhaustive;
