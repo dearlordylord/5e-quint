@@ -7,6 +7,7 @@ import { describe, expect, test } from "vitest";
 import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 import { spellProcedureExecutionFor } from "./battle-reducer/spell-procedure-profiles/execution-registry.ts";
 import { characterSpellProcedure } from "./character-execution-admission.ts";
+import { unitIsSupportedClassFeatureSpellFreeCastResource } from "./character-battle-resources.ts";
 import type {
   BattleRuntimeSession,
   BattleState,
@@ -349,6 +350,12 @@ describe("battle runtime: Favored Enemy", () => {
       },
     };
 
+    expect(unitIsSupportedClassFeatureSpellFreeCastResource(favoredEnemy)).toBe(
+      true,
+    );
+    expect(
+      unitIsSupportedClassFeatureSpellFreeCastResource(mismatchedFreeCast),
+    ).toBe(false);
     expect(characterBattleResourceSupportedForUnit(mismatchedFreeCast)).toBe(
       false,
     );

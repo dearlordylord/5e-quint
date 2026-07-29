@@ -1,6 +1,9 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { describe, expect, test } from "vitest";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import {
+  battleActSpellPresentation,
+  battleSelectedSpellInvocationForProcedure,
+} from "./battle-act-composition.ts";
 import type {
   BattleState,
   BattleSubject,
@@ -50,6 +53,25 @@ import {
 describe("battle runtime: spellcasting actions and slots", () => {
   test("Wizard action-time spell acts spend slots for prepared level-1 spells but not cantrips", () => {
     const magicMissileState = wizardVsSkeletonBattle();
+    const magicMissileProcedureRef = requireCharacterSpellProcedureRefForTest(
+      magicMissileState,
+      wizardId,
+      spellSlotInvocationRef("magic_missile", 1, "repeatedDamageAllocation"),
+    );
+    expect(
+      battleSelectedSpellInvocationForProcedure(
+        magicMissileState,
+        wizardId,
+        magicMissileProcedureRef,
+      ),
+    ).toMatchObject({ spell: { id: "magic_missile" } });
+    expect(
+      battleSelectedSpellInvocationForProcedure(
+        magicMissileState,
+        skeletonId,
+        magicMissileProcedureRef,
+      ),
+    ).toBeUndefined();
     expect(
       discoverBattleActs(magicMissileState).map((act) => act.subject),
     ).toEqual(
@@ -58,71 +80,31 @@ describe("battle runtime: spellcasting actions and slots", () => {
         {
           tag: "actionSpell",
           actorId: wizardId,
-          procedureRef: requireCharacterSpellProcedureRefForTest(
-            magicMissileState,
-            wizardId,
-            spellSlotInvocationRef(
-              "magic_missile",
-              1,
-              "repeatedDamageAllocation",
-            ),
-          ),
+          procedureRef: magicMissileProcedureRef,
           mode: { tag: "cast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          procedureRef: requireCharacterSpellProcedureRefForTest(
-            magicMissileState,
-            wizardId,
-            spellSlotInvocationRef(
-              "magic_missile",
-              1,
-              "repeatedDamageAllocation",
-            ),
-          ),
+          procedureRef: magicMissileProcedureRef,
           mode: { tag: "ready", trigger: "attackHit" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          procedureRef: requireCharacterSpellProcedureRefForTest(
-            magicMissileState,
-            wizardId,
-            spellSlotInvocationRef(
-              "magic_missile",
-              1,
-              "repeatedDamageAllocation",
-            ),
-          ),
+          procedureRef: magicMissileProcedureRef,
           mode: { tag: "ready", trigger: "spellCast" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          procedureRef: requireCharacterSpellProcedureRefForTest(
-            magicMissileState,
-            wizardId,
-            spellSlotInvocationRef(
-              "magic_missile",
-              1,
-              "repeatedDamageAllocation",
-            ),
-          ),
+          procedureRef: magicMissileProcedureRef,
           mode: { tag: "ready", trigger: "saveFailed" },
         },
         {
           tag: "actionSpell",
           actorId: wizardId,
-          procedureRef: requireCharacterSpellProcedureRefForTest(
-            magicMissileState,
-            wizardId,
-            spellSlotInvocationRef(
-              "magic_missile",
-              1,
-              "repeatedDamageAllocation",
-            ),
-          ),
+          procedureRef: magicMissileProcedureRef,
           mode: { tag: "ready", trigger: "afterDamage" },
         },
         {

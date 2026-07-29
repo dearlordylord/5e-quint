@@ -13,6 +13,7 @@ import {
   type BattleActiveEffect,
   type SpellShapeShiftedFormActiveEffect,
 } from "./index.ts";
+import { projectShapeShiftRuntimeReversion } from "./battle-reducer/shape-shifting.ts";
 import {
   battleId,
   combatantId,
@@ -70,33 +71,41 @@ const replacementSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
 };
 
 test("shape-shift runtime state admits true form and class-feature restoration owners", () => {
-  expect(trueFormRuntimeState()).toEqual({
+  const trueForm = trueFormRuntimeState();
+  expect(trueForm).toEqual({
     kind: "trueForm",
     trueForm: { kind: "combatantBaseState" },
   });
+  expect(projectShapeShiftRuntimeReversion(trueForm)).toEqual({
+    tag: "alreadyTrueForm",
+    shapeShift: trueForm,
+  });
 
-  expect(
-    shapeShiftedRuntimeState({
-      source: {
-        kind: "classFeature",
-        sourceCombatantId: syntheticDruidWildShapeEffect.sourceCombatantId,
-        sourceProcedureRef: expect.any(String),
-      },
-      replacementForm: {
-        kind: "runtimeCreatureForm",
-        creatureSize: "large",
-      },
-      reversionOwner: {
-        kind: "druidWildShapeActiveEffect",
-        effect: syntheticDruidWildShapeEffect,
-      },
-    }),
-  ).toMatchObject({
+  const shifted = shapeShiftedRuntimeState({
+    source: {
+      kind: "classFeature",
+      sourceCombatantId: syntheticDruidWildShapeEffect.sourceCombatantId,
+      sourceProcedureRef: syntheticDruidWildShapeEffect.sourceProcedureRef,
+    },
+    replacementForm: {
+      kind: "runtimeCreatureForm",
+      creatureSize: "large",
+    },
+    reversionOwner: {
+      kind: "druidWildShapeActiveEffect",
+      effect: syntheticDruidWildShapeEffect,
+    },
+  });
+  expect(shifted).toMatchObject({
     kind: "shapeShifted",
     trueForm: { kind: "combatantBaseState" },
     source: { kind: "classFeature" },
     replacementForm: { kind: "runtimeCreatureForm", creatureSize: "large" },
     reversionOwner: { kind: "druidWildShapeActiveEffect" },
+  });
+  expect(projectShapeShiftRuntimeReversion(shifted)).toEqual({
+    tag: "revertedToTrueForm",
+    shapeShift: trueForm,
   });
 });
 

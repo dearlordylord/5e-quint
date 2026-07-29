@@ -19,6 +19,7 @@ import { deriveCreatureSpaceTraversalMovementFactFromTableRoute } from "./battle
 import { resolveReplayContinuationFromState } from "./battle-execution-composition.ts";
 import {
   grappleDragCostExempt,
+  grappleEscapeDc,
   targetIsNoMoreThanOneSizeLarger,
 } from "./battle-reducer/movement-speed.ts";
 import type {
@@ -1971,6 +1972,14 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     expect(grappled.state.grapples).toEqual([
       expect.objectContaining({ targetId: goblinId, escapeDc: 13 }),
     ]);
+  });
+
+  test("Grapple escape DC derives from the attacker's Strength", () => {
+    const fighter = fighterVsGoblinBattle().combatants.get(fighterId);
+    if (fighter === undefined) {
+      throw new Error("Expected the Grapple helper fighter.");
+    }
+    expect(grappleEscapeDc(fighter)).toBe(13);
   });
 
   test("Grapple size helpers match size limit and drag-cost exceptions", () => {

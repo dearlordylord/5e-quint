@@ -8,6 +8,8 @@ import type {
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
+import { spellSavingThrowAbility } from "./battle-reducer/spells-damage-fills.ts";
+import { characterSpellProcedureExecution } from "./character-execution-queries.ts";
 import {
   attackDamageDispositionFill,
   attackRollFill,
@@ -103,6 +105,17 @@ describe("battle runtime: Ice Knife", () => {
       ),
       mode: { tag: "cast" },
     };
+    if (wizard.origin.kind !== "character") {
+      throw new Error("Expected Wizard character execution.");
+    }
+    const selectedInvocation = characterSpellProcedureExecution(
+      wizard.origin.execution,
+      subject.procedureRef,
+    );
+    if (selectedInvocation?.procedure !== "attackBurstSaveDamage") {
+      throw new Error("Expected selected Ice Knife attack-burst invocation.");
+    }
+    expect(spellSavingThrowAbility(selectedInvocation)).toBe("dex");
     const target = requireHole(
       resolveBattleSubject({ state, subject, fills: [] }),
       "targetChoice",

@@ -27,6 +27,7 @@ import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { expect, test } from "vitest";
 import { resolveReplayContinuationFromState } from "./battle-execution-composition.ts";
+import { spellDefinitionHasPricedOrConsumedMaterialComponent } from "./battle-reducer/spells-invocation-guards.ts";
 
 type CharacterSeedInput = Parameters<typeof characterSeed>[0];
 
@@ -2719,6 +2720,21 @@ test("Beast Spells admits focus-replaceable Material spell invocation while Wild
 });
 
 test("Beast Spells rejects priced or consumed Material spells while Wild Shape is active", () => {
+  expect(
+    spellDefinitionHasPricedOrConsumedMaterialComponent(
+      spellRecord("continual_flame"),
+    ),
+  ).toBe(true);
+  expect(
+    spellDefinitionHasPricedOrConsumedMaterialComponent(
+      spellRecord("cure_wounds"),
+    ),
+  ).toBe(false);
+  expect(
+    spellDefinitionHasPricedOrConsumedMaterialComponent(
+      spellRecord("warding_bond"),
+    ),
+  ).toBe(true);
   const session = druidWildShapeSession({
     druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
     preparedSpells: [

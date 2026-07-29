@@ -1,6 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
+import { reactionReductionResourceDieLabel } from "./battle-reducer/reaction-modifiers.ts";
 import {
   armorClass,
   bardicInspirationBattle,
@@ -689,6 +690,16 @@ describe("battle runtime: Bardic Inspiration", () => {
       message:
         "Bardic Inspiration is no longer available for the D20 Test actor.",
     });
+  });
+
+  test("formats the admitted Bardic Inspiration reduction die", () => {
+    expect(
+      reactionReductionResourceDieLabel({
+        dice: 1,
+        dieSize: 6,
+        flatModifier: 0,
+      }),
+    ).toBe("1d6");
   });
 
   test("Bardic Inspiration reduction rolls must be one valid class die", () => {
