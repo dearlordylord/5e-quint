@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from "node:fs";
+
 import { describe, expect, test } from "vitest";
 
 import animalMessengerInput from "../../content/animal_messenger.json";
@@ -12,17 +14,7 @@ import hasteInput from "../../content/haste.json";
 import heatMetalInput from "../../content/heat_metal.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
-import adamantineArmorInput from "../../content/magic_item_adamantine_armor.json";
-import ammunitionTemplateInput from "../../content/magic_item_ammunition_1_2_or_3.json";
 import bagOfHoldingInput from "../../content/magic_item_bag_of_holding.json";
-import brazierOfCommandingFireElementalsInput from "../../content/magic_item_brazier_of_commanding_fire_elementals.json";
-import chimeOfOpeningInput from "../../content/magic_item_chime_of_opening.json";
-import cloakOfProtectionInput from "../../content/magic_item_cloak_of_protection.json";
-import defenderInput from "../../content/magic_item_defender.json";
-import sentinelShieldInput from "../../content/magic_item_sentinel_shield.json";
-import staffOfFireInput from "../../content/magic_item_staff_of_fire.json";
-import wandOfLightningBoltsInput from "../../content/magic_item_wand_of_lightning_bolts.json";
-import weaponTemplateInput from "../../content/magic_item_weapon_1_2_or_3.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import magicMouthInput from "../../content/magic_mouth.json";
 import moonbeamInput from "../../content/moonbeam.json";
@@ -34,7 +26,10 @@ import silenceInput from "../../content/silence.json";
 import spiritualWeaponInput from "../../content/spiritual_weapon.json";
 import zoneOfTruthInput from "../../content/zone_of_truth.json";
 import wardingBondInput from "../../content/warding_bond.json";
-import { decodeUnitRecordSync } from "../surface/schema.ts";
+import {
+  decodeStatBlockRecordSync,
+  decodeUnitRecordSync,
+} from "../surface/schema.ts";
 import { srdSurface } from "../surface/surface-catalog.ts";
 import {
   renderStatBlockTraceDocument,
@@ -63,29 +58,38 @@ describe("Surface trace interpreter", () => {
     }
   });
 
-  test("traces canonical magic-item and equipment-template record families", () => {
-    const records = [
-      bagOfHoldingInput,
-      brazierOfCommandingFireElementalsInput,
-      chimeOfOpeningInput,
-      cloakOfProtectionInput,
-      staffOfFireInput,
-      wandOfLightningBoltsInput,
-      adamantineArmorInput,
-      sentinelShieldInput,
-      ammunitionTemplateInput,
-      defenderInput,
-      weaponTemplateInput,
-    ];
+  test("traces every canonical content record with a Unit or Stat Block kind", () => {
+    const contentDirectory = new URL("../../content/", import.meta.url);
+    let tracedRecords = 0;
 
-    for (const input of records) {
-      const unit = decodeUnitRecordSync(input);
+    for (const fileName of readdirSync(contentDirectory)) {
+      if (!fileName.endsWith(".json")) continue;
+      const raw: unknown = JSON.parse(
+        readFileSync(new URL(fileName, contentDirectory), "utf8"),
+      );
+      if (typeof raw !== "object" || raw === null || !("kind" in raw)) {
+        continue;
+      }
+
+      if (raw.kind === "statBlock") {
+        const statBlock = decodeStatBlockRecordSync(raw);
+        const trace = traceStatBlock(statBlock);
+        expect(trace.unitId, fileName).toBe(statBlock.id);
+        expect(trace.nodes.length, fileName).toBeGreaterThan(0);
+        tracedRecords += 1;
+        continue;
+      }
+
+      const unit = decodeUnitRecordSync(raw);
       const trace = traceUnit(unit);
-
-      expect(trace.unitId).toBe(unit.id);
-      expect(trace.nodes.length).toBeGreaterThan(1);
-      expect(trace.edges.length).toBeGreaterThan(0);
+      expect(trace.unitId, fileName).toBe(unit.id);
+      expect(trace.nodes.length, fileName).toBeGreaterThan(0);
+      tracedRecords += 1;
     }
+
+    expect(tracedRecords).toBeGreaterThan(
+      srdSurface.units.length + srdSurface.statBlocks.length,
+    );
   });
 
   test("traces a synthetic magic-item variant collection through decoded Surface shape", () => {

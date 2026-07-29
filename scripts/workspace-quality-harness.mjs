@@ -84,7 +84,7 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   surface: {
-    coverage: { lines: 89, statements: 89, functions: 93, branches: 85 },
+    coverage: { lines: 93, statements: 93, functions: 94, branches: 88 },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
