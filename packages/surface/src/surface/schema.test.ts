@@ -1,20 +1,229 @@
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
+import cloakOfProtectionInput from "../../content/cloak_of_protection.json";
+import adamantineArmorInput from "../../content/magic_item_adamantine_armor.json";
+import ammunitionTemplateInput from "../../content/magic_item_ammunition_1_2_or_3.json";
+import sentinelShieldInput from "../../content/magic_item_sentinel_shield.json";
+import { readMagicInitiateSpellAccessSourceFacts } from "./character-creation-readers.ts";
 import { srdSurface } from "./surface-catalog.ts";
 import {
   SRD_SURFACE_SCHEMA_BOUNDS,
   SRD_SURFACE_SCHEMA_SIZE,
 } from "./publication-artifacts.ts";
 import {
+  decodeArmorRecordSync,
+  decodeArmorTemplateRecordSync,
+  decodeBackgroundRecordSync,
+  decodeClassFeatureRecordSync,
+  decodeClassRecordSync,
+  decodeFeatRecordSync,
+  decodeMagicItemRecordSync,
+  decodeMasteryRecordSync,
+  decodeMonsterStatBlockSync,
+  decodeShieldRecordSync,
+  decodeShieldTemplateRecordSync,
+  decodeSpeciesRecordSync,
+  decodeSpeciesTraitRecordSync,
+  decodeSpellRecordSync,
   decodeSrdSurfaceEither,
+  decodeSubclassRecordSync,
   decodeUnitRecordEither,
+  decodeWeaponRecordSync,
+  decodeWeaponTemplateRecordSync,
+  formatSurfaceDecodeError,
   readSurfaceSchemaRole,
   SrdProvenanceSchema,
   SrdSurfaceJsonSchema,
 } from "./schema.ts";
+import {
+  favoredEnemyHuntersMarkFreeCastGrantsForUnit,
+  isSupportedClassFeatureSpellFreeCastResourceTag,
+  spellHasTopLevelCastingTime,
+  spellHasTopLevelRitualTag,
+  supportedClassFeatureSpellFreeCastGrantsForUnit,
+  topLevelSpellCastingTime,
+  type SpellRecord,
+  type UnitRecord,
+} from "./types.ts";
+
+function requireSrdUnit(
+  predicate: (unit: UnitRecord) => boolean,
+  description: string,
+): UnitRecord {
+  const unit = srdSurface.units.find(predicate);
+  expect(unit, `Missing canonical ${description} fixture`).toBeDefined();
+  if (unit === undefined) {
+    throw new Error(`Missing canonical ${description} fixture`);
+  }
+  return unit;
+}
+
+function requireSrdSpell(id: string): SpellRecord {
+  const unit = requireSrdUnit(
+    (candidate) => candidate.kind === "spell" && candidate.id === id,
+    `Spell ${id}`,
+  );
+  expect(unit.kind).toBe("spell");
+  if (unit.kind !== "spell") {
+    throw new Error(`Canonical Unit ${id} is not a Spell`);
+  }
+  return unit;
+}
 
 describe("SRD Surface publication schema", () => {
+  test("decodes every public Unit and monster record family from canonical records", () => {
+    const unitDecoders = [
+      ["spell", decodeSpellRecordSync],
+      ["class_feature", decodeClassFeatureRecordSync],
+      ["class", decodeClassRecordSync],
+      ["subclass", decodeSubclassRecordSync],
+      ["background", decodeBackgroundRecordSync],
+      ["species", decodeSpeciesRecordSync],
+      ["mastery", decodeMasteryRecordSync],
+      ["feat", decodeFeatRecordSync],
+      ["species_trait", decodeSpeciesTraitRecordSync],
+      ["armor", decodeArmorRecordSync],
+      ["shield", decodeShieldRecordSync],
+      ["weapon", decodeWeaponRecordSync],
+    ] as const;
+
+    for (const [kind, decode] of unitDecoders) {
+      const unit = requireSrdUnit(
+        (candidate) => candidate.kind === kind,
+        `${kind} Unit`,
+      );
+      expect(decode(unit)).toEqual(unit);
+    }
+
+    expect(decodeMagicItemRecordSync(cloakOfProtectionInput)).toMatchObject({
+      kind: "magic_item",
+    });
+    expect(decodeArmorTemplateRecordSync(adamantineArmorInput)).toMatchObject({
+      kind: "armor_template",
+    });
+    expect(decodeShieldTemplateRecordSync(sentinelShieldInput)).toMatchObject({
+      kind: "shield_template",
+    });
+    expect(
+      decodeWeaponTemplateRecordSync(ammunitionTemplateInput),
+    ).toMatchObject({
+      kind: "weapon_template",
+    });
+
+    const monster = srdSurface.statBlocks[0];
+    expect(decodeMonsterStatBlockSync(monster.statBlock)).toEqual(
+      monster.statBlock,
+    );
+  });
+
+  test("reads top-level casting-time and ritual facts without assuming every Spell family has them", () => {
+    const animalMessenger = requireSrdSpell("animal_messenger");
+    const acidArrow = requireSrdSpell("acid_arrow");
+    const plantGrowth = requireSrdSpell("plant_growth");
+
+    expect(topLevelSpellCastingTime(animalMessenger.mechanics)).toMatchObject({
+      ritual: true,
+    });
+    expect(spellHasTopLevelCastingTime(animalMessenger)).toBe(true);
+    expect(spellHasTopLevelRitualTag(animalMessenger)).toBe(true);
+    expect(spellHasTopLevelRitualTag(acidArrow)).toBe(false);
+    expect(topLevelSpellCastingTime(plantGrowth.mechanics)).toBeNull();
+    expect(spellHasTopLevelCastingTime(plantGrowth)).toBe(false);
+    expect(spellHasTopLevelRitualTag(plantGrowth)).toBe(false);
+  });
+
+  test("reads supported class-feature free-cast grants from their retained facts", () => {
+    const favoredEnemy = requireSrdUnit(
+      (unit) => unit.id === "ranger_favored_enemy",
+      "Ranger Favored Enemy feature",
+    );
+    const paladinsSmite = requireSrdUnit(
+      (unit) => unit.id === "paladin_paladins_smite",
+      "Paladin's Smite feature",
+    );
+    const fighterClass = requireSrdUnit(
+      (unit) => unit.id === "class_fighter",
+      "Fighter class",
+    );
+
+    expect(
+      isSupportedClassFeatureSpellFreeCastResourceTag(
+        "favoredEnemyHuntersMarkFreeCasts",
+      ),
+    ).toBe(true);
+    expect(isSupportedClassFeatureSpellFreeCastResourceTag("unknown")).toBe(
+      false,
+    );
+    expect(isSupportedClassFeatureSpellFreeCastResourceTag(1)).toBe(false);
+    expect(
+      favoredEnemyHuntersMarkFreeCastGrantsForUnit(favoredEnemy),
+    ).toMatchObject({
+      preparedSpellGrant: {
+        kind: "grant_spell_access",
+        spellId: "hunters_mark",
+      },
+      freeCastGrant: {
+        kind: "grant_spell_free_casts",
+        spellId: "hunters_mark",
+      },
+    });
+    expect(
+      favoredEnemyHuntersMarkFreeCastGrantsForUnit(paladinsSmite),
+    ).toBeNull();
+    expect(
+      supportedClassFeatureSpellFreeCastGrantsForUnit(fighterClass),
+    ).toBeNull();
+  });
+
+  test("reads Magic Initiate spell-access facts and rejects unrelated canonical Units", () => {
+    const magicInitiate = requireSrdUnit(
+      (unit) => unit.id === "feat_magic_initiate_wizard",
+      "Magic Initiate (Wizard) feat",
+    );
+    const fighterClass = requireSrdUnit(
+      (unit) => unit.id === "class_fighter",
+      "Fighter class",
+    );
+
+    expect(readMagicInitiateSpellAccessSourceFacts(magicInitiate)).toEqual({
+      tag: "readable",
+      value: {
+        recordId: "feat_magic_initiate_wizard",
+        spellList: "wizard",
+        selectedCantrips: { count: 2, spellLevel: 0 },
+        selectedLevelOneSpell: {
+          access: [
+            "always_prepared",
+            "one_free_cast_per_long_rest",
+            "spell_slot_cast",
+          ],
+          count: 1,
+          spellLevel: 1,
+        },
+        spellcastingAbilityOptions: ["int", "wis", "cha"],
+      },
+    });
+    expect(readMagicInitiateSpellAccessSourceFacts(fighterClass)).toEqual({
+      tag: "unreadable",
+      issues: [
+        {
+          code: "unsupportedUnitKind",
+          message: "Expected magic_initiate feat record, received class.",
+          unitId: "class_fighter",
+        },
+      ],
+    });
+  });
+
+  test("formats public decoder errors for boundary diagnostics", () => {
+    const result = decodeUnitRecordEither({ kind: "synthetic-test" });
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isLeft(result)) {
+      expect(formatSurfaceDecodeError(result.left)).toContain("UnitRecord");
+    }
+  });
+
   test("publishes distinct Unit and Stat Block collections", () => {
     expect(srdSurface.kind).toBe("srd-5.2.1-surface-catalog");
     expect(srdSurface.units.length).toBeGreaterThan(0);
