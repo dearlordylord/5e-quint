@@ -342,7 +342,7 @@ export function zeroAbilityWeaponAttack(
       battleObjectId(`main:${weapon.id}`),
       [],
     ),
-    ability: "str",
+    ability: weapon.usage === "ranged" ? "dex" : "str",
     abilityModifier: abilityModifier(0),
   };
 }

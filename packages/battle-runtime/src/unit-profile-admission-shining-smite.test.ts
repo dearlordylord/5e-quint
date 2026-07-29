@@ -8,7 +8,10 @@ import {
   BattleInterruptProcedureChoiceSchema,
   BattleSnapshotSchema,
 } from "./index.ts";
-import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  characterSpellInvocationRefForProcedureRefForTest,
+  testCharacterD20Statistics,
+} from "./battle-runtime.test-support.ts";
 import { characterAttackSubjectForTest } from "./battle-runtime.test-support.ts";
 import {
   shiningSmiteUnitId,
@@ -32,11 +35,11 @@ import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "./battle-reducer/spells-
 import {
   applyCondition,
   battleCreatureStateWithKnockOutPreservedConditions,
-  breakBattleConcentration,
   elapsedTimeTicks,
   endTurn,
   Hp,
   movementFeet,
+  proficiencyBonus,
   resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
@@ -44,12 +47,45 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import type { BattleSubject } from "./unit-profile-admission.test-support.ts";
 
+const paladinFiveSpellcastingFacts = {
+  casterClassLevels: [{ className: "paladin", level: 5 }],
+  casterD20Statistics: testCharacterD20Statistics({ cha: 16 }),
+  casterProficiencyBonus: proficiencyBonus(3),
+  spellSlots: [
+    { spellLevel: 1, count: 4 },
+    { spellLevel: 2, count: 2 },
+  ],
+} as const satisfies Pick<
+  Parameters<typeof spellBattle>[0],
+  | "casterClassLevels"
+  | "casterD20Statistics"
+  | "casterProficiencyBonus"
+  | "spellSlots"
+>;
+const paladinNineSpellcastingFacts = {
+  casterClassLevels: [{ className: "paladin", level: 9 }],
+  casterD20Statistics: testCharacterD20Statistics({ cha: 16 }),
+  casterProficiencyBonus: proficiencyBonus(4),
+  spellSlots: [
+    { spellLevel: 1, count: 4 },
+    { spellLevel: 2, count: 3 },
+    { spellLevel: 3, count: 2 },
+  ],
+} as const satisfies Pick<
+  Parameters<typeof spellBattle>[0],
+  | "casterClassLevels"
+  | "casterD20Statistics"
+  | "casterProficiencyBonus"
+  | "spellSlots"
+>;
+const shiningSmiteUpcastSlotLevel: (typeof paladinNineSpellcastingFacts.spellSlots)[number]["spellLevel"] = 3;
+
 describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () => {
-  test("shining_smite adds Radiant damage after a melee hit and illuminates the target until Concentration ends", () => {
+  test("shining_smite adds Radiant damage, illuminates its target, and routes public Concentration teardown to the effect owners", () => {
     const spell = spellRecord(shiningSmiteUnitId);
     const session = spellBattle({
+      ...paladinNineSpellcastingFacts,
       preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 3, count: 1 }],
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
       targetHp: 30,
       targetMaxHp: 30,
@@ -77,15 +113,18 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) => {
         if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
+        const invocationRef = characterSpellInvocationRefForProcedureRefForTest(
+          battleRuntimeSessionForTest({
+            ...session,
+            state: awaitingReaction.state,
+          }),
+          candidate.reactorId,
+          candidate.subject.procedureRef,
+        );
         return (
-          characterSpellInvocationRefForProcedureRefForTest(
-            battleRuntimeSessionForTest({
-              ...session,
-              state: awaitingReaction.state,
-            }),
-            candidate.reactorId,
-            candidate.subject.procedureRef,
-          ).spellId === shiningSmiteUnitId
+          invocationRef.spellId === shiningSmiteUnitId &&
+          invocationRef.tag === "spellSlot" &&
+          Number(invocationRef.slotLevel) === shiningSmiteUpcastSlotLevel
         );
       },
     );
@@ -107,7 +146,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     ).toEqual(
       spellSlotInvocationRef(
         shiningSmiteUnitId,
-        3,
+        shiningSmiteUpcastSlotLevel,
         "afterHitDamageAndIllumination",
       ),
     );
@@ -269,25 +308,59 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     );
     expect(unseenUnarmedAttackRoll).not.toHaveProperty("rollMode");
 
-    const concentrationBroken = breakBattleConcentration(
-      afterWeaponDamage.state,
-      spellCasterId,
-    );
+    const concentrationBroken = resolveBattleSubject({
+      state: afterWeaponDamage.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endConcentration",
+      },
+      fills: [],
+    });
+    if (concentrationBroken.tag !== "resolved") {
+      throw new Error("Expected Shining Smite Concentration to end.");
+    }
+    expect(concentrationBroken.routeEvents).toEqual([
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleConcentration",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "afterHitDamageRider",
+        holes: [],
+        owner: "battleConcentration",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "afterHitDamageRider",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+    ]);
     expect(
-      requireCombatant(concentrationBroken, spellTargetId).activeEffects,
+      requireCombatant(concentrationBroken.state, spellTargetId).activeEffects,
     ).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: "shiningSmiteIllumination" }),
       ]),
     );
-    expect(snapshotBattle(concentrationBroken).lightEmitters).toEqual([]);
+    expect(snapshotBattle(concentrationBroken.state).lightEmitters).toEqual([]);
   });
 
   test("shining_smite is admitted after an Unarmed Strike hit but not after a ranged weapon hit", () => {
     const spell = spellRecord(shiningSmiteUnitId);
     const unarmedSession = spellBattle({
+      ...paladinFiveSpellcastingFacts,
       preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 2, count: 1 }],
       attack: null,
     });
     const unarmedSubject: BattleSubject = characterAttackSubjectForTest(
@@ -361,8 +434,8 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     );
 
     const rangedSession = spellBattle({
+      ...paladinFiveSpellcastingFacts,
       preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 2, count: 1 }],
       attack: zeroAbilityWeaponAttack("weapon_shortbow"),
     });
     const rangedSubject = weaponAttackSubject(rangedSession, "Shortbow");
