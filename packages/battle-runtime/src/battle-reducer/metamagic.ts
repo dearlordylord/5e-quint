@@ -93,7 +93,6 @@ export {
   subtleSpellComponentProjectionForApplications,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   transmutedSpellDamageInvocation,
-  transmutedSpellMetamagicLabel,
   TWINNED_METAMAGIC_EFFECT_KIND,
   TWINNED_SPELL_METAMAGIC_SELECTION,
   twinnedSpellTargetCountInvocation,

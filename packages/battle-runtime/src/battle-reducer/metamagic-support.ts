@@ -425,15 +425,6 @@ export function spellMetamagicApplications(
   );
 }
 
-export function transmutedSpellMetamagicLabel(
-  metamagic: readonly SpellMetamagicSelection[],
-): string {
-  const targetDamageType = transmutedSpellSelectionTargetDamageType(metamagic);
-  return targetDamageType === undefined
-    ? "Transmuted Spell"
-    : `Transmuted Spell (${targetDamageType})`;
-}
-
 export function transmutedSpellSelectionTargetDamageType(
   metamagic: readonly SpellMetamagicSelection[],
 ): TransmutedSpellDamageType | undefined {
