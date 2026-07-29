@@ -511,6 +511,32 @@ describe("Stat Block execution references", () => {
     expect(
       addedCharacter.right.executionScopeCursors.has(characterWithoutFormsId),
     ).toBe(true);
+    const removedCharacter = removeBattleCombatants({
+      state: addedCharacter.right,
+      combatantIds: [characterWithoutFormsId],
+    });
+    if (Either.isLeft(removedCharacter)) {
+      throw new Error("Expected the character to be removed.");
+    }
+    const serializedAfterCharacterRemoval = Schema.decodeUnknownSync(
+      BattleSnapshotSchema,
+    )(
+      Schema.encodeSync(BattleSnapshotSchema)(
+        snapshotBattle(removedCharacter.right),
+      ),
+    );
+    expect(
+      serializedAfterCharacterRemoval.retiredExecutionScopeAllocations.find(
+        (allocation) => allocation.combatantId === characterWithoutFormsId,
+      ),
+    ).toMatchObject({
+      ownership: {
+        kind: "character",
+        characterScopeRef: expect.any(String),
+        attackScopeRef: expect.any(String),
+        formScopeRefs: [],
+      },
+    });
     const readmitted = addBattleCombatant({
       state: restoredAfterRemoval,
       combatant: actorInit,
