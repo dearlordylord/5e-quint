@@ -2639,17 +2639,7 @@ function applyListPreparedSpellChanges(input: {
     });
   }
 
-  return finalPreparedSpells.length ===
-    input.nextSpellcasting.preparedAccess.choose
-    ? Either.right(finalPreparedSpells)
-    : Either.left({
-        code: "invalidListPreparedSpellSelectionCount",
-        classLevel: input.nextClassLevel,
-        expectedCount: input.nextSpellcasting.preparedAccess.choose,
-        actualCount: finalPreparedSpells.length,
-        message:
-          "List-prepared spell changes must leave the build with the table count for the new class level.",
-      });
+  return Either.right(finalPreparedSpells);
 }
 
 function replaceListPreparedSpell(input: {
@@ -2831,30 +2821,21 @@ function updateSorcererMetamagicOptions(input: {
     });
   }
 
-  return finalOptions.length === nextExpectedCount
-    ? Either.right([
-        ...input.build.features.filter(
-          (feature) =>
-            !isSelectedSorcererMetamagicOptionFromFeature(
-              feature,
-              featureChoice.right.featureUnitId,
-            ),
+  return Either.right([
+    ...input.build.features.filter(
+      (feature) =>
+        !isSelectedSorcererMetamagicOptionFromFeature(
+          feature,
+          featureChoice.right.featureUnitId,
         ),
-        ...finalOptions.map((optionId) =>
-          sorcererMetamagicOptionFeature(
-            optionId,
-            featureChoice.right.featureUnitId,
-          ),
-        ),
-      ])
-    : Either.left({
-        code: "invalidSorcererMetamagicSelectionCount",
-        sorcererLevel: nextSorcererLevel,
-        expectedCount: nextExpectedCount,
-        actualCount: finalOptions.length,
-        message:
-          "Metamagic option changes must leave the build with the table count for the new Sorcerer level.",
-      });
+    ),
+    ...finalOptions.map((optionId) =>
+      sorcererMetamagicOptionFeature(
+        optionId,
+        featureChoice.right.featureUnitId,
+      ),
+    ),
+  ]);
 }
 
 function sorcererMetamagicCanRemainUnchanged(input: {

@@ -105,6 +105,7 @@ import {
   type CharacterChoiceSelection,
   type CharacterBuild,
   type CharacterBuildEldritchInvocationRepeatableChoice,
+  type CharacterBuildListPreparedSpellcastingLevelGain,
   type CharacterBuildWarlockEldritchInvocationSelectionInput,
   type CharacterBuildWarlockPactMagicLevelGain,
   type CharacterBuildProficiencies,
@@ -6189,6 +6190,124 @@ describe("character creation finalization", () => {
     });
   });
 
+  test("rejects incoherent Sorcerer Metamagic advancement state", () => {
+    const classUnitId = testClassUnitId(authoredUnitId("class_sorcerer"));
+    const build = {
+      ...finalizedSorcererMetamagicBuild(
+        "draft:sorcerer-metamagic-advancement-errors",
+      ),
+      progression: testProgression(authoredUnitId("class_sorcerer"), 9),
+    };
+    const validGain = expectRight(
+      sorcererLevelGain({
+        unitLibrary,
+        classUnitId,
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        gainedOptions: ["sorcerer_seeking_spell", "sorcerer_subtle_spell"],
+      }),
+    );
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: expectRight(
+          sorcererLevelGain({
+            unitLibrary,
+            classUnitId,
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+            gainedOptions: ["sorcerer_seeking_spell"],
+          }),
+        ),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidSorcererMetamagicGainCount",
+        expectedGains: 2,
+        actualGains: 1,
+      },
+    });
+    const [firstOption, secondOption] = build.features.filter(
+      (feature) => feature.kind === "selectedSorcererMetamagicOption",
+    );
+    if (
+      firstOption?.kind !== "selectedSorcererMetamagicOption" ||
+      secondOption?.kind !== "selectedSorcererMetamagicOption"
+    ) {
+      throw new Error(
+        "The Sorcerer fixture must retain two Metamagic options.",
+      );
+    }
+    const featuresWithoutMetamagic = build.features.filter(
+      (feature) => feature.kind !== "selectedSorcererMetamagicOption",
+    );
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: {
+          ...build,
+          features: [
+            ...featuresWithoutMetamagic,
+            firstOption,
+            { ...secondOption, optionId: firstOption.optionId },
+          ],
+        },
+        unitLibrary,
+        levelGain: validGain,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "duplicateSorcererMetamagicOption",
+        optionId: firstOption.optionId,
+      },
+    });
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: expectRight(
+          sorcererLevelGain({
+            unitLibrary,
+            classUnitId,
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+            gainedOptions: ["sorcerer_seeking_spell", "sorcerer_subtle_spell"],
+            replacement: {
+              replaceOptionId: "sorcerer_heightened_spell",
+              selectedOptionId: "sorcerer_subtle_spell",
+            },
+          }),
+        ),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "duplicateSorcererMetamagicOption",
+        optionId: "sorcerer_subtle_spell",
+      },
+    });
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build,
+        unitLibrary,
+        levelGain: {
+          tag: "classLevelGain",
+          classUnitId,
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidSorcererMetamagicGainCount",
+        expectedGains: 2,
+        actualGains: 0,
+      },
+    });
+  });
+
   test("projects Druid 4 Wild Shape roster thresholds without known-form defaults", () => {
     const druidTwo = completeSupportedProgressionDraft({
       draftId: "draft:druid-wild-shape-level-four",
@@ -7018,6 +7137,158 @@ describe("character creation finalization", () => {
         code: "duplicateFightingStyleCantripSelection",
         cantripId: "sacred_flame",
       },
+    });
+  });
+
+  test("rejects incoherent list-prepared spell advancement state", () => {
+    const build = finalizedPaladinFightingStyleCantripBuild(
+      "draft:paladin-list-prepared-advancement-errors",
+    );
+    const classUnitId = testClassUnitId(authoredUnitId("class_paladin"));
+    const buildWithPreparedSpells = (
+      preparedSpells: readonly UnitRecord["id"][],
+    ): CharacterBuild => {
+      const spellcasting = build.spellcasting;
+      if (spellcasting === undefined) {
+        throw new Error("Expected the Paladin fixture to retain spellcasting.");
+      }
+      const withPreparedSpells = (
+        source: (typeof spellcasting.sources)[number],
+      ): (typeof spellcasting.sources)[number] =>
+        source.sourceUnitId === classUnitId
+          ? { ...source, preparedSpells }
+          : source;
+      const [firstSource, ...remainingSources] = spellcasting.sources;
+      return {
+        ...build,
+        spellcasting: {
+          ...spellcasting,
+          sources: [
+            withPreparedSpells(firstSource),
+            ...remainingSources.map(withPreparedSpells),
+          ],
+        },
+      };
+    };
+    const advance = (
+      candidateBuild: CharacterBuild,
+      preparedSpellcasting: CharacterBuildListPreparedSpellcastingLevelGain,
+      gainingClassUnitId = classUnitId,
+    ) =>
+      advanceCharacterBuildClassLevel({
+        build: candidateBuild,
+        unitLibrary,
+        levelGain: {
+          tag: "classLevelGainWithListPreparedSpellcasting",
+          classUnitId: gainingClassUnitId,
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+          preparedSpellcasting,
+        },
+      });
+
+    expect(
+      advance(
+        buildWithPreparedSpells([
+          authoredUnitId("heroism"),
+          authoredUnitId("bless"),
+        ]),
+        { gainedPreparedSpells: [authoredUnitId("command")] },
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidListPreparedSpellSelectionCount",
+        expectedCount: 3,
+        actualCount: 2,
+      },
+    });
+    expect(advance(build, { gainedPreparedSpells: [] })).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidListPreparedSpellGainCount",
+        expectedGains: 1,
+        actualGains: 0,
+      },
+    });
+    expect(
+      advance(build, {
+        gainedPreparedSpells: [authoredUnitId("command")],
+        preparedSpellReplacement: {
+          replaceSpellId: authoredUnitId("heroism"),
+          selectedSpellId: authoredUnitId("heroism"),
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "sameListPreparedSpellReplacement",
+        spellId: "heroism",
+      },
+    });
+    expect(
+      advance(build, {
+        gainedPreparedSpells: [authoredUnitId("command")],
+        preparedSpellReplacement: {
+          replaceSpellId: authoredUnitId("cure_wounds"),
+          selectedSpellId: authoredUnitId("command"),
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "missingListPreparedSpellReplacement",
+        spellId: "cure_wounds",
+      },
+    });
+    expect(
+      advance(build, {
+        gainedPreparedSpells: [authoredUnitId("fire_bolt")],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "invalidListPreparedSpellChoice",
+        spellId: "fire_bolt",
+      },
+    });
+    expect(
+      advance(build, {
+        gainedPreparedSpells: [authoredUnitId("heroism")],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "duplicateListPreparedSpellSelection",
+        spellId: "heroism",
+      },
+    });
+
+    const spellcasting = build.spellcasting;
+    if (spellcasting === undefined) {
+      throw new Error("Expected the Paladin fixture to retain spellcasting.");
+    }
+    const fighterClassUnitId = testClassUnitId(authoredUnitId("class_fighter"));
+    const [firstSource, ...remainingSources] = spellcasting.sources;
+    const fighterSourceBuild: CharacterBuild = {
+      ...build,
+      progression: testProgression(authoredUnitId("class_fighter"), 1),
+      spellcasting: {
+        ...spellcasting,
+        sources: [
+          { ...firstSource, sourceUnitId: fighterClassUnitId },
+          ...remainingSources,
+        ],
+      },
+    };
+    expect(
+      advance(
+        fighterSourceBuild,
+        { gainedPreparedSpells: [] },
+        fighterClassUnitId,
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { code: "missingListPreparedSpellcasting" },
     });
   });
 
