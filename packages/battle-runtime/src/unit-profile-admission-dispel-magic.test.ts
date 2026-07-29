@@ -3,12 +3,17 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ongoing-spell-ending
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
 import {
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { Round } from "@dnd/shared/types";
+import {
+  characterLevel,
+  proficiencyBonusForCharacterLevel,
+  Round,
+} from "@dnd/shared/types";
 import type { ActivationPhase, SpellRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
@@ -50,6 +55,7 @@ import {
   battleObjectId,
   battleTablePositionId,
   canSpendAction,
+  classLevel,
   movementFeet,
   resolveBattleSubject,
   snapshotBattle,
@@ -760,54 +766,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
   });
 
   test("magical-effect targeting ends a tracked Spiritual Weapon occurrence and clears concentration", () => {
-    const baseState = spellBattle({
-      preparedSpells: [
-        spellRecord(dispelMagicUnitId),
-        spellRecord(spiritualWeaponUnitId),
-      ],
-      spellSlots: [
-        { spellLevel: 2, count: 1 },
-        { spellLevel: 3, count: 1 },
-      ],
-    });
-    const boundProcedureRef = requireCharacterSpellProcedureRefForTest(
-      baseState,
-      spellCasterId,
-      spellSlotInvocationRef(
-        spiritualWeaponUnitId,
-        2,
-        "spiritualWeaponAttackProxy",
-      ),
-    );
-    const caster = baseState.state.combatants.get(spellCasterId);
-    if (caster === undefined) {
-      throw new Error("Expected spell caster combatant.");
-    }
-    const effectAllocation = allocateBattleActiveEffectRefForCreature({
-      owner: caster,
-    });
-    const effect = {
-      ...spiritualWeaponEffect({
-        sourceSpellLevel: 2,
-        sourceEffectId: `${spellCasterId}:${spiritualWeaponUnitId}:tracked-force`,
-      }),
-      effectRef: effectAllocation.effectRef,
-      sourceProcedureRef: boundProcedureRef,
-    };
-    const state: BattleRuntimeSession = battleRuntimeSessionForTest({
-      ...baseState,
-      state: {
-        ...baseState.state,
-        combatants: new Map(baseState.state.combatants).set(spellCasterId, {
-          ...effectAllocation.owner,
-          concentration: {
-            sourceProcedureRef: boundProcedureRef,
-            effectKind: "spellEffect" as const,
-          },
-          activeEffects: [...caster.activeEffects, effect],
-        }),
-      },
-    });
+    const { state, effect } = stateWithBoundSpiritualWeaponEffect(2);
     const act = spellAct({
       session: state,
       spellId: dispelMagicUnitId,
@@ -988,18 +947,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
   });
 
   test("higher-level tracked Spiritual Weapon occurrences use the Dispel Magic ability-check gate", () => {
-    const effect = spiritualWeaponEffect({
-      sourceSpellLevel: 4,
-      sourceEffectId: `${spellCasterId}:${spiritualWeaponUnitId}:upcast-force`,
-    });
-    const state = stateWithActiveEffects([effect], {
-      concentration: {
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(spiritualWeaponUnitId),
-        ),
-        effectKind: "spellEffect",
-      },
-    });
+    const { state, effect } = stateWithBoundSpiritualWeaponEffect(4);
     const act = spellAct({
       session: state,
       spellId: dispelMagicUnitId,
@@ -1023,6 +971,45 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       subject: act.subject,
       fills: [targetFill],
     });
+    if (needsCheck.tag !== "needsHoles") {
+      throw new Error("Expected a Dispel Magic spellcasting ability check.");
+    }
+    const focusedSnapshot = {
+      ...needsCheck.snapshot,
+      acts: needsCheck.snapshot.acts.filter(
+        (candidate) =>
+          "procedureRef" in candidate.subject &&
+          candidate.subject.procedureRef === act.subject.procedureRef,
+      ),
+    };
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: focusedSnapshot,
+      subject: act.subject,
+      holes: needsCheck.holes,
+    });
+    const encodedSnapshot =
+      Schema.encodeSync(BattleSnapshotSchema)(focusedSnapshot);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)({
+          ...encodedSnapshot,
+          combatants: encodedSnapshot.combatants.map((combatant) =>
+            combatant.combatantId === spellCasterId
+              ? {
+                  ...combatant,
+                  activeEffectRefs: combatant.activeEffectRefs.filter(
+                    (effectRef) => effectRef !== effect.effectRef,
+                  ),
+                }
+              : combatant,
+          ),
+          acts: focusedSnapshot.acts.map((candidate) => ({
+            ...candidate,
+            initialHoles: needsCheck.holes,
+          })),
+        }),
+      ),
+    ).toBe(true);
     const checkHole = requireResultHole(needsCheck, "spellcastingAbilityCheck");
     expect(checkHole).toEqual(
       expect.objectContaining({
@@ -1110,6 +1097,77 @@ function stateWithLightEmitters(
     ...session,
     state: { ...session.state, lightEmitters },
   });
+}
+
+function stateWithBoundSpiritualWeaponEffect(sourceSpellLevel: 2 | 4): {
+  readonly state: BattleRuntimeSession;
+  readonly effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spiritualWeapon" }
+  >;
+} {
+  const clericClassLevel = {
+    className: "cleric",
+    level: classLevel(7),
+  } as const;
+  const baseState = spellBattle({
+    casterClassLevels: [clericClassLevel],
+    casterSpellcastingSourceClassName: clericClassLevel.className,
+    casterProficiencyBonus: proficiencyBonusForCharacterLevel(
+      characterLevel(Number(clericClassLevel.level)),
+    ),
+    preparedSpells: [
+      spellRecord(dispelMagicUnitId),
+      spellRecord(spiritualWeaponUnitId),
+    ],
+    spellSlots: [
+      { spellLevel: 1, count: 4 },
+      { spellLevel: 2, count: 3 },
+      { spellLevel: 3, count: 3 },
+      { spellLevel: 4, count: 1 },
+    ],
+  });
+  const boundProcedureRef = requireCharacterSpellProcedureRefForTest(
+    baseState,
+    spellCasterId,
+    spellSlotInvocationRef(
+      spiritualWeaponUnitId,
+      sourceSpellLevel,
+      "spiritualWeaponAttackProxy",
+    ),
+  );
+  const caster = baseState.state.combatants.get(spellCasterId);
+  if (caster === undefined) {
+    throw new Error("Expected spell caster combatant.");
+  }
+  const effectAllocation = allocateBattleActiveEffectRefForCreature({
+    owner: caster,
+  });
+  const effect = {
+    ...spiritualWeaponEffect({
+      sourceSpellLevel,
+      sourceEffectId: `${spellCasterId}:${spiritualWeaponUnitId}:${sourceSpellLevel}:tracked-force`,
+    }),
+    effectRef: effectAllocation.effectRef,
+    sourceProcedureRef: boundProcedureRef,
+  };
+  return {
+    effect,
+    state: battleRuntimeSessionForTest({
+      ...baseState,
+      state: {
+        ...baseState.state,
+        combatants: new Map(baseState.state.combatants).set(spellCasterId, {
+          ...effectAllocation.owner,
+          concentration: {
+            sourceProcedureRef: boundProcedureRef,
+            effectKind: "spellEffect" as const,
+          },
+          activeEffects: [...effectAllocation.owner.activeEffects, effect],
+        }),
+      },
+    }),
+  };
 }
 
 function stateWithActiveEffects(

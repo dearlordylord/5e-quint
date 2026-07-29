@@ -6644,7 +6644,7 @@ function serializedBattleHoleExecutionReferences(
       slowSomaticSpellFailureOutcome: (value) => [
         source(value.sourceProcedureRef, value.actorId),
         ...value.activeEffectSources.map((effect) =>
-          source(effect.sourceProcedureRef, effect.sourceCombatantId),
+          owned(effect.sourceProcedureRef, effect.sourceCombatantId),
         ),
       ],
       objectTargetChoice: (value) => [source(value.sourceProcedureRef)],

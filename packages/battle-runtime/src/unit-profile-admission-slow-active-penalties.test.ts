@@ -1,5 +1,8 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME slow
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME slow
@@ -18,6 +21,8 @@ import {
   currentArmorClass,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { proficiencyBonus } from "@dnd/shared/types";
+import { Schema } from "effect";
+import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import {
   activeEffectArmorClass,
@@ -50,6 +55,7 @@ import {
   savingThrowOutcomeFill,
   singleTargetSavingThrowOutcomeFill,
   slowUnitId,
+  snapshotBattle,
   spellAct,
   spellCasterId,
   spellSlotInvocationRef,
@@ -74,6 +80,7 @@ import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { shillelaghUnitId } from "./unit-profile-admission-catalog.test-support.ts";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
+import { BattleSnapshotSchema } from "./index.ts";
 
 const slowExtraTargetId = combatantId("unit-profile-slow-extra-target");
 const slowMultiattackTargetId = combatantId(
@@ -538,6 +545,42 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
         ],
       }),
     );
+    const snapshot = snapshotBattle(targetTurn.state);
+    const focusedSnapshot = {
+      ...snapshot,
+      acts: snapshot.acts.filter(
+        (candidate) =>
+          "procedureRef" in candidate.subject &&
+          candidate.subject.procedureRef === act.subject.procedureRef,
+      ),
+    };
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: focusedSnapshot,
+      subject: act.subject,
+      holes: act.initialHoles,
+    });
+    const wrongOwnerHoles = act.initialHoles.map((hole) =>
+      hole.kind === "slowSomaticSpellFailureOutcome"
+        ? {
+            ...hole,
+            activeEffectSources: hole.activeEffectSources.map((source) => ({
+              ...source,
+              sourceCombatantId: spellTargetId,
+            })),
+          }
+        : hole,
+    );
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)({
+          ...Schema.encodeSync(BattleSnapshotSchema)(focusedSnapshot),
+          acts: focusedSnapshot.acts.map((candidate) => ({
+            ...candidate,
+            initialHoles: wrongOwnerHoles,
+          })),
+        }),
+      ),
+    ).toBe(true);
 
     const failed = resolveBattleSubject({
       state: targetTurn.state,
