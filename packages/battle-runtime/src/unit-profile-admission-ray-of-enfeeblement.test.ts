@@ -46,16 +46,7 @@ import {
   withResistanceEffect,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { damageAmount, Hp, proficiencyBonus } from "@dnd/shared/types";
-import { spellSavingThrowOutcomeHole } from "./battle-reducer/spells-damage-fills.ts";
-import { abilityD20TestRollModeSaveGateProfile } from "./battle-reducer/spell-procedure-profiles/ability-d20-test-roll-mode-save-gate.ts";
-import { spellAdmissionContextFor } from "./battle-reducer/spell-procedure-profiles/admission-context.ts";
-import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
-import { spellTargetListHole } from "./battle-reducer/spells-holes-fills.ts";
-import { spellProcedureExecution } from "./character-execution-admission.ts";
-import {
-  spellAdmissionSource,
-  spellRecord,
-} from "./unit-profile-admission-spell-record.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { endTurn } from "./unit-profile-admission.test-support.ts";
 import {
   battleObjectId,
@@ -64,7 +55,6 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleRuntimeSession,
-  type SupportedSpellInvocation,
 } from "./index.ts";
 
 const rayOfEnfeeblementUnitId = "ray_of_enfeeblement";
@@ -77,90 +67,37 @@ function rayOfEnfeeblementSpell(): SpellRecord {
   return unit;
 }
 
-function rayOfEnfeeblementInvocation(
-  session: BattleRuntimeSession,
-  spell: SpellRecord,
-): Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: "abilityD20TestRollModeSaveGate" }
-> {
-  const state = session.state;
-  const actor = requireCombatant(state, spellCasterId);
-  const resourceOwnership =
-    session.context.characters.get(spellCasterId)?.resourceOwnership;
-  if (resourceOwnership === undefined) {
-    throw new Error("Expected spell caster runtime ownership context.");
-  }
-  const admissionContext = spellAdmissionContextFor(actor, state);
-  if (admissionContext === null) {
-    throw new Error("Expected spell caster admission actor.");
-  }
-  const invocation = abilityD20TestRollModeSaveGateProfile.admit(
-    spellAdmissionSource(spell),
-    admissionContext,
-  )[0];
-  expect(invocation).toBeDefined();
-  if (invocation?.procedure !== "abilityD20TestRollModeSaveGate") {
-    throw new Error("Expected Ray of Enfeeblement D20 lifecycle invocation.");
-  }
-  return invocation;
-}
-
 function resolveRayOfEnfeeblementCast(input: {
   readonly session: BattleRuntimeSession;
-  readonly spell: SpellRecord;
   readonly succeeded: boolean;
 }) {
   const state = input.session.state;
-  const invocation = rayOfEnfeeblementInvocation(input.session, input.spell);
   const act = spellAct({
     session: input.session,
     spellId: rayOfEnfeeblementUnitId,
   });
-  const executableInvocation = {
-    ...spellProcedureExecution(invocation),
-    sourceProcedureRef: act.subject.procedureRef,
-  };
-  const targetHole = spellTargetListHole(
-    state,
-    spellCasterId,
-    executableInvocation,
-  );
-  const saveHole = spellSavingThrowOutcomeHole(
-    state,
-    spellCasterId,
-    executableInvocation,
-  );
   const targetFill = spellTargetListFill(
-    targetHole,
+    requireHole(act.initialHoles, "spellTargetList"),
     spellCasterId,
     rayOfEnfeeblementUnitId,
     [spellTargetId],
   );
-  const saveFill = savingThrowOutcomeFill(saveHole, [
-    { targetId: spellTargetId, succeeded: input.succeeded },
-  ]);
-  const fills = [targetFill, saveFill];
-  const fillSet = spellFillSet(
-    fills,
-    executableInvocation,
-    executableInvocation.sourceProcedureRef,
-    spellCasterId,
+  const needsSave = resolveBattleSubject({
     state,
-  );
-  expect(fillSet.tag).toBe("ok");
-  if (fillSet.tag !== "ok") {
-    throw new Error(fillSet.message);
+    subject: act.subject,
+    fills: [targetFill],
+  });
+  if (needsSave.tag !== "needsHoles") {
+    throw new Error("Expected Ray of Enfeeblement Saving Throw hole.");
   }
-  return abilityD20TestRollModeSaveGateProfile.resolve({
-    input: {
-      state,
-      subject: act.subject,
-      fills,
-    },
-    actorId: spellCasterId,
-    invocation: executableInvocation,
-    fillSet,
+  const saveFill = savingThrowOutcomeFill(
+    requireHole(needsSave.holes, "savingThrowOutcome"),
+    [{ targetId: spellTargetId, succeeded: input.succeeded }],
+  );
+  return resolveBattleSubject({
+    state: needsSave.state,
+    subject: needsSave.subject,
+    fills: [targetFill, saveFill],
   });
 }
 
@@ -174,7 +111,6 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     });
     const cast = resolveRayOfEnfeeblementCast({
       session: baseSession,
-      spell,
       succeeded: true,
     });
 
@@ -220,7 +156,6 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
 
     const castForStartTurnExpiry = resolveRayOfEnfeeblementCast({
       session: baseSession,
-      spell,
       succeeded: true,
     });
     expect(castForStartTurnExpiry.tag).toBe("resolved");
@@ -266,7 +201,6 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     });
     const cast = resolveRayOfEnfeeblementCast({
       session: baseSession,
-      spell,
       succeeded: false,
     });
 
@@ -350,7 +284,6 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     });
     const cast = resolveRayOfEnfeeblementCast({
       session: baseSession,
-      spell,
       succeeded: false,
     });
     expect(cast.tag).toBe("resolved");
@@ -502,7 +435,6 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     });
     const cast = resolveRayOfEnfeeblementCast({
       session: baseSession,
-      spell,
       succeeded: false,
     });
     expect(cast.tag).toBe("resolved");
@@ -670,7 +602,6 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     });
     const cast = resolveRayOfEnfeeblementCast({
       session: baseSession,
-      spell,
       succeeded: false,
     });
     expect(cast.tag).toBe("resolved");
@@ -767,7 +698,6 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     });
     const cast = resolveRayOfEnfeeblementCast({
       session: baseSession,
-      spell,
       succeeded: false,
     });
     expect(cast.tag).toBe("resolved");
@@ -922,7 +852,6 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     });
     const cast = resolveRayOfEnfeeblementCast({
       session: baseSession,
-      spell,
       succeeded: false,
     });
     expect(cast.tag).toBe("resolved");
@@ -1072,7 +1001,6 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     });
     const cast = resolveRayOfEnfeeblementCast({
       session: baseSession,
-      spell,
       succeeded: false,
     });
     expect(cast.tag).toBe("resolved");
@@ -1184,7 +1112,6 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     });
     const cast = resolveRayOfEnfeeblementCast({
       session: baseSession,
-      spell,
       succeeded: false,
     });
     expect(cast.tag).toBe("resolved");
@@ -1290,7 +1217,6 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     });
     const cast = resolveRayOfEnfeeblementCast({
       session: baseSession,
-      spell,
       succeeded: false,
     });
     expect(cast.tag).toBe("resolved");
@@ -1427,7 +1353,6 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     });
     const cast = resolveRayOfEnfeeblementCast({
       session: baseSession,
-      spell,
       succeeded: false,
     });
     expect(cast.tag).toBe("resolved");
