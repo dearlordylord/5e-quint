@@ -556,6 +556,7 @@ function admitCharacterSpellExecution(input: {
                       },
                     ];
               },
+              /* v8 ignore next -- Fresh lifecycle admission allocates a new execution, then adds only currently admitted spells, so it cannot contain a retained unavailable spell binding. */
               unavailableSpellInvocation: () => [],
               unitFeature: () => [],
               unitSupportProfile: () => [],

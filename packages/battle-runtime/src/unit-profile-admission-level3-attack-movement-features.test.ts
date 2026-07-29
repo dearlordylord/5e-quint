@@ -68,6 +68,7 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { characterUnitProcedureBindings } from "./character-execution-queries.ts";
 import {
   attackExecutionSelectionForSubjectForTest,
   characterBattleFeatureInitForTest,
@@ -553,7 +554,6 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     if (Either.isLeft(state)) {
       throw new Error(battleStateInitIssueMessage(state.left));
     }
-
     expect(
       requiredInitiativeRollModeForCombatant(
         state.right.state,
@@ -629,6 +629,50 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         remarkableAthleteActorId,
         "str",
         { skill: "athletics" },
+      ),
+    ).toBeUndefined();
+  });
+
+  test("Remarkable Athlete support-profile selection alone does not grant Initiative Advantage", () => {
+    const { unitRef } = remarkableAthleteSelectedUnit();
+    const state = startBattle({
+      battleId: battleId("remarkable-athlete-support-only"),
+      combatants: [
+        characterCreature({
+          combatantId: remarkableAthleteActorId,
+          displayName: "Support-Only Remarkable Athlete Actor",
+          initiative: 18,
+          characterUnitRefs: [unitRef],
+          classLevels: [{ className: "fighter", level: 3 }],
+          unitFeatures: [],
+        }),
+      ],
+    });
+    expect(Either.isRight(state)).toBe(true);
+    if (Either.isLeft(state)) {
+      throw new Error(battleStateInitIssueMessage(state.left));
+    }
+    const actor = state.right.state.combatants.get(remarkableAthleteActorId);
+    if (actor?.origin.kind !== "character") {
+      throw new Error("Expected the support-only character execution.");
+    }
+    expect(
+      characterUnitProcedureBindings(actor.origin.execution),
+    ).toContainEqual(
+      expect.objectContaining({
+        procedure: expect.objectContaining({
+          kind: "unitSupportProfile",
+          execution: expect.objectContaining({
+            kind: REMARKABLE_ATHLETE_SUPPORT_PROFILE,
+          }),
+        }),
+      }),
+    );
+
+    expect(
+      requiredInitiativeRollModeForCombatant(
+        state.right.state,
+        remarkableAthleteActorId,
       ),
     ).toBeUndefined();
   });
