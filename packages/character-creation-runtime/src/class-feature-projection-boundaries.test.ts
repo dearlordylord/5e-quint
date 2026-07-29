@@ -1,11 +1,12 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { abilityScore } from "@dnd/shared/types";
+import { abilityScore, spellSlotLevel } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Option } from "effect";
+import { Either, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -15,6 +16,8 @@ import {
   characterBuildSorcererFontOfMagicFacts,
   characterBuildSorcererMetamagicFacts,
   classUnitId,
+  fontOfMagicSpellSlotCreationOption,
+  parseSorcererMetamagicOptionId,
   type CharacterBuild,
   type CharacterBuildFeature,
   type UnitCatalog,
@@ -133,6 +136,56 @@ function catalogWithWrongKind(unitId: UnitRecord["id"]): UnitCatalog {
   };
 }
 
+function catalogReplacing(replacement: UnitRecord): UnitCatalog {
+  return {
+    getUnit: (candidate) =>
+      candidate === replacement.id
+        ? Option.some(replacement)
+        : unitLibrary.getUnit(candidate),
+    listUnits: () => [
+      ...unitLibrary
+        .listUnits()
+        .filter((candidate) => candidate.id !== replacement.id),
+      replacement,
+    ],
+    requireUnit: (candidate) =>
+      candidate === replacement.id
+        ? replacement
+        : unitLibrary.requireUnit(candidate),
+  };
+}
+
+function levelTwoClassBuild(input: {
+  readonly classUnitId: UnitRecord["id"];
+  readonly features: readonly CharacterBuildFeature[];
+}): CharacterBuild {
+  return {
+    ...buildWithRetainedFeatures(),
+    progression: {
+      startingClass: classUnitId(input.classUnitId),
+      advancements: [
+        {
+          classUnitId: classUnitId(input.classUnitId),
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+        },
+      ],
+    },
+    features: input.features,
+  };
+}
+
+function selectedMetamagicOption(optionId: string): CharacterBuildFeature {
+  const parsed = parseSorcererMetamagicOptionId(optionId);
+  if (Either.isLeft(parsed)) {
+    throw new Error(`Unsupported Metamagic fixture option ${optionId}.`);
+  }
+  return {
+    kind: "selectedSorcererMetamagicOption",
+    selectedFromUnitId: authoredUnitId("sorcerer_metamagic"),
+    optionId: parsed.right,
+  };
+}
+
 describe("class-feature projection boundaries", () => {
   test.each(featureCases)(
     "returns no $unitId facts when the build does not retain the feature",
@@ -210,4 +263,360 @@ describe("class-feature projection boundaries", () => {
       });
     },
   );
+
+  test("reports malformed Metamagic ownership and missing resource facts", () => {
+    const empowered = selectedMetamagicOption("sorcerer_empowered_spell");
+    const heightened = selectedMetamagicOption("sorcerer_heightened_spell");
+    const fighterWithOrphanSelection = {
+      ...buildWithRetainedFeatures(),
+      features: [empowered],
+    };
+    expect(
+      characterBuildSorcererMetamagicFacts({
+        build: fighterWithOrphanSelection,
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Metamagic option selections require the retained Metamagic feature.",
+      },
+    });
+
+    const oneOptionBuild = levelTwoClassBuild({
+      classUnitId: authoredUnitId("class_sorcerer"),
+      features: [empowered],
+    });
+    expect(
+      characterBuildSorcererMetamagicFacts({
+        build: oneOptionBuild,
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Metamagic known option count must match the Sorcerer level.",
+      },
+    });
+
+    const duplicateOptionBuild = levelTwoClassBuild({
+      classUnitId: authoredUnitId("class_sorcerer"),
+      features: [empowered, empowered],
+    });
+    expect(
+      characterBuildSorcererMetamagicFacts({
+        build: duplicateOptionBuild,
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: "Metamagic known options must be unique." },
+    });
+
+    const completeBuild = levelTwoClassBuild({
+      classUnitId: authoredUnitId("class_sorcerer"),
+      features: [empowered, heightened],
+    });
+    expect(
+      characterBuildSorcererMetamagicFacts({
+        build: completeBuild,
+        unitLibrary: catalogWithout(authoredUnitId("sorcerer_font_of_magic")),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: "Font of Magic requires an installed Unit." },
+    });
+  });
+
+  test("parses Metamagic ids and selects Font of Magic slot-creation options", () => {
+    expect(
+      parseSorcererMetamagicOptionId("sorcerer_empowered_spell"),
+    ).toMatchObject({
+      _tag: "Right",
+      right: "sorcerer_empowered_spell",
+    });
+    expect(parseSorcererMetamagicOptionId("synthetic_unknown")).toMatchObject({
+      _tag: "Left",
+      left: { message: "Unknown Sorcerer Metamagic option id." },
+    });
+
+    const build = levelTwoClassBuild({
+      classUnitId: authoredUnitId("class_sorcerer"),
+      features: [],
+    });
+    const facts = characterBuildSorcererFontOfMagicFacts({
+      build,
+      unitLibrary,
+    });
+    if (Either.isLeft(facts) || facts.right === undefined) {
+      throw new Error("The Sorcerer fixture must project Font of Magic facts.");
+    }
+    expect(
+      fontOfMagicSpellSlotCreationOption({
+        facts: facts.right,
+        spellLevel: spellSlotLevel(1),
+      }),
+    ).toMatchObject({ spellSlotLevel: 1, pointCost: 2 });
+    expect(
+      fontOfMagicSpellSlotCreationOption({
+        facts: facts.right,
+        spellLevel: spellSlotLevel(9),
+      }),
+    ).toBeUndefined();
+
+    const fontOfMagic = unitLibrary.requireUnit("sorcerer_font_of_magic");
+    if (
+      fontOfMagic.kind !== "class_feature" ||
+      fontOfMagic.mechanics.family !== "resource_pool"
+    ) {
+      throw new Error("The Font of Magic fixture must expose resource facts.");
+    }
+    const fixedSorceryPointCap = decodeUnitRecordSync({
+      ...fontOfMagic,
+      mechanics: {
+        ...fontOfMagic.mechanics,
+        resource: {
+          ...fontOfMagic.mechanics.resource,
+          cap: { kind: "fixed", uses: 2 },
+        },
+      },
+    });
+    expect(
+      characterBuildSorcererFontOfMagicFacts({
+        build,
+        unitLibrary: catalogReplacing(fixedSorceryPointCap),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Font of Magic requires class-level Sorcery Point scaling facts.",
+      },
+    });
+  });
+
+  test("reports malformed Uncanny Metabolism dependency and Martial Arts die facts", () => {
+    const build = levelTwoClassBuild({
+      classUnitId: authoredUnitId("class_monk"),
+      features: [],
+    });
+    const monksFocus = unitLibrary.requireUnit("monk_monks_focus");
+    if (
+      monksFocus.kind !== "class_feature" ||
+      monksFocus.mechanics.family !== "resource_container"
+    ) {
+      throw new Error("The Monk's Focus fixture must expose resource facts.");
+    }
+    const wrongFocusPointBase = decodeUnitRecordSync({
+      ...monksFocus,
+      mechanics: {
+        ...monksFocus.mechanics,
+        resource: {
+          ...monksFocus.mechanics.resource,
+          cap: {
+            kind: "linear_per_level",
+            axis: "class",
+            base: 3,
+            perLevel: 1,
+            startingAtLevel: 2,
+          },
+        },
+      },
+    });
+    expect(
+      characterBuildMonksFocusFacts({
+        build,
+        unitLibrary: catalogReplacing(wrongFocusPointBase),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Monk's Focus requires Monk-level Focus Point scaling facts.",
+      },
+    });
+    expect(
+      characterBuildMonkUncannyMetabolismFacts({
+        build,
+        unitLibrary: catalogWithout(authoredUnitId("monk_monks_focus")),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: "Monk's Focus requires an installed Unit." },
+    });
+    expect(
+      characterBuildMonkUncannyMetabolismFacts({
+        build,
+        unitLibrary: catalogWithout(authoredUnitId("monk_martial_arts")),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Uncanny Metabolism requires the installed Martial Arts Unit.",
+      },
+    });
+
+    const monkClass = unitLibrary.requireUnit("class_monk");
+    if (monkClass.kind !== "class") {
+      throw new Error("The Monk fixture must be a class record.");
+    }
+    const monkWithoutFocusGrant = {
+      ...monkClass,
+      featureGrants: monkClass.featureGrants.filter(
+        (grant) => grant.unitId !== "monk_monks_focus",
+      ),
+    } satisfies UnitRecord;
+    expect(
+      characterBuildMonkUncannyMetabolismFacts({
+        build,
+        unitLibrary: catalogReplacing(monkWithoutFocusGrant),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Uncanny Metabolism requires the shared Monk's Focus resource projection.",
+      },
+    });
+
+    const uncannyMetabolism = unitLibrary.requireUnit(
+      "monk_uncanny_metabolism",
+    );
+    if (
+      uncannyMetabolism.kind !== "class_feature" ||
+      uncannyMetabolism.mechanics.family !== "initiative_focus_recovery"
+    ) {
+      throw new Error(
+        "The Uncanny Metabolism fixture must expose recovery facts.",
+      );
+    }
+    const mismatchedRecovery = decodeUnitRecordSync({
+      ...uncannyMetabolism,
+      mechanics: {
+        ...uncannyMetabolism.mechanics,
+        recovery: {
+          ...uncannyMetabolism.mechanics.recovery,
+          resourceUnitId: authoredUnitId("synthetic_focus_resource"),
+        },
+      },
+    });
+    expect(
+      characterBuildMonkUncannyMetabolismFacts({
+        build,
+        unitLibrary: catalogReplacing(mismatchedRecovery),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Uncanny Metabolism recovery must reference the shared Monk's Focus resource.",
+      },
+    });
+
+    const martialArts = unitLibrary.requireUnit("monk_martial_arts");
+    if (
+      martialArts.kind !== "class_feature" ||
+      martialArts.mechanics.family !== "passive"
+    ) {
+      throw new Error("The Martial Arts fixture must expose passive grants.");
+    }
+    const dieGrant = martialArts.mechanics.grants.find(
+      (grant) => grant.kind === "replace_damage_die",
+    );
+    if (
+      dieGrant?.kind !== "replace_damage_die" ||
+      dieGrant.die.kind !== "threshold_tiers"
+    ) {
+      throw new Error("The Martial Arts fixture must expose its damage die.");
+    }
+    const withoutDieSource = {
+      ...martialArts,
+      mechanics: {
+        ...martialArts.mechanics,
+        grants: martialArts.mechanics.grants.filter(
+          (grant) => grant !== dieGrant,
+        ),
+      },
+    } satisfies UnitRecord;
+    expect(
+      characterBuildMonkUncannyMetabolismFacts({
+        build,
+        unitLibrary: catalogReplacing(withoutDieSource),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Uncanny Metabolism requires Martial Arts die source facts.",
+      },
+    });
+
+    const malformedDieCases = [
+      {
+        name: "multiple base dice",
+        die: {
+          ...dieGrant.die,
+          base: { ...dieGrant.die.base, dice: 2 },
+        },
+        message:
+          "Uncanny Metabolism requires a single Martial Arts damage die.",
+      },
+      {
+        name: "unsupported base die size",
+        die: {
+          ...dieGrant.die,
+          base: { ...dieGrant.die.base, dieSize: 20 },
+        },
+        message:
+          "Uncanny Metabolism requires a supported Martial Arts damage die size.",
+      },
+      {
+        name: "tier dice override",
+        die: {
+          ...dieGrant.die,
+          tiers: [{ atLevel: 2, override: { dice: 2, dieSize: 8 } }],
+        },
+        message:
+          "Uncanny Metabolism requires Martial Arts tiers to override only die size.",
+      },
+      {
+        name: "missing tier die-size override",
+        die: {
+          ...dieGrant.die,
+          tiers: [{ atLevel: 2, override: {} }],
+        },
+        message:
+          "Uncanny Metabolism requires Martial Arts tiers to override die size.",
+      },
+      {
+        name: "unsupported tier die size",
+        die: {
+          ...dieGrant.die,
+          tiers: [{ atLevel: 2, override: { dieSize: 20 } }],
+        },
+        message:
+          "Uncanny Metabolism requires a supported Martial Arts damage die size.",
+      },
+    ] as const;
+    for (const malformed of malformedDieCases) {
+      const replacement = decodeUnitRecordSync({
+        ...martialArts,
+        mechanics: {
+          ...martialArts.mechanics,
+          grants: martialArts.mechanics.grants.map((grant) =>
+            grant === dieGrant ? { ...dieGrant, die: malformed.die } : grant,
+          ),
+        },
+      });
+      expect(
+        characterBuildMonkUncannyMetabolismFacts({
+          build,
+          unitLibrary: catalogReplacing(replacement),
+        }),
+        malformed.name,
+      ).toMatchObject({
+        _tag: "Left",
+        left: { message: malformed.message },
+      });
+    }
+  });
 });

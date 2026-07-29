@@ -8,6 +8,7 @@ import {
 
 import {
   classNameFromClassUnit,
+  classUnitIdFromClassUnit,
   classUnitIdFromUnitId,
   classUnitIdToClassName,
   parseCharacterProgressionShape,
@@ -139,7 +140,9 @@ describe("character progression algebra", () => {
 
   it("returns typed issues for non-class Unit projection inputs", () => {
     const background = unitLibrary.requireUnit("background_soldier");
+    const fighter = unitLibrary.requireUnit("class_fighter");
 
+    expect(classNameFromClassUnit(fighter)).toEqual(Either.right("fighter"));
     expect(classNameFromClassUnit(background)).toEqual(
       Either.left({
         code: "nonClassUnit",
@@ -159,11 +162,29 @@ describe("character progression algebra", () => {
         unitKind: "background",
       }),
     );
+    expect(classUnitIdFromClassUnit(background)).toEqual(
+      Either.left({
+        code: "nonClassUnit",
+        unitId: "background_soldier",
+        unitKind: "background",
+      }),
+    );
   });
 
   it("returns typed issues for unknown Unit ids", () => {
     expect(
       classUnitIdToClassName({
+        unitLibrary,
+        classUnitId: authoredUnitId("missing_unit"),
+      }),
+    ).toEqual(
+      Either.left({
+        code: "unknownUnitId",
+        unitId: "missing_unit",
+      }),
+    );
+    expect(
+      classUnitIdFromUnitId({
         unitLibrary,
         classUnitId: authoredUnitId("missing_unit"),
       }),

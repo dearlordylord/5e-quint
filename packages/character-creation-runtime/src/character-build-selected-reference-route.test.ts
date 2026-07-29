@@ -14,6 +14,7 @@ import {
   characterBuildSelectedReferencesWithRoute,
   classUnitId,
   eldritchInvocationId,
+  recordCharacterBuildSelectedReferenceRetentionWithRoute,
   sorcererMetamagicOptionId,
   type CharacterBuild,
   type CharacterBuildFeature,
@@ -159,6 +160,64 @@ describe("characterBuildSelectedReferencesWithRoute", () => {
         characterBuildSelectedReferencesWithRoute({ build, route: [] }),
       ),
     ).toBe(true);
+  });
+
+  test("counts Book of Shadows references and records the routed retention fact", () => {
+    const build = testBuild({
+      spellcasting: {
+        slotPools: {},
+        sources: [
+          {
+            sourceUnitId: authoredUnitId("class_warlock"),
+            spellcastingAbility: "cha",
+            cantrips: [],
+            spellbook: [],
+            preparedSpells: [],
+            spellcastingFocuses: ["book_of_shadows"],
+            bookOfShadows: {
+              tag: "bookOfShadows",
+              cantrips: [
+                authoredUnitId("synthetic_book_cantrip_one"),
+                authoredUnitId("synthetic_book_cantrip_two"),
+                authoredUnitId("synthetic_book_cantrip_three"),
+              ],
+              ritualSpells: [
+                authoredUnitId("synthetic_book_ritual_one"),
+                authoredUnitId("synthetic_book_ritual_two"),
+              ],
+              spellcastingFocus: "book_of_shadows",
+            },
+          },
+        ],
+      },
+    });
+    const retained = expectRight(
+      characterBuildSelectedReferencesWithRoute({
+        build,
+        route: ["seed"],
+      }),
+    );
+
+    expect(characterBuildSelectedReferenceCount(build)).toBe(5);
+    expect(
+      recordCharacterBuildSelectedReferenceRetentionWithRoute(retained),
+    ).toEqual({
+      build,
+      route: [
+        "seed",
+        {
+          kind: "retainCreationSelectedReferences",
+          subject: "selectedReference",
+          owner: "creationSelectedReference",
+        },
+        {
+          kind: "recordCreationFacts",
+          subject: "selectedReference",
+          facts: ["selectedReferenceRetention"],
+          owner: "creationSelectedReference",
+        },
+      ],
+    });
   });
 
   test("routes retained skill Expertise choices from build proficiency facts", () => {

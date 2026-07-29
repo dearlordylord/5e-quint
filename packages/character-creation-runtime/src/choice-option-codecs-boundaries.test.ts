@@ -17,8 +17,10 @@ import {
 } from "./choice-option-codecs.ts";
 import {
   MUSICAL_INSTRUMENT_TOOL_PROFICIENCY_IDS,
+  creationChoiceOptionId,
   type CreationChoiceOptionDecodeCause,
 } from "./types.ts";
+import { languageFromCreationChoiceOptionId } from "./language-codecs.ts";
 
 type ProficiencySubjectCases = {
   readonly [Kind in ProficiencyGrantSubject["kind"]]: {
@@ -123,6 +125,19 @@ const invalidAbilityScoreIncreaseValueCases = {
 >;
 
 describe("choice-option codec boundaries", () => {
+  test("rejects an unsupported language option id", () => {
+    expect(
+      languageFromCreationChoiceOptionId(
+        creationChoiceOptionId("synthetic_language"),
+      ),
+    ).toEqual(
+      Either.left({
+        tag: "unsupportedLanguageChoiceOptionId",
+        value: "synthetic_language",
+      }),
+    );
+  });
+
   test("round-trips one- and two-score increases and reports every parse cause", () => {
     const oneScoreId = abilityScoreIncreaseOneScoreOptionId({
       ability: "str",

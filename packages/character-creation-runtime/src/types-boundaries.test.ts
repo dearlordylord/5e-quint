@@ -25,6 +25,7 @@ import {
   unitChoiceSourceHoleIdText,
   unitChoiceSourceKey,
   unitChoiceSourceUnitId,
+  type CharacterEquipmentItemId,
 } from "./index.ts";
 import {
   isCharacterSpeciesSizeSelection,
@@ -214,6 +215,15 @@ describe("character-creation primitive boundaries", () => {
       _tag: "Left",
       left: { tag: "characterEquipmentItemIdUnitIdEmpty", slot: "armor" },
     });
+    // The public constructor is the only safe producer; this cast deliberately
+    // violates its erased brand to exercise the internal invariant assertion.
+    expect(() =>
+      characterEquipmentItemSourceFromId(
+        "synthetic_invalid_item_id" as CharacterEquipmentItemId,
+      ),
+    ).toThrow(
+      "CharacterEquipmentItemId invariant violated: synthetic_invalid_item_id",
+    );
   });
 
   test("distinguishes empty and non-empty collections", () => {
