@@ -1,8 +1,17 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import { SUPPORTED_ABILITY_SCORE_METHODS } from "@dnd/shared-algebras/ability-score-algebra";
 import { describe, expect, test } from "vitest";
 
-import { progressionOptionId } from "./phase1-manifest.ts";
-import { creationChoiceOptionId } from "./types.ts";
+import { draftSource, unitSource } from "./hole-factories.ts";
+import {
+  CLASS_EQUIPMENT_CHOICE_KEY,
+  progressionOptionId,
+} from "./phase1-manifest.ts";
+import {
+  creationChoiceOptionId,
+  creationHoleId,
+  type CreationHole,
+} from "./types.ts";
 import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
   finalizableSpeciesUnitIds,
@@ -12,12 +21,16 @@ import {
   supportedClassUnitIds,
   supportedEquipmentPurchaseChoiceCount,
   supportedLoadoutChoices,
+  supportedDraftOptionIds,
+  supportedHoleOptionIds,
   supportedProgressionForOptionId,
   supportedProgressionsForClass,
   supportedPurchasableEquipmentUnitIds,
   supportedPurchasableEquipmentUnitIdsForClass,
   supportedSpeciesUnitIds,
+  supportedUnitOptionIdsForSource,
   supportsCharacterBuildResourceUnitId,
+  unsupportedHoleSelectionOptionId,
 } from "./support-gates.ts";
 
 describe("character creation support-profile boundaries", () => {
@@ -120,5 +133,43 @@ describe("character creation support-profile boundaries", () => {
         CHARACTER_CREATION_SUPPORT_PROFILE,
       ),
     ).toBe(false);
+  });
+
+  test("distinguishes non-choice holes from absent equipment support maps", () => {
+    const abilityScoreHole: CreationHole = {
+      kind: "abilityScores",
+      holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+      source: draftSource("draft.abilityScoreGeneration"),
+      methods: SUPPORTED_ABILITY_SCORE_METHODS,
+    };
+
+    expect(
+      supportedDraftOptionIds(
+        abilityScoreHole.source,
+        CHARACTER_CREATION_SUPPORT_PROFILE,
+      ),
+    ).toBeUndefined();
+    expect(
+      supportedHoleOptionIds(
+        abilityScoreHole,
+        CHARACTER_CREATION_SUPPORT_PROFILE,
+      ),
+    ).toBeUndefined();
+    expect(
+      unsupportedHoleSelectionOptionId(
+        abilityScoreHole,
+        [],
+        CHARACTER_CREATION_SUPPORT_PROFILE,
+      ),
+    ).toBeUndefined();
+    expect(
+      supportedUnitOptionIdsForSource(
+        unitSource(
+          authoredUnitId("synthetic_class_without_equipment_map"),
+          CLASS_EQUIPMENT_CHOICE_KEY,
+        ),
+        CHARACTER_CREATION_SUPPORT_PROFILE,
+      ),
+    ).toEqual([]);
   });
 });

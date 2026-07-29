@@ -15,9 +15,12 @@ import {
   selectedChoiceOptionMatchesHole,
 } from "./discovery.ts";
 import {
+  backgroundAbilityScoreIncreaseOptionId,
   choiceHole,
   draftSource,
   loadoutSource,
+  parseBackgroundAbilityScoreIncreaseOptionId,
+  startingEquipmentLabel,
   unitSource,
 } from "./hole-factories.ts";
 import { CLASS_SKILL_PROFICIENCY_CHOICE_KEY } from "./phase1-manifest.ts";
@@ -78,6 +81,38 @@ function skillChoiceHole(): ChoiceCreationHole {
 }
 
 describe("choice-selection structural equality", () => {
+  test("rejects malformed hole construction inputs at their typed boundary", () => {
+    expect(
+      choiceHole({
+        source: draftSource("draft.background"),
+        cardinality: undefined,
+        options: [],
+      }),
+    ).toBeUndefined();
+    expect(
+      choiceHole({
+        source: draftSource("draft.background"),
+        cardinality: exactChoiceCardinality(2),
+        options: [{ optionId: athletics.optionId, label: "Athletics" }],
+      }),
+    ).toBeUndefined();
+  });
+
+  test("projects equipment and background increase option labels", () => {
+    expect(
+      startingEquipmentLabel({
+        id: "synthetic_bundle",
+        kind: "item_bundle",
+        items: [{ kind: "draft_owned_item", itemName: "Synthetic Item" }],
+      }),
+    ).toBe("synthetic_bundle");
+    expect(
+      parseBackgroundAbilityScoreIncreaseOptionId(
+        backgroundAbilityScoreIncreaseOptionId({ kind: "oneEach" }),
+      ),
+    ).toEqual({ kind: "oneEach" });
+  });
+
   test("enforces choice cardinality, membership, and selected-option identity", () => {
     const hole = skillChoiceHole();
 

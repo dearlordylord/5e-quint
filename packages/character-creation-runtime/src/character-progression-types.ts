@@ -78,13 +78,6 @@ export function characterTotalLevelHitPointRule(input: {
   CharacterTotalLevelHitPointRule,
   CharacterProgressionLevelIssue
 > {
-  if (!CHARACTER_CLASS_LEVELS.some((level) => level === input.totalLevel)) {
-    return Either.left({
-      code: "invalidCharacterClassLevel",
-      classLevel: input.totalLevel,
-    });
-  }
-
   return Match.value(input.hitPointRule).pipe(
     Match.when({ tag: "levelOneMaximumHitDie" }, (hitPointRule) =>
       input.totalLevel === 1

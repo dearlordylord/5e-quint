@@ -1,13 +1,12 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY
-import { Either } from "effect";
 
 import {
   creationChoiceOptionId,
   creationHoleId,
   choiceCardinalityMax,
-  loadoutEquipmentUnitId,
+  loadoutEquipmentUnitIdFromUnitId,
   loadoutSourceHoleIdText,
-  unitChoiceSourceUnitId,
+  unitChoiceSourceUnitIdFromUnitId,
   unitChoiceSourceHoleIdText,
   type BackgroundAbilityScoreIncreaseSelection,
   type CharacterDraftPath,
@@ -167,26 +166,20 @@ export function unitSource(
   unitId: UnitRecord["id"],
   choiceKey: UnitChoiceKey,
 ): UnitChoiceSource {
-  const sourceUnitId = unitChoiceSourceUnitId(unitId);
-  if (Either.isLeft(sourceUnitId)) {
-    throw new Error("Unit choice sources require a non-empty Unit id.");
-  }
-
-  return { tag: "unitChoice", unitId: sourceUnitId.right, choiceKey };
+  return {
+    tag: "unitChoice",
+    unitId: unitChoiceSourceUnitIdFromUnitId(unitId),
+    choiceKey,
+  };
 }
 
 export function loadoutSource(
   equipmentUnitId: UnitRecord["id"],
   slot: LoadoutSlot,
 ): LoadoutSource {
-  const sourceEquipmentUnitId = loadoutEquipmentUnitId(equipmentUnitId);
-  if (Either.isLeft(sourceEquipmentUnitId)) {
-    throw new Error("Loadout sources require a non-empty equipment Unit id.");
-  }
-
   return {
     tag: "loadout",
-    equipmentUnitId: sourceEquipmentUnitId.right,
+    equipmentUnitId: loadoutEquipmentUnitIdFromUnitId(equipmentUnitId),
     slot,
   };
 }

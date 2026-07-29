@@ -321,6 +321,9 @@ export type ChoiceCreationHoleSource =
 export type UnitChoiceSourceUnitId = UnitRecord["id"] &
   Brand.Brand<"UnitChoiceSourceUnitId">;
 const UnitChoiceSourceUnitId = Brand.nominal<UnitChoiceSourceUnitId>();
+export const unitChoiceSourceUnitIdFromUnitId = (
+  value: UnitRecord["id"],
+): UnitChoiceSourceUnitId => UnitChoiceSourceUnitId(value);
 
 export type UnitChoiceSourceUnitIdIssue = {
   readonly tag: "unitChoiceSourceUnitIdEmpty";
@@ -339,6 +342,9 @@ export function unitChoiceSourceUnitId(
 export type LoadoutEquipmentUnitId = UnitRecord["id"] &
   Brand.Brand<"LoadoutEquipmentUnitId">;
 const LoadoutEquipmentUnitId = Brand.nominal<LoadoutEquipmentUnitId>();
+export const loadoutEquipmentUnitIdFromUnitId = (
+  value: UnitRecord["id"],
+): LoadoutEquipmentUnitId => LoadoutEquipmentUnitId(value);
 
 export type LoadoutEquipmentUnitIdIssue = {
   readonly tag: "loadoutEquipmentUnitIdEmpty";

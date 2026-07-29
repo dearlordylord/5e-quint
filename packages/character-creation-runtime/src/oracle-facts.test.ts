@@ -478,6 +478,63 @@ describe("Character Creation owner facts", () => {
     });
   });
 
+  test("projects a build without spellcasting slot pools", () => {
+    const fact = characterBuildFact(syntheticBuild());
+
+    expect(fact.spellcasting).toBeUndefined();
+    expect(decodeCharacterBuildFact(fact)._tag).toBe("Right");
+  });
+
+  test("projects ready finalization and stale-batch rejection facts", () => {
+    const build = syntheticBuild();
+    expect(creationFinalizationFact({ tag: "ready", build })).toEqual({
+      tag: "ready",
+      build: characterBuildFact(build),
+    });
+
+    const batchFact = projectedBatchFact({
+      tag: "rejected",
+      draft: {
+        draftId: characterDraftId("draft-stale"),
+        revision: draftRevision(1),
+        selections: { choices: [] },
+      },
+      holes: [],
+      issues: [
+        {
+          tag: "illegalBatch",
+          code: "staleRevision",
+          message: "presentation prose",
+        },
+      ],
+      finalization: {
+        tag: "invalid",
+        issues: [
+          {
+            tag: "illegalFinalization",
+            cause: { tag: "draftIncomplete" },
+          },
+        ],
+      },
+    });
+
+    expect(batchFact).toEqual({
+      tag: "rejected",
+      frontier: { holes: [] },
+      issues: [{ tag: "illegalBatch", code: "staleRevision" }],
+      finalization: {
+        tag: "invalid",
+        issues: [
+          {
+            tag: "illegalFinalization",
+            cause: { tag: "draftIncomplete" },
+          },
+        ],
+      },
+    });
+    expect(decodeCharacterCreationBatchFact(batchFact)._tag).toBe("Right");
+  });
+
   test("projects every Hole source, cardinality, option, and Fill shape", () => {
     const unitId = unitChoiceSourceUnitId("synthetic_feature");
     const choiceKey = unitChoiceKey("class_feature_feat_choice");
