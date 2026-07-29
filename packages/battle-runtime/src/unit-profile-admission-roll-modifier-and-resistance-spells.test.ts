@@ -13,6 +13,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  testCharacterD20Statistics,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
@@ -1037,9 +1038,8 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
   });
 
-  test("resistance stores a chosen damage-type reduction with a once-per-turn use marker", () => {
-    const spell = spellRecord(resistanceUnitId);
-    const state = spellBattle({ cantrips: [spell], spellSlots: [] });
+  test("resistance routes target then damage-type choice before storing its once-per-turn reduction", () => {
+    const state = resistanceBattle();
     const act = spellAct({ session: state, spellId: resistanceUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
@@ -1071,17 +1071,35 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       "slashing",
       "thunder",
     ]);
+    const targetSelection = spellTargetFill(
+      targetHole,
+      resistanceUnitId,
+      spellCasterId,
+      spellCasterId,
+    );
+    const awaitingDamageType = resolveBattleSubject({
+      state: state.state,
+      subject: act.subject,
+      fills: [targetSelection],
+    });
+    expect(awaitingDamageType).toMatchObject({
+      tag: "needsHoles",
+      routeEvents: [
+        {
+          kind: "resolveBattleSubject",
+          subject: "spellDamageReduction",
+          fill: "targetChoice",
+          holes: ["damageTypeChoice"],
+          owner: "battleTargetSelection",
+        },
+      ],
+    });
 
     const resolved = resolveBattleSubject({
       state: state.state,
       subject: act.subject,
       fills: [
-        spellTargetFill(
-          targetHole,
-          resistanceUnitId,
-          spellCasterId,
-          spellCasterId,
-        ),
+        targetSelection,
         {
           kind: "damageTypeChoice",
           holeId: damageTypeHole.holeId,
@@ -1094,6 +1112,21 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Resistance to resolve.");
     }
+    expect(resolved.routeEvents).toEqual([
+      {
+        kind: "resolveBattleSubject",
+        subject: "spellDamageReduction",
+        fill: "damageTypeChoice",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "spellDamageReduction",
+        holes: [],
+        owner: "battleConcentration",
+      },
+    ]);
     expect(
       resolved.state.combatants.get(spellCasterId)?.activeEffects,
     ).toContainEqual(
@@ -1110,8 +1143,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
   });
 
   test("resistance rejects fill kinds owned by other spell procedures", () => {
-    const spell = spellRecord(resistanceUnitId);
-    const state = spellBattle({ cantrips: [spell], spellSlots: [] });
+    const state = resistanceBattle();
     const act = spellAct({ session: state, spellId: resistanceUnitId });
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
@@ -1705,6 +1737,16 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     );
   });
 });
+
+function resistanceBattle(): BattleRuntimeSession {
+  return spellBattle({
+    casterClassLevels: [{ className: "cleric", level: 1 }],
+    casterD20Statistics: testCharacterD20Statistics({ wis: 16 }),
+    cantrips: [spellRecord(resistanceUnitId)],
+    preparedSpells: [],
+    spellSlots: [{ spellLevel: 1, count: 2 }],
+  });
+}
 
 describe("L12G Protection from Poison deterministic Spell Unit admission", () => {
   test("protection_from_poison removes Poisoned and stores condition-save Advantage plus poison Resistance", () => {
