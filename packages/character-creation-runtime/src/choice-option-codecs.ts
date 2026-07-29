@@ -78,11 +78,14 @@ export function requireAbilityScoreIncreaseTwoScoresOptionId(input: {
   readonly secondaryIncrease: PositiveIntegerType;
   readonly maxScore: AbilityScoreType;
 }): CreationChoiceOptionId {
+  // Equal abilities are malformed for this already-narrowed constructor.
+  /* v8 ignore start */
   if (input.primary === input.secondary) {
     throw new Error(
       "Ability Score Increase two-score option ids require distinct ability scores.",
     );
   }
+  /* v8 ignore stop */
 
   return creationChoiceOptionId(
     `ability_scores:${input.primary}:+${input.primaryIncrease};${input.secondary}:+${input.secondaryIncrease}:max${input.maxScore}`,

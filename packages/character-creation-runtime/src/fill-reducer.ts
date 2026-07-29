@@ -924,8 +924,10 @@ export function applyDraftFill(
     });
   }
 
+  /* v8 ignore start */
   const exhaustive: never = acceptedFill;
   return exhaustive;
+  /* v8 ignore stop */
 }
 
 export function applyUnitFill(

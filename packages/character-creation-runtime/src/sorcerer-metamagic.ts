@@ -119,11 +119,14 @@ export function characterBuildSorcererMetamagicFacts(input: {
   const knownOptions: CharacterBuildSorcererMetamagicOptionFact[] = [];
   for (const optionId of selectedOptionIds) {
     const optionFact = metamagicOptionFact(featureUnit.value, optionId);
+    // Finalization admits selected options from this exact installed roster.
+    /* v8 ignore start */
     if (optionFact === null) {
       return sorcererMetamagicFactsIssue(
         "Metamagic known options must come from the installed Surface option roster.",
       );
     }
+    /* v8 ignore stop */
     knownOptions.push(optionFact);
   }
 

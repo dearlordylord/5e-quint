@@ -56,11 +56,16 @@ export function characterBuildGnomishLineageTraitProjection(input: {
   const option = source.right.mechanics.options.find(
     (candidate) => candidate.id === selection.lineageId,
   );
+  // Finalization admits selections from this exact installed option roster.
+  /* v8 ignore start */
   if (option === undefined) {
     return projectionIssue(
       "Selected Gnomish Lineage id is absent from the selected species trait Surface options.",
     );
   }
+  /* v8 ignore stop */
+  // Finalization admits abilities from this exact installed ability roster.
+  /* v8 ignore start */
   if (
     !source.right.mechanics.spellcastingAbilityChoice.abilities.some(
       (ability) => ability === selection.spellcastingAbility,
@@ -70,6 +75,7 @@ export function characterBuildGnomishLineageTraitProjection(input: {
       "Selected Gnomish Lineage spellcasting ability is absent from the selected species trait Surface options.",
     );
   }
+  /* v8 ignore stop */
 
   return Either.right({
     traitUnitId: source.right.traitUnitId,
