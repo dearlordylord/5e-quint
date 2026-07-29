@@ -7,6 +7,7 @@ import {
   build,
   characterSheetId,
   druidCircleLandBuild,
+  druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
   resourceCount,
   unitLibrary,
   wizardBuild,
@@ -14,6 +15,7 @@ import {
 import {
   FreshCharacterSheetProjectionSchema,
   CharacterSheetConstructionIssuesSchema,
+  characterSheetConstructionIssuesSummary,
   createFreshCharacterSheet,
   freshCharacterSheetProjection,
   isFreshSpellcastingCharacterSheet,
@@ -30,8 +32,11 @@ describe("fresh Character Sheet construction", () => {
       unitLibrary,
     });
 
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isLeft(result)) return;
+    if (Either.isLeft(result)) {
+      throw new Error(
+        `Valid fresh fixture must construct: ${JSON.stringify(result.left)}`,
+      );
+    }
 
     const zeroReduction: 0 = result.right.hitPointMaximumReduction;
     const noConditions: readonly [] = result.right.conditions;
@@ -110,8 +115,11 @@ describe("fresh Character Sheet construction", () => {
       unitLibrary,
     });
 
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isLeft(result)) return;
+    if (Either.isLeft(result)) {
+      throw new Error(
+        `Valid fresh Druid fixture must construct: ${JSON.stringify(result.left)}`,
+      );
+    }
     if (!isFreshSpellcastingCharacterSheet(result.right)) {
       throw new Error("Expected a spellcasting fresh Character Sheet.");
     }
@@ -124,6 +132,32 @@ describe("fresh Character Sheet construction", () => {
       [],
       undefined,
     ]);
+  });
+
+  test("projects a valid fresh Druid roster through the nonempty schema", () => {
+    const result = createFreshCharacterSheet({
+      characterId: characterSheetId("character:fresh-druid"),
+      build: druidCircleLandBuild({ druidLevel: 5 }),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: [],
+      unitLibrary,
+      druidCircleLand: { land: "temperate" },
+      druidWildShapeKnownFormStatBlockIds:
+        druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
+    });
+
+    if (Either.isLeft(result)) {
+      throw new Error(
+        `Valid fresh Druid fixture must construct: ${JSON.stringify(result.left)}`,
+      );
+    }
+    expect(freshCharacterSheetProjection(result.right)).toMatchObject({
+      druidCircleLand: { land: "temperate" },
+      druidWildShapeKnownForms: {
+        statBlockIds: druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
+      },
+    });
   });
 
   test("returns one flat issue per independently invalid Wild Shape form", () => {
@@ -157,5 +191,10 @@ describe("fresh Character Sheet construction", () => {
         },
       ]),
     );
+    if (Either.isLeft(result)) {
+      expect(characterSheetConstructionIssuesSummary(result.left)).toBe(
+        "wildShapeKnownFormWrongCreatureType: stat_block_goblin_warrior; wildShapeKnownFormUnavailable: stat_block_missing",
+      );
+    }
   });
 });

@@ -12,6 +12,7 @@ import {
   build,
   characterBuildSorcererMetamagicFacts,
   characterSheetHitPointMaximum,
+  characterSheetNormalHitPointMaximum,
   characterSheetId,
   characterSheetTempHp,
   rebuildCharacterSheetFixture,
@@ -199,6 +200,14 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
         tempHp: 0,
       });
       expect(characterSheetHitPointMaximum(sheet.right)).toBe(8);
+      expect(
+        requireRight(
+          characterSheetNormalHitPointMaximum({
+            sheet: sheet.right,
+            unitLibrary,
+          }),
+        ),
+      ).toBe(11);
     }
   });
 

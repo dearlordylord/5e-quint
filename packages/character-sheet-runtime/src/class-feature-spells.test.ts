@@ -3,9 +3,14 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
   Either,
+  Hp,
   armorClassBuild,
   characterSheetClassFeaturePreparedSpellAccessesForBuild,
+  characterSheetClassFeatureSelectedReferenceProjection,
+  characterSheetId,
   parseCharacterSheet,
+  rebuildCharacterSheetFixture,
+  requireRight,
   storedAvailableSheetInput,
   subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName,
   subclassPreparedSpellAccessProgressionTestName,
@@ -13,6 +18,49 @@ import {
 } from "./test-support.test-support.ts";
 
 describe("Character Sheet runtime / class feature prepared spells", () => {
+  test("projects retained class-feature selected references through the public route", () => {
+    const sheet = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:class-feature-references"),
+        build: armorClassBuild({
+          startingClass: "class_cleric",
+          advancements: ["class_cleric", "class_cleric"],
+          features: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: authoredUnitId("class_cleric"),
+              unitId: authoredUnitId("subclass_cleric_life_domain"),
+            },
+          ],
+        }),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    expect(
+      characterSheetClassFeatureSelectedReferenceProjection({
+        sheet,
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      selectedClassChoiceUnitIds: ["subclass_cleric_life_domain"],
+      qRoute: [
+        {
+          kind: "retainCharacterSheetSelectedReferences",
+          subject: "selectedReferenceProjection",
+          owner: "selectedReference",
+        },
+        {
+          kind: "projectCharacterSheetFacts",
+          subject: "selectedReferenceProjection",
+          owner: "buildProjection",
+        },
+      ],
+    });
+  });
+
   test(subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName, () => {
     const sheet = parseCharacterSheet(
       storedAvailableSheetInput({

@@ -910,17 +910,32 @@ describe("Character Sheet runtime / rests", () => {
       }),
     );
 
-    const rested = requireRight(
-      completeShortRest({
-        sheet,
-        unitLibrary,
-        arcaneRecovery: {
-          refundSpellSlots: [
-            { spellLevel: spellSlotLevel(2), count: resourceCount(1) },
-          ],
+    const routed = completeShortRestArcaneRecoveryWithRoute({
+      sheet,
+      unitLibrary,
+      arcaneRecovery: {
+        refundSpellSlots: [
+          { spellLevel: spellSlotLevel(2), count: resourceCount(1) },
+        ],
+      },
+    });
+    expect(routed).toMatchObject({
+      tag: "accepted",
+      route: "arcaneRecovery",
+      qRoute: [
+        {
+          kind: "completeCharacterSheetRest",
+          subject: "spellResource",
+          fill: "recoverySelection",
+          holes: [],
+          owner: "spellSlot",
         },
-      }),
-    );
+      ],
+    });
+    if (routed.tag !== "accepted") {
+      throw new Error("Valid Arcane Recovery must be accepted.");
+    }
+    const rested = routed.sheet;
 
     expect(characterSheetSpellSlots(rested)).toEqual([
       { spellLevel: 1, count: 4, expended: 2 },

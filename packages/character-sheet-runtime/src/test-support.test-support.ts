@@ -60,11 +60,13 @@ import {
   characterSheetUnarmoredArmorClassBase,
   characterBuildHasSpellbookSpell,
   characterSheetClassFeaturePreparedSpellAccessesForBuild,
+  characterSheetClassFeatureSelectedReferenceProjection,
   characterSheetCurrentHp,
   characterSheetDruidCircleLandPreparedSpellAccess,
   characterSheetDruidWildShapeKnownForms,
   characterSheetHitDice,
   characterSheetHitPointMaximum as characterSheetHitPointMaximumCore,
+  characterSheetNormalHitPointMaximum,
   characterSheetJumpDistanceAbility,
   characterSheetLinkedSpeedGrants,
   characterSheetLongRestCalendarGate,
@@ -241,6 +243,7 @@ export {
   characterSheetUnarmoredArmorClassBase,
   characterBuildHasSpellbookSpell,
   characterSheetClassFeaturePreparedSpellAccessesForBuild,
+  characterSheetClassFeatureSelectedReferenceProjection,
   castPasswall,
   castPlanarBinding,
   castSummonDragon,
@@ -264,6 +267,7 @@ export {
   characterSheetDruidCircleLandPreparedSpellAccess,
   characterSheetDruidWildShapeKnownForms,
   characterSheetHitDice,
+  characterSheetNormalHitPointMaximum,
   characterSheetJumpDistanceAbility,
   characterSheetLinkedSpeedGrants,
   characterSheetLongRestCalendarGate,
@@ -451,6 +455,11 @@ export const druidWildShapeFixtureKnownFormStatBlockIds = [
   authoredStatBlockId("stat_block_riding_horse"),
   authoredStatBlockId("stat_block_spider"),
   authoredStatBlockId("stat_block_wolf"),
+] as const;
+export const druidLevelFiveWildShapeFixtureKnownFormStatBlockIds = [
+  ...druidWildShapeFixtureKnownFormStatBlockIds,
+  authoredStatBlockId("stat_block_cat"),
+  authoredStatBlockId("stat_block_frog"),
 ] as const;
 
 type CharacterSheetTestInput = Omit<

@@ -18,6 +18,7 @@ import {
   completeShortRest,
   rebuildCharacterSheetFixture,
   druidCircleLandBuild,
+  druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
   druidCircleLandSpellAccessBookOfShadowsDuplicateTestName,
   druidCircleLandSpellAccessProjectionTestName,
   druidCircleLandSpellAccessSelectedLandGateTestName,
@@ -41,11 +42,8 @@ describe("Character Sheet runtime / druid features", () => {
         currentHp: Hp(24),
         tempHp: Hp(0),
         unitLibrary,
-        druidWildShapeKnownFormStatBlockIds: [
-          ...druidWildShapeFixtureKnownFormStatBlockIds,
-          authoredStatBlockId("stat_block_cat"),
-          authoredStatBlockId("stat_block_frog"),
-        ],
+        druidWildShapeKnownFormStatBlockIds:
+          druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
         druidCircleLand: { land: "temperate" },
       }),
     );
