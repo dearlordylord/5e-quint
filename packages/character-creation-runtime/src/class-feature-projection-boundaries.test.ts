@@ -24,7 +24,11 @@ import {
   type CharacterBuildFeature,
   type UnitCatalog,
 } from "./index.ts";
-import { grantExpertiseSkillSourceForSelection } from "./discovery.ts";
+import {
+  abilityScoreIncreaseOptions,
+  grantExpertiseSkillSourceForSelection,
+  skillExpertiseFromChoiceSelections,
+} from "./discovery.ts";
 import { loadoutSource, unitSource } from "./hole-factories.ts";
 import { CLASS_FEATURE_PROFICIENCY_CHOICE_KEY } from "./phase1-manifest.ts";
 
@@ -236,6 +240,41 @@ describe("class-feature projection boundaries", () => {
         unitLibrary,
       ),
     ).toEqual({ kind: "owned_skill_proficiencies_without_expertise" });
+    expect(
+      skillExpertiseFromChoiceSelections(
+        [selectionFor(authoredUnitId("rogue_expertise"))],
+        unitLibrary,
+      ),
+    ).toEqual(["stealth"]);
+  });
+
+  test("projects feat ability-score choices from their canonical Surface fact", () => {
+    const grappler = unitLibrary.requireUnit(authoredUnitId("feat_grappler"));
+    if (grappler.kind !== "feat") {
+      throw new Error("The SRD Grappler fixture must be a feat.");
+    }
+    const abilityScoreIncreaseChoice = grappler.abilityScoreIncreaseChoice;
+    if (abilityScoreIncreaseChoice == null) {
+      throw new Error(
+        "The SRD Grappler fixture must carry an ability-score increase choice.",
+      );
+    }
+
+    expect(
+      abilityScoreIncreaseOptions({
+        ...grappler,
+        abilityScoreIncreaseChoice,
+      }),
+    ).toEqual([
+      {
+        optionId: "ability_score:str:+1:max20",
+        label: "STR +1",
+      },
+      {
+        optionId: "ability_score:dex:+1:max20",
+        label: "DEX +1",
+      },
+    ]);
   });
 
   test.each(featureCases)(

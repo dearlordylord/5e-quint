@@ -1,12 +1,16 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import { abilityScore } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
+  advanceCharacterBuildClassLevel,
+  classLevelGainWithFightingStyleCantripReplacement,
   classUnitIdFromUnitId,
   eldritchInvocationId,
   fighterClassUnitId,
@@ -19,6 +23,9 @@ import {
   weaponMasteryFeatureUnitId,
   weaponMasteryLevelGain,
   weaponMasteryWeaponUnitId,
+  type CharacterBuild,
+  type CharacterBuildFeature,
+  type CharacterBuildFighterFightingStyleReplacementLevelGain,
   type ClassUnitId,
   type UnitCatalog,
 } from "./index.ts";
@@ -44,10 +51,62 @@ function parsedClassUnitId(
 }
 
 const fighterUnitId = parsedClassUnitId("class_fighter");
+const paladinUnitId = parsedClassUnitId("class_paladin");
 const sorcererUnitId = parsedClassUnitId("class_sorcerer");
 const warlockUnitId = parsedClassUnitId("class_warlock");
 const wizardUnitId = parsedClassUnitId("class_wizard");
 const fixedHitPoints = { tag: "fixedHigherLevelGain" } as const;
+
+function buildForClass(
+  classId: ClassUnitId,
+  features: readonly CharacterBuildFeature[] = [],
+): CharacterBuild {
+  return {
+    progression: {
+      startingClass: classId,
+      advancements: [],
+    },
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: {
+      str: abilityScore(16),
+      dex: abilityScore(14),
+      con: abilityScore(14),
+      int: abilityScore(8),
+      wis: abilityScore(12),
+      cha: abilityScore(10),
+    },
+    proficiencyChoices: [],
+    features,
+    equipment: { owned: [], loadout: {} },
+  };
+}
+
+function fighterBuild(
+  features: readonly CharacterBuildFeature[] = [],
+): CharacterBuild {
+  return buildForClass(fighterUnitId, features);
+}
+
+function fightingStyleReplacement(
+  selectedFeatUnitId: UnitRecord["id"],
+): CharacterBuildFighterFightingStyleReplacementLevelGain {
+  const result = fighterLevelGainWithFightingStyleReplacement({
+    unitLibrary,
+    classUnitId: fighterUnitId,
+    hitPointRule: fixedHitPoints,
+    selectedFeatUnitId,
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(
+      `Expected a supported Fighting Style replacement: ${selectedFeatUnitId}.`,
+    );
+  }
+  return result.right;
+}
 
 describe("Character Build advancement typed boundaries", () => {
   test("narrows only the matching class identity", () => {
@@ -220,6 +279,142 @@ describe("Character Build advancement typed boundaries", () => {
     ).toMatchObject({
       _tag: "Left",
       left: { code: "unknownUnitId" },
+    });
+  });
+
+  test("enforces the retained Fighting Style identity during replacement", () => {
+    const fightingStyleSource = authoredUnitId("fighter_fighting_style");
+    const selectedFeature = (
+      unitId: UnitRecord["id"],
+    ): CharacterBuildFeature => ({
+      kind: "selectedClassChoice",
+      selectedFromUnitId: fightingStyleSource,
+      unitId,
+    });
+    const selectedWeapon = (
+      unitId: UnitRecord["id"],
+    ): CharacterBuildFeature => ({
+      kind: "selectedClassChoice",
+      selectedFromUnitId: authoredUnitId("fighter_weapon_mastery"),
+      unitId,
+    });
+    const replaceWithDefense = fightingStyleReplacement(
+      authoredUnitId("defense"),
+    );
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: fighterBuild(),
+        unitLibrary,
+        levelGain: replaceWithDefense,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { code: "missingSelectedFightingStyle" },
+    });
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: fighterBuild([
+          selectedFeature(authoredUnitId("feat_archery")),
+          selectedFeature(authoredUnitId("feat_great_weapon_fighting")),
+        ]),
+        unitLibrary,
+        levelGain: replaceWithDefense,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { code: "ambiguousSelectedFightingStyle", count: 2 },
+    });
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: fighterBuild([selectedFeature(authoredUnitId("feat_archery"))]),
+        unitLibrary,
+        levelGain: fightingStyleReplacement(authoredUnitId("feat_archery")),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        code: "sameFightingStyleReplacement",
+        selectedFeatUnitId: "feat_archery",
+      },
+    });
+
+    const replaced = advanceCharacterBuildClassLevel({
+      build: fighterBuild([
+        selectedFeature(authoredUnitId("feat_archery")),
+        selectedWeapon(authoredUnitId("weapon_longsword")),
+        selectedWeapon(authoredUnitId("weapon_dagger")),
+        selectedWeapon(authoredUnitId("weapon_longbow")),
+      ]),
+      unitLibrary,
+      levelGain: replaceWithDefense,
+    });
+    expect(replaced).toMatchObject({
+      _tag: "Right",
+      right: {
+        features: expect.arrayContaining([
+          {
+            kind: "selectedClassChoice",
+            selectedFromUnitId: "fighter_fighting_style",
+            unitId: "defense",
+          },
+        ]),
+        progression: {
+          advancements: [
+            {
+              classUnitId: "class_fighter",
+              hitPointRule: fixedHitPoints,
+            },
+          ],
+        },
+      },
+    });
+  });
+
+  test("requires matching spellcasting state for spellcasting level gains", () => {
+    const cantripReplacement =
+      classLevelGainWithFightingStyleCantripReplacement({
+        unitLibrary,
+        classUnitId: paladinUnitId,
+        hitPointRule: fixedHitPoints,
+        replaceCantripId: authoredUnitId("guidance"),
+        selectedCantripId: authoredUnitId("thaumaturgy"),
+        preparedSpellcasting: {
+          gainedPreparedSpells: [authoredUnitId("command")],
+        },
+      });
+    if (Either.isLeft(cantripReplacement)) {
+      throw new Error(
+        "The Paladin Blessed Warrior cantrip replacement fixture must be supported.",
+      );
+    }
+
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: buildForClass(paladinUnitId),
+        unitLibrary,
+        levelGain: cantripReplacement.right,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { code: "missingFightingStyleCantripSpellcastingSource" },
+    });
+    expect(
+      advanceCharacterBuildClassLevel({
+        build: buildForClass(paladinUnitId),
+        unitLibrary,
+        levelGain: {
+          tag: "classLevelGainWithListPreparedSpellcasting",
+          classUnitId: paladinUnitId,
+          hitPointRule: fixedHitPoints,
+          preparedSpellcasting: {
+            gainedPreparedSpells: [authoredUnitId("command")],
+          },
+        },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { code: "missingListPreparedSpellcasting" },
     });
   });
 

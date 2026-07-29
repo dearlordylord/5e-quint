@@ -2323,9 +2323,7 @@ function skillFromChoiceOptionId(
 function draftOwnedSkillProficiencies(
   draft: CharacterDraft,
   unitLibrary: UnitCatalog,
-  shouldIgnoreSelection: (
-    selection: CharacterChoiceSelection,
-  ) => boolean = () => false,
+  shouldIgnoreSelection: (selection: CharacterChoiceSelection) => boolean,
 ): readonly Skill[] {
   const backgroundSkills =
     draft.selections.background == null
