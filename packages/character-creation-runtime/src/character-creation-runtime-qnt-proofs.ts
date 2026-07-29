@@ -21,8 +21,7 @@ export function discoverProofModules(): readonly ProofModule[] {
 export { proofModuleTimeoutMs };
 export type { ProofModuleOutcome };
 
-// The default coverage lane intentionally excludes the opt-in QNT proof lane.
-/* v8 ignore start */
+/* v8 ignore start -- QNT proof execution belongs to the opt-in proof lane, not V8 unit coverage. */
 export async function runProofModule(
   proofModule: ProofModule,
 ): Promise<ProofModuleOutcome> {

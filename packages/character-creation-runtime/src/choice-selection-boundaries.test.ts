@@ -2,10 +2,14 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 
 import {
+  backgroundToolChoiceHole,
+  backgroundToolChoiceSpec,
   choiceOptionIdsFitHole,
   choiceSelectionMatchesHole,
   choiceSelectionOptionIds,
   hasDuplicateOptionIds,
+  hasPurchasedUnit,
+  hasValidEquipmentPurchaseSelectionForHole,
   sameChoiceSelection,
   sameChoiceSelectionMultiset,
   sameCreationHoleSource,
@@ -13,8 +17,15 @@ import {
   sameSelectedChoiceOption,
   sameSelectedChoiceOptionMultiset,
   selectedChoiceOptionMatchesHole,
+  selectedCoinGrantStartingEquipmentChoice,
+  selectedStartingEquipmentChoice,
   skillProficienciesFromChoiceSelections,
+  unselectedBackgroundAbilityScoreIncreaseHole,
+  unselectedLoadoutHole,
+  unselectedPurchaseHole,
+  unselectedUnitChoiceHole,
 } from "./discovery.ts";
+import { createCharacterDraft } from "./draft.ts";
 import {
   backgroundAbilityScoreIncreaseOptionId,
   choiceHole,
@@ -27,10 +38,12 @@ import {
 import { CLASS_SKILL_PROFICIENCY_CHOICE_KEY } from "./phase1-manifest.ts";
 import {
   creationChoiceOptionId,
+  creationHoleId,
   exactChoiceCardinality,
   type CharacterChoiceSelection,
   type CharacterSelectedChoiceOption,
   type ChoiceCreationHole,
+  type CreationHole,
 } from "./types.ts";
 
 const athletics = {
@@ -297,5 +310,68 @@ describe("choice-selection structural equality", () => {
         creationChoiceOptionId("athletics"),
       ]),
     ).toBe(true);
+  });
+
+  test("treats absent optional holes and purchases as absent domain states", () => {
+    const draft = createCharacterDraft({});
+    const abilityScoreHole = {
+      kind: "abilityScores",
+      holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+      source: draftSource("draft.abilityScoreGeneration"),
+      methods: ["standardArray"],
+    } as const satisfies CreationHole;
+
+    expect(
+      selectedStartingEquipmentChoice(draft, undefined, []),
+    ).toBeUndefined();
+    expect(
+      selectedCoinGrantStartingEquipmentChoice(draft, undefined, []),
+    ).toBeUndefined();
+    expect(unselectedUnitChoiceHole(draft, undefined)).toEqual([]);
+    expect(
+      unselectedBackgroundAbilityScoreIncreaseHole(draft, undefined),
+    ).toEqual([]);
+    expect(unselectedPurchaseHole(draft, undefined)).toEqual([]);
+    expect(
+      unselectedLoadoutHole(
+        draft,
+        undefined,
+        authoredUnitId("synthetic_absent_purchase"),
+        true,
+      ),
+    ).toEqual([]);
+    expect(
+      unselectedLoadoutHole(
+        draft,
+        skillChoiceHole(),
+        authoredUnitId("synthetic_absent_purchase"),
+        true,
+      ),
+    ).toEqual([]);
+    expect(
+      hasValidEquipmentPurchaseSelectionForHole(draft, skillChoiceHole()),
+    ).toBe(false);
+    expect(
+      hasPurchasedUnit(draft, authoredUnitId("synthetic_absent_purchase")),
+    ).toBe(false);
+    expect(choiceOptionIdsFitHole(abilityScoreHole, [])).toBe(false);
+    const unsupportedArtisanToolChoice = {
+      kind: "tool_category_choice",
+      category: "artisan_tool",
+      choose: 1,
+    } as const;
+    expect(
+      backgroundToolChoiceSpec(unsupportedArtisanToolChoice),
+    ).toBeUndefined();
+    expect(
+      backgroundToolChoiceHole(
+        draft,
+        unitSource(
+          authoredUnitId("synthetic_background"),
+          CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+        ),
+        unsupportedArtisanToolChoice,
+      ),
+    ).toEqual([]);
   });
 });

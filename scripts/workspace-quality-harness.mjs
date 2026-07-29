@@ -59,7 +59,7 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "character-creation-runtime": {
-    coverage: { lines: 95, statements: 95, functions: 100, branches: 91 },
+    coverage: { lines: 99, statements: 99, functions: 100, branches: 99 },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },

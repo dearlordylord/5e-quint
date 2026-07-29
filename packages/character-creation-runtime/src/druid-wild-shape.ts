@@ -115,8 +115,7 @@ export function characterBuildDruidWildShapeFacts(input: {
   if (Either.isLeft(druidLevel)) return Either.left(druidLevel.left);
 
   const knownFormRoster = wildShapeKnownFormRoster(feature);
-  // Admission requires the retained Wild Shape Unit to carry roster facts.
-  /* v8 ignore start */
+  /* v8 ignore start -- Admission retains Wild Shape only after proving its Beast-form roster exists. */
   if (knownFormRoster === undefined) {
     return druidWildShapeFactsIssue(
       "Wild Shape requires known Beast form roster facts.",
@@ -129,8 +128,7 @@ export function characterBuildDruidWildShapeFacts(input: {
     knownFormRoster.knownForms,
     druidLevel.right,
   );
-  // Admission requires both projections to use class-level threshold tiers.
-  /* v8 ignore start */
+  /* v8 ignore start -- Admission proves both retained projections use class-level threshold tiers. */
   if (
     useCountCap.kind !== "threshold_tiers" ||
     !isClassLevelThresholdTiers(useCountCap) ||

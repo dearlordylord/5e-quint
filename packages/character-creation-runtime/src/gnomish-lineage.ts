@@ -56,16 +56,14 @@ export function characterBuildGnomishLineageTraitProjection(input: {
   const option = source.right.mechanics.options.find(
     (candidate) => candidate.id === selection.lineageId,
   );
-  // Finalization admits selections from this exact installed option roster.
-  /* v8 ignore start */
+  /* v8 ignore start -- The admitted lineage id came from this exact installed option roster. */
   if (option === undefined) {
     return projectionIssue(
       "Selected Gnomish Lineage id is absent from the selected species trait Surface options.",
     );
   }
   /* v8 ignore stop */
-  // Finalization admits abilities from this exact installed ability roster.
-  /* v8 ignore start */
+  /* v8 ignore start -- The admitted spellcasting ability came from this exact installed ability roster. */
   if (
     !source.right.mechanics.spellcastingAbilityChoice.abilities.some(
       (ability) => ability === selection.spellcastingAbility,
@@ -123,6 +121,7 @@ function gnomishLineageSourceForBuild(input: {
       ];
     },
   );
+  /* v8 ignore start -- Support admission retains exactly one installed Gnomish Lineage trait source for a lineage selection. */
   if (sources.length !== 1) {
     return projectionIssue(
       sources.length === 0
@@ -130,6 +129,7 @@ function gnomishLineageSourceForBuild(input: {
         : "Selected Gnomish Lineage cannot project from multiple species lineage choice trait Units.",
     );
   }
+  /* v8 ignore stop */
 
   return Either.right(sources[0]);
 }

@@ -250,8 +250,7 @@ function supportedSameClassProgression(
       characterLevel: characterClassLevel(index + 2),
       hitPointRule: { tag: "fixedHigherLevelGain" },
     });
-    // The generated consecutive level and branded class id satisfy the parser.
-    /* v8 ignore start */
+    /* v8 ignore start -- Consecutive generated levels and the branded class id satisfy the progression parser. */
     if (Either.isLeft(advancement)) {
       throw new Error(
         `Invalid supported progression advancement: ${JSON.stringify(advancement.left)}`,
@@ -277,8 +276,7 @@ function supportedTwoClassSecondLevelProgression(
     characterLevel: characterClassLevel(2),
     hitPointRule: { tag: "fixedHigherLevelGain" },
   });
-  // The fixed second-level entry and branded class id satisfy the parser.
-  /* v8 ignore start */
+  /* v8 ignore start -- This generated second-level entry and branded class id satisfy the progression parser. */
   if (Either.isLeft(advancement)) {
     throw new Error(
       `Invalid supported progression advancement: ${JSON.stringify(advancement.left)}`,

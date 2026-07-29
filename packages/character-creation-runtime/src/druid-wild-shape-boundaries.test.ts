@@ -194,6 +194,33 @@ describe("Druid Wild Shape boundaries", () => {
     });
   });
 
+  test("allows flying forms at the authored class-level threshold", () => {
+    const druidClassUnitId = classUnitId(authoredUnitId("class_druid"));
+
+    expect(
+      characterBuildDruidWildShapeFacts({
+        build: {
+          ...retainedFeatureBuild([DRUID_WILD_SHAPE_UNIT_ID]),
+          progression: {
+            startingClass: druidClassUnitId,
+            advancements: Array.from({ length: 7 }, () => ({
+              classUnitId: druidClassUnitId,
+              hitPointRule: { tag: "fixedHigherLevelGain" as const },
+            })),
+          },
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        knownFormRoster: {
+          flySpeed: "allowed",
+        },
+      },
+    });
+  });
+
   test("reports every identified known-form eligibility issue", () => {
     const scenarioByIssueCode = {
       wildShapeKnownFormCountMismatch: {

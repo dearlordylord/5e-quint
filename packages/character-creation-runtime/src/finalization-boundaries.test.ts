@@ -526,6 +526,35 @@ describe("character finalization boundaries", () => {
         authoredUnitId("fighter_remarkable_athlete"),
       ]),
     );
+    expect(
+      characterBuildFeatureUnitIds(
+        {
+          progression: {
+            startingClass: classUnitId(authoredUnitId("class_fighter")),
+            advancements: [
+              {
+                classUnitId: classUnitId(authoredUnitId("class_fighter")),
+                hitPointRule: { tag: "fixedHigherLevelGain" },
+              },
+              {
+                classUnitId: classUnitId(authoredUnitId("class_fighter")),
+                hitPointRule: { tag: "fixedHigherLevelGain" },
+              },
+            ],
+          },
+          features: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: authoredUnitId("class_fighter"),
+              unitId: authoredUnitId("subclass_fighter_champion"),
+            },
+          ],
+        },
+        unitLibrary,
+      ),
+    ).toEqual(
+      expect.arrayContaining([authoredUnitId("fighter_improved_critical")]),
+    );
   });
 
   test("projects supported class-choice identities and drops invalid option ids", () => {
@@ -554,6 +583,31 @@ describe("character finalization boundaries", () => {
         selectedOption: {
           kind: "huntersPrey",
           selection: "nearbyDifferentTargetSameWeaponAttack",
+        },
+      },
+    ]);
+    expect(
+      finalizedClassChoiceFeatures({
+        ...base,
+        choices: [
+          {
+            kind: "unitChoice",
+            source: unitSource(
+              authoredUnitId("ranger_hunters_prey"),
+              HUNTERS_PREY_CHOICE_KEY,
+            ),
+            options: [{ optionId: creationChoiceOptionId("colossus_slayer") }],
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        kind: "selectedClassChoice",
+        selectedFromUnitId: "ranger_hunters_prey",
+        unitId: "ranger_hunters_prey",
+        selectedOption: {
+          kind: "huntersPrey",
+          selection: "woundedTargetWeaponDamage",
         },
       },
     ]);

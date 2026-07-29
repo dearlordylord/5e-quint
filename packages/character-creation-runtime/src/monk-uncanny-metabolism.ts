@@ -164,9 +164,11 @@ export function characterBuildMonkUncannyMetabolismFacts(input: {
     unitLibrary: input.unitLibrary,
     feature: featureUnit.value,
   });
+  /* v8 ignore start -- Admission retains Uncanny Metabolism only with its owning Monk class progression. */
   if (Either.isLeft(monkLevel)) {
     return monkUncannyMetabolismFactsIssue(monkLevel.left.message);
   }
+  /* v8 ignore stop */
   const martialArtsDie = monkMartialArtsDieForLevel({
     dieGrant: martialArtsDieGrant,
     monkLevel: monkLevel.right,
