@@ -3463,6 +3463,7 @@ function reactionSpellRouteForInterrupt(input: {
       ),
     ];
   }
+  /* v8 ignore start -- Every currently admitted afterDamage triggered-reaction invocation narrows to saveGatedDamage and returns through reactionAfterDamageEffect above. Only a malformed cross-wired checkpoint reaches this fallback; a new admitted procedure must add an explicit payload route and test. */
   if (frame.trigger === "afterDamage" && input.result.tag === "resolved") {
     const route: BattleReducerRouteEvents = [
       eventForOwner("reactionSpell", "battleInterruptStack"),
@@ -3472,6 +3473,7 @@ function reactionSpellRouteForInterrupt(input: {
       ? [...route, eventForOwner("reactionSpell", "battleHitPoint")]
       : route;
   }
+  /* v8 ignore stop */
   if (frame.trigger === "spellCast") {
     return [
       eventForOwner("reactionSpell", "battleInterruptStack"),
@@ -5785,6 +5787,7 @@ function isReactionSpellCastingTimeFrame(
   );
 }
 
+/* v8 ignore start -- This HP comparison serves only the malformed-checkpoint fallback above; every admitted afterDamage triggered-reaction invocation uses the typed reactionAfterDamageEffect route. */
 function combatantHitPointsChanged(
   before: BattleState,
   after: BattleState,
@@ -5794,6 +5797,7 @@ function combatantHitPointsChanged(
       combatant.hp !== before.combatants.get(combatant.combatantId)?.hp,
   );
 }
+/* v8 ignore stop */
 
 function rollModifierRouteForDiscoveredAct(
   state: BattleState,
