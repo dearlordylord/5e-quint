@@ -97,6 +97,7 @@ import {
   counterspellUnitId,
   darknessUnitId,
   blessUnitId,
+  dissonantWhispersUnitId,
   enlargeReduceUnitId,
   fireballUnitId,
   flamingSphereUnitId,
@@ -134,6 +135,7 @@ import {
   interruptDecisionFill,
   statBlockWithCreatureType,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   maybeSpellAct,
@@ -195,6 +197,13 @@ type GlyphDurableOccurrenceEffect = Extract<
 type TestSpellSlotLevel = NonNullable<
   Parameters<typeof spellBattle>[0]["spellSlots"]
 >[number]["spellLevel"];
+type StoredSpellInvocationCaster = Pick<
+  Parameters<typeof spellBattle>[0],
+  | "casterClassLevels"
+  | "casterD20Statistics"
+  | "casterProficiencyBonus"
+  | "spellSlots"
+>;
 type NonEmptyDamageDice = readonly [number, ...ReadonlyArray<number>];
 const glyphSourceEffectId = battleSpellEffectOccurrenceId(
   "glyph:durable-occurrence:test-effect",
@@ -234,6 +243,16 @@ const glyphStoredWrongAreaOriginAnchor = {
 const glyphStoredUnanchoredAreaOrigin = {
   kind: "tableSelectedPoint",
 } as const satisfies BattleSpellAreaOriginAnchor;
+const bardFiveGlyphCaster = {
+  casterClassLevels: [{ className: "bard", level: 5 }],
+  casterD20Statistics: testCharacterD20Statistics({ cha: 16 }),
+  casterProficiencyBonus: proficiencyBonus(3),
+  spellSlots: [
+    { spellLevel: 1, count: 4 },
+    { spellLevel: 2, count: 3 },
+    { spellLevel: 3, count: 2 },
+  ],
+} as const satisfies StoredSpellInvocationCaster;
 
 type GlyphStoredAreaOngoingReleaseCase = {
   readonly label: string;
@@ -2483,6 +2502,92 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     );
   });
 
+  test("stored Dissonant Whispers successful save deals half damage to the triggering creature without spending a current slot or Reaction", () => {
+    const storedInvocation = storedSpellInvocation(
+      dissonantWhispersUnitId,
+      1,
+      "saveGatedDamage",
+      bardFiveGlyphCaster,
+    );
+    const state = stateWithPriorCasterSpellSlotUse(
+      stateWithGlyphEffect(
+        requireCompletedGlyphEffect({
+          anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+          release: { kind: "spellGlyph", storedInvocation },
+        }),
+        glyphBattle({
+          ...bardFiveGlyphCaster,
+          preparedSpells: [spellRecord(dissonantWhispersUnitId)],
+          targetHp: 30,
+          targetMaxHp: 30,
+        }),
+      ),
+      1,
+    );
+    const priorTurnSpellSlotUses =
+      state.currentTurnResources.spellSlotUsesThisTurn;
+    const targetFacts = storedSingleCreatureSpellTargetFacts(
+      spellTargetId,
+      storedSpellProcedureRefInState(state, storedInvocation),
+    );
+    const needsSave = releaseGlyphStoredSpell({
+      executionRegistry,
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness(
+        [],
+        spellTargetId,
+        targetFacts,
+      ),
+    });
+
+    expect(needsSave.tag).toBe("needsHoles");
+    if (needsSave.tag !== "needsHoles") return;
+    const savingThrow = requireReleaseHole(
+      needsSave.holes,
+      "savingThrowOutcome",
+    );
+    const saveFill = savingThrowOutcomeFill(savingThrow, [
+      { targetId: spellTargetId, succeeded: true },
+    ]);
+    const needsDamageRoll = releaseGlyphStoredSpell({
+      executionRegistry,
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness(
+        [saveFill],
+        spellTargetId,
+        targetFacts,
+      ),
+    });
+
+    expect(needsDamageRoll.tag).toBe("needsHoles");
+    if (needsDamageRoll.tag !== "needsHoles") return;
+    const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
+    const released = releaseGlyphStoredSpell({
+      executionRegistry,
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness(
+        [saveFill, glyphDamageRollFill(damageRoll, [[4, 4, 4]])],
+        spellTargetId,
+        targetFacts,
+      ),
+    });
+
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    expect(glyphEffects(released.state)).toEqual([]);
+    expect(Number(released.state.combatants.get(spellTargetId)?.hp)).toBe(24);
+    expect(
+      requireCombatant(released.state, spellTargetId).reactionAvailable,
+    ).toBe(true);
+    expect(casterSpellSlotExpended(released.state, 1)).toBe(1);
+    expect(released.state.currentTurnResources.spellSlotUsesThisTurn).toEqual(
+      priorTurnSpellSlotUses,
+    );
+  });
+
   test("stored self-origin area release centers on the triggering creature", () => {
     const state = stateWithGlyphEffect(
       requireCompletedGlyphEffect({
@@ -3956,10 +4061,12 @@ function storedSpellInvocation(
   storedSpellId: string,
   slotLevel: TestSpellSlotLevel,
   expectedProcedure?: GlyphStoredSpellInvocationCandidate["procedure"],
+  caster: StoredSpellInvocationCaster = {},
 ): GlyphStoredSpellInvocationCandidate {
   const session = spellBattle({
+    ...caster,
     preparedSpells: [spellRecord(storedSpellId)],
-    spellSlots: [{ spellLevel: slotLevel, count: 1 }],
+    spellSlots: caster.spellSlots ?? [{ spellLevel: slotLevel, count: 1 }],
   });
   const invocation = session.context.characters
     .get(spellCasterId)
