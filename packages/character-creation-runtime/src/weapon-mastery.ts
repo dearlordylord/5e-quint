@@ -64,10 +64,7 @@ export function weaponMasteryChoiceProfileForFeature(input: {
       feature.mechanics.choose,
       feature.acquiredAtLevel,
     ),
-    longRestChangeCount:
-      feature.mechanics.changeOn.kind === "long_rest"
-        ? feature.mechanics.changeOn.count
-        : 0,
+    longRestChangeCount: feature.mechanics.changeOn.count,
     eligibleWeapons: eligibleWeaponMasteryWeapons({
       feature,
       classRecord,
