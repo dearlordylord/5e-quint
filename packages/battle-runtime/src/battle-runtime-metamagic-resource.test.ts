@@ -20,6 +20,8 @@ import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   abilityModifier,
   DieRollResult,
+  proficiencyBonus,
+  type ProficiencyBonus,
   resourceCount,
 } from "@dnd/shared/types";
 import { Either } from "effect";
@@ -2957,6 +2959,81 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
   });
 
+  test("Heightened Dissonant Whispers uses its only spell target as the disadvantaged target", () => {
+    const session = saveMetamagicBattle({
+      knownOptions: [heightenedMetamagicOption()],
+      classLevels: [
+        { className: "sorcerer", level: 5 },
+        { className: "bard", level: 1 },
+      ],
+      spellcastingSourceClassName: "bard",
+      spellcastingProficiencyBonus: proficiencyBonus(3),
+      cantrips: [],
+      preparedSpells: ["dissonant_whispers"],
+      spellSlots: [
+        { spellLevel: 1, count: 4 },
+        { spellLevel: 2, count: 3 },
+        { spellLevel: 3, count: 3 },
+      ],
+    });
+    const act = heightenedSpellAct(session, spellId("dissonant_whispers"));
+    const targetHoles = act.initialHoles.filter(
+      (hole) => hole.kind === "targetChoice",
+    );
+
+    expect(targetHoles.map((hole) => hole.label)).toEqual(["Spell target"]);
+    const [spellTarget] = targetHoles;
+    if (spellTarget === undefined) {
+      throw new Error("Expected Dissonant Whispers spell target.");
+    }
+    const awaitingSave = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [targetFill(spellTarget, skeletonId)],
+    });
+    const saveHole = findHole(
+      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      "savingThrowOutcome",
+    );
+
+    expect(saveHole).toMatchObject({
+      targetRollModes: [{ targetId: skeletonId, rollMode: "disadvantage" }],
+    });
+  });
+
+  test("Heightened Color Spray discovers its disadvantaged target before the area save", () => {
+    const session = saveMetamagicBattle({
+      knownOptions: [heightenedMetamagicOption()],
+      cantrips: [],
+      preparedSpells: ["color_spray"],
+      spellSlots: [
+        { spellLevel: 1, count: 4 },
+        { spellLevel: 2, count: 3 },
+        { spellLevel: 3, count: 2 },
+      ],
+    });
+    const act = heightenedSpellAct(session, spellId("color_spray"));
+    const heightenedTarget = findHole(act.initialHoles, "targetChoice");
+
+    expect(heightenedTarget).toMatchObject({
+      label: "Spell Heightened Spell target",
+      choices: expect.arrayContaining([fighterId, skeletonId]),
+    });
+    const awaitingSave = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [targetFill(heightenedTarget, skeletonId)],
+    });
+    const saveHole = findHole(
+      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      "savingThrowOutcome",
+    );
+
+    expect(saveHole).toMatchObject({
+      targetRollModes: [{ targetId: skeletonId, rollMode: "disadvantage" }],
+    });
+  });
+
   test("Heightened Spell Disadvantage cancels an existing save Advantage source", () => {
     const baseSession = saveMetamagicBattle({
       knownOptions: [heightenedMetamagicOption()],
@@ -3740,10 +3817,22 @@ function metamagicBattle(input?: {
 function saveMetamagicBattle(input: {
   readonly sorceryPoints?: number;
   readonly knownOptions: readonly MetamagicOptionFixture[];
+  readonly classLevels?: NonNullable<
+    Parameters<typeof characterSeed>[0]["classLevels"]
+  >;
+  readonly spellcastingSourceClassName?: ReturnType<
+    typeof wizardSpellcasting
+  >["sourceClassName"];
+  readonly spellcastingProficiencyBonus?: ProficiencyBonus;
   readonly cantrips?: readonly ("eldritch_blast" | "ray_of_frost")[];
-  readonly preparedSpells?: readonly ("burning_hands" | "scorching_ray")[];
+  readonly preparedSpells?: readonly (
+    | "burning_hands"
+    | "color_spray"
+    | "dissonant_whispers"
+    | "scorching_ray"
+  )[];
   readonly spellSlots?: readonly {
-    readonly spellLevel: 1 | 2;
+    readonly spellLevel: 1 | 2 | 3;
     readonly count: number;
   }[];
   readonly d20Statistics?: ReturnType<typeof testCharacterD20Statistics>;
@@ -3757,7 +3846,7 @@ function saveMetamagicBattle(input: {
         displayName: "Sorcerer",
         initiative: 20,
         attack: null,
-        classLevels: [{ className: "sorcerer", level: 5 }],
+        classLevels: input.classLevels ?? [{ className: "sorcerer", level: 5 }],
         d20Statistics:
           input.d20Statistics ?? testCharacterD20Statistics({ cha: 16 }),
         currentHp: 18,
@@ -3790,7 +3879,9 @@ function saveMetamagicBattle(input: {
                   input.spellcastingAbilityModifier,
                 ),
               }),
-          sourceClassName: "sorcerer",
+          proficiencyBonus:
+            input.spellcastingProficiencyBonus ?? proficiencyBonus(3),
+          sourceClassName: input.spellcastingSourceClassName ?? "sorcerer",
         },
       }),
       characterSeed({
@@ -4709,18 +4800,25 @@ function hasHeightenedActionSpellAct(
 function heightenedBurningHandsAct(
   session: BattleRuntimeSession,
 ): ActionSpellAct {
+  return heightenedSpellAct(session, spellId("burning_hands"));
+}
+
+function heightenedSpellAct(
+  session: BattleRuntimeSession,
+  selectedSpellId: SpellInvocationRef["spellId"],
+): ActionSpellAct {
   const act = discoverBattleActs(session).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.spellId ===
-        "burning_hands" &&
+        selectedSpellId &&
       candidate.subject.metamagic?.some(
         (selection) =>
           selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
       ) === true,
   );
   if (act === undefined) {
-    throw new Error("Expected Heightened Burning Hands act.");
+    throw new Error(`Expected Heightened ${selectedSpellId} act.`);
   }
   return act;
 }
