@@ -13,6 +13,7 @@ import {
   bardJackOfAllTradesBuild,
   characterSheetAbilityCheckAbility,
   characterSheetAbilityCheckProficiencyBonus,
+  characterSheetAbilityCheckProficiencyBonusProjection,
   characterSheetJumpDistanceAbility,
   characterSheetLinkedSpeedGrants,
   jackOfAllTradesAddsHalfProficiencyBonusTestName,
@@ -78,13 +79,14 @@ describe("Character Sheet runtime / ability checks", () => {
   test(secondStoryWorkProjectionTestName, expectSecondStoryWorkProjection);
 
   test(jackOfAllTradesAddsHalfProficiencyBonusTestName, () => {
+    const input = {
+      build: bardJackOfAllTradesBuild({ totalLevel: 2 }),
+      unitLibrary,
+      skill: "performance" as const,
+      otherProficiencyBonus: CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
+    };
     const result = requireRight(
-      characterSheetAbilityCheckProficiencyBonus({
-        build: bardJackOfAllTradesBuild({ totalLevel: 2 }),
-        unitLibrary,
-        skill: "performance",
-        otherProficiencyBonus: CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
-      }),
+      characterSheetAbilityCheckProficiencyBonus(input),
     );
     const roundedDown = requireRight(
       characterSheetAbilityCheckProficiencyBonus({
@@ -100,6 +102,18 @@ describe("Character Sheet runtime / ability checks", () => {
       sourceUnitId: authoredUnitId("bard_jack_of_all_trades"),
       skill: "performance",
       bonus: 1,
+    });
+    expect(
+      requireRight(characterSheetAbilityCheckProficiencyBonusProjection(input)),
+    ).toEqual({
+      proficiencyBonus: result,
+      qRoute: [
+        {
+          kind: "projectCharacterSheetFacts",
+          subject: "abilityCheckProjection",
+          owner: "buildProjection",
+        },
+      ],
     });
     expect(roundedDown).toMatchObject({ tag: "jackOfAllTrades", bonus: 1 });
   });

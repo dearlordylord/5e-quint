@@ -13,6 +13,7 @@ import {
   convertFontOfMagicSorceryPointsToSpellSlot,
   convertFontOfMagicSpellSlotToSorceryPoints,
   rebuildCharacterSheetFixture,
+  replaceCharacterSheetSpellSlotSourceState,
   parseCharacterSheet,
   requireRight,
   resourceCount,
@@ -45,6 +46,25 @@ describe("Character Sheet runtime / spell slots", () => {
     });
     expect(characterSheetSpellSlots(sheet)).toEqual([
       { spellLevel: 1, count: 3, expended: 0 },
+    ]);
+
+    const replaced = requireRight(
+      replaceCharacterSheetSpellSlotSourceState({
+        sheet,
+        unitLibrary,
+        spellSlotState: {
+          ordinarySpellSlotExpenditures: [
+            {
+              spellLevel: spellSlotLevel(1),
+              expended: resourceCount(1),
+            },
+          ],
+          createdSpellSlots: [],
+        },
+      }),
+    );
+    expect(characterSheetSpellSlots(replaced)).toEqual([
+      { spellLevel: 1, count: 3, expended: 1 },
     ]);
   });
 

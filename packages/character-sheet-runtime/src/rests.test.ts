@@ -449,13 +449,33 @@ describe("Character Sheet runtime / rests", () => {
         selectedWeaponUnitIds: authoredNonEmptyUnitIds(testCase.after),
       } satisfies CharacterSheetWeaponMasteryReselection;
 
-      const rested = requireRight(
-        completeLongRest({
-          sheet,
-          unitLibrary,
-          weaponMasteryReselections: [reselection],
-        }),
-      );
+      const routed = completeLongRestWeaponMasteryReselectionWithRoute({
+        sheet,
+        unitLibrary,
+        weaponMasteryReselections: [reselection],
+      });
+      expect(routed).toMatchObject({
+        tag: "accepted",
+        route: "weaponMastery",
+        qRoute: [
+          {
+            kind: "retainCharacterSheetSelectedReferences",
+            subject: "selectedReferenceProjection",
+            owner: "selectedReference",
+          },
+          {
+            kind: "completeCharacterSheetRest",
+            subject: "selectedReferenceProjection",
+            fill: "projectionSelection",
+            holes: [],
+            owner: "selectedReference",
+          },
+        ],
+      });
+      if (routed.tag !== "accepted") {
+        throw new Error("Valid Weapon Mastery reselection must be accepted.");
+      }
+      const rested = routed.sheet;
 
       expect(
         selectedClassChoiceUnitIds(rested.build, testCase.featureUnitId),
@@ -486,7 +506,7 @@ describe("Character Sheet runtime / rests", () => {
       }),
     );
 
-    const result = completeLongRest({
+    const result = completeLongRestWeaponMasteryReselectionWithRoute({
       sheet,
       unitLibrary,
       weaponMasteryReselections: [
@@ -502,11 +522,21 @@ describe("Character Sheet runtime / rests", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: {
+      tag: "rejected",
+      route: "weaponMastery",
+      issue: {
         message:
           "Weapon Mastery Long Rest reselection changes too many weapon choices.",
       },
+      qRoute: [
+        {
+          kind: "resolveCharacterSheetSubject",
+          subject: "selectedReferenceProjection",
+          fill: "projectionSelection",
+          holes: ["projectionChoice"],
+          owner: "selectedReference",
+        },
+      ],
     });
   });
 

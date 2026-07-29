@@ -11,6 +11,7 @@ import {
   Hp,
   applyCharacterSheetSpellRestBenefit,
   applyLayOnHands,
+  applyLayOnHandsWithRoute,
   armorClassBuild,
   characterSheetCurrentHp,
   characterSheetHitDice,
@@ -39,6 +40,7 @@ import {
   unitLibrary,
   wizardWarlockBuild,
 } from "./test-support.test-support.ts";
+
 describe("Character Sheet runtime / healing and rest benefit spells", () => {
   test(layOnHandsSpendsHealingPoolTestName, () => {
     const source = requireRight(
@@ -65,7 +67,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
     );
 
     const result = requireRight(
-      applyLayOnHands({
+      applyLayOnHandsWithRoute({
         source,
         target,
         unitLibrary,
@@ -74,6 +76,26 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       }),
     );
 
+    expect(result.qRoute).toEqual([
+      {
+        kind: "resolveCharacterSheetSubject",
+        subject: "featureResource",
+        fill: "resourceSpend",
+        holes: [],
+        owner: "featureResource",
+      },
+      {
+        kind: "projectCharacterSheetFacts",
+        subject: "hitPoint",
+        owner: "hitPoint",
+      },
+      {
+        kind: "recordCharacterSheetFacts",
+        subject: "featureResource",
+        facts: ["featureResourceSpend"],
+        owner: "featureResource",
+      },
+    ]);
     expect(result.target.hitPoints).toEqual({
       tag: "positive",
       currentHp: 5,

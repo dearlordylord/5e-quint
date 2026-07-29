@@ -7,8 +7,10 @@ import {
   Either,
   abilityScoreAssignment,
   armorClassBuild,
+  characterSheetArmorClass,
   characterSheetArmorClassProjection,
   characterSheetArmorClassState,
+  characterSheetUnarmoredArmorClassBase,
   currentArmorClass,
   draconicResilienceArmorClassProjectionTestName,
   expectRight,
@@ -18,18 +20,29 @@ import {
 
 describe("Character Sheet runtime / armor class", () => {
   test("derives default unarmored Armor Class from Dexterity", () => {
-    const state = requireRight(
-      characterSheetArmorClassState({
-        build: armorClassBuild({ startingClass: "class_fighter" }),
-        unitLibrary,
-      }),
-    );
+    const input = {
+      build: armorClassBuild({ startingClass: "class_fighter" }),
+      unitLibrary,
+    };
+    const state = requireRight(characterSheetArmorClassState(input));
 
     expect(state.base).toMatchObject({
       kind: "ability_sum",
       source: "default_unarmored",
     });
     expect(currentArmorClass(state)).toBe(12);
+    expect(requireRight(characterSheetArmorClass(input))).toBe(12);
+    expect(
+      requireRight(
+        characterSheetUnarmoredArmorClassBase({
+          ...input,
+          wieldingShield: false,
+        }),
+      ),
+    ).toMatchObject({
+      kind: "ability_sum",
+      source: "default_unarmored",
+    });
   });
 
   test("derives Barbarian Unarmored Defense and still allows Shield bonus", () => {
