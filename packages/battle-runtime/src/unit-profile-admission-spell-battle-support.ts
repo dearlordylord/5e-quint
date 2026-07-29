@@ -100,6 +100,10 @@ export function spellBattle(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
+  readonly casterD20Statistics?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["d20Statistics"];
   readonly casterUnitRefs?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -157,6 +161,9 @@ export function spellBattle(input: {
           ? {}
           : { selectedLoadout: input.selectedLoadout }),
         classLevels: casterClassLevels,
+        ...(input.casterD20Statistics === undefined
+          ? {}
+          : { d20Statistics: input.casterD20Statistics }),
         ...(input.casterWeaponProficiencies === undefined
           ? {}
           : { weaponProficiencies: input.casterWeaponProficiencies }),

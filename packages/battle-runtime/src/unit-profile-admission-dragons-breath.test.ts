@@ -7,6 +7,8 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { spellExecutionFacts } from "./battle-reducer/spell-execution-facts.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
+import { Schema } from "effect";
+import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import dragonsBreathInput from "../../surface/content/dragons_breath.json";
 import {
@@ -30,6 +32,7 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   breakBattleConcentration,
+  classLevel,
   combatantId,
   decodeUnitRecordSync,
   discoverBattleActCandidates,
@@ -37,6 +40,7 @@ import {
   elapsedTimeTicks,
   endTurn,
   resolveBattleSubject,
+  sameBattleSubject,
   spellSaveDcForCaster,
   spellSlotInvocationRef,
   type BattleActiveEffect,
@@ -49,9 +53,12 @@ import {
   type SpellRecord,
 } from "./unit-profile-admission.test-support.ts";
 import {
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleActiveEffectExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
+  testCharacterD20Statistics,
 } from "./battle-runtime.test-support.ts";
+import { BattleSnapshotSchema } from "./index.ts";
 
 describe("Dragon's Breath initial cast admission", () => {
   test("stores chosen damage type, original slot, and caster save DC on the willing target", () => {
@@ -196,8 +203,13 @@ describe("Dragon's Breath initial cast admission", () => {
 
   test("grants the target a Magic action that exhales the retained damage type and slot-scaled damage", () => {
     const session = spellBattle({
+      casterClassLevels: [{ className: "wizard", level: classLevel(3) }],
+      casterD20Statistics: testCharacterD20Statistics({ int: 16 }),
       preparedSpells: [dragonsBreathSpell()],
-      spellSlots: [{ spellLevel: 2, count: 1 }],
+      spellSlots: [
+        { spellLevel: 1, count: 4 },
+        { spellLevel: 2, count: 2 },
+      ],
     });
     const cast = castDragonsBreath(session, "fire");
     const endedCasterTurn = endTurn({ state: cast, actorId: spellCasterId });
@@ -242,7 +254,44 @@ describe("Dragon's Breath initial cast admission", () => {
         }),
       ],
     });
+    if (needsDamage.tag !== "needsHoles") {
+      throw new Error("Expected Dragon's Breath damage dice.");
+    }
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: needsDamage.snapshot,
+      subject: exhaleAct.subject,
+      holes: needsDamage.holes,
+    });
     const damageHole = requireResultHole(needsDamage, "rolledDice");
+    expect(damageHole).toMatchObject({
+      dragonsBreath: { sourceCombatantId: spellCasterId },
+    });
+    const wrongOwnerHoles = needsDamage.holes.map((hole) =>
+      hole.kind === "rolledDice" && "dragonsBreath" in hole
+        ? {
+            ...hole,
+            dragonsBreath: {
+              ...hole.dragonsBreath,
+              sourceCombatantId: spellTargetId,
+            },
+          }
+        : hole,
+    );
+    const encodedSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
+      needsDamage.snapshot,
+    );
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)({
+          ...encodedSnapshot,
+          acts: needsDamage.snapshot.acts.map((candidate) =>
+            sameBattleSubject(candidate.subject, exhaleAct.subject)
+              ? { ...candidate, initialHoles: wrongOwnerHoles }
+              : candidate,
+          ),
+        }),
+      ),
+    ).toBe(true);
     const needsConcentration = resolveBattleSubject({
       state: targetTurn,
       subject: exhaleAct.subject,

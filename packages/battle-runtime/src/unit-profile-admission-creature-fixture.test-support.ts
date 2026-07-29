@@ -89,6 +89,10 @@ export function characterCreature(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["classLevels"];
+  readonly d20Statistics?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["d20Statistics"];
   readonly weaponProficiencies?: readonly WeaponProficiency[];
   readonly currentHp?: number;
   readonly maxHp?: number;
@@ -157,7 +161,7 @@ export function characterCreature(input: {
       characterUnitRefs,
       classLevels: input.classLevels ?? [{ className: "wizard", level: 1 }],
       knownLanguages: ["Common"],
-      d20Statistics: testCharacterD20Statistics(),
+      d20Statistics: input.d20Statistics ?? testCharacterD20Statistics(),
       weaponMasteries: [],
       ...(input.weaponProficiencies === undefined
         ? {}
