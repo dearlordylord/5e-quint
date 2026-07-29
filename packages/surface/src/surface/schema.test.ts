@@ -5,7 +5,13 @@ import cloakOfProtectionInput from "../../content/cloak_of_protection.json";
 import adamantineArmorInput from "../../content/magic_item_adamantine_armor.json";
 import ammunitionTemplateInput from "../../content/magic_item_ammunition_1_2_or_3.json";
 import sentinelShieldInput from "../../content/magic_item_sentinel_shield.json";
-import { readMagicInitiateSpellAccessSourceFacts } from "./character-creation-readers.ts";
+import {
+  readBackgroundCreationFacts,
+  readClassCreationFacts,
+  readMagicInitiateSpellAccessSourceFacts,
+  readOrcSpeciesCreationFacts,
+  readSpeciesCreationFacts,
+} from "./character-creation-readers.ts";
 import { srdSurface } from "./surface-catalog.ts";
 import {
   SRD_SURFACE_SCHEMA_BOUNDS,
@@ -35,6 +41,7 @@ import {
   readSurfaceSchemaRole,
   SrdProvenanceSchema,
   SrdSurfaceJsonSchema,
+  surfaceSchemaRolesEqual,
 } from "./schema.ts";
 import {
   favoredEnemyHuntersMarkFreeCastGrantsForUnit,
@@ -146,7 +153,6 @@ describe("SRD Surface publication schema", () => {
       (unit) => unit.id === "class_fighter",
       "Fighter class",
     );
-
     expect(
       isSupportedClassFeatureSpellFreeCastResourceTag(
         "favoredEnemyHuntersMarkFreeCasts",
@@ -185,6 +191,7 @@ describe("SRD Surface publication schema", () => {
       (unit) => unit.id === "class_fighter",
       "Fighter class",
     );
+    const alert = requireSrdUnit((unit) => unit.id === "alert", "Alert feat");
 
     expect(readMagicInitiateSpellAccessSourceFacts(magicInitiate)).toEqual({
       tag: "readable",
@@ -214,6 +221,50 @@ describe("SRD Surface publication schema", () => {
         },
       ],
     });
+    expect(readMagicInitiateSpellAccessSourceFacts(alert)).toMatchObject({
+      tag: "unreadable",
+      issues: [
+        {
+          code: "unsupportedUnitKind",
+          message: "Expected magic_initiate feat record, received feat.",
+        },
+      ],
+    });
+  });
+
+  test("returns typed unreadable results when creation readers receive another canonical Unit family", () => {
+    const spell = requireSrdSpell("acid_arrow");
+    const cases = [
+      {
+        read: readClassCreationFacts,
+        expectedKind: "class",
+      },
+      {
+        read: readBackgroundCreationFacts,
+        expectedKind: "background",
+      },
+      {
+        read: readSpeciesCreationFacts,
+        expectedKind: "species",
+      },
+      {
+        read: readOrcSpeciesCreationFacts,
+        expectedKind: "species",
+      },
+    ] as const;
+
+    for (const { read, expectedKind } of cases) {
+      expect(read(spell)).toEqual({
+        tag: "unreadable",
+        issues: [
+          {
+            code: "unsupportedUnitKind",
+            message: `Expected ${expectedKind} record, received spell.`,
+            unitId: "acid_arrow",
+          },
+        ],
+      });
+    }
   });
 
   test("formats public decoder errors for boundary diagnostics", () => {
@@ -262,6 +313,27 @@ describe("SRD Surface publication schema", () => {
     expect(
       readSurfaceSchemaRole(SrdProvenanceSchema.fields.section.ast),
     ).toEqual({ category: "provenance" });
+  });
+
+  test("compares schema roles by their canonical semantic key", () => {
+    expect(
+      surfaceSchemaRolesEqual(
+        { category: "identity", kind: "id" },
+        { category: "identity", kind: "id" },
+      ),
+    ).toBe(true);
+    expect(
+      surfaceSchemaRolesEqual(
+        { category: "identity", kind: "id" },
+        { category: "identity", kind: "name" },
+      ),
+    ).toBe(false);
+    expect(
+      surfaceSchemaRolesEqual(
+        { category: "identity", kind: "id" },
+        { category: "unknown" },
+      ),
+    ).toBe(false);
   });
 
   test("rejects unknown properties instead of stripping them", () => {

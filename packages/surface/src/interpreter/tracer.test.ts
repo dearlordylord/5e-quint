@@ -12,6 +12,17 @@ import hasteInput from "../../content/haste.json";
 import heatMetalInput from "../../content/heat_metal.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
+import adamantineArmorInput from "../../content/magic_item_adamantine_armor.json";
+import ammunitionTemplateInput from "../../content/magic_item_ammunition_1_2_or_3.json";
+import bagOfHoldingInput from "../../content/magic_item_bag_of_holding.json";
+import brazierOfCommandingFireElementalsInput from "../../content/magic_item_brazier_of_commanding_fire_elementals.json";
+import chimeOfOpeningInput from "../../content/magic_item_chime_of_opening.json";
+import cloakOfProtectionInput from "../../content/magic_item_cloak_of_protection.json";
+import defenderInput from "../../content/magic_item_defender.json";
+import sentinelShieldInput from "../../content/magic_item_sentinel_shield.json";
+import staffOfFireInput from "../../content/magic_item_staff_of_fire.json";
+import wandOfLightningBoltsInput from "../../content/magic_item_wand_of_lightning_bolts.json";
+import weaponTemplateInput from "../../content/magic_item_weapon_1_2_or_3.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import magicMouthInput from "../../content/magic_mouth.json";
 import moonbeamInput from "../../content/moonbeam.json";
@@ -50,6 +61,70 @@ describe("Surface trace interpreter", () => {
         `Stat Block id: \`${statBlock.id}\``,
       );
     }
+  });
+
+  test("traces canonical magic-item and equipment-template record families", () => {
+    const records = [
+      bagOfHoldingInput,
+      brazierOfCommandingFireElementalsInput,
+      chimeOfOpeningInput,
+      cloakOfProtectionInput,
+      staffOfFireInput,
+      wandOfLightningBoltsInput,
+      adamantineArmorInput,
+      sentinelShieldInput,
+      ammunitionTemplateInput,
+      defenderInput,
+      weaponTemplateInput,
+    ];
+
+    for (const input of records) {
+      const unit = decodeUnitRecordSync(input);
+      const trace = traceUnit(unit);
+
+      expect(trace.unitId).toBe(unit.id);
+      expect(trace.nodes.length).toBeGreaterThan(1);
+      expect(trace.edges.length).toBeGreaterThan(0);
+    }
+  });
+
+  test("traces a synthetic magic-item variant collection through decoded Surface shape", () => {
+    const unit = decodeUnitRecordSync({
+      id: "synthetic_magic_item_collection",
+      kind: "magic_item",
+      name: "Synthetic Magic Item Collection",
+      provenance: {
+        kind: "synthetic-test",
+        section: "Synthetic Tests/Magic Item Collection",
+      },
+      defaultAttunement: { requiresAttunement: false },
+      variants: [
+        {
+          id: "synthetic_magic_item_variant",
+          name: "Synthetic Attuned Variant",
+          rarity: "uncommon",
+          mechanics: bagOfHoldingInput.mechanics,
+          destruction: { kind: "none" },
+          attunementOverride: { requiresAttunement: true },
+        },
+      ],
+    });
+
+    const trace = traceUnit(unit);
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "magic_item_root",
+          label: expect.stringContaining("1 variants"),
+        }),
+        expect.objectContaining({
+          atomKind: "magic_item_root",
+          label: expect.stringContaining("[attunement]"),
+        }),
+        expect.objectContaining({ atomKind: "attunement_slot" }),
+      ]),
+    );
   });
 
   test("renders Fighter class creation traits as class graph nodes", () => {

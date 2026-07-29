@@ -37,8 +37,12 @@ import {
   TargetSelectionSchema,
 } from "./schema.ts";
 import {
+  allCantripsFromAnyClassSpellList,
+  allCantripsFromClassSpellList,
+  allLeveledSpellsFromAnyClassSpellList,
   assertSrd521Unit,
   buildUnitCatalog,
+  classSpellListPreparedSpellLevel,
   defineSrdUnitCollection,
   srdUnitCollection,
 } from "./unit-catalog.ts";
@@ -297,6 +301,75 @@ const requiredFirstVerticalUnitIds = [
 ] as const;
 
 describe("SRD Unit catalog boundary", () => {
+  test("projects class spell-list membership through the public catalog readers", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag !== "ok") return;
+    const unitLibrary = result.catalog;
+    const fireBolt = UnitIdSchema.make("fire_bolt");
+    const acidArrow = UnitIdSchema.make("acid_arrow");
+    const fireball = UnitIdSchema.make("fireball");
+    const healingWord = UnitIdSchema.make("healing_word");
+    const unknownSpell = UnitIdSchema.make("synthetic_unknown_spell");
+
+    expect(
+      classSpellListPreparedSpellLevel({
+        unitLibrary,
+        className: "wizard",
+        spellId: fireball,
+      }),
+    ).toBe(3);
+    expect(
+      classSpellListPreparedSpellLevel({
+        unitLibrary,
+        className: "fighter",
+        spellId: fireball,
+      }),
+    ).toBeUndefined();
+    expect(
+      allCantripsFromClassSpellList({
+        unitLibrary,
+        className: "wizard",
+        spellIds: [fireBolt],
+      }),
+    ).toBe(true);
+    expect(
+      allCantripsFromClassSpellList({
+        unitLibrary,
+        className: "wizard",
+        spellIds: [acidArrow],
+      }),
+    ).toBe(false);
+    expect(
+      allCantripsFromAnyClassSpellList({
+        unitLibrary,
+        spellIds: [fireBolt],
+      }),
+    ).toBe(true);
+    expect(
+      allCantripsFromAnyClassSpellList({
+        unitLibrary,
+        spellIds: [unknownSpell],
+      }),
+    ).toBe(false);
+    expect(
+      allLeveledSpellsFromAnyClassSpellList({
+        unitLibrary,
+        spells: [
+          { spellId: fireball, spellLevel: 3 },
+          { spellId: healingWord, spellLevel: 1 },
+        ],
+      }),
+    ).toBe(true);
+    expect(
+      allLeveledSpellsFromAnyClassSpellList({
+        unitLibrary,
+        spells: [{ spellId: fireball, spellLevel: 2 }],
+      }),
+    ).toBe(false);
+  });
+
   test("installs first-vertical SRD Units into a real catalog", () => {
     const result = buildUnitCatalog({ collections: [srdUnitCollection] });
 
