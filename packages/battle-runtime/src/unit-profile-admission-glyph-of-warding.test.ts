@@ -136,11 +136,13 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   maybeSpellAct,
+  spellAct,
   flamingSphereAreaFill,
   greaseSavingThrowOutcomeFill,
   gustOfWindLineSavingThrowOutcomeFill,
   moonbeamAreaFill,
   savingThrowOutcomeFill,
+  spellTargetListFill,
   spikeGrowthAreaFill,
   spiritualWeaponTargetFill,
   spiritualWeaponForcePositionFill,
@@ -153,6 +155,7 @@ import {
   battleObjectId,
   battleTablePositionId,
   battleD20TestNaturalOneRerollSupportForUnit,
+  breakBattleConcentration,
   discoverBattleActCandidates,
   endTurn,
   type BattleActiveEffect,
@@ -1528,6 +1531,123 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       }
     },
   );
+
+  test("stored Invisibility replaces an ordinary same-procedure effect without duplication", () => {
+    const storedInvocation = storedSpellInvocation(
+      invisibilityUnitId,
+      2,
+      "directCondition",
+    );
+    if (storedInvocation.procedure !== "directCondition") {
+      throw new Error("Expected stored direct-condition Invisibility.");
+    }
+    const session = sessionWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+        release: { kind: "spellGlyph", storedInvocation },
+      }),
+      {
+        preparedSpells: [spellRecord(invisibilityUnitId)],
+        spellSlots: [{ spellLevel: 2, count: 2 }],
+      },
+    );
+    const act = spellAct({
+      session,
+      spellId: invisibilityUnitId,
+      slotLevel: 2,
+    });
+    const ordinarilyInvisible = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(
+          requireReleaseHole(act.initialHoles, "spellTargetList"),
+          spellCasterId,
+          invisibilityUnitId,
+          [spellTargetId],
+        ),
+      ],
+    });
+    if (ordinarilyInvisible.tag !== "resolved") {
+      throw new Error("Expected ordinary Invisibility cast to resolve.");
+    }
+    const storedProcedureRef = storedSpellProcedureRefInState(
+      ordinarilyInvisible.state,
+      storedInvocation,
+    );
+    expect(storedProcedureRef).toBe(act.subject.procedureRef);
+    const ordinaryEffects = requireCombatant(
+      ordinarilyInvisible.state,
+      spellTargetId,
+    ).activeEffects.filter(
+      (effect) =>
+        effect.kind === "targetActionEndedSpellCondition" &&
+        effect.sourceProcedureRef === storedProcedureRef,
+    );
+    expect(ordinaryEffects).toHaveLength(1);
+    expect(ordinaryEffects[0]?.expiresAt).toEqual(
+      expect.objectContaining({ kind: "concentration" }),
+    );
+    const ordinaryConcentration = requireCombatant(
+      ordinarilyInvisible.state,
+      spellCasterId,
+    ).concentration;
+    if (ordinaryConcentration === null) {
+      throw new Error("Expected ordinary Invisibility Concentration.");
+    }
+
+    const released = releaseGlyphStoredSpell({
+      executionRegistry,
+      state: ordinarilyInvisible.state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedSingleCreatureReleaseWitness(
+        [],
+        spellTargetId,
+        storedSingleCreatureSpellTargetFacts(spellTargetId, storedProcedureRef),
+      ),
+    });
+
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    const releasedEffects = requireCombatant(
+      released.state,
+      spellTargetId,
+    ).activeEffects.filter(
+      (effect) =>
+        effect.kind === "targetActionEndedSpellCondition" &&
+        effect.sourceProcedureRef === storedProcedureRef,
+    );
+    expect(releasedEffects).toEqual([
+      expect.objectContaining({
+        condition: "invisible",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: storedInvocation.activeEffect.expiresAt.durationTicks,
+        },
+      }),
+    ]);
+    expect(
+      requireCombatant(released.state, spellCasterId).concentration,
+    ).toEqual(ordinaryConcentration);
+    const afterOrdinaryConcentrationEnds = breakBattleConcentration(
+      released.state,
+      spellCasterId,
+    );
+    expect(
+      requireCombatant(afterOrdinaryConcentrationEnds, spellCasterId)
+        .concentration,
+    ).toBeNull();
+    expect(
+      requireCombatant(
+        afterOrdinaryConcentrationEnds,
+        spellTargetId,
+      ).activeEffects.filter(
+        (effect) =>
+          effect.kind === "targetActionEndedSpellCondition" &&
+          effect.sourceProcedureRef === storedProcedureRef,
+      ),
+    ).toEqual(releasedEffects);
+  });
 
   test("stored self-transformation Concentration release applies the chosen mode to the triggering creature for full duration", () => {
     const storedInvocation = storedSpellInvocation(
