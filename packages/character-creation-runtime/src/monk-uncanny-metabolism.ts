@@ -150,7 +150,10 @@ export function characterBuildMonkUncannyMetabolismFacts(input: {
       "Uncanny Metabolism requires the installed Martial Arts Unit.",
     );
   }
-  if (!isMonkMartialArtsDieSource(martialArtsUnit.value)) {
+  const martialArtsDieGrant = findMonkMartialArtsDieGrant(
+    martialArtsUnit.value,
+  );
+  if (martialArtsDieGrant === undefined) {
     return monkUncannyMetabolismFactsIssue(
       "Uncanny Metabolism requires Martial Arts die source facts.",
     );
@@ -165,7 +168,7 @@ export function characterBuildMonkUncannyMetabolismFacts(input: {
     return monkUncannyMetabolismFactsIssue(monkLevel.left.message);
   }
   const martialArtsDie = monkMartialArtsDieForLevel({
-    unit: martialArtsUnit.value,
+    dieGrant: martialArtsDieGrant,
     monkLevel: monkLevel.right,
   });
   if (Either.isLeft(martialArtsDie)) return Either.left(martialArtsDie.left);
@@ -208,36 +211,31 @@ function isMonkUncannyMetabolismFeature(
   );
 }
 
-function isMonkMartialArtsDieSource(
+function findMonkMartialArtsDieGrant(
   unit: UnitRecord,
-): unit is MonkMartialArtsFeature {
-  return (
+): MonkMartialArtsDieGrant | undefined {
+  if (
     unit.kind === "class_feature" &&
     unit.className === "monk" &&
-    unit.mechanics.family === "passive" &&
-    unit.mechanics.grants.some(isMonkMartialArtsDieGrant)
-  );
+    unit.mechanics.family === "passive"
+  ) {
+    return unit.mechanics.grants.find(isMonkMartialArtsDieGrant);
+  }
+  return undefined;
 }
 
 function monkMartialArtsDieForLevel(input: {
-  readonly unit: MonkMartialArtsFeature;
+  readonly dieGrant: MonkMartialArtsDieGrant;
   readonly monkLevel: number;
 }): Either.Either<
   CharacterBuildMonkUncannyMetabolismFacts["healing"]["martialArtsDie"],
   CharacterBuildMonkUncannyMetabolismFactsIssue
 > {
-  const dieGrant = input.unit.mechanics.grants.find(isMonkMartialArtsDieGrant);
-  if (dieGrant === undefined) {
-    return monkUncannyMetabolismFactsIssue(
-      "Uncanny Metabolism requires Martial Arts die source facts.",
-    );
-  }
-
-  const baseDie = parseSingleDamageDie(dieGrant.die.base);
+  const baseDie = parseSingleDamageDie(input.dieGrant.die.base);
   if (Either.isLeft(baseDie)) return Either.left(baseDie.left);
 
   let die = baseDie.right;
-  const applicableTiers = [...dieGrant.die.tiers]
+  const applicableTiers = [...input.dieGrant.die.tiers]
     .filter((tier) => tier.atLevel <= input.monkLevel)
     .sort((left, right) => left.atLevel - right.atLevel);
   for (const tier of applicableTiers) {

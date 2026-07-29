@@ -8,11 +8,25 @@ import {
   classUnitId,
 } from "./index.ts";
 import {
+  applyCreationFills,
+  applyLoadoutFill,
+  applyUnitFill,
   creationFillIssues,
   getHole,
   indexCreationHoles,
+  requireChoiceOptionIndex,
 } from "./fill-reducer.ts";
-import { choiceHole, draftSource } from "./hole-factories.ts";
+import {
+  backgroundAbilityScoreIncreaseOptionId,
+  choiceHole,
+  draftSource,
+  loadoutSource,
+  unitSource,
+} from "./hole-factories.ts";
+import {
+  BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+  CLASS_EQUIPMENT_CHOICE_KEY,
+} from "./phase1-manifest.ts";
 import {
   characterDraftId,
   creationChoiceOptionId,
@@ -31,14 +45,14 @@ import {
   optionalUnitId,
 } from "./finalization.ts";
 
-function backgroundHole(): ChoiceCreationHole {
+function backgroundHoleWithoutUnitRef(): ChoiceCreationHole {
   const hole = choiceHole({
     source: draftSource("draft.background"),
     cardinality: exactChoiceCardinality(1),
     options: [
       {
-        optionId: creationChoiceOptionId("synthetic_background"),
-        label: "Synthetic Background",
+        optionId: creationChoiceOptionId("background_soldier"),
+        label: "Soldier",
       },
     ],
   });
@@ -56,12 +70,12 @@ const draft: CharacterDraft = {
 
 describe("creation fill reducer boundaries", () => {
   test("indexes known holes and reports unknown fills consistently", () => {
-    const hole = backgroundHole();
+    const hole = backgroundHoleWithoutUnitRef();
     const holeIndex = indexCreationHoles([hole]);
     const knownFill: CreationFill = {
       kind: "choice",
       holeId: hole.holeId,
-      optionIds: [creationChoiceOptionId("synthetic_background")],
+      optionIds: [creationChoiceOptionId("background_soldier")],
     };
     const unknownFill: CreationFill = {
       ...knownFill,
@@ -71,6 +85,7 @@ describe("creation fill reducer boundaries", () => {
     expect(getHole(holeIndex, knownFill, creationFillIndex(0))).toEqual(
       Either.right(hole),
     );
+    expect(requireChoiceOptionIndex(indexCreationHoles([]), hole).size).toBe(0);
     expect(getHole(holeIndex, unknownFill, creationFillIndex(1))).toMatchObject(
       {
         _tag: "Left",
@@ -82,6 +97,22 @@ describe("creation fill reducer boundaries", () => {
         },
       },
     );
+    expect(
+      creationFillIssues(
+        {
+          draft,
+          expectedRevision: draft.revision,
+          fills: [knownFill],
+        },
+        holeIndex,
+      ),
+    ).toMatchObject([
+      {
+        tag: "illegalFill",
+        fillIndex: 0,
+        code: "invalidChoice",
+      },
+    ]);
     expect(
       creationFillIssues(
         {
@@ -99,6 +130,186 @@ describe("creation fill reducer boundaries", () => {
         code: "unknownHole",
       },
     ]);
+  });
+
+  test("rejects a second loadout fill for an already selected slot", () => {
+    const equipmentUnitId = authoredUnitId("synthetic_weapon");
+    const optionId = creationChoiceOptionId("synthetic_weapon");
+    const hole = choiceHole({
+      source: loadoutSource(equipmentUnitId, "weapon"),
+      cardinality: exactChoiceCardinality(1),
+      options: [
+        {
+          optionId,
+          label: "Synthetic Weapon",
+          unitRef: { unitId: equipmentUnitId },
+        },
+      ],
+    });
+    if (hole?.kind !== "choice" || hole.source.tag !== "loadout") {
+      throw new Error("The loadout fixture must produce a choice hole.");
+    }
+    const loadoutHole = { ...hole, source: hole.source };
+    const fill = {
+      kind: "choice",
+      holeId: loadoutHole.holeId,
+      optionIds: [optionId],
+    } as const;
+    const acceptedFill = {
+      hole: loadoutHole,
+      fill,
+      selectedOption: { optionId },
+    };
+
+    const first = applyLoadoutFill(
+      { choices: [] },
+      acceptedFill,
+      creationFillIndex(0),
+    );
+    if (Either.isLeft(first)) {
+      throw new Error("The first loadout fill must be accepted.");
+    }
+    expect(first.right.choices).toHaveLength(1);
+    expect(
+      applyLoadoutFill(first.right, acceptedFill, creationFillIndex(1)),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "illegalFill",
+        fillIndex: 1,
+        code: "duplicateFill",
+      },
+    });
+    expect(
+      applyCreationFills(draft, [
+        {
+          fillIndex: creationFillIndex(0),
+          acceptedFill: { tag: "loadout", acceptedFill },
+        },
+        {
+          fillIndex: creationFillIndex(1),
+          acceptedFill: { tag: "loadout", acceptedFill },
+        },
+      ]),
+    ).toMatchObject({
+      _tag: "Left",
+      left: [
+        {
+          tag: "illegalFill",
+          fillIndex: 1,
+          code: "duplicateFill",
+        },
+      ],
+    });
+  });
+
+  test("applies each accepted Unit-sourced fill variant", () => {
+    const backgroundOptionId = backgroundAbilityScoreIncreaseOptionId({
+      kind: "oneEach",
+    });
+    const equipmentOptionId = creationChoiceOptionId("synthetic_equipment");
+    const unitId = authoredUnitId("synthetic_unit");
+    const backgroundIncreaseHole = choiceHole({
+      source: unitSource(
+        authoredUnitId("synthetic_background"),
+        BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
+      ),
+      cardinality: exactChoiceCardinality(1),
+      options: [
+        { optionId: backgroundOptionId, label: "One point in each ability" },
+      ],
+    });
+    const equipmentHole = choiceHole({
+      source: unitSource(
+        authoredUnitId("synthetic_class"),
+        CLASS_EQUIPMENT_CHOICE_KEY,
+      ),
+      cardinality: exactChoiceCardinality(1),
+      options: [
+        {
+          optionId: equipmentOptionId,
+          label: "Synthetic equipment",
+          unitRef: { unitId },
+        },
+      ],
+    });
+    if (
+      backgroundIncreaseHole?.kind !== "choice" ||
+      backgroundIncreaseHole.source.tag !== "unitChoice" ||
+      equipmentHole?.kind !== "choice" ||
+      equipmentHole.source.tag !== "unitChoice"
+    ) {
+      throw new Error("The Unit-sourced fixtures must produce choice holes.");
+    }
+    const backgroundUnitHole = {
+      ...backgroundIncreaseHole,
+      source: backgroundIncreaseHole.source,
+    };
+    const equipmentUnitHole = {
+      ...equipmentHole,
+      source: equipmentHole.source,
+    };
+    const backgroundFill = {
+      kind: "choice",
+      holeId: backgroundUnitHole.holeId,
+      optionIds: [backgroundOptionId],
+    } as const;
+    const equipmentFill = {
+      kind: "choice",
+      holeId: equipmentUnitHole.holeId,
+      optionIds: [equipmentOptionId],
+    } as const;
+
+    expect(
+      applyUnitFill(
+        { choices: [] },
+        {
+          tag: "backgroundAbilityScoreIncrease",
+          hole: backgroundUnitHole,
+          fill: backgroundFill,
+          selection: { kind: "oneEach" },
+        },
+      ),
+    ).toMatchObject({
+      _tag: "Right",
+      right: { backgroundAbilityScoreIncrease: { kind: "oneEach" } },
+    });
+    expect(
+      applyUnitFill(
+        { choices: [] },
+        {
+          tag: "equipmentPurchase",
+          hole: equipmentUnitHole,
+          fill: equipmentFill,
+          unitIds: [unitId],
+        },
+      ),
+    ).toMatchObject({
+      _tag: "Right",
+      right: { equipment: { selectedUnitIds: [unitId] } },
+    });
+    expect(
+      applyUnitFill(
+        { choices: [] },
+        {
+          tag: "unitChoice",
+          hole: equipmentUnitHole,
+          fill: equipmentFill,
+          options: [{ optionId: equipmentOptionId }],
+        },
+      ),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        choices: [
+          {
+            kind: "unitChoice",
+            source: equipmentUnitHole.source,
+            options: [{ optionId: equipmentOptionId }],
+          },
+        ],
+      },
+    });
   });
 });
 

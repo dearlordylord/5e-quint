@@ -183,6 +183,20 @@ describe("choice-option codec boundaries", () => {
       },
     });
     expect(
+      decodeAbilityScoreIncreaseOptionId(
+        "ability_scores:str:+9007199254740992;dex:+1:max20",
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        cause: {
+          tag: "invalidAbilityScoreIncreaseValue",
+          field: "increase",
+          reason: "unsafeInteger",
+        },
+      },
+    });
+    expect(
       decodeAbilityScoreIncreaseOptionId("ability_score:future:+1:max20"),
     ).toMatchObject({
       _tag: "Left",

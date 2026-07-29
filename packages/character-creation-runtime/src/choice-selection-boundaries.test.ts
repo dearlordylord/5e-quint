@@ -13,6 +13,7 @@ import {
   sameSelectedChoiceOption,
   sameSelectedChoiceOptionMultiset,
   selectedChoiceOptionMatchesHole,
+  skillProficienciesFromChoiceSelections,
 } from "./discovery.ts";
 import {
   backgroundAbilityScoreIncreaseOptionId,
@@ -98,7 +99,7 @@ describe("choice-selection structural equality", () => {
     ).toBeUndefined();
   });
 
-  test("projects equipment and background increase option labels", () => {
+  test("projects equipment labels and parses background increase option ids", () => {
     expect(
       startingEquipmentLabel({
         id: "synthetic_bundle",
@@ -111,6 +112,11 @@ describe("choice-selection structural equality", () => {
         backgroundAbilityScoreIncreaseOptionId({ kind: "oneEach" }),
       ),
     ).toEqual({ kind: "oneEach" });
+    expect(
+      parseBackgroundAbilityScoreIncreaseOptionId(
+        creationChoiceOptionId("two_and_one:str:str"),
+      ),
+    ).toBeUndefined();
   });
 
   test("enforces choice cardinality, membership, and selected-option identity", () => {
@@ -199,6 +205,25 @@ describe("choice-selection structural equality", () => {
     expect(
       sameCreationHoleSource(draftSource("draft.background"), fighterSkills),
     ).toBe(false);
+  });
+
+  test("projects only skill options from non-ignored Unit choices", () => {
+    const nonSkillOption = {
+      optionId: creationChoiceOptionId("synthetic_not_a_skill"),
+    } as const satisfies CharacterSelectedChoiceOption;
+    const loadoutChoice = {
+      kind: "loadout",
+      source: loadoutSource(authoredUnitId("weapon_longsword"), "weapon"),
+      options: [longsword],
+    } as const satisfies CharacterChoiceSelection;
+    const choices = [unitChoice([athletics, nonSkillOption]), loadoutChoice];
+
+    expect(skillProficienciesFromChoiceSelections(choices)).toEqual([
+      "athletics",
+    ]);
+    expect(skillProficienciesFromChoiceSelections(choices, () => true)).toEqual(
+      [],
+    );
   });
 
   test("compares selected options as order-independent multisets", () => {

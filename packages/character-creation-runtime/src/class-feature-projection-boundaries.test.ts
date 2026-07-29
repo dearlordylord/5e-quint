@@ -16,12 +16,17 @@ import {
   characterBuildSorcererFontOfMagicFacts,
   characterBuildSorcererMetamagicFacts,
   classUnitId,
+  creationChoiceOptionId,
   fontOfMagicSpellSlotCreationOption,
   parseSorcererMetamagicOptionId,
   type CharacterBuild,
+  type CharacterChoiceSelection,
   type CharacterBuildFeature,
   type UnitCatalog,
 } from "./index.ts";
+import { grantExpertiseSkillSourceForSelection } from "./discovery.ts";
+import { loadoutSource, unitSource } from "./hole-factories.ts";
+import { CLASS_FEATURE_PROFICIENCY_CHOICE_KEY } from "./phase1-manifest.ts";
 
 const catalogResult = buildUnitCatalog({ collections: [srdUnitCollection] });
 if (catalogResult.tag !== "ok") {
@@ -187,6 +192,52 @@ function selectedMetamagicOption(optionId: string): CharacterBuildFeature {
 }
 
 describe("class-feature projection boundaries", () => {
+  test("recognizes only installed expertise-grant Unit selections", () => {
+    const option = {
+      optionId: creationChoiceOptionId("stealth"),
+    };
+    const selectionFor = (
+      unitId: UnitRecord["id"],
+    ): CharacterChoiceSelection => ({
+      kind: "unitChoice",
+      source: unitSource(unitId, CLASS_FEATURE_PROFICIENCY_CHOICE_KEY),
+      options: [option],
+    });
+    const loadoutSelection = {
+      kind: "loadout",
+      source: loadoutSource(authoredUnitId("weapon_longsword"), "weapon"),
+      options: [option],
+    } as const satisfies CharacterChoiceSelection;
+
+    expect(
+      grantExpertiseSkillSourceForSelection(loadoutSelection, unitLibrary),
+    ).toBeUndefined();
+    expect(
+      grantExpertiseSkillSourceForSelection(
+        selectionFor(authoredUnitId("synthetic_missing")),
+        unitLibrary,
+      ),
+    ).toBeUndefined();
+    expect(
+      grantExpertiseSkillSourceForSelection(
+        selectionFor(authoredUnitId("weapon_longsword")),
+        unitLibrary,
+      ),
+    ).toBeUndefined();
+    expect(
+      grantExpertiseSkillSourceForSelection(
+        selectionFor(authoredUnitId("fighter_fighting_style")),
+        unitLibrary,
+      ),
+    ).toBeUndefined();
+    expect(
+      grantExpertiseSkillSourceForSelection(
+        selectionFor(authoredUnitId("rogue_expertise")),
+        unitLibrary,
+      ),
+    ).toEqual({ kind: "owned_skill_proficiencies_without_expertise" });
+  });
+
   test.each(featureCases)(
     "returns no $unitId facts when the build does not retain the feature",
     ({ project }) => {
@@ -327,6 +378,29 @@ describe("class-feature projection boundaries", () => {
       _tag: "Left",
       left: { message: "Font of Magic requires an installed Unit." },
     });
+
+    const sorcererClass = unitLibrary.requireUnit("class_sorcerer");
+    if (sorcererClass.kind !== "class") {
+      throw new Error("The Sorcerer fixture must be a class record.");
+    }
+    const sorcererWithoutFontOfMagic = {
+      ...sorcererClass,
+      featureGrants: sorcererClass.featureGrants.filter(
+        (grant) => grant.unitId !== "sorcerer_font_of_magic",
+      ),
+    } satisfies UnitRecord;
+    expect(
+      characterBuildSorcererMetamagicFacts({
+        build: completeBuild,
+        unitLibrary: catalogReplacing(sorcererWithoutFontOfMagic),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Metamagic requires the shared Font of Magic Sorcery Point resource.",
+      },
+    });
   });
 
   test("parses Metamagic ids and selects Font of Magic slot-creation options", () => {
@@ -394,6 +468,27 @@ describe("class-feature projection boundaries", () => {
           "Font of Magic requires class-level Sorcery Point scaling facts.",
       },
     });
+
+    const withoutSpellSlotCreation = decodeUnitRecordSync({
+      ...fontOfMagic,
+      mechanics: {
+        ...fontOfMagic.mechanics,
+        operations: fontOfMagic.mechanics.operations.filter(
+          (operation) => operation.kind !== "point_pool_to_spell_slot",
+        ),
+      },
+    });
+    expect(
+      characterBuildSorcererFontOfMagicFacts({
+        build,
+        unitLibrary: catalogReplacing(withoutSpellSlotCreation),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Font of Magic requires Spell Slot creation source facts.",
+      },
+    });
   });
 
   test("reports malformed Uncanny Metabolism dependency and Martial Arts die facts", () => {
@@ -453,6 +548,17 @@ describe("class-feature projection boundaries", () => {
       _tag: "Left",
       left: {
         message: "Uncanny Metabolism requires the installed Martial Arts Unit.",
+      },
+    });
+    expect(
+      characterBuildMonkUncannyMetabolismFacts({
+        build,
+        unitLibrary: catalogWithWrongKind(authoredUnitId("monk_martial_arts")),
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Uncanny Metabolism requires Martial Arts die source facts.",
       },
     });
 

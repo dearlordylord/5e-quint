@@ -133,8 +133,7 @@ function isSorcererFontOfMagicFeature(
     unit.mechanics.family === "resource_pool" &&
     unit.mechanics.resource.kind === "point_pool" &&
     unit.mechanics.resetCadence.kind === "long_rest" &&
-    unit.mechanics.operations.some(isSpellSlotToPointPoolOperation) &&
-    unit.mechanics.operations.some(isPointPoolToSpellSlotOperation)
+    unit.mechanics.operations.some(isSpellSlotToPointPoolOperation)
   );
 }
 

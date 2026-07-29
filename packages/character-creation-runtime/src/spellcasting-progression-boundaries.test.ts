@@ -47,4 +47,27 @@ describe("class spellcasting progression boundaries", () => {
       ).toBeUndefined();
     },
   );
+
+  test("preserves a fixed list-prepared spellcasting projection", () => {
+    const progression = spellcastingForClass(authoredUnitId("class_cleric"));
+    if (
+      progression.kind !== "list_prepared_spellcasting_progression_creation"
+    ) {
+      throw new Error(
+        "The Cleric fixture must expose list-prepared progression facts.",
+      );
+    }
+    const {
+      spellcastingProgression: _spellcastingProgression,
+      ...levelOneSpellcasting
+    } = progression;
+    const fixedSpellcasting = {
+      ...levelOneSpellcasting,
+      kind: "list_prepared_spellcasting_creation",
+    } satisfies ClassSpellcastingCreation;
+
+    expect(classSpellcastingCreationAtLevel(fixedSpellcasting, 1)).toEqual(
+      fixedSpellcasting,
+    );
+  });
 });

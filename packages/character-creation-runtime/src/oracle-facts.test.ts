@@ -1,5 +1,5 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { Either } from "effect";
+import { Either, ParseResult } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -57,6 +57,15 @@ function projectedBatchFact(
     throw new Error("Expected the synthetic owner result to project.");
   }
   return projection.right;
+}
+
+function parseErrorMessage(
+  result: Either.Either<unknown, ParseResult.ParseError>,
+): string {
+  if (Either.isRight(result)) {
+    throw new Error("Expected the synthetic malformed fact to be rejected.");
+  }
+  return ParseResult.TreeFormatter.formatErrorSync(result.left);
 }
 
 type ExpandProperty<Value, Key extends PropertyKey> =
@@ -485,11 +494,79 @@ describe("Character Creation owner facts", () => {
     expect(decodeCharacterBuildFact(fact)._tag).toBe("Right");
   });
 
+  test("omits only the absent spellcasting slot-pool variant", () => {
+    const ordinaryOnly = characterBuildFact({
+      ...syntheticBuild(),
+      spellcasting: {
+        sources: [
+          {
+            sourceUnitId: authoredUnitId("synthetic_spellcasting_source"),
+            spellcastingAbility: "int",
+            cantrips: [],
+            spellbook: [],
+            preparedSpells: [],
+            spellcastingFocuses: [],
+          },
+        ],
+        slotPools: {
+          spellcasting: {
+            kind: "spellcasting",
+            slots: [{ spellLevel: 1, count: 2 }],
+          },
+        },
+      },
+    });
+    expect(ordinaryOnly.spellcasting?.slotPools).toEqual({
+      spellcasting: {
+        kind: "spellcasting",
+        slots: [{ spellLevel: 1, count: 2 }],
+      },
+    });
+
+    const pactOnly = characterBuildFact({
+      ...syntheticBuild(),
+      spellcasting: {
+        sources: [
+          {
+            sourceUnitId: authoredUnitId("synthetic_pact_magic_source"),
+            spellcastingAbility: "cha",
+            cantrips: [],
+            spellbook: [],
+            preparedSpells: [],
+            spellcastingFocuses: [],
+          },
+        ],
+        slotPools: {
+          pactMagic: { kind: "pactMagic", slotLevel: 1, count: 1 },
+        },
+      },
+    });
+    expect(pactOnly.spellcasting?.slotPools).toEqual({
+      pactMagic: { kind: "pactMagic", slotLevel: 1, count: 1 },
+    });
+  });
+
   test("projects ready finalization and stale-batch rejection facts", () => {
     const build = syntheticBuild();
     expect(creationFinalizationFact({ tag: "ready", build })).toEqual({
       tag: "ready",
       build: characterBuildFact(build),
+    });
+    expect(
+      projectedBatchFact({
+        tag: "accepted",
+        draft: {
+          draftId: characterDraftId("draft-ready"),
+          revision: draftRevision(1),
+          selections: { choices: [] },
+        },
+        holes: [],
+        finalization: { tag: "ready", build },
+      }),
+    ).toEqual({
+      tag: "accepted",
+      frontier: { holes: [] },
+      finalization: { tag: "ready", build: characterBuildFact(build) },
     });
 
     const batchFact = projectedBatchFact({
@@ -533,6 +610,75 @@ describe("Character Creation owner facts", () => {
       },
     });
     expect(decodeCharacterCreationBatchFact(batchFact)._tag).toBe("Right");
+  });
+
+  test("reports each cross-field fact invariant in decoder diagnostics", () => {
+    const holeFact = creationHoleFact(syntheticChoiceHole());
+    expect(
+      parseErrorMessage(
+        decodeCreationHoleFact({ ...holeFact, holeId: "not-a-hole-id" }),
+      ),
+    ).toContain("invalid Creation Hole id");
+    expect(
+      parseErrorMessage(
+        decodeCreationHoleFact({
+          ...holeFact,
+          cardinality: { tag: "between", min: 2, max: 1 },
+        }),
+      ),
+    ).toContain("cardinality maximum must be at least its minimum");
+    expect(
+      parseErrorMessage(
+        decodeCreationHoleFact({
+          ...holeFact,
+          holeId: "cc:draft:draft.species",
+        }),
+      ),
+    ).toContain("Creation Hole identity must match its owner source");
+
+    const buildFact = characterBuildFact(syntheticBuild());
+    expect(
+      parseErrorMessage(
+        decodeCharacterBuildFact({
+          ...buildFact,
+          originLanguages: ["Dwarvish", "Elvish", "Giant"],
+        }),
+      ),
+    ).toContain("origin languages must contain Common and two others");
+    expect(
+      parseErrorMessage(
+        decodeCharacterBuildFact({
+          ...buildFact,
+          equipment: {
+            owned: [{ itemId: "not-an-equipment-item-id" }],
+            loadout: {},
+          },
+        }),
+      ),
+    ).toContain("invalid Character Equipment Item id");
+
+    const speciesHole: Extract<CreationHole, { kind: "choice" }> = {
+      ...syntheticChoiceHole(),
+      holeId: creationHoleId("cc:draft:draft.species"),
+      source: { tag: "draft", path: "draft.species" },
+    };
+    expect(
+      parseErrorMessage(
+        decodeCharacterCreationBatchFact({
+          tag: "accepted",
+          frontier: creationFrontierFact([syntheticChoiceHole(), speciesHole]),
+          finalization: {
+            tag: "incomplete",
+            blockingHoleIds: [
+              "cc:draft:draft.species",
+              "cc:draft:draft.background",
+            ],
+          },
+        }),
+      ),
+    ).toContain(
+      "finalization blocker ids must be an ordered subsequence of the frontier",
+    );
   });
 
   test("projects every Hole source, cardinality, option, and Fill shape", () => {
