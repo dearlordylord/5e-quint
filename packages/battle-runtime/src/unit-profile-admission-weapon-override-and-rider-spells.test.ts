@@ -748,6 +748,87 @@ describe("SRDINV31A deterministic weapon damage rider Spell Unit admission", () 
     );
   });
 
+  test("divine_favor recast replaces and refreshes the same weapon damage rider", () => {
+    const divineFavor = spellRecord(divineFavorUnitId);
+    const session = spellBattle({
+      preparedSpells: [divineFavor],
+      spellSlots: [{ spellLevel: 1, count: 2 }],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+    const act = bonusSpellAct({ session, spellId: divineFavorUnitId });
+    const firstCast = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [],
+    });
+    if (firstCast.tag !== "resolved") {
+      throw new Error("Expected initial Divine Favor cast to resolve.");
+    }
+    const targetTurn = endTurn({
+      state: firstCast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Divine Favor caster turn to end.");
+    }
+    const casterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected Divine Favor target turn to end.");
+    }
+    const agedRider = requireCombatant(
+      casterTurn.state,
+      spellCasterId,
+    ).activeEffects.find(
+      (effect) =>
+        effect.kind === "spellWeaponDamageRider" &&
+        effect.sourceProcedureRef === act.subject.procedureRef,
+    );
+    if (agedRider?.expiresAt.kind !== "duration") {
+      throw new Error("Expected aged Divine Favor weapon damage rider.");
+    }
+    expect(agedRider.expiresAt.durationTicks).toBe(
+      elapsedTimeTicks(Number(divineFavorDurationTicks) - 1),
+    );
+
+    const recastSession = battleRuntimeSessionForTest({
+      state: casterTurn.state,
+      context: session.context,
+    });
+    const recastAct = bonusSpellAct({
+      session: recastSession,
+      spellId: divineFavorUnitId,
+    });
+    expect(recastAct.subject.procedureRef).toBe(act.subject.procedureRef);
+    const recast = resolveBattleSubject({
+      state: recastSession.state,
+      subject: recastAct.subject,
+      fills: [],
+    });
+    if (recast.tag !== "resolved") {
+      throw new Error("Expected Divine Favor recast to resolve.");
+    }
+    const refreshedRiders = requireCombatant(
+      recast.state,
+      spellCasterId,
+    ).activeEffects.filter(
+      (effect) =>
+        effect.kind === "spellWeaponDamageRider" &&
+        effect.sourceProcedureRef === recastAct.subject.procedureRef,
+    );
+
+    expect(refreshedRiders).toEqual([
+      expect.objectContaining({
+        expiresAt: {
+          kind: "duration",
+          durationTicks: divineFavorDurationTicks,
+        },
+      }),
+    ]);
+  });
+
   test("divine_favor adds Radiant dice to caster weapon hits only", () => {
     const divineFavor = spellRecord(divineFavorUnitId);
     const rayOfFrost = spellRecord(rayOfFrostUnitId);
