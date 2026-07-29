@@ -15,6 +15,7 @@ import type {
 } from "./battle-state-execution.ts";
 import {
   battleId,
+  characterSeed,
   combatantId,
   discoverBattleActCandidates,
   resolveBattleSubject,
@@ -27,6 +28,18 @@ const ATTACKER_ID = combatantId("creature-attack-a");
 const TARGET_ID = combatantId("creature-attack-b");
 
 describe("creature attack public reducer", () => {
+  test("requests the discovered Attack Roll before resolving", () => {
+    const state = startCreatureAttackBattle();
+    const subject = creatureAttackSubject();
+    const discovered = discoverCreatureAttackAct(state, subject);
+
+    expect(resolveBattleSubject({ state, subject, fills: [] })).toMatchObject({
+      tag: "needsHoles",
+      subject,
+      holes: discovered.initialHoles,
+    });
+  });
+
   test("a missed attack resolves without requesting damage and spends the Attack action", () => {
     const state = startCreatureAttackBattle();
     const subject = creatureAttackSubject();
@@ -58,6 +71,17 @@ describe("creature attack public reducer", () => {
         (candidate) => candidate.subject.tag === "creatureAttack",
       ),
     ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state: result.state,
+        subject,
+        fills: [attackRoll],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Creature Attack requires an available Attack action.",
+    });
   });
 
   test("a hit requests damage and applies the supplied damage roll", () => {
@@ -91,6 +115,57 @@ describe("creature attack public reducer", () => {
           { combatantId: TARGET_ID, hp: 13 },
         ],
       },
+    });
+  });
+
+  test("rejects subjects whose combatants are no longer in the battle", () => {
+    const state = startCreatureAttackBattle();
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          ...creatureAttackSubject(),
+          targetId: combatantId("creature-attack-missing-target"),
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "missingCombatant",
+      message: expect.stringContaining("creature-attack-missing-target"),
+    });
+  });
+
+  test("rejects character actors outside the stat-block no-actions pilot", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle:creature-attack-character-actor"),
+      combatants: [
+        characterSeed({
+          combatantId: ATTACKER_ID,
+          displayName: "Character A",
+          initiative: 20,
+        }),
+        statBlockCreatureInit({
+          combatantId: TARGET_ID,
+          displayName: "Creature B",
+          statBlock: creatureAttackStatBlock("creature_attack_b"),
+          initiative: 10,
+        }),
+      ],
+    });
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: creatureAttackSubject(),
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedSubject",
+      message:
+        "Creature Attack is available only for the narrow stat-block no-actions pilot.",
     });
   });
 });
