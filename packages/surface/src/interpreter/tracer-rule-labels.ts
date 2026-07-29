@@ -86,10 +86,12 @@ export function procedurePrefix(k: "activate" | "respond" | "store"): string {
       return "rsp";
     case "store":
       return "sto";
+    /* v8 ignore start -- the procedure kind union is exhaustive; any other string is malformed before this formatter is called */
     default: {
       const _: never = k;
       throw new Error(`unhandled procedure prefix: ${String(_)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -103,6 +105,7 @@ export function describeBonusActionTrigger(
         return "after hit with Melee weapon or Unarmed Strike";
       }
       if (t.attack === "weapon") return "after hit with weapon";
+      /* v8 ignore next -- decoded bonus-action triggers permit only the two attack tags handled above */
       return t.attack;
   }
 }
@@ -143,10 +146,12 @@ export function describeReactionTrigger(t: ReactionTrigger): string {
     }
     case "any_of":
       return t.triggers.map(describeReactionTrigger).join(" OR ");
+    /* v8 ignore start -- ReactionTrigger is decoder-narrowed to the handled tags, so another tag is malformed input */
     default: {
       const _: never = t;
       throw new Error(`unhandled reaction trigger: ${String(_)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -154,10 +159,12 @@ export function describeTransferEvent(t: MarkTransfer): string {
   switch (t.onEvent.kind) {
     case "target_drops_to_0_hp":
       return "target drops to 0 HP";
+    /* v8 ignore start -- MarkTransfer events have one decoded tag; another event cannot inhabit this type */
     default: {
       const _: never = t.onEvent.kind;
       throw new Error(`unhandled transfer event: ${String(_)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -205,10 +212,12 @@ export function describeAttachmentHole(
       return `${labelPrefix}\n${describeCasterTargetBondAttachment(a.value, range)}`;
     case "spell_spatial_manifestation":
       return `${labelPrefix}\n${describeSpellSpatialManifestationAttachment(a.value, range)}`;
+    /* v8 ignore start -- decoded attachment-hole values are exhausted above; another tag is malformed */
     default: {
       const _: never = a.value;
       throw new Error(`unhandled attachment hole value: ${String(_)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -283,10 +292,12 @@ export function describeObjectFilter(f: ObjectFilter | undefined): string {
       break;
     case undefined:
       break;
+    /* v8 ignore start -- ObjectFilter targetRelation accepts only the two handled tags or omission */
     default: {
       const _: never = f.targetRelation;
       throw new Error(`unhandled targetRelation: ${String(_)}`);
     }
+    /* v8 ignore stop */
   }
   return parts.length > 0 ? `\nfilter: ${parts.join(", ")}` : "";
 }
@@ -312,9 +323,11 @@ export function describeDamageTypeRef(d: DamageTypeRef): string {
   }
   if (d.kind === "choice")
     return `${d.label} (choose: ${d.options.join(" | ")})`;
+  /* v8 ignore start -- DamageTypeRef is decoder-narrowed to the variants handled above */
   const _: never = d;
   throw new Error(`unhandled damage type ref: ${String(_)}`);
 }
+/* v8 ignore stop */
 
 export function describeTargetSelection(s: TargetSelection): string {
   const targetKinds =
@@ -401,10 +414,12 @@ export function describeAreaOrigin(
       return "origin: attached creature";
     case "self":
       return "origin: caster (self)";
+    /* v8 ignore start -- AreaOrigin is a decoded tagged union exhausted above */
     default: {
       const _: never = o;
       throw new Error(`unhandled area origin: ${String(_)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -426,12 +441,14 @@ export function describeAreaOccupantDispositionFilter(
       return "\naffects: friendly creatures";
     case "hostile_to_source":
       return "\naffects: hostile creatures";
+    /* v8 ignore start -- decoded disposition filters permit only the two handled values or omission */
     default: {
       const _: never = filter;
       throw new Error(
         `unhandled area occupant disposition filter: ${String(_)}`,
       );
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -443,12 +460,14 @@ export function describeAreaOccupantPerceptionFilter(
       return "";
     case "can_see_area_effect":
       return "\naffects: creatures that can see the area effect";
+    /* v8 ignore start -- decoded perception filters permit only the handled value or omission */
     default: {
       const _: never = filter;
       throw new Error(
         `unhandled area occupant perception filter: ${String(_)}`,
       );
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -494,10 +513,12 @@ export function describeAreaShape(s: AreaShapeSpec): string {
       return `choice of:\n  ${s.options
         .map(describeAreaShapeFixed)
         .join("\n  ")}`;
+    /* v8 ignore start -- AreaShapeSpec is decoder-narrowed to the shape tags handled above */
     default: {
       const _: never = s;
       throw new Error(`unhandled area shape: ${String(_)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -525,10 +546,12 @@ export function describeAreaShapeFixed(s: AreaShapeDescriptor): string {
       return `line ${s.lengthFeet} ft × ${s.widthFeet} ft`;
     case "wall_volume":
       return `wall ${s.maxLengthFeet} ft × ${s.maxHeightFeet} ft × ${s.thicknessFeet} ft`;
+    /* v8 ignore start -- AreaShapeDescriptor is decoder-narrowed to the fixed shape tags handled above */
     default: {
       const _: never = s;
       throw new Error(`unhandled area shape: ${String(_)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -565,10 +588,12 @@ export function describeModifyAcSetBase(
       return `${effect.formula.base} + DEX mod + WIS mod`;
     case "base_plus_dex_cha":
       return `${effect.formula.base} + DEX mod + CHA mod`;
+    /* v8 ignore start -- the decoded AC base formula union is exhausted above */
     default: {
       const _exhaustive: never = effect.formula;
       throw new Error(`unhandled AC base formula: ${String(_exhaustive)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -599,10 +624,12 @@ export function describeClassLevelChoiceCount(
       return `choose by class level: ${choiceCount.levels
         .map((level) => `L${level.atLevel}: ${level.total}`)
         .join(", ")}`;
+    /* v8 ignore start -- SurfaceChoiceCount is decoder-narrowed to the two class-level variants above */
     default: {
       const _exhaustive: never = choiceCount;
       return _exhaustive;
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -675,10 +702,12 @@ export function describeProficiencyGrant(grant: ProficiencyGrant): string {
               .join(", ")}`,
         ),
       ].join("; ");
+    /* v8 ignore start -- ProficiencyGrant is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = grant;
       return _exhaustive;
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -696,10 +725,12 @@ export function describeToolProficiencyGrant(
       return `choose ${grant.count}: ${grant.options
         .map(describeToolProficiencyGrantSubject)
         .join(", ")}`;
+    /* v8 ignore start -- ToolProficiencyGrant is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = grant;
       return _exhaustive;
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -717,10 +748,12 @@ export function describeProficiencyGrantSubject(
       return `${subject.toolId} tool`;
     case "tool_category":
       return `${subject.category} tools`;
+    /* v8 ignore start -- ProficiencyGrantSubject is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = subject;
       return _exhaustive;
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -732,10 +765,12 @@ export function describeToolProficiencyGrantSubject(
       return `${subject.toolId} tool`;
     case "tool_category":
       return `${subject.category} tool`;
+    /* v8 ignore start -- ToolProficiencyGrantSubject is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = subject;
       return _exhaustive;
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -749,10 +784,12 @@ export function describeDc(d: DcSource): string {
       return `${d.base} + ability mod + PB (weapon attack)`;
     case "innate_dc":
       return `${d.base} + ${d.ability.toUpperCase()} mod + PB`;
+    /* v8 ignore start -- DcSource is a decoded tagged union exhausted above */
     default: {
       const _: never = d;
       throw new Error(`unhandled dc source: ${String(_)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -786,10 +823,12 @@ export function describeLinkedSpeed(l: LinkedSpeed): string {
   switch (l.kind) {
     case "walk_speed":
       return "= walk speed";
+    /* v8 ignore start -- LinkedSpeed currently has one decoded tag, so another tag is malformed */
     default: {
       const _exhaustive: never = l.kind;
       throw new Error(`unhandled linked speed: ${String(_exhaustive)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -803,10 +842,12 @@ export function describeRange(r: Range): string {
       return "Unlimited";
     case "point":
       return `${r.feet} ft`;
+    /* v8 ignore start -- Range is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = r;
       throw new Error(`unhandled range: ${String(_exhaustive)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -819,7 +860,8 @@ export function describeDurationValue(
   const duration = timeSpanDuration(d);
   const base = Either.isRight(duration)
     ? formatTimeSpanDuration(duration.right)
-    : `${d.amount} ${d.unit}${d.amount === 1 ? "" : "s"}`;
+    : /* v8 ignore next -- decoded positive integer time spans always convert; this fallback requires malformed numeric input */
+      `${d.amount} ${d.unit}${d.amount === 1 ? "" : "s"}`;
   if (d.upcastTiers === undefined || d.upcastTiers.length === 0) return base;
   const tiers = d.upcastTiers
     .map(
@@ -834,7 +876,8 @@ export function formatElapsedHours(hours: number): string {
   const ticks = elapsedTimeTicksFromHours(hours);
   return Either.isRight(ticks)
     ? formatElapsedTimeTicks(ticks.right)
-    : `${hours} hour${hours === 1 ? "" : "s"}`;
+    : /* v8 ignore next -- callers supply decoded finite hour counts; this fallback requires malformed numeric input */
+      `${hours} hour${hours === 1 ? "" : "s"}`;
 }
 
 export function describeConditionChoice(
@@ -869,10 +912,12 @@ export function describeOngoingPredicate(
           return `HP = ${p.threshold}`;
         case "gte":
           return `HP >= ${p.threshold}`;
+        /* v8 ignore start -- the decoded HP comparison union is exhausted above */
         default: {
           const _exhaustive: never = p.comparison;
           throw new Error(`unhandled HP comparison: ${String(_exhaustive)}`);
         }
+        /* v8 ignore stop */
       }
     case "has_condition":
       return `has condition: ${p.condition}`;
@@ -882,10 +927,12 @@ export function describeOngoingPredicate(
       return "table-witnessed attachment within spell range";
     case "caster_within_feet_of_attachment":
       return `caster within ${p.feet} ft of attachment`;
+    /* v8 ignore start -- OngoingPredicate is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = p;
       throw new Error(`unhandled ongoing predicate: ${String(_exhaustive)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -929,10 +976,12 @@ function describeDurationEndTrigger(trigger: DurationEndTrigger): string {
       return "attached bond exceeds range";
     case "spell_cast_again_on_connected_creature":
       return "spell cast again on connected creature";
+    /* v8 ignore start -- DurationEndTrigger is a decoded tagged union exhausted above */
     default: {
       const _: never = trigger;
       throw new Error(`unhandled duration end trigger: ${String(_)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -963,10 +1012,12 @@ export function describeSpellAccessMode(m: SpellAccessMode): string {
         `${lo}–${hi} charges (${m.baseCharges} + ${m.perLevelCharges}/level)`
       );
     }
+    /* v8 ignore start -- non-string SpellAccessMode has one decoded tag, so another tag is malformed */
     default: {
       const _exhaustive: never = m.kind;
       throw new Error(`unhandled spell access mode: ${String(_exhaustive)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -979,10 +1030,12 @@ export function describeGrantedSpellTargetRestriction(
       return "\ntarget: self only";
     case "visible_target_within_feet":
       return `\ntarget: visible target within ${restriction.feet} ft of ${restriction.origin === "caster" ? "caster" : "spell sensor"}`;
+    /* v8 ignore start -- GrantedSpellTargetRestriction is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = restriction;
       return _exhaustive;
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -1029,10 +1082,12 @@ export function describeWeaponFilter(f: WeaponFilter | undefined): string {
       return ` [${f.property} weapons only]`;
     case "specific_item":
       return ` [item only: ${f.itemId}]`;
+    /* v8 ignore start -- WeaponFilter is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = f;
       return _exhaustive;
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -1043,10 +1098,12 @@ export function describeSkillFilter(f: SkillFilter | undefined): string {
       return ` [${f.skills.join(", ")} only]`;
     case "choice":
       return ` [choice: ${f.options.join(", ")}]`;
+    /* v8 ignore start -- SkillFilter is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = f;
       return _exhaustive;
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -1071,7 +1128,8 @@ export function describeCriticalRangeAttackFilter(
 ): string {
   return filter === "weapon_or_unarmed_strike"
     ? "weapons and Unarmed Strikes"
-    : (filter satisfies never);
+    : /* v8 ignore next -- the parameter type admits only the handled literal; the false arm requires malformed input */
+      (filter satisfies never);
 }
 
 export function describeDelta(d: DiceDelta): string {
@@ -1094,10 +1152,12 @@ export function describeDelta(d: DiceDelta): string {
       return `${d.sign}bonus by item rarity (${Object.entries(d.byRarity)
         .map(([rarity, bonus]) => `${rarity}=${bonus}`)
         .join(", ")})`;
+    /* v8 ignore start -- DiceDelta is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = d;
       return _exhaustive;
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -1168,10 +1228,12 @@ export function describeDiceAmount(a: DiceAmount): string {
         a.link.kind === "damage_taken" ? "damage taken" : "damage dealt";
       return `= ${scale}${source}`;
     }
+    /* v8 ignore start -- DiceAmount is a decoded tagged union exhausted above */
     default: {
       const _exhaustive: never = a;
       throw new Error(`unhandled dice amount: ${String(_exhaustive)}`);
     }
+    /* v8 ignore stop */
   }
 }
 
