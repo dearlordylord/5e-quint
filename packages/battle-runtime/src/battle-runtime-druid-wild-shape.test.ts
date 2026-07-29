@@ -21,7 +21,12 @@ import {
   type ArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { abilityModifier, attackBonus, ClassLevel } from "@dnd/shared/types";
+import {
+  abilityModifier,
+  attackBonus,
+  ClassLevel,
+  DieRollResult,
+} from "@dnd/shared/types";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
@@ -319,6 +324,148 @@ test("re-assuming a Wild Shape form preserves its committed Stat Block resources
       (pool) => pool.resourcePoolRef === limitedPool.resourcePoolRef,
     ),
   ).toMatchObject({ usesRemaining: 0 });
+});
+
+test("an active Wild Shape form restores a spent recharge action from its start-turn roll", () => {
+  const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const rechargeFormId = "synthetic_recharge_wild_shape_form";
+  const baseAttack = baseForm.statBlock.actions?.attacks?.[0];
+  if (baseAttack === undefined) {
+    throw new Error("Expected the Riding Horse attack fixture.");
+  }
+  const rechargeForm: StatBlockRecord = {
+    ...baseForm,
+    id: parseSharedStatBlockId(rechargeFormId),
+    name: "Synthetic Recharge Wild Shape Form",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-recharge-wild-shape-form",
+    },
+    statBlock: {
+      ...baseForm.statBlock,
+      displayName: "Synthetic Recharge Wild Shape Form",
+      actions: {
+        ...baseForm.statBlock.actions,
+        attacks: [
+          {
+            ...baseAttack,
+            limitedUse: { kind: "recharge", minimumRoll: 5 },
+          },
+        ],
+      },
+    },
+  };
+  const initial = druidWildShapeBattle({
+    knownForms: druidWildShapeKnownFormsReplacingRidingHorse(rechargeForm),
+  });
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
+      initial,
+      wildShapeSubject(initial, {
+        action: "assumeForm",
+        formStatBlockId: rechargeFormId,
+      }),
+    ),
+  );
+  const assumedDruid = requireCharacter(assumed.state, druidId);
+  const active = activeDruidWildShape(assumedDruid);
+  const rechargePool = active?.admission.execution.resourcePools.find(
+    (pool) => pool.kind === "recharge",
+  );
+  const rechargeBinding =
+    rechargePool === undefined
+      ? undefined
+      : active?.admission.execution.procedureBindings.find((binding) =>
+          binding.resourcePoolRefs.includes(rechargePool.resourcePoolRef),
+        );
+  if (
+    active === null ||
+    rechargeBinding === undefined ||
+    rechargePool === undefined
+  ) {
+    throw new Error("Expected the active recharge form procedure.");
+  }
+  const attackSubject = statBlockAttackSubject(assumed.state, baseAttack.name);
+  expect(attackSubject.procedureRef).toBe(rechargeBinding.procedureRef);
+  const targetHole = attackInitialTargetHole(assumed.state, attackSubject);
+  const targetSelection = attackTargetFill(targetHole, druidId, goblinId);
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state: assumed.state,
+      subject: attackSubject,
+      fills: [targetSelection],
+    }),
+    "attackRoll",
+  );
+  const attackRollSelection = attackRollFill(attackRoll, {
+    total: 20,
+    naturalD20: 15,
+  });
+  const damage = requireHole(
+    resolveBattleSubject({
+      state: assumed.state,
+      subject: attackSubject,
+      fills: [targetSelection, attackRollSelection],
+    }),
+    "rolledDice",
+  );
+  const spentState = requireResolved(
+    resolveBattleSubject({
+      state: assumed.state,
+      subject: attackSubject,
+      fills: [targetSelection, attackRollSelection, damageRollFill(damage, 1)],
+    }),
+  ).state;
+  expect(
+    activeDruidWildShape(
+      requireCharacter(spentState, druidId),
+    )?.admission.execution.resourcePools.find(
+      (pool) => pool.resourcePoolRef === rechargePool.resourcePoolRef,
+    ),
+  ).toMatchObject({ available: false });
+  const targetTurn = requireResolved(
+    endTurn({ state: spentState, actorId: druidId }),
+  ).state;
+  const rechargeRequest = endTurn({ state: targetTurn, actorId: goblinId });
+  expect(rechargeRequest).toMatchObject({
+    tag: "needsHoles",
+    holes: [
+      {
+        kind: "statBlockRechargeRoll",
+        rechargeTargets: [rechargePool.resourcePoolRef],
+      },
+    ],
+  });
+  if (rechargeRequest.tag !== "needsHoles") {
+    throw new Error("Expected the Wild Shape form recharge roll.");
+  }
+  const rechargeHole = requireHole(rechargeRequest, "statBlockRechargeRoll");
+  const recharged = requireResolved(
+    resolveBattleSubject({
+      state: rechargeRequest.state,
+      subject: rechargeRequest.subject,
+      fills: [
+        {
+          kind: "statBlockRechargeRoll",
+          holeId: rechargeHole.holeId,
+          value: [
+            {
+              target: rechargePool.resourcePoolRef,
+              roll: DieRollResult(rechargePool.minimumRoll),
+            },
+          ],
+        },
+      ],
+    }),
+  );
+  const rechargedActive = activeDruidWildShape(
+    requireCharacter(recharged.state, druidId),
+  );
+  expect(
+    rechargedActive?.admission.execution.resourcePools.find(
+      (pool) => pool.resourcePoolRef === rechargePool.resourcePoolRef,
+    ),
+  ).toMatchObject({ available: true });
 });
 
 test("derives Wild Shape equipment disposition candidates from selected loadout object refs", () => {
