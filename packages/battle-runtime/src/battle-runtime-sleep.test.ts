@@ -310,14 +310,50 @@ describe("battle runtime: Sleep", () => {
       }),
     ).state;
 
-    const broken = breakBattleConcentration(slept, wizardId);
+    const endConcentrationSubject: Extract<
+      BattleSubject,
+      { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
+    > = {
+      tag: "runtimeCommand",
+      actorId: wizardId,
+      command: "endConcentration",
+    };
+    const endConcentration = findAct(slept, endConcentrationSubject);
+    const broken = requireResolved(
+      resolveBattleSubject({
+        state: slept,
+        subject: endConcentration.subject,
+        fills: [],
+      }),
+    );
 
-    expect(broken.combatants.get(goblinId)).toMatchObject({
+    expect(broken.routeEvents).toEqual([
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "repeatSaveConditionEffect",
+        holes: [],
+        owner: "battleConcentration",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "repeatSaveConditionEffect",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "repeatSaveConditionEffect",
+        holes: [],
+        owner: "battleConditionLifecycle",
+      },
+    ]);
+    expect(broken.state.combatants.get(wizardId)?.concentration).toBeNull();
+    expect(broken.state.combatants.get(goblinId)).toMatchObject({
       conditions: expect.not.objectContaining({ directIncapacitated: true }),
       activeEffects: [],
     });
     const goblinTurn = requireResolved(
-      endTurn({ state: broken, actorId: wizardId }),
+      endTurn({ state: broken.state, actorId: wizardId }),
     ).state;
     expect(endTurn({ state: goblinTurn, actorId: goblinId })).toMatchObject({
       tag: "resolved",
