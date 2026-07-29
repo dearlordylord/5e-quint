@@ -426,11 +426,15 @@ describe("Sanctuary targeting interdiction", () => {
     if (act === undefined || act.subject.tag !== "actionSpell") {
       throw new Error("Expected Magic Missile action spell.");
     }
+    const allocationHole = requireHole(
+      act.initialHoles,
+      "spellTargetAllocation",
+    );
     const allocationFill = spellTargetAllocationFill(
-      requireHole(act.initialHoles, "spellTargetAllocation"),
+      allocationHole,
       magicMissileUnitId,
       wardedId,
-      3,
+      allocationHole.allocationCount,
     );
     const needsSanctuary = resolveBattleSubject({
       state: warded.state,
@@ -466,6 +470,90 @@ describe("Sanctuary targeting interdiction", () => {
       throw new Error("Expected lost spell to resolve.");
     }
     expect(combatant(lost.state, wardedId).hp).toBe(Hp(12));
+  });
+
+  test("failed save can move a Magic Missile allocation to a new target", () => {
+    const warded = advanceRoundToCaster(
+      castSanctuary(battleWithSanctuary(), wardedId),
+    );
+    const act = discoverBattleActs(warded).find(
+      (candidate) =>
+        candidate.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          magicMissileUnitId,
+    );
+    if (act === undefined || act.subject.tag !== "actionSpell") {
+      throw new Error("Expected Magic Missile action spell.");
+    }
+    const allocationHole = requireHole(
+      act.initialHoles,
+      "spellTargetAllocation",
+    );
+    const allocationFill = spellTargetAllocationFill(
+      allocationHole,
+      magicMissileUnitId,
+      wardedId,
+      allocationHole.allocationCount,
+    );
+    const originalTargetFact = allocationFill.spatialFacts.find(
+      (fact) => fact.kind === "spellTarget",
+    );
+    if (originalTargetFact === undefined) {
+      throw new Error("Expected the admitted allocation's spell target fact.");
+    }
+    const needsSanctuary = resolveBattleSubject({
+      state: warded.state,
+      subject: act.subject,
+      fills: [allocationFill],
+    });
+    if (needsSanctuary.tag !== "needsHoles") {
+      throw new Error("Expected Sanctuary interdiction hole.");
+    }
+    const sanctuaryHole = requireHole(
+      needsSanctuary.holes,
+      "sanctuaryInterdictionOutcome",
+    );
+    if (sanctuaryHole.replacementTargetKind !== "nonAttack") {
+      throw new Error("Expected a non-attack Sanctuary replacement.");
+    }
+    const sanctuaryFill = sanctuaryOutcomeFill(sanctuaryHole, {
+      saveSucceeded: false,
+      outcome: {
+        kind: "newTarget",
+        targetId: replacementId,
+        replacementTargetKind: sanctuaryHole.replacementTargetKind,
+        spatialFacts: [{ ...originalTargetFact, targetId: replacementId }],
+      },
+    });
+    const needsDamage = resolveBattleSubject({
+      state: needsSanctuary.state,
+      subject: needsSanctuary.subject,
+      fills: [allocationFill, sanctuaryFill],
+    });
+    if (needsDamage.tag !== "needsHoles") {
+      throw new Error("Expected Magic Missile damage roll hole.");
+    }
+    const resolved = resolveBattleSubject({
+      state: needsDamage.state,
+      subject: needsDamage.subject,
+      fills: [
+        allocationFill,
+        sanctuaryFill,
+        rolledDiceFill(
+          requireHole(needsDamage.holes, "rolledDice"),
+          Array.from({ length: allocationHole.allocationCount }, () => 1),
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected retargeted Magic Missile to resolve.");
+    }
+    expect(combatant(resolved.state, wardedId).hp).toBe(Hp(12));
+    expect(combatant(resolved.state, replacementId).hp).toBe(
+      Hp(12 - allocationHole.allocationCount * 2),
+    );
   });
 
   test("failed save can lose Eldritch Blast beam targeting the warded creature", () => {
