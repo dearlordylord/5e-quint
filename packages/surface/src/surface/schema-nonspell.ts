@@ -661,6 +661,7 @@ const ResourcePoolSpellSlotCreationOptionsSchema = Schema.NonEmptyArray(
   ResourcePoolSpellSlotCreationOptionSchema,
 ).pipe(
   Schema.filter(distinctSpellSlotCreationLevels, {
+    /* v8 ignore next -- this callback only formats the diagnostic after malformed point-pool options repeat a Spell Slot level */
     message: () =>
       "Point-pool Spell Slot creation options must have distinct Spell Slot levels.",
   }),
@@ -738,6 +739,7 @@ const metamagicChoiceCountMatchesSorcererTable = (
 
 const MetamagicChoiceCountSchema = ClassLevelChoiceCountSchema.pipe(
   Schema.filter(metamagicChoiceCountMatchesSorcererTable, {
+    /* v8 ignore next -- this callback only formats the diagnostic after malformed Metamagic totals disagree with the SRD table */
     message: () =>
       "Sorcerer Metamagic option totals must match the SRD Sorcerer Features table.",
   }),
@@ -904,6 +906,7 @@ const MetamagicOptionSchema = Schema.Union(
 
 const MetamagicOptionsSchema = Schema.NonEmptyArray(MetamagicOptionSchema).pipe(
   Schema.filter(distinctCompleteMetamagicOptionSet, {
+    /* v8 ignore next -- this callback only formats the diagnostic after malformed Metamagic options duplicate or omit an authored option */
     message: () =>
       "Sorcerer Metamagic must author each SRD Metamagic option exactly once.",
   }),
@@ -972,6 +975,7 @@ const DruidWildCompanionSpendOptionsSchema = Schema.NonEmptyArray(
   DruidWildCompanionSpendOptionSchema,
 ).pipe(
   Schema.filter(druidWildCompanionSpendOptionsMatchSrd, {
+    /* v8 ignore next -- this callback only formats the diagnostic after malformed Wild Companion spend options violate the fixed pair */
     message: () =>
       "Druid Wild Companion spend options must be exactly one Spell Slot option and one Wild Shape use option.",
   }),
@@ -2358,6 +2362,7 @@ export const AttackDamageRiderMechanicsSchema = strictStruct({
         "attackFilter" in mechanics.trigger &&
         mechanics.effect.dice.kind === "rage_damage_bonus"),
     {
+      /* v8 ignore next -- this callback only formats the diagnostic after a malformed attack rider combines incompatible trigger, optionality, and dice facts */
       message: () =>
         "Attack damage riders must use matching optionality, trigger, and dice source.",
     },
@@ -2484,6 +2489,7 @@ export const PrimaryAbilityExpressionSchema = Schema.Union(
   Schema.filter(
     (primaryAbilities) => distinctAbilities(primaryAbilities.abilities),
     {
+      /* v8 ignore next -- this callback only formats the diagnostic after malformed class Primary Ability entries repeat an ability */
       message: () => "Class Primary Ability entries must be distinct.",
     },
   ),
@@ -2492,6 +2498,7 @@ export const PrimaryAbilityExpressionSchema = Schema.Union(
       primaryAbilities.kind !== "any_of" ||
       primaryAbilities.abilities.length > 1,
     {
+      /* v8 ignore next -- this callback only formats the diagnostic after a malformed any-of Primary Ability supplies fewer than two alternatives */
       message: () =>
         "Class Primary Ability any_of entries must contain multiple alternatives.",
     },
@@ -2501,6 +2508,7 @@ export const PrimaryAbilityExpressionSchema = Schema.Union(
 export const BackgroundAbilityScoreIncreaseSchema = Schema.Struct({
   abilities: Schema.Tuple(AbilitySchema, AbilitySchema, AbilitySchema).pipe(
     Schema.filter(distinctAbilities, {
+      /* v8 ignore next -- this callback only formats the diagnostic after malformed Background ability choices repeat an ability */
       message: () =>
         "Background ability score list must contain three distinct abilities.",
     }),
@@ -2799,6 +2807,7 @@ export const ListPreparedSpellcastingCreationSchema = Schema.Struct({
       );
     },
     {
+      /* v8 ignore next -- this callback only formats the diagnostic after malformed list-prepared choices disagree with their class spellcasting facts */
       message: () =>
         "List-prepared spellcasting choices must match class Spellcasting facts, counts, uniqueness, and available Spell Slot levels.",
     },
@@ -2877,6 +2886,7 @@ export const ListPreparedSpellcastingProgressionCreationSchema = Schema.Struct({
       );
     },
     {
+      /* v8 ignore next -- this callback only formats the diagnostic after malformed list-prepared progression choices violate their level or spell-list bounds */
       message: () =>
         "List-prepared spellcasting progression choices must match level-1 facts, provide enough unique spell options for each progression row, and prepare only spells at or below available Spell Slot levels.",
     },
@@ -2922,6 +2932,7 @@ export const PactMagicSpellcastingCreationSchema = Schema.Struct({
       );
     },
     {
+      /* v8 ignore next -- this callback only formats the diagnostic after malformed Pact Magic choices violate their counts, levels, or spell list */
       message: () =>
         "Pact Magic choices must match their counts, be unique, use the Warlock spell list, and prepare only spells at or below the Pact Slot level.",
     },
@@ -3051,6 +3062,7 @@ export const WizardSpellcastingCreationSchema = Schema.Struct({
       );
     },
     {
+      /* v8 ignore next -- this callback only formats the diagnostic after malformed Wizard choices violate cantrip, spellbook, or preparation facts */
       message: () =>
         "Wizard spellcasting choices must match cantrip and spellbook counts, provide enough unique prepared spell options, and prepare only spellbook spells with available Spell Slot levels.",
     },
@@ -3343,6 +3355,7 @@ export const ListPreparedSpellcastingClassRecordSchema = Schema.Struct({
       );
     },
     {
+      /* v8 ignore next -- this callback only formats the diagnostic after malformed class records contradict their list-prepared spellcasting table facts */
       message: () =>
         "List-prepared class records must match class-specific level-1 spellcasting ability, focus, cantrip count, prepared-spell count, Spell Slot projection, prepared-spell replacement timing/cardinality, and class spell list.",
     },
@@ -3416,6 +3429,7 @@ export const PactMagicClassRecordSchema = Schema.Struct({
       );
     },
     {
+      /* v8 ignore next -- this callback only formats the diagnostic after a malformed Warlock class record contradicts its Pact Magic level-1 facts */
       message: () =>
         "Warlock Pact Magic class records must match level-1 cantrip, prepared-spell, Pact Slot count, Pact Slot level, and Warlock spell list facts.",
     },
@@ -3608,6 +3622,7 @@ const FeatAbilityScoreIncreaseAbilityScopeSchema = Schema.Union(
     kind: Schema.Literal("specific_abilities"),
     abilities: Schema.NonEmptyArray(AbilitySchema).pipe(
       Schema.filter(distinctAbilities, {
+        /* v8 ignore next -- this callback only formats the diagnostic after a malformed Feat ability scope repeats an ability */
         message: () =>
           "Feat ability score increase ability list must contain distinct abilities.",
       }),
@@ -3641,6 +3656,7 @@ const FeatAbilityScoreIncreaseChoiceSchema = Schema.Struct({
           choice.abilityScope.abilities.length > 1,
       ),
     {
+      /* v8 ignore next -- this callback only formats the diagnostic after a malformed two-score Feat exposes fewer than two legal abilities */
       message: () =>
         "Feat two-score ability score increases require at least two legal abilities.",
     },

@@ -12,9 +12,12 @@ import flameBladeInput from "../../content/flame_blade.json";
 import fighterWeaponMasteryInput from "../../content/fighter_weapon_mastery.json";
 import hasteInput from "../../content/haste.json";
 import heatMetalInput from "../../content/heat_metal.json";
+import huntersMarkInput from "../../content/hunters_mark.json";
 import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.json";
 import locateObjectInput from "../../content/locate_object.json";
 import bagOfHoldingInput from "../../content/magic_item_bag_of_holding.json";
+import chimeOfOpeningInput from "../../content/magic_item_chime_of_opening.json";
+import cloakOfProtectionInput from "../../content/magic_item_cloak_of_protection.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import magicMouthInput from "../../content/magic_mouth.json";
 import moonbeamInput from "../../content/moonbeam.json";
@@ -24,6 +27,7 @@ import prayerOfHealingInput from "../../content/prayer_of_healing.json";
 import ropeTrickInput from "../../content/rope_trick.json";
 import silenceInput from "../../content/silence.json";
 import spiritualWeaponInput from "../../content/spiritual_weapon.json";
+import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
 import zoneOfTruthInput from "../../content/zone_of_truth.json";
 import wardingBondInput from "../../content/warding_bond.json";
 import {
@@ -92,7 +96,7 @@ describe("Surface trace interpreter", () => {
     );
   });
 
-  test("traces a synthetic magic-item variant collection through decoded Surface shape", () => {
+  test("traces synthetic magic-item variants for valid mechanics absent from canonical content", () => {
     const unit = decodeUnitRecordSync({
       id: "synthetic_magic_item_collection",
       kind: "magic_item",
@@ -111,6 +115,39 @@ describe("Surface trace interpreter", () => {
           destruction: { kind: "none" },
           attunementOverride: { requiresAttunement: true },
         },
+        {
+          id: "synthetic_reaction_magic_item_variant",
+          name: "Synthetic Reaction Variant",
+          rarity: "uncommon",
+          mechanics: {
+            ...chimeOfOpeningInput.mechanics,
+            family: "triggered_reaction",
+            activationCost: { kind: "reaction" },
+            range: { kind: "self" },
+            interruptsTrigger: true,
+          },
+          destruction: { kind: "none" },
+        },
+        {
+          id: "synthetic_passive_operation_magic_item_variant",
+          name: "Synthetic Passive Operation Variant",
+          rarity: "uncommon",
+          mechanics: {
+            family: "passive",
+            grants: [],
+            operations: [
+              {
+                trigger: {
+                  kind: "elapsed_time",
+                  unit: "hour",
+                  amount: 1,
+                },
+                effect: bagOfHoldingInput.mechanics.grants[0],
+              },
+            ],
+          },
+          destruction: { kind: "none" },
+        },
       ],
     });
 
@@ -120,13 +157,68 @@ describe("Surface trace interpreter", () => {
       expect.arrayContaining([
         expect.objectContaining({
           atomKind: "magic_item_root",
-          label: expect.stringContaining("1 variants"),
+          label: expect.stringContaining("3 variants"),
         }),
         expect.objectContaining({
           atomKind: "magic_item_root",
           label: expect.stringContaining("[attunement]"),
         }),
         expect.objectContaining({ atomKind: "attunement_slot" }),
+        expect.objectContaining({ atomKind: "duration_window" }),
+      ]),
+    );
+  });
+
+  test("traces a synthetic creature support action through decoded Stat Block shape", () => {
+    const statBlock = decodeStatBlockRecordSync({
+      ...goblinWarriorInput,
+      id: "synthetic_support_stat_block",
+      name: "Synthetic Support Creature",
+      provenance: {
+        kind: "synthetic-test",
+        section: "Synthetic Tests/Creature Support",
+      },
+      statBlock: {
+        ...goblinWarriorInput.statBlock,
+        actions: {
+          ...goblinWarriorInput.statBlock.actions,
+          supports: [
+            {
+              name: "Synthetic Support",
+              target: "ally_in_range",
+              rangeFeet: 30,
+              effect: cloakOfProtectionInput.mechanics.grants[0],
+            },
+          ],
+        },
+      },
+    });
+
+    const trace = traceStatBlock(statBlock);
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          atomKind: "direct_apply",
+          label: expect.stringContaining("Synthetic Support"),
+        }),
+      ]),
+    );
+  });
+
+  test("traces transfer mechanics retained inside a mark attachment hole", () => {
+    const trace = traceUnit(decodeUnitRecordSync(huntersMarkInput));
+
+    expect(trace.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ atomKind: "mark_target" }),
+        expect.objectContaining({ atomKind: "transfer_mark" }),
+        expect.objectContaining({ atomKind: "bonus_action_quota" }),
+      ]),
+    );
+    expect(trace.edges).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ relation: "transfers_to" }),
       ]),
     );
   });

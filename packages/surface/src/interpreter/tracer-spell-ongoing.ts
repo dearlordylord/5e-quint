@@ -92,9 +92,6 @@ export function traceOngoingEffect(
   }
 }
 
-// If the attachment is a v4 `mark`, emit the mark_target effect (and,
-// if configured, the transfer_mark effect with its transfers_to edge
-// back onto the mark attachment node).
 export function traceMarkAttachmentEffects(
   a: Attachment,
   procId: string,
@@ -103,7 +100,8 @@ export function traceMarkAttachmentEffects(
   edges: TraceEdge[],
   ids: IdGen,
 ): void {
-  if (a.kind !== "mark") return;
+  const mark = markAttachmentValue(a);
+  if (mark === null) return;
   const markId = ids("mk");
   nodes.push({
     id: markId,
@@ -114,10 +112,25 @@ export function traceMarkAttachmentEffects(
   edges.push({ from: procId, to: markId, relation: "grants" });
   edges.push({ from: markId, to: attId, relation: "attaches_to" });
 
-  if (a.transfer !== undefined) {
-    const transferId = traceMarkTransfer(a.transfer, procId, nodes, edges, ids);
+  if (mark.transfer !== undefined) {
+    const transferId = traceMarkTransfer(
+      mark.transfer,
+      procId,
+      nodes,
+      edges,
+      ids,
+    );
     edges.push({ from: transferId, to: attId, relation: "transfers_to" });
   }
+}
+
+function markAttachmentValue(
+  attachment: Attachment,
+): Extract<Attachment, { readonly kind: "mark" }> | null {
+  if (attachment.kind === "mark") return attachment;
+  return attachment.kind === "hole" && attachment.value.kind === "mark"
+    ? attachment.value
+    : null;
 }
 
 export function traceMarkTransfer(
