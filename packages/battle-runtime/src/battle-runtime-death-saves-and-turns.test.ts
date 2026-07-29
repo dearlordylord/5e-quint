@@ -1,5 +1,6 @@
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { cantripSpellInvocationRef } from "./battle-subjects.ts";
+import { combatantKnockedOutUnconscious } from "./battle-reducer/creature-state.ts";
 import type {
   BattleRuntimeSession,
   BattleState,
@@ -414,6 +415,20 @@ describe("battle runtime: death saves and turns", () => {
       ],
     });
     const state = session.state;
+    const knockedOut = state.combatants.get(fighterId);
+    if (knockedOut === undefined) {
+      throw new Error("Expected the Knocked Out fighter.");
+    }
+    expect(combatantKnockedOutUnconscious(knockedOut)).toEqual(
+      Either.right(KNOCKED_OUT_UNCONSCIOUS),
+    );
+    const ordinary = state.combatants.get(wizardId);
+    if (ordinary === undefined) {
+      throw new Error("Expected the ordinary conscious caster.");
+    }
+    expect(combatantKnockedOutUnconscious(ordinary)).toEqual(
+      Either.right(null),
+    );
     const healingWordAct = discoverBattleActs(session).find(
       (candidate) =>
         candidate.subject.tag === "bonusActionSpell" &&

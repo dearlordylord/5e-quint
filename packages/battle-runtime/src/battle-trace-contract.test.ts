@@ -15,9 +15,11 @@ import {
   battleActTraceCheckpoint,
   battleId,
   battleResolutionTraceCheckpoint,
+  battleSnapshotProjection,
   combatantId,
   discoverBattleActs,
   initiativeScore,
+  snapshotBattle,
   startBattle,
   type AvailableBattleAct,
   type BattleCreatureInit,
@@ -46,6 +48,9 @@ describe("battle trace contract", () => {
   test("projects public weapon attack hit replay into QNT-owned checkpoints", () => {
     const session = startBattleRight();
     const state = session.state;
+    expect(battleSnapshotProjection(state).snapshot).toEqual(
+      snapshotBattle(state),
+    );
     const attackAct = requireAttackAct(session);
     const targetHole = requireHole(attackAct.initialHoles, "targetChoice");
     const target = attackTargetFill(targetHole);

@@ -874,6 +874,7 @@ export function combatantKnockedOutUnconscious(
   combatant: BattleCreatureState,
 ): Either.Either<BattlePositiveHpUnconscious | null, BattleStateInitIssue> {
   if (combatant.positiveHpUnconscious === null) return Either.right(null);
+  /* v8 ignore start -- Forged-state defense: the BattleCreatureState union couples Knocked Out metadata to branded 1 HP and KnockedOutConditionState, so parsed/constructed states cannot violate this relationship. */
   if (
     Number(combatant.hp) !== 1 ||
     !hasCondition(combatant.conditions, "unconscious")
@@ -882,5 +883,6 @@ export function combatantKnockedOutUnconscious(
       "BattleCreatureState invariant violated: Knocked Out Unconscious requires exactly 1 HP and the Unconscious condition.",
     );
   }
+  /* v8 ignore stop */
   return Either.right(combatant.positiveHpUnconscious);
 }
