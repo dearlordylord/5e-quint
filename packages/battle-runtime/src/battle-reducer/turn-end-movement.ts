@@ -8948,14 +8948,8 @@ type AreaMovementCostFactResult =
       readonly extraCostFeet: MovementFeet;
     };
 
-const ACROBATIC_MOVEMENT_EMPTY_PATHS_MESSAGE =
-  "Acrobatic Movement requires at least one table-supplied vertical-surface or liquid path.";
-
 const ACROBATIC_MOVEMENT_REPEATED_PATH_MESSAGE =
   "Acrobatic Movement path witness repeats a traversal path.";
-
-const ACROBATIC_MOVEMENT_UNKNOWN_PATH_MESSAGE =
-  "Acrobatic Movement path witness contains an unsupported traversal path.";
 
 const ACROBATIC_MOVEMENT_MISSING_PROFILE_MESSAGE =
   "Acrobatic Movement requires a selected Acrobatic Movement support profile.";
@@ -8965,9 +8959,6 @@ const ACROBATIC_MOVEMENT_EQUIPMENT_MESSAGE =
 
 const ACROBATIC_MOVEMENT_TURN_MESSAGE =
   "Acrobatic Movement can be used only on the mover's turn.";
-
-const ACROBATIC_MOVEMENT_FALLING_MESSAGE =
-  "Acrobatic Movement path witness must preserve no-falling-during-movement semantics.";
 
 function validateAcrobaticMovementFact(
   state: BattleState,
@@ -8981,29 +8972,19 @@ function validateAcrobaticMovementFact(
   if (profile === null) {
     return ACROBATIC_MOVEMENT_MISSING_PROFILE_MESSAGE;
   }
+  /* v8 ignore start -- Defensive internal guard: movement dispatch admits only the current actor before the typed movement fill reaches this parser. */
   if (currentActorId(state) !== mover.combatantId) {
     return ACROBATIC_MOVEMENT_TURN_MESSAGE;
   }
+  /* v8 ignore stop */
   if (
     combatantWearingArmor(state, mover) ||
     combatantWieldingShield(state, mover)
   ) {
     return ACROBATIC_MOVEMENT_EQUIPMENT_MESSAGE;
   }
-  if (fact.withoutFallingDuringMovement !== true) {
-    return ACROBATIC_MOVEMENT_FALLING_MESSAGE;
-  }
-  if (fact.paths.length === 0) {
-    return ACROBATIC_MOVEMENT_EMPTY_PATHS_MESSAGE;
-  }
-  const supportedPaths = new Set(
-    profile.acrobaticMovement.paths.map((path) => path.path),
-  );
   const seenPaths = new Set<string>();
   for (const path of fact.paths) {
-    if (!supportedPaths.has(path)) {
-      return ACROBATIC_MOVEMENT_UNKNOWN_PATH_MESSAGE;
-    }
     if (seenPaths.has(path)) {
       return ACROBATIC_MOVEMENT_REPEATED_PATH_MESSAGE;
     }

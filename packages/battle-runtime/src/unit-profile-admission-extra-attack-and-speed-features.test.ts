@@ -945,6 +945,63 @@ describe("L19D-07-MONK-ACROBATIC-MOVEMENT deterministic admission", () => {
     });
   });
 
+  test("Acrobatic Movement rejects an unselected profile and repeated traversal paths", () => {
+    const unselected = acrobaticMovementBattle({ selected: false });
+    expect(
+      resolveBattleSubject({
+        state: unselected,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: spellCasterId,
+          command: "move",
+        },
+        fills: [
+          movementFill(acrobaticMovementHole(unselected), {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            acrobaticMovement: {
+              kind: "acrobaticMovement",
+              paths: ["alongVerticalSurface"],
+              withoutFallingDuringMovement: true,
+            },
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Acrobatic Movement requires a selected Acrobatic Movement support profile.",
+    });
+
+    const selected = acrobaticMovementBattle();
+    expect(
+      resolveBattleSubject({
+        state: selected,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: spellCasterId,
+          command: "move",
+        },
+        fills: [
+          movementFill(acrobaticMovementHole(selected), {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            acrobaticMovement: {
+              kind: "acrobaticMovement",
+              paths: ["acrossLiquid", "acrossLiquid"],
+              withoutFallingDuringMovement: true,
+            },
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Acrobatic Movement path witness repeats a traversal path.",
+    });
+  });
+
   test("Acrobatic Movement support gate rejects adjacent movement shapes", () => {
     const unit = unitLibrary.requireUnit(monkAcrobaticMovementUnitId);
     if (
@@ -1315,6 +1372,7 @@ function acrobaticMovementBattle(
     readonly selectedLoadout?: Parameters<
       typeof characterCreature
     >[0]["selectedLoadout"];
+    readonly selected?: boolean;
   } = {},
 ): BattleState {
   const unit = unitLibrary.requireUnit(monkAcrobaticMovementUnitId);
@@ -1339,7 +1397,7 @@ function acrobaticMovementBattle(
         combatantId: spellCasterId,
         displayName: "Acrobatic Movement Monk",
         initiative: 20,
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: input.selected === false ? [] : [unitRef.right],
         classLevels: [{ className: "monk", level: classLevel(9) }],
         ...(input.armorClass === undefined
           ? {}
