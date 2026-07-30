@@ -806,6 +806,75 @@ describe("Sanctuary targeting interdiction", () => {
     expect(combatant(lost.state, wardedId).hp).toBe(Hp(12));
   });
 
+  test("failed save can move Ice Knife to a new legal initial target", () => {
+    const warded = advanceRoundToCaster(
+      castSanctuary(battleWithSanctuary(), wardedId),
+    );
+    const act = discoverBattleActs(warded).find(
+      (candidate) =>
+        candidate.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          iceKnifeUnitId,
+    );
+    if (act === undefined || act.subject.tag !== "actionSpell") {
+      throw new Error("Expected Ice Knife action spell.");
+    }
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      targetHole,
+      iceKnifeUnitId,
+      casterId,
+      wardedId,
+    );
+    const needsSanctuary = resolveBattleSubject({
+      state: warded.state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    if (needsSanctuary.tag !== "needsHoles") {
+      throw new Error("Expected Sanctuary interdiction hole.");
+    }
+    const sanctuaryHole = requireHole(
+      needsSanctuary.holes,
+      "sanctuaryInterdictionOutcome",
+    );
+    if (sanctuaryHole.replacementTargetKind !== "attackRoll") {
+      throw new Error("Expected an attack-roll Sanctuary replacement.");
+    }
+    const replacementFill = spellTargetFill(
+      targetHole,
+      iceKnifeUnitId,
+      casterId,
+      replacementId,
+    );
+
+    const retargeted = resolveBattleSubject({
+      state: needsSanctuary.state,
+      subject: needsSanctuary.subject,
+      fills: [
+        targetFill,
+        sanctuaryOutcomeFill(sanctuaryHole, {
+          saveSucceeded: false,
+          outcome: {
+            kind: "newTarget",
+            targetId: replacementId,
+            replacementTargetKind: "attackRoll",
+            spatialFacts: replacementFill.spatialFacts ?? [],
+          },
+        }),
+      ],
+    });
+
+    expect(retargeted).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "attackRoll" })],
+    });
+    if (retargeted.tag !== "needsHoles") {
+      throw new Error("Expected retargeted Ice Knife attack roll.");
+    }
+    expect(combatant(retargeted.state, wardedId).hp).toBe(Hp(12));
+  });
+
   test("failed save can lose Chromatic Orb primary target against the warded creature", () => {
     const warded = advanceRoundToCaster(
       castSanctuary(battleWithSanctuary(), wardedId),

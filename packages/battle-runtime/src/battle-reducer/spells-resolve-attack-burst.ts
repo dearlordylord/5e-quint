@@ -259,16 +259,9 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     }
     /* v8 ignore stop */
     return resolveAttackBurstSaveDamageSpellAct({
+      ...input,
       input: { ...input.input, fills },
-      actorId: input.actorId,
-      invocation: input.invocation,
       fillSet,
-      ...(input.actionCostOverride === undefined
-        ? {}
-        : { actionCostOverride: input.actionCostOverride }),
-      ...(input.metamagicApplications === undefined
-        ? {}
-        : { metamagicApplications: input.metamagicApplications }),
     });
   }
 
