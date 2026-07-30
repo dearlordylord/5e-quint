@@ -3712,6 +3712,21 @@ function needsHazardCommandHoleWithEndTurnFrontier(input: {
   ]);
 }
 
+function pendingHazardCommandEndTurnResult(
+  endTurnProbe: BattleResolutionResult | null,
+  subject: BattleSubject,
+): BattleResolutionResult | null {
+  if (endTurnProbe?.tag === "needsHoles") {
+    return { ...endTurnProbe, subject };
+  }
+  /* v8 ignore start -- Malformed combined-command input: a nested End Turn probe is invalid only when fills outside the admitted hazard and End Turn hole contracts were supplied. */
+  if (endTurnProbe?.tag === "invalid") {
+    return endTurnProbe;
+  }
+  /* v8 ignore stop */
+  return null;
+}
+
 function resolveGreaseGroundHazardEndTurnSaveCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
@@ -3793,11 +3808,12 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
     return invalidResult(input.state, "invalidFill", validation);
   }
   /* v8 ignore stop */
-  if (endTurnProbe.tag === "needsHoles") {
-    return { ...endTurnProbe, subject: input.subject };
-  }
-  if (endTurnProbe.tag === "invalid") {
-    return endTurnProbe;
+  const pendingEndTurn = pendingHazardCommandEndTurnResult(
+    endTurnProbe,
+    input.subject,
+  );
+  if (pendingEndTurn !== null) {
+    return pendingEndTurn;
   }
   const outcome = matchingGreaseFill.value.outcomes[0]!;
   if (!outcome.succeeded) {
@@ -3967,11 +3983,12 @@ export function resolveGustOfWindLineSaveCommand(
     return invalidResult(input.state, "invalidFill", validation);
   }
   /* v8 ignore stop */
-  if (endTurnProbe.tag === "needsHoles") {
-    return { ...endTurnProbe, subject: input.subject };
-  }
-  if (endTurnProbe.tag === "invalid") {
-    return endTurnProbe;
+  const pendingEndTurn = pendingHazardCommandEndTurnResult(
+    endTurnProbe,
+    input.subject,
+  );
+  if (pendingEndTurn !== null) {
+    return pendingEndTurn;
   }
   const outcome = matchingGustFill.value.outcomes[0]!;
   if (!outcome.succeeded) {
@@ -4483,11 +4500,12 @@ export function resolveFlamingSphereSaveCommand(
       endTurnProbe,
     });
   }
-  if (endTurnProbe.tag === "needsHoles") {
-    return { ...endTurnProbe, subject: input.subject };
-  }
-  if (endTurnProbe.tag === "invalid") {
-    return endTurnProbe;
+  const pendingEndTurn = pendingHazardCommandEndTurnResult(
+    endTurnProbe,
+    input.subject,
+  );
+  if (pendingEndTurn !== null) {
+    return pendingEndTurn;
   }
   const damaged = applyFlamingSphereDamage({
     state: input.state,
@@ -5249,11 +5267,12 @@ export function resolveMoonbeamSaveCommand(
       endTurnProbe,
     });
   }
-  if (endTurnProbe?.tag === "needsHoles") {
-    return { ...endTurnProbe, subject: input.subject };
-  }
-  if (endTurnProbe?.tag === "invalid") {
-    return endTurnProbe;
+  const pendingEndTurn = pendingHazardCommandEndTurnResult(
+    endTurnProbe,
+    input.subject,
+  );
+  if (pendingEndTurn !== null) {
+    return pendingEndTurn;
   }
   const afterDamage = applyMoonbeamDamage({
     state: input.state,
