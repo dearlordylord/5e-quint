@@ -1,4 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { resolveCastAttackHitBonusActionSpellCommand } from "./battle-reducer/dispatcher.ts";
+import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31F true_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31C divine_smite
@@ -27,11 +29,13 @@ import {
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { testBattleCreatureStateWithConditions } from "./battle-runtime.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   abilityModifier,
+  applyCondition,
   attackBonus,
   cantripSpellInvocationRef,
   classLevel,
@@ -344,7 +348,6 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     ) {
       throw new Error("Expected Divine Smite after-hit choice.");
     }
-
     const afterSmite = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(
@@ -544,7 +547,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       },
     });
   });
-  test("divine_smite validates resources before spending and does not treat Ready as a pre-cast interrupt", () => {
+  test("divine_smite rejects stale hit state, validates resources before spending, and does not treat Ready as a pre-cast interrupt", () => {
     const divineSmite = spellRecord(divineSmiteUnitId);
     const rayOfFrost = spellRecord(rayOfFrostUnitId);
     const initialState = spellBattle({
@@ -636,6 +639,132 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     ) {
       throw new Error("Expected Divine Smite after-hit choice.");
     }
+    const activeFrame =
+      awaitingAttackHit.state.interruptStack[
+        awaitingAttackHit.state.interruptStack.length - 1
+      ];
+    if (
+      activeFrame?.kind !== "interruptCheckpoint" ||
+      activeFrame.frame.trigger !== "attackHit"
+    ) {
+      throw new Error("Expected active attack-hit checkpoint.");
+    }
+    const commandFrame = {
+      ...activeFrame,
+      frame: {
+        ...activeFrame.frame,
+        activeInterrupt: {
+          responderId: spellCasterId,
+          subject: smiteChoice.subject,
+          fills: [],
+        },
+      },
+    };
+    const commandState = {
+      ...awaitingAttackHit.state,
+      interruptStack: [
+        ...awaitingAttackHit.state.interruptStack.slice(0, -1),
+        commandFrame,
+      ],
+    };
+    const caster = requireCombatant(commandState, spellCasterId);
+    if (
+      caster.origin.kind !== "character" ||
+      caster.origin.spellcasting === undefined
+    ) {
+      throw new Error("Expected spellcasting character caster.");
+    }
+    const spellcasting = caster.origin.spellcasting;
+    const executionRegistry = spellProcedureExecutionRegistry();
+    const resolveDirectly = (state: typeof awaitingAttackHit.state) =>
+      resolveCastAttackHitBonusActionSpellCommand(
+        {
+          state,
+          subject: smiteChoice.subject,
+          fills: [],
+        },
+        executionRegistry,
+      );
+    expect(resolveDirectly(casterTurn.state)).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+    const combatantsWithoutCaster = new Map(commandState.combatants);
+    combatantsWithoutCaster.delete(spellCasterId);
+    expect(
+      resolveDirectly({
+        ...commandState,
+        combatants: combatantsWithoutCaster,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+    });
+    expect(
+      resolveDirectly({
+        ...commandState,
+        combatants: new Map(commandState.combatants).set(
+          spellCasterId,
+          testBattleCreatureStateWithConditions(
+            caster,
+            applyCondition(caster.conditions, "incapacitated"),
+          ),
+        ),
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+    const combatantsWithoutTarget = new Map(commandState.combatants);
+    combatantsWithoutTarget.delete(spellTargetId);
+    expect(
+      resolveDirectly({
+        ...commandState,
+        combatants: combatantsWithoutTarget,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "missingCombatant",
+    });
+    expect(
+      resolveDirectly({
+        ...commandState,
+        interruptStack: [
+          ...commandState.interruptStack.slice(0, -1),
+          {
+            ...commandFrame,
+            frame: {
+              ...commandFrame.frame,
+              attackerId: spellTargetId,
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+    expect(
+      resolveDirectly({
+        ...commandState,
+        combatants: new Map(commandState.combatants).set(spellCasterId, {
+          ...caster,
+          origin: {
+            ...caster.origin,
+            spellcasting: {
+              ...spellcasting,
+              spellSlots: spellcasting.spellSlots.map((slot) => ({
+                ...slot,
+                expended: slot.count,
+              })),
+            },
+          },
+        }),
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
     const staleWithoutBonusAction = resolveBattleInterrupt({
       state: {
         ...awaitingAttackHit.state,
