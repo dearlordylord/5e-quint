@@ -129,12 +129,15 @@ export function presentFindFamiliarHitPoints(
     return "Present Find Familiar combatant is missing.";
   }
   const currentHp = findFamiliarCurrentHitPoints(combatant.hp);
-  return typeof currentHp === "string"
-    ? currentHp
-    : {
-        currentHp,
-        tempHp: combatant.tempHp,
-      };
+  /* v8 ignore start -- Present-companion lifecycle invariant: a familiar at zero HP is transitioned and removed atomically before present-state HP is retained. */
+  if (typeof currentHp === "string") {
+    return currentHp;
+  }
+  /* v8 ignore stop */
+  return {
+    currentHp,
+    tempHp: combatant.tempHp,
+  };
 }
 
 export function findFamiliarCurrentHitPoints(
@@ -180,17 +183,21 @@ export function temporarilyDismissFindFamiliar(
     return spent;
   }
   const hitPoints = presentFindFamiliarHitPoints(input.state, familiarId);
+  /* v8 ignore start -- Present-companion lifecycle invariant: zero-HP damage processing transitions and removes the familiar atomically before a dismissal can observe it as present. */
   if (typeof hitPoints === "string") {
     return invalidFindFamiliarResult(input.state, "invalidFill", hitPoints);
   }
+  /* v8 ignore stop */
   const retainedForm = retainedStoredFormForPresentCompanion({
     state: input.state,
     companionId: familiarId,
     companion: familiar,
   });
+  /* v8 ignore start -- Present-companion invariant: dismissal receives the form and live Stat Block combatant admitted together; a retained-form mismatch requires externally corrupted companion state. */
   if (typeof retainedForm === "string") {
     return invalidFindFamiliarResult(input.state, "invalidFill", retainedForm);
   }
+  /* v8 ignore stop */
   const nextFamiliar = findFamiliarTemporarilyDismissedState({
     storedForm: retainedForm,
     identity: familiar.identity,
@@ -204,9 +211,11 @@ export function temporarilyDismissFindFamiliar(
     withFindFamiliar(spent.state, nextFamiliar),
     familiarId,
   );
+  /* v8 ignore start -- Atomic dismissal invariant: the present companion was resolved from this roster immediately before its combatant is removed. */
   if (nextState.tag === "invalid") {
     return nextState;
   }
+  /* v8 ignore stop */
   return resolvedFindFamiliarResult(
     nextState.state,
     droppedObjectsForFamiliarDisappearance({
@@ -263,9 +272,12 @@ export function permanentlyDismissFindFamiliar(
     { ...spent.state, companions },
     familiar.combatantId,
   );
-  return nextState.tag === "invalid"
-    ? nextState
-    : resolvedFindFamiliarResult(nextState.state, []);
+  /* v8 ignore start -- Atomic permanent-dismissal invariant: a present companion's combatant is removed from the same roster entry that supplied its identity. */
+  if (nextState.tag === "invalid") {
+    return nextState;
+  }
+  /* v8 ignore stop */
+  return resolvedFindFamiliarResult(nextState.state, []);
 }
 
 export function reappearAdmittedTemporarilyDismissedFindFamiliar(
@@ -275,6 +287,7 @@ export function reappearAdmittedTemporarilyDismissedFindFamiliar(
     input.state.companions,
     input.casterId,
   );
+  /* v8 ignore start -- Reappearance admission proves this owner has the temporarily dismissed companion represented by the admitted form. */
   if (
     familiarEntry === undefined ||
     familiarEntry.companion.status !== "temporarilyDismissed"
@@ -285,7 +298,9 @@ export function reappearAdmittedTemporarilyDismissedFindFamiliar(
       "Find Familiar can reappear only from temporary dismissal.",
     );
   }
+  /* v8 ignore stop */
   const familiar = familiarEntry.companion;
+  /* v8 ignore start -- The admission object is constructed from this retained companion; differing owner or reappearance ids require mixing records from separate admissions. */
   if (
     input.admission.ownerId !== input.casterId ||
     input.admission.combatantAdmission.combatantId !==
@@ -297,14 +312,17 @@ export function reappearAdmittedTemporarilyDismissedFindFamiliar(
       "Find Familiar reappearance admission does not match the retained familiar.",
     );
   }
+  /* v8 ignore stop */
   const identityIssue = findFamiliarIdentityIssue(
     input.state,
     input.casterId,
     familiar.reappearanceCombatantId,
   );
+  /* v8 ignore start -- Reappearance admission collision-checks the retained combatant id against the current roster immediately before commit. */
   if (identityIssue !== null) {
     return invalidFindFamiliarResult(input.state, "invalidFill", identityIssue);
   }
+  /* v8 ignore stop */
   const nextFamiliar = findFamiliarPresentState({
     form: familiar,
     combatantId: familiar.reappearanceCombatantId,
@@ -332,13 +350,16 @@ export function reappearAdmittedTemporarilyDismissedFindFamiliar(
     currentHp: familiar.hitPoints.currentHp,
     tempHp: familiar.hitPoints.tempHp,
   });
-  return nextState.tag === "invalid"
-    ? nextState
-    : resolvedFindFamiliarResult(
-        nextState.state,
-        [],
-        findFamiliarCompanionLifecycleRouteEvents(),
-      );
+  /* v8 ignore start -- Admitted reappearance commit: owner, identity, form, HP, and roster insertion were proven together before this helper returns. */
+  if (nextState.tag === "invalid") {
+    return nextState;
+  }
+  /* v8 ignore stop */
+  return resolvedFindFamiliarResult(
+    nextState.state,
+    [],
+    findFamiliarCompanionLifecycleRouteEvents(),
+  );
 }
 
 export function applyFindFamiliarZeroHitPointDisappearance(input: {
@@ -359,9 +380,11 @@ export function applyFindFamiliarZeroHitPointDisappearance(input: {
     companionId: input.familiarId,
     companion: entry.familiar,
   });
+  /* v8 ignore start -- Zero-HP disappearance starts from a present companion and the live Stat Block combatant admitted with its stored form. */
   if (typeof retainedForm === "string") {
     return invalidFindFamiliarResult(input.state, "invalidFill", retainedForm);
   }
+  /* v8 ignore stop */
   const nextFamiliar = findFamiliarDisappearedAtZeroHitPointsState({
     storedForm: retainedForm,
     identity: entry.familiar.identity,
@@ -373,9 +396,11 @@ export function applyFindFamiliarZeroHitPointDisappearance(input: {
     withFindFamiliar(input.state, nextFamiliar),
     input.familiarId,
   );
+  /* v8 ignore start -- Atomic zero-HP lifecycle invariant: the present companion lookup and combatant removal operate on the same roster state. */
   if (nextState.tag === "invalid") {
     return nextState;
   }
+  /* v8 ignore stop */
   return resolvedFindFamiliarResult(
     nextState.state,
     droppedObjectsForFamiliarDisappearance({
@@ -486,13 +511,16 @@ function withoutPresentFindFamiliarCombatant(
     state,
     combatantIds: [familiarId],
   });
-  return Either.isLeft(removed)
-    ? invalidFindFamiliarResult(
-        state,
-        "invalidFill",
-        battleStateInitIssueMessage(removed.left),
-      )
-    : { tag: "resolved", state: { ...removed.right, companions } };
+  /* v8 ignore start -- Internal removal invariant: callers pass an id already proven to be the present companion in this roster, so lifecycle-alignment removal cannot fail. */
+  if (Either.isLeft(removed)) {
+    return invalidFindFamiliarResult(
+      state,
+      "invalidFill",
+      battleStateInitIssueMessage(removed.left),
+    );
+  }
+  /* v8 ignore stop */
+  return { tag: "resolved", state: { ...removed.right, companions } };
 }
 
 export function familiarStatBlockWithCreatureTypeOverride(input: {

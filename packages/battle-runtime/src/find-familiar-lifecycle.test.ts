@@ -10,7 +10,12 @@ import {
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84I5 find_familiar
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { findFamiliarCurrentHitPoints } from "./find-familiar-lifecycle-execution.ts";
+import {
+  familiarMaxHp,
+  findFamiliarCurrentHitPoints,
+  findFamiliarIdentityIssue,
+  presentFindFamiliarHitPoints,
+} from "./find-familiar-lifecycle-execution.ts";
 import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
 import * as Either from "effect/Either";
 import { Schema } from "effect";
@@ -1829,6 +1834,108 @@ describe("Find Familiar lifecycle", () => {
       status: "present",
       placement: { kind: "unoccupiedSpaceWithin30Feet" },
     });
+  });
+
+  test("rejects stale familiar lifecycle transitions at their public boundaries", () => {
+    const withoutFamiliar = startFixtureBattle();
+    expect(
+      temporarilyDismissFindFamiliar({
+        state: withoutFamiliar,
+        casterId,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(
+      permanentlyDismissFindFamiliar({
+        state: withoutFamiliar,
+        casterId,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(presentFindFamiliarHitPoints(withoutFamiliar, undefined)).toBe(
+      "Present Find Familiar combatant identity is missing.",
+    );
+    expect(
+      presentFindFamiliarHitPoints(withoutFamiliar, otherCombatantId),
+    ).toBe("Present Find Familiar combatant is missing.");
+    expect(findFamiliarCurrentHitPoints(Hp(0))).toBe(
+      "Present Find Familiar current HP must be above 0.",
+    );
+
+    const cast = castCatFamiliar(withoutFamiliar);
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+    const catSource = Either.getOrThrow(
+      battleStatBlockCombatantSource(
+        statBlockCatalog.requireStatBlock("stat_block_cat"),
+      ),
+    );
+    expect(
+      familiarMaxHp({
+        ...catSource,
+        statBlock: {
+          ...catSource.statBlock,
+          hp: { kind: "caster_derived", source: "spell_save_dc" },
+        },
+      }),
+    ).toBe("Find Familiar form Stat Block must use literal HP.");
+    expect(
+      findFamiliarIdentityIssue(cast.state, otherCombatantId, familiarId),
+    ).toBe(
+      "Find Familiar familiar identity is already owned by another caster.",
+    );
+    const withoutMagicAction = {
+      ...cast.state,
+      currentTurnResources: {
+        ...cast.state.currentTurnResources,
+        actionResources: [],
+      },
+    };
+    expect(
+      temporarilyDismissFindFamiliar({
+        state: withoutMagicAction,
+        casterId,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(
+      permanentlyDismissFindFamiliar({
+        state: withoutMagicAction,
+        casterId,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    const nextTurn = endTurn({ state: cast.state, actorId: casterId });
+    expect(nextTurn.tag).toBe("resolved");
+    if (nextTurn.tag !== "resolved") return;
+    expect(
+      temporarilyDismissFindFamiliar({
+        state: nextTurn.state,
+        casterId,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    const dismissed = temporarilyDismissFindFamiliar({
+      state: withFreshMagicAction(cast.state),
+      casterId,
+    });
+    expect(dismissed.tag).toBe("resolved");
+    if (dismissed.tag !== "resolved") return;
+    expect(
+      temporarilyDismissFindFamiliar({
+        state: withFreshMagicAction(dismissed.state),
+        casterId,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(
+      permanentlyDismissFindFamiliar({
+        state: withFreshMagicAction(dismissed.state),
+        casterId,
+      }),
+    ).toMatchObject({ tag: "resolved" });
+    expect(
+      applyFindFamiliarZeroHitPointDisappearance({
+        state: cast.state,
+        familiarId: otherCombatantId,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
   });
 
   test("rejects retained temporary dismissal with an ordinary reappearance combatant identity", () => {
