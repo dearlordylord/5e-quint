@@ -2990,10 +2990,14 @@ function insectPlagueAreaHazardSaveAlreadyResolved(
   return effect.savedThisTurn.includes(targetId);
 }
 
-function insectPlagueAreaHazardAdjustedDamage(input: {
+type PersistentAreaHazardDamageEffect =
+  | InsectPlagueAreaHazardEffect
+  | CloudkillAreaHazardEffect;
+
+function persistentAreaHazardAdjustedDamage(input: {
   readonly state: BattleState;
   readonly target: BattleCreatureState;
-  readonly effect: InsectPlagueAreaHazardEffect;
+  readonly effect: PersistentAreaHazardDamageEffect;
   readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
   readonly saveSucceeded: boolean;
 }): number {
@@ -3008,15 +3012,16 @@ function insectPlagueAreaHazardAdjustedDamage(input: {
   );
 }
 
-function applyInsectPlagueAreaHazardDamage(input: {
+function applyPersistentAreaHazardDamage(input: {
   readonly state: BattleState;
   readonly targetId: CombatantId;
-  readonly effect: InsectPlagueAreaHazardEffect;
+  readonly effect: PersistentAreaHazardDamageEffect;
   readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
   readonly saveSucceeded: boolean;
-  readonly concentrationSavingThrow?:
-    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
-    | undefined;
+  readonly concentrationSavingThrow?: Extract<
+    BattleFill,
+    { readonly kind: "concentrationSavingThrow" }
+  >;
 }): BattleState {
   const target = input.state.combatants.get(input.targetId);
   if (target === undefined) {
@@ -3025,7 +3030,7 @@ function applyInsectPlagueAreaHazardDamage(input: {
   return applyPreparedSlotSpellDamage(
     input.state,
     input.targetId,
-    insectPlagueAreaHazardAdjustedDamage({
+    persistentAreaHazardAdjustedDamage({
       state: input.state,
       target,
       effect: input.effect,
@@ -3034,7 +3039,9 @@ function applyInsectPlagueAreaHazardDamage(input: {
     }),
     {
       damageSourceId: input.effect.sourceCombatantId,
-      concentrationSavingThrow: input.concentrationSavingThrow,
+      ...(input.concentrationSavingThrow === undefined
+        ? {}
+        : { concentrationSavingThrow: input.concentrationSavingThrow }),
       spatialFacts: [],
     },
   );
@@ -3166,7 +3173,7 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
   /* v8 ignore stop */
-  const adjustedDamage = insectPlagueAreaHazardAdjustedDamage({
+  const adjustedDamage = persistentAreaHazardAdjustedDamage({
     state: input.state,
     target,
     effect,
@@ -3220,13 +3227,15 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
     );
   }
   /* v8 ignore stop */
-  const afterDamage = applyInsectPlagueAreaHazardDamage({
+  const afterDamage = applyPersistentAreaHazardDamage({
     state: input.state,
     targetId: input.subject.actorId,
     effect,
     damageFill,
     saveSucceeded: saveOutcome.succeeded,
-    concentrationSavingThrow: concentrationFill,
+    ...(concentrationFill === undefined
+      ? {}
+      : { concentrationSavingThrow: concentrationFill }),
   });
   const afterMark =
     trigger === "appearsInArea"
@@ -3388,56 +3397,6 @@ function cloudkillAreaHazardSaveAlreadyResolved(
   return effect.savedThisTurn.includes(targetId);
 }
 
-function cloudkillAreaHazardAdjustedDamage(input: {
-  readonly state: BattleState;
-  readonly target: BattleCreatureState;
-  readonly effect: CloudkillAreaHazardEffect;
-  readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
-  readonly saveSucceeded: boolean;
-}): number {
-  const rolledDamage =
-    rolledDiceTotal(input.damageFill.value) +
-    (input.effect.damage.expr.flat ?? 0);
-  return damageAmountAfterTargetAdjustments(
-    input.state,
-    input.target,
-    applySaveDamageResult(rolledDamage, input.saveSucceeded ? "half" : "full"),
-    input.effect.damage.damageType,
-  );
-}
-
-function applyCloudkillAreaHazardDamage(input: {
-  readonly state: BattleState;
-  readonly targetId: CombatantId;
-  readonly effect: CloudkillAreaHazardEffect;
-  readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
-  readonly saveSucceeded: boolean;
-  readonly concentrationSavingThrow?:
-    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
-    | undefined;
-}): BattleState {
-  const target = input.state.combatants.get(input.targetId);
-  if (target === undefined) {
-    return input.state;
-  }
-  return applyPreparedSlotSpellDamage(
-    input.state,
-    input.targetId,
-    cloudkillAreaHazardAdjustedDamage({
-      state: input.state,
-      target,
-      effect: input.effect,
-      damageFill: input.damageFill,
-      saveSucceeded: input.saveSucceeded,
-    }),
-    {
-      damageSourceId: input.effect.sourceCombatantId,
-      concentrationSavingThrow: input.concentrationSavingThrow,
-      spatialFacts: [],
-    },
-  );
-}
-
 export function resolveCloudkillAreaHazardSaveCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
@@ -3564,7 +3523,7 @@ export function resolveCloudkillAreaHazardSaveCommand(
     return invalidResult(input.state, "invalidFill", damageValidation);
   }
   /* v8 ignore stop */
-  const adjustedDamage = cloudkillAreaHazardAdjustedDamage({
+  const adjustedDamage = persistentAreaHazardAdjustedDamage({
     state: input.state,
     target,
     effect,
@@ -3618,13 +3577,15 @@ export function resolveCloudkillAreaHazardSaveCommand(
     );
   }
   /* v8 ignore stop */
-  const afterDamage = applyCloudkillAreaHazardDamage({
+  const afterDamage = applyPersistentAreaHazardDamage({
     state: input.state,
     targetId: input.subject.actorId,
     effect,
     damageFill,
     saveSucceeded: saveOutcome.succeeded,
-    concentrationSavingThrow: concentrationFill,
+    ...(concentrationFill === undefined
+      ? {}
+      : { concentrationSavingThrow: concentrationFill }),
   });
   const afterMark =
     trigger === "appearsInArea"
