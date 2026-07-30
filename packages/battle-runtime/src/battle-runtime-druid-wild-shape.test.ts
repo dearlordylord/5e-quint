@@ -125,6 +125,9 @@ const packAllyId = combatantId("wild-shape-pack-ally");
 const druidGroundPositionId = battleTablePositionId(
   "wild-shape-druid-ground-position",
 );
+const druidOffHandGroundPositionId = battleTablePositionId(
+  "wild-shape-druid-off-hand-ground-position",
+);
 const incapacitatedPackAllyId = combatantId(
   "wild-shape-incapacitated-pack-ally",
 );
@@ -1553,6 +1556,124 @@ test("does not turn a fallen Shield into a wielded Shield through weapon pickup"
   expect(reverted.state.groundObjects.get(druidId)?.has(shieldObjectId)).toBe(
     true,
   );
+});
+
+test("held-weapon pickup reports boundary failures and preserves other fallen objects", () => {
+  const mainWeaponItemId = battleObjectId("main:weapon_quarterstaff");
+  const offHandWeaponItemId = battleObjectId("offhand:weapon_dagger");
+  const initial = druidWildShapeBattle({
+    selectedLoadout: {
+      weapon: {
+        itemId: mainWeaponItemId,
+        unitId: parseSharedUnitId("weapon_quarterstaff"),
+        grip: "one_handed",
+      },
+      offHandWeapon: {
+        itemId: offHandWeaponItemId,
+        unitId: parseSharedUnitId("weapon_dagger"),
+      },
+    },
+  });
+  const subject = wildShapeSubject(initial, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+  if (subject.action !== "assumeForm") {
+    throw new Error("Expected admitted Wild Shape assume-form subject.");
+  }
+  const droppedSource = {
+    kind: "druidWildShape" as const,
+    procedureRef: subject.procedureRef,
+    formExecutionRef: subject.formExecutionRef,
+  };
+  const placed = battleStateWithGroundObjects(initial, [
+    {
+      actorId: druidId,
+      objectId: mainWeaponItemId,
+      positionId: druidGroundPositionId,
+      source: droppedSource,
+    },
+    {
+      actorId: druidId,
+      objectId: offHandWeaponItemId,
+      positionId: druidOffHandGroundPositionId,
+      source: droppedSource,
+    },
+  ]);
+  if (placed.tag !== "applied") {
+    throw new Error(placed.message);
+  }
+  const pickup = (
+    actorId: typeof druidId,
+    objectId: typeof mainWeaponItemId,
+    positionId: typeof druidGroundPositionId,
+    loadoutSlot: Parameters<
+      typeof applyBattleHeldWeaponPickup
+    >[1]["loadoutSlot"] = "mainWeapon",
+  ) =>
+    applyBattleHeldWeaponPickup(placed.state, {
+      interaction: {
+        actorId,
+        objectId,
+        actorSpace: { kind: "actorSpace", positionId },
+      },
+      loadoutSlot,
+    });
+
+  expect(
+    pickup(
+      combatantId("missing-pickup-actor"),
+      mainWeaponItemId,
+      druidGroundPositionId,
+    ),
+  ).toMatchObject({ tag: "invalid", reason: "missingCombatant" });
+  expect(
+    pickup(goblinId, mainWeaponItemId, druidGroundPositionId),
+  ).toMatchObject({ tag: "invalid", reason: "actorNotCharacter" });
+  expect(
+    pickup(
+      druidId,
+      battleObjectId("missing-ground-object"),
+      druidGroundPositionId,
+    ),
+  ).toMatchObject({ tag: "invalid", reason: "objectNotOnGround" });
+  expect(
+    pickup(druidId, mainWeaponItemId, druidOffHandGroundPositionId),
+  ).toMatchObject({ tag: "invalid", reason: "positionMismatch" });
+
+  const pickedUp = pickup(druidId, mainWeaponItemId, druidGroundPositionId);
+  if (pickedUp.tag !== "applied") {
+    throw new Error(pickedUp.message);
+  }
+  const remainingGroundObjects = pickedUp.state.groundObjects.get(druidId);
+  if (remainingGroundObjects === undefined) {
+    throw new Error("Expected the off-hand weapon to remain on the ground.");
+  }
+  expect([...remainingGroundObjects.entries()]).toEqual([
+    [
+      offHandWeaponItemId,
+      {
+        positionId: druidOffHandGroundPositionId,
+        source: droppedSource,
+      },
+    ],
+  ]);
+
+  const offHandPickedUp = pickup(
+    druidId,
+    offHandWeaponItemId,
+    druidOffHandGroundPositionId,
+    "offHandWeapon",
+  );
+  if (offHandPickedUp.tag !== "applied") {
+    throw new Error(offHandPickedUp.message);
+  }
+  const remainingAfterOffHandPickup =
+    offHandPickedUp.state.groundObjects.get(druidId);
+  if (remainingAfterOffHandPickup === undefined) {
+    throw new Error("Expected the main weapon to remain on the ground.");
+  }
+  expect([...remainingAfterOffHandPickup.keys()]).toEqual([mainWeaponItemId]);
 });
 
 test("uses the Shield-compatible unarmored base when armor falls but the Shield remains worn", () => {
