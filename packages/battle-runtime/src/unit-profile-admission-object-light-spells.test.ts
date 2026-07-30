@@ -714,7 +714,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       spellCasterId,
       cantripSpellInvocationRef(lightUnitId, "objectLight"),
     );
-    const oneRoundRemaining: BattleState = {
+    const twoRoundsRemaining: BattleState = {
       ...session.state,
       lightEmitters: [
         {
@@ -733,14 +733,14 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
           opaqueCoverInteraction: { kind: "blocksEmission" },
           expiresAt: {
             kind: "duration",
-            durationTicks: elapsedTimeTicks(1),
+            durationTicks: elapsedTimeTicks(2),
           },
         },
       ],
     };
 
     const sameRound = resolveBattleSubject({
-      state: oneRoundRemaining,
+      state: twoRoundsRemaining,
       subject: {
         tag: "runtimeCommand",
         actorId: spellCasterId,
@@ -751,7 +751,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
     if (sameRound.tag !== "resolved") {
       throw new Error("Expected Light caster end turn to resolve.");
     }
-    const nextRound = resolveBattleSubject({
+    const oneRoundRemaining = resolveBattleSubject({
       state: sameRound.state,
       subject: {
         tag: "runtimeCommand",
@@ -760,8 +760,45 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       },
       fills: [],
     });
+    expect(oneRoundRemaining).toMatchObject({
+      tag: "resolved",
+      state: {
+        lightEmitters: [
+          {
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(1),
+            },
+          },
+        ],
+      },
+    });
+    if (oneRoundRemaining.tag !== "resolved") {
+      throw new Error("Expected Light emitter duration to tick.");
+    }
+    const finalCasterTurn = resolveBattleSubject({
+      state: oneRoundRemaining.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    if (finalCasterTurn.tag !== "resolved") {
+      throw new Error("Expected final Light caster turn to resolve.");
+    }
+    const expired = resolveBattleSubject({
+      state: finalCasterTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
 
-    expect(nextRound).toMatchObject({
+    expect(expired).toMatchObject({
       tag: "resolved",
       state: { lightEmitters: [] },
       snapshot: { lightEmitters: [] },
