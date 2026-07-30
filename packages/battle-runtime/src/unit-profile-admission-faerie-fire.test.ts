@@ -449,6 +449,23 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         undefined,
       ),
     ).toBe("Faerie Fire area affected objects must not duplicate object ids.");
+    expect(
+      validateSavingThrowOutcomes(
+        {
+          ...fill.value,
+          area: {
+            ...fill.value.area,
+            originAnchorId: combatantId("combatant:faerie-fire-foreign-origin"),
+          },
+        },
+        invocation,
+        state.state,
+        spellCasterId,
+        undefined,
+      ),
+    ).toBe(
+      "Save-gate spell area origin anchor must be a combatant in this battle.",
+    );
   });
 
   test("faerie_fire area outcomes form a bijection with current-battle affected targets", () => {
