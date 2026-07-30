@@ -1,6 +1,6 @@
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
-import { Schema } from "effect";
+import { Either, Schema } from "effect";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import {
@@ -57,16 +57,79 @@ import type {
 } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { classLevel } from "@dnd/shared/types";
+import { classLevel, DieRollResult } from "@dnd/shared/types";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
 import { battleContinuationFillEquals } from "./battle-reducer/dispatcher.ts";
 import { BattleStatBlockProcedureExecutionRef } from "./identity.ts";
+import { D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
+import {
+  battleUnitRefWithSupportProfiles,
+  speciesHalflingLuckUnitId,
+  unitLibrary,
+} from "./unit-profile-admission.test-support.ts";
 
 function goblinOpportunityAttackThreat(state: BattleState) {
   const subject = goblinAttackSubject(state, "Scimitar");
   return {
     reactorId: goblinId,
     ...attackExecutionSelectionForSubjectForTest(subject),
+  };
+}
+
+function fighterUnarmedOpportunityAttackThreat(state: BattleState) {
+  const subject = fighterAttackSubject(state, "Unarmed Strike");
+  return {
+    reactorId: fighterId,
+    ...attackExecutionSelectionForSubjectForTest(subject),
+  };
+}
+
+function startFighterUnarmedOpportunityAttack(state: BattleState) {
+  const moveSubject: BattleSubject = {
+    tag: "runtimeCommand",
+    actorId: goblinId,
+    command: "move",
+  };
+  const moveHole = requireHole(
+    resolveBattleSubject({ state, subject: moveSubject, fills: [] }),
+    "movement",
+  );
+  const awaitingReaction = resolveBattleSubject({
+    state,
+    subject: moveSubject,
+    fills: [
+      movementFill(moveHole, {
+        movementCostFeet: 5,
+        provokedOpportunityAttacks: [
+          fighterUnarmedOpportunityAttackThreat(state),
+        ],
+      }),
+    ],
+  });
+  if (awaitingReaction.tag !== "needsHoles") {
+    throw new Error("Expected unarmed Opportunity Attack Reaction window.");
+  }
+  const choice = reactionChoiceWithSubject(
+    awaitingReaction.snapshot.pendingInterrupt!.choices,
+  );
+  const startedReaction = resolveBattleInterrupt({
+    state: awaitingReaction.state,
+    fill: interruptDecisionFill(
+      awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+      {
+        kind: "resolve",
+        responderId: fighterId,
+        choice: opportunityAttackProcedureSelectionForTest(choice),
+      },
+    ),
+  });
+  if (startedReaction.tag !== "needsHoles") {
+    throw new Error("Expected unarmed Opportunity Attack roll hole.");
+  }
+  return {
+    state: startedReaction.state,
+    subject: choice.subject,
+    attackRoll: findHole(startedReaction.holes, "attackRoll"),
   };
 }
 
@@ -1133,6 +1196,93 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         }),
       ]),
     );
+  });
+
+  test("a Halfling Opportunity Attack rerolls a natural 1 and resolves fixed damage without a damage-roll hole", () => {
+    const halflingLuck = unitLibrary.requireUnit(speciesHalflingLuckUnitId);
+    const halflingLuckRef = battleUnitRefWithSupportProfiles({
+      unitRef: { unitId: halflingLuck.id },
+      unit: halflingLuck,
+    });
+    if (Either.isLeft(halflingLuckRef)) {
+      throw new Error(halflingLuckRef.left.message);
+    }
+    const state = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-halfling-opportunity-attack"),
+          combatants: [
+            characterSeed({
+              initiative: 20,
+              characterUnitRefs: [halflingLuckRef.right],
+              unitFeatures: [characterBattleFeatureInitForTest(halflingLuck)],
+            }),
+            statBlockCreatureInit({ initiative: 10 }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const startedReaction = startFighterUnarmedOpportunityAttack(state);
+    const originalRoll = {
+      total: 5,
+      naturalD20: 1,
+    } as const;
+
+    expect(
+      resolveBattleSubject({
+        state: startedReaction.state,
+        subject: startedReaction.subject,
+        fills: [attackRollFill(startedReaction.attackRoll, originalRoll)],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({
+          kind: "attackRoll",
+          d20TestNaturalOneRerolls: expect.any(Array),
+        }),
+      ],
+    });
+
+    const completed = resolveBattleSubject({
+      state: startedReaction.state,
+      subject: startedReaction.subject,
+      fills: [
+        attackRollFill(startedReaction.attackRoll, {
+          ...originalRoll,
+          d20TestNaturalOneReroll: {
+            kind: "reroll",
+            effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+            replacement: {
+              total: 20,
+              naturalD20: DieRollResult(18),
+            },
+          },
+        }),
+      ],
+    });
+
+    expect(completed).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        pendingInterrupt: null,
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: goblinId,
+            hp: 6,
+            movement: expect.objectContaining({
+              spentFeet: 5,
+              remainingFeet: 25,
+            }),
+          }),
+          expect.objectContaining({
+            combatantId: fighterId,
+            reactionAvailable: false,
+          }),
+        ]),
+      },
+    });
   });
 
   test("Opportunity Attack interrupt selection distinguishes two procedures from one reactor", () => {
