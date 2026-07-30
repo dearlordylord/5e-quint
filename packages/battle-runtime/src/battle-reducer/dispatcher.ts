@@ -1819,6 +1819,7 @@ function resolveCompanionLifecycleSubject(
     input.state,
     input.subject.actorId,
   );
+  /* v8 ignore start -- Malformed direct subject: lifecycle discovery requires a retained familiar, while ordinary replay preserves its retained entry (including dismissed states). Reaching no entry requires forging a lifecycle subject for an actor that never owned one. */
   if (familiarEntry === null) {
     return invalidResult(
       input.state,
@@ -1826,6 +1827,7 @@ function resolveCompanionLifecycleSubject(
       "Familiar lifecycle act requires the actor's retained familiar.",
     );
   }
+  /* v8 ignore stop */
   const familiar = familiarEntry.companion;
   if (input.subject.action === "temporarilyDismiss") {
     if (familiar.status !== "present") {

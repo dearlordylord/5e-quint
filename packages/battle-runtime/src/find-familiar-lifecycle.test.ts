@@ -2505,6 +2505,10 @@ describe("Find Familiar lifecycle", () => {
     ) {
       return;
     }
+    const heldObjects = heldObjectFactsFill(
+      requireHole(temporaryDismiss.initialHoles, "heldObjectFacts"),
+      [droppedObjectId],
+    );
 
     const shared = resolveBattleRuntimeSubject({
       session: battleRuntimeSessionForTest({
@@ -2527,12 +2531,7 @@ describe("Find Familiar lifecycle", () => {
     const dismissed = resolveBattleSubject({
       state: cast.state,
       subject: temporaryDismiss.subject,
-      fills: [
-        heldObjectFactsFill(
-          requireHole(temporaryDismiss.initialHoles, "heldObjectFacts"),
-          [droppedObjectId],
-        ),
-      ],
+      fills: [heldObjects],
     });
     expect(dismissed.tag).toBe("resolved");
     if (dismissed.tag !== "resolved") return;
@@ -2548,6 +2547,18 @@ describe("Find Familiar lifecycle", () => {
         objectId: droppedObjectId,
       }),
     ]);
+    expect(
+      resolveBattleSubject({
+        state: dismissed.state,
+        subject: temporaryDismiss.subject,
+        fills: [heldObjects],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Familiar temporary dismissal requires the actor's present familiar.",
+    });
     expect(
       discoverBattleActs(
         battleRuntimeSessionForTest({
