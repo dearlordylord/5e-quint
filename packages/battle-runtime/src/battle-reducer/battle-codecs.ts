@@ -4055,10 +4055,16 @@ type BattleFillEncoded =
         };
         readonly creatureSpaceTraversal?: {
           readonly kind: "occupiedCreatureSpaceTraversal";
-          readonly occupiedSpaces: readonly {
-            readonly occupantId: string;
-            readonly positionId: string;
-          }[];
+          readonly occupiedSpaces: readonly [
+            {
+              readonly occupantId: string;
+              readonly positionId: string;
+            },
+            ...{
+              readonly occupantId: string;
+              readonly positionId: string;
+            }[],
+          ];
           readonly destination:
             | {
                 readonly kind: "unoccupiedSpace";
@@ -5019,7 +5025,7 @@ export const BattleFillSchema: Schema.Schema<
         creatureSpaceTraversal: Schema.optionalWith(
           Schema.Struct({
             kind: Schema.Literal("occupiedCreatureSpaceTraversal"),
-            occupiedSpaces: Schema.Array(
+            occupiedSpaces: Schema.NonEmptyArray(
               Schema.Struct({
                 occupantId: CombatantId,
                 positionId: BattleTablePositionId,

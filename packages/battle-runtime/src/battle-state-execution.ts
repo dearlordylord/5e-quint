@@ -1386,10 +1386,10 @@ export type BattleGrappleDragMovementFact = {
 };
 export type BattleCreatureSpaceTraversalMovementFact = {
   readonly kind: "occupiedCreatureSpaceTraversal";
-  readonly occupiedSpaces: readonly {
+  readonly occupiedSpaces: ReadonlyNonEmptyArray<{
     readonly occupantId: CombatantId;
     readonly positionId: BattleTablePositionId;
-  }[];
+  }>;
   readonly destination:
     | {
         readonly kind: "unoccupiedSpace";

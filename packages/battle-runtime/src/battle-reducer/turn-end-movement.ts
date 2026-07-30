@@ -8091,7 +8091,7 @@ export function parseBattleMovement(
   const creatureSpaceTraversalValidation =
     validateCreatureSpaceTraversalMovementFact(
       state,
-      moverId,
+      mover,
       fill.value.creatureSpaceTraversal,
     );
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -9016,15 +9016,6 @@ function acrobaticMovementProfileForCombatant(
   return null;
 }
 
-const CREATURE_SPACE_TRAVERSAL_WRONG_KIND_MESSAGE =
-  "Creature-space traversal movement fact has the wrong kind.";
-
-const CREATURE_SPACE_TRAVERSAL_EMPTY_SPACES_MESSAGE =
-  "Creature-space traversal movement fact requires an occupied creature space.";
-
-const CREATURE_SPACE_TRAVERSAL_UNKNOWN_MOVER_MESSAGE =
-  "Creature-space traversal requires a known mover.";
-
 const CREATURE_SPACE_TRAVERSAL_MISSING_PROFILE_MESSAGE =
   "Creature-space traversal requires a selected occupied-creature-space movement permission profile.";
 
@@ -9044,9 +9035,6 @@ const CREATURE_SPACE_TRAVERSAL_OCCUPIED_STOP_MESSAGE =
   "Creature-space traversal cannot end in an occupied creature space.";
 
 const CREATURE_SPACE_TRAVERSAL_VALIDATION_MESSAGES = new Set<string>([
-  CREATURE_SPACE_TRAVERSAL_WRONG_KIND_MESSAGE,
-  CREATURE_SPACE_TRAVERSAL_EMPTY_SPACES_MESSAGE,
-  CREATURE_SPACE_TRAVERSAL_UNKNOWN_MOVER_MESSAGE,
   CREATURE_SPACE_TRAVERSAL_MISSING_PROFILE_MESSAGE,
   CREATURE_SPACE_TRAVERSAL_SELF_OCCUPANT_MESSAGE,
   CREATURE_SPACE_TRAVERSAL_REPEATED_OCCUPANT_MESSAGE,
@@ -9063,28 +9051,18 @@ export function isCreatureSpaceTraversalMovementFactValidationMessage(
 
 function validateCreatureSpaceTraversalMovementFact(
   state: BattleState,
-  moverId: CombatantId,
+  mover: BattleCreatureState,
   fact: BattleCreatureSpaceTraversalMovementFact | undefined,
 ): string | null {
   if (fact === undefined) {
     return null;
-  }
-  if (fact.kind !== "occupiedCreatureSpaceTraversal") {
-    return CREATURE_SPACE_TRAVERSAL_WRONG_KIND_MESSAGE;
-  }
-  if (fact.occupiedSpaces.length === 0) {
-    return CREATURE_SPACE_TRAVERSAL_EMPTY_SPACES_MESSAGE;
-  }
-  const mover = state.combatants.get(moverId);
-  if (mover === undefined) {
-    return CREATURE_SPACE_TRAVERSAL_UNKNOWN_MOVER_MESSAGE;
   }
   if (creatureSpaceMovementPermissionProfileForCombatant(mover) === null) {
     return CREATURE_SPACE_TRAVERSAL_MISSING_PROFILE_MESSAGE;
   }
   const seenOccupants = new Set<CombatantId>();
   for (const occupiedSpace of fact.occupiedSpaces) {
-    if (occupiedSpace.occupantId === moverId) {
+    if (occupiedSpace.occupantId === mover.combatantId) {
       return CREATURE_SPACE_TRAVERSAL_SELF_OCCUPANT_MESSAGE;
     }
     if (seenOccupants.has(occupiedSpace.occupantId)) {

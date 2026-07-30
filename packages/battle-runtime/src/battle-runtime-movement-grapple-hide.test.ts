@@ -528,6 +528,27 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         },
       },
     });
+    expect(
+      Either.isLeft(
+        decodeFill({
+          kind: "movement",
+          holeId: "battle:movement",
+          value: {
+            speedKind: "walk",
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            creatureSpaceTraversal: {
+              kind: "occupiedCreatureSpaceTraversal",
+              occupiedSpaces: [],
+              destination: {
+                kind: "unoccupiedSpace",
+                positionId: "beyond-medium-blocker",
+              },
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
 
     expect(
       Either.isRight(
@@ -656,6 +677,100 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     expect(moved.combatants.get(fighterId)).toMatchObject({
       movementSpentFeet: movementFeet(10),
     });
+  });
+
+  test("Halfling Nimbleness Movement facts reject contradictory occupied creatures", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-halfling-nimbleness-occupant-validation"),
+      combatants: [
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Nimble Mover",
+          initiative: 20,
+          size: "small",
+          characterUnitRefs: halflingNimblenessUnitRefs(),
+        }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Medium Blocker",
+          initiative: 10,
+          size: "medium",
+        }),
+      ],
+    });
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "movement",
+    );
+    const destination = {
+      kind: "unoccupiedSpace" as const,
+      positionId: battleTablePositionId("beyond-medium-blocker"),
+    };
+    const invalidTraversals = [
+      {
+        occupiedSpaces: [
+          {
+            occupantId: fighterId,
+            positionId: battleTablePositionId("mover-space"),
+          },
+        ],
+        message:
+          "Creature-space traversal cannot name the mover as the occupied creature.",
+      },
+      {
+        occupiedSpaces: [
+          {
+            occupantId: goblinId,
+            positionId: battleTablePositionId("medium-blocker-front"),
+          },
+          {
+            occupantId: goblinId,
+            positionId: battleTablePositionId("medium-blocker-back"),
+          },
+        ],
+        message:
+          "Creature-space traversal movement fact repeats an occupied creature.",
+      },
+      {
+        occupiedSpaces: [
+          {
+            occupantId: combatantId("missing-occupant"),
+            positionId: battleTablePositionId("missing-occupant-space"),
+          },
+        ],
+        message:
+          "Creature-space traversal references an unknown occupied creature.",
+      },
+    ] as const;
+
+    for (const invalidTraversal of invalidTraversals) {
+      expect(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            movementFill(hole, {
+              movementCostFeet: 10,
+              provokedOpportunityAttacks: [],
+              creatureSpaceTraversal: {
+                kind: "occupiedCreatureSpaceTraversal",
+                occupiedSpaces: invalidTraversal.occupiedSpaces,
+                destination,
+              },
+            }),
+          ],
+        }),
+      ).toMatchObject({
+        tag: "invalid",
+        reason: "invalidFill",
+        message: invalidTraversal.message,
+      });
+    }
   });
 
   test("table route facts derive Nimbleness traversal through a larger creature footprint", () => {
