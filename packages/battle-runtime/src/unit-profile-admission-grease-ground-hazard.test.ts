@@ -262,6 +262,27 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
         trigger: "entersArea",
       },
     });
+    const caster = requireCombatant(targetTurn.state, spellCasterId);
+    const stateWithoutHazard = {
+      ...targetTurn.state,
+      combatants: new Map(targetTurn.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: caster.activeEffects.filter(
+          (effect) => effect.kind !== "greaseGroundHazard",
+        ),
+      }),
+    };
+    expect(
+      resolveBattleSubject({
+        state: stateWithoutHazard,
+        subject: entryAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Grease ground-hazard save is no longer available.",
+    });
     const entrySucceeded = resolveBattleSubject({
       state: targetTurn.state,
       subject: entryAct.subject,

@@ -324,7 +324,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     ).toBe(false);
   });
 
-  test("save resolution rejects a fill from another Web trigger hole", () => {
+  test("save resolution rejects a wrong hole and a repeated entry save", () => {
     const { targetTurn } = castWeb();
     const entryAct = webRestraintSaveAct(
       targetTurn,
@@ -353,6 +353,32 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     expect(requireCombatant(targetTurn.state, spellTargetId)).toMatchObject({
       conditions: expect.objectContaining({ restrained: false }),
       activeEffects: [],
+    });
+    const entryHole = requireHole(entryAct.initialHoles, "savingThrowOutcome");
+    const entryFill = singleTargetSavingThrowOutcomeFill(
+      entryHole,
+      spellTargetId,
+      false,
+    );
+    const firstEntrySave = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: entryAct.subject,
+      fills: [entryFill],
+    });
+    if (firstEntrySave.tag !== "resolved") {
+      throw new Error("Expected first Web entry save to resolve.");
+    }
+    expect(
+      resolveBattleSubject({
+        state: firstEntrySave.state,
+        subject: entryAct.subject,
+        fills: [entryFill],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Web Restraint save was already resolved for this target this turn.",
     });
   });
 
