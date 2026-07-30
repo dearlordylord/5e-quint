@@ -2960,22 +2960,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
   });
 
   test("Heightened Dissonant Whispers uses its only spell target as the disadvantaged target", () => {
-    const session = saveMetamagicBattle({
-      knownOptions: [heightenedMetamagicOption()],
-      classLevels: [
-        { className: "sorcerer", level: 5 },
-        { className: "bard", level: 1 },
-      ],
-      spellcastingSourceClassName: "bard",
-      spellcastingProficiencyBonus: proficiencyBonus(3),
-      cantrips: [],
-      preparedSpells: ["dissonant_whispers"],
-      spellSlots: [
-        { spellLevel: 1, count: 4 },
-        { spellLevel: 2, count: 3 },
-        { spellLevel: 3, count: 3 },
-      ],
-    });
+    const session = dissonantWhispersMetamagicBattle(
+      heightenedMetamagicOption(),
+    );
     const act = heightenedSpellAct(session, spellId("dissonant_whispers"));
     const targetHoles = act.initialHoles.filter(
       (hole) => hole.kind === "targetChoice",
@@ -2998,6 +2985,59 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
 
     expect(saveHole).toMatchObject({
       targetRollModes: [{ targetId: skeletonId, rollMode: "disadvantage" }],
+    });
+  });
+
+  test("Careful Dissonant Whispers uses its only spell target as the protected target", () => {
+    const session = dissonantWhispersMetamagicBattle(carefulMetamagicOption());
+    const act = carefulSpellAct(session, spellId("dissonant_whispers"));
+    const targetHoles = act.initialHoles.filter(
+      (hole) => hole.kind === "targetChoice",
+    );
+
+    expect(targetHoles.map((hole) => hole.label)).toEqual(["Spell target"]);
+    expect(act.initialHoles).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "spellTargetList",
+          label: "Spell Careful Spell protected targets",
+        }),
+      ]),
+    );
+    const [spellTarget] = targetHoles;
+    if (spellTarget === undefined) {
+      throw new Error("Expected Dissonant Whispers spell target.");
+    }
+    const target = targetFill(spellTarget, skeletonId);
+    const awaitingSave = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [target],
+    });
+    const saveHole = findHole(
+      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      "savingThrowOutcome",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          target,
+          {
+            kind: "savingThrowOutcome",
+            holeId: saveHole.holeId,
+            value: {
+              outcomes: [{ targetId: skeletonId, succeeded: false }],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Careful Spell protected targets must be non-caster spell targets that succeed on the saving throw.",
     });
   });
 
@@ -3810,6 +3850,27 @@ function metamagicBattle(input?: {
         currentHp: 4,
         maxHp: 20,
       }),
+    ],
+  });
+}
+
+function dissonantWhispersMetamagicBattle(
+  knownOption: MetamagicOptionFixture,
+): BattleRuntimeSession {
+  return saveMetamagicBattle({
+    knownOptions: [knownOption],
+    classLevels: [
+      { className: "sorcerer", level: 5 },
+      { className: "bard", level: 1 },
+    ],
+    spellcastingSourceClassName: "bard",
+    spellcastingProficiencyBonus: proficiencyBonus(3),
+    cantrips: [],
+    preparedSpells: ["dissonant_whispers"],
+    spellSlots: [
+      { spellLevel: 1, count: 4 },
+      { spellLevel: 2, count: 3 },
+      { spellLevel: 3, count: 3 },
     ],
   });
 }
@@ -4824,17 +4885,24 @@ function heightenedSpellAct(
 }
 
 function carefulBurningHandsAct(session: BattleRuntimeSession): ActionSpellAct {
+  return carefulSpellAct(session, spellId("burning_hands"));
+}
+
+function carefulSpellAct(
+  session: BattleRuntimeSession,
+  selectedSpellId: SpellInvocationRef["spellId"],
+): ActionSpellAct {
   const act = discoverBattleActs(session).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.spellId ===
-        "burning_hands" &&
+        selectedSpellId &&
       candidate.subject.metamagic?.some(
         (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
       ) === true,
   );
   if (act === undefined) {
-    throw new Error("Expected Careful Burning Hands act.");
+    throw new Error(`Expected Careful ${selectedSpellId} act.`);
   }
   return act;
 }
