@@ -18,6 +18,7 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   damageRollFillWithGroups,
+  interruptDecisionFill,
   movementFill,
   requireCombatant,
   requireHole,
@@ -45,6 +46,7 @@ import {
   type BattleRuntimeSession,
   difficultyClass,
   movementFeet,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
@@ -738,5 +740,27 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
 
     const reaction = requireResultHole(result, "interruptDecision");
     expect(reaction.trigger).toBe("opportunityAttack");
+    if (result.tag !== "needsHoles") {
+      throw new Error("Expected Dissonant Whispers opportunity interrupt.");
+    }
+    const afterDecline = resolveBattleInterrupt({
+      state: result.state,
+      fill: interruptDecisionFill(reaction, {
+        kind: "decline",
+        responderId: spellCasterId,
+      }),
+    });
+    expect(afterDecline).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            hp: 18,
+            reactionAvailable: false,
+          }),
+        ]),
+      },
+    });
   });
 });
