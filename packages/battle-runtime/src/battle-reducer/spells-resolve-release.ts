@@ -15,7 +15,6 @@ import {
   attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
 import { Either } from "effect";
-import { spellActiveEffectForExecutionRef } from "../active-effect/execution-ref.ts";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActiveEffect,
@@ -79,7 +78,7 @@ import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-target
 import { expendSpellSlot } from "./spell-effects.ts";
 import {
   applyDancingLightsSpellEffect,
-  setSpellCreatedHeldObjectState,
+  releaseSpellCreatedHeldObjectState,
   repositionDancingLightsSpellEffect,
   dancingLightsFromEffect,
   applySpellActiveEffects,
@@ -143,34 +142,10 @@ export function resolveReleaseSpellCreatedHeldObjectCommand(
     );
   }
   /* v8 ignore stop */
-  const actor = input.state.combatants.get(input.subject.actorId);
-  const selectedEffect =
-    actor === undefined
-      ? undefined
-      : spellActiveEffectForExecutionRef(
-          actor.activeEffects,
-          input.subject.effectRef,
-        );
-  const effect =
-    selectedEffect?.kind === "spellCreatedHeldObject"
-      ? selectedEffect
-      : undefined;
-  if (
-    effect === undefined ||
-    effect.sourceCombatantId !== input.subject.actorId ||
-    effect.objectState.kind !== "held"
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Spell-created held object is no longer held by this actor.",
-    );
-  }
-  const released = setSpellCreatedHeldObjectState({
+  const released = releaseSpellCreatedHeldObjectState({
     state: input.state,
     actorId: input.subject.actorId,
-    effect,
-    objectState: { kind: "notHeld" },
+    effectRef: input.subject.effectRef,
   });
   if (released.tag === "invalid") {
     return invalidResult(input.state, "staleSubject", released.message);

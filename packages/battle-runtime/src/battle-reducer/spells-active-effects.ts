@@ -650,24 +650,32 @@ export function applySpellCreatedHeldObjectEffect(input: {
   };
 }
 
-export function setSpellCreatedHeldObjectState(input: {
+type SetSpellCreatedHeldObjectStateForActorInput = {
   readonly state: BattleState;
-  readonly actorId: CombatantId;
+  readonly actor: BattleCreatureState;
   readonly effect: SpellCreatedHeldObjectActiveEffect;
   readonly objectState: SpellCreatedHeldObjectState;
-}):
+};
+
+function setSpellCreatedHeldObjectStateForActor(
+  input: SetSpellCreatedHeldObjectStateForActorInput & {
+    readonly objectState: Extract<
+      SpellCreatedHeldObjectState,
+      { readonly kind: "notHeld" }
+    >;
+  },
+): { readonly tag: "updated"; readonly state: BattleState };
+function setSpellCreatedHeldObjectStateForActor(
+  input: SetSpellCreatedHeldObjectStateForActorInput,
+):
+  | { readonly tag: "updated"; readonly state: BattleState }
+  | { readonly tag: "invalid"; readonly message: string };
+function setSpellCreatedHeldObjectStateForActor(
+  input: SetSpellCreatedHeldObjectStateForActorInput,
+):
   | { readonly tag: "updated"; readonly state: BattleState }
   | { readonly tag: "invalid"; readonly message: string } {
-  const actor = input.state.combatants.get(input.actorId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (actor === undefined) {
-    return {
-      tag: "invalid",
-      message: "Spell-created held object actor is not in this battle.",
-    };
-  }
-  /* v8 ignore stop */
-  const activeEffects = actor.activeEffects.map((effect) =>
+  const activeEffects = input.actor.activeEffects.map((effect) =>
     effect === input.effect
       ? { ...input.effect, objectState: input.objectState }
       : effect,
@@ -676,13 +684,13 @@ export function setSpellCreatedHeldObjectState(input: {
     input.objectState.kind === "held"
       ? spellCreatedHeldObjectHeldActor({
           state: input.state,
-          actor: { ...actor, activeEffects },
-          actorId: input.actorId,
+          actor: { ...input.actor, activeEffects },
+          actorId: input.actor.combatantId,
         })
       : {
           tag: "updated" as const,
           actor: battleCreatureWithoutSpellCreatedHeldObjectHand({
-            ...actor,
+            ...input.actor,
             activeEffects,
           }),
         };
@@ -694,11 +702,58 @@ export function setSpellCreatedHeldObjectState(input: {
     state: {
       ...input.state,
       combatants: new Map(input.state.combatants).set(
-        input.actorId,
+        input.actor.combatantId,
         nextActor.actor,
       ),
     },
   };
+}
+
+export function setSpellCreatedHeldObjectState(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly effect: SpellCreatedHeldObjectActiveEffect;
+  readonly objectState: SpellCreatedHeldObjectState;
+}):
+  | { readonly tag: "updated"; readonly state: BattleState }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const actor = input.state.combatants.get(input.actorId);
+  /* v8 ignore start -- Defensive internal guard: held-object procedures pass the actor that supplied the selected active effect, so it remains present for this synchronous transition. */
+  if (actor === undefined) {
+    return {
+      tag: "invalid",
+      message: "Spell-created held object actor is not in this battle.",
+    };
+  }
+  /* v8 ignore stop */
+  return setSpellCreatedHeldObjectStateForActor({ ...input, actor });
+}
+
+export function releaseSpellCreatedHeldObjectState(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly effectRef: BattleActiveEffectExecutionRef;
+}):
+  | { readonly tag: "updated"; readonly state: BattleState }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const actor = input.state.combatants.get(input.actorId);
+  const effect = spellCreatedHeldObjectEffectsForActor(actor).find(
+    (candidate) =>
+      candidate.effectRef === input.effectRef &&
+      candidate.sourceCombatantId === input.actorId,
+  );
+  if (actor === undefined || effect?.objectState.kind !== "held") {
+    return {
+      tag: "invalid",
+      message: "Spell-created held object is no longer held by this actor.",
+    };
+  }
+  return setSpellCreatedHeldObjectStateForActor({
+    state: input.state,
+    actor,
+    effect,
+    objectState: { kind: "notHeld" },
+  });
 }
 
 function spellCreatedHeldObjectHeldActor(input: {
