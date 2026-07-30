@@ -3693,6 +3693,25 @@ export function resolveWebAreaRemovedCommand(
   };
 }
 
+function needsHazardCommandHoleWithEndTurnFrontier(input: {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly hole: BattleHole;
+  readonly endTurnProbe: BattleResolutionResult | null;
+}): BattleResolutionResult {
+  /* v8 ignore start -- Malformed combined-command input: a nested End Turn probe is invalid only when fills outside the admitted hazard and End Turn hole contracts were supplied. */
+  if (input.endTurnProbe?.tag === "invalid") {
+    return input.endTurnProbe;
+  }
+  /* v8 ignore stop */
+  return needsHolesResult(input.state, input.subject, [
+    input.hole,
+    ...(input.endTurnProbe?.tag === "needsHoles"
+      ? input.endTurnProbe.holes
+      : []),
+  ]);
+}
+
 function resolveGreaseGroundHazardEndTurnSaveCommand(
   input: BattleResolutionInput & {
     readonly subject: Extract<
@@ -3758,14 +3777,12 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
     fills: endTurnFills,
   });
   if (matchingGreaseFill === undefined) {
-    return endTurnProbe.tag === "needsHoles"
-      ? needsHolesResult(input.state, input.subject, [
-          hole,
-          ...endTurnProbe.holes,
-        ])
-      : endTurnProbe.tag === "invalid"
-        ? endTurnProbe
-        : needsHolesResult(input.state, input.subject, [hole]);
+    return needsHazardCommandHoleWithEndTurnFrontier({
+      state: input.state,
+      subject: input.subject,
+      hole,
+      endTurnProbe,
+    });
   }
   const validation = validateGreaseGroundHazardSavingThrowOutcome(
     matchingGreaseFill.value,
@@ -3933,14 +3950,12 @@ export function resolveGustOfWindLineSaveCommand(
     fills: endTurnFills,
   });
   if (matchingGustFill === undefined) {
-    return endTurnProbe.tag === "needsHoles"
-      ? needsHolesResult(input.state, input.subject, [
-          hole,
-          ...endTurnProbe.holes,
-        ])
-      : endTurnProbe.tag === "invalid"
-        ? endTurnProbe
-        : needsHolesResult(input.state, input.subject, [hole]);
+    return needsHazardCommandHoleWithEndTurnFrontier({
+      state: input.state,
+      subject: input.subject,
+      hole,
+      endTurnProbe,
+    });
   }
   const validation = validateGustOfWindLineSavingThrowOutcome(
     matchingGustFill.value,
@@ -4369,14 +4384,12 @@ export function resolveFlamingSphereSaveCommand(
   });
   const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
   if (saveFill === undefined) {
-    return endTurnProbe.tag === "needsHoles"
-      ? needsHolesResult(input.state, input.subject, [
-          saveHole,
-          ...endTurnProbe.holes,
-        ])
-      : endTurnProbe.tag === "invalid"
-        ? endTurnProbe
-        : needsHolesResult(input.state, input.subject, [saveHole]);
+    return needsHazardCommandHoleWithEndTurnFrontier({
+      state: input.state,
+      subject: input.subject,
+      hole: saveHole,
+      endTurnProbe,
+    });
   }
   const saveValidation = validateFlamingSphereSavingThrowOutcome(
     saveFill.value,
@@ -4409,14 +4422,12 @@ export function resolveFlamingSphereSaveCommand(
   }
   const damageFill = rolledDiceFillForHole(damageFills, damageHole);
   if (damageFill === undefined) {
-    return endTurnProbe.tag === "needsHoles"
-      ? needsHolesResult(input.state, input.subject, [
-          damageHole,
-          ...endTurnProbe.holes,
-        ])
-      : endTurnProbe.tag === "invalid"
-        ? endTurnProbe
-        : needsHolesResult(input.state, input.subject, [damageHole]);
+    return needsHazardCommandHoleWithEndTurnFrontier({
+      state: input.state,
+      subject: input.subject,
+      hole: damageHole,
+      endTurnProbe,
+    });
   }
   const damageValidation = validateFlamingSphereDamageRoll(
     damageFill,
@@ -4465,14 +4476,12 @@ export function resolveFlamingSphereSaveCommand(
       ? undefined
       : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
   if (concentrationHole !== null && concentrationFill === undefined) {
-    return endTurnProbe.tag === "needsHoles"
-      ? needsHolesResult(input.state, input.subject, [
-          concentrationHole,
-          ...endTurnProbe.holes,
-        ])
-      : endTurnProbe.tag === "invalid"
-        ? endTurnProbe
-        : needsHolesResult(input.state, input.subject, [concentrationHole]);
+    return needsHazardCommandHoleWithEndTurnFrontier({
+      state: input.state,
+      subject: input.subject,
+      hole: concentrationHole,
+      endTurnProbe,
+    });
   }
   if (endTurnProbe.tag === "needsHoles") {
     return { ...endTurnProbe, subject: input.subject };
@@ -5144,13 +5153,12 @@ export function resolveMoonbeamSaveCommand(
     : null;
   const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
   if (saveFill === undefined) {
-    if (endTurnProbe?.tag === "invalid") {
-      return endTurnProbe;
-    }
-    return needsHolesResult(input.state, input.subject, [
-      saveHole,
-      ...(endTurnProbe?.tag === "needsHoles" ? endTurnProbe.holes : []),
-    ]);
+    return needsHazardCommandHoleWithEndTurnFrontier({
+      state: input.state,
+      subject: input.subject,
+      hole: saveHole,
+      endTurnProbe,
+    });
   }
   const saveValidation = validateMoonbeamSavingThrowOutcome(
     saveFill.value,
@@ -5183,13 +5191,12 @@ export function resolveMoonbeamSaveCommand(
   }
   const damageFill = rolledDiceFillForHole(damageFills, damageHole);
   if (damageFill === undefined) {
-    if (endTurnProbe?.tag === "invalid") {
-      return endTurnProbe;
-    }
-    return needsHolesResult(input.state, input.subject, [
-      damageHole,
-      ...(endTurnProbe?.tag === "needsHoles" ? endTurnProbe.holes : []),
-    ]);
+    return needsHazardCommandHoleWithEndTurnFrontier({
+      state: input.state,
+      subject: input.subject,
+      hole: damageHole,
+      endTurnProbe,
+    });
   }
   const damageValidation = validateMoonbeamDamageRoll(damageFill, damageHole);
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -5235,13 +5242,12 @@ export function resolveMoonbeamSaveCommand(
       ? undefined
       : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
   if (concentrationHole !== null && concentrationFill === undefined) {
-    if (endTurnProbe?.tag === "invalid") {
-      return endTurnProbe;
-    }
-    return needsHolesResult(input.state, input.subject, [
-      concentrationHole,
-      ...(endTurnProbe?.tag === "needsHoles" ? endTurnProbe.holes : []),
-    ]);
+    return needsHazardCommandHoleWithEndTurnFrontier({
+      state: input.state,
+      subject: input.subject,
+      hole: concentrationHole,
+      endTurnProbe,
+    });
   }
   if (endTurnProbe?.tag === "needsHoles") {
     return { ...endTurnProbe, subject: input.subject };
