@@ -1777,6 +1777,7 @@ export function resolveBattleSubjectInternal(
             }),
       });
     }
+    /* v8 ignore start -- Exhaustive continuation marker: creature-fall interrupt frames store this subject under a `resolved` continuation, and resumeInterruptedProcedure returns that state before dispatching the marker. Only a forged direct resolution request reaches this arm. */
     if (
       subject.tag === "runtimeCommand" &&
       subject.command === "creatureFalls"
@@ -1787,6 +1788,7 @@ export function resolveBattleSubjectInternal(
         snapshot: snapshotBattle(input.state),
       };
     }
+    /* v8 ignore stop */
     if (
       subject.tag === "runtimeCommand" &&
       subject.command === "dragonsBreathExhale"

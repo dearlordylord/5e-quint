@@ -57,6 +57,28 @@ describe("Slow Fall Reaction", () => {
     });
   });
 
+  test("declining Slow Fall resumes the falling creature continuation", () => {
+    const awaitingReaction = openSlowFallWindow(
+      battleWithSlowFallMonk({ level: 4 }),
+    );
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Slow Fall falling-trigger Reaction window.");
+    }
+
+    const declined = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(
+        findHole(awaitingReaction.holes, "interruptDecision"),
+        { kind: "decline", responderId: monkId },
+      ),
+    });
+
+    expect(declined).toMatchObject({
+      tag: "resolved",
+      snapshot: { pendingInterrupt: null },
+    });
+  });
+
   test("spends the Monk's Reaction and reduces caller-supplied fall damage by five times Monk level", () => {
     const state = battleWithSlowFallMonk({ level: 5 });
     const resolved = resolveSlowFallReaction(state);
