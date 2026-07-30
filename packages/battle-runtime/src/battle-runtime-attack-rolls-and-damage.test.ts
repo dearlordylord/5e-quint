@@ -3,6 +3,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import {
   startBattleRight,
   startBattleSessionRight,
+  assertBattleSnapshotCodecRoundTripForTest,
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   fighterVsGoblinBattle,
   criticalRange19UnitRefs,
@@ -36,6 +37,7 @@ import {
   defaultArmorClassState,
   discoverBattleActs,
   resolveBattleSubject,
+  snapshotBattle,
 } from "./battle-runtime.test-support.ts";
 import type {
   BattleState,
@@ -557,6 +559,7 @@ describe("battle runtime: attack rolls and damage", () => {
       ],
     });
     const state = session.state;
+    assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(state));
     const act = discoverBattleActs(session).find(
       (candidate) =>
         candidate.subject.tag === "bonusAction" &&

@@ -20,6 +20,7 @@ import {
   attackRollFill,
   attackRollHoleAfterTarget,
   attackTargetFill,
+  assertBattleSnapshotCodecRoundTripForTest,
   battleId,
   battleRuntimeContextForStateForTest,
   characterAttackSubjectForTest,
@@ -901,6 +902,7 @@ describe("battle runtime: Stat Block actions", () => {
         actorId: fighterId,
       }),
     ).state;
+    assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(goblinTurn));
 
     expect(
       discoveredStatBlockBonusActionSubject(goblinTurn, "disengage"),
@@ -987,6 +989,7 @@ describe("battle runtime: Stat Block actions", () => {
         actorId: fighterId,
       }),
     ).state;
+    assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(goblinTurn));
     const subject = discoveredMultiattackSubject(goblinTurn);
 
     expect(

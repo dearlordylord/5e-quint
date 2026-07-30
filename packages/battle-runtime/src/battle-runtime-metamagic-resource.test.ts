@@ -1,6 +1,7 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
+  assertBattleSnapshotCodecRoundTripForTest,
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
   battleProcedureExecutionRefForTest,
@@ -71,6 +72,7 @@ import {
   resolveBattleSubject,
   resolveBattleSubjectUncheckedForTest,
   savingThrowOutcomeFill,
+  snapshotBattle,
   skeletonId,
   spellRecord,
   startBattleRight,
@@ -224,6 +226,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
   test("discovers Quickened Cure Wounds as a Bonus Action and spends Sorcery Points without spending the Magic action", () => {
     const session = metamagicBattle();
     const state = session.state;
+    assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(state));
     const act = quickenedCureWoundsAct(session);
 
     expect({

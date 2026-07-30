@@ -9,6 +9,7 @@ import { resolveReplayContinuationFromState } from "./battle-execution-compositi
 import {
   actionSurgeResource,
   applyCondition,
+  assertBattleSnapshotCodecRoundTripForTest,
   attackRollFill,
   battleActiveEffectExecutionRefForTest,
   battleId,
@@ -106,6 +107,7 @@ describe("battle runtime: Monk's Focus battle options", () => {
 
   test("Patient Defense can take Disengage as a Bonus Action without spending Focus", () => {
     const state = monkFocusBattle({ usesRemaining: 2 });
+    assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(state));
     const subject = monkFocusSubject(
       state,
       (subject) =>

@@ -75,6 +75,7 @@ import {
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
 import {
+  assertBattleSnapshotCodecRoundTripForTest,
   characterBattleFeatureInitForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -3152,6 +3153,7 @@ describe("Find Familiar lifecycle", () => {
     const cast = castCatFamiliarAfterCasterTurn(session);
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
+    assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(cast.state));
     const attackActs = discoverBattleActs(
       battleRuntimeSessionForTest({
         state: cast.state,

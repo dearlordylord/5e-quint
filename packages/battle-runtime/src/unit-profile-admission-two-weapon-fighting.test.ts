@@ -13,6 +13,7 @@ import { describe, expect, test } from "vitest";
 import { attackBonus } from "@dnd/shared/types";
 import {
   attackTargetFill,
+  assertBattleSnapshotCodecRoundTripForTest,
   attackRollFill,
   battleAbilityModifier,
   battleId,
@@ -26,6 +27,7 @@ import {
   requireHole,
   requireResolved,
   resolveBattleSubject,
+  snapshotBattle,
   startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
@@ -74,8 +76,10 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
   });
 
   test("Light Property Bonus Action Attack still omits a positive damage modifier by default", () => {
+    const session = afterQualifyingLightAttack(lightAttackBattle({}));
+    assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(session.state));
     const result = resolveOffHandHit({
-      state: afterQualifyingLightAttack(lightAttackBattle({})),
+      state: session,
       damageRoll: 4,
     });
 
