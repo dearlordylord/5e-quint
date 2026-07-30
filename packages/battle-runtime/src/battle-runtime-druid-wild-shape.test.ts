@@ -41,6 +41,7 @@ import {
   spendActiveDruidWildShapeProcedureResources,
 } from "./battle-reducer/druid-wild-shape.ts";
 import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
+import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
 import {
   attackInitialTargetHole,
   attackRollFill,
@@ -617,6 +618,9 @@ test("requires and validates Wild Shape equipment disposition fills for selected
   expect(Number(snapshotCreature(resolved.snapshot, druidId).armorClass)).toBe(
     11,
   );
+  expect(
+    combatantHandUses(resolved.state, activeDruid, resolved.state.grapples),
+  ).toEqual({ left: "free", right: "free" });
 
   const activeActs = discoverBattleActCandidates(resolved.state);
   expect(
@@ -739,6 +743,9 @@ test("projects practical worn Wild Shape equipment into the effective loadout", 
   expect(Number(snapshotCreature(resolved.snapshot, druidId).armorClass)).toBe(
     13,
   );
+  expect(
+    combatantHandUses(resolved.state, activeDruid, resolved.state.grapples),
+  ).toEqual({ left: "shield", right: "free" });
   expect(
     discoverBattleActCandidates(resolved.state).some((act) =>
       isAttackActForProcedure(
@@ -888,6 +895,11 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
 
 test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action lane with form statistics", () => {
   const initial = druidWildShapeBattle({
+    armorClass: {
+      ...defaultArmorClassState(),
+      leftHandUse: "offWeapon",
+      rightHandUse: "mainWeapon",
+    },
     attack: weakTrueFormShortswordAttack(),
     offHandAttack: weakTrueFormDaggerAttack(),
     selectedLoadout: {
@@ -941,6 +953,10 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
       ]),
     ]),
   );
+  const activeDruid = requireCharacter(resolved.state, druidId);
+  expect(
+    combatantHandUses(resolved.state, activeDruid, resolved.state.grapples),
+  ).toEqual({ left: "offWeapon", right: "mainWeapon" });
   const battleReadyState = restoreBonusAction(resolved.state);
 
   const activeActs = discoverBattleActCandidates(battleReadyState);
@@ -1086,6 +1102,10 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
 
 test("blocks worn Wild Shape weapon use when form limbs cannot handle objects", () => {
   const initial = druidWildShapeBattle({
+    armorClass: {
+      ...defaultArmorClassState(),
+      rightHandUse: "mainWeapon",
+    },
     selectedLoadout: {
       weapon: {
         itemId: battleObjectId("main:weapon_longsword"),
@@ -1127,6 +1147,10 @@ test("blocks worn Wild Shape weapon use when form limbs cannot handle objects", 
       ),
     ]),
   );
+  const activeDruid = requireCharacter(resolved.state, druidId);
+  expect(
+    combatantHandUses(resolved.state, activeDruid, resolved.state.grapples),
+  ).toEqual({ left: "free", right: "free" });
 
   expect(
     discoverBattleActCandidates(resolved.state).some((act) =>

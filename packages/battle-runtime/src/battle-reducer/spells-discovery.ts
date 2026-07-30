@@ -134,9 +134,10 @@ function discoverRegisteredSpellProcedureCastAct(
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       jumpMovementReplacement: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      /* v8 ignore next -- Triggered Feather Fall invocations are removed by isTriggeredReactionSpellInvocation before ordinary cast-act dispatch. */
+      /* v8 ignore start -- Triggered Feather Fall invocations are removed by isTriggeredReactionSpellInvocation before ordinary cast-act dispatch. */
       featherFallMitigation: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
+      /* v8 ignore stop */
       selfTeleport: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       selfTransformationMode: (value) =>
@@ -205,12 +206,14 @@ function discoverRegisteredSpellProcedureCastAct(
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       command: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      /* v8 ignore next -- Triggered Counterspell invocations are removed by isTriggeredReactionSpellInvocation before ordinary cast-act dispatch. */
+      /* v8 ignore start -- Triggered Counterspell invocations are removed by isTriggeredReactionSpellInvocation before ordinary cast-act dispatch. */
       counterspell: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
-      /* v8 ignore next -- Shield is removed explicitly before ordinary cast-act dispatch and is discovered only from an attack trigger. */
+      /* v8 ignore stop */
+      /* v8 ignore start -- Shield is removed explicitly before ordinary cast-act dispatch and is discovered only from an attack trigger. */
       shieldReaction: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
+      /* v8 ignore stop */
       spellAttackDamage: (value) =>
         executionFor(value.procedure).discoverCastAct(state, actorId, value),
       spellAttackSequence: (value) =>
