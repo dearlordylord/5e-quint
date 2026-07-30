@@ -2636,13 +2636,13 @@ function resolveReplaceSelfTransformationModeCommand(
       "Magic action is no longer available for the current actor.",
     );
   }
-  const selectedEffect =
-    actor === undefined
-      ? undefined
-      : spellActiveEffectForExecutionRef(
-          actor.activeEffects,
-          input.subject.effectRef,
-        );
+  const spent = Either.getOrThrow(
+    spendAction(input.state.currentTurnResources, "magic"),
+  );
+  const selectedEffect = spellActiveEffectForExecutionRef(
+    actor.activeEffects,
+    input.subject.effectRef,
+  );
   const activeEffect =
     selectedEffect?.kind === "selfTransformation" ? selectedEffect : undefined;
   if (
@@ -2672,11 +2672,13 @@ function resolveReplaceSelfTransformationModeCommand(
             naturalWeaponFacts: activeEffect.naturalWeaponFacts,
             naturalWeaponDamageType: input.subject.naturalWeaponDamageType,
           }
-        : null
+        : /* v8 ignore next -- Discovered-subject invariant: the selected damage type comes from these immutable active-effect choices. */
+          null
       : {
           mode: input.subject.mode,
           naturalWeaponFacts: activeEffect.naturalWeaponFacts,
         };
+  /* v8 ignore start -- Stale forged subject: discovery derives Natural Weapons choices from this same active effect, whose immutable procedure facts remain attached for its lifetime. */
   if (modeEffect === null) {
     return invalidResult(
       input.state,
@@ -2684,16 +2686,9 @@ function resolveReplaceSelfTransformationModeCommand(
       "Natural Weapons damage type is no longer available.",
     );
   }
-  const spent = spendAction(input.state.currentTurnResources, "magic");
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Magic action is no longer available for the current actor.",
-    );
-  }
+  /* v8 ignore stop */
   const nextState = applySelfTransformationModeEffect({
-    state: { ...input.state, currentTurnResources: spent.right },
+    state: { ...input.state, currentTurnResources: spent },
     actorId: input.subject.actorId,
     sourceCombatantId: activeEffect.sourceCombatantId,
     sourceProcedureRef: activeEffect.sourceProcedureRef,

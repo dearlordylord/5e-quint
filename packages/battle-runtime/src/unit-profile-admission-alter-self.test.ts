@@ -389,6 +389,57 @@ describe("L12G Alter Self self-transformation Spell Unit admission", () => {
     expect(casterSnapshot?.movement.speedKinds).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ kind: "swim" })]),
     );
+
+    expect(
+      resolveBattleSubject({
+        state: replaced.state,
+        subject: replacementAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Magic action is no longer available for the current actor.",
+    });
+
+    expect(
+      resolveBattleSubject({
+        state: breakBattleConcentration(casterTurn.state, spellCasterId),
+        subject: replacementAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Self-transformation mode replacement requires an active self-transformation effect.",
+    });
+
+    const afterCasterTurn = endTurn({
+      state: replaced.state,
+      actorId: spellCasterId,
+    });
+    if (afterCasterTurn.tag !== "resolved") {
+      throw new Error("Expected caster end turn after replacement.");
+    }
+    const nextCasterTurn = endTurn({
+      state: afterCasterTurn.state,
+      actorId: spellTargetId,
+    });
+    if (nextCasterTurn.tag !== "resolved") {
+      throw new Error("Expected target end turn after replacement.");
+    }
+    expect(
+      resolveBattleSubject({
+        state: nextCasterTurn.state,
+        subject: replacementAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Self-transformation mode is already active.",
+    });
   });
 
   test("Magic action replacement can switch into Natural Weapons with a selected damage type", () => {
