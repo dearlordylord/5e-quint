@@ -1291,6 +1291,87 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     });
   });
 
+  test("readied Spell Attack releases request the selected natural-1 reroll decision", () => {
+    const { unit, unitRef } = halflingLuckSelection();
+    const rayOfFrost = spellRecord("ray_of_frost");
+    const session = spellBattle({
+      cantrips: [rayOfFrost],
+      casterUnitRefs: [unitRef],
+      casterUnitFeatures: [characterBattleFeatureInitForTest(unit)],
+    });
+    const castAct = spellAct({ session, spellId: rayOfFrost.id });
+    if (castAct.subject.tag !== "actionSpell") {
+      throw new Error("Expected a spell Action subject.");
+    }
+    const readySubject = {
+      ...castAct.subject,
+      mode: { tag: "ready" as const, trigger: "attackHit" as const },
+    };
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: readySubject,
+        fills: [],
+      }),
+    );
+    const targetTurn = requireResolved(
+      endTurn({ state: readied.state, actorId: spellCasterId }),
+    );
+    const heldSpell = targetTurn.state.readiedSpells.get(spellCasterId);
+    if (heldSpell === undefined) {
+      throw new Error("Expected the caster to hold the readied spell.");
+    }
+    const releaseSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: spellTargetId,
+      command: "releaseReadiedSpell" as const,
+      readiedSpellCasterId: spellCasterId,
+      procedureRef: heldSpell.procedureRef,
+    };
+    const target = requireTypedHole(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: releaseSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const targetSelection = spellTargetFill(
+      target,
+      rayOfFrost.id,
+      spellCasterId,
+      spellTargetId,
+    );
+    const attack = requireTypedHole(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: releaseSubject,
+        fills: [targetSelection],
+      }),
+      "attackRoll",
+    );
+
+    const awaitingLuck = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: releaseSubject,
+      fills: [
+        targetSelection,
+        attackRollFill(attack, {
+          total: 4,
+          naturalD20: 1,
+        }),
+      ],
+    });
+
+    expect(requireTypedHole(awaitingLuck, "attackRoll")).toMatchObject({
+      d20TestNaturalOneRerolls: [
+        expect.objectContaining({
+          effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+        }),
+      ],
+    });
+  });
+
   test("Concentration Saving Throws consume natural-1 reroll decisions", () => {
     const { unit, unitRef } = halflingLuckSelection();
     const baseSession = startBattleSessionRight({
