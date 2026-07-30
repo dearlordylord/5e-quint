@@ -186,6 +186,124 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       ),
     ).toBe(false);
   });
+
+  test("Hideous Laughter asks for an Advantage repeat save after end-turn spell damage", () => {
+    const baseState = spellBattle({
+      preparedSpells: [spellRecord(hideousLaughterUnitId)],
+    });
+    const caster = requireCombatant(baseState.state, spellCasterId);
+    const casterWithConditions =
+      battleCreatureStateWithKnockOutPreservedConditions(
+        caster,
+        applyCondition(
+          applyCondition(caster.conditions, "prone"),
+          "incapacitated",
+        ),
+      );
+    const state: BattleState = {
+      ...baseState.state,
+      combatants: new Map(baseState.state.combatants).set(spellCasterId, {
+        ...casterWithConditions,
+        activeEffects: [
+          ...caster.activeEffects,
+          {
+            kind: "spellTurnEndDamage",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              "synthetic-end-turn-damage",
+            ),
+            sourceCombatantId: spellTargetId,
+            damage: {
+              expr: { dice: 1, dieSize: 6 },
+              damageType: "fire",
+            },
+            expiresAt: {
+              kind: "endOfTurn",
+              combatantId: spellCasterId,
+              round: baseState.state.initiative.round,
+            },
+          },
+          {
+            kind: "hideousLaughter",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              String(hideousLaughterUnitId),
+            ),
+            sourceCombatantId: spellTargetId,
+            conditionHadNonSpellProneSource: false,
+            conditionHadNonSpellIncapacitatedSource: false,
+            repeatSaveRollMode: null,
+            save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+            expiresAt: {
+              kind: "concentration",
+              combatantId: spellTargetId,
+              durationTicks: hideousLaughterDurationTicks,
+            },
+          },
+        ],
+      }),
+    };
+
+    const awaitingDamage = endTurn({
+      state,
+      actorId: spellCasterId,
+    });
+    if (awaitingDamage.tag !== "needsHoles") {
+      throw new Error("Expected end-turn damage and repeat-save holes.");
+    }
+    const damage = requireResultHole(awaitingDamage, "rolledDice");
+    const endTurnRepeatSave = awaitingDamage.holes.find(
+      (
+        hole,
+      ): hole is Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> =>
+        hole.kind === "savingThrowOutcome" &&
+        "hideousLaughterRepeatSave" in hole &&
+        hole.hideousLaughterRepeatSave.trigger === "endTurn",
+    );
+    if (endTurnRepeatSave === undefined) {
+      throw new Error("Expected Hideous Laughter end-turn repeat save.");
+    }
+    const endTurnRepeatSaveFill = savingThrowOutcomeFill(endTurnRepeatSave, [
+      { targetId: spellCasterId, succeeded: false },
+    ]);
+    const damageFill = damageRollFillWithGroups(damage, [[4]]);
+    const awaitingDamageRepeatSave = endTurn({
+      state,
+      actorId: spellCasterId,
+      fills: [endTurnRepeatSaveFill, damageFill],
+    });
+    const damageRepeatSave = requireResultHole(
+      awaitingDamageRepeatSave,
+      "savingThrowOutcome",
+    );
+    expect(damageRepeatSave).toMatchObject({
+      hideousLaughterRepeatSave: {
+        targetId: spellCasterId,
+        trigger: "damage",
+      },
+      targetRollModes: [{ targetId: spellCasterId, rollMode: "advantage" }],
+    });
+
+    const resolved = endTurn({
+      state,
+      actorId: spellCasterId,
+      fills: [
+        endTurnRepeatSaveFill,
+        damageFill,
+        savingThrowOutcomeFill(damageRepeatSave, [
+          { targetId: spellCasterId, succeeded: true },
+        ]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected end-turn damage repeat save to resolve.");
+    }
+    const resolvedCaster = requireCombatant(resolved.state, spellCasterId);
+    expect(resolvedCaster.hp).toBe(Hp(8));
+    expect(hasCondition(resolvedCaster.conditions, "prone")).toBe(false);
+    expect(hasCondition(resolvedCaster.conditions, "incapacitated")).toBe(
+      false,
+    );
+  });
+
   test("Hideous Laughter asks for a fresh damage repeat save for each same-target Eldritch Blast beam", () => {
     const spell = spellRecord(eldritchBlastUnitId);
     const baseState = spellBattle({
