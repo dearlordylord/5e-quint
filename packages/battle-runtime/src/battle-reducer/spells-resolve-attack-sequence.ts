@@ -218,22 +218,14 @@ export function resolveSpellAttackSequenceAct(input: {
     partFill,
   ] of input.fillSet.attackSequencePartFills.entries()) {
     const resolved = resolveSpellAttackSequencePart({
+      ...input,
       state,
-      input: input.input,
-      actorId: input.actorId,
       invocation: transmutedSpellDamageInvocation(
         input.invocation,
         input.metamagicApplications,
       ),
-      fillSet: input.fillSet,
       partFill,
       partIndex,
-      ...(input.actionCostOverride === undefined
-        ? {}
-        : { actionCostOverride: input.actionCostOverride }),
-      ...(input.metamagicApplications === undefined
-        ? {}
-        : { metamagicApplications: input.metamagicApplications }),
     });
     if (resolved.tag !== "resolved") {
       return resolved;
@@ -319,15 +311,16 @@ function resolveSpellAttackSequencePart(input: {
   readonly metamagicApplications?: readonly SpellMetamagicApplicationFact[];
 }): ResolvedSpellAttackSequencePart | BattleResolutionResult {
   const target = input.partFill.target;
+  /* v8 ignore start -- Internal replay invariant: the outer resolver requests every missing sequence target before iterating its completed part fills. */
   if (target === undefined) {
     const partName = spellAttackSequencePartName();
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       `Spell ${partName} target was not filled.`,
     );
   }
+  /* v8 ignore stop */
   if (target.kind === "combatant") {
     return resolveSpellAttackSequenceCreaturePart({ ...input, target });
   }
@@ -355,6 +348,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
   >;
 }): ResolvedSpellAttackSequencePart | BattleResolutionResult {
   const target = input.state.combatants.get(input.target.targetId);
+  /* v8 ignore start -- Malformed resolution input: a decoded creature target must still match the roster and range facts encoded by its emitted sequence target hole. */
   if (
     target === undefined ||
     !spellTargetIsLegal(
@@ -366,13 +360,13 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     )
   ) {
     const partName = spellAttackSequencePartName();
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       `Spell ${partName} target must be a combatant within the selected spell's supported range.`,
     );
   }
+  /* v8 ignore stop */
   const requiredRollMode = requiredSpellAttackRollMode(
     input.state,
     input.actorId,
@@ -428,6 +422,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     const replacementTarget = input.state.combatants.get(
       sanctuaryCheck.targetId,
     );
+    /* v8 ignore start -- Malformed resolution input: Sanctuary replacement facts must identify a roster combatant legal for this exact sequence spell. */
     if (
       replacementTarget === undefined ||
       !spellTargetIsLegal(
@@ -439,27 +434,28 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       )
     ) {
       const partName = spellAttackSequencePartName();
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
         `Sanctuary replacement Spell ${partName} target must be legal for the selected spell.`,
       );
     }
+    /* v8 ignore stop */
     const originalTargetFill = input.input.fills.find(
       (fill): fill is Extract<BattleFill, { readonly kind: "targetChoice" }> =>
         fill.kind === "targetChoice" &&
         fill.holeId === originalTargetHole.holeId,
     );
+    /* v8 ignore start -- Malformed resolution input: a Sanctuary outcome is accepted only for the sequence target fill that emitted its event id. */
     if (originalTargetFill === undefined) {
       const partName = spellAttackSequencePartName();
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
       return invalidResult(
         input.input.state,
         "invalidFill",
         `Sanctuary replacement requires the original Spell ${partName} target fill.`,
       );
     }
+    /* v8 ignore stop */
     const fills = input.input.fills
       .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
       .map(
@@ -485,16 +481,9 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     }
     /* v8 ignore stop */
     return resolveSpellAttackSequenceAct({
+      ...input,
       input: { ...input.input, fills },
-      actorId: input.actorId,
-      invocation: input.invocation,
       fillSet,
-      ...(input.actionCostOverride === undefined
-        ? {}
-        : { actionCostOverride: input.actionCostOverride }),
-      ...(input.metamagicApplications === undefined
-        ? {}
-        : { metamagicApplications: input.metamagicApplications }),
     });
   }
   if (input.partFill.attackRoll === undefined) {
@@ -607,17 +596,19 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       attackRoll: effectiveAttackRoll,
     },
   );
+  /* v8 ignore start -- Malformed resolution input: Mirror Image emits a duplicate roll only after this sequence attack has hit. */
   if (!hit && input.partFill.mirrorImageDuplicateRoll !== undefined) {
     const partName = spellAttackSequencePartName();
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       `Spell ${partName} Mirror Image duplicate roll is only valid after an attack-roll hit.`,
     );
   }
+  /* v8 ignore stop */
   if (hit) {
     const mirrorImageAttacker = attackRolledState.combatants.get(input.actorId);
+    /* v8 ignore start -- Internal replay invariant: recording an attack roll and consuming Help preserve the already-resolved spell attacker in the combatant map. */
     if (mirrorImageAttacker === undefined) {
       return invalidResult(
         input.input.state,
@@ -625,6 +616,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         "Spell attack sequence actor is no longer in this battle.",
       );
     }
+    /* v8 ignore stop */
     const mirrorImageCheck = mirrorImageHitInterceptionCheck({
       state: attackRolledState,
       attacker: mirrorImageAttacker,
@@ -718,15 +710,16 @@ function resolveSpellAttackSequenceCreaturePart(input: {
     return remarkableAthleteMovement.result;
   }
   const postRemarkableAthleteMovementState = remarkableAthleteMovement.state;
+  /* v8 ignore start -- Malformed resolution input: a missed sequence attack emits no damage-roll hole. */
   if (!hit && input.partFill.damageRoll !== undefined) {
     const partName = spellAttackSequencePartName();
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       `Spell ${partName} damage can only be filled after a hit.`,
     );
   }
+  /* v8 ignore stop */
   if (!hit) {
     return {
       tag: "resolved",
@@ -1134,15 +1127,16 @@ function resolveSpellAttackSequenceObjectPart(input: {
     input.target.objectId,
     input.invocation,
   );
+  /* v8 ignore start -- Malformed resolution input: an object sequence target must carry the range, Armor Class, and damage-disposition fact requested by its emitted hole. */
   if (objectFact === null) {
     const partName = spellAttackSequencePartName();
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       `Spell object ${partName} must include a matching table-supplied range and object Armor Class fact.`,
     );
   }
+  /* v8 ignore stop */
   const sightFact = spellObjectTargetSightFact(
     input.target.spatialFacts.filter(
       (
@@ -1156,18 +1150,19 @@ function resolveSpellAttackSequenceObjectPart(input: {
     input.target.objectId,
     input.invocation,
   );
+  /* v8 ignore start -- Malformed resolution input: visible-object attacks require the sight fact requested alongside the selected object target. */
   if (
     sightFact === null &&
     objectTargetAttackNeedsSightFact(input.state, input.target.objectId)
   ) {
     const partName = spellAttackSequencePartName();
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.input.state,
       "invalidFill",
       `Spell object ${partName} must include a matching table-supplied object sight fact.`,
     );
   }
+  /* v8 ignore stop */
   const requiredRollMode = requiredSpellObjectTargetAttackRollMode(
     input.state,
     input.actorId,
@@ -1375,16 +1370,22 @@ function validateSpellAttackSequencePartAttackRoll(
   attackRoll: NonNullable<SpellAttackSequencePartFillSet["attackRoll"]>,
   requiredRollMode: Parameters<typeof attackRollModeMatches>[1],
 ): string | null {
+  /* v8 ignore start -- Malformed resolution input: decoded sequence attack rolls must satisfy the d20 result protocol attached to the emitted attack-roll hole. */
   if (!attackRollResultIsValid(attackRoll)) {
     return "Spell attack roll result is outside the d20 attack-roll protocol.";
   }
+  /* v8 ignore stop */
   const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(attackRoll);
+  /* v8 ignore start -- Malformed resolution input: sequence spells do not emit the spell-attack reroll options rejected by this validator. */
   if (spellAttackRerollIssue !== null) {
     return spellAttackRerollIssue;
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: the roll mode must match the Advantage and Disadvantage facts used to emit this sequence attack-roll hole. */
   if (!attackRollModeMatches(attackRoll, requiredRollMode)) {
     return "Spell attack roll mode does not match the current attack-roll rule.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
