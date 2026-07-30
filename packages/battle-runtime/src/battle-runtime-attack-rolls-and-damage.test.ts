@@ -22,7 +22,10 @@ import {
   attackDamageDispositionHoleAfterDamage,
   attackDamageDispositionHoleAfterFills,
   attackDamageDispositionFill,
+  battleProcedureExecutionRefForTest,
   characterSeed,
+  concentrationSavingThrowFill,
+  concentrationSavingThrowDc,
   heavyArmorClassState,
   testLongswordAttack,
   testUnarmedStrikeDamageAttack,
@@ -402,6 +405,71 @@ describe("battle runtime: attack rolls and damage", () => {
           { combatantId: fighterId },
           { combatantId: goblinId, hp: 6 },
         ],
+      },
+    });
+  });
+
+  test("fixed-damage Unarmed Strike waits for a concentrating target's save", () => {
+    const baseState = startBattleRight({
+      battleId: battleId("battle-unarmed-fixed-damage-concentration"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          attack: null,
+          unarmedStrike: testUnarmedStrikeDamageAttack(),
+          selectedLoadout: {},
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const goblin = baseState.combatants.get(goblinId);
+    if (goblin === undefined) {
+      throw new Error("Expected concentrating Unarmed Strike target.");
+    }
+    const state: BattleState = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(goblinId, {
+        ...goblin,
+        concentration: {
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            "synthetic-unarmed-target-concentration",
+          ),
+          effectKind: "spellEffect",
+        },
+      }),
+    };
+    const subject = fighterAttackSubject(state, "Unarmed Strike");
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+    const attackFills = [
+      targetFill(targetHole, goblinId),
+      attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+    ];
+
+    const concentration = requireHole(
+      resolveBattleSubject({ state, subject, fills: attackFills }),
+      "concentrationSavingThrow",
+    );
+    expect(concentration).toMatchObject({
+      combatantId: goblinId,
+      damageAmount: 4,
+      dc: concentrationSavingThrowDc(4),
+    });
+    const resolved = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        ...attackFills,
+        concentrationSavingThrowFill(concentration, true),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: goblinId, hp: 6 }),
+        ]),
       },
     });
   });

@@ -453,9 +453,11 @@ function applyBrutalStrikeAfterDamage(input: {
   }
   if (input.choice === "hamstring_blow") {
     const target = input.state.combatants.get(input.targetId);
+    /* v8 ignore start -- Defensive inconsistent-state guard: attack damage, Cunning Strike, and Weapon Mastery Slow preserve the already-resolved attack target in the combatant map before Brutal Strike is applied. */
     if (target === undefined) {
       return { state: input.state, shovePushes: [] };
     }
+    /* v8 ignore stop */
     const activeEffects = [
       ...target.activeEffects.filter(
         (effect) =>
@@ -491,7 +493,11 @@ function spendBrutalStrikeForcefulBlowMovement(
   attackerId: CombatantId,
 ): BattleState {
   const attacker = state.combatants.get(attackerId);
-  if (attacker === undefined) return state;
+  /* v8 ignore start -- Defensive inconsistent-state guard: the preceding Brutal Strike selection is read from this attacker's character procedure bindings, and intervening damage reducers preserve that combatant. */
+  if (attacker === undefined) {
+    return state;
+  }
+  /* v8 ignore stop */
   const movementSpentFeet = movementFeet(
     Number(attacker.movementSpentFeet) +
       Math.floor(Number(effectiveWalkSpeed(state, attacker)) / 2),
@@ -1267,6 +1273,7 @@ export function resolveSelectedAttackProcedure(
   /* v8 ignore stop */
   if (hit) {
     const mirrorImageAttacker = attackRolledState.combatants.get(attackerId);
+    /* v8 ignore start -- Defensive inconsistent-state guard: attackRolledState is produced from the admitted state by resource/effect updates that preserve the already-resolved attacker entry. */
     if (mirrorImageAttacker === undefined) {
       return invalidResult(
         input.state,
@@ -1274,6 +1281,7 @@ export function resolveSelectedAttackProcedure(
         "Attack actor is no longer in this battle.",
       );
     }
+    /* v8 ignore stop */
     const mirrorImageCheck = mirrorImageHitInterceptionCheck({
       state: attackRolledState,
       attacker: mirrorImageAttacker,
