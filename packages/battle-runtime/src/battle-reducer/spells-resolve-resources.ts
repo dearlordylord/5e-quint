@@ -137,30 +137,14 @@ export function spendSpellCastResources(input: {
         input.actorId,
       ),
     };
-    const metamagicSpend = spendSpellCastMetamagicResources({
+    return finishSpellCastResourceSpend({
       state: resourced,
       actorId: input.actorId,
+      invocation: input.invocation,
+      errorState: input.errorState,
       applications: metamagicApplications,
+      shouldStartConcentration,
     });
-    if (Either.isLeft(metamagicSpend)) {
-      return invalidResult(
-        input.errorState,
-        "staleSubject",
-        metamagicSpend.left,
-      );
-    }
-    const nextState = shouldStartConcentration
-      ? startSpellEffectConcentration(
-          metamagicSpend.right,
-          input.actorId,
-          input.invocation,
-        )
-      : metamagicSpend.right;
-    return {
-      tag: "resolved",
-      state: nextState,
-      snapshot: snapshotBattle(nextState),
-    };
   }
   if (input.invocation.resource.tag === "classFeatureFreeCast") {
     return invalidResult(
@@ -195,15 +179,29 @@ export function spendSpellCastResources(input: {
       input.actorId,
     ),
   };
-  const metamagicSpend = spendSpellCastMetamagicResources({
+  return finishSpellCastResourceSpend({
     state: resourced,
     actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.errorState,
     applications: metamagicApplications,
+    shouldStartConcentration,
   });
+}
+
+function finishSpellCastResourceSpend(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: BattleExecutableSpellInvocation;
+  readonly errorState: BattleState;
+  readonly applications: readonly CharacterBattleMetamagicOptionFact[];
+  readonly shouldStartConcentration: boolean;
+}): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  const metamagicSpend = spendSpellCastMetamagicResources(input);
   if (Either.isLeft(metamagicSpend)) {
     return invalidResult(input.errorState, "staleSubject", metamagicSpend.left);
   }
-  const nextState = shouldStartConcentration
+  const nextState = input.shouldStartConcentration
     ? startSpellEffectConcentration(
         metamagicSpend.right,
         input.actorId,
