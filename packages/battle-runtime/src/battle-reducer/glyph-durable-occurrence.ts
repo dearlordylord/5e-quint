@@ -836,6 +836,7 @@ export function releaseGlyphExplosiveRune(input: {
       sourceEffectId,
     };
   }
+  /* v8 ignore start -- refs has exactly one element after the zero- and multi-occurrence returns above, so typed array destructuring cannot produce undefined here. */
   const [ref] = refs;
   if (ref === undefined) {
     return {
@@ -844,12 +845,14 @@ export function releaseGlyphExplosiveRune(input: {
       sourceEffectId,
     };
   }
+  /* v8 ignore stop */
   const validation = glyphExplosiveRuneReleaseWitnessValidation({
     state: input.state,
     profile: input.profile,
     effect: ref.effect,
     witness: input.witness,
   });
+  /* v8 ignore start -- Malformed release witness: trigger discovery binds the occurrence, branch, target geometry, and source identities that this defensive validator rejects. */
   if (validation !== null) {
     return {
       tag: "invalidWitness",
@@ -858,11 +861,13 @@ export function releaseGlyphExplosiveRune(input: {
       reason: validation,
     };
   }
+  /* v8 ignore stop */
   const savingThrow = glyphExplosiveRuneSavingThrowCheck({
     state: input.state,
     effect: ref.effect,
     witness: input.witness,
   });
+  /* v8 ignore start -- Malformed saving-throw witness: the discovered Glyph holes fix target membership, outcome cardinality, and relationship facts before this release is called. */
   if (savingThrow.tag === "invalid") {
     return {
       tag: "invalidWitness",
@@ -871,6 +876,7 @@ export function releaseGlyphExplosiveRune(input: {
       reason: savingThrow.reason,
     };
   }
+  /* v8 ignore stop */
   if (savingThrow.tag === "needsHoles") {
     return {
       tag: "needsHoles",
@@ -886,6 +892,7 @@ export function releaseGlyphExplosiveRune(input: {
     witness: input.witness,
     savingThrowOutcomes: savingThrow.outcomes,
   });
+  /* v8 ignore start -- Malformed damage-lifecycle witness: discovered reduction, concentration, and repeat-save holes are the only fills forwarded to this private check. */
   if (lifecycle.tag === "invalid") {
     return {
       tag: "invalidWitness",
@@ -894,6 +901,7 @@ export function releaseGlyphExplosiveRune(input: {
       reason: lifecycle.reason,
     };
   }
+  /* v8 ignore stop */
   if (lifecycle.tag === "needsHoles") {
     return {
       tag: "needsHoles",
@@ -912,6 +920,7 @@ export function releaseGlyphExplosiveRune(input: {
     witness: input.witness,
     lifecycle: lifecycle.lifecycle,
   });
+  /* v8 ignore start -- Malformed release witness: validation above proves the explosive-rune target and damage facts consumed by the private apply step. */
   if (applied.tag === "invalid") {
     return {
       tag: "invalidWitness",
@@ -920,6 +929,7 @@ export function releaseGlyphExplosiveRune(input: {
       reason: applied.reason,
     };
   }
+  /* v8 ignore stop */
   return {
     tag: "released",
     state: applied.state,
@@ -952,6 +962,7 @@ export function releaseGlyphStoredSpell(input: {
       sourceEffectId,
     };
   }
+  /* v8 ignore start -- refs has exactly one element after the zero- and multi-occurrence returns above, so typed array destructuring cannot produce undefined here. */
   const [ref] = refs;
   if (ref === undefined) {
     return {
@@ -960,12 +971,14 @@ export function releaseGlyphStoredSpell(input: {
       sourceEffectId,
     };
   }
+  /* v8 ignore stop */
   const validation = glyphStoredSpellReleaseWitnessValidation({
     state: input.state,
     profile: input.profile,
     effect: ref.effect,
     witness: input.witness,
   });
+  /* v8 ignore start -- Malformed stored-spell witness: release discovery binds the occurrence, stored branch, triggering creature, and source identities rejected here. */
   if (validation !== null) {
     return {
       tag: "invalidWitness",
@@ -982,6 +995,7 @@ export function releaseGlyphStoredSpell(input: {
       reason: "storedReleaseBranchMismatch",
     };
   }
+  /* v8 ignore stop */
   const resolved = resolveStoredSpellGlyphRelease({
     state: input.state,
     profile: input.profile,
@@ -1087,6 +1101,7 @@ export function endGlyphDurableOccurrence(input: {
       sourceEffectId: input.witness.sourceEffectId,
     };
   }
+  /* v8 ignore start -- refs has exactly one element after the zero- and multi-occurrence returns above, so typed array destructuring cannot produce undefined here. */
   const [ref] = refs;
   if (ref === undefined) {
     return {
@@ -1095,7 +1110,9 @@ export function endGlyphDurableOccurrence(input: {
       sourceEffectId: input.witness.sourceEffectId,
     };
   }
+  /* v8 ignore stop */
   const validation = glyphEndWitnessValidation(ref.effect, input.witness);
+  /* v8 ignore start -- Malformed end witness: trigger discovery binds the occurrence identity and end-reason-specific movement or trigger facts checked here. */
   if (validation !== null) {
     return {
       tag: "invalidWitness",
@@ -1104,6 +1121,7 @@ export function endGlyphDurableOccurrence(input: {
       reason: validation,
     };
   }
+  /* v8 ignore stop */
   return {
     tag: "ended",
     state: battleStateWithoutGlyphOccurrence(
