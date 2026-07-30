@@ -10,6 +10,7 @@ import {
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
+  interruptDecisionFill,
   requireCombatant,
   requireHole,
   requireResultHole,
@@ -29,6 +30,7 @@ import {
   discoverBattleActCandidates,
   endTurn,
   movementFeet,
+  resolveBattleInterrupt,
   resolveBattleSubject,
 } from "./unit-profile-admission.test-support.ts";
 import type {
@@ -136,21 +138,22 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         }),
       ],
     });
-    expect(
-      requireResultHole(opportunityAttack, "interruptDecision"),
-    ).toMatchObject({
+    const opportunityAttackDecision = requireResultHole(
+      opportunityAttack,
+      "interruptDecision",
+    );
+    expect(opportunityAttackDecision).toMatchObject({
       trigger: "opportunityAttack",
     });
-    const approached = resolveBattleSubject({
-      state: targetTurn.state,
-      subject: approachAct.subject,
-      fills: [
-        commandApproachMovementFill(movement, {
-          movementCostFeet: 10,
-          movedWithinFiveFeetOfCaster: false,
-          provokedOpportunityAttacks: [],
-        }),
-      ],
+    if (opportunityAttack.tag !== "needsHoles") {
+      throw new Error("Expected Command Approach opportunity interrupt.");
+    }
+    const approached = resolveBattleInterrupt({
+      state: opportunityAttack.state,
+      fill: interruptDecisionFill(opportunityAttackDecision, {
+        kind: "decline",
+        responderId: commandApproachThreatId,
+      }),
     });
     expect(approached).toMatchObject({
       tag: "resolved",
@@ -717,5 +720,26 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     });
     const reaction = requireResultHole(fled, "interruptDecision");
     expect(reaction.trigger).toBe("opportunityAttack");
+    if (fled.tag !== "needsHoles") {
+      throw new Error("Expected Command Flee opportunity interrupt.");
+    }
+    const afterDecline = resolveBattleInterrupt({
+      state: fled.state,
+      fill: interruptDecisionFill(reaction, {
+        kind: "decline",
+        responderId: spellCasterId,
+      }),
+    });
+    expect(afterDecline).toMatchObject({
+      tag: "resolved",
+      snapshot: { currentActorId: spellCasterId },
+    });
+    if (afterDecline.tag !== "resolved") {
+      throw new Error("Expected Command Flee to resolve after decline.");
+    }
+    expect(requireCombatant(afterDecline.state, spellTargetId)).toMatchObject({
+      movementSpentFeet: movementFeet(30),
+      activeEffects: [],
+    });
   });
 });
