@@ -1104,22 +1104,15 @@ function applyAbilityD20TestRollModeSaveGateEffects(
   const combatants = new Map(state.combatants);
   for (const targetId of successfulTargetIds) {
     const target = combatants.get(targetId);
+    /* v8 ignore start -- validateSavingThrowOutcomes proves every outcome target exists before resource spending, whose action/slot/concentration updates cannot remove combatants before this private helper. */
     if (target === undefined) {
       continue;
     }
+    /* v8 ignore stop */
     combatants.set(targetId, {
       ...target,
       activeEffects: [
-        ...target.activeEffects.filter(
-          (effect) =>
-            !(
-              effect.kind === "nextAttackRollBySelf" &&
-              "sourceProcedureRef" in effect &&
-              effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-              effect.sourceCombatantId ===
-                invocation.successEffect.sourceCombatantId
-            ),
-        ),
+        ...target.activeEffects,
         {
           ...invocation.successEffect,
           sourceProcedureRef: invocation.sourceProcedureRef,
@@ -1129,28 +1122,15 @@ function applyAbilityD20TestRollModeSaveGateEffects(
   }
   for (const targetId of failedTargetIds) {
     const target = combatants.get(targetId);
+    /* v8 ignore start -- validateSavingThrowOutcomes proves every outcome target exists before resource spending, whose action/slot/concentration updates cannot remove combatants before this private helper. */
     if (target === undefined) {
       continue;
     }
+    /* v8 ignore stop */
     combatants.set(targetId, {
       ...target,
       activeEffects: [
-        ...target.activeEffects.filter(
-          (effect) =>
-            !(
-              effect.kind === "abilityD20TestRollModeEndTurnSave" &&
-              effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-              effect.sourceCombatantId ===
-                invocation.failedSaveEffect.sourceCombatantId &&
-              effect.ability === invocation.failedSaveEffect.ability
-            ) &&
-            !(
-              effect.kind === "sourceDamageRollPenalty" &&
-              effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-              effect.sourceCombatantId ===
-                invocation.failedSaveDamagePenaltyEffect.sourceCombatantId
-            ),
-        ),
+        ...target.activeEffects,
         {
           ...invocation.failedSaveEffect,
           sourceProcedureRef: invocation.sourceProcedureRef,
