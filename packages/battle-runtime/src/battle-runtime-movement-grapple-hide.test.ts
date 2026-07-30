@@ -29,6 +29,7 @@ import type {
 import {
   abilityCheckFill,
   applyCondition,
+  attackExecutionSelectionForSubjectForTest,
   attackInitialTargetHole,
   attackRollFill,
   attackRollHoleAfterTarget,
@@ -1487,6 +1488,63 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     });
 
     const decision = requireHole(awaitingReaction, "interruptDecision");
+    expect(
+      resolveBattleInterrupt({
+        state: {
+          ...awaitingReaction.state,
+          readiedMovements: new Map(),
+        },
+        fill: interruptDecisionFill(decision, {
+          kind: "resolve",
+          responderId: fighterId,
+          choice: {
+            kind: "releaseReadiedMovement",
+            readiedMovementActorId: fighterId,
+            fills: [readiedMove],
+          },
+        }),
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "No readied movement is currently being held.",
+    });
+
+    const goblinThreat = {
+      reactorId: goblinId,
+      ...attackExecutionSelectionForSubjectForTest(
+        goblinAttackSubject(awaitingReaction.state, "Scimitar"),
+      ),
+    };
+    const provokingReadiedMove = movementFill(readiedMovementHole, {
+      movementCostFeet: 5,
+      provokedOpportunityAttacks: [goblinThreat],
+    });
+    const opportunityWindow = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(decision, {
+        kind: "resolve",
+        responderId: fighterId,
+        choice: {
+          kind: "releaseReadiedMovement",
+          readiedMovementActorId: fighterId,
+          fills: [provokingReadiedMove],
+        },
+      }),
+    });
+    expect(opportunityWindow).toMatchObject({
+      tag: "needsHoles",
+      snapshot: {
+        pendingInterrupt: {
+          trigger: "opportunityAttack",
+        },
+      },
+    });
+    if (opportunityWindow.tag !== "needsHoles") {
+      throw new Error("Expected nested Opportunity Attack interrupt.");
+    }
+    expect(opportunityWindow.state.readiedMovements.has(fighterId)).toBe(false);
+
     const released = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(decision, {
