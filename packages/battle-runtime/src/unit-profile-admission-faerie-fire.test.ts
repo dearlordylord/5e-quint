@@ -417,6 +417,13 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
     }
     expect(battleActSpellPresentation(act)?.invocation.spellId).toBe(spell.id);
     const fill = faerieFireObjectOutlineFill(savingThrows, [objectId]);
+    if (
+      !("area" in fill.value) ||
+      !("kind" in fill.value.area) ||
+      fill.value.area.kind !== "faerieFireArea"
+    ) {
+      throw new Error("Expected Faerie Fire object-area facts.");
+    }
 
     expect(
       validateSavingThrowOutcomes(
@@ -427,6 +434,21 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         undefined,
       ),
     ).toBeNull();
+    expect(
+      validateSavingThrowOutcomes(
+        {
+          ...fill.value,
+          area: {
+            ...fill.value.area,
+            affectedObjectIds: [objectId, objectId],
+          },
+        },
+        invocation,
+        state.state,
+        spellCasterId,
+        undefined,
+      ),
+    ).toBe("Faerie Fire area affected objects must not duplicate object ids.");
   });
 
   test("faerie_fire area outcomes form a bijection with current-battle affected targets", () => {
