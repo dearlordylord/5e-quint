@@ -5,6 +5,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import {
+  attackDamageDispositionFill,
   damageRollFillWithGroups,
   movementFill,
   requireCombatant,
@@ -30,15 +31,18 @@ import {
   movementFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
+  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   type BattleFill,
   type BattleSubject,
   type BattleState,
 } from "./unit-profile-admission.test-support.ts";
 import {
+  orcRelentlessEnduranceUnitId,
   spellCasterId,
   spellTargetId,
   spikeGrowthAreaId,
   spikeGrowthUnitId,
+  unitLibrary,
   webAreaId,
   webUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
@@ -52,14 +56,33 @@ import type { BattleProcedureExecutionRef } from "./identity.ts";
 
 const spikeGrowthDurationTicks = elapsedTimeTicks(100);
 
-function spikeGrowthTargetTurnState(): {
+function spikeGrowthTargetTurnState(
+  input: {
+    readonly targetHp?: number;
+    readonly targetHasRelentlessEndurance?: boolean;
+  } = {},
+): {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly state: BattleState;
 } {
   const spell = spellRecord(spikeGrowthUnitId);
+  const relentlessEnduranceUnit = input.targetHasRelentlessEndurance
+    ? unitLibrary.requireUnit(orcRelentlessEnduranceUnitId)
+    : undefined;
   const state = spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 2, count: 1 }],
+    ...(relentlessEnduranceUnit === undefined
+      ? {}
+      : {
+          targetResources: [{ unit: relentlessEnduranceUnit }],
+          targetUnitRefs: [
+            {
+              unit: relentlessEnduranceUnit,
+              supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
+            },
+          ],
+        }),
   });
   const act = spellAct({
     session: state,
@@ -89,7 +112,7 @@ function spikeGrowthTargetTurnState(): {
       ...targetTurn.state,
       combatants: new Map(targetTurn.state.combatants).set(spellTargetId, {
         ...target,
-        hp: Hp(20),
+        hp: Hp(input.targetHp ?? 20),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -562,6 +585,92 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
         ]),
       },
     });
+  });
+
+  test("spike growth movement damage can trigger Relentless Endurance", () => {
+    const { sourceProcedureRef, state } = spikeGrowthTargetTurnState({
+      targetHp: 2,
+      targetHasRelentlessEndurance: true,
+    });
+    const subject = {
+      tag: "runtimeCommand" as const,
+      actorId: spellTargetId,
+      command: "move" as const,
+    };
+    const movement = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "movement",
+    );
+    const movementThroughHazard = movementFill(movement, {
+      movementCostFeet: 15,
+      provokedOpportunityAttacks: [],
+      areaDifficultTerrain: spikeGrowthAreaDifficultTerrain(
+        sourceProcedureRef,
+        {
+          totalDistanceFeet: 10,
+          difficultTerrainDistanceFeet: 5,
+          damageDistanceFeet: 5,
+        },
+      ),
+    });
+    const pendingDamage = resolveBattleSubject({
+      state,
+      subject,
+      fills: [movementThroughHazard],
+    });
+    const damageHole = requireResultHole(pendingDamage, "rolledDice");
+    const damage = damageRollFillWithGroups(damageHole, [[1, 1]]);
+    const pendingDisposition = resolveBattleSubject({
+      state,
+      subject,
+      fills: [movementThroughHazard, damage],
+    });
+    const disposition = requireResultHole(
+      pendingDisposition,
+      "attackDamageDisposition",
+    );
+    const replacement = disposition.choices.find(
+      (choice) => choice.kind === "zeroHitPointReplacement",
+    );
+    if (replacement === undefined) {
+      throw new Error("Expected Relentless Endurance disposition.");
+    }
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        movementThroughHazard,
+        damage,
+        attackDamageDispositionFill(disposition, replacement),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            hp: Hp(1),
+            conditions: expect.not.arrayContaining(["unconscious"]),
+            movement: expect.objectContaining({
+              spentFeet: movementFeet(15),
+            }),
+          }),
+        ]),
+      },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Spike Growth movement damage to resolve.");
+    }
+    const target = requireCombatant(resolved.state, spellTargetId);
+    if (target.origin.kind !== "character") {
+      throw new Error("Expected Relentless Endurance target character.");
+    }
+    expect(target.origin.resources).toContainEqual(
+      expect.objectContaining({ usesRemaining: 0 }),
+    );
   });
 
   test("movement rejects spike growth damage distance beyond represented area distance", () => {
