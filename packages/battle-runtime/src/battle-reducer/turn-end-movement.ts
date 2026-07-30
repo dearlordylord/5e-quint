@@ -2407,10 +2407,7 @@ function resolveGreaseGroundHazardEntrySaveCommand(
   }
   /* v8 ignore stop */
   const effect = greaseGroundHazardEffectFor(input.state, input.subject);
-  if (
-    effect === undefined ||
-    !input.state.combatants.has(input.subject.actorId)
-  ) {
+  if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -2544,10 +2541,7 @@ export function resolveWebRestraintSaveCommand(
   }
   /* v8 ignore stop */
   const effect = webRestraintHazardEffectFor(input.state, input.subject);
-  if (
-    effect === undefined ||
-    !input.state.combatants.has(input.subject.actorId)
-  ) {
+  if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -2758,10 +2752,7 @@ export function resolveSleetStormAreaHazardSaveCommand(
   }
   /* v8 ignore stop */
   const effect = sleetStormAreaHazardEffectFor(input.state, input.subject);
-  if (
-    effect === undefined ||
-    !input.state.combatants.has(input.subject.actorId)
-  ) {
+  if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3077,7 +3068,11 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
   /* v8 ignore stop */
   const effect = insectPlagueAreaHazardEffectFor(input.state, input.subject);
   const target = input.state.combatants.get(input.subject.actorId);
-  if (effect === undefined || target === undefined) {
+  if (
+    effect === undefined ||
+    /* v8 ignore next -- Defensive internal guard: the dispatcher's missing-combatant check rejects an absent hazard target before routing this subject here. */
+    target === undefined
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3427,7 +3422,11 @@ export function resolveCloudkillAreaHazardSaveCommand(
   /* v8 ignore stop */
   const effect = cloudkillAreaHazardEffectFor(input.state, input.subject);
   const target = input.state.combatants.get(input.subject.actorId);
-  if (effect === undefined || target === undefined) {
+  if (
+    effect === undefined ||
+    /* v8 ignore next -- Defensive internal guard: the dispatcher's missing-combatant check rejects an absent hazard target before routing this subject here. */
+    target === undefined
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
