@@ -587,19 +587,23 @@ function resolveGrapplerPunchAndGrabAfterHit(input: {
     targetSpatialFacts: input.fillSet.targetSpatialFacts,
   });
   if (eligibility === null) {
-    return grapplerPunchAndGrabFillIsAbsent(input.fillSet)
-      ? { tag: "ok", state: input.state }
-      : {
-          tag: "result",
-          result: invalidResult(
-            input.state,
-            "invalidFill",
-            "Grappler Punch and Grab is only valid after an eligible Unarmed Strike hit.",
-          ),
-        };
+    if (grapplerPunchAndGrabFillIsAbsent(input.fillSet)) {
+      return { tag: "ok", state: input.state };
+    }
+    /* v8 ignore start -- Malformed resolution input: attack discovery emits Punch and Grab fills only for an eligible Attack-action Unarmed Strike hit. */
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Grappler Punch and Grab is only valid after an eligible Unarmed Strike hit.",
+      ),
+    };
+    /* v8 ignore stop */
   }
   const decisionHole = grapplerPunchAndGrabDecisionHole();
   if (input.fillSet.grapplerPunchAndGrabDecision === undefined) {
+    /* v8 ignore start -- Malformed resolution input: the resolver emits the outcome hole only after a decoded decision chooses to use Punch and Grab. */
     if (input.fillSet.grapplerPunchAndGrabOutcome !== undefined) {
       return {
         tag: "result",
@@ -610,6 +614,7 @@ function resolveGrapplerPunchAndGrabAfterHit(input: {
         ),
       };
     }
+    /* v8 ignore stop */
     return {
       tag: "result",
       result: needsHolesResult(input.state, input.subject, [decisionHole]),
@@ -618,6 +623,7 @@ function resolveGrapplerPunchAndGrabAfterHit(input: {
   if (
     input.fillSet.grapplerPunchAndGrabDecision.holeId !== decisionHole.holeId
   ) {
+    /* v8 ignore start -- Malformed resolution input: decoded decision fills are bound to the one emitted Punch and Grab decision-hole id. */
     return {
       tag: "result",
       result: invalidResult(
@@ -626,19 +632,24 @@ function resolveGrapplerPunchAndGrabAfterHit(input: {
         "Grappler Punch and Grab decision uses the wrong hole.",
       ),
     };
+    /* v8 ignore stop */
   }
   if (input.fillSet.grapplerPunchAndGrabDecision.value === "decline") {
-    return input.fillSet.grapplerPunchAndGrabOutcome === undefined
-      ? { tag: "ok", state: input.state }
-      : {
-          tag: "result",
-          result: invalidResult(
-            input.state,
-            "invalidFill",
-            "Grappler Punch and Grab outcome requires using Punch and Grab.",
-          ),
-        };
+    if (input.fillSet.grapplerPunchAndGrabOutcome === undefined) {
+      return { tag: "ok", state: input.state };
+    }
+    /* v8 ignore start -- Malformed resolution input: declining does not emit an outcome hole, so a decoded outcome fill cannot accompany that decision. */
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Grappler Punch and Grab outcome requires using Punch and Grab.",
+      ),
+    };
+    /* v8 ignore stop */
   }
+  /* v8 ignore start -- Malformed resolution input: the decoded Punch and Grab decision value is the closed union "use" | "decline". */
   if (input.fillSet.grapplerPunchAndGrabDecision.value !== "use") {
     return {
       tag: "result",
@@ -649,6 +660,7 @@ function resolveGrapplerPunchAndGrabAfterHit(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   if (input.fillSet.grapplerPunchAndGrabOutcome === undefined) {
     return {
       tag: "result",
