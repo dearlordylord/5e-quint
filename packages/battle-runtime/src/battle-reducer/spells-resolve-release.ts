@@ -244,9 +244,11 @@ export function resolveDancingLightsCastSpellAct(input: {
     invocation: input.invocation,
     errorState: input.input.state,
   });
+  /* v8 ignore start -- Defensive internal guard: dispatcher admission proves this cantrip's Magic Action, and spell-cast interrupt replay cannot spend the caster's Action before this synchronous commit. */
   if (resourced.tag === "invalid") {
     return resourced;
   }
+  /* v8 ignore stop */
   const effected = applyDancingLightsSpellEffect(
     resourced.state,
     input.actorId,
