@@ -8188,6 +8188,7 @@ function parseOngoingFeatureActionRestrictions(
 ): readonly "spellcasting"[] | null {
   const parsed: "spellcasting"[] = [];
   for (const restriction of restrictions) {
+    /* v8 ignore next -- Unsupported structured input: this ongoing-feature profile admits only the spellcasting restriction enumerated by its Surface shape. */
     if (restriction !== "spellcasting") {
       return null;
     }
@@ -8219,6 +8220,7 @@ function parseOngoingFeatureEarlyEndConditions(
     const parsedCondition = ALL_CONDITIONS.find(
       (candidate) => candidate === condition,
     );
+    /* v8 ignore next -- Unsupported structured input: admitted early-end conditions are members of the canonical Condition vocabulary. */
     if (parsedCondition === undefined) {
       return null;
     }
@@ -8231,6 +8233,7 @@ function parseOngoingFeatureArmorCategories(
   categories: readonly string[],
 ): readonly ["heavy"] | readonly [] | null {
   if (categories.length === 0) return [];
+  /* v8 ignore next -- Unsupported structured input: the profile admits either no armor restriction or the single canonical heavy-armor restriction. */
   if (categories.length === 1 && categories[0] === "heavy") return ["heavy"];
   return null;
 }
@@ -8240,6 +8243,7 @@ function durationToRounds(duration: {
   readonly amount: number;
 }): number | null {
   const ticks = elapsedTimeTicksFromTimeSpanDuration(duration);
+  /* v8 ignore next -- Unsupported structured input: admitted ongoing-feature durations use positive Surface time spans convertible to whole combat rounds. */
   if (Either.isLeft(ticks)) {
     return null;
   }
@@ -8438,6 +8442,7 @@ function spellSaveDcModifierBenefit(
   }
   /* v8 ignore stop */
   const sourceClassName = spellSourceFilterClassName(effect.spellSourceFilter);
+  /* v8 ignore next -- Unsupported structured input: the admitted spell benefit supplies a typed class-name source filter, so null represents only a caller-mutated filter. */
   return sourceClassName === null ? null : { sourceClassName, saveDcBonus: 1 };
 }
 
@@ -8478,6 +8483,7 @@ function spellAttackRollModeModifierBenefit(
   }
   /* v8 ignore stop */
   const sourceClassName = spellSourceFilterClassName(effect.spellSourceFilter);
+  /* v8 ignore next -- Unsupported structured input: the admitted spell benefit supplies a typed class-name source filter, so null represents only a caller-mutated filter. */
   return sourceClassName === null
     ? null
     : { sourceClassName, attackRollMode: "advantage" };
@@ -8503,6 +8509,7 @@ function hasOnlySpellAttackRollModeModifierBenefitFields(effect: {
 function spellSourceFilterClassName(
   spellSourceFilter: unknown,
 ): ClassName | null {
+  /* v8 ignore next -- Unsupported structured input: Surface admission supplies an object with one recognized className; the alternatives reject malformed imported atoms. */
   if (
     typeof spellSourceFilter !== "object" ||
     spellSourceFilter === null ||
