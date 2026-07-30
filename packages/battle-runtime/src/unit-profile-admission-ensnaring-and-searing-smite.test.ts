@@ -37,6 +37,7 @@ import {
   abilityModifier,
   cantripSpellInvocationRef,
   discoverBattleActCandidates,
+  discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
   Hp,
@@ -180,7 +181,12 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     }
     expect(requireCombatant(targetTurn.state, spellTargetId).hp).toBe(Hp(13));
 
-    const escapeAct = discoverBattleActCandidates(targetTurn.state).find(
+    const escapeAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        ...state,
+        state: targetTurn.state,
+      }),
+    ).find(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "escapeSpellRestraint",
@@ -192,6 +198,26 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     ) {
       throw new Error("Expected Ensnaring Strike escape action.");
     }
+    expect(escapeAct.routeEvents).toEqual([
+      {
+        kind: "discoverBattleActs",
+        subject: "afterHitDamageRider",
+        holes: ["abilityCheck"],
+        owner: "battleAbilityCheck",
+      },
+      {
+        kind: "discoverBattleActs",
+        subject: "afterHitDamageRider",
+        holes: ["abilityCheck"],
+        owner: "battleConditionLifecycle",
+      },
+      {
+        kind: "discoverBattleActs",
+        subject: "afterHitDamageRider",
+        holes: ["abilityCheck"],
+        owner: "battleConcentration",
+      },
+    ]);
     const escaped = resolveBattleSubject({
       state: targetTurn.state,
       subject: escapeAct.subject,

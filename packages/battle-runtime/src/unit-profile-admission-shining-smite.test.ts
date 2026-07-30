@@ -35,6 +35,7 @@ import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "./battle-reducer/spells-
 import {
   applyCondition,
   battleCreatureStateWithKnockOutPreservedConditions,
+  discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
   Hp,
@@ -308,13 +309,39 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     );
     expect(unseenUnarmedAttackRoll).not.toHaveProperty("rollMode");
 
+    const endConcentrationAct = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        ...session,
+        state: afterWeaponDamage.state,
+      }),
+    ).find(
+      (act) =>
+        act.subject.tag === "runtimeCommand" &&
+        act.subject.command === "endConcentration",
+    );
+    if (
+      endConcentrationAct?.subject.tag !== "runtimeCommand" ||
+      endConcentrationAct.subject.command !== "endConcentration"
+    ) {
+      throw new Error("Expected public Shining Smite End Concentration act.");
+    }
+    expect(endConcentrationAct.routeEvents).toEqual([
+      {
+        kind: "discoverBattleActs",
+        subject: "afterHitDamageRider",
+        holes: [],
+        owner: "battleConcentration",
+      },
+      {
+        kind: "discoverBattleActs",
+        subject: "afterHitDamageRider",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+    ]);
     const concentrationBroken = resolveBattleSubject({
       state: afterWeaponDamage.state,
-      subject: {
-        tag: "runtimeCommand",
-        actorId: spellCasterId,
-        command: "endConcentration",
-      },
+      subject: endConcentrationAct.subject,
       fills: [],
     });
     if (concentrationBroken.tag !== "resolved") {
