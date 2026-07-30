@@ -342,6 +342,7 @@ export function resolveDancingLightsRepositionSpellAct(input: {
   const spent = spendActivationResource(effected.currentTurnResources, {
     kind: "bonusAction",
   });
+  /* v8 ignore start -- Defensive internal guard: dispatcher admission proves the Bonus Action is available, and the preceding synchronous light reposition does not spend turn resources. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.input.state,
@@ -349,6 +350,7 @@ export function resolveDancingLightsRepositionSpellAct(input: {
       "Bonus Action spell is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const state = {
     ...effected,
     currentTurnResources: spent.right,
