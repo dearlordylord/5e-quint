@@ -239,6 +239,43 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         expect.objectContaining({ targetCombatantId: goblinId }),
       ],
     });
+    const spellDropped = requireResolved(
+      resolveBattleSubject({
+        state: marked.state,
+        subject: spellSubject,
+        fills: [
+          targetFill(spellTarget, goblinId),
+          attackRollFill(spellAttack, { total: 15, naturalD20: 10 }),
+          damageRollFillWithGroups(spellDamage, [[8], [6]]),
+        ],
+      }),
+    );
+    expect(spellDropped.state.combatants.get(goblinId)?.hp).toBe(0);
+    expect(spellDropped.state.combatants.get(fighterId)?.activeEffects).toEqual(
+      [
+        expect.objectContaining({
+          kind: "spellMarkedDamageRider",
+          targetCombatantId: goblinId,
+          transfer: { kind: "available", retargetTiming: "sameTurn" },
+        }),
+      ],
+    );
+    expect(spellDropped.routeEvents).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "markedDamageRiderEffect",
+          holes: [],
+          owner: "battleHitPointAndZeroHpLifecycle",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "markedDamageRiderEffect",
+          holes: [],
+          owner: "battleActiveEffect",
+        },
+      ]),
+    );
 
     const target = attackInitialTargetHole(marked.state);
     const roll = attackRollHoleAfterTarget(

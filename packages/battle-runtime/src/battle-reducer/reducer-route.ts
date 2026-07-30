@@ -2249,6 +2249,11 @@ function spellAttackProcedureRouteForResolution(
     ...activeFeatureSpellAttackRollModeResolutionRouteEvents(input, result),
     ...spellAttackHitActiveEffectAdmissionRouteForResolution(input, result),
     ...zeroHitPointSpellEffectTeardownRouteForResolution(input, fill, result),
+    ...(markedDamageRiderTransferRouteForResolution({
+      state: input.state,
+      result,
+      holes,
+    }) ?? []),
   ];
 }
 
@@ -6560,6 +6565,31 @@ function markedDamageRiderTransferBecameAvailable(
   });
 }
 
+function markedDamageRiderTransferRouteForResolution(input: {
+  readonly state: BattleState;
+  readonly result: BattleResolutionResult;
+  readonly holes: readonly BattleReducerRouteHole[];
+}): BattleReducerRouteEvents | undefined {
+  if (
+    input.result.tag !== "resolved" ||
+    !markedDamageRiderTransferBecameAvailable(input.state, input.result.state)
+  ) {
+    return undefined;
+  }
+  return [
+    markedDamageAndConditionProtectionResolveWithoutFillRoute(
+      "markedDamageRiderEffect",
+      input.holes,
+      "battleHitPointAndZeroHpLifecycle",
+    ),
+    markedDamageAndConditionProtectionResolveWithoutFillRoute(
+      "markedDamageRiderEffect",
+      input.holes,
+      "battleActiveEffect",
+    ),
+  ];
+}
+
 function markedDamageRiderLaterTransferBecameAvailable(
   before: BattleState,
   after: BattleState,
@@ -8261,28 +8291,15 @@ function weaponAttackRouteForResolution(
       ),
     ];
   }
-  if (
-    fill.kind === "attackDamageDisposition" &&
-    result.tag === "resolved" &&
-    battleCombatantHasActiveEffectKind(
-      input.state,
-      input.subject.actorId,
-      "spellMarkedDamageRider",
-    ) &&
-    markedDamageRiderTransferBecameAvailable(input.state, result.state)
-  ) {
-    return [
-      markedDamageAndConditionProtectionResolveWithoutFillRoute(
-        "markedDamageRiderEffect",
-        [],
-        "battleHitPointAndZeroHpLifecycle",
-      ),
-      markedDamageAndConditionProtectionResolveWithoutFillRoute(
-        "markedDamageRiderEffect",
-        [],
-        "battleActiveEffect",
-      ),
-    ];
+  if (fill.kind === "attackDamageDisposition") {
+    const transferRoute = markedDamageRiderTransferRouteForResolution({
+      state: input.state,
+      result,
+      holes: [],
+    });
+    if (transferRoute !== undefined) {
+      return transferRoute;
+    }
   }
   const routeFill = battleReducerRouteFill(fill);
   if (routeFill === undefined) {
@@ -8495,25 +8512,13 @@ function weaponHostedAttackCompositionRouteForResolution(input: {
           "battleHitPoint",
         ),
       );
-      if (
-        markedDamageRiderTransferBecameAvailable(
-          input.state,
-          input.result.state,
-        )
-      ) {
-        route.push(
-          markedDamageAndConditionProtectionResolveWithoutFillRoute(
-            "markedDamageRiderEffect",
-            input.holes,
-            "battleHitPointAndZeroHpLifecycle",
-          ),
-          markedDamageAndConditionProtectionResolveWithoutFillRoute(
-            "markedDamageRiderEffect",
-            input.holes,
-            "battleActiveEffect",
-          ),
-        );
-      }
+      route.push(
+        ...(markedDamageRiderTransferRouteForResolution({
+          state: input.state,
+          result: input.result,
+          holes: input.holes,
+        }) ?? []),
+      );
     }
     if (hasWeaponDamageRider) {
       route.push(
