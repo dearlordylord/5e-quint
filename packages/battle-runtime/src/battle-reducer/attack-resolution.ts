@@ -260,9 +260,14 @@ export function needsAttackDamageConcentrationResult(input: {
     input.subject.actorId,
     input.attack,
   );
-  return spent.tag === "invalid"
-    ? spent
-    : needsHolesResult(spent.state, input.subject, [input.concentrationSave]);
+  /* v8 ignore start -- Defensive internal guard: dispatcher admission proves the Attack resource exists, and the pre-concentration damage path preserves it; reaction-window paths spend and return before calling this helper. */
+  if (spent.tag === "invalid") {
+    return spent;
+  }
+  /* v8 ignore stop */
+  return needsHolesResult(spent.state, input.subject, [
+    input.concentrationSave,
+  ]);
 }
 
 export function resolveDash(
