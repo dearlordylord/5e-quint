@@ -357,6 +357,7 @@ function bonusActionStandardActionProcedure(
   | { readonly kind: "staleSpell" }
   | {
       readonly kind: "unit";
+      readonly actor: CharacterBattleCreatureState;
       readonly procedure: CharacterUnitProcedureExecution;
     }
   | undefined {
@@ -386,7 +387,7 @@ function bonusActionStandardActionProcedure(
   ) {
     return undefined;
   }
-  return { kind: "unit", procedure: binding.procedure };
+  return { kind: "unit", actor, procedure: binding.procedure };
 }
 
 export function resolveBonusActionStandardAction(
@@ -423,26 +424,30 @@ export function resolveBonusActionStandardAction(
     );
   }
 
-  return Match.value(input.subject.action).pipe(
-    Match.when("dash", () => resolveBonusActionDash(input)),
-    Match.when("disengage", () => resolveBonusActionDisengage(input)),
-    Match.when("hide", () =>
-      resolveHide({
-        ...input,
-        subject: {
-          tag: "bonusActionStandardAction",
-          actorId: input.subject.actorId,
-          procedureRef: input.subject.procedureRef,
-          action: "hide",
-        },
-      }),
+  return Match.value(input.subject).pipe(
+    Match.when({ action: "dash" }, (subject) =>
+      resolveBonusActionDash({ ...input, subject }),
+    ),
+    Match.when({ action: "disengage" }, (subject) =>
+      resolveBonusActionDisengage({ ...input, subject }),
+    ),
+    Match.when({ action: "hide" }, (subject) =>
+      resolveHide({ ...input, subject }),
     ),
     Match.exhaustive,
   );
 }
 
 export function resolveBonusActionDash(
-  input: BonusActionStandardActionBattleResolutionInput,
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "bonusActionStandardAction";
+        readonly action: "dash";
+      }
+    >
+  >,
 ): BattleResolutionResult {
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
@@ -461,14 +466,13 @@ export function resolveBonusActionDash(
   }
   /* v8 ignore stop */
   const procedure = bonusActionStandardActionProcedure(actor, input.subject);
-  const dashTemporaryHitPoints =
+  const dashTemporaryHitPointsProcedure =
     procedure?.kind === "unit" &&
     typeof procedure.procedure.execution === "object" &&
     procedure.procedure.execution.kind === "bonusActionDashTemporaryHitPoints"
-      ? procedure.procedure
+      ? procedure
       : null;
-  const speedKind =
-    input.subject.action === "dash" ? input.subject.speedKind : "walk";
+  const speedKind = input.subject.speedKind;
   if (!representedMovementSpeedKinds(actor).includes(speedKind)) {
     return invalidResult(
       input.state,
@@ -476,17 +480,21 @@ export function resolveBonusActionDash(
       "Dash speed kind is not represented for this combatant.",
     );
   }
-  const dashTemporaryHitPointsResourcePoolRef =
-    dashTemporaryHitPoints?.source.kind === "resourcePool"
-      ? dashTemporaryHitPoints.source.resourcePoolRef
-      : undefined;
+  const dashTemporaryHitPoints =
+    dashTemporaryHitPointsProcedure === null ||
+    dashTemporaryHitPointsProcedure.procedure.source.kind !== "resourcePool"
+      ? null
+      : {
+          actor: dashTemporaryHitPointsProcedure.actor,
+          resourcePoolRef:
+            dashTemporaryHitPointsProcedure.procedure.source.resourcePoolRef,
+        };
   if (
-    dashTemporaryHitPoints !== null &&
-    (!isCharacterBattleCreatureState(actor) ||
-      dashTemporaryHitPointsResourcePoolRef === undefined ||
-      !actor.origin.resources.some(
+    dashTemporaryHitPointsProcedure !== null &&
+    (dashTemporaryHitPoints === null ||
+      !dashTemporaryHitPoints.actor.origin.resources.some(
         (resource) =>
-          resource.resourcePoolRef === dashTemporaryHitPointsResourcePoolRef &&
+          resource.resourcePoolRef === dashTemporaryHitPoints.resourcePoolRef &&
           resourceHasUsesRemaining(resource),
       ))
   ) {
@@ -515,17 +523,10 @@ export function resolveBonusActionDash(
     spent.right,
   );
   if (dashTemporaryHitPoints !== null) {
-    if (!isCharacterBattleCreatureState(actor) || procedure?.kind !== "unit") {
-      return invalidResult(
-        input.state,
-        "unsupportedActOption",
-        "Bonus Action Dash Temporary Hit Points requires a character feature resource.",
-      );
-    }
     return resolveBonusActionDashTemporaryHitPoints(
       nextState,
-      actor,
-      dashTemporaryHitPointsResourcePoolRef,
+      dashTemporaryHitPoints.actor,
+      dashTemporaryHitPoints.resourcePoolRef,
     );
   }
   return {
@@ -538,7 +539,7 @@ export function resolveBonusActionDash(
 export function resolveBonusActionDashTemporaryHitPoints(
   dashedState: BattleState,
   actor: CharacterBattleCreatureState,
-  resourcePoolRef: BattleResourcePoolExecutionRef | undefined,
+  resourcePoolRef: BattleResourcePoolExecutionRef,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
   const nextActor = applyTemporaryHitPoints(
     {
@@ -570,7 +571,11 @@ export function resolveBonusActionDashTemporaryHitPoints(
 }
 
 export function resolveBonusActionDisengage(
-  input: BonusActionStandardActionBattleResolutionInput,
+  input: BattleResolutionInputForSubject<
+    Extract<BattleSubject, { readonly tag: "bonusActionStandardAction" }> & {
+      readonly action: "disengage";
+    }
+  >,
 ): BattleResolutionResult {
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
@@ -1490,6 +1495,7 @@ export function resolveGrapple(
   const spent = spendUnarmedStrikeActionResource(
     input.state.currentTurnResources,
   );
+  /* v8 ignore start -- Defensive internal guard: dispatcher unarmed-strike resource admission rejects an exhausted compatible Action before routing Grapple here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1497,6 +1503,7 @@ export function resolveGrapple(
       "Grapple is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const nextState = applyGrappleSavingThrowOutcome({
     state: {
       ...input.state,
@@ -1643,6 +1650,7 @@ export function resolveShove(
   const spent = spendUnarmedStrikeActionResource(
     input.state.currentTurnResources,
   );
+  /* v8 ignore start -- Defensive internal guard: dispatcher unarmed-strike resource admission rejects an exhausted compatible Action before routing Shove here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1650,6 +1658,7 @@ export function resolveShove(
       "Shove is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const savingThrowExtendedState = extendSavingThrowOngoingFeatures(
     input.state,
     input.subject.actorId,
@@ -1846,6 +1855,7 @@ export function resolveEscapeSpellRestraint(
   }
   /* v8 ignore stop */
   const spent = spendAction(input.state.currentTurnResources, "utilize");
+  /* v8 ignore start -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing this Utilize action here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1853,6 +1863,7 @@ export function resolveEscapeSpellRestraint(
       "Escape spell Restraint is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const nextState =
     check.value.value.total >= dc
       ? resolveSuccessfulEscapeSpellRestraint(
