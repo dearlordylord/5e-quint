@@ -6781,6 +6781,7 @@ export function resolveEndTurnCommand(
             hole: spellTurnStartSavingThrowOutcomeHole(
               nextActorId,
               effect,
+              /* v8 ignore next -- Internal turn-boundary invariant: this callback only runs for a start-turn effect read from nextActor, so nextActor cannot be absent here. */
               nextActor === undefined
                 ? []
                 : savingThrowFlatBonusProjections(
@@ -7026,9 +7027,11 @@ export function resolveEndTurnCommand(
   }
   const endTurnHideousLaughterDamageRepeatSaveChecks =
     endTurnDamageRollRequests.map((request) => {
+      /* v8 ignore start -- Internal turn-boundary invariant: endTurnDamageRollRequests can contain an entry only when that effect was read from actor. */
       if (actor === undefined) {
         return { tag: "ok" as const, holes: [] };
       }
+      /* v8 ignore stop */
       const damageAmount = spellTurnEndDamageAmount(
         input.state,
         actor,
@@ -7075,9 +7078,11 @@ export function resolveEndTurnCommand(
   }
   const startTurnHideousLaughterDamageRepeatSaveChecks =
     startTurnDamageRollRequests.map((request) => {
+      /* v8 ignore start -- Internal turn-boundary invariant: startTurnDamageRollRequests can contain an entry only when that effect was read from nextActor. */
       if (nextActor === undefined) {
         return { tag: "ok" as const, holes: [] };
       }
+      /* v8 ignore stop */
       const damageAmount = spellTurnStartDamageAmount(
         input.state,
         nextActor,
@@ -7328,9 +7333,11 @@ export function resolveEndTurnCommand(
   const endTurnConcentrationHoles = endTurnDamageRollRequests.flatMap(
     (request) => {
       const target = actor;
+      /* v8 ignore start -- Internal turn-boundary invariant: an end-turn damage request exists only when its target actor supplied the source effect. */
       if (target === undefined) {
         return [];
       }
+      /* v8 ignore stop */
       return damageLifecycleConcentrationSavingThrowHoles({
         state: input.state,
         target,
@@ -7346,9 +7353,11 @@ export function resolveEndTurnCommand(
   const startTurnConcentrationHoles = startTurnDamageRollRequests.flatMap(
     (request) => {
       const target = nextActor;
+      /* v8 ignore start -- Internal turn-boundary invariant: a start-turn damage request exists only when its target nextActor supplied the source effect. */
       if (target === undefined) {
         return [];
       }
+      /* v8 ignore stop */
       return damageLifecycleConcentrationSavingThrowHoles({
         state: input.state,
         target,
