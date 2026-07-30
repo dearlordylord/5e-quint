@@ -1924,11 +1924,13 @@ export function battleUnitRefWithSupportProfiles(input: {
     input.unit,
     input.unitRef.selectedOption,
   );
+  /* v8 ignore start -- Malformed authored support shape: the focused Hunter's Prey reader reports unsupported mechanics before a Unit ref can be admitted. */
   if (huntersPreySupport === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Hunter's Prey Unit hook: ${input.unit.id}.`,
     );
   }
+  /* v8 ignore stop */
   if (
     !isClassicNonSrdMechanicsUnit(input.unit) &&
     hasClassFeatureMechanicsFamily(input.unit, "hunters_prey") &&

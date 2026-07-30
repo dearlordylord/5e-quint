@@ -486,6 +486,41 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     ).toBeNull();
   });
 
+  test("Unit-ref admission rejects contradictory authored identity and retained selections", () => {
+    const huntersPreyUnit = unitLibrary.requireUnit(rangerHuntersPreyUnitId);
+    const secondWindUnit = unitLibrary.requireUnit(fighterSecondWindUnitId);
+
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: secondWindUnit.id },
+        unit: huntersPreyUnit,
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleUnitSupportProfileIssue",
+        message: `Battle Unit ref ${secondWindUnit.id} does not match Unit ${huntersPreyUnit.id}.`,
+      }),
+    );
+
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: {
+          unitId: secondWindUnit.id,
+          selectedOption: {
+            kind: "huntersPrey",
+            selection: "woundedTargetWeaponDamage",
+          },
+        },
+        unit: secondWindUnit,
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleUnitSupportProfileIssue",
+        message: `Battle Unit ref ${secondWindUnit.id} selected Hunter's Prey option requires Hunter's Prey support.`,
+      }),
+    );
+  });
+
   test.each(admissionCases)(
     "$unitId is admitted and projected deterministically",
     ({ unitId, className, support, supportForUnit, payloadKey }) => {
