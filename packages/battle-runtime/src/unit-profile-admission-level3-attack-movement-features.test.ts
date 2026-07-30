@@ -73,7 +73,9 @@ import {
   attackExecutionSelectionForSubjectForTest,
   characterBattleFeatureInitForTest,
   characterAttackSubjectForTest,
+  endTurn,
   requireCharacterUnitProcedureRefForTest,
+  requireResolved,
 } from "./battle-runtime.test-support.ts";
 
 const remarkableAthleteActorId = combatantId("remarkable-athlete-actor");
@@ -932,6 +934,113 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       tag: "needsHoles",
       holes: [expect.objectContaining({ kind: "rolledDice" })],
     });
+  });
+
+  test("Remarkable Athlete preserves readied spell release state while requesting Critical Hit movement", () => {
+    const { unit, unitRef } = remarkableAthleteSelectedUnit();
+    const rayOfFrost = spellRecord("ray_of_frost");
+    const session = spellBattle({
+      cantrips: [rayOfFrost],
+      casterSpellcastingSourceClassName: "wizard",
+      casterClassLevels: [
+        { className: "fighter", level: classLevel(3) },
+        { className: "wizard", level: classLevel(1) },
+      ],
+      casterUnitRefs: [unitRef],
+      casterUnitFeatures: [
+        characterBattleFeatureInitForTest(unit, [
+          { className: "fighter", level: classLevel(3) },
+        ]),
+      ],
+    });
+    const castAct = spellAct({ session, spellId: rayOfFrost.id });
+    if (castAct.subject.tag !== "actionSpell") {
+      throw new Error("Expected a spell Action subject.");
+    }
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: {
+          ...castAct.subject,
+          mode: { tag: "ready", trigger: "attackHit" },
+        },
+        fills: [],
+      }),
+    );
+    const targetTurn = requireResolved(
+      endTurn({ state: readied.state, actorId: spellCasterId }),
+    );
+    const heldSpell = targetTurn.state.readiedSpells.get(spellCasterId);
+    if (heldSpell === undefined) {
+      throw new Error("Expected the caster to hold the readied spell.");
+    }
+    const releaseSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: spellTargetId,
+      command: "releaseReadiedSpell" as const,
+      readiedSpellCasterId: spellCasterId,
+      procedureRef: heldSpell.procedureRef,
+    };
+    const target = requireResultHole(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: releaseSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const targetSelection = spellTargetFill(
+      target,
+      rayOfFrost.id,
+      spellCasterId,
+      spellTargetId,
+    );
+    const attack = requireResultHole(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: releaseSubject,
+        fills: [targetSelection],
+      }),
+      "attackRoll",
+    );
+    const critical = attackRollFill(attack, {
+      total: 20,
+      naturalD20: 20,
+    });
+
+    const awaitingDecision = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: releaseSubject,
+      fills: [targetSelection, critical],
+    });
+    const decision = requireResultHole(awaitingDecision, "unitFeatureDecision");
+
+    expect(decision).toMatchObject({
+      label: "Use Remarkable Athlete movement",
+    });
+    if (awaitingDecision.tag !== "needsHoles") {
+      throw new Error("Expected a Remarkable Athlete decision hole.");
+    }
+    expect(awaitingDecision.state).toBe(targetTurn.state);
+
+    const awaitingMovement = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: releaseSubject,
+      fills: [
+        targetSelection,
+        critical,
+        unitFeatureDecisionFill(decision, "use"),
+      ],
+    });
+
+    expect(requireResultHole(awaitingMovement, "movement")).toMatchObject({
+      actorId: spellCasterId,
+      movementBudgetFeet: movementFeet(15),
+    });
+    if (awaitingMovement.tag !== "needsHoles") {
+      throw new Error("Expected a Remarkable Athlete movement hole.");
+    }
+    expect(awaitingMovement.state).toBe(targetTurn.state);
   });
 
   test("Remarkable Athlete resumes an independent spell attack sequence after Critical Hit movement", () => {
