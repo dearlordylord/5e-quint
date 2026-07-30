@@ -553,6 +553,7 @@ export function resolveReadySpellAct(
     );
   }
   /* v8 ignore stop */
+  /* v8 ignore start -- Defensive lifecycle guard: Ready spends the caster's only Magic-capable Action, and supported extra-action grants cannot Ready another spell before the held spell expires. */
   if (input.state.readiedSpells.has(input.subject.actorId)) {
     return invalidResult(
       input.state,
@@ -560,6 +561,7 @@ export function resolveReadySpellAct(
       "This caster is already holding a readied spell.",
     );
   }
+  /* v8 ignore stop */
   const castingState = invocation.spellRuleFacts.components.verbal
     ? revealHidden(input.state, input.subject.actorId)
     : input.state;
