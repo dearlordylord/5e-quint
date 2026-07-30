@@ -44,6 +44,7 @@ import {
 import { describe, expect, test } from "vitest";
 import fc from "fast-check";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
 import {
   characterBattleLevel,
   parseCharacterBattleClassLevels,
@@ -660,5 +661,25 @@ describe("battle runtime: setup and discovery", () => {
       currentActorId: skeletonId,
       turnOrder: [skeletonId, goblinId],
     });
+  });
+
+  test("combatant removal rejects absent combatants and an empty resulting roster", () => {
+    const state = fighterVsGoblinBattle();
+
+    const absent = removeBattleCombatants({
+      state,
+      combatantIds: [skeletonId],
+    });
+    expect(Either.mapLeft(absent, battleStateInitIssueMessage)).toEqual(
+      Either.left("Cannot remove a combatant that is not in this battle."),
+    );
+
+    const all = removeBattleCombatants({
+      state,
+      combatantIds: [fighterId, goblinId],
+    });
+    expect(Either.mapLeft(all, battleStateInitIssueMessage)).toEqual(
+      Either.left("Cannot remove every combatant from a battle."),
+    );
   });
 });
