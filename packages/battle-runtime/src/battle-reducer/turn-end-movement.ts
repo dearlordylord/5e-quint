@@ -6551,6 +6551,32 @@ export function expireOngoingFeatures(
   );
 }
 
+function collectRequestedHoleFills<
+  Request extends { readonly hole: { readonly holeId: BattleHoleId } },
+  Fill,
+>(
+  requests: readonly Request[],
+  fillForHole: (hole: Request["hole"]) => Fill | undefined,
+): {
+  readonly resolved: readonly {
+    readonly request: Request;
+    readonly fill: Fill;
+  }[];
+  readonly missingHoles: readonly Request["hole"][];
+} {
+  const resolved: { request: Request; fill: Fill }[] = [];
+  const missingHoles: Request["hole"][] = [];
+  for (const request of requests) {
+    const fill = fillForHole(request.hole);
+    if (fill === undefined) {
+      missingHoles.push(request.hole);
+    } else {
+      resolved.push({ request, fill });
+    }
+  }
+  return { resolved, missingHoles };
+}
+
 export function resolveEndTurnCommand(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
@@ -6818,196 +6844,145 @@ export function resolveEndTurnCommand(
     );
   }
   /* v8 ignore stop */
-  const sleepRepeatSaves = sleepRepeatSaveRequests.flatMap((request) => {
-    const fill = sleepRepeatSavingThrowOutcomeFor(
-      savingThrowOutcomeFills,
-      request.hole,
-    );
-    return fill === undefined ? [] : [fill];
-  });
-  const hideousLaughterRepeatSaves = hideousLaughterRepeatSaveRequests.flatMap(
-    (request) => {
-      const fill = hideousLaughterRepeatSavingThrowOutcomeFor(
-        savingThrowOutcomeFills,
-        request.hole,
-      );
-      return fill === undefined ? [] : [fill];
-    },
+  const sleepRepeatSaveCollection = collectRequestedHoleFills(
+    sleepRepeatSaveRequests,
+    (hole) => sleepRepeatSavingThrowOutcomeFor(savingThrowOutcomeFills, hole),
   );
-  const spellConditionEndTurnSaves = spellConditionEndTurnSaveRequests.flatMap(
-    (request) => {
-      const fill = spellConditionEndTurnSavingThrowOutcomeFor(
+  const sleepRepeatSaves = sleepRepeatSaveCollection.resolved.map(
+    ({ fill }) => fill,
+  );
+  const hideousLaughterRepeatSaveCollection = collectRequestedHoleFills(
+    hideousLaughterRepeatSaveRequests,
+    (hole) =>
+      hideousLaughterRepeatSavingThrowOutcomeFor(savingThrowOutcomeFills, hole),
+  );
+  const hideousLaughterRepeatSaves =
+    hideousLaughterRepeatSaveCollection.resolved.map(({ fill }) => fill);
+  const spellConditionEndTurnSaveCollection = collectRequestedHoleFills(
+    spellConditionEndTurnSaveRequests,
+    (hole) =>
+      spellConditionEndTurnSavingThrowOutcomeFor(savingThrowOutcomeFills, hole),
+  );
+  const spellConditionEndTurnSaves =
+    spellConditionEndTurnSaveCollection.resolved.map(({ fill }) => fill);
+  const spellConditionCountedEndTurnSaveCollection = collectRequestedHoleFills(
+    spellConditionCountedEndTurnSaveRequests,
+    (hole) =>
+      spellConditionCountedEndTurnSavingThrowOutcomeFor(
         savingThrowOutcomeFills,
-        request.hole,
-      );
-      return fill === undefined ? [] : [fill];
-    },
+        hole,
+      ),
   );
   const spellConditionCountedEndTurnSaves =
-    spellConditionCountedEndTurnSaveRequests.flatMap((request) => {
-      const fill = spellConditionCountedEndTurnSavingThrowOutcomeFor(
+    spellConditionCountedEndTurnSaveCollection.resolved.map(({ fill }) => fill);
+  const unitFeatureConditionEndTurnSaveCollection = collectRequestedHoleFills(
+    unitFeatureConditionEndTurnSaveRequests,
+    (hole) =>
+      unitFeatureConditionEndTurnSavingThrowOutcomeFor(
         savingThrowOutcomeFills,
-        request.hole,
-      );
-      return fill === undefined ? [] : [fill];
-    });
+        hole,
+      ),
+  );
   const unitFeatureConditionEndTurnSaves =
-    unitFeatureConditionEndTurnSaveRequests.flatMap((request) => {
-      const fill = unitFeatureConditionEndTurnSavingThrowOutcomeFor(
+    unitFeatureConditionEndTurnSaveCollection.resolved.map(({ fill }) => fill);
+  const slowActivePenaltiesEndTurnSaveCollection = collectRequestedHoleFills(
+    slowActivePenaltiesEndTurnSaveRequests,
+    (hole) =>
+      slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
         savingThrowOutcomeFills,
-        request.hole,
-      );
-      return fill === undefined ? [] : [fill];
-    });
+        hole,
+      ),
+  );
   const slowActivePenaltiesEndTurnSaves =
-    slowActivePenaltiesEndTurnSaveRequests.flatMap((request) => {
-      const fill = slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
+    slowActivePenaltiesEndTurnSaveCollection.resolved.map(({ fill }) => fill);
+  const abilityD20TestEndTurnSaveCollection = collectRequestedHoleFills(
+    abilityD20TestEndTurnSaveRequests,
+    (hole) =>
+      abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
         savingThrowOutcomeFills,
-        request.hole,
-      );
-      return fill === undefined ? [] : [fill];
-    });
-  const abilityD20TestEndTurnSaves = abilityD20TestEndTurnSaveRequests.flatMap(
-    (request) => {
-      const fill = abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
-        savingThrowOutcomeFills,
-        request.hole,
-      );
-      return fill === undefined ? [] : [fill];
-    },
+        hole,
+      ),
   );
-  const missingSleepRepeatSaveHoles = sleepRepeatSaveRequests.flatMap(
-    (request) =>
-      sleepRepeatSavingThrowOutcomeFor(
-        savingThrowOutcomeFills,
-        request.hole,
-      ) === undefined
-        ? [request.hole]
-        : [],
-  );
+  const abilityD20TestEndTurnSaves =
+    abilityD20TestEndTurnSaveCollection.resolved.map(({ fill }) => fill);
+  const missingSleepRepeatSaveHoles = sleepRepeatSaveCollection.missingHoles;
   if (missingSleepRepeatSaveHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingSleepRepeatSaveHoles,
     ]);
   }
   const missingHideousLaughterRepeatSaveHoles =
-    hideousLaughterRepeatSaveRequests.flatMap((request) =>
-      hideousLaughterRepeatSavingThrowOutcomeFor(
-        savingThrowOutcomeFills,
-        request.hole,
-      ) === undefined
-        ? [request.hole]
-        : [],
-    );
+    hideousLaughterRepeatSaveCollection.missingHoles;
   if (missingHideousLaughterRepeatSaveHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingHideousLaughterRepeatSaveHoles,
     ]);
   }
   const missingSpellConditionEndTurnSaveHoles =
-    spellConditionEndTurnSaveRequests.flatMap((request) =>
-      spellConditionEndTurnSavingThrowOutcomeFor(
-        savingThrowOutcomeFills,
-        request.hole,
-      ) === undefined
-        ? [request.hole]
-        : [],
-    );
+    spellConditionEndTurnSaveCollection.missingHoles;
   if (missingSpellConditionEndTurnSaveHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingSpellConditionEndTurnSaveHoles,
     ]);
   }
   const missingSpellConditionCountedEndTurnSaveHoles =
-    spellConditionCountedEndTurnSaveRequests.flatMap((request) =>
-      spellConditionCountedEndTurnSavingThrowOutcomeFor(
-        savingThrowOutcomeFills,
-        request.hole,
-      ) === undefined
-        ? [request.hole]
-        : [],
-    );
+    spellConditionCountedEndTurnSaveCollection.missingHoles;
   if (missingSpellConditionCountedEndTurnSaveHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingSpellConditionCountedEndTurnSaveHoles,
     ]);
   }
   const missingUnitFeatureConditionEndTurnSaveHoles =
-    unitFeatureConditionEndTurnSaveRequests.flatMap((request) =>
-      unitFeatureConditionEndTurnSavingThrowOutcomeFor(
-        savingThrowOutcomeFills,
-        request.hole,
-      ) === undefined
-        ? [request.hole]
-        : [],
-    );
+    unitFeatureConditionEndTurnSaveCollection.missingHoles;
   if (missingUnitFeatureConditionEndTurnSaveHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingUnitFeatureConditionEndTurnSaveHoles,
     ]);
   }
   const missingSlowActivePenaltiesEndTurnSaveHoles =
-    slowActivePenaltiesEndTurnSaveRequests.flatMap((request) =>
-      slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
-        savingThrowOutcomeFills,
-        request.hole,
-      ) === undefined
-        ? [request.hole]
-        : [],
-    );
+    slowActivePenaltiesEndTurnSaveCollection.missingHoles;
   if (missingSlowActivePenaltiesEndTurnSaveHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingSlowActivePenaltiesEndTurnSaveHoles,
     ]);
   }
   const missingAbilityD20TestEndTurnSaveHoles =
-    abilityD20TestEndTurnSaveRequests.flatMap((request) =>
-      abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
-        savingThrowOutcomeFills,
-        request.hole,
-      ) === undefined
-        ? [request.hole]
-        : [],
-    );
+    abilityD20TestEndTurnSaveCollection.missingHoles;
   if (missingAbilityD20TestEndTurnSaveHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingAbilityD20TestEndTurnSaveHoles,
     ]);
   }
-  const endTurnDamageRolls = endTurnDamageRequests.flatMap((request) => {
-    const fill = spellTurnEndDamageRollFor(input.fills, request.hole);
-    return fill === undefined ? [] : [fill];
-  });
-  const endTurnDamageRollRequests = endTurnDamageRequests.flatMap((request) => {
-    const roll = spellTurnEndDamageRollFor(input.fills, request.hole);
-    return roll === undefined ? [] : [{ ...request, roll }];
-  });
-  const missingEndTurnDamageHoles = endTurnDamageRequests.flatMap((request) =>
-    spellTurnEndDamageRollFor(input.fills, request.hole) === undefined
-      ? [request.hole]
-      : [],
+  const endTurnDamageRollCollection = collectRequestedHoleFills(
+    endTurnDamageRequests,
+    (hole) => spellTurnEndDamageRollFor(input.fills, hole),
   );
+  const endTurnDamageRolls = endTurnDamageRollCollection.resolved.map(
+    ({ fill }) => fill,
+  );
+  const endTurnDamageRollRequests = endTurnDamageRollCollection.resolved.map(
+    ({ request, fill: roll }) => ({ ...request, roll }),
+  );
+  const missingEndTurnDamageHoles = endTurnDamageRollCollection.missingHoles;
   if (missingEndTurnDamageHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingEndTurnDamageHoles,
     ]);
   }
-  const startTurnDamageRolls = startTurnDamageRequests.flatMap((request) => {
-    const fill = spellTurnStartDamageRollFor(input.fills, request.hole);
-    return fill === undefined ? [] : [fill];
-  });
-  const startTurnDamageRollRequests = startTurnDamageRequests.flatMap(
-    (request) => {
-      const roll = spellTurnStartDamageRollFor(input.fills, request.hole);
-      return roll === undefined ? [] : [{ ...request, roll }];
-    },
+  const startTurnDamageRollCollection = collectRequestedHoleFills(
+    startTurnDamageRequests,
+    (hole) => spellTurnStartDamageRollFor(input.fills, hole),
   );
-  const missingStartTurnDamageHoles = startTurnDamageRequests.flatMap(
-    (request) =>
-      spellTurnStartDamageRollFor(input.fills, request.hole) === undefined
-        ? [request.hole]
-        : [],
+  const startTurnDamageRolls = startTurnDamageRollCollection.resolved.map(
+    ({ fill }) => fill,
   );
+  const startTurnDamageRollRequests =
+    startTurnDamageRollCollection.resolved.map(({ request, fill: roll }) => ({
+      ...request,
+      roll,
+    }));
+  const missingStartTurnDamageHoles =
+    startTurnDamageRollCollection.missingHoles;
   if (missingStartTurnDamageHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingStartTurnDamageHoles,
