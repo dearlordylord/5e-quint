@@ -155,6 +155,28 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     ]);
   });
 
+  test("Dash rejects a speed the combatant does not represent", () => {
+    const state = fighterVsGoblinBattle();
+    const dashSubject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "dash" as const,
+      speedKind: "walk" as const,
+    };
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: { ...dashSubject, speedKind: "fly" },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message: "Dash speed kind is not represented for this combatant.",
+    });
+  });
+
   test("Grappler Attack Advantage uses the existing grapple link", () => {
     const state = {
       ...fighterVsGoblinBattle({

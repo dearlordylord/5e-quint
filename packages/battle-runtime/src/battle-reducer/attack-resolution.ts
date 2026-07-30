@@ -275,6 +275,7 @@ export function resolveDash(
   }
   /* v8 ignore stop */
   const actor = input.state.combatants.get(input.subject.actorId);
+  /* v8 ignore start -- Defensive internal guard: the dispatcher's missing-combatant check rejects an absent actor before routing Dash here. */
   if (actor === undefined) {
     return invalidResult(
       input.state,
@@ -282,6 +283,7 @@ export function resolveDash(
       "Dash actor is not in this battle.",
     );
   }
+  /* v8 ignore stop */
   const speedKind =
     input.subject.tag === "action" && input.subject.action === "dash"
       ? input.subject.speedKind
@@ -294,6 +296,7 @@ export function resolveDash(
     );
   }
   const spent = spendAction(input.state.currentTurnResources, "dash");
+  /* v8 ignore start -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Dash here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -301,6 +304,7 @@ export function resolveDash(
       "Dash is no longer available.",
     );
   }
+  /* v8 ignore stop */
   const nextState = applyDashToActor(
     input.state,
     actor,
@@ -328,6 +332,7 @@ export function resolveDisengage(
   }
   /* v8 ignore stop */
   const spent = spendAction(input.state.currentTurnResources, "disengage");
+  /* v8 ignore start -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Disengage here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -335,6 +340,7 @@ export function resolveDisengage(
       "Disengage is no longer available.",
     );
   }
+  /* v8 ignore stop */
   const nextState = applyDisengage(input.state, spent.right);
   return {
     tag: "resolved",
