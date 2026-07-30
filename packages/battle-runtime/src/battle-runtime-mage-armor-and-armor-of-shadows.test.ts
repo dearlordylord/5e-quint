@@ -1,5 +1,6 @@
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { describe, expect, test } from "vitest";
+import type { BattleActiveEffect } from "./index.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { parseCharacterBattleInvocationSpellAccesses } from "./character-battle-resources.ts";
 import { admitPersistentArmorEffectSpell } from "./procedure-admission/persistent-armor-effect-facts.ts";
@@ -15,6 +16,7 @@ import {
   discoverBattleActs,
   Either,
   elapsedTimeTicks,
+  endTurn,
   expendedLevelOneSlots,
   fighterId,
   findAct,
@@ -48,8 +50,16 @@ import {
   battleStatBlockExecutionScopeRef,
 } from "./identity.ts";
 
+type DurationSpellBaseArmorClassEffect = Extract<
+  BattleActiveEffect,
+  {
+    readonly kind: "spellBaseArmorClass";
+    readonly expiresAt: { readonly kind: "duration" };
+  }
+>;
+
 describe("battle runtime: Mage Armor and Armor of Shadows", () => {
-  test("Mage Armor creates a persistent base AC spell effect with typed early end", () => {
+  test("Mage Armor creates and expires through the base AC lifecycle route", () => {
     const unarmoredDex = {
       ...defaultArmorClassState(),
       abilityModifiers: {
@@ -142,6 +152,78 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
       ],
     });
     expect(expendedLevelOneSlots(requireResolved(result), wizardId)).toBe(1);
+
+    const resolvedState = requireResolved(result).state;
+    const wizard = resolvedState.combatants.get(wizardId);
+    if (wizard === undefined) {
+      throw new Error("Expected Mage Armor wizard.");
+    }
+    const mageArmorEffect = wizard.activeEffects.find(
+      (effect): effect is DurationSpellBaseArmorClassEffect =>
+        effect.kind === "spellBaseArmorClass" &&
+        effect.expiresAt.kind === "duration",
+    );
+    if (mageArmorEffect === undefined) {
+      throw new Error("Expected duration-owned Mage Armor effect.");
+    }
+    const nearlyExpired = {
+      ...resolvedState,
+      combatants: new Map(resolvedState.combatants).set(wizardId, {
+        ...wizard,
+        activeEffects: [
+          {
+            ...mageArmorEffect,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(1),
+            },
+          },
+        ],
+      }),
+    };
+    const skeletonTurn = requireResolved(
+      endTurn({ state: nearlyExpired, actorId: wizardId }),
+    ).state;
+    const expired = endTurn({ state: skeletonTurn, actorId: skeletonId });
+    expect(expired).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: [
+          { combatantId: wizardId, armorClass: 12 },
+          { combatantId: skeletonId },
+        ],
+      },
+      routeEvents: [
+        {
+          kind: "discoverBattleActs",
+          subject: "spellBaseArmorClassEffect",
+          holes: [],
+          owner: "battleActiveEffect",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "spellBaseArmorClassEffect",
+          holes: [],
+          owner: "battleTurnBoundary",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "spellBaseArmorClassEffect",
+          holes: [],
+          owner: "battleActiveEffect",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "spellBaseArmorClassEffect",
+          holes: [],
+          owner: "battleArmorClass",
+        },
+      ],
+    });
+    if (expired.tag !== "resolved") {
+      throw new Error("Expected Mage Armor duration to expire.");
+    }
+    expect(expired.state.combatants.get(wizardId)?.activeEffects).toEqual([]);
   });
 
   test("Mage Armor rejects forged Saving Throw outcome fills", () => {
