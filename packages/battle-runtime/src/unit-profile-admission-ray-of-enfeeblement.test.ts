@@ -49,8 +49,16 @@ import {
   withResistanceEffect,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { damageAmount, Hp, proficiencyBonus } from "@dnd/shared/types";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
-import { endTurn } from "./unit-profile-admission.test-support.ts";
+import {
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
+import { supportedPreparedAbilityD20TestRollModeSaveGateProfile } from "./battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts";
+import {
+  endTurn,
+  resourceCount,
+  spellSlotLevel,
+} from "./unit-profile-admission.test-support.ts";
 import {
   battleObjectId,
   combatantId,
@@ -105,6 +113,22 @@ function resolveRayOfEnfeeblementCast(input: {
 }
 
 describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
+  test("rejects a slot below the spell level", () => {
+    expect(
+      supportedPreparedAbilityD20TestRollModeSaveGateProfile(
+        spellCasterId,
+        spellAdmissionSource(rayOfEnfeeblementSpell()),
+        [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(1),
+            expended: resourceCount(0),
+          },
+        ],
+      ),
+    ).toEqual([]);
+  });
+
   test("success applies one next-attack Disadvantage until caster turn start", () => {
     const spell = rayOfEnfeeblementSpell();
     const baseSession = spellBattle({

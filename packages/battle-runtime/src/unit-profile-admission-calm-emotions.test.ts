@@ -23,17 +23,39 @@ import {
   spellAct,
   spellHoleInvocation,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  spellAdmissionSource,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
+import { supportedPreparedSaveGateConditionImmunityProfile } from "./battle-reducer/spell-procedure-profiles/_save-gate-helpers.ts";
 import {
   applyCondition,
   breakBattleConcentration,
   combatantId,
   hasCondition,
   resolveBattleSubject,
+  resourceCount,
   spellSlotInvocationRef,
+  spellSlotLevel,
 } from "./unit-profile-admission.test-support.ts";
 
 describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
+  test("calm_emotions rejects a slot below its spell level", () => {
+    expect(
+      supportedPreparedSaveGateConditionImmunityProfile(
+        spellCasterId,
+        spellAdmissionSource(spellRecord(calmEmotionsUnitId)),
+        [
+          {
+            spellLevel: spellSlotLevel(1),
+            count: resourceCount(1),
+            expended: resourceCount(0),
+          },
+        ],
+      ),
+    ).toEqual([]);
+  });
+
   test("calm_emotions is admitted as Humanoid Sphere save-gated condition immunity", () => {
     const spell = spellRecord(calmEmotionsUnitId);
     const session = spellBattle({

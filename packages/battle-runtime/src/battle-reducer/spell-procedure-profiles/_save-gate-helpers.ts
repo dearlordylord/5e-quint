@@ -241,9 +241,11 @@ export function supportedPreparedSaveGateAttackRollAdvantageProfile(
   }
 
   return spellSlots.flatMap((slot): readonly SupportedSpellInvocation[] => {
+    /* v8 ignore start -- Domain invariant: this profile admits only level-1 Faerie Fire, and SpellSlotLevel cannot represent a slot below level 1. */
     if (Number(slot.spellLevel) < spell.mechanics.level) {
       return [];
     }
+    /* v8 ignore stop */
     return [
       {
         access: { tag: "prepared" },
