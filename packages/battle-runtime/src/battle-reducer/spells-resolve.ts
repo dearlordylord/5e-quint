@@ -63,6 +63,7 @@ import {
   type BattleState,
   type BattleExecutableSpellInvocation,
   type BonusActionSpellBattleResolutionInput,
+  type CharacterBattleCreatureState,
   type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
@@ -101,6 +102,7 @@ import {
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state-execution.ts";
+import { isCharacterBattleCreatureState } from "./creature-state-queries.ts";
 import {
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowFillCheck,
@@ -1714,35 +1716,30 @@ function resolveSpellActInternal(
   const input = lane.input;
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
-  let invocation =
-    actor?.origin.kind === "character"
-      ? Match.value(subject).pipe(
-          Match.discriminatorsExhaustive("tag")({
-            actionSpell: (actionSubject) =>
-              supportedActionSpellInvocationForSubject(
-                input.state,
-                actor,
-                actionSubject,
-              ),
-            bonusActionSpell: (bonusActionSubject) =>
-              supportedBonusActionSpellInvocationForSubject(
-                input.state,
-                actor,
-                bonusActionSubject,
-              ),
-          }),
-        )
-      : undefined;
-  const boundInvocation =
-    actor?.origin.kind === "character"
-      ? characterSpellProcedure(
-          actor.origin.execution,
-          subject.procedureRef,
+  if (!isCharacterBattleCreatureState(actor)) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Action-time spell act requires a supported prepared spell or cantrip.",
+    );
+  }
+  let invocation = Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      actionSpell: (actionSubject) =>
+        supportedActionSpellInvocationForSubject(actor, actionSubject),
+      bonusActionSpell: (bonusActionSubject) =>
+        supportedBonusActionSpellInvocationForSubject(
           actor,
-        )
-      : undefined;
+          bonusActionSubject,
+        ),
+    }),
+  );
+  const boundInvocation = characterSpellProcedure(
+    actor.origin.execution,
+    subject.procedureRef,
+    actor,
+  );
   if (
-    actor?.origin.kind === "character" &&
     invocation == null &&
     options.kind === "bonusActionSpellAttackProxy" &&
     boundInvocation !== undefined &&
@@ -1752,7 +1749,7 @@ function resolveSpellActInternal(
   ) {
     invocation = boundInvocation;
   }
-  if (actor?.origin.kind !== "character" || invocation == null) {
+  if (invocation == null) {
     return invalidResult(
       input.state,
       "unsupportedActOption",
@@ -1911,20 +1908,6 @@ function resolveSpellActInternal(
       input.state,
       "unsupportedSubject",
       "Prepared Bonus Action spells must use the Bonus Action spell subject.",
-    );
-  }
-  if (invocation.procedure === "shieldReaction") {
-    return invalidResult(
-      input.state,
-      "unsupportedSubject",
-      "Triggered Reaction spells must use the pending interrupt decision.",
-    );
-  }
-  if (invocation.procedure === "featherFallMitigation") {
-    return invalidResult(
-      input.state,
-      "unsupportedSubject",
-      "Triggered Reaction spells must use the pending interrupt decision.",
     );
   }
   if (isTriggeredReactionSpellInvocation(invocation)) {
@@ -4242,22 +4225,21 @@ export function resolveBonusActionSpellAct(
 ): BattleResolutionResult {
   const subject = input.subject;
   const actor = input.state.combatants.get(subject.actorId);
-  let invocation =
-    actor?.origin.kind === "character"
-      ? supportedBonusActionSpellInvocationForSubject(
-          input.state,
-          actor,
-          subject,
-        )
-      : undefined;
-  if (actor?.origin.kind === "character" && invocation == null) {
-    invocation = antimagicSuppressedInvocationForStaleSubject(
+  if (!isCharacterBattleCreatureState(actor)) {
+    return invalidResult(
       input.state,
-      actor,
-      subject,
+      "unsupportedActOption",
+      "Bonus Action spell act requires a supported Bonus Action spell.",
     );
   }
-  if (actor?.origin.kind !== "character" || invocation == null) {
+  let invocation = supportedBonusActionSpellInvocationForSubject(
+    actor,
+    subject,
+  );
+  if (invocation == null) {
+    invocation = antimagicSuppressedInvocationForStaleSubject(actor, subject);
+  }
+  if (invocation == null) {
     return invalidResult(
       input.state,
       "unsupportedActOption",
@@ -4466,11 +4448,10 @@ function isNativeBonusActionSpellInvocation(
 }
 
 function supportedActionSpellInvocationForSubject(
-  _state: BattleState,
-  actor: BattleCreatureState,
+  actor: CharacterBattleCreatureState,
   subject: ActionSpellBattleResolutionInput["subject"],
 ): BattleSpellProcedureExecution | undefined {
-  if (actor.origin.kind !== "character" || subject.procedureRef === undefined) {
+  if (subject.procedureRef === undefined) {
     return undefined;
   }
   const invocation = characterSpellProcedure(
@@ -4482,11 +4463,10 @@ function supportedActionSpellInvocationForSubject(
 }
 
 function supportedBonusActionSpellInvocationForSubject(
-  _state: BattleState,
-  actor: BattleCreatureState,
+  actor: CharacterBattleCreatureState,
   subject: BonusActionSpellBattleResolutionInput["subject"],
 ): BattleSpellProcedureExecution | undefined {
-  if (actor.origin.kind !== "character" || subject.procedureRef === undefined) {
+  if (subject.procedureRef === undefined) {
     return undefined;
   }
   const invocation = characterSpellProcedure(
@@ -4499,12 +4479,10 @@ function supportedBonusActionSpellInvocationForSubject(
 
 /* v8 ignore start -- Defensive stale-subject recovery: legal rediscovery removes repeat spell acts while Antimagic Field suppresses their source effect. */
 function antimagicSuppressedInvocationForStaleSubject(
-  state: BattleState,
-  actor: BattleCreatureState,
+  actor: CharacterBattleCreatureState,
   subject: BonusActionSpellBattleResolutionInput["subject"],
 ): BattleSpellProcedureExecution | undefined {
   const invocation = supportedBonusActionSpellInvocationForSubject(
-    state,
     actor,
     subject,
   );
