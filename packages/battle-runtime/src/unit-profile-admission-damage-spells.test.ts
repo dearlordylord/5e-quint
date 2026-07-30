@@ -79,6 +79,7 @@ import type {
   BattleObjectDamageDisposition,
   BattleObjectIgnitionDisposition,
   BattleRuntimeSession,
+  BattleState,
   CombatantId,
   EffectAtom,
 } from "./unit-profile-admission.test-support.ts";
@@ -90,6 +91,7 @@ import {
 import {
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 
 const fireballObjectId = battleObjectId("unit-profile-fireball-object");
@@ -110,6 +112,57 @@ function spellExecutionForAct(
     throw new Error("Expected admitted mechanical spell execution.");
   }
   return execution;
+}
+
+function resolveAcidArrowHit(
+  session: BattleRuntimeSession,
+  targetId: CombatantId,
+): BattleState {
+  const act = spellAct({
+    session,
+    spellId: acidArrowUnitId,
+    slotLevel: 2,
+  });
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const targetSelection = spellTargetFill(
+    target,
+    acidArrowUnitId,
+    act.subject.actorId,
+    targetId,
+  );
+  const attack = requireResultHole(
+    resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [targetSelection],
+    }),
+    "attackRoll",
+  );
+  const attackSelection = attackRollFill(attack, {
+    total: 18,
+    naturalD20: 12,
+  });
+  const damage = requireResultHole(
+    resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [targetSelection, attackSelection],
+    }),
+    "rolledDice",
+  );
+  const resolved = resolveBattleSubject({
+    state: session.state,
+    subject: act.subject,
+    fills: [
+      targetSelection,
+      attackSelection,
+      damageRollFillWithGroups(damage, [[1, 1, 1, 1]]),
+    ],
+  });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected Acid Arrow hit to resolve.");
+  }
+  return resolved.state;
 }
 
 describe("QMBT14 deterministic damage Spell Unit admission", () => {
@@ -703,6 +756,75 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       ),
     ).toBe(false);
   });
+
+  test("concurrent Acid Arrow effects expose the next unfilled delayed-damage roll", () => {
+    const spell = spellRecord(acidArrowUnitId);
+    const sharedTargetId = combatantId("unit-profile-acid-arrow-shared-target");
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetSpellcasting: wizardSpellcasting({
+        preparedSpells: [spell],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      }),
+      extraTargetIds: [sharedTargetId],
+      extraTargetHp: 40,
+      extraTargetMaxHp: 40,
+    });
+    const firstCast = resolveAcidArrowHit(session, sharedTargetId);
+    const secondCasterTurn = endTurn({
+      state: firstCast,
+      actorId: spellCasterId,
+    });
+    if (secondCasterTurn.tag !== "resolved") {
+      throw new Error("Expected first Acid Arrow caster End Turn to resolve.");
+    }
+    const secondCast = resolveAcidArrowHit(
+      battleRuntimeSessionForTest({
+        state: secondCasterTurn.state,
+        context: session.context,
+      }),
+      sharedTargetId,
+    );
+    const sharedTargetTurn = endTurn({
+      state: secondCast,
+      actorId: spellTargetId,
+    });
+    if (sharedTargetTurn.tag !== "resolved") {
+      throw new Error("Expected second Acid Arrow caster End Turn to resolve.");
+    }
+    const request = endTurn({
+      state: sharedTargetTurn.state,
+      actorId: sharedTargetId,
+    });
+    if (request.tag !== "needsHoles") {
+      throw new Error("Expected two delayed-damage rolls.");
+    }
+    const delayedDamageHoles = request.holes.filter(
+      (hole) => hole.kind === "rolledDice",
+    );
+    expect(delayedDamageHoles).toHaveLength(2);
+    const [firstDelayedDamage, secondDelayedDamage] = delayedDamageHoles;
+    if (firstDelayedDamage === undefined || secondDelayedDamage === undefined) {
+      throw new Error("Expected both delayed-damage roll holes.");
+    }
+
+    expect(
+      resolveBattleSubject({
+        state: sharedTargetTurn.state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: sharedTargetId,
+          command: "endTurn",
+        },
+        fills: [damageRollFillWithGroups(firstDelayedDamage, [[2, 2]])],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ holeId: secondDelayedDamage.holeId })],
+    });
+  });
+
   test("poison_spray is admitted through catalog spell access and projected as a pure damage cantrip spell attack", () => {
     const spell = spellRecord(poisonSprayUnitId);
     const state = spellBattle({ cantrips: [spell] });
