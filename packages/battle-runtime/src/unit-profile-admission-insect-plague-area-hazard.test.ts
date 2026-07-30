@@ -385,4 +385,37 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     });
     expect(nextTurn.tag).toBe("resolved");
   });
+
+  test("rejects a previously discovered save after concentration removes the hazard", () => {
+    const { session, cast } = castInsectPlague();
+    const saveAct = insectPlagueAreaHazardSaveAct(
+      battleRuntimeSessionForTest({ state: cast, context: session.context }),
+      spellTargetId,
+      "appearsInArea",
+    );
+    const ended = resolveBattleSubject({
+      state: cast,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endConcentration",
+      },
+      fills: [],
+    });
+    if (ended.tag !== "resolved") {
+      throw new Error("Expected Insect Plague concentration to end.");
+    }
+
+    expect(
+      resolveBattleSubject({
+        state: ended.state,
+        subject: saveAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Insect Plague save is no longer available.",
+    });
+  });
 });

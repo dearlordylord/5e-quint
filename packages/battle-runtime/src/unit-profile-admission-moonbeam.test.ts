@@ -820,8 +820,18 @@ describe("L12G deterministic Moonbeam admission", () => {
     if (cast.tag !== "resolved") {
       throw new Error("Expected Moonbeam cast to resolve.");
     }
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const staleSave = moonbeamEndTurnSaveAct(
+      battleSessionWithState(state, targetTurn.state),
+    );
 
-    const broken = breakBattleConcentration(cast.state, spellCasterId);
+    const broken = breakBattleConcentration(targetTurn.state, spellCasterId);
 
     expect(requireCombatant(broken, spellCasterId).concentration).toBeNull();
     expect(
@@ -829,6 +839,17 @@ describe("L12G deterministic Moonbeam admission", () => {
         (effect) => effect.kind === "moonbeam",
       ),
     ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state: broken,
+        subject: staleSave.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Movable zone save is no longer available.",
+    });
   });
 });
 
