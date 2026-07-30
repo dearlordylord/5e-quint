@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SPIKE-GROWTH-MOVEMENT-HAZARD-RUNTIME spike_growth
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spike-growth-movement-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
@@ -49,8 +50,12 @@ import {
 import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer/spell-reroll-issues.ts";
 import {
   battleActiveEffectExecutionRefForTest,
+  battleAreaId,
   battleProcedureExecutionRefForTest,
+  concentrationSavingThrowFill,
+  fogCloudAreaFill,
   requireCharacterSpellProcedureRefForTest,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import type { BattleProcedureExecutionRef } from "./identity.ts";
 
@@ -581,6 +586,143 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
             movement: expect.objectContaining({
               spentFeet: movementFeet(15),
             }),
+          }),
+        ]),
+      },
+    });
+  });
+
+  test("movement damage requests and consumes the mover's Concentration save", () => {
+    const spikeGrowth = spellRecord(spikeGrowthUnitId);
+    const fogCloud = spellRecord("fog_cloud");
+    const session = spellBattle({
+      preparedSpells: [spikeGrowth],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetSpellcasting: wizardSpellcasting({
+        preparedSpells: [fogCloud],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      }),
+      targetHp: 20,
+      targetMaxHp: 20,
+    });
+    const spikeGrowthAct = spellAct({
+      session,
+      spellId: spikeGrowthUnitId,
+      slotLevel: 2,
+    });
+    const spikeGrowthCast = resolveBattleSubject({
+      state: session.state,
+      subject: spikeGrowthAct.subject,
+      fills: [
+        spikeGrowthAreaFill(
+          requireHole(spikeGrowthAct.initialHoles, "spellAreaChoice"),
+        ),
+      ],
+    });
+    if (spikeGrowthCast.tag !== "resolved") {
+      throw new Error("Expected Spike Growth cast to resolve.");
+    }
+    const fogCloudTurn = endTurn({
+      state: spikeGrowthCast.state,
+      actorId: spellCasterId,
+    });
+    if (fogCloudTurn.tag !== "resolved") {
+      throw new Error("Expected Spike Growth caster End Turn to resolve.");
+    }
+    const fogCloudAct = spellAct({
+      session: battleRuntimeSessionForTest({
+        state: fogCloudTurn.state,
+        context: session.context,
+      }),
+      spellId: "fog_cloud",
+      slotLevel: 1,
+    });
+    const fogCloudCast = resolveBattleSubject({
+      state: fogCloudTurn.state,
+      subject: fogCloudAct.subject,
+      fills: [
+        fogCloudAreaFill(
+          requireHole(fogCloudAct.initialHoles, "spellAreaChoice"),
+          battleAreaId("spike-growth-mover-fog-cloud"),
+        ),
+      ],
+    });
+    if (fogCloudCast.tag !== "resolved") {
+      throw new Error("Expected Fog Cloud cast to resolve.");
+    }
+    const casterTurn = endTurn({
+      state: fogCloudCast.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected Fog Cloud caster End Turn to resolve.");
+    }
+    const movementTurn = endTurn({
+      state: casterTurn.state,
+      actorId: spellCasterId,
+    });
+    if (movementTurn.tag !== "resolved") {
+      throw new Error("Expected Spike Growth caster End Turn to resolve.");
+    }
+    const subject = {
+      tag: "runtimeCommand" as const,
+      actorId: spellTargetId,
+      command: "move" as const,
+    };
+    const movement = requireResultHole(
+      resolveBattleSubject({
+        state: movementTurn.state,
+        subject,
+        fills: [],
+      }),
+      "movement",
+    );
+    const movementThroughHazard = movementFill(movement, {
+      movementCostFeet: 15,
+      provokedOpportunityAttacks: [],
+      areaDifficultTerrain: spikeGrowthAreaDifficultTerrain(
+        spikeGrowthAct.subject.procedureRef,
+        {
+          totalDistanceFeet: 10,
+          difficultTerrainDistanceFeet: 5,
+          damageDistanceFeet: 5,
+        },
+      ),
+    });
+    const pendingDamage = resolveBattleSubject({
+      state: movementTurn.state,
+      subject,
+      fills: [movementThroughHazard],
+    });
+    const damage = requireResultHole(pendingDamage, "rolledDice");
+    const damageFill = damageRollFillWithGroups(damage, [[1, 1]]);
+    const pendingConcentration = resolveBattleSubject({
+      state: movementTurn.state,
+      subject,
+      fills: [movementThroughHazard, damageFill],
+    });
+    const concentration = requireResultHole(
+      pendingConcentration,
+      "concentrationSavingThrow",
+    );
+    const resolved = resolveBattleSubject({
+      state: movementTurn.state,
+      subject,
+      fills: [
+        movementThroughHazard,
+        damageFill,
+        concentrationSavingThrowFill(concentration, true),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            hp: Hp(18),
+            concentrating: true,
           }),
         ]),
       },
