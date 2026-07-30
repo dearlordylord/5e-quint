@@ -85,7 +85,9 @@ import {
   STUNNING_STRIKE_SUPPORT_PROFILE,
 } from "./unit-profile-admission.test-support.ts";
 import {
+  battleAttackDamageRiderSupportForUnit,
   battleTacticalMasterReplacementSupportForUnit,
+  battleWeaponOrUnarmedCriticalRange19SupportForUnit,
   battleWeaponMasteryPushSupportForUnit,
   battleWeaponMasterySlowSupportForUnit,
   TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
@@ -1680,6 +1682,35 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
     );
   });
 
+  test("fighter_improved_critical admits exactly the 19-or-higher critical range", () => {
+    const unit = unitLibrary.requireUnit(fighterImprovedCriticalUnitId);
+    if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive") {
+      throw new Error("Expected Improved Critical passive mechanics.");
+    }
+    const mechanics = unit.mechanics;
+
+    fc.assert(
+      fc.property(fc.integer({ min: 2, max: 20 }), (threshold) => {
+        const variant = unitMechanicsVariant(unit, {
+          id: "fighter_improved_critical_threshold_variant",
+          mechanics: {
+            ...mechanics,
+            grants: mechanics.grants.map((effect) =>
+              effect.kind === "modify_crit_range"
+                ? { ...effect, threshold }
+                : effect,
+            ),
+          },
+        });
+
+        expect(
+          battleWeaponOrUnarmedCriticalRange19SupportForUnit(variant),
+        ).toBe(threshold === 19 ? "criticalRange19" : "unsupported");
+      }),
+      { numRuns: 30 },
+    );
+  });
+
   test("fighter_tactical_master admits a level-gated mastery replacement support profile", () => {
     const unit = unitLibrary.requireUnit(fighterTacticalMasterUnitId);
 
@@ -1892,6 +1923,48 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
           ],
         },
       }),
+    );
+  });
+
+  test("rogue_sneak_attack never admits a rider with a substituted damage type", () => {
+    const unit = unitLibrary.requireUnit(rogueSneakAttackUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "on_hit_trigger"
+    ) {
+      throw new Error("Expected Sneak Attack on-hit mechanics.");
+    }
+    const mechanics = unit.mechanics;
+
+    fc.assert(
+      fc.property(
+        fc.constantFrom(
+          "acid" as const,
+          "cold" as const,
+          "fire" as const,
+          "force" as const,
+          "lightning" as const,
+          "necrotic" as const,
+          "poison" as const,
+          "psychic" as const,
+          "radiant" as const,
+          "thunder" as const,
+        ),
+        (damageType) => {
+          const variant = unitMechanicsVariant(unit, {
+            id: "rogue_sneak_attack_damage_type_variant",
+            mechanics: {
+              ...mechanics,
+              effect: { ...mechanics.effect, damageType },
+            },
+          });
+
+          expect(battleAttackDamageRiderSupportForUnit(variant)).toBe(
+            "unsupported",
+          );
+        },
+      ),
+      { numRuns: 30 },
     );
   });
 
