@@ -20,7 +20,7 @@ import type { DamageType } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { characterUnitProcedureBindings } from "../character-execution-queries.ts";
 import {
   damageDispositionFillFor,
@@ -167,6 +167,31 @@ function spellReactionContinuationSubject(
   return "reactionContinuationSubject" in input
     ? (input.reactionContinuationSubject ?? input.subject)
     : input.subject;
+}
+
+function maybeOpenSpellSaveFailedInterruptWindow(
+  input: SaveGatedSpellResolutionInput,
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  failedTargetIds: readonly CombatantId[],
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
+  const triggeringTargetId = failedTargetIds[0];
+  if (triggeringTargetId === undefined) {
+    return null;
+  }
+  return maybeOpenInterruptWindow(
+    input.state,
+    {
+      trigger: "saveFailed",
+      targetId: triggeringTargetId,
+      sourceProcedureRef,
+      continuation: {
+        kind: "replay",
+        subject: spellReactionContinuationSubject(input),
+        fills: input.fills,
+      },
+    },
+    input.handledInterruptTrigger,
+  );
 }
 
 function metamagicApplicationsIncludeCareful(
@@ -650,24 +675,13 @@ export function resolveGreaseGroundHazardSpellAct(input: {
   const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
     outcome.succeeded ? [] : [outcome.targetId],
   );
-  if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      {
-        trigger: "saveFailed",
-        targetId: failedTargets[0]!,
-        sourceProcedureRef: input.invocation.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: spellReactionContinuationSubject(input.input),
-          fills: input.input.fills,
-        },
-      },
-      input.input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
+    input.input,
+    input.invocation.sourceProcedureRef,
+    failedTargets,
+  );
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
 
   const resourced =
@@ -774,24 +788,13 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
   const failedTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
     (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
   );
-  if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      {
-        trigger: "saveFailed",
-        targetId: failedTargets[0]!,
-        sourceProcedureRef: input.invocation.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: spellReactionContinuationSubject(input.input),
-          fills: input.input.fills,
-        },
-      },
-      input.input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
+    input.input,
+    input.invocation.sourceProcedureRef,
+    failedTargets,
+  );
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
   const resourced = spendSpellCastResources({
     state: input.input.state,
@@ -929,24 +932,13 @@ export function resolveHideousLaughterSpellAct(input: {
   const failedTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
     (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
   );
-  if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      {
-        trigger: "saveFailed",
-        targetId: failedTargets[0]!,
-        sourceProcedureRef: input.invocation.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: spellReactionContinuationSubject(input.input),
-          fills: input.input.fills,
-        },
-      },
-      input.input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
+    input.input,
+    input.invocation.sourceProcedureRef,
+    failedTargets,
+  );
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
   const resourced = spendSpellCastResources({
     state: input.input.state,
@@ -1063,24 +1055,13 @@ export function resolveAbilityD20TestRollModeSaveGateSpellAct(input: {
   const successfulTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
     (outcome) => (outcome.succeeded ? [outcome.targetId] : []),
   );
-  if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      {
-        trigger: "saveFailed",
-        targetId: failedTargets[0]!,
-        sourceProcedureRef: input.invocation.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: spellReactionContinuationSubject(input.input),
-          fills: input.input.fills,
-        },
-      },
-      input.input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
+    input.input,
+    input.invocation.sourceProcedureRef,
+    failedTargets,
+  );
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
   const resourced = spendSpellCastResources({
     state: input.input.state,
@@ -1577,24 +1558,13 @@ export function resolveSaveGateDamageSpellAct(input: {
     area: savingThrowArea,
     invocation: damageInvocation,
   });
-  if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      {
-        trigger: "saveFailed",
-        targetId: failedTargets[0]!,
-        sourceProcedureRef: input.invocation.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: spellReactionContinuationSubject(input.input),
-          fills: input.input.fills,
-        },
-      },
-      input.input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
+    input.input,
+    input.invocation.sourceProcedureRef,
+    failedTargets,
+  );
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
   if (damageTargets.length === 0 && objectDamageFacts.length === 0) {
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -2811,24 +2781,13 @@ export function resolveSaveGateConditionSpellAct(input: {
   const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
     outcome.succeeded ? [] : [outcome.targetId],
   );
-  if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      {
-        trigger: "saveFailed",
-        targetId: failedTargets[0]!,
-        sourceProcedureRef: input.invocation.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: spellReactionContinuationSubject(input.input),
-          fills: input.input.fills,
-        },
-      },
-      input.input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
+    input.input,
+    input.invocation.sourceProcedureRef,
+    failedTargets,
+  );
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
 
   const resourced =
@@ -2991,24 +2950,13 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
   const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
     outcome.succeeded ? [] : [outcome.targetId],
   );
-  if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      {
-        trigger: "saveFailed",
-        targetId: failedTargets[0]!,
-        sourceProcedureRef: input.invocation.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: spellReactionContinuationSubject(input.input),
-          fills: input.input.fills,
-        },
-      },
-      input.input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
+    input.input,
+    input.invocation.sourceProcedureRef,
+    failedTargets,
+  );
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
 
   const resourced = spendSpellCastResources({
@@ -3197,25 +3145,13 @@ export function resolveCommandSpellAct(input: {
   const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
     outcome.succeeded ? [] : [outcome.targetId],
   );
-  if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      {
-        trigger: "saveFailed",
-        targetId: failedTargets[0]!,
-        sourceProcedureRef: input.invocation.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
-          fills: input.input.fills,
-        },
-      },
-      input.input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
+    input.input,
+    input.invocation.sourceProcedureRef,
+    failedTargets,
+  );
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
 
   const resourced = spendSpellCastResources({
@@ -3349,25 +3285,13 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
   const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
     outcome.succeeded ? [] : [outcome.targetId],
   );
-  if (failedTargets.length > 0) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.input.state,
-      {
-        trigger: "saveFailed",
-        targetId: failedTargets[0]!,
-        sourceProcedureRef: input.invocation.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
-          fills: input.input.fills,
-        },
-      },
-      input.input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
+    input.input,
+    input.invocation.sourceProcedureRef,
+    failedTargets,
+  );
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
 
   const resourced = spendSpellCastResources({
