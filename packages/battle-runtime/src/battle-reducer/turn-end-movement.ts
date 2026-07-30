@@ -3700,10 +3700,7 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
   },
 ): BattleResolutionResult {
   const effect = greaseGroundHazardEffectFor(input.state, input.subject);
-  if (
-    effect === undefined ||
-    !input.state.combatants.has(input.subject.actorId)
-  ) {
+  if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3876,10 +3873,7 @@ export function resolveGustOfWindLineSaveCommand(
   },
 ): BattleResolutionResult {
   const effect = gustOfWindLineEffectFor(input.state, input.subject);
-  if (
-    effect === undefined ||
-    !input.state.combatants.has(input.subject.actorId)
-  ) {
+  if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -4001,7 +3995,6 @@ export function resolveGustOfWindLineDirectionChangeCommand(
   const actor = input.state.combatants.get(input.subject.actorId);
   if (
     effect === undefined ||
-    actor === undefined ||
     input.subject.actorId !== effect.sourceCombatantId ||
     input.subject.actorId !== currentActorId(input.state) ||
     (effect.castTurn.actorId === input.subject.actorId &&
@@ -4298,7 +4291,11 @@ export function resolveFlamingSphereSaveCommand(
   /* v8 ignore stop */
   const effect = flamingSphereEffectFor(input.state, input.subject);
   const target = input.state.combatants.get(input.subject.actorId);
-  if (effect === undefined || target === undefined) {
+  if (
+    effect === undefined ||
+    /* v8 ignore next -- Defensive internal guard: the dispatcher's missing-combatant check rejects an absent movable-zone target before routing this subject here. */
+    target === undefined
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -5038,7 +5035,11 @@ export function resolveMoonbeamSaveCommand(
   /* v8 ignore stop */
   const effect = moonbeamEffectFor(input.state, input.subject);
   const target = input.state.combatants.get(input.subject.actorId);
-  if (effect === undefined || target === undefined) {
+  if (
+    effect === undefined ||
+    /* v8 ignore next -- Defensive internal guard: the dispatcher's missing-combatant check rejects an absent movable-zone target before routing this subject here. */
+    target === undefined
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
