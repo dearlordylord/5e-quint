@@ -762,37 +762,33 @@ export function combatantsAfterHideousLaughterSpellEndedIfNoEffects(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   source: HideousLaughterEffect,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  const spellStillActive = [...combatants.values()].some((combatant) =>
-    combatant.activeEffects.some((effect) =>
-      sameHideousLaughterSpellEffect(effect, source),
-    ),
+  return combatantsAfterMatchingConcentrationSpellEffectsEndedIfNoEffects(
+    combatants,
+    source,
+    sameHideousLaughterSpellEffect,
   );
-  if (spellStillActive) {
-    return combatants;
-  }
-  const sourceCombatant = combatants.get(source.sourceCombatantId);
-  if (
-    sourceCombatant === undefined ||
-    sourceCombatant.concentration?.effectKind !== "spellEffect" ||
-    sourceCombatant.concentration.sourceProcedureRef !==
-      source.sourceProcedureRef
-  ) {
-    return combatants;
-  }
-  return new Map(combatants).set(source.sourceCombatantId, {
-    ...sourceCombatant,
-    concentration: null,
-  });
 }
 
 export function combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   source: SpellConcentrationEffectSource,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return combatantsAfterMatchingConcentrationSpellEffectsEndedIfNoEffects(
+    combatants,
+    source,
+    sameConcentrationSpellEffectSource,
+  );
+}
+
+function combatantsAfterMatchingConcentrationSpellEffectsEndedIfNoEffects<
+  Source extends SpellConcentrationEffectSource,
+>(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  source: Source,
+  matchesSource: (effect: BattleActiveEffect, source: Source) => boolean,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
   const spellStillActive = [...combatants.values()].some((combatant) =>
-    combatant.activeEffects.some((effect) =>
-      sameConcentrationSpellEffectSource(effect, source),
-    ),
+    combatant.activeEffects.some((effect) => matchesSource(effect, source)),
   );
   if (spellStillActive) {
     return combatants;
