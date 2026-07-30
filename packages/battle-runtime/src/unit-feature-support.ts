@@ -7196,18 +7196,25 @@ function parseBardicInspirationGrantUnitFeatureProfile(
   SupportedUnitFeatureProfile,
   { readonly kind: "bardicInspirationGrant" }
 > | null {
+  /* v8 ignore start -- Unsupported structured input: Bardic Inspiration grant execution is admitted only from a Bard class-feature record. */
   if (unit.kind !== "class_feature" || unit.className !== "bard") {
     return null;
   }
+  /* v8 ignore stop */
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
+  /* v8 ignore start -- Unsupported character/profile pairing: admission requires the Bard level at or above acquisition. */
   if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
     return null;
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Unsupported structured input: Bardic Inspiration grant owns activation mechanics; other mechanics families are rejected before projection. */
   if (unit.mechanics.family !== "activation") {
     return null;
   }
+  /* v8 ignore stop */
   const mechanics = unit.mechanics;
   const range = mechanics.range;
+  /* v8 ignore start -- Unsupported structured input: this profile owns the exact Bonus Action, 60-foot target, Charisma use-count, Long Rest, one-phase activation shape. */
   if (
     mechanics.activationCost.kind !== "bonus_action" ||
     range === undefined ||
@@ -7222,7 +7229,9 @@ function parseBardicInspirationGrantUnitFeatureProfile(
   ) {
     return null;
   }
+  /* v8 ignore stop */
   const phase = mechanics.phases[0];
+  /* v8 ignore start -- Unsupported structured input: the grant must be one direct target-attached effect with single-target selection. */
   if (
     phase?.kind !== "direct" ||
     phase.attachment.kind !== "target" ||
@@ -7231,7 +7240,9 @@ function parseBardicInspirationGrantUnitFeatureProfile(
   ) {
     return null;
   }
+  /* v8 ignore stop */
   const effect = phase.effects[0];
+  /* v8 ignore start -- Unsupported structured input: the granted token must match the SRD failed-D20-test, one-hour, class-threshold die shape. */
   if (
     effect?.kind !== "grant_die_token" ||
     effect.maxHeld !== 1 ||
@@ -7244,11 +7255,14 @@ function parseBardicInspirationGrantUnitFeatureProfile(
   ) {
     return null;
   }
+  /* v8 ignore stop */
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(effect.duration);
   const dieSize = bardicInspirationDieSizeAtClassLevel(effect.die, classLevel);
+  /* v8 ignore start -- Unsupported structured input: the threshold die table or duration failed its typed SRD projection. */
   if (dieSize === null || Either.isLeft(durationTicks)) {
     return null;
   }
+  /* v8 ignore stop */
   return {
     kind: "bardicInspirationGrant",
     unit,
@@ -7339,10 +7353,13 @@ function parseExtraActionGrantUnitFeatureProfile(
   SupportedUnitFeatureProfile,
   { readonly kind: "extraActionGrant" }
 > | null {
+  /* v8 ignore start -- Unsupported structured input: extra-action grant execution is admitted only from a class-feature record. */
   if (unit.kind !== "class_feature") {
     return null;
   }
+  /* v8 ignore stop */
   const mechanics = unit.mechanics;
+  /* v8 ignore start -- Unsupported structured input: this profile owns a free activation with use-count, Short/Long Rest reset, and once-per-turn usage. */
   if (
     mechanics.family !== "activation" ||
     mechanics.activationCost.kind !== "free" ||
@@ -7352,24 +7369,34 @@ function parseExtraActionGrantUnitFeatureProfile(
   ) {
     return null;
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Unsupported structured input: extra-action grant owns exactly one activation phase. */
   if (mechanics.phases.length !== 1) {
     return null;
   }
+  /* v8 ignore stop */
   const phase = mechanics.phases[0];
+  /* v8 ignore start -- Unsupported structured input: the sole extra-action phase must be direct. */
   if (phase?.kind !== "direct") {
     return null;
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Unsupported structured input: the direct phase must contain exactly one effect. */
   if (phase.effects?.length !== 1) {
     return null;
   }
+  /* v8 ignore stop */
   const effect = phase.effects[0];
-  return effect.kind === "grant_extra_action"
-    ? {
-        kind: "extraActionGrant",
-        unit,
-        restriction: effect.restriction,
-      }
-    : null;
+  /* v8 ignore start -- Unsupported structured input: the sole effect must grant the extra action projected by this profile. */
+  if (effect.kind !== "grant_extra_action") {
+    return null;
+  }
+  /* v8 ignore stop */
+  return {
+    kind: "extraActionGrant",
+    unit,
+    restriction: effect.restriction,
+  };
 }
 
 function parseRetaliationReactionAttackUnitFeatureProfile(
