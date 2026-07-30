@@ -220,10 +220,18 @@ function carefulSpellProtectedTargetLimit(
   actorId: CombatantId,
 ): number {
   const actor = state.combatants.get(actorId);
-  return actor?.origin.kind === "character" &&
-    actor.origin.spellcasting !== undefined
-    ? Math.max(1, Number(actor.origin.spellcasting.spellcastingAbilityModifier))
-    : 1;
+  /* v8 ignore start -- Internal Metamagic invariant: Careful Spell selection is admitted only for a character with an active spellcasting execution. */
+  if (
+    actor?.origin.kind !== "character" ||
+    actor.origin.spellcasting === undefined
+  ) {
+    return 1;
+  }
+  /* v8 ignore stop */
+  return Math.max(
+    1,
+    Number(actor.origin.spellcasting.spellcastingAbilityModifier),
+  );
 }
 
 export function saveMetamagicSelectionState(input: {
@@ -255,9 +263,11 @@ export function saveMetamagicSelectionState(input: {
     input.fills,
     input.invocation,
   );
+  /* v8 ignore start -- Malformed resolution input: the save-Metamagic fill parser rejects duplicate, wrong-hole, or contradictory selection fills before rule execution. */
   if (metamagicSelectionFills.tag === "invalid") {
     return metamagicSelectionFills;
   }
+  /* v8 ignore stop */
   const includesCareful = metamagicApplicationsIncludeCareful(
     input.metamagicApplications,
   );
@@ -453,15 +463,17 @@ export function resolveAreaSaveMetamagicFills(input: {
     selection.carefulSpellProtectedTargetIds,
     selection.heightenedSpellTargetId,
   );
-  return validation === null
-    ? {
-        tag: "ready",
-        savingThrowOutcomes: input.savingThrowOutcomes,
-        carefulSpellProtectedTargetIds:
-          selection.carefulSpellProtectedTargetIds,
-        heightenedSpellTargetId: selection.heightenedSpellTargetId,
-      }
-    : invalidResult(input.state, "invalidFill", validation);
+  /* v8 ignore start -- Malformed resolution input: area-save outcome validation rejects target-set or Metamagic facts that contradict the emitted saving-throw hole. */
+  if (validation !== null) {
+    return invalidResult(input.state, "invalidFill", validation);
+  }
+  /* v8 ignore stop */
+  return {
+    tag: "ready",
+    savingThrowOutcomes: input.savingThrowOutcomes,
+    carefulSpellProtectedTargetIds: selection.carefulSpellProtectedTargetIds,
+    heightenedSpellTargetId: selection.heightenedSpellTargetId,
+  };
 }
 
 function saveMetamagicSelectionFills(

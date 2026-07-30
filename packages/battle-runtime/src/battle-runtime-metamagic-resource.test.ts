@@ -2880,6 +2880,17 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     const act = heightenedBurningHandsAct(session);
     const heightenedHole = findHole(act.initialHoles, "targetChoice");
 
+    expect(
+      resolveBattleSubject({ state, subject: act.subject, fills: [] }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({
+          kind: "targetChoice",
+          label: "Spell Heightened Spell target",
+        }),
+      ],
+    });
     expect(heightenedHole).toMatchObject({
       label: "Spell Heightened Spell target",
       choices: expect.arrayContaining([fighterId, skeletonId]),
@@ -3173,6 +3184,17 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     const act = carefulBurningHandsAct(session);
     const protectedTargetsHole = findHole(act.initialHoles, "spellTargetList");
 
+    expect(
+      resolveBattleSubject({ state, subject: act.subject, fills: [] }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({
+          kind: "spellTargetList",
+          label: "Spell Careful Spell protected targets",
+        }),
+      ],
+    });
     expect(protectedTargetsHole).toMatchObject({
       label: "Spell Careful Spell protected targets",
       maxTargets: 3,
