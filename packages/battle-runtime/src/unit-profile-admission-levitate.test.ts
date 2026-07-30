@@ -378,7 +378,7 @@ describe("L12G deterministic Levitate creature admission", () => {
     );
   });
 
-  test("caster Magic Action altitude control requires target-within-range fact", () => {
+  test("caster Magic Action altitude control requires range facts and rejects stale acts", () => {
     const cast = castWillingLevitate();
     const targetTurn = endTurn({
       state: cast.state,
@@ -407,28 +407,38 @@ describe("L12G deterministic Levitate creature admission", () => {
       altitudeAct.initialHoles,
       "levitateAltitudeChange",
     );
+    const levitated = requireLevitatedEffect(nextCasterTurn.state);
+    const witnessedAltitudeChange = levitateAltitudeChangeFill(hole, "up", 10, [
+      {
+        kind: "levitatedTargetWithinSpellRange",
+        sourceCombatantId: spellCasterId,
+        sourceProcedureRef: levitated.sourceProcedureRef,
+        targetId: spellTargetId,
+        rangeFeet: movementFeet(60),
+      },
+    ]);
     const missingFact = resolveBattleSubject({
       state: nextCasterTurn.state,
       subject: altitudeAct.subject,
       fills: [levitateAltitudeChangeFill(hole, "up", 10, [])],
     });
     expect(missingFact).toMatchObject({ tag: "invalid" });
+    expect(
+      resolveBattleSubject({
+        state: breakBattleConcentration(nextCasterTurn.state, spellCasterId),
+        subject: altitudeAct.subject,
+        fills: [witnessedAltitudeChange],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Levitate altitude control is no longer active for the target.",
+    });
 
     const raised = resolveBattleSubject({
       state: nextCasterTurn.state,
       subject: altitudeAct.subject,
-      fills: [
-        levitateAltitudeChangeFill(hole, "up", 10, [
-          {
-            kind: "levitatedTargetWithinSpellRange",
-            sourceCombatantId: spellCasterId,
-            sourceProcedureRef: requireLevitatedEffect(nextCasterTurn.state)
-              .sourceProcedureRef,
-            targetId: spellTargetId,
-            rangeFeet: movementFeet(60),
-          },
-        ]),
-      ],
+      fills: [witnessedAltitudeChange],
     });
     expect(raised).toMatchObject({
       tag: "resolved",
@@ -440,6 +450,18 @@ describe("L12G deterministic Levitate creature admission", () => {
     expect(requireLevitatedEffect(raised.state).altitudeFeet).toBe(
       movementFeet(30),
     );
+    expect(
+      resolveBattleSubject({
+        state: raised.state,
+        subject: altitudeAct.subject,
+        fills: [witnessedAltitudeChange],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Magic action is no longer available for Levitate altitude control.",
+    });
   });
 
   test("self-target Levitate uses movement, not a caster Magic Action, to change altitude", () => {

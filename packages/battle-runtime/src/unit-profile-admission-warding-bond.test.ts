@@ -1227,6 +1227,17 @@ function separateWardingBond(state: BattleState): BattleState {
   if (resolved.tag !== "resolved") {
     throw new Error("Expected Warding Bond separation to resolve.");
   }
+  expect(
+    resolveBattleSubject({
+      state: resolved.state,
+      subject,
+      fills: [wardingBondSeparationFactsFill(hole, spellTargetId)],
+    }),
+  ).toMatchObject({
+    tag: "invalid",
+    reason: "staleSubject",
+    message: "Warding Bond is no longer active for this connected target.",
+  });
   return resolved.state;
 }
 
