@@ -438,7 +438,7 @@ export function resolvePreparedSlotSpellAct(input: {
     );
   }
 
-  const concentrationSaves = targetAllocation.allocations.flatMap(
+  const allocationTargetDamageAmounts = targetAllocation.allocations.flatMap(
     (allocation, allocationIndex) => {
       const target = input.input.state.combatants.get(allocation.targetId);
       if (target === undefined) {
@@ -446,6 +446,11 @@ export function resolvePreparedSlotSpellAct(input: {
       }
       const damageAmount =
         damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
+      return [{ target, damageAmount }];
+    },
+  );
+  const concentrationSaves = allocationTargetDamageAmounts.flatMap(
+    ({ target, damageAmount }) => {
       return damageLifecycleConcentrationSavingThrowHoles({
         state: input.input.state,
         target,
@@ -483,14 +488,8 @@ export function resolvePreparedSlotSpellAct(input: {
     );
   }
   /* v8 ignore stop */
-  const damageDispositionHoles = targetAllocation.allocations.flatMap(
-    (allocation, allocationIndex) => {
-      const target = input.input.state.combatants.get(allocation.targetId);
-      if (target === undefined) {
-        return [];
-      }
-      const damageAmount =
-        damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
+  const damageDispositionHoles = allocationTargetDamageAmounts.flatMap(
+    ({ target, damageAmount }) => {
       const hole = zeroHitPointReplacementDispositionHole({
         damageSourceId: input.actorId,
         target,
