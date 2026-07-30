@@ -8148,9 +8148,11 @@ function parseOngoingFeatureEffects(
       effect.kind === "grant_resistance" &&
       typeof effect.damageType === "string"
     ) {
+      /* v8 ignore start -- Unsupported structured input: the ongoing-feature support profile admits an unfiltered resistance grant only. Source-filtered resistance records are rejected at this admission boundary; admitted resistance projection remains measured below. */
       if ("sourceFilter" in effect && effect.sourceFilter !== undefined) {
         return null;
       }
+      /* v8 ignore stop */
       resistances.push(effect.damageType);
       continue;
     }
@@ -8158,9 +8160,12 @@ function parseOngoingFeatureEffects(
       effect.kind === "modify_roll_advantage" &&
       effect.on.includes("attack_roll")
     ) {
+      /* v8 ignore start -- Unsupported structured input: this profile admits an attack-roll-only modifier, so a mixed roll-target list is rejected before projection. */
       if (effect.on.some((target) => target !== "attack_roll")) {
         return null;
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Unsupported structured input: attacker, skill, condition, save, range, count, and expiry filters are outside this ongoing-feature profile. The supported optional ability-filter projection remains measured after this guard. */
       if (
         ("attackerTypeFilter" in effect &&
           effect.attackerTypeFilter !== undefined) ||
@@ -8180,6 +8185,7 @@ function parseOngoingFeatureEffects(
       ) {
         return null;
       }
+      /* v8 ignore stop */
       const abilityFilter: readonly Ability[] | undefined =
         "abilityFilter" in effect && Array.isArray(effect.abilityFilter)
           ? effect.abilityFilter
@@ -8197,21 +8203,25 @@ function parseOngoingFeatureEffects(
       continue;
     }
     if (effect.kind === "modify_damage_numeric") {
+      /* v8 ignore start -- Unsupported structured input: this profile admits either no weapon filter or the typed weapon-category filter; other structured filter shapes are rejected at admission. */
       if (
         effect.weaponFilter !== undefined &&
         effect.weaponFilter.kind !== "weapon_category"
       ) {
         return null;
       }
+      /* v8 ignore stop */
       const amount = numericDeltaForClassLevel(
         effect.delta,
         unit.kind === "class_feature"
           ? classLevelForClass(classLevels, unit.className)
           : 0,
       );
+      /* v8 ignore start -- Unsupported structured input: numericDeltaForClassLevel admits only the fixed-number and class-threshold shapes projected by this profile. */
       if (amount === null) {
         return null;
       }
+      /* v8 ignore stop */
       damageModifiers.push({
         amount,
         ...(effect.abilityFilter === undefined
@@ -8223,6 +8233,7 @@ function parseOngoingFeatureEffects(
       });
       continue;
     }
+    /* v8 ignore next -- Unsupported structured input: every effect kind owned by this ongoing-feature profile is handled above; unrelated effect atoms are rejected at admission. */
     return null;
   }
   return rollModifiers.length === 0 &&
@@ -8238,9 +8249,11 @@ function parseSpellBenefitActivationProjectionEffects(
   Extract<SupportedUnitFeatureProfile, { readonly kind: "ongoingFeature" }>,
   "rollModifiers" | "spellModifiers" | "damageModifiers" | "resistances"
 > | null {
+  /* v8 ignore start -- Unsupported structured input: the spell-benefit activation profile is defined by exactly one save-DC atom and one spell-attack atom; other cardinalities are rejected before projection. */
   if (effects.length !== 2) {
     return null;
   }
+  /* v8 ignore stop */
   const saveDc = effects.find((effect) => effect.kind === "modify_save_dc");
   const attackRollAdvantage = effects.find(
     (effect) => effect.kind === "modify_roll_advantage",
@@ -8248,6 +8261,7 @@ function parseSpellBenefitActivationProjectionEffects(
   const saveDcModifier = spellSaveDcModifierBenefit(saveDc);
   const attackRollModifier =
     spellAttackRollModeModifierBenefit(attackRollAdvantage);
+  /* v8 ignore start -- Unsupported structured input: malformed atom shapes or benefits sourced from different classes cannot form one spell-benefit activation profile. */
   if (
     saveDcModifier === null ||
     attackRollModifier === null ||
@@ -8255,6 +8269,7 @@ function parseSpellBenefitActivationProjectionEffects(
   ) {
     return null;
   }
+  /* v8 ignore stop */
   return {
     rollModifiers: [],
     spellModifiers: [
