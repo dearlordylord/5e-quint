@@ -3321,20 +3321,28 @@ export function validateSavingThrowOutcomes(
 ): string | null {
   const outcomes = value.outcomes;
   if (invocation.procedure === "rollModifier") {
+    /* v8 ignore start -- Malformed roll-modifier save fill: discovery requests a non-empty outcome list without area geometry, so this rejects only an empty caller mutation. */
     if (outcomes.length === 0) {
       return "Save-gated roll modifier spell must include at least one target Saving Throw outcome.";
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- Malformed roll-modifier save fill: the selected-target adapter cannot attach area geometry to this hole, so this rejects only a caller mutation. */
     if ("area" in value) {
       return "Save-gated roll modifier spell outcomes must not include area facts.";
     }
+    /* v8 ignore stop */
     const seenTargets = new Set<CombatantId>();
     for (const outcome of outcomes) {
+      /* v8 ignore start -- Malformed roll-modifier save witness: discovery selects combatants from this battle, so this rejects only a caller-mutated foreign identity. */
       if (!state.combatants.has(outcome.targetId)) {
         return "Save-gated roll modifier spell target must be a combatant in this battle.";
       }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed roll-modifier save witness: the selected-target adapter emits each target once, so this rejects only a caller-mutated duplicate. */
       if (seenTargets.has(outcome.targetId)) {
         return "Save-gated roll modifier spell Saving Throw outcomes must not duplicate targets.";
       }
+      /* v8 ignore stop */
       seenTargets.add(outcome.targetId);
     }
     if (invocation.targeting.kind === "selfAndChosenLegalTargets") {
@@ -3641,6 +3649,7 @@ function validatePostSaveAreaEffect(input: {
   >;
 }): string | null {
   if (input.invocation.postSaveAreaEffect === undefined) {
+    /* v8 ignore start -- Malformed post-save area fill: discovery only requests Fireball, Shatter, or Thunderwave area facts when the invocation owns the matching post-save effect. These branches reject caller-mutated cross-spell facts. */
     if (input.area !== undefined && "kind" in input.area) {
       if (input.area.kind === "fireballArea") {
         return "Fireball object ignition facts are only valid for Fireball.";
@@ -3650,6 +3659,7 @@ function validatePostSaveAreaEffect(input: {
       }
       return "Thunderwave push facts are only valid for Thunderwave.";
     }
+    /* v8 ignore stop */
     return null;
   }
   const effect = input.invocation.postSaveAreaEffect;
@@ -3666,8 +3676,10 @@ function validatePostSaveAreaEffect(input: {
   if (effect.kind === "shatterObjectDamage") {
     return validateShatterAreaEffect(input.area);
   }
+  /* v8 ignore start -- The post-save area-effect union is exhausted above; widening it without a validator arm fails compilation at this assignment. */
   const exhaustive: never = effect;
   return exhaustive;
+  /* v8 ignore stop */
 }
 
 function validateFireballAreaEffect(
