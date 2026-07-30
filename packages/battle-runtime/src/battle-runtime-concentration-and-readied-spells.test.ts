@@ -778,6 +778,30 @@ describe("battle runtime: Concentration and readied spells", () => {
     });
   });
 
+  test("rejects a stale release command when no spell is held", () => {
+    const state = wizardVsSkeletonBattle().state;
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: wizardId,
+          command: "releaseReadiedSpell",
+          readiedSpellCasterId: wizardId,
+          procedureRef: battleProcedureExecutionRefForTest(
+            "stale-readied-spell",
+          ),
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "No matching readied spell is currently being held.",
+    });
+  });
+
   test("readied prepared slot spell releases without spending another Spell Slot", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-readied-slot-spell-release"),
