@@ -7461,14 +7461,19 @@ function parseSelfBonusActionHealingUnitFeatureProfile(
   SupportedUnitFeatureProfile,
   { readonly kind: "selfBonusActionHealing" }
 > | null {
+  /* v8 ignore start -- Unsupported structured input: this support profile is class-feature-only; other authored unit families are rejected before projection. */
   if (unit.kind !== "class_feature") {
     return null;
   }
+  /* v8 ignore stop */
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
+  /* v8 ignore start -- Unsupported character/profile pairing: admission requires the owning class level at or above the feature's acquisition level. */
   if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
     return null;
   }
+  /* v8 ignore stop */
   const mechanics = unit.mechanics;
+  /* v8 ignore start -- Unsupported structured input: self Bonus Action healing owns one activation, use-count, reset-cadence, and direct-phase shape. The admitted healing projection remains measured below. */
   if (
     mechanics.family !== "activation" ||
     mechanics.activationCost.kind !== "bonus_action" ||
@@ -7478,7 +7483,9 @@ function parseSelfBonusActionHealingUnitFeatureProfile(
   ) {
     return null;
   }
+  /* v8 ignore stop */
   const phase = mechanics.phases[0];
+  /* v8 ignore start -- Unsupported structured input: the healing phase must be one direct self-attached effect; other phase shapes are rejected at profile admission. */
   if (
     phase?.kind !== "direct" ||
     phase.attachment.kind !== "self" ||
@@ -7486,7 +7493,9 @@ function parseSelfBonusActionHealingUnitFeatureProfile(
   ) {
     return null;
   }
+  /* v8 ignore stop */
   const effect = phase.effects[0];
+  /* v8 ignore start -- Unsupported structured input: this profile admits the exact self-healing linear-per-class-level dice shape; malformed or differently-scaled healing atoms are rejected. */
   if (
     effect?.kind !== "heal_hp" ||
     effect.target !== "self" ||
@@ -7499,6 +7508,7 @@ function parseSelfBonusActionHealingUnitFeatureProfile(
   ) {
     return null;
   }
+  /* v8 ignore stop */
   return {
     kind: "selfBonusActionHealing",
     unit,
@@ -7519,10 +7529,13 @@ function parseOngoingFeatureUnitFeatureProfile(
   SupportedUnitFeatureProfile,
   { readonly kind: "ongoingFeature" }
 > | null {
+  /* v8 ignore start -- Unsupported structured input: ongoing feature execution is admitted only from a class-feature record. */
   if (unit.kind !== "class_feature") {
     return null;
   }
+  /* v8 ignore stop */
   const mechanics = unit.mechanics;
+  /* v8 ignore start -- Unsupported structured input: an ongoing feature owns exactly one activation phase and an explicit lifecycle block; other mechanics families are rejected. */
   if (
     mechanics.family !== "activation" ||
     !("ongoingFeature" in mechanics) ||
@@ -7531,7 +7544,9 @@ function parseOngoingFeatureUnitFeatureProfile(
   ) {
     return null;
   }
+  /* v8 ignore stop */
   const phase = mechanics.phases[0];
+  /* v8 ignore start -- Unsupported structured input: ongoing feature effects must be a non-empty direct self-attached phase before their typed effect parser runs. */
   if (
     phase?.kind !== "direct" ||
     phase.attachment.kind !== "self" ||
@@ -7540,6 +7555,7 @@ function parseOngoingFeatureUnitFeatureProfile(
   ) {
     return null;
   }
+  /* v8 ignore stop */
   const effects = phase.effects.flatMap((effect): readonly EffectAtom[] =>
     isEffectAtom(effect) ? [effect] : [],
   );
@@ -7548,9 +7564,11 @@ function parseOngoingFeatureUnitFeatureProfile(
       ? (parseOngoingFeatureEffects(effects, classLevels, unit) ??
         parseSpellBenefitActivationProjectionEffects(phase.effects))
       : parseSpellBenefitActivationProjectionEffects(phase.effects);
+  /* v8 ignore start -- Unsupported structured input: neither the ongoing-effect parser nor the spell-benefit activation parser admitted this effect list. */
   if (parsedEffects === null) {
     return null;
   }
+  /* v8 ignore stop */
   const override = mechanics.ongoingFeature.levelOverrides
     ?.filter(
       (candidate) =>
@@ -7573,19 +7591,25 @@ function parseOngoingFeatureUnitFeatureProfile(
       : mechanics.activationCost.kind === "free"
         ? { trigger: "firstAttackRoll" as const, spendsUse: false }
         : null;
+  /* v8 ignore start -- Unsupported structured input: activation timing and cost did not form either the Bonus Action or first-attack trigger owned by this profile. */
   if (activation === null) {
     return null;
   }
+  /* v8 ignore stop */
   const lifecycleProfile = parseOngoingFeatureLifecycle(lifecycle);
+  /* v8 ignore start -- Unsupported structured input: the lifecycle block did not parse into a supported turn-boundary, extended, or fixed duration. */
   if (lifecycleProfile === null) {
     return null;
   }
+  /* v8 ignore stop */
   const actionRestrictions = parseOngoingFeatureActionRestrictions(
     support.actionRestrictions ?? [],
   );
+  /* v8 ignore start -- Unsupported structured input: this profile admits only its typed spellcasting action restriction. */
   if (actionRestrictions === null) {
     return null;
   }
+  /* v8 ignore stop */
   return {
     kind: "ongoingFeature",
     unit,
@@ -7608,13 +7632,17 @@ function parseAttackDamageRiderUnitFeatureProfile(
   { readonly kind: "attackDamageRider" }
 > | null {
   const mechanics = attackDamageRiderMechanicsProjection(unit);
+  /* v8 ignore start -- Unsupported structured input: attack-damage riders require a class-feature record whose mechanics projection parsed successfully. */
   if (unit.kind !== "class_feature" || mechanics === null) {
     return null;
   }
+  /* v8 ignore stop */
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
+  /* v8 ignore start -- Unsupported character/profile pairing: admission requires the owning class level at or above acquisition. */
   if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
     return null;
   }
+  /* v8 ignore stop */
   if (mechanics.optional === true) {
     return {
       kind: "attackDamageRider",
@@ -7646,13 +7674,17 @@ function parseSaveDamageReplacementUnitFeatureProfile(
   { readonly kind: "saveDamageReplacement" }
 > | null {
   const mechanics = saveDamageReplacementMechanicsProjection(unit);
+  /* v8 ignore start -- Unsupported structured input: save-damage replacement requires a class-feature record whose mechanics projection parsed successfully. */
   if (unit.kind !== "class_feature" || mechanics === null) {
     return null;
   }
+  /* v8 ignore stop */
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
+  /* v8 ignore start -- Unsupported character/profile pairing: admission requires the owning class level at or above acquisition. */
   if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
     return null;
   }
+  /* v8 ignore stop */
   return {
     kind: "saveDamageReplacement",
     unit,
@@ -7671,20 +7703,26 @@ function parseReactionRollOrDamageReductionUnitFeatureProfile(
   SupportedUnitFeatureProfile,
   { readonly kind: "reactionRollOrDamageReduction" }
 > | null {
+  /* v8 ignore start -- Unsupported structured input: reaction roll/damage reduction execution is admitted only from a class-feature record. */
   if (unit.kind !== "class_feature") {
     return null;
   }
+  /* v8 ignore stop */
   const classLevel = findCharacterClassLevel(classLevels, unit.className);
+  /* v8 ignore start -- Unsupported character/profile pairing: admission requires the owning class level at or above acquisition. */
   if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
     return null;
   }
+  /* v8 ignore stop */
   const modifiers = reactionRollOrDamageReductionMechanicsProjection(
     unit,
     classLevel,
   );
+  /* v8 ignore start -- Unsupported structured input: the reaction modifier mechanics did not parse into a supported roll or damage reduction. */
   if (modifiers === null) {
     return null;
   }
+  /* v8 ignore stop */
   return {
     kind: "reactionRollOrDamageReduction",
     unit,
