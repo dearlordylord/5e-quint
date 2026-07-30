@@ -434,28 +434,10 @@ function activeEffectSourcesCondition(
   effect: BattleActiveEffect,
   condition: Condition,
 ): boolean {
-  if (condition === "incapacitated") {
-    return activeEffectDirectlyAppliesCondition(effect, condition);
-  }
   return (
-    (effect.kind === "spellCondition" &&
-      (effect.condition === condition ||
-        (condition === "prone" && effect.condition === "unconscious"))) ||
-    (effect.kind === "unitFeatureCondition" &&
-      effect.condition === condition) ||
-    (effect.kind === "unitFeatureConditionEndTurnSave" &&
-      effect.condition === condition) ||
-    (effect.kind === "targetActionEndedSpellCondition" &&
-      effect.condition === condition) ||
-    (effect.kind === "spellConditionRepeatSave" &&
-      effect.condition === condition) ||
-    (effect.kind === "spellConditionEndTurnSave" &&
-      effect.condition === condition) ||
-    (effect.kind === "spellConditionCountedEndTurnSave" &&
-      effect.condition === condition) ||
-    (effect.kind === "sleepUnconscious" &&
-      (condition === "unconscious" || condition === "prone")) ||
-    activeEffectDirectlyAppliesCondition(effect, condition)
+    activeEffectDirectlyAppliesCondition(effect, condition) ||
+    (condition === "prone" &&
+      activeEffectDirectlyAppliesCondition(effect, "unconscious"))
   );
 }
 
