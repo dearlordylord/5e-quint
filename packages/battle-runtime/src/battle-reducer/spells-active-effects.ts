@@ -218,6 +218,20 @@ type CasterAreaSpellActiveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: CasterAreaSpellActiveEffectKind }
 >;
+const SINGLE_SAVE_AREA_ACTIVE_EFFECT_KINDS = [
+  "moonbeam",
+  "sleetStormAreaHazard",
+  "insectPlagueAreaHazard",
+  "cloudkillAreaHazard",
+] as const satisfies ReadonlyArray<BattleActiveEffect["kind"]>;
+type SingleSaveAreaActiveEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: (typeof SINGLE_SAVE_AREA_ACTIVE_EFFECT_KINDS)[number] }
+>;
+type SingleSaveAreaHazardActiveEffect = Exclude<
+  SingleSaveAreaActiveEffect,
+  { readonly kind: "moonbeam" }
+>;
 type DancingLightsActiveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "dancingLights" }
@@ -2584,13 +2598,26 @@ export function replaceGustOfWindLineDirection(input: {
   };
 }
 
-export function resetAllMoonbeamSavedThisTurn(
+const SINGLE_SAVE_AREA_ACTIVE_EFFECT_KIND_SET: ReadonlySet<
+  BattleActiveEffect["kind"]
+> = new Set(SINGLE_SAVE_AREA_ACTIVE_EFFECT_KINDS);
+
+function isSingleSaveAreaActiveEffect(
+  activeEffect: BattleActiveEffect,
+): activeEffect is SingleSaveAreaActiveEffect {
+  return SINGLE_SAVE_AREA_ACTIVE_EFFECT_KIND_SET.has(activeEffect.kind);
+}
+
+function resetAllSingleSaveAreaEffectsForTurn(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  kind: SingleSaveAreaActiveEffect["kind"],
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const next = new Map(combatants);
   for (const [id, combatant] of next) {
     const activeEffects = combatant.activeEffects.map((effect) =>
-      effect.kind === "moonbeam" && effect.savedThisTurn.length > 0
+      isSingleSaveAreaActiveEffect(effect) &&
+      effect.kind === kind &&
+      effect.savedThisTurn.length > 0
         ? { ...effect, savedThisTurn: [] as readonly CombatantId[] }
         : effect,
     );
@@ -2599,6 +2626,12 @@ export function resetAllMoonbeamSavedThisTurn(
     }
   }
   return next;
+}
+
+export function resetAllMoonbeamSavedThisTurn(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  return resetAllSingleSaveAreaEffectsForTurn(combatants, "moonbeam");
 }
 
 export function resetAllWebSavedThisTurn(
@@ -2631,74 +2664,28 @@ export function resetAllWebSavedThisTurn(
 export function resetAllSleetStormSavedThisTurn(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  const next = new Map(combatants);
-  for (const [id, combatant] of next) {
-    const activeEffects = combatant.activeEffects.map((effect) =>
-      effect.kind === "sleetStormAreaHazard" && effect.savedThisTurn.length > 0
-        ? {
-            ...effect,
-            savedThisTurn: [] as readonly CombatantId[],
-          }
-        : effect,
-    );
-    if (
-      activeEffects.some(
-        (effect, index) => effect !== combatant.activeEffects[index],
-      )
-    ) {
-      next.set(id, { ...combatant, activeEffects });
-    }
-  }
-  return next;
+  return resetAllSingleSaveAreaEffectsForTurn(
+    combatants,
+    "sleetStormAreaHazard",
+  );
 }
 
 export function resetAllInsectPlagueSavedThisTurn(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  const next = new Map(combatants);
-  for (const [id, combatant] of next) {
-    const activeEffects = combatant.activeEffects.map((effect) =>
-      effect.kind === "insectPlagueAreaHazard" &&
-      effect.savedThisTurn.length > 0
-        ? {
-            ...effect,
-            savedThisTurn: [] as readonly CombatantId[],
-          }
-        : effect,
-    );
-    if (
-      activeEffects.some(
-        (effect, index) => effect !== combatant.activeEffects[index],
-      )
-    ) {
-      next.set(id, { ...combatant, activeEffects });
-    }
-  }
-  return next;
+  return resetAllSingleSaveAreaEffectsForTurn(
+    combatants,
+    "insectPlagueAreaHazard",
+  );
 }
 
 export function resetAllCloudkillSavedThisTurn(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  const next = new Map(combatants);
-  for (const [id, combatant] of next) {
-    const activeEffects = combatant.activeEffects.map((effect) =>
-      effect.kind === "cloudkillAreaHazard" && effect.savedThisTurn.length > 0
-        ? {
-            ...effect,
-            savedThisTurn: [] as readonly CombatantId[],
-          }
-        : effect,
-    );
-    if (
-      activeEffects.some(
-        (effect, index) => effect !== combatant.activeEffects[index],
-      )
-    ) {
-      next.set(id, { ...combatant, activeEffects });
-    }
-  }
-  return next;
+  return resetAllSingleSaveAreaEffectsForTurn(
+    combatants,
+    "cloudkillAreaHazard",
+  );
 }
 
 export function markMoonbeamSavedThisTurn(
@@ -2834,13 +2821,10 @@ export function markWebSavedThisTurn(
   };
 }
 
-export function markSleetStormAreaHazardSavedThisTurn(
+function markSingleSaveAreaHazardSavedThisTurn(
   state: BattleState,
   targetId: CombatantId,
-  effect: Extract<
-    BattleActiveEffect,
-    { readonly kind: "sleetStormAreaHazard" }
-  >,
+  effect: SingleSaveAreaHazardActiveEffect,
 ): BattleState {
   const caster = state.combatants.get(effect.sourceCombatantId);
   if (caster === undefined || effect.savedThisTurn.includes(targetId)) {
@@ -2849,8 +2833,8 @@ export function markSleetStormAreaHazardSavedThisTurn(
   const activeEffects = caster.activeEffects.map((current) =>
     current === effect
       ? {
-          ...current,
-          savedThisTurn: [...current.savedThisTurn, targetId],
+          ...effect,
+          savedThisTurn: [...effect.savedThisTurn, targetId],
         }
       : current,
   );
@@ -2861,6 +2845,17 @@ export function markSleetStormAreaHazardSavedThisTurn(
       activeEffects,
     }),
   };
+}
+
+export function markSleetStormAreaHazardSavedThisTurn(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "sleetStormAreaHazard" }
+  >,
+): BattleState {
+  return markSingleSaveAreaHazardSavedThisTurn(state, targetId, effect);
 }
 
 export function markInsectPlagueAreaHazardSavedThisTurn(
@@ -2871,25 +2866,7 @@ export function markInsectPlagueAreaHazardSavedThisTurn(
     { readonly kind: "insectPlagueAreaHazard" }
   >,
 ): BattleState {
-  const caster = state.combatants.get(effect.sourceCombatantId);
-  if (caster === undefined || effect.savedThisTurn.includes(targetId)) {
-    return state;
-  }
-  const activeEffects = caster.activeEffects.map((current) =>
-    current === effect
-      ? {
-          ...current,
-          savedThisTurn: [...current.savedThisTurn, targetId],
-        }
-      : current,
-  );
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(effect.sourceCombatantId, {
-      ...caster,
-      activeEffects,
-    }),
-  };
+  return markSingleSaveAreaHazardSavedThisTurn(state, targetId, effect);
 }
 
 export function markCloudkillAreaHazardSavedThisTurn(
@@ -2897,25 +2874,7 @@ export function markCloudkillAreaHazardSavedThisTurn(
   targetId: CombatantId,
   effect: Extract<BattleActiveEffect, { readonly kind: "cloudkillAreaHazard" }>,
 ): BattleState {
-  const caster = state.combatants.get(effect.sourceCombatantId);
-  if (caster === undefined || effect.savedThisTurn.includes(targetId)) {
-    return state;
-  }
-  const activeEffects = caster.activeEffects.map((current) =>
-    current === effect
-      ? {
-          ...current,
-          savedThisTurn: [...current.savedThisTurn, targetId],
-        }
-      : current,
-  );
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(effect.sourceCombatantId, {
-      ...caster,
-      activeEffects,
-    }),
-  };
+  return markSingleSaveAreaHazardSavedThisTurn(state, targetId, effect);
 }
 
 export function applyWebRestrainedCondition(
