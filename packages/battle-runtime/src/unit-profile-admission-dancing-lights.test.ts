@@ -396,6 +396,25 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(
+      resolveBattleSubject({
+        state: resolved.state,
+        subject: moveAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({
+          kind: "dancingLightsPlacement",
+          mode: "reposition",
+          form: "combinedMediumForm",
+          activeLightIds: [
+            expect.stringContaining(String(combinedAct.subject.procedureRef)),
+          ],
+        }),
+      ],
+    });
     const moved = resolveBattleSubject({
       state: resolved.state,
       subject: moveAct.subject,
