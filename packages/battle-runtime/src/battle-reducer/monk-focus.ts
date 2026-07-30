@@ -172,9 +172,12 @@ export function resolveMonkFocusOption(
               ),
             );
           }),
-          Match.when("focusDisengageDash", () =>
+          Match.when("focusDisengageDash", (mode) =>
             resolveStepOfTheWindFocus(
-              input,
+              {
+                ...input,
+                subject: { ...subject, mode },
+              },
               focus,
               spent.right,
               heightenedStepOfTheWindCarryRequest,
@@ -394,8 +397,21 @@ function monkFocusFlurryOfBlowsStrikeCount(
     : focus.execution.flurryOfBlows.strikeCount;
 }
 
+type StepOfTheWindFocusResolutionInput = Omit<
+  MonkFocusOptionBattleResolutionInput,
+  "subject"
+> & {
+  readonly subject: Omit<
+    Extract<
+      MonkFocusOptionBattleResolutionInput["subject"],
+      { readonly option: "stepOfTheWind" }
+    >,
+    "mode"
+  > & { readonly mode: "focusDisengageDash" };
+};
+
 function resolveStepOfTheWindFocus(
-  input: MonkFocusOptionBattleResolutionInput,
+  input: StepOfTheWindFocusResolutionInput,
   focus: MonkFocusResourceFact,
   spentResources: BattleTurnResources,
   carryRequest: HeightenedStepOfTheWindCarryRequest,
@@ -405,16 +421,6 @@ function resolveStepOfTheWindFocus(
       input.state,
       "staleSubject",
       "Step of the Wind requires an unspent Focus Point for Disengage.",
-    );
-  }
-  if (
-    input.subject.option !== "stepOfTheWind" ||
-    input.subject.mode !== "focusDisengageDash"
-  ) {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Step of the Wind Focus mode requires a Dash speed kind.",
     );
   }
   if (
@@ -445,18 +451,10 @@ function resolveStepOfTheWindFocus(
     carryRequest,
     input.subject.procedureRef,
   );
-  const actor = withCarriedCreature.combatants.get(input.subject.actorId);
-  if (!isCharacterBattleCreatureState(actor)) {
-    return invalidResult(
-      input.state,
-      "missingCombatant",
-      "Step of the Wind actor is not in this battle.",
-    );
-  }
   return resolved(
     stateWithMonkFocusResource(
       withCarriedCreature,
-      actor,
+      focus.actor,
       spendCharacterResourceUse(focus.resource),
     ),
   );

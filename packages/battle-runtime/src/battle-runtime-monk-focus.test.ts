@@ -300,6 +300,14 @@ describe("battle runtime: Monk's Focus battle options", () => {
         candidate.mode === "freeDash" &&
         candidate.speedKind === "fly",
     );
+    const focusSubject = monkFocusSubject(
+      withFlySpeed,
+      (candidate) =>
+        candidate.tag === "monkFocusOption" &&
+        candidate.option === "stepOfTheWind" &&
+        candidate.mode === "focusDisengageDash" &&
+        candidate.speedKind === "fly",
+    );
     const withoutFlySpeed: BattleState = {
       ...withFlySpeed,
       combatants: new Map(withFlySpeed.combatants).set(fighterId, {
@@ -324,10 +332,22 @@ describe("battle runtime: Monk's Focus battle options", () => {
       message:
         "Step of the Wind speed kind is not represented for this combatant.",
     });
+    expect(
+      resolveBattleSubject({
+        state: withoutFlySpeed,
+        subject: focusSubject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message:
+        "Step of the Wind speed kind is not represented for this combatant.",
+    });
   });
 
   test("Step of the Wind spends Focus for Disengage and Dash", () => {
-    const state = monkFocusBattle({ usesRemaining: 2 });
+    const state = monkFocusBattle({ usesRemaining: 1 });
     const subject = monkFocusSubject(
       state,
       (subject) =>
@@ -356,8 +376,27 @@ describe("battle runtime: Monk's Focus battle options", () => {
     });
     expect(
       monkFocusResourceForSubject(resolved.state, subject).usesRemaining,
-    ).toBe(1);
+    ).toBe(0);
     expect(monk.activeEffects).toEqual([]);
+
+    const targetTurn = requireResolved(
+      endTurn({ state: resolved.state, actorId: fighterId }),
+    );
+    const nextMonkTurn = requireResolved(
+      endTurn({ state: targetTurn.state, actorId: goblinId }),
+    );
+    expect(
+      resolveBattleSubject({
+        state: nextMonkTurn.state,
+        subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Step of the Wind requires an unspent Focus Point for Disengage.",
+    });
   });
 
   test("Heightened Focus Step of the Wind carries a willing nearby creature for the turn", () => {
