@@ -798,9 +798,11 @@ export function applyStartOfTurnActiveEffects(
   actorId: CombatantId,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const actor = combatants.get(actorId);
+  /* v8 ignore start -- Defensive inconsistent-state guard: battle admission and turn reducers keep every initiative combatant in the combatant map before start-of-turn effects run. */
   if (actor === undefined) {
     return combatants;
   }
+  /* v8 ignore stop */
   const temporaryHitPoints = actor.activeEffects
     .filter(
       (
@@ -826,9 +828,11 @@ export function applyStartOfTurnActiveEffects(
 export function spellTurnStartDamageEffects(
   combatant: BattleCreatureState | undefined,
 ): readonly SpellTurnStartDamageEffect[] {
+  /* v8 ignore start -- Defensive inconsistent-state guard: end-turn routing derives the next actor from admitted initiative entries, whose combatants remain in the battle map. */
   if (combatant === undefined) {
     return [];
   }
+  /* v8 ignore stop */
   return combatant.activeEffects.filter(
     (effect): effect is SpellTurnStartDamageEffect =>
       (effect.kind === "spellCondition" &&
@@ -852,9 +856,11 @@ export function spellTurnEndDamageEffects(
   actorId: CombatantId,
   round: RoundType,
 ): readonly SpellTurnEndDamageEffect[] {
+  /* v8 ignore start -- Defensive inconsistent-state guard: the dispatcher rejects a missing current actor before turn-end damage discovery. */
   if (combatant === undefined) {
     return [];
   }
+  /* v8 ignore stop */
   return combatant.activeEffects.filter(
     (effect): effect is SpellTurnEndDamageEffect =>
       effect.kind === "spellTurnEndDamage" &&
