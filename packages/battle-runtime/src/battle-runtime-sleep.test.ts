@@ -326,6 +326,17 @@ describe("battle runtime: Sleep", () => {
         fills: [],
       }),
     );
+    expect(
+      resolveBattleSubject({
+        state: broken.state,
+        subject: endConcentration.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "End Concentration is no longer available.",
+    });
 
     expect(broken.routeEvents).toEqual([
       {
