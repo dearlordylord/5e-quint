@@ -579,6 +579,27 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     ).toBe(true);
   });
 
+  test("BattleFillSchema rejects empty Grapple Drag Movement facts", () => {
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleFillSchema)({
+          kind: "movement",
+          holeId: "battle:movement",
+          value: {
+            speedKind: "walk",
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            grappleDrag: {
+              kind: "grappleDrag",
+              totalDistanceFeet: 10,
+              targets: [],
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
   test("BattleFillSchema admits only non-empty procedure-specific roll relationship facts", () => {
     const decodeFill = Schema.decodeUnknownEither(BattleFillSchema);
     const valid = decodeFill({
@@ -2384,7 +2405,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           targetId: goblinId,
           distanceFeet: movementFeet(10),
         },
-      ],
+      ] as const,
     };
     const grappled = fighterGrapplesGoblin(fighterVsGoblinBattle()).state;
     const normalHole = requireHole(
@@ -2545,7 +2566,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           targetId: skeletonId,
           distanceFeet: movementFeet(10),
         },
-      ],
+      ] as const,
     };
 
     expect(

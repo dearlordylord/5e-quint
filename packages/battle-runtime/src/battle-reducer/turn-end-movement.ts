@@ -9245,14 +9245,6 @@ function validateGrappleDragMovementFact(
     return { tag: "notApplicable" };
   }
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (fact.kind !== "grappleDrag") {
-    return {
-      tag: "invalid",
-      message: "Grapple drag movement fact has the wrong kind.",
-    };
-  }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     !Number.isInteger(fact.totalDistanceFeet) ||
     fact.totalDistanceFeet <= 0
@@ -9260,14 +9252,6 @@ function validateGrappleDragMovementFact(
     return {
       tag: "invalid",
       message: "Grapple drag total distance must be a positive integer.",
-    };
-  }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (fact.targets.length === 0) {
-    return {
-      tag: "invalid",
-      message: "Grapple drag movement fact requires a target.",
     };
   }
   /* v8 ignore stop */
@@ -9372,9 +9356,6 @@ function validateJumpMovementReplacementFact(
   if (fact === undefined) {
     return "Jump movement replacement requires caller-supplied jump distance and landing facts.";
   }
-  if (fact.kind !== "jumpMovementReplacement") {
-    return "Jump movement replacement fact has the wrong kind.";
-  }
   const expectedMovementCostFeet = movementFeet(
     Number(effect.movementCostFeet) + Number(areaExtraCostFeet),
   );
@@ -9389,14 +9370,6 @@ function validateJumpMovementReplacementFact(
     Number(maxJumpMovementReplacementDistanceFeet(state, moverId, effect))
   ) {
     return "Jump movement replacement distance exceeds the active maximum.";
-  }
-  if (
-    fact.landing.kind !== "legalLanding" ||
-    (fact.landing.difficultTerrainAcrobatics !== "notRequired" &&
-      fact.landing.difficultTerrainAcrobatics !== "passed" &&
-      fact.landing.difficultTerrainAcrobatics !== "failed")
-  ) {
-    return "Jump movement replacement requires caller-supplied legal landing facts.";
   }
   return null;
 }
@@ -9413,9 +9386,7 @@ function validateCommandApproachMovementFact(
   if (fact === undefined) {
     return "Command Approach requires caller-supplied route facts.";
   }
-  return fact.kind === "commandApproachShortestDirectRouteTowardCaster"
-    ? null
-    : "Command Approach route fact has the wrong kind.";
+  return null;
 }
 
 function validateCommandFleeMovementFact(
@@ -9430,9 +9401,7 @@ function validateCommandFleeMovementFact(
   if (fact === undefined) {
     return "Command Flee requires caller-supplied route facts.";
   }
-  return fact.kind === "commandFleeFastestAvailableRouteAwayFromCaster"
-    ? null
-    : "Command Flee route fact has the wrong kind.";
+  return null;
 }
 
 export function resetStartOfTurnCombatant(

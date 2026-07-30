@@ -1379,10 +1379,10 @@ export type BattleGustOfWindLineMovementFact = {
 export type BattleGrappleDragMovementFact = {
   readonly kind: "grappleDrag";
   readonly totalDistanceFeet: MovementFeet;
-  readonly targets: readonly {
+  readonly targets: ReadonlyNonEmptyArray<{
     readonly targetId: CombatantId;
     readonly distanceFeet: MovementFeet;
-  }[];
+  }>;
 };
 export type BattleCreatureSpaceTraversalMovementFact = {
   readonly kind: "occupiedCreatureSpaceTraversal";

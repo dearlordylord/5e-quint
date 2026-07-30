@@ -4048,10 +4048,16 @@ type BattleFillEncoded =
         readonly grappleDrag?: {
           readonly kind: "grappleDrag";
           readonly totalDistanceFeet: number;
-          readonly targets: readonly {
-            readonly targetId: string;
-            readonly distanceFeet: number;
-          }[];
+          readonly targets: readonly [
+            {
+              readonly targetId: string;
+              readonly distanceFeet: number;
+            },
+            ...{
+              readonly targetId: string;
+              readonly distanceFeet: number;
+            }[],
+          ];
         };
         readonly creatureSpaceTraversal?: {
           readonly kind: "occupiedCreatureSpaceTraversal";
@@ -5013,7 +5019,7 @@ export const BattleFillSchema: Schema.Schema<
           Schema.Struct({
             kind: Schema.Literal("grappleDrag"),
             totalDistanceFeet: MovementFeet,
-            targets: Schema.Array(
+            targets: Schema.NonEmptyArray(
               Schema.Struct({
                 targetId: CombatantId,
                 distanceFeet: MovementFeet,
