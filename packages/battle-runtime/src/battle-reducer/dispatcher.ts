@@ -1798,8 +1798,10 @@ export function resolveBattleSubjectInternal(
         subject,
       });
     }
-    const _exhaustive: never = subject;
-    return _exhaustive;
+    /* v8 ignore start -- The subject union is exhausted above; this emitted tail is reachable only if a new variant is added without a dispatcher arm, which fails compilation at this assignment. */
+    const exhaustive: never = subject;
+    return exhaustive;
+    /* v8 ignore stop */
   })();
   return consumeOrCloseLegendaryActionWindow(input.subject, result);
 }
@@ -1862,8 +1864,10 @@ function resolveCompanionLifecycleSubject(
       casterId: input.subject.actorId,
     });
   }
-  const _exhaustive: never = input.subject.action;
-  return _exhaustive;
+  /* v8 ignore start -- Companion lifecycle actions are exhausted above; widening the action union without a handler fails compilation at this assignment. */
+  const exhaustive: never = input.subject.action;
+  return exhaustive;
+  /* v8 ignore stop */
 }
 
 type FindFamiliarReappearanceResolutionSubject = Omit<
@@ -5675,8 +5679,10 @@ function replayContinuationSameKindSemanticFillEquals(
       battleContinuationFillEquals(recordedFill, submittedFill)
     );
   }
+  /* v8 ignore start -- ReplayContinuationSemanticFill is exhausted above; widening it without an equality arm fails compilation at this assignment. */
   const exhaustive: never = recordedFill;
   return exhaustive;
+  /* v8 ignore stop */
 }
 
 function battleFillPrefixAccumulated(
