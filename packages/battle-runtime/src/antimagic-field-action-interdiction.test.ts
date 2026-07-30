@@ -2,9 +2,13 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleActiveEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
+  resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
+import {
+  antimagicFieldAuraEffectForTest,
+  antimagicFieldAuraMembershipForTest,
+  type TestAntimagicFieldAuraMembership,
+} from "./antimagic-field.test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-antimagic-field-action-interdiction
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION
@@ -29,7 +33,6 @@ import {
   type BattleProcedureExecutionRef,
 } from "./identity.ts";
 import {
-  antimagicFieldUnitId,
   clericChannelDivinityUnitId,
   clericPreserveLifeUnitId,
   flameBladeUnitId,
@@ -65,12 +68,10 @@ import {
   endTurn,
   startBattle,
   type BattleActiveEffect,
-  type BattleAntimagicFieldAuraMembership,
   type BattleFill,
   type BattleHole,
   type BattleRuntimeSession,
   type BattleState,
-  type CombatantId,
 } from "./index.ts";
 import { battleMagicActionHealingPoolSupportForUnit } from "./unit-feature-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
@@ -89,7 +90,7 @@ describe("Antimagic Field action interdiction", () => {
   test("origin-included aura blocks action and Bonus Action spell discovery", () => {
     const session = activeAntimagicAuraSession(
       spellInterdictionBattle(),
-      auraMembership({
+      antimagicFieldAuraMembershipForTest({
         sourceCombatantId: spellCasterId,
         originIncluded: true,
         nonOriginCombatantIds: [],
@@ -107,7 +108,7 @@ describe("Antimagic Field action interdiction", () => {
   test("origin-excluded aura does not block the origin creature", () => {
     const session = activeAntimagicAuraSession(
       spellInterdictionBattle(),
-      auraMembership({
+      antimagicFieldAuraMembershipForTest({
         sourceCombatantId: spellCasterId,
         originIncluded: false,
         nonOriginCombatantIds: [],
@@ -123,7 +124,7 @@ describe("Antimagic Field action interdiction", () => {
   test("non-origin aura membership blocks the current actor without geometry state", () => {
     const session = activeAntimagicAuraSession(
       spellInterdictionBattle(),
-      auraMembership({
+      antimagicFieldAuraMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: false,
         nonOriginCombatantIds: [spellCasterId],
@@ -140,7 +141,7 @@ describe("Antimagic Field action interdiction", () => {
     const act = spellAct({ session: base, spellId: rayOfFrostUnitId });
     const stale = activeAntimagicAuraSession(
       base,
-      auraMembership({
+      antimagicFieldAuraMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: false,
         nonOriginCombatantIds: [spellCasterId],
@@ -165,7 +166,7 @@ describe("Antimagic Field action interdiction", () => {
     const act = preserveLifeAct(base);
     const stale = activeAntimagicAuraSession(
       base,
-      auraMembership({
+      antimagicFieldAuraMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: false,
         nonOriginCombatantIds: [spellCasterId],
@@ -191,7 +192,7 @@ describe("Antimagic Field action interdiction", () => {
     const attack = spellAct({ session: base, spellId: flameBladeUnitId });
     const stale = activeAntimagicAuraSession(
       base,
-      auraMembership({
+      antimagicFieldAuraMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: false,
         nonOriginCombatantIds: [spellCasterId],
@@ -222,7 +223,7 @@ describe("Antimagic Field action interdiction", () => {
     });
     const stale = activeAntimagicAuraSession(
       base,
-      auraMembership({
+      antimagicFieldAuraMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: false,
         nonOriginCombatantIds: [spellCasterId],
@@ -250,7 +251,7 @@ describe("Antimagic Field action interdiction", () => {
     const altitudeAct = levitateAltitudeControlAct(base);
     const stale = activeAntimagicAuraSession(
       base,
-      auraMembership({
+      antimagicFieldAuraMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: false,
         nonOriginCombatantIds: [spellCasterId],
@@ -280,7 +281,7 @@ describe("Antimagic Field action interdiction", () => {
   test("interdicts stale triggered Reaction spell subjects", () => {
     const session = activeAntimagicAuraSession(
       spellInterdictionBattle(),
-      auraMembership({
+      antimagicFieldAuraMembershipForTest({
         sourceCombatantId: spellCasterId,
         originIncluded: true,
         nonOriginCombatantIds: [],
@@ -309,7 +310,7 @@ describe("Antimagic Field action interdiction", () => {
   test("combatant removal prunes removed non-origin members without dropping the aura witness", () => {
     const session = activeAntimagicAuraSession(
       preserveLifeBattle(),
-      auraMembership({
+      antimagicFieldAuraMembershipForTest({
         sourceCombatantId: spellCasterId,
         originIncluded: true,
         nonOriginCombatantIds: [spellTargetId, secondTargetId],
@@ -558,53 +559,18 @@ function activeAntimagicAuraSession(
   }
   combatants.set(aura.sourceCombatantId, {
     ...source,
-    activeEffects: [...source.activeEffects, antimagicFieldAuraEffect(aura)],
+    activeEffects: [
+      ...source.activeEffects,
+      antimagicFieldAuraEffectForTest({
+        areaId: antimagicFieldAreaId,
+        aura,
+      }),
+    ],
   });
   return battleRuntimeSessionForTest({
     ...session,
     state: { ...session.state, combatants },
   });
-}
-
-function antimagicFieldAuraEffect(
-  aura: TestAntimagicFieldAuraMembership,
-): BattleActiveEffect {
-  return {
-    kind: "antimagicFieldOngoingSpellSuppression",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(antimagicFieldUnitId),
-    ),
-    sourceCombatantId: aura.sourceCombatantId,
-    areaId: antimagicFieldAreaId,
-    auraMembership: aura.membership,
-    radiusFeet: movementFeet(10),
-    suppressedOngoingSpellEffects: [],
-    expiresAt: {
-      kind: "concentration",
-      combatantId: aura.sourceCombatantId,
-      durationTicks: elapsedTimeTicks(600),
-    },
-  };
-}
-
-type TestAntimagicFieldAuraMembership = {
-  readonly sourceCombatantId: CombatantId;
-  readonly membership: BattleAntimagicFieldAuraMembership;
-};
-
-function auraMembership(input: {
-  readonly sourceCombatantId: CombatantId;
-  readonly originIncluded: boolean;
-  readonly nonOriginCombatantIds: readonly CombatantId[];
-}): TestAntimagicFieldAuraMembership {
-  return {
-    sourceCombatantId: input.sourceCombatantId,
-    membership: {
-      kind: "antimagicFieldAuraMembership",
-      originIncluded: input.originIncluded,
-      nonOriginCombatantIds: input.nonOriginCombatantIds,
-    },
-  };
 }
 
 function preserveLifeBattle(): BattleRuntimeSession {

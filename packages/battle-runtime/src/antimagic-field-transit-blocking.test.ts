@@ -1,0 +1,206 @@
+// RAW trace: .references/srd-5.2.1/Spells/Descriptions-A-D.md#Antimagic Field
+// No one can teleport into or out of an Antimagic Field aura.
+import { describe, expect, test } from "vitest";
+
+import {
+  antimagicFieldAuraEffectForTest,
+  antimagicFieldAuraMembershipForTest,
+} from "./antimagic-field.test-support.ts";
+import {
+  ANTIMAGIC_FIELD_TRANSIT_BLOCKING_MESSAGE,
+  antimagicFieldTransitInvalidReason,
+} from "./battle-reducer/antimagic-field-transit-blocking.ts";
+import {
+  battleAreaId,
+  type BattleAntimagicFieldTransitWitness,
+  type BattleState,
+} from "./index.ts";
+import {
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog.test-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+
+const antimagicFieldAreaId = battleAreaId(
+  "unit-profile-antimagic-transit-blocking-area",
+);
+const unmatchedAntimagicFieldAreaId = battleAreaId(
+  "unit-profile-unmatched-antimagic-transit-area",
+);
+
+describe("Antimagic Field teleport transit witnesses", () => {
+  test("accepts an empty witness set when no aura is active", () => {
+    expect(
+      antimagicFieldTransitInvalidReason({
+        state: transitBattleState(),
+        actorId: spellCasterId,
+        witnesses: [],
+      }),
+    ).toBeNull();
+  });
+
+  test.each([
+    {
+      name: "outside the aura",
+      actorInsideAura: false,
+      destinationInsideAura: false,
+    },
+    {
+      name: "inside the aura",
+      actorInsideAura: true,
+      destinationInsideAura: true,
+    },
+  ])(
+    "accepts matching origin and destination facts $name",
+    ({ actorInsideAura, destinationInsideAura }) => {
+      expect(
+        antimagicFieldTransitInvalidReason({
+          state: activeAntimagicTransitState(actorInsideAura),
+          actorId: spellCasterId,
+          witnesses: [
+            antimagicTransitWitness({
+              originInsideAura: actorInsideAura,
+              destinationInsideAura,
+            }),
+          ],
+        }),
+      ).toBeNull();
+    },
+  );
+
+  test("rejects a witness that does not identify one active aura", () => {
+    expect(
+      antimagicFieldTransitInvalidReason({
+        state: transitBattleState(),
+        actorId: spellCasterId,
+        witnesses: [
+          {
+            ...antimagicTransitWitness({
+              originInsideAura: false,
+              destinationInsideAura: false,
+            }),
+            areaId: unmatchedAntimagicFieldAreaId,
+          },
+        ],
+      }),
+    ).toBe("Antimagic Field transit witness must reference one active aura.");
+  });
+
+  test.each([
+    { name: "missing", witnesses: [] },
+    {
+      name: "duplicated",
+      witnesses: [
+        antimagicTransitWitness({
+          originInsideAura: false,
+          destinationInsideAura: false,
+        }),
+        antimagicTransitWitness({
+          originInsideAura: false,
+          destinationInsideAura: false,
+        }),
+      ],
+    },
+  ] satisfies ReadonlyArray<{
+    readonly name: string;
+    readonly witnesses: readonly BattleAntimagicFieldTransitWitness[];
+  }>)("rejects a $name witness for an active aura", ({ witnesses }) => {
+    expect(
+      antimagicFieldTransitInvalidReason({
+        state: activeAntimagicTransitState(false),
+        actorId: spellCasterId,
+        witnesses,
+      }),
+    ).toBe(
+      "Teleport destination table fact must include one Antimagic Field transit witness for each active aura.",
+    );
+  });
+
+  test("rejects an origin fact that disagrees with active aura membership", () => {
+    expect(
+      antimagicFieldTransitInvalidReason({
+        state: activeAntimagicTransitState(true),
+        actorId: spellCasterId,
+        witnesses: [
+          antimagicTransitWitness({
+            originInsideAura: false,
+            destinationInsideAura: false,
+          }),
+        ],
+      }),
+    ).toBe(
+      "Antimagic Field transit origin witness must match the active aura membership.",
+    );
+  });
+
+  test.each([
+    {
+      name: "into",
+      actorInsideAura: false,
+      destinationInsideAura: true,
+    },
+    {
+      name: "out of",
+      actorInsideAura: true,
+      destinationInsideAura: false,
+    },
+  ])(
+    "blocks teleportation $name an active aura",
+    ({ actorInsideAura, destinationInsideAura }) => {
+      expect(
+        antimagicFieldTransitInvalidReason({
+          state: activeAntimagicTransitState(actorInsideAura),
+          actorId: spellCasterId,
+          witnesses: [
+            antimagicTransitWitness({
+              originInsideAura: actorInsideAura,
+              destinationInsideAura,
+            }),
+          ],
+        }),
+      ).toBe(ANTIMAGIC_FIELD_TRANSIT_BLOCKING_MESSAGE);
+    },
+  );
+});
+
+function transitBattleState(): BattleState {
+  return spellBattle({}).state;
+}
+
+function activeAntimagicTransitState(actorInsideAura: boolean): BattleState {
+  const state = transitBattleState();
+  const aura = antimagicFieldAuraMembershipForTest({
+    sourceCombatantId: spellTargetId,
+    originIncluded: true,
+    nonOriginCombatantIds: actorInsideAura ? [spellCasterId] : [],
+  });
+  const combatants = new Map(state.combatants);
+  const source = combatants.get(aura.sourceCombatantId);
+  if (source === undefined) {
+    throw new Error("Antimagic Field test source must be in the battle.");
+  }
+  combatants.set(aura.sourceCombatantId, {
+    ...source,
+    activeEffects: [
+      ...source.activeEffects,
+      antimagicFieldAuraEffectForTest({
+        areaId: antimagicFieldAreaId,
+        aura,
+      }),
+    ],
+  });
+  return { ...state, combatants };
+}
+
+function antimagicTransitWitness(input: {
+  readonly originInsideAura: boolean;
+  readonly destinationInsideAura: boolean;
+}): BattleAntimagicFieldTransitWitness {
+  return {
+    kind: "antimagicFieldTransit",
+    areaId: antimagicFieldAreaId,
+    sourceCombatantId: spellTargetId,
+    originInsideAura: input.originInsideAura,
+    destinationInsideAura: input.destinationInsideAura,
+  };
+}

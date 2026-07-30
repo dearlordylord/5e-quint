@@ -2,10 +2,14 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
+import {
+  antimagicFieldAuraEffectForTest,
+  antimagicFieldAuraMembershipForTest,
+  type TestAntimagicFieldAuraMembership,
+} from "./antimagic-field.test-support.ts";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-magical-effect-interdiction
-import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { classLevel, Hp, movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 import { describe, expect, it } from "vitest";
@@ -16,7 +20,6 @@ import {
   magicalEffectTargetsInterdictedByAntimagicField,
 } from "./battle-reducer/antimagic-field-magical-effect-interdiction.ts";
 import {
-  antimagicFieldUnitId,
   burningHandsUnitId,
   clericChannelDivinityUnitId,
   clericPreserveLifeUnitId,
@@ -48,8 +51,6 @@ import {
   combatantId,
   discoverBattleActs,
   startBattle,
-  type BattleActiveEffect,
-  type BattleAntimagicFieldAuraMembership,
   type BattleFill,
   type BattleHitPointHealingPoolDistributionHole,
   type BattleRuntimeSession,
@@ -371,7 +372,7 @@ function outsideAuraSpellTargetState(): BattleRuntimeSession {
 function insideAuraSpellTargetState(): BattleRuntimeSession {
   return activeAntimagicAuraSession(
     spellTargetBattle(),
-    auraMembership({
+    antimagicFieldAuraMembershipForTest({
       sourceCombatantId: spellTargetId,
       originIncluded: true,
       nonOriginCombatantIds: [],
@@ -395,7 +396,7 @@ function outsideAuraSpellAreaState(): BattleRuntimeSession {
 function insideAuraSpellAreaState(): BattleRuntimeSession {
   return activeAntimagicAuraSession(
     spellAreaBattle(),
-    auraMembership({
+    antimagicFieldAuraMembershipForTest({
       sourceCombatantId: spellTargetId,
       originIncluded: true,
       nonOriginCombatantIds: [],
@@ -417,7 +418,7 @@ function outsideAuraObjectContactState(): BattleRuntimeSession {
 function insideAuraObjectContactState(): BattleRuntimeSession {
   return activeAntimagicAuraSession(
     objectContactBattle(),
-    auraMembership({
+    antimagicFieldAuraMembershipForTest({
       sourceCombatantId: spellTargetId,
       originIncluded: true,
       nonOriginCombatantIds: [],
@@ -441,7 +442,7 @@ function outsideAuraOtherMagicalEffectState(): BattleRuntimeSession {
 function insideAuraOtherMagicalEffectState(): BattleRuntimeSession {
   return activeAntimagicAuraSession(
     preserveLifeBattle(),
-    auraMembership({
+    antimagicFieldAuraMembershipForTest({
       sourceCombatantId: spellTargetId,
       originIncluded: true,
       nonOriginCombatantIds: [],
@@ -460,53 +461,18 @@ function activeAntimagicAuraSession(
   }
   combatants.set(aura.sourceCombatantId, {
     ...source,
-    activeEffects: [...source.activeEffects, antimagicFieldAuraEffect(aura)],
+    activeEffects: [
+      ...source.activeEffects,
+      antimagicFieldAuraEffectForTest({
+        areaId: antimagicFieldAreaId,
+        aura,
+      }),
+    ],
   });
   return battleRuntimeSessionForTest({
     ...session,
     state: { ...session.state, combatants },
   });
-}
-
-function antimagicFieldAuraEffect(
-  aura: TestAntimagicFieldAuraMembership,
-): BattleActiveEffect {
-  return {
-    kind: "antimagicFieldOngoingSpellSuppression",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(antimagicFieldUnitId),
-    ),
-    sourceCombatantId: aura.sourceCombatantId,
-    areaId: antimagicFieldAreaId,
-    auraMembership: aura.membership,
-    radiusFeet: movementFeet(10),
-    suppressedOngoingSpellEffects: [],
-    expiresAt: {
-      kind: "concentration",
-      combatantId: aura.sourceCombatantId,
-      durationTicks: elapsedTimeTicks(600),
-    },
-  };
-}
-
-type TestAntimagicFieldAuraMembership = {
-  readonly sourceCombatantId: CombatantId;
-  readonly membership: BattleAntimagicFieldAuraMembership;
-};
-
-function auraMembership(input: {
-  readonly sourceCombatantId: CombatantId;
-  readonly originIncluded: boolean;
-  readonly nonOriginCombatantIds: readonly CombatantId[];
-}): TestAntimagicFieldAuraMembership {
-  return {
-    sourceCombatantId: input.sourceCombatantId,
-    membership: {
-      kind: "antimagicFieldAuraMembership",
-      originIncluded: input.originIncluded,
-      nonOriginCombatantIds: input.nonOriginCombatantIds,
-    },
-  };
 }
 
 function preserveLifeBattle(): BattleRuntimeSession {

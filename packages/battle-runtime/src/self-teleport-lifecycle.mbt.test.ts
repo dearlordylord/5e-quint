@@ -1,5 +1,9 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
+import {
+  antimagicFieldAuraEffectForTest,
+  antimagicFieldAuraMembershipForTest,
+  type TestAntimagicFieldAuraMembership,
+} from "./antimagic-field.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-self-teleport
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING
 // RAW trace:
@@ -17,7 +21,6 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // - UBIQUITOUS_LANGUAGE.md: Bonus Action, Spell Slot, Movement,
 //   Opportunity Attack, Teleportation, and Holding / Wielding.
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
-import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   MBT_TEST_TIMEOUT_MS,
   assertWitnessProtocolConsistentWithScenario,
@@ -37,13 +40,10 @@ import {
 import { describe, expect, it } from "vitest";
 
 import type {
-  BattleActiveEffect,
-  BattleAntimagicFieldAuraMembership,
   BattleAntimagicFieldTransitWitness,
   BattleHole,
   BattleResolutionResult,
   BattleState,
-  CombatantId,
 } from "./index.ts";
 import { discoverBattleActCandidates, snapshotBattle } from "./index.ts";
 import {
@@ -60,7 +60,6 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import { antimagicFieldTransitInvalidReason } from "./battle-reducer/antimagic-field-transit-blocking.ts";
 import {
-  antimagicFieldUnitId,
   mistyStepUnitId,
   spellCasterId,
   spellTargetId,
@@ -249,7 +248,7 @@ describe("Self-teleport lifecycle MBT parity", () => {
   it("rejects outbound Antimagic Field transit from a caller-supplied destination witness", () => {
     const battle = activeAntimagicAuraState(
       initialRuntimeState().battle,
-      auraMembership({
+      antimagicFieldAuraMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: true,
         nonOriginCombatantIds: [spellCasterId],
@@ -276,7 +275,7 @@ describe("Self-teleport lifecycle MBT parity", () => {
   it("requires an Antimagic Field transit witness for every active aura", () => {
     const battle = activeAntimagicAuraState(
       initialRuntimeState().battle,
-      auraMembership({
+      antimagicFieldAuraMembershipForTest({
         sourceCombatantId: spellTargetId,
         originIncluded: true,
         nonOriginCombatantIds: [],
@@ -389,7 +388,7 @@ function castSelfTeleportIntoAntimagicAura(
 ): SelfTeleportRuntimeState {
   const battle = activeAntimagicAuraState(
     state.battle,
-    auraMembership({
+    antimagicFieldAuraMembershipForTest({
       sourceCombatantId: spellTargetId,
       originIncluded: true,
       nonOriginCombatantIds: [],
@@ -549,52 +548,17 @@ function activeAntimagicAuraState(
   }
   combatants.set(aura.sourceCombatantId, {
     ...source,
-    activeEffects: [...source.activeEffects, antimagicFieldAuraEffect(aura)],
+    activeEffects: [
+      ...source.activeEffects,
+      antimagicFieldAuraEffectForTest({
+        areaId: ANTIMAGIC_FIELD_AREA_ID,
+        aura,
+      }),
+    ],
   });
   return {
     ...state,
     combatants,
-  };
-}
-
-function antimagicFieldAuraEffect(
-  aura: TestAntimagicFieldAuraMembership,
-): BattleActiveEffect {
-  return {
-    kind: "antimagicFieldOngoingSpellSuppression",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(antimagicFieldUnitId),
-    ),
-    sourceCombatantId: aura.sourceCombatantId,
-    areaId: ANTIMAGIC_FIELD_AREA_ID,
-    auraMembership: aura.membership,
-    radiusFeet: movementFeet(10),
-    suppressedOngoingSpellEffects: [],
-    expiresAt: {
-      kind: "concentration",
-      combatantId: aura.sourceCombatantId,
-      durationTicks: elapsedTimeTicks(600),
-    },
-  };
-}
-
-type TestAntimagicFieldAuraMembership = {
-  readonly sourceCombatantId: CombatantId;
-  readonly membership: BattleAntimagicFieldAuraMembership;
-};
-
-function auraMembership(input: {
-  readonly sourceCombatantId: CombatantId;
-  readonly originIncluded: boolean;
-  readonly nonOriginCombatantIds: readonly CombatantId[];
-}): TestAntimagicFieldAuraMembership {
-  return {
-    sourceCombatantId: input.sourceCombatantId,
-    membership: {
-      kind: "antimagicFieldAuraMembership",
-      originIncluded: input.originIncluded,
-      nonOriginCombatantIds: input.nonOriginCombatantIds,
-    },
   };
 }
 

@@ -4,6 +4,10 @@ import {
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
+import {
+  antimagicFieldAuraEffectForTest,
+  antimagicFieldAuraMembershipForTest,
+} from "./antimagic-field.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-ongoing-spell-ending
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
 // RAW trace:
@@ -556,26 +560,14 @@ function antimagicFieldAuraEffect(): Extract<
   BattleActiveEffect,
   { readonly kind: "antimagicFieldOngoingSpellSuppression" }
 > {
-  return {
-    kind: "antimagicFieldOngoingSpellSuppression",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(antimagicFieldUnitId),
-    ),
-    sourceCombatantId: spellTargetId,
+  return antimagicFieldAuraEffectForTest({
     areaId: antimagicFieldAreaId,
-    auraMembership: {
-      kind: "antimagicFieldAuraMembership",
+    aura: antimagicFieldAuraMembershipForTest({
+      sourceCombatantId: spellTargetId,
       originIncluded: true,
       nonOriginCombatantIds: [],
-    },
-    radiusFeet: movementFeet(10),
-    suppressedOngoingSpellEffects: [],
-    expiresAt: {
-      kind: "concentration",
-      combatantId: spellTargetId,
-      durationTicks: elapsedTimeTicks(600),
-    },
-  };
+    }),
+  });
 }
 
 function lowLevelObjectLightEmitter(): BattleTrackedOngoingSpellLightEmitter {

@@ -8,6 +8,10 @@ import {
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
+import {
+  antimagicFieldAuraEffectForTest,
+  antimagicFieldAuraMembershipForTest,
+} from "./antimagic-field.test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   characterLevel,
@@ -1357,26 +1361,14 @@ function antimagicFieldAuraEffect(
   BattleActiveEffect,
   { readonly kind: "antimagicFieldOngoingSpellSuppression" }
 > {
-  return {
-    kind: "antimagicFieldOngoingSpellSuppression",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(antimagicFieldUnitId),
-    ),
-    sourceCombatantId: spellTargetId,
+  return antimagicFieldAuraEffectForTest({
     areaId,
-    auraMembership: {
-      kind: "antimagicFieldAuraMembership",
+    aura: antimagicFieldAuraMembershipForTest({
+      sourceCombatantId: spellTargetId,
       originIncluded: true,
       nonOriginCombatantIds: [],
-    },
-    radiusFeet: movementFeet(10),
-    suppressedOngoingSpellEffects: [],
-    expiresAt: {
-      kind: "concentration",
-      combatantId: spellTargetId,
-      durationTicks: elapsedTimeTicks(600),
-    },
-  };
+    }),
+  });
 }
 
 type SurfaceTargetKind = "creature" | "object" | "magical_effect";
