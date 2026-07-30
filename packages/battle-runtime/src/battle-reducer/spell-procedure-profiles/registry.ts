@@ -102,6 +102,7 @@ import type {
   SpellInvocationAdmittedByRegisteredProcedure,
   SpellProcedureAdmissionDeclaration,
   SpellProcedureDeclaration,
+  SynthesizedSpellProcedureDeclaration,
 } from "./profile.ts";
 import { snapshotBattleWithExecutionRegistry } from "../battle-snapshot.ts";
 import { executeStoredGlyphSpellProcedure } from "./stored-glyph-resolution.ts";
@@ -110,12 +111,19 @@ type RegisteredSpellProcedureDeclaration<
   P extends SupportedSpellInvocation["procedure"],
 > = {
   readonly procedure: P;
-  readonly admission: SpellProcedureAdmissionDeclaration<
-    P,
-    SpellInvocationAdmittedByRegisteredProcedure<P>
-  >;
   readonly execution: SpellProcedureExecutionDeclaration<P>;
-};
+} & (
+  | {
+      readonly admission: {
+        readonly kind: "authored";
+        readonly admit: SpellProcedureAdmissionDeclaration<
+          P,
+          SpellInvocationAdmittedByRegisteredProcedure<P>
+        >["admit"];
+      };
+    }
+  | { readonly admission: { readonly kind: "synthesized" } }
+);
 
 export type RegisteredSpellProcedureDeclarations = {
   readonly [P in SupportedSpellInvocation["procedure"]]: RegisteredSpellProcedureDeclaration<P>;
@@ -124,20 +132,30 @@ export type RegisteredSpellProcedureDeclarations = {
 function registeredSpellProcedureDeclaration<
   P extends SupportedSpellInvocation["procedure"],
 >(
-  declaration: SpellProcedureDeclaration<
-    P,
-    SpellInvocationAdmittedByRegisteredProcedure<P>
-  >,
+  declaration:
+    | SpellProcedureDeclaration<
+        P,
+        SpellInvocationAdmittedByRegisteredProcedure<P>
+      >
+    | SynthesizedSpellProcedureDeclaration<P>,
 ): RegisteredSpellProcedureDeclaration<P> {
+  const execution = {
+    procedure: declaration.procedure,
+    discoverCastAct: declaration.discoverCastAct,
+    executionSchema: declaration.executionSchema,
+    resolve: declaration.resolve,
+  };
+  if ("admission" in declaration) {
+    return {
+      procedure: declaration.procedure,
+      admission: { kind: "synthesized" },
+      execution,
+    };
+  }
   return {
     procedure: declaration.procedure,
-    admission: { admit: declaration.admit },
-    execution: {
-      procedure: declaration.procedure,
-      discoverCastAct: declaration.discoverCastAct,
-      executionSchema: declaration.executionSchema,
-      resolve: declaration.resolve,
-    },
+    admission: { kind: "authored", admit: declaration.admit },
+    execution,
   };
 }
 

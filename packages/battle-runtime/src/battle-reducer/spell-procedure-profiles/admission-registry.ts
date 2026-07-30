@@ -7,8 +7,8 @@ import {
 import { registeredSpellProcedureDeclarations } from "./registry.ts";
 
 export function registeredSpellProcedureAdmissions(): readonly AnySpellProcedureAdmission[] {
-  return Object.values(registeredSpellProcedureDeclarations()).map(
-    ({ admission }) => admission,
+  return Object.values(registeredSpellProcedureDeclarations()).flatMap(
+    ({ admission }) => (admission.kind === "authored" ? [admission] : []),
   );
 }
 

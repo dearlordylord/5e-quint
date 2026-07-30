@@ -1,4 +1,3 @@
-import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-held-light-emitter
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE
@@ -31,19 +30,13 @@ import {
   BattleProcedureExecutionRef,
   type CombatantId,
 } from "../../identity.ts";
-import { characterSpellProcedureExecution } from "../../character-execution-queries.ts";
 import { spellCastSelectionSubject } from "../spells-discovery.ts";
 import { spellObjectTargetHole, spellTargetHole } from "../spells-targeting.ts";
 import { resolveSpellAttackDamageAct } from "../spells-resolve.ts";
 import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
-import {
-  heldLightHurlMechanicalFacts,
-  isProduceFlameOngoingEffectSpell,
-} from "./held-light.ts";
 import type {
-  SpellAdmissionContext,
-  SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
+  SynthesizedSpellProcedureDeclaration,
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
@@ -67,42 +60,6 @@ type HeldLightHurlInvocation = Extract<
 type HeldLightHurlResolveInput =
   SpellProcedureProfileResolveInput<HeldLightHurlInvocation>;
 
-function admitHeldLightHurl(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly HeldLightHurlInvocation[] {
-  if (!isProduceFlameOngoingEffectSpell(spell)) {
-    return [];
-  }
-  const hurl = heldLightHurlMechanicalFacts(spell, ctx);
-  if (hurl === null) return [];
-  return ctx.actor.activeEffects.flatMap((effect) => {
-    if (effect.kind !== "heldLight") return [];
-    const source = characterSpellProcedureExecution(
-      ctx.actor.origin.execution,
-      effect.sourceProcedureRef,
-    );
-    if (source?.procedure !== "heldLight") {
-      return [];
-    }
-    return [
-      {
-        access: { tag: "classCantrip" },
-        resource: { tag: "none" },
-        procedure: "heldLightHurl",
-        sourceEffectRef: effect.effectRef,
-        sourceHeldLightProcedureRef: effect.sourceProcedureRef,
-        spell,
-        targeting: hurl.targeting,
-        damage: hurl.damage,
-        rangeFeet: hurl.rangeFeet,
-        attackKind: hurl.attackKind,
-        attackBonus: hurl.attackBonus,
-      },
-    ];
-  });
-}
-
 function discoverHeldLightHurlCastAct(
   state: BattleState,
   actorId: CombatantId,
@@ -110,6 +67,7 @@ function discoverHeldLightHurlCastAct(
 ): readonly BattleActDiscoveryCandidate[] {
   const targetHole = spellTargetHole(state, actorId, invocation);
   const initialHoles = [
+    /* v8 ignore next -- The upstream Magic Action discovery gate removes this hurl when Antimagic excludes its actor; otherwise Produce Flame permits that actor creature as a target, so this list is nonempty. */
     ...(targetHole.choices.length === 0 ? [] : [targetHole]),
     spellObjectTargetHole(invocation),
   ];
@@ -146,13 +104,11 @@ const HeldLightHurlInvocationSchema = spellProcedureExecutionSchema(
     attackBonus: AttackBonus,
   }),
 );
-export const heldLightHurlProfile: SpellProcedureDeclaration<
-  "heldLightHurl",
-  HeldLightHurlInvocation
-> = {
-  procedure: "heldLightHurl",
-  executionSchema: HeldLightHurlInvocationSchema,
-  admit: admitHeldLightHurl,
-  discoverCastAct: discoverHeldLightHurlCastAct,
-  resolve: resolveHeldLightHurl,
-};
+export const heldLightHurlProfile: SynthesizedSpellProcedureDeclaration<"heldLightHurl"> =
+  {
+    admission: "synthesized",
+    procedure: "heldLightHurl",
+    executionSchema: HeldLightHurlInvocationSchema,
+    discoverCastAct: discoverHeldLightHurlCastAct,
+    resolve: resolveHeldLightHurl,
+  };

@@ -206,3 +206,9 @@ export type SpellProcedureDeclaration<
   I extends SpellInvocationAdmittedByRegisteredProcedure<P>,
 > = SpellProcedureAdmissionDeclaration<P, I> &
   SpellProcedureExecutionDeclaration<P>;
+
+export type SynthesizedSpellProcedureDeclaration<
+  P extends SupportedSpellInvocation["procedure"],
+> = {
+  readonly admission: "synthesized";
+} & SpellProcedureExecutionDeclaration<P>;
