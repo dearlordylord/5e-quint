@@ -6872,37 +6872,10 @@ function openPreparedInterruptWindowWithChoices(
     BattleInterruptCheckpoint,
     "eligibleResponders" | "offeredResponders" | "choices"
   >;
-  const nextFrame: BattleInterruptCheckpoint = Match.value(frame).pipe(
-    Match.when({ trigger: "attackHit" }, (triggerFrame) => ({
-      ...triggerFrame,
-      ...frameCommon,
-    })),
-    Match.when({ trigger: "attackDamage" }, (triggerFrame) => ({
-      ...triggerFrame,
-      ...frameCommon,
-    })),
-    Match.when({ trigger: "spellCast" }, (triggerFrame) => ({
-      ...triggerFrame,
-      ...frameCommon,
-    })),
-    Match.when({ trigger: "saveFailed" }, (triggerFrame) => ({
-      ...triggerFrame,
-      ...frameCommon,
-    })),
-    Match.when({ trigger: "afterDamage" }, (triggerFrame) => ({
-      ...triggerFrame,
-      ...frameCommon,
-    })),
-    Match.when({ trigger: "creatureFalls" }, (triggerFrame) => ({
-      ...triggerFrame,
-      ...frameCommon,
-    })),
-    Match.when({ trigger: "opportunityAttack" }, (triggerFrame) => ({
-      ...triggerFrame,
-      ...frameCommon,
-    })),
-    Match.exhaustive,
-  );
+  const nextFrame: BattleInterruptCheckpoint = {
+    ...frame,
+    ...frameCommon,
+  };
   const nextState = openBattleInterruptWindow({
     state: checkpointState,
     frame: nextFrame,
