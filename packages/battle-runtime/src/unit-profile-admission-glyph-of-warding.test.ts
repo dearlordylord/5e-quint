@@ -665,6 +665,52 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
   });
 
+  test("reports stale release and end witnesses after their occurrence is absent", () => {
+    const state = glyphBattle();
+    const effect = requireCompletedGlyphEffect({
+      anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+    });
+    const explosiveRuneProfile = requireGlyphExplosiveRuneProfile();
+
+    expect(
+      releaseGlyphExplosiveRune({
+        state,
+        profile: explosiveRuneProfile,
+        witness: glyphExplosiveRuneReleaseWitness({
+          state,
+          effect,
+          profile: explosiveRuneProfile,
+          outcomes: [
+            { targetId: spellTargetId, succeeded: false, withoutRoll: true },
+          ],
+        }),
+      }),
+    ).toMatchObject({
+      tag: "notFound",
+      sourceEffectId: glyphSourceEffectId,
+    });
+    expect(
+      releaseGlyphStoredSpell({
+        state,
+        profile: requireGlyphStoredSpellProfile(),
+        witness: storedSingleCreatureReleaseWitness([]),
+        executionRegistry,
+      }),
+    ).toMatchObject({
+      tag: "notFound",
+      sourceEffectId: glyphSourceEffectId,
+    });
+    expect(
+      endGlyphDurableOccurrence({
+        state,
+        witness: glyphTriggerOccurrenceWitness(),
+      }),
+    ).toMatchObject({
+      tag: "notFound",
+      sourceEffectId: glyphSourceEffectId,
+    });
+  });
+
   test("stores a prepared spell invocation without applying an immediate effect", () => {
     const storedInvocation = storedSpellInvocation(guidingBoltUnitId, 1);
     const state = glyphBattle({ targetHp: 50, targetMaxHp: 50 });

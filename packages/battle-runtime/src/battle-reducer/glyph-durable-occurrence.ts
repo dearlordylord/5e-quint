@@ -829,6 +829,7 @@ export function releaseGlyphExplosiveRune(input: {
       sourceEffectId,
     };
   }
+  /* v8 ignore start -- Invalid runtime state: addGlyphDurableOccurrence enforces source-effect uniqueness, so an admitted BattleState cannot contain multiple matching Glyph occurrences. */
   if (refs.length > 1) {
     return {
       tag: "ambiguousOccurrence",
@@ -836,6 +837,7 @@ export function releaseGlyphExplosiveRune(input: {
       sourceEffectId,
     };
   }
+  /* v8 ignore stop */
   /* v8 ignore start -- refs has exactly one element after the zero- and multi-occurrence returns above, so typed array destructuring cannot produce undefined here. */
   const [ref] = refs;
   if (ref === undefined) {
@@ -955,6 +957,7 @@ export function releaseGlyphStoredSpell(input: {
       sourceEffectId,
     };
   }
+  /* v8 ignore start -- Invalid runtime state: addGlyphDurableOccurrence enforces source-effect uniqueness, so an admitted BattleState cannot contain multiple matching Glyph occurrences. */
   if (refs.length > 1) {
     return {
       tag: "ambiguousOccurrence",
@@ -962,6 +965,7 @@ export function releaseGlyphStoredSpell(input: {
       sourceEffectId,
     };
   }
+  /* v8 ignore stop */
   /* v8 ignore start -- refs has exactly one element after the zero- and multi-occurrence returns above, so typed array destructuring cannot produce undefined here. */
   const [ref] = refs;
   if (ref === undefined) {
@@ -1094,6 +1098,7 @@ export function endGlyphDurableOccurrence(input: {
       sourceEffectId: input.witness.sourceEffectId,
     };
   }
+  /* v8 ignore start -- Invalid runtime state: addGlyphDurableOccurrence enforces source-effect uniqueness, so an admitted BattleState cannot contain multiple matching Glyph occurrences. */
   if (refs.length > 1) {
     return {
       tag: "ambiguousOccurrence",
@@ -1101,6 +1106,7 @@ export function endGlyphDurableOccurrence(input: {
       sourceEffectId: input.witness.sourceEffectId,
     };
   }
+  /* v8 ignore stop */
   /* v8 ignore start -- refs has exactly one element after the zero- and multi-occurrence returns above, so typed array destructuring cannot produce undefined here. */
   const [ref] = refs;
   if (ref === undefined) {
