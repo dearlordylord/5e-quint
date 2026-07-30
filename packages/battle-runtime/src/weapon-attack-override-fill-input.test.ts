@@ -5,6 +5,7 @@ import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
 } from "./battle-reducer/battle-runtime-protocol.ts";
 import { parseWeaponAttackOverrideFillInput } from "./battle-reducer/weapon-attack-override-fill-input.ts";
+import { validateUniqueAttackSightFacts } from "./battle-reducer/attack-fill-set.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import {
   spellCasterId,
@@ -112,5 +113,33 @@ describe("weapon attack override fill input", () => {
         ]),
       ]),
     ).toMatchObject({ tag: "invalid" });
+  });
+
+  test("distinguishes reciprocal sight facts while rejecting a duplicate direction", () => {
+    const attackerCannotSeeTarget = {
+      kind: "attackAttackerCannotSeeTarget" as const,
+      attackerId: spellCasterId,
+      targetId: spellTargetId,
+    };
+    const targetCannotSeeAttacker = {
+      kind: "attackTargetCannotSeeAttacker" as const,
+      attackerId: spellCasterId,
+      targetId: spellTargetId,
+    };
+
+    expect(
+      validateUniqueAttackSightFacts([
+        attackerCannotSeeTarget,
+        targetCannotSeeAttacker,
+      ]),
+    ).toBeNull();
+    expect(
+      validateUniqueAttackSightFacts([
+        attackerCannotSeeTarget,
+        attackerCannotSeeTarget,
+      ]),
+    ).toBe(
+      "Attack sight facts must contain at most one witness for each direction, attacker, and target.",
+    );
   });
 });

@@ -983,11 +983,12 @@ export function attackFillSet(
       /* v8 ignore stop */
     }
 
-    /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
+    /* v8 ignore start -- Malformed attack fill set: discovery is the canonical hole contract; any fill reaching this fallback has the wrong kind or hole identity for the admitted Attack. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Attack replay holes.`,
     };
+    /* v8 ignore stop */
   }
 
   const relationshipDecisions = DamageRelationshipDecisionsByHole.parse({
