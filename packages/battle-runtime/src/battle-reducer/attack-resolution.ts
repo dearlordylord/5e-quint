@@ -1785,6 +1785,7 @@ export function resolveEscapeSpellRestraint(
       "No spell-imposed Restraint is available to escape.",
     );
   }
+  /* v8 ignore start -- Discovered-subject invariant: the effect reference comes from a restraint effect whose immutable escape procedure is an Ability Check. */
   if (effect.escape?.kind !== "abilityCheck") {
     return invalidResult(
       input.state,
@@ -1792,6 +1793,8 @@ export function resolveEscapeSpellRestraint(
       "Spell-imposed Restraint escape is no longer available.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Discovered-subject invariant: target-only escape discovery emits the restrained target as actor; the effect's allowed-actor rule cannot change in place. */
   if (
     effect.escape.allowedActor === "target" &&
     input.subject.actorId !== input.subject.targetId
@@ -1802,6 +1805,7 @@ export function resolveEscapeSpellRestraint(
       "This spell-imposed Restraint can only be escaped by the restrained target.",
     );
   }
+  /* v8 ignore stop */
   if (
     actorHasStatBlockMultiattackActionResource(
       input.state,
@@ -1815,6 +1819,7 @@ export function resolveEscapeSpellRestraint(
     );
   }
   const dc = spellSaveDcForCaster(input.state, effect.sourceCombatantId);
+  /* v8 ignore start -- BattleState lifecycle invariant: removing a spell source also removes its sourced active effects, so a surviving restraint retains its caster DC. */
   if (dc === null) {
     return invalidResult(
       input.state,
@@ -1822,6 +1827,7 @@ export function resolveEscapeSpellRestraint(
       "Spell-imposed Restraint escape DC is no longer available.",
     );
   }
+  /* v8 ignore stop */
   const checkHole = escapeSpellRestraintAbilityCheckHole(input.state, effect, {
     actorId: input.subject.actorId,
     targetId: input.subject.targetId,
