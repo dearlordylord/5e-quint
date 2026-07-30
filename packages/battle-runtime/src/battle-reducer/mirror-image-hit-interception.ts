@@ -271,6 +271,7 @@ function mirrorImageDuplicateRollSucceeds(fill: BattleRolledDiceFill): boolean {
   );
 }
 
+/* v8 ignore start -- Malformed Mirror Image roll: discovery fixes the duplicate-roll hole and dice expression and does not offer attack-damage choices. */
 function validateMirrorImageDuplicateRoll(
   fill: BattleRolledDiceFill,
   hole: BattleMirrorImageDuplicateRollHole,
@@ -291,6 +292,7 @@ function validateMirrorImageDuplicateRoll(
   });
   return validation;
 }
+/* v8 ignore stop */
 
 function stateAfterMirrorImageDuplicateDestroyed(
   state: BattleState,

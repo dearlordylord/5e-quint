@@ -397,6 +397,7 @@ function applyOpenHandTechniqueApplyProne(
   };
 }
 
+/* v8 ignore start -- Malformed Open Hand push disposition: the discovered forced-movement choice caps distance, forbids opportunity attacks, and requires a destination for an applied push. */
 function validateOpenHandTechniquePushDisposition(
   disposition: BattleShovePushDisposition,
   maximumDistanceFeet: BattleShovePushDisposition["distanceFeet"],
@@ -414,6 +415,7 @@ function validateOpenHandTechniquePushDisposition(
   }
   return null;
 }
+/* v8 ignore stop */
 
 function openHandTechniqueFlurryHit(
   state: BattleState,

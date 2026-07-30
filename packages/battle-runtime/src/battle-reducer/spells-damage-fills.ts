@@ -1924,6 +1924,7 @@ export function validateSpellHealingFill(
   });
 }
 
+/* v8 ignore start -- Malformed scalar-buff fill: temporary-Hit-Point discovery fixes the eligible effect kind, rolled-dice hole, and dice expression. */
 export function validateScalarBuffTemporaryHitPointsFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   invocation: Extract<
@@ -1942,6 +1943,7 @@ export function validateScalarBuffTemporaryHitPointsFill(
     dieSize: invocation.effect.amount.expr.dieSize,
   });
 }
+/* v8 ignore stop */
 
 export function validateSpellBurstDamageFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,

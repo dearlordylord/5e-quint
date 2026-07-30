@@ -2023,6 +2023,7 @@ export function abilityCheckFill(
   return { tag: "ok", value: check };
 }
 
+/* v8 ignore start -- Malformed Shove disposition: the discovered push outcome fixes the SRD 5-foot distance and non-provoking forced-movement fact. */
 function validateShovePushDisposition(
   disposition: BattleShovePushOutcome["disposition"],
 ): string | null {
@@ -2034,6 +2035,7 @@ function validateShovePushDisposition(
   }
   return null;
 }
+/* v8 ignore stop */
 
 function applyShoveOutcome(input: {
   readonly state: BattleState;

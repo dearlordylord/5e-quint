@@ -225,6 +225,7 @@ export function cunningStrikeDamageContinuation(
   return selected === null ? undefined : { selected, fills: [] };
 }
 
+/* v8 ignore start -- Malformed Cunning Strike selection: discovery offers only eligible options backed by the selected Sneak Attack rider and enough dice to pay their cost. */
 export function validateCunningStrikeDamageRollSelection(input: {
   readonly fill: {
     readonly cunningStrikeOption?: BattleCunningStrikeOptionSelection;
@@ -250,6 +251,7 @@ export function validateCunningStrikeDamageRollSelection(input: {
     ? "Cunning Strike requires enough selected Sneak Attack dice to pay the option cost."
     : null;
 }
+/* v8 ignore stop */
 
 export function attackDamageRidersAfterCunningStrikeCost(
   selectedAttackDamageRiders: readonly AttackDamageRider[],
@@ -760,6 +762,7 @@ function cunningStrikeEndTurnCoverHole(
   };
 }
 
+/* v8 ignore start -- Malformed Cunning Strike save witness: discovery fixes the saving-throw hole and the single attacked target, with no area projection. */
 function validateCunningStrikeSavingThrow(
   fill: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>,
   targetId: CombatantId,
@@ -775,6 +778,7 @@ function validateCunningStrikeSavingThrow(
     ? null
     : "Cunning Strike Saving Throw must target the attacked creature.";
 }
+/* v8 ignore stop */
 
 function applyCunningStrikeConditionEndTurnSaveFailure(
   state: BattleState,

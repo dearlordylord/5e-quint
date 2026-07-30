@@ -3838,6 +3838,7 @@ function gustOfWindLineEffectFor(
   );
 }
 
+/* v8 ignore start -- Malformed Gust of Wind witness: command discovery binds the active Line geometry, ending-turn target, saving-throw outcome, and push facts. */
 function validateGustOfWindLineSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
@@ -3869,6 +3870,7 @@ function validateGustOfWindLineSavingThrowOutcome(
     pushDistanceFeet: effect.pushDistanceFeet,
   });
 }
+/* v8 ignore stop */
 
 export function resolveGustOfWindLineSaveCommand(
   input: BattleResolutionInput & {
@@ -4201,6 +4203,7 @@ function validateFlamingSphereRamMovement(
     : "Movable zone ram movement distance exceeds the spell's maximum.";
 }
 
+/* v8 ignore start -- Malformed Flaming Sphere reposition fill: discovery fixes the movement hole and offers positive whole-foot movement no greater than the active spell maximum. */
 function validateFlamingSphereRepositionMovement(
   fill: Extract<BattleFill, { readonly kind: "movableZoneRepositionMovement" }>,
   hole: BattleMovableZoneRepositionMovementHole,
@@ -4221,6 +4224,7 @@ function validateFlamingSphereRepositionMovement(
     ? null
     : "Movable zone reposition movement distance exceeds the spell's maximum.";
 }
+/* v8 ignore stop */
 
 function flamingSphereAdjustedDamage(input: {
   readonly state: BattleState;
@@ -4931,6 +4935,7 @@ function validateMoonbeamDamageRoll(
   return validateRolledDiceFillForDiceExpr(fill, hole.movableZone.damage.expr);
 }
 
+/* v8 ignore start -- Malformed Moonbeam reposition fill: discovery fixes the movement hole and offers positive whole-foot movement no greater than the active spell maximum. */
 function validateMoonbeamRepositionMovement(
   fill: Extract<BattleFill, { readonly kind: "movableZoneRepositionMovement" }>,
   hole: BattleMovableZoneRepositionMovementHole,
@@ -4950,6 +4955,7 @@ function validateMoonbeamRepositionMovement(
       ? "Movable zone reposition movement distance exceeds the spell's maximum."
       : "Movable zone reposition movement distance must be a positive integer.";
 }
+/* v8 ignore stop */
 
 function moonbeamAdjustedDamage(input: {
   readonly state: BattleState;

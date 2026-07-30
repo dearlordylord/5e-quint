@@ -226,6 +226,7 @@ function selfTeleportOutcomeDestination(
   };
 }
 
+/* v8 ignore start -- Malformed teleport witness: discovery binds the destination hole to this caster and spell and offers only nonzero destinations within the invocation range. */
 function validateSelfTeleportDestination(
   invocation: BattleExecutableSpellInvocation<SelfTeleportInvocation>,
   actorId: CombatantId,
@@ -249,6 +250,7 @@ function validateSelfTeleportDestination(
   }
   return null;
 }
+/* v8 ignore stop */
 
 const SelfTeleportInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({

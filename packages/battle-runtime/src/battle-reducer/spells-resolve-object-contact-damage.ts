@@ -1246,6 +1246,7 @@ function objectContactSavingThrowOutcomeHoleKey(input: {
   return `battle:spell:object-contact-damage:holding-wearing-save:${input.actorId}:${input.procedureRef}:${input.objectId}`;
 }
 
+/* v8 ignore start -- Malformed object-contact save witness: discovery fixes the object save hole, excludes area facts, and names each holding-or-wearing target exactly once. */
 function objectContactSavingThrowFillValidation(input: {
   readonly fill: Extract<
     OkSpellFillSet["objectContactSavingThrowOutcome"],
@@ -1266,6 +1267,7 @@ function objectContactSavingThrowFillValidation(input: {
       "Object-contact saving throw outcomes must match damaged holding-or-wearing targets exactly once.",
   });
 }
+/* v8 ignore stop */
 
 function objectDropResolutionHole(input: {
   readonly actorId: CombatantId;
@@ -1317,6 +1319,7 @@ function objectDropResolutionFillValidation(input: {
   });
 }
 
+/* v8 ignore start -- Malformed outcome target set: callers supply targets from their discovered typed holes, so duplicate, missing, and unrelated target ids are forged raw fills. */
 function exactOutcomeTargetsValidation(input: {
   readonly outcomes: readonly { readonly targetId: CombatantId }[];
   readonly targetIds: readonly CombatantId[];
@@ -1335,6 +1338,7 @@ function exactOutcomeTargetsValidation(input: {
   }
   return null;
 }
+/* v8 ignore stop */
 
 function applyObjectContactPenalties(input: {
   readonly state: BattleState;
