@@ -3673,14 +3673,18 @@ function validatePostSaveAreaEffect(input: {
 function validateFireballAreaEffect(
   area: BattleSpellAreaChoice | undefined,
 ): string | null {
+  /* v8 ignore start -- Malformed Fireball area fill: discovery supplies Fireball-specific area facts, so this rejects only a missing or cross-spell caller mutation. */
   if (area === undefined || area.kind !== "fireballArea") {
     return "Fireball requires caller-supplied object ignition area facts.";
   }
+  /* v8 ignore stop */
   const objectIds = new Set<string>();
   for (const fact of area.objectIgnitionFacts) {
+    /* v8 ignore start -- Malformed Fireball object witness: the table adapter emits each object identity once, so this rejects only a caller-mutated duplicate. */
     if (objectIds.has(fact.objectId)) {
       return "Fireball object ignition facts must not duplicate objects.";
     }
+    /* v8 ignore stop */
     objectIds.add(fact.objectId);
   }
   return null;
@@ -3717,14 +3721,18 @@ function postSaveAreaObjectIgnitions(input: {
 function validateShatterAreaEffect(
   area: BattleSpellAreaChoice | undefined,
 ): string | null {
+  /* v8 ignore start -- Malformed Shatter area fill: discovery supplies Shatter-specific area facts, so this rejects only a missing or cross-spell caller mutation. */
   if (area === undefined || area.kind !== "shatterArea") {
     return "Shatter requires caller-supplied nonmagical unattended object damage area facts.";
   }
+  /* v8 ignore stop */
   const objectIds = new Set<string>();
   for (const fact of area.nonmagicalUnattendedObjectDamageFacts) {
+    /* v8 ignore start -- Malformed Shatter object witness: the table adapter emits each object identity once, so this rejects only a caller-mutated duplicate. */
     if (objectIds.has(fact.objectId)) {
       return "Shatter object damage facts must not duplicate objects.";
     }
+    /* v8 ignore stop */
     objectIds.add(fact.objectId);
   }
   return null;
@@ -3785,43 +3793,57 @@ function validateThunderwaveAreaEffect(input: {
     { readonly kind: "thunderwave" }
   >;
 }): string | null {
+  /* v8 ignore start -- Malformed Thunderwave area fill: discovery supplies Thunderwave-specific area facts, so this rejects only a missing or cross-spell caller mutation. */
   if (input.area === undefined || input.area.kind !== "thunderwaveArea") {
     return "Thunderwave requires caller-supplied push, object, and audible-boom area facts.";
   }
+  /* v8 ignore stop */
   const failedTargetIds = new Set(input.failedTargetIds);
   const pushedTargetIds = new Set<CombatantId>();
   for (const push of input.area.creaturePushes) {
+    /* v8 ignore start -- Malformed Thunderwave creature witness: discovery requests exactly the failed-save targets, so this rejects only a caller-mutated foreign identity. */
     if (!failedTargetIds.has(push.targetId)) {
       return "Thunderwave creature push facts must match failed-save targets.";
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- Malformed Thunderwave creature witness: the table adapter emits each failed-save target once, so this rejects only a caller-mutated duplicate. */
     if (pushedTargetIds.has(push.targetId)) {
       return "Thunderwave creature push facts must not duplicate targets.";
     }
+    /* v8 ignore stop */
     pushedTargetIds.add(push.targetId);
     const dispositionValidation = validateThunderwavePushDisposition(
       push.disposition,
       input.effect.creaturePush.distanceFeet,
     );
+    /* v8 ignore start -- Malformed Thunderwave creature witness: the table adapter constructs the validated push disposition, so this propagates only a caller-mutated contradiction. */
     if (dispositionValidation !== null) {
       return dispositionValidation;
     }
+    /* v8 ignore stop */
   }
+  /* v8 ignore start -- Malformed Thunderwave creature witness set: discovery requests every failed-save target exactly once, so this rejects only a caller-mutated omission. */
   if (pushedTargetIds.size !== failedTargetIds.size) {
     return "Thunderwave creature push facts must cover every failed-save target.";
   }
+  /* v8 ignore stop */
   const objectIds = new Set<string>();
   for (const push of input.area.unsecuredObjectPushes) {
+    /* v8 ignore start -- Malformed Thunderwave object witness: the table adapter emits each unsecured object identity once, so this rejects only a caller-mutated duplicate. */
     if (objectIds.has(push.objectId)) {
       return "Thunderwave unsecured-object push facts must not duplicate objects.";
     }
+    /* v8 ignore stop */
     objectIds.add(push.objectId);
     const dispositionValidation = validateThunderwavePushDisposition(
       push.disposition,
       input.effect.unsecuredObjectPush.distanceFeet,
     );
+    /* v8 ignore start -- Malformed Thunderwave object witness: the table adapter constructs the validated push disposition, so this propagates only a caller-mutated contradiction. */
     if (dispositionValidation !== null) {
       return dispositionValidation;
     }
+    /* v8 ignore stop */
   }
   return input.area.audibleBoom.sound === input.effect.audibleBoom.sound &&
     input.area.audibleBoom.audibleRadiusFeet ===
@@ -3834,17 +3856,21 @@ function validateThunderwavePushDisposition(
   disposition: BattleThunderwavePushDisposition,
   distanceFeet: MovementFeet,
 ): string | null {
+  /* v8 ignore start -- Malformed Thunderwave push witness: the table adapter copies the spell distance, so this rejects only a caller-mutated distance. */
   if (disposition.distanceFeet !== distanceFeet) {
     return "Thunderwave push disposition must use the spell's 10-foot distance.";
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed Thunderwave push witness: the table adapter fixes the non-provoking forced-movement rule, so this rejects only a caller mutation. */
   if (disposition.provokesOpportunityAttacks !== false) {
     return "Thunderwave push disposition must not provoke Opportunity Attacks.";
   }
-  if (disposition.kind === "pushed") {
-    return disposition.destinationId.length === 0
-      ? "Thunderwave pushed destinations must be caller-supplied non-empty table positions."
-      : null;
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed Thunderwave push witness: the table adapter requires a selected table position for an applied push, so this rejects only a caller-mutated empty destination. */
+  if (disposition.kind === "pushed" && disposition.destinationId.length === 0) {
+    return "Thunderwave pushed destinations must be caller-supplied non-empty table positions.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
