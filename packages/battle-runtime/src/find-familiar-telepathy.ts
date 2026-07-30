@@ -95,18 +95,22 @@ export function shareFindFamiliarSenses(input: {
   }
   const caster = input.state.combatants.get(input.casterId);
   const familiar = input.state.combatants.get(connection.familiarId);
+  /* v8 ignore start -- Discovered shared-senses acts are admitted only for a live owner/present-companion pair; a missing member requires a forged state/fact combination. */
   if (caster === undefined || familiar === undefined) {
     return invalidTransition(
       "missingCombatant",
       "Find Familiar shared senses require caster and familiar combatants.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Present Find Familiar companions are admitted from Stat Blocks; a non-Stat-Block companion contradicts the companion roster boundary. */
   if (familiar.origin.kind !== "statBlock") {
     return invalidTransition(
       "invalidFill",
       "Find Familiar shared senses require a familiar Stat Block.",
     );
   }
+  /* v8 ignore stop */
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
@@ -160,24 +164,27 @@ export function prepareTouchSpellDeliveryThroughFindFamiliar(input: {
   | PreparedFindFamiliarTouchSpellDelivery
   | Exclude<FindFamiliarMechanicalTransition, { readonly tag: "resolved" }> {
   const actor = input.state.combatants.get(input.subject.actorId);
-  const procedure =
-    actor?.origin.kind === "character"
-      ? characterSpellProcedure(
-          actor.origin.execution,
-          input.subject.procedureRef,
-          actor,
-        )
-      : undefined;
-  if (
-    actor?.origin.kind !== "character" ||
-    procedure === undefined ||
-    !spellInvocationIsSpellcasting(procedure)
-  ) {
+  /* v8 ignore start -- Familiar delivery acts are projected only for a character caster; reaching this guard requires a forged subject owner. */
+  if (actor?.origin.kind !== "character") {
     return invalidTransition(
       "unsupportedActOption",
       "Find Familiar touch delivery requires a supported spell invocation.",
     );
   }
+  /* v8 ignore stop */
+  const procedure = characterSpellProcedure(
+    actor.origin.execution,
+    input.subject.procedureRef,
+    actor,
+  );
+  /* v8 ignore start -- Familiar delivery acts retain their admitted spell binding; a missing or non-spell procedure requires a forged procedure reference. */
+  if (procedure === undefined || !spellInvocationIsSpellcasting(procedure)) {
+    return invalidTransition(
+      "unsupportedActOption",
+      "Find Familiar touch delivery requires a supported spell invocation.",
+    );
+  }
+  /* v8 ignore stop */
   if (procedure.spellRuleFacts.range.kind !== "touch") {
     return invalidTransition(
       "invalidFill",
@@ -222,6 +229,7 @@ export function spendFindFamiliarTouchDeliveryReaction(input: {
   | { readonly tag: "resolved"; readonly state: BattleState }
   | { readonly tag: "invalid"; readonly message: string } {
   const familiar = input.state.combatants.get(input.familiarId);
+  /* v8 ignore start -- Preparation and Reaction spending are one atomic reducer operation; the already-proven present familiar cannot disappear between those steps. */
   if (familiar === undefined) {
     return {
       tag: "invalid",
@@ -229,6 +237,7 @@ export function spendFindFamiliarTouchDeliveryReaction(input: {
         "Find Familiar touch delivery requires the familiar to remain present.",
     };
   }
+  /* v8 ignore stop */
   return {
     tag: "resolved",
     state: {
@@ -257,6 +266,7 @@ function findFamiliarTouchDeliveryFills(input: {
   let deliveryTargetFactSeen = false;
   const fills: BattleFill[] = [];
   for (const fill of input.fills) {
+    /* v8 ignore start -- Familiar delivery discovery admits only spells with exactly one targetChoice hole, so list/allocation fills contradict that discovered act contract. */
     if (
       fill.kind === "spellTargetList" ||
       fill.kind === "spellTargetAllocation"
@@ -267,11 +277,13 @@ function findFamiliarTouchDeliveryFills(input: {
           "Find Familiar touch delivery currently supports single target-choice Touch spells.",
       };
     }
+    /* v8 ignore stop */
     if (fill.kind !== "targetChoice") {
       fills.push(fill);
       continue;
     }
     targetChoiceCount += 1;
+    /* v8 ignore start -- Familiar delivery discovery proves exactly one targetChoice hole; a second target fill can only be forged outside that hole contract. */
     if (targetChoiceCount > 1) {
       return {
         tag: "invalid",
@@ -279,6 +291,7 @@ function findFamiliarTouchDeliveryFills(input: {
           "Find Familiar touch delivery currently supports exactly one target choice.",
       };
     }
+    /* v8 ignore stop */
     const facts = fill.spatialFacts ?? [];
     const deliveryFact = facts.find((fact) =>
       findFamiliarTouchSpellTargetFactMatches({

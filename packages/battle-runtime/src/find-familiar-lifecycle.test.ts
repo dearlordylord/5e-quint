@@ -53,6 +53,7 @@ import {
   deliverTouchSpellThroughFindFamiliar,
   discoverBattleActs,
   emptyBattleRuntimeContext,
+  endTurn,
   DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE,
   findFamiliarCompanionEntryForOwner,
   findFamiliarCompanionForOwner,
@@ -2272,6 +2273,37 @@ describe("Find Familiar lifecycle", () => {
     expect(blocked.tag).toBe("invalid");
     if (blocked.tag !== "invalid") return;
     expect(blocked.reason).toBe("staleSubject");
+
+    const wrongConnection = shareFindFamiliarSenses({
+      state: cast.state,
+      casterId,
+      fact: {
+        kind: "findFamiliarWithin100FeetOfOwner",
+        ownerId: casterId,
+        familiarId: otherCombatantId,
+      },
+    });
+    expect(wrongConnection).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const nextTurn = endTurn({ state: cast.state, actorId: casterId });
+    expect(nextTurn.tag).toBe("resolved");
+    if (nextTurn.tag !== "resolved") return;
+    const outsideCasterTurn = shareFindFamiliarSenses({
+      state: nextTurn.state,
+      casterId,
+      fact: {
+        kind: "findFamiliarWithin100FeetOfOwner",
+        ownerId: casterId,
+        familiarId,
+      },
+    });
+    expect(outsideCasterTurn).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
   });
 
   test("delivers Touch spells through a present familiar and atomically spends its Reaction", () => {
@@ -2446,6 +2478,20 @@ describe("Find Familiar lifecycle", () => {
     );
     expect(cureWoundsAct?.subject.tag).toBe("actionSpell");
     if (cureWoundsAct?.subject.tag !== "actionSpell") return;
+    const wrongConnection = deliverTouchSpellThroughFindFamiliar({
+      state: cast.state,
+      subject: cureWoundsAct.subject,
+      fills: [],
+      fact: {
+        kind: "findFamiliarWithin100FeetOfOwner",
+        ownerId: casterId,
+        familiarId: otherCombatantId,
+      },
+    });
+    expect(wrongConnection).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
     const withoutReaction = {
       ...cast.state,
       combatants: new Map(cast.state.combatants).set(familiarId, {
@@ -2759,6 +2805,20 @@ describe("Find Familiar lifecycle", () => {
       tag: "invalid",
       reason: "invalidFill",
     });
+    expect(
+      resolveBattleSubject({
+        state: cast.state,
+        subject: delivery.subject,
+        fills: [
+          connection,
+          {
+            kind: "targetChoice",
+            holeId: targetHole.holeId,
+            value: enemyId,
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
     const targetFill: Extract<BattleFill, { readonly kind: "targetChoice" }> = {
       kind: "targetChoice",
       holeId: targetHole.holeId,
