@@ -1085,12 +1085,16 @@ function validateSpellTurnStartSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
+  /* v8 ignore start -- Malformed fill: a turn-start spell save hole is single-target and cannot carry area geometry. */
   if ("area" in value) {
     return "Turn-start spell Saving Throw outcome must not include area facts.";
   }
-  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
-    ? null
-    : "Turn-start spell Saving Throw outcome must match the starting-turn target.";
+  /* v8 ignore stop */
+  if (value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId) {
+    return null;
+  }
+  /* v8 ignore next -- Malformed fill: the discovered turn-start spell save hole names exactly the combatant whose turn is starting. */
+  return "Turn-start spell Saving Throw outcome must match the starting-turn target.";
 }
 
 type SleepPendingRepeatSaveEffect = Extract<
@@ -4153,12 +4157,16 @@ function validateFlamingSphereSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
+  /* v8 ignore start -- Malformed fill: a Flaming Sphere ram save hole is single-target and cannot carry area geometry. */
   if ("area" in value) {
     return "Movable zone saving throw outcome must not include area facts.";
   }
-  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
-    ? null
-    : "Movable zone saving throw outcome must match the triggering target.";
+  /* v8 ignore stop */
+  if (value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId) {
+    return null;
+  }
+  /* v8 ignore next -- Malformed fill: the discovered Flaming Sphere ram save hole names exactly its triggering target. */
+  return "Movable zone saving throw outcome must match the triggering target.";
 }
 
 function validateFlamingSphereDamageRoll(
@@ -4897,12 +4905,16 @@ function validateMoonbeamSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
 ): string | null {
+  /* v8 ignore start -- Malformed fill: a Moonbeam membership save hole is single-target and cannot carry area geometry. */
   if ("area" in value) {
     return "Movable zone saving throw outcome must not include area facts.";
   }
-  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
-    ? null
-    : "Movable zone saving throw outcome must match the triggering target.";
+  /* v8 ignore stop */
+  if (value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId) {
+    return null;
+  }
+  /* v8 ignore next -- Malformed fill: the discovered Moonbeam save hole names exactly its triggering target. */
+  return "Movable zone saving throw outcome must match the triggering target.";
 }
 
 function validateMoonbeamDamageRoll(
