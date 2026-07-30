@@ -15,6 +15,7 @@ import {
   battleProcedureExecutionRefForTest,
   BattleSnapshotSchema,
   characterSeed,
+  characterAttackSubjectForTest,
   damageRollFillWithGroups,
   discoverBattleActCandidates,
   discoverBattleActs,
@@ -925,6 +926,64 @@ describe("battle runtime: Monk's Focus battle options", () => {
     expect(result.snapshot.turn.bonusActionAvailable).toBe(false);
     expect(monkFocusUsesRemaining(result.snapshot)).toBe(1);
     expect(flurryResourceCount(result.snapshot.turn.actionResources)).toBe(0);
+  });
+
+  test("stale Flurry strike subjects fail when their last target disappears", () => {
+    const activated = activateFlurryOfBlows(
+      monkFocusBattle({ usesRemaining: 2 }),
+    );
+    const strikeSubject = monkFocusSubject(
+      activated.state,
+      (candidate) => candidate.tag === "monkFocusFlurryOfBlowsStrike",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: stateWithoutGoblin(activated.state),
+        subject: strikeSubject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Flurry of Blows requires an available Unarmed Strike target.",
+    });
+  });
+
+  test("rejects a Flurry strike subject bound to a different attack", () => {
+    const activated = activateFlurryOfBlows(
+      monkFocusBattle({
+        usesRemaining: 2,
+        weaponAttackAvailable: true,
+      }),
+    );
+    const strikeSubject = monkFocusSubject(
+      activated.state,
+      (candidate) => candidate.tag === "monkFocusFlurryOfBlowsStrike",
+    );
+    if (strikeSubject.tag !== "monkFocusFlurryOfBlowsStrike") {
+      throw new Error("Expected Flurry of Blows strike subject.");
+    }
+    const weaponAttackSubject = characterAttackSubjectForTest(
+      activated.state,
+      fighterId,
+      "Longsword",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: activated.state,
+        subject: {
+          ...strikeSubject,
+          procedureRef: weaponAttackSubject.procedureRef,
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message: "Flurry of Blows requires the actor's Unarmed Strike.",
+    });
   });
 
   test("Command Halt suppresses stale Monk Focus option and Flurry strike subjects", () => {

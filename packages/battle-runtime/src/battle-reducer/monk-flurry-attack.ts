@@ -3,7 +3,6 @@ import type {
   BattleResolutionResult,
 } from "../battle-state-execution.ts";
 import { resolveSelectedAttackProcedure } from "./attack-main.ts";
-import { combatantCanTakeActions } from "./creature-state-execution.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   flurryOfBlowsUnarmedStrikeForActor,
@@ -14,15 +13,6 @@ import {
 export function resolveMonkFocusFlurryOfBlowsStrike(
   input: AdmittedMonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
 ): BattleResolutionResult {
-  if (
-    !combatantCanTakeActions(input.state.combatants.get(input.subject.actorId))
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Flurry of Blows is no longer available for this actor.",
-    );
-  }
   if (
     !stateHasMonkFocusFlurryOfBlowsActionResource(
       input.state,
@@ -40,10 +30,14 @@ export function resolveMonkFocusFlurryOfBlowsStrike(
     input.state,
     input.subject.actorId,
   );
-  if (
-    unarmedStrike === undefined ||
-    unarmedStrike.procedureRef !== input.subject.procedureRef
-  ) {
+  if (unarmedStrike === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Flurry of Blows requires an available Unarmed Strike target.",
+    );
+  }
+  if (unarmedStrike.procedureRef !== input.subject.procedureRef) {
     return invalidResult(
       input.state,
       "unsupportedActOption",
