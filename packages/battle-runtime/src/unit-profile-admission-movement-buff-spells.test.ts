@@ -1,5 +1,10 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { assertBattleSnapshotCodecRoundTripForTest } from "./battle-runtime.test-support.ts";
+import {
+  assertBattleSnapshotCodecRoundTripForTest,
+  attackExecutionSelectionForSubjectForTest,
+  characterAttackSubjectForTest,
+  testShortswordAttack,
+} from "./battle-runtime.test-support.ts";
 import {
   battleActSpellPresentation,
   battleActSpellSlotPresentation,
@@ -289,7 +294,10 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
 
   test("jump installs a one-minute per-target movement replacement and spends 10 Movement for up to 30 feet", () => {
     const spell = spellRecord(jumpUnitId);
-    const session = spellBattle({ preparedSpells: [spell] });
+    const session = spellBattle({
+      preparedSpells: [spell],
+      targetAttack: testShortswordAttack(),
+    });
     const castAct = bonusSpellAct({ session, spellId: jumpUnitId });
     const targetHole = requireHole(castAct.initialHoles, "spellTargetList");
     const cast = resolveBattleSubject({
@@ -329,6 +337,51 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
 
     const jumpAct = jumpMovementReplacementAct(cast.state);
     const movement = requireHole(jumpAct.initialHoles, "movement");
+    const threatenedJump = resolveBattleSubject({
+      state: cast.state,
+      subject: jumpAct.subject,
+      fills: [
+        movementFill(movement, {
+          movementCostFeet: 10,
+          provokedOpportunityAttacks: [
+            {
+              reactorId: spellTargetId,
+              ...attackExecutionSelectionForSubjectForTest(
+                characterAttackSubjectForTest(
+                  cast.state,
+                  spellTargetId,
+                  "Shortsword",
+                ),
+              ),
+            },
+          ],
+          jumpMovementReplacement: {
+            kind: "jumpMovementReplacement",
+            distanceFeet: movementFeet(30),
+            landing: {
+              kind: "legalLanding",
+              difficultTerrainAcrobatics: "notRequired",
+            },
+          },
+        }),
+      ],
+    });
+    expect(threatenedJump).toMatchObject({
+      tag: "needsHoles",
+      snapshot: {
+        pendingInterrupt: { trigger: "opportunityAttack" },
+      },
+    });
+    if (threatenedJump.tag !== "needsHoles") {
+      throw new Error("Expected Jump to open an Opportunity Attack window.");
+    }
+    expect(
+      threatenedJump.state.combatants
+        .get(spellCasterId)
+        ?.activeEffects.find(
+          (effect) => effect.kind === "jumpMovementReplacement",
+        ),
+    ).toMatchObject({ usedThisTurn: true });
     const jumped = resolveBattleSubject({
       state: cast.state,
       subject: jumpAct.subject,
