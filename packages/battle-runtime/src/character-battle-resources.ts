@@ -49,7 +49,6 @@ import {
   pactOfTheChainFindFamiliarFormEligibilityForSpell,
   type PactOfTheChainFindFamiliarFormEligibility,
 } from "@dnd/surface/surface/find-familiar-forms";
-import * as Either from "effect/Either";
 import {
   battleResourcePoolExecutionRef,
   type BattleCharacterExecutionScopeRef,
@@ -60,9 +59,7 @@ import {
   type PersistentArmorEffectAdmission,
 } from "./procedure-admission/persistent-armor-effect-facts.ts";
 import {
-  characterBattleResourceIsPointPool,
   type CharacterBattleActivationResource,
-  type CharacterBattlePointPoolResourceState,
   type CharacterBattleMetamagicOptionFact,
   type CharacterBattleMetamagicState,
   type CharacterBattleResourceExecutionFacts,
@@ -77,7 +74,9 @@ export {
   characterBattleResourceIsUnlimited,
   characterBattleResourceIsUseCount,
   characterBattleResourceUsage,
+  spendCharacterPointPoolResource,
   spendCharacterResourceUse,
+  type CharacterBattlePointPoolSpendIssue,
   type CharacterBattlePointPoolResourceState,
   type CharacterBattleMetamagicEffectKind,
   type CharacterBattleMetamagicOptionFact,
@@ -192,11 +191,6 @@ export function admitCharacterBattleResources(
     ownership: admitted.map(({ ownership }) => ownership),
   };
 }
-
-export type CharacterBattlePointPoolSpendIssue = {
-  readonly tag: "characterBattlePointPoolSpendIssue";
-  readonly message: string;
-};
 
 export type CharacterBattleSpellSlotInit = {
   readonly spellLevel: number;
@@ -915,39 +909,6 @@ function unitHasSupportedAbilityModifierBattleResourceProfile(
     (failedSavingThrowRerollSupport !== null &&
       failedSavingThrowRerollSupport !== "unsupported")
   );
-}
-
-export function spendCharacterPointPoolResource(input: {
-  readonly resource: CharacterBattleResourceState;
-  readonly points: ResourceCount;
-}): Either.Either<
-  CharacterBattlePointPoolResourceState,
-  CharacterBattlePointPoolSpendIssue
-> {
-  if (!characterBattleResourceIsPointPool(input.resource)) {
-    return Either.left({
-      tag: "characterBattlePointPoolSpendIssue",
-      message: "Only point-pool character battle resources can spend points.",
-    });
-  }
-  if (input.points <= 0) {
-    return Either.left({
-      tag: "characterBattlePointPoolSpendIssue",
-      message: "Point-pool spending requires a positive point cost.",
-    });
-  }
-  if (input.resource.pointsRemaining < input.points) {
-    return Either.left({
-      tag: "characterBattlePointPoolSpendIssue",
-      message: "Point-pool resource has insufficient remaining points.",
-    });
-  }
-  return Either.right({
-    ...input.resource,
-    pointsRemaining: resourceCount(
-      Number(input.resource.pointsRemaining) - Number(input.points),
-    ),
-  });
 }
 
 function admittedSpellWithFreeCastRefs(
