@@ -793,7 +793,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     const needsCasterSave = endTurn({
       state,
       actorId: spellCasterId,
-      fills: [damageFill, saveFill],
+      fills: [saveFill, damageFill],
     });
     const casterSave = requireResultHole(
       needsCasterSave,
@@ -803,6 +803,17 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       combatantId: spellCasterId,
       damageAmount: 3,
     });
+    expect(needsCasterSave.routeEvents).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "resolveBattleSubject",
+          subject: "concentrationTeardown",
+          fill: "rolledDice",
+          holes: ["concentrationSavingThrow"],
+          owner: "battleConcentration",
+        },
+      ]),
+    );
 
     const resolved = endTurn({
       state,
