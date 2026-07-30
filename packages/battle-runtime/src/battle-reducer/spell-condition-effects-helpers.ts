@@ -228,6 +228,7 @@ export function resolveBattlePossessionAttempt({
   }
 
   const sourceCreatureType = battleCreatureType(source);
+  /* v8 ignore start -- Battle-state admission rejects an unresolved cast-time creature-type choice before creating a Stat Block combatant, while character combatants are canonically Humanoid. */
   if (sourceCreatureType === null) {
     return {
       tag: "invalid",
@@ -236,6 +237,7 @@ export function resolveBattlePossessionAttempt({
       targetId,
     };
   }
+  /* v8 ignore stop */
 
   if (
     possessionApplicationPreventedByCreatureTypeProtection(

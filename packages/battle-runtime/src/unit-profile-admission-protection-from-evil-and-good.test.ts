@@ -69,6 +69,37 @@ function selectedFixedConditionEffect(
 }
 
 describe("SRDINV30C deterministic Protection from Evil and Good admission", () => {
+  test("possession attempts report unknown source and target combatants", () => {
+    const missingSourceId = combatantId("missing-possession-source");
+    const missingTargetId = combatantId("missing-possession-target");
+    const session = spellBattle({});
+
+    expect(
+      resolveBattlePossessionAttempt({
+        state: session.state,
+        sourceCombatantId: missingSourceId,
+        targetId: spellTargetId,
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "unknownSourceCombatant",
+      sourceCombatantId: missingSourceId,
+      targetId: spellTargetId,
+    });
+    expect(
+      resolveBattlePossessionAttempt({
+        state: session.state,
+        sourceCombatantId: spellCasterId,
+        targetId: missingTargetId,
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "unknownTargetCombatant",
+      sourceCombatantId: spellCasterId,
+      targetId: missingTargetId,
+    });
+  });
+
   test("protection from evil and good imposes attack Disadvantage only for scoped creature types", () => {
     const spell = spellRecord(protectionFromEvilAndGoodUnitId);
     const undeadId = combatantId("unit-profile-protection-undead");
