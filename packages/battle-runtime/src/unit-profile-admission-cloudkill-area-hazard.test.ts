@@ -294,14 +294,15 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
 
   test("strong wind dispersal ends the active Cloudkill hazard", () => {
     const { cast } = castCloudkill();
+    const subject = {
+      tag: "runtimeCommand" as const,
+      actorId: spellCasterId,
+      command: "disperseCloudkill" as const,
+      areaId: cloudkillAreaId,
+    };
     const dispersed = resolveBattleSubject({
       state: cast,
-      subject: {
-        tag: "runtimeCommand",
-        actorId: spellCasterId,
-        command: "disperseCloudkill",
-        areaId: cloudkillAreaId,
-      },
+      subject,
       fills: [],
     });
     expect(dispersed).toMatchObject({
@@ -316,6 +317,17 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     expect(requireCombatant(dispersed.state, spellCasterId)).toMatchObject({
       concentration: null,
       activeEffects: [],
+    });
+    expect(
+      resolveBattleSubject({
+        state: dispersed.state,
+        subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Cloudkill area is no longer active.",
     });
   });
 });

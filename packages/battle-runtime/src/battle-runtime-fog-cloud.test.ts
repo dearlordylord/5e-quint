@@ -165,6 +165,17 @@ describe("battle runtime: Fog Cloud", () => {
     expect(dispersed.state.combatants.get(wizardId)?.activeEffects).toEqual([]);
     expect(dispersed.state.combatants.get(wizardId)?.concentration).toBeNull();
     expect(dispersed.snapshot.obscurementZones).toEqual([]);
+    expect(
+      resolveBattleSubject({
+        state: dispersed.state,
+        subject: command.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Fog Cloud area is no longer active.",
+    });
   });
 
   test("damage to zero Hit Points tears down Fog Cloud Concentration ownership", () => {
