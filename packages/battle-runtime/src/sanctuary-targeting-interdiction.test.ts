@@ -413,6 +413,92 @@ describe("Sanctuary targeting interdiction", () => {
     expect(combatant(lost.state, wardedId).hp).toBe(Hp(12));
   });
 
+  test("failed save can move a direct save-damage spell to a new target", () => {
+    const warded = castSanctuary(battleWithSanctuary(), wardedId);
+    const act = discoverBattleActs(warded).find(
+      (candidate) =>
+        candidate.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          sacredFlameUnitId,
+    );
+    if (act === undefined || act.subject.tag !== "actionSpell") {
+      throw new Error("Expected Sacred Flame action spell.");
+    }
+    const targetFill = spellTargetFill(
+      requireHole(act.initialHoles, "targetChoice"),
+      sacredFlameUnitId,
+      casterId,
+      wardedId,
+    );
+    const originalTargetFact = targetFill.spatialFacts?.find(
+      (fact) => fact.kind === "spellTarget",
+    );
+    if (originalTargetFact === undefined) {
+      throw new Error("Expected the admitted Sacred Flame target fact.");
+    }
+    const needsSanctuary = resolveBattleSubject({
+      state: warded.state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    if (needsSanctuary.tag !== "needsHoles") {
+      throw new Error("Expected Sanctuary interdiction hole.");
+    }
+    const sanctuaryHole = requireHole(
+      needsSanctuary.holes,
+      "sanctuaryInterdictionOutcome",
+    );
+    if (sanctuaryHole.replacementTargetKind !== "nonAttack") {
+      throw new Error("Expected a non-attack Sanctuary replacement.");
+    }
+    const sanctuaryFill = sanctuaryOutcomeFill(sanctuaryHole, {
+      saveSucceeded: false,
+      outcome: {
+        kind: "newTarget",
+        targetId: replacementId,
+        replacementTargetKind: sanctuaryHole.replacementTargetKind,
+        spatialFacts: [{ ...originalTargetFact, targetId: replacementId }],
+      },
+    });
+    const needsSave = resolveBattleSubject({
+      state: needsSanctuary.state,
+      subject: needsSanctuary.subject,
+      fills: [targetFill, sanctuaryFill],
+    });
+    if (needsSave.tag !== "needsHoles") {
+      throw new Error("Expected Sacred Flame saving throw hole.");
+    }
+    const saveFill = savingThrowOutcomeFill(
+      requireHole(needsSave.holes, "savingThrowOutcome"),
+      [{ targetId: replacementId, succeeded: false }],
+    );
+    const needsDamage = resolveBattleSubject({
+      state: needsSave.state,
+      subject: needsSave.subject,
+      fills: [targetFill, sanctuaryFill, saveFill],
+    });
+    if (needsDamage.tag !== "needsHoles") {
+      throw new Error("Expected Sacred Flame damage roll hole.");
+    }
+    const resolved = resolveBattleSubject({
+      state: needsDamage.state,
+      subject: needsDamage.subject,
+      fills: [
+        targetFill,
+        sanctuaryFill,
+        saveFill,
+        rolledDiceFill(requireHole(needsDamage.holes, "rolledDice"), [4]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected retargeted Sacred Flame to resolve.");
+    }
+    expect(combatant(resolved.state, wardedId).hp).toBe(Hp(12));
+    expect(combatant(resolved.state, replacementId).hp).toBe(Hp(8));
+  });
+
   test("failed save can lose Magic Missile allocation against the warded creature", () => {
     const warded = advanceRoundToCaster(
       castSanctuary(battleWithSanctuary(), wardedId),
@@ -1457,10 +1543,14 @@ function savingThrowOutcomeFill(
     holeId: hole.holeId,
     ...(relationshipFacts === undefined ? {} : { relationshipFacts }),
     value: {
-      area: {
-        originAnchorId: casterId,
-        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
-      },
+      ...("outcomeTargeting" in hole && hole.outcomeTargeting === "singleTarget"
+        ? {}
+        : {
+            area: {
+              originAnchorId: casterId,
+              affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+            },
+          }),
       outcomes,
     },
   };
