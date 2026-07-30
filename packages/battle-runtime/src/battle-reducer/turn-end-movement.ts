@@ -7018,21 +7018,15 @@ export function resolveEndTurnCommand(
     );
   }
   /* v8 ignore stop */
-  const startTurnSaves = startTurnSaveRequests.flatMap((request) => {
-    const fill = spellTurnStartSavingThrowOutcomeFor(
-      savingThrowOutcomeFills,
-      request.hole,
-    );
-    return fill === undefined ? [] : [fill];
-  });
-  const missingStartTurnSaveHoles = startTurnSaveRequests.flatMap((request) =>
-    spellTurnStartSavingThrowOutcomeFor(
-      savingThrowOutcomeFills,
-      request.hole,
-    ) === undefined
-      ? [request.hole]
-      : [],
+  const startTurnSaveCollection = collectRequestedHoleFills(
+    startTurnSaveRequests,
+    (hole) =>
+      spellTurnStartSavingThrowOutcomeFor(savingThrowOutcomeFills, hole),
   );
+  const startTurnSaves = startTurnSaveCollection.resolved.map(
+    ({ fill }) => fill,
+  );
+  const missingStartTurnSaveHoles = startTurnSaveCollection.missingHoles;
   if (missingStartTurnSaveHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingStartTurnSaveHoles,
