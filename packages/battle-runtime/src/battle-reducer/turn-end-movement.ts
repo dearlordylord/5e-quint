@@ -989,7 +989,7 @@ function spellTurnStartDamageAmount(
 
 function applySpellTurnStartDamage(
   state: BattleState,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   effect: SpellTurnStartDamageEffect,
   roll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   concentrationSavingThrow:
@@ -1005,13 +1005,9 @@ function applySpellTurnStartDamage(
     { readonly kind: "savingThrowOutcome" }
   >[],
 ): BattleState {
-  const target = state.combatants.get(targetId);
-  if (target === undefined) {
-    return state;
-  }
   return applyPreparedSlotSpellDamage(
     state,
-    targetId,
+    target.combatantId,
     spellTurnStartDamageAmount(state, target, effect, roll),
     {
       concentrationSavingThrow,
@@ -1139,15 +1135,20 @@ type DurationActiveEffect = Extract<
   >;
 };
 
+function activeEffectsMatching<Effect extends BattleActiveEffect>(
+  combatant: BattleCreatureState | undefined,
+  isEffect: (effect: BattleActiveEffect) => effect is Effect,
+): readonly Effect[] {
+  return combatant?.activeEffects.filter(isEffect) ?? [];
+}
+
 function sleepPendingRepeatSaveEffects(
   combatant: BattleCreatureState | undefined,
   actorId: CombatantId,
   round: RoundType,
 ): readonly SleepPendingRepeatSaveEffect[] {
-  if (combatant === undefined) {
-    return [];
-  }
-  return combatant.activeEffects.filter(
+  return activeEffectsMatching(
+    combatant,
     (effect): effect is SleepPendingRepeatSaveEffect =>
       effect.kind === "sleepPendingRepeatSave" &&
       effect.repeatAt.combatantId === actorId &&
@@ -1264,24 +1265,21 @@ export function conditionSpellEndTurnRepeatSaveHoleIds(
 function spellConditionEndTurnSaveEffects(
   combatant: BattleCreatureState | undefined,
 ): readonly SpellConditionEndTurnSaveEffect[] {
-  return combatant === undefined
-    ? []
-    : combatant.activeEffects.filter(
-        (effect): effect is SpellConditionEndTurnSaveEffect =>
-          effect.kind === "spellConditionEndTurnSave",
-      );
+  return activeEffectsMatching(
+    combatant,
+    (effect): effect is SpellConditionEndTurnSaveEffect =>
+      effect.kind === "spellConditionEndTurnSave",
+  );
 }
 
 function spellConditionCountedEndTurnSaveEffects(
   combatant: BattleCreatureState | undefined,
 ): readonly SpellConditionCountedEndTurnSaveEffect[] {
-  return combatant === undefined
-    ? []
-    : combatant.activeEffects.filter(
-        (effect): effect is SpellConditionCountedEndTurnSaveEffect =>
-          effect.kind === "spellConditionCountedEndTurnSave" &&
-          !effect.lockedIn,
-      );
+  return activeEffectsMatching(
+    combatant,
+    (effect): effect is SpellConditionCountedEndTurnSaveEffect =>
+      effect.kind === "spellConditionCountedEndTurnSave" && !effect.lockedIn,
+  );
 }
 
 function spellConditionEndTurnSavingThrowOutcomeHole(
@@ -1408,12 +1406,11 @@ function spellConditionCountedEndTurnSavingThrowOutcomeFor(
 function unitFeatureConditionEndTurnSaveEffects(
   combatant: BattleCreatureState | undefined,
 ): readonly UnitFeatureConditionEndTurnSaveEffect[] {
-  return combatant === undefined
-    ? []
-    : combatant.activeEffects.filter(
-        (effect): effect is UnitFeatureConditionEndTurnSaveEffect =>
-          effect.kind === "unitFeatureConditionEndTurnSave",
-      );
+  return activeEffectsMatching(
+    combatant,
+    (effect): effect is UnitFeatureConditionEndTurnSaveEffect =>
+      effect.kind === "unitFeatureConditionEndTurnSave",
+  );
 }
 
 function unitFeatureConditionEndTurnSavingThrowOutcomeHole(
@@ -1470,12 +1467,11 @@ function unitFeatureConditionEndTurnSavingThrowOutcomeFor(
 function slowActivePenaltiesEffects(
   combatant: BattleCreatureState | undefined,
 ): readonly SlowActivePenaltiesEffect[] {
-  return combatant === undefined
-    ? []
-    : combatant.activeEffects.filter(
-        (effect): effect is SlowActivePenaltiesEffect =>
-          effect.kind === "slowActivePenalties",
-      );
+  return activeEffectsMatching(
+    combatant,
+    (effect): effect is SlowActivePenaltiesEffect =>
+      effect.kind === "slowActivePenalties",
+  );
 }
 
 function slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
@@ -1529,12 +1525,11 @@ function slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
 function abilityD20TestRollModeEndTurnSaveEffects(
   combatant: BattleCreatureState | undefined,
 ): readonly AbilityD20TestRollModeEndTurnSaveEffect[] {
-  return combatant === undefined
-    ? []
-    : combatant.activeEffects.filter(
-        (effect): effect is AbilityD20TestRollModeEndTurnSaveEffect =>
-          effect.kind === "abilityD20TestRollModeEndTurnSave",
-      );
+  return activeEffectsMatching(
+    combatant,
+    (effect): effect is AbilityD20TestRollModeEndTurnSaveEffect =>
+      effect.kind === "abilityD20TestRollModeEndTurnSave",
+  );
 }
 
 function abilityD20TestRollModeEndTurnSavingThrowOutcomeHole(
@@ -6009,7 +6004,7 @@ function applyStartTurnSpellDamageFills(
     );
     const damaged = applySpellTurnStartDamage(
       nextState,
-      actorId,
+      target,
       effect,
       roll,
       concentrationHole === null
@@ -6622,12 +6617,7 @@ export function resolveEndTurnCommand(
     hole: sleepRepeatSavingThrowOutcomeHole(
       actorId,
       effect,
-      actor === undefined
-        ? []
-        : savingThrowFlatBonusProjections(
-            input.state,
-            effect.save.ability,
-          ).filter((projection) => projection.targetId === actorId),
+      endTurnSavingThrowFlatBonuses(input.state, actorId, effect.save.ability),
     ),
   }));
   const sleepRepeatSaveHoles = sleepRepeatSaveRequests.map(
@@ -6641,12 +6631,11 @@ export function resolveEndTurnCommand(
         effect,
         "endTurn",
         undefined,
-        actor === undefined
-          ? []
-          : savingThrowFlatBonusProjections(
-              input.state,
-              effect.save.ability,
-            ).filter((projection) => projection.targetId === actorId),
+        endTurnSavingThrowFlatBonuses(
+          input.state,
+          actorId,
+          effect.save.ability,
+        ),
       ),
     }),
   );
@@ -6661,12 +6650,7 @@ export function resolveEndTurnCommand(
       actorId,
       effect,
       input.state,
-      actor === undefined
-        ? []
-        : savingThrowFlatBonusProjections(
-            input.state,
-            effect.save.ability,
-          ).filter((projection) => projection.targetId === actorId),
+      endTurnSavingThrowFlatBonuses(input.state, actorId, effect.save.ability),
     ),
   }));
   const spellConditionEndTurnSaveHoles = spellConditionEndTurnSaveRequests.map(
@@ -6679,12 +6663,11 @@ export function resolveEndTurnCommand(
         actorId,
         effect,
         input.state,
-        actor === undefined
-          ? []
-          : savingThrowFlatBonusProjections(
-              input.state,
-              effect.save.ability,
-            ).filter((projection) => projection.targetId === actorId),
+        endTurnSavingThrowFlatBonuses(
+          input.state,
+          actorId,
+          effect.save.ability,
+        ),
       ),
     }));
   const unitFeatureConditionEndTurnSaveRequests =
@@ -6694,12 +6677,11 @@ export function resolveEndTurnCommand(
         actorId,
         effect,
         input.state,
-        actor === undefined
-          ? []
-          : savingThrowFlatBonusProjections(
-              input.state,
-              effect.save.ability,
-            ).filter((projection) => projection.targetId === actorId),
+        endTurnSavingThrowFlatBonuses(
+          input.state,
+          actorId,
+          effect.save.ability,
+        ),
       ),
     }));
   const unitFeatureConditionEndTurnSaveHoles =
@@ -6712,12 +6694,7 @@ export function resolveEndTurnCommand(
       actorId,
       effect,
       input.state,
-      actor === undefined
-        ? []
-        : savingThrowFlatBonusProjections(
-            input.state,
-            effect.save.ability,
-          ).filter((projection) => projection.targetId === actorId),
+      endTurnSavingThrowFlatBonuses(input.state, actorId, effect.save.ability),
     ),
   }));
   const slowActivePenaltiesEndTurnSaveHoles =
@@ -6729,12 +6706,11 @@ export function resolveEndTurnCommand(
         actorId,
         effect,
         input.state,
-        actor === undefined
-          ? []
-          : savingThrowFlatBonusProjections(
-              input.state,
-              effect.save.ability,
-            ).filter((projection) => projection.targetId === actorId),
+        endTurnSavingThrowFlatBonuses(
+          input.state,
+          actorId,
+          effect.save.ability,
+        ),
       ),
     }));
   const abilityD20TestEndTurnSaveHoles = abilityD20TestEndTurnSaveRequests.map(
@@ -7111,22 +7087,14 @@ export function resolveEndTurnCommand(
       ...missingStartTurnHideousLaughterDamageRepeatSaveHoles,
     ]);
   }
-  const startTurnHideousLaughterDamageRepeatSaves =
-    startTurnHideousLaughterDamageRepeatSaveHoles.flatMap((hole) => {
-      const fill = hideousLaughterRepeatSavingThrowOutcomeFor(
-        savingThrowOutcomeFills,
-        hole,
-      );
-      return fill === undefined ? [] : [fill];
-    });
-  const endTurnHideousLaughterDamageRepeatSaves =
-    endTurnHideousLaughterDamageRepeatSaveHoles.flatMap((hole) => {
-      const fill = hideousLaughterRepeatSavingThrowOutcomeFor(
-        savingThrowOutcomeFills,
-        hole,
-      );
-      return fill === undefined ? [] : [fill];
-    });
+  const startTurnHideousLaughterDamageRepeatSaves = fillsMatchingHoleIds(
+    savingThrowOutcomeFills,
+    startTurnHideousLaughterDamageRepeatSaveHoles,
+  );
+  const endTurnHideousLaughterDamageRepeatSaves = fillsMatchingHoleIds(
+    savingThrowOutcomeFills,
+    endTurnHideousLaughterDamageRepeatSaveHoles,
+  );
   const turnBoundaryHideousLaughterDamageRepeatSaves = [
     ...endTurnHideousLaughterDamageRepeatSaves,
     ...startTurnHideousLaughterDamageRepeatSaves,
