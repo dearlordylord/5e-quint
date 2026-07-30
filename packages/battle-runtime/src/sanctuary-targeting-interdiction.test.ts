@@ -866,6 +866,107 @@ describe("Sanctuary targeting interdiction", () => {
     expect(combatant(lost.state, wardedId).hp).toBe(Hp(12));
   });
 
+  test("failed save can move a Chromatic Orb attack to a new legal target", () => {
+    const warded = advanceRoundToCaster(
+      castSanctuary(battleWithSanctuary(), wardedId),
+    );
+    const act = discoverBattleActs(warded).find(
+      (candidate) =>
+        candidate.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          chromaticOrbUnitId,
+    );
+    if (act === undefined || act.subject.tag !== "actionSpell") {
+      throw new Error("Expected Chromatic Orb action spell.");
+    }
+    const damageTypeFill = spellDamageTypeChoiceFill(
+      requireHole(act.initialHoles, "damageTypeChoice"),
+      "acid",
+    );
+    const needsTarget = resolveBattleSubject({
+      state: warded.state,
+      subject: act.subject,
+      fills: [damageTypeFill],
+    });
+    if (needsTarget.tag !== "needsHoles") {
+      throw new Error("Expected Chromatic Orb target hole.");
+    }
+    const targetHole = requireHole(needsTarget.holes, "targetChoice");
+    const targetFill = spellTargetFill(
+      targetHole,
+      chromaticOrbUnitId,
+      casterId,
+      wardedId,
+    );
+    const needsSanctuary = resolveBattleSubject({
+      state: warded.state,
+      subject: act.subject,
+      fills: [damageTypeFill, targetFill],
+    });
+    if (needsSanctuary.tag !== "needsHoles") {
+      throw new Error("Expected Sanctuary interdiction hole.");
+    }
+    const sanctuaryHole = requireHole(
+      needsSanctuary.holes,
+      "sanctuaryInterdictionOutcome",
+    );
+    if (sanctuaryHole.replacementTargetKind !== "attackRoll") {
+      throw new Error("Expected an attack-roll Sanctuary replacement.");
+    }
+    const replacementFill = spellTargetFill(
+      targetHole,
+      chromaticOrbUnitId,
+      casterId,
+      replacementId,
+    );
+    const sanctuaryFill = sanctuaryOutcomeFill(sanctuaryHole, {
+      saveSucceeded: false,
+      outcome: {
+        kind: "newTarget",
+        targetId: replacementId,
+        replacementTargetKind: "attackRoll",
+        spatialFacts: replacementFill.spatialFacts ?? [],
+      },
+    });
+    const retargetFills = [damageTypeFill, targetFill, sanctuaryFill];
+    const retargeted = resolveBattleSubject({
+      state: warded.state,
+      subject: act.subject,
+      fills: retargetFills,
+    });
+
+    if (retargeted.tag !== "needsHoles") {
+      throw new Error("Expected retargeted Chromatic Orb attack roll.");
+    }
+    const attackFill = attackRollFill(
+      requireHole(retargeted.holes, "attackRoll"),
+    );
+    const needsDamage = resolveBattleSubject({
+      state: retargeted.state,
+      subject: retargeted.subject,
+      fills: [...retargetFills, attackFill],
+    });
+    if (needsDamage.tag !== "needsHoles") {
+      throw new Error("Expected retargeted Chromatic Orb damage roll.");
+    }
+    const resolved = resolveBattleSubject({
+      state: needsDamage.state,
+      subject: needsDamage.subject,
+      fills: [
+        ...retargetFills,
+        attackFill,
+        rolledDiceFill(requireHole(needsDamage.holes, "rolledDice"), [1, 2, 3]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected retargeted Chromatic Orb to resolve.");
+    }
+    expect(combatant(retargeted.state, wardedId).hp).toBe(Hp(12));
+    expect(combatant(resolved.state, replacementId).hp).toBe(Hp(6));
+  });
+
   test("failed save can lose Chromatic Orb leap target against the warded creature", () => {
     const warded = advanceRoundToCaster(
       castSanctuary(battleWithSanctuary(), wardedId),

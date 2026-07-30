@@ -386,15 +386,17 @@ export function resolveChainedSpellAttackDamageAct(input: {
         );
       }
       /* v8 ignore stop */
-      const fills = input.input.fills.map(
-        (fill): BattleFill =>
-          fill === originalTargetFill
-            ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
-                fill,
-                replacement: sanctuaryCheck,
-              })
-            : fill,
-      );
+      const fills = input.input.fills
+        .filter((fill) => fill.kind !== "sanctuaryInterdictionOutcome")
+        .map(
+          (fill): BattleFill =>
+            fill === originalTargetFill
+              ? targetChoiceFillAfterSanctuaryAttackRollReplacement({
+                  fill,
+                  replacement: sanctuaryCheck,
+                })
+              : fill,
+        );
       const replacementFillSet = chainedSpellFillSet(
         fills,
         input.invocation,
@@ -414,6 +416,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       return resolveChainedSpellAttackDamageAct({
         ...input,
         input: { ...input.input, fills },
+        fillSet: replacementFillSet,
       });
     }
 
