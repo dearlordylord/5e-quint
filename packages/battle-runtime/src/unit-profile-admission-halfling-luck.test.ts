@@ -1514,6 +1514,24 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     expect(battleFillEquals(restoredDeathSave, { ...restoredDeathSave })).toBe(
       true,
     );
+    const replayMetadata: { readonly source: string; cycle?: unknown } = {
+      source: "synthetic replay metadata",
+    };
+    replayMetadata.cycle = replayMetadata;
+    const restoredReroll = restoredDeathSave.d20TestNaturalOneReroll;
+    if (restoredReroll === undefined) {
+      throw new Error("Expected a natural-one reroll decision.");
+    }
+    const restoredDeathSaveWithReplayMetadata = {
+      ...restoredDeathSave,
+      d20TestNaturalOneReroll: {
+        ...restoredReroll,
+        replayMetadata,
+      },
+    };
+    expect(
+      battleFillEquals(restoredDeathSave, restoredDeathSaveWithReplayMetadata),
+    ).toBe(true);
     expect(
       battleFillEquals(restoredDeathSave, {
         ...restoredDeathSave,

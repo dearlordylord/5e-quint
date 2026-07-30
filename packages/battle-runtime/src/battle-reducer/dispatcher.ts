@@ -392,7 +392,6 @@ import type {
   EndedFlySpeedGrant,
   SpellSlotInvocationResource,
 } from "../battle-state-execution.ts";
-import { sameDomainValue } from "../domain-value-equality.ts";
 import { KnockedOutConditionState } from "./knocked-out-state.ts";
 import { admitBattleResolutionInput } from "./resolution-admission.ts";
 import {
@@ -6551,7 +6550,29 @@ function d20TestNaturalOneRerollOutcomeDecisionsEqual(
     { readonly kind: "concentrationSavingThrow" }
   >["value"]["d20TestNaturalOneReroll"],
 ): boolean {
-  return sameDomainValue(a, b);
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
+    return false;
+  }
+  if (a.kind === "decline" || b.kind === "decline") {
+    return a.kind === b.kind;
+  }
+  if (a.kind === "rerollRolledDie" || b.kind === "rerollRolledDie") {
+    return (
+      a.kind === "rerollRolledDie" &&
+      b.kind === "rerollRolledDie" &&
+      a.replacement.die === b.replacement.die &&
+      a.replacement.naturalD20 === b.replacement.naturalD20 &&
+      a.replacement.result.succeeded === b.replacement.result.succeeded &&
+      a.replacement.result.naturalD20 === b.replacement.result.naturalD20
+    );
+  }
+  return (
+    a.replacement.succeeded === b.replacement.succeeded &&
+    a.replacement.naturalD20 === b.replacement.naturalD20
+  );
 }
 
 function d20TestNaturalOneRerollDieDecisionsEqual(
@@ -6564,14 +6585,27 @@ function d20TestNaturalOneRerollDieDecisionsEqual(
     { readonly kind: "deathSavingThrow" }
   >["d20TestNaturalOneReroll"],
 ): boolean {
-  return sameDomainValue(a, b);
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
+    return false;
+  }
+  return a.kind === "decline" || b.kind === "decline"
+    ? a.kind === b.kind
+    : a.replacement === b.replacement;
 }
 
 function rolledD20sEqual(
   a: BattleD20TestRolledD20s | undefined,
   b: BattleD20TestRolledD20s | undefined,
 ): boolean {
-  return sameDomainValue(a, b);
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  return (
+    a.first === b.first && a.second === b.second && a.selected === b.selected
+  );
 }
 
 function savingThrowOutcomeValuesEqual(
