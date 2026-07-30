@@ -1344,6 +1344,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       spellSlots: [{ spellLevel: 3, count: 1 }],
     });
     const endedEffect = requireFlySpeedGrant(cast.state, spellCasterId);
+    const absentTargetId = combatantId("combatant:synthetic-absent-fly-target");
 
     expect(
       resolveFlySpeedGrantEndFallCleanup({
@@ -1354,6 +1355,17 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "cleanupFrameMissing",
+    });
+    expect(
+      resolveFlySpeedGrantEndFallCleanup({
+        state: cast.state,
+        targetId: absentTargetId,
+        witness: { kind: "notAloft" },
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "missingCombatant",
+      message: "Fly Speed end-fall witness target is not in this battle.",
     });
     const groundedState = breakBattleConcentration(cast.state, spellCasterId);
     expect(

@@ -3148,11 +3148,8 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
       message: "Fly Speed end-fall witness target is not in this battle.",
     };
   }
-  const cleanupFrameIndex = flySpeedGrantEndFallCleanupFrameIndex(
-    input.state,
-    input.targetId,
-  );
-  if (cleanupFrameIndex === null) {
+  const cleanup = flySpeedGrantEndFallCleanupFrame(input.state, input.targetId);
+  if (cleanup === null) {
     return {
       tag: "invalid",
       state: input.state,
@@ -3162,17 +3159,8 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
         "Fly Speed end-fall witness requires a pending cleanup frame emitted by Fly effect cleanup.",
     };
   }
-  const cleanupFrame = input.state.interruptStack[cleanupFrameIndex];
-  if (cleanupFrame?.kind !== "flySpeedGrantEndFallCleanup") {
-    return {
-      tag: "invalid",
-      state: input.state,
-      snapshot: snapshotBattle(input.state),
-      reason: "cleanupFrameMissing",
-      message:
-        "Fly Speed end-fall cleanup frame was not available for this target.",
-    };
-  }
+  const cleanupFrame = cleanup.frame;
+  /* v8 ignore start -- Malformed internal state: cleanup frames are emitted only after the ended Fly Speed grant has been removed, so a frame retaining that exact effect contradicts the cleanup transition. */
   if (target.activeEffects.includes(cleanupFrame.endedEffect)) {
     return {
       tag: "invalid",
@@ -3183,9 +3171,10 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
         "Fly Speed end-fall witness can only resolve after the emitted Fly effect cleanup removed the ended grant.",
     };
   }
+  /* v8 ignore stop */
   const cleanedState = battleStateWithoutFlySpeedGrantEndFallCleanupFrame(
     input.state,
-    cleanupFrameIndex,
+    cleanup.frameIndex,
   );
   if (input.witness.kind === "notAloft") {
     return {
@@ -3221,17 +3210,23 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
   };
 }
 
-function flySpeedGrantEndFallCleanupFrameIndex(
+function flySpeedGrantEndFallCleanupFrame(
   state: BattleState,
   targetId: CombatantId,
-): number | null {
+): {
+  readonly frameIndex: number;
+  readonly frame: Extract<
+    BattleInterruptFrame,
+    { readonly kind: "flySpeedGrantEndFallCleanup" }
+  >;
+} | null {
   for (let index = state.interruptStack.length - 1; index >= 0; index -= 1) {
     const frame = state.interruptStack[index];
     if (
       frame?.kind === "flySpeedGrantEndFallCleanup" &&
       frame.targetId === targetId
     ) {
-      return index;
+      return { frameIndex: index, frame };
     }
   }
   return null;
