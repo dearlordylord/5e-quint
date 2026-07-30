@@ -406,6 +406,41 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     expect(requireCombatant(resolved.state, spellCasterId).hp).toBe(
       requireCombatant(cast.state, spellCasterId).hp,
     );
+    expect(
+      resolveBattleSubject({
+        state: resolved.state,
+        subject: reposition.subject,
+        fills: [flamingSphereRepositionMovementFill(movement)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Movable zone reposition requires an available Bonus Action.",
+    });
+
+    const concentrationEnded = resolveBattleSubject({
+      state: cast.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endConcentration",
+      },
+      fills: [],
+    });
+    if (concentrationEnded.tag !== "resolved") {
+      throw new Error("Expected Flaming Sphere Concentration to end.");
+    }
+    expect(
+      resolveBattleSubject({
+        state: concentrationEnded.state,
+        subject: reposition.subject,
+        fills: [flamingSphereRepositionMovementFill(movement)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Movable zone reposition is no longer available.",
+    });
   });
 
   test("ram spends the caster Bonus Action and applies successful-save half damage", () => {
@@ -483,6 +518,49 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       false,
     );
     expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(17));
+    expect(
+      resolveBattleSubject({
+        state: resolved.state,
+        subject: ram.subject,
+        fills: [
+          flamingSphereRamMovementFill(movement),
+          succeededSave,
+          damageRollFillWithGroups(damage, [[3, 3]]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Movable zone ram requires an available Bonus Action.",
+    });
+
+    const concentrationEnded = resolveBattleSubject({
+      state: cast.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endConcentration",
+      },
+      fills: [],
+    });
+    if (concentrationEnded.tag !== "resolved") {
+      throw new Error("Expected Flaming Sphere Concentration to end.");
+    }
+    expect(
+      resolveBattleSubject({
+        state: concentrationEnded.state,
+        subject: ram.subject,
+        fills: [
+          flamingSphereRamMovementFill(movement),
+          succeededSave,
+          damageRollFillWithGroups(damage, [[3, 3]]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Movable zone ram is no longer available.",
+    });
   });
 
   test("failed ram save opens a readied-spell reaction once before damage", () => {
