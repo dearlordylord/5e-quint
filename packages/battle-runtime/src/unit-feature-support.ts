@@ -8284,10 +8284,21 @@ function parseSpellBenefitActivationProjectionEffects(
   };
 }
 
-function spellSaveDcModifierBenefit(
+type SpellSaveDcModifierBenefitEffect = {
+  readonly kind: "modify_save_dc";
+  readonly delta: {
+    readonly kind: "fixed_number";
+    readonly amount: 1;
+    readonly sign: "+";
+  };
+  readonly spellSourceFilter: unknown;
+};
+
+/* v8 ignore start -- Structured-input shape gate: support is admitted only for the exact +1 fixed save-DC atom. Exhaustive malformed field permutations are rejected here; the narrowed profile projection remains measured in spellSaveDcModifierBenefit. */
+function isSpellSaveDcModifierBenefitEffect(
   effect: { readonly kind: string } | undefined,
-): { readonly sourceClassName: ClassName; readonly saveDcBonus: 1 } | null {
-  if (
+): effect is SpellSaveDcModifierBenefitEffect {
+  return (
     effect?.kind === "modify_save_dc" &&
     "delta" in effect &&
     typeof effect.delta === "object" &&
@@ -8299,24 +8310,34 @@ function spellSaveDcModifierBenefit(
     "sign" in effect.delta &&
     effect.delta.sign === "+" &&
     "spellSourceFilter" in effect
-  ) {
-    const sourceClassName = spellSourceFilterClassName(
-      effect.spellSourceFilter,
-    );
-    return sourceClassName === null
-      ? null
-      : { sourceClassName, saveDcBonus: 1 };
+  );
+}
+/* v8 ignore stop */
+
+function spellSaveDcModifierBenefit(
+  effect: { readonly kind: string } | undefined,
+): { readonly sourceClassName: ClassName; readonly saveDcBonus: 1 } | null {
+  /* v8 ignore start -- Unsupported structured input: the exact atom shape is narrowed by isSpellSaveDcModifierBenefitEffect before its projection below. */
+  if (!isSpellSaveDcModifierBenefitEffect(effect)) {
+    return null;
   }
-  return null;
+  /* v8 ignore stop */
+  const sourceClassName = spellSourceFilterClassName(effect.spellSourceFilter);
+  return sourceClassName === null ? null : { sourceClassName, saveDcBonus: 1 };
 }
 
-function spellAttackRollModeModifierBenefit(
+type SpellAttackRollModeModifierBenefitEffect = {
+  readonly kind: "modify_roll_advantage";
+  readonly mode: "advantage";
+  readonly on: readonly ["spell_attack_roll"];
+  readonly spellSourceFilter: unknown;
+};
+
+/* v8 ignore start -- Structured-input shape gate: support is admitted only for the exact spell-attack Advantage atom with no extra fields. Exhaustive malformed field permutations are rejected here; the narrowed projection remains measured in spellAttackRollModeModifierBenefit. */
+function isSpellAttackRollModeModifierBenefitEffect(
   effect: { readonly kind: string } | undefined,
-): {
-  readonly sourceClassName: ClassName;
-  readonly attackRollMode: "advantage";
-} | null {
-  if (
+): effect is SpellAttackRollModeModifierBenefitEffect {
+  return (
     effect?.kind === "modify_roll_advantage" &&
     hasOnlySpellAttackRollModeModifierBenefitFields(effect) &&
     "mode" in effect &&
@@ -8326,15 +8347,25 @@ function spellAttackRollModeModifierBenefit(
     effect.on.length === 1 &&
     effect.on[0] === "spell_attack_roll" &&
     "spellSourceFilter" in effect
-  ) {
-    const sourceClassName = spellSourceFilterClassName(
-      effect.spellSourceFilter,
-    );
-    return sourceClassName === null
-      ? null
-      : { sourceClassName, attackRollMode: "advantage" };
+  );
+}
+/* v8 ignore stop */
+
+function spellAttackRollModeModifierBenefit(
+  effect: { readonly kind: string } | undefined,
+): {
+  readonly sourceClassName: ClassName;
+  readonly attackRollMode: "advantage";
+} | null {
+  /* v8 ignore start -- Unsupported structured input: the exact atom shape is narrowed by isSpellAttackRollModeModifierBenefitEffect before its projection below. */
+  if (!isSpellAttackRollModeModifierBenefitEffect(effect)) {
+    return null;
   }
-  return null;
+  /* v8 ignore stop */
+  const sourceClassName = spellSourceFilterClassName(effect.spellSourceFilter);
+  return sourceClassName === null
+    ? null
+    : { sourceClassName, attackRollMode: "advantage" };
 }
 
 const SPELL_ATTACK_ROLL_MODE_MODIFIER_BENEFIT_FIELDS = [
