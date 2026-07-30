@@ -22,6 +22,7 @@ import { describe, expect, test } from "vitest";
 import speciesDragonbornInput from "../../surface/content/species_dragonborn.json";
 import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-helpers.ts";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   barbarianFrenzyUnitId,
   barbarianRageUnitId,
@@ -63,6 +64,7 @@ import {
   CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE,
   creatureSpaceMovementPermissionProfileForUnit,
   dwarfDwarvenResilienceUnitId,
+  discoverBattleActs,
   Either,
   endTurn,
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
@@ -91,11 +93,15 @@ import {
 } from "./unit-feature-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
+  attackRollFill,
   characterBattleFeatureInitForTest,
+  damageRollFillWithGroups,
+  findHole,
   grappleOutcomeFill,
   requireHole,
   requireResolved,
   targetFill,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import type { UnitRecord } from "./unit-profile-admission.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
@@ -501,7 +507,7 @@ describe("L3MSPEC species battle support", () => {
     ).toEqual(expectedDamageResistanceSupport);
   });
 
-  test("Damage Resistance halves only matching target-side damage", () => {
+  test("Damage Resistance halves matching spell damage through its reducer route", () => {
     const unit = unitLibrary.requireUnit(
       speciesDragonbornDamageResistanceUnitId,
     );
@@ -527,7 +533,10 @@ describe("L3MSPEC species battle support", () => {
         characterCreature({
           combatantId: combatantId("dragonborn-damage-resistance-attacker"),
           displayName: "Attacker",
-          initiative: 5,
+          initiative: 20,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("fire_bolt")],
+          }),
         }),
       ],
     });
@@ -546,6 +555,64 @@ describe("L3MSPEC species battle support", () => {
     expect(
       damageAmountAfterTargetAdjustments(result.right.state, target, 9, "cold"),
     ).toBe(9);
+    const fireBoltAct = discoverBattleActs(result.right).find(
+      (candidate) => candidate.subject.tag === "actionSpell",
+    );
+    expect(fireBoltAct?.routeEvents).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "discoverBattleActs",
+          subject: "passiveDamageAdjustment",
+          holes: [],
+          owner: "battleDamageAdjustment",
+        },
+      ]),
+    );
+    if (fireBoltAct === undefined) {
+      throw new Error("Expected Fire Bolt act against the Dragonborn target.");
+    }
+    const spellTarget = findHole(fireBoltAct.initialHoles, "targetChoice");
+    const spellAttack = requireHole(
+      resolveBattleSubject({
+        state: result.right.state,
+        subject: fireBoltAct.subject,
+        fills: [targetFill(spellTarget, targetId)],
+      }),
+      "attackRoll",
+    );
+    const spellDamage = requireHole(
+      resolveBattleSubject({
+        state: result.right.state,
+        subject: fireBoltAct.subject,
+        fills: [
+          targetFill(spellTarget, targetId),
+          attackRollFill(spellAttack, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const spellResolved = requireResolved(
+      resolveBattleSubject({
+        state: result.right.state,
+        subject: fireBoltAct.subject,
+        fills: [
+          targetFill(spellTarget, targetId),
+          attackRollFill(spellAttack, { total: 15, naturalD20: 10 }),
+          damageRollFillWithGroups(spellDamage, [[9]]),
+        ],
+      }),
+    );
+    expect(spellResolved.state.combatants.get(targetId)?.hp).toBe(8);
+    expect(spellResolved.routeEvents).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "passiveDamageAdjustment",
+          holes: [],
+          owner: "battleDamageAdjustment",
+        },
+      ]),
+    );
   });
 
   test("dwarf_dwarven_resilience admits separate Poison Resistance and Poisoned save Advantage facts", () => {
