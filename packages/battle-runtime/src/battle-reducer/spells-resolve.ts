@@ -366,6 +366,50 @@ type SpellActInternalInput =
   | ActionSpellBattleResolutionInput
   | BonusActionSpellBattleResolutionInput;
 
+type SpellInvocationResolutionAdmission =
+  | {
+      readonly tag: "ok";
+      readonly invocation: BattleSpellProcedureExecution;
+      readonly applications: readonly SpellMetamagicApplicationFact[];
+    }
+  | {
+      readonly tag: "unavailable";
+    }
+  | {
+      readonly tag: "spellMetamagicAdmissionIssue";
+      readonly message: string;
+    };
+
+function admitSpellInvocationForResolution(input: {
+  readonly state: BattleState;
+  readonly actor: CharacterBattleCreatureState;
+  readonly subject:
+    | ActionSpellBattleResolutionInput["subject"]
+    | BonusActionSpellBattleResolutionInput["subject"];
+  readonly invocation: BattleSpellProcedureExecution | undefined;
+}): SpellInvocationResolutionAdmission {
+  if (input.invocation === undefined) {
+    return { tag: "unavailable" };
+  }
+  const metamagicAdmission = admitSpellMetamagicApplications({
+    state: input.state,
+    actor: input.actor,
+    actorId: input.subject.actorId,
+    invocation: input.invocation,
+    subject: input.subject,
+  });
+  return metamagicAdmission.tag === "ok"
+    ? {
+        tag: "ok",
+        invocation: twinnedSpellTargetCountInvocation(
+          input.invocation,
+          metamagicAdmission.applications,
+        ),
+        applications: metamagicAdmission.applications,
+      }
+    : metamagicAdmission;
+}
+
 type SpellActLane =
   | {
       readonly tag: "action";
@@ -1723,7 +1767,7 @@ function resolveSpellActInternal(
       "Action-time spell act requires a supported prepared spell or cantrip.",
     );
   }
-  let invocation = Match.value(subject).pipe(
+  const selectedProcedureInvocation = Match.value(subject).pipe(
     Match.discriminatorsExhaustive("tag")({
       actionSpell: (actionSubject) =>
         supportedActionSpellInvocationForSubject(actor, actionSubject),
@@ -1739,41 +1783,36 @@ function resolveSpellActInternal(
     subject.procedureRef,
     actor,
   );
-  if (
-    invocation == null &&
-    options.kind === "bonusActionSpellAttackProxy" &&
+  const invocationCandidate =
+    selectedProcedureInvocation ??
+    (options.kind === "bonusActionSpellAttackProxy" &&
     boundInvocation !== undefined &&
     invocationRefHasAntimagicSuppressedRepeatResolverGuard(
       boundInvocation.procedure,
     )
-  ) {
-    invocation = boundInvocation;
-  }
-  if (invocation == null) {
+      ? boundInvocation
+      : undefined);
+  const metamagicAdmission = admitSpellInvocationForResolution({
+    state: input.state,
+    actor,
+    subject,
+    invocation: invocationCandidate,
+  });
+  if (metamagicAdmission.tag === "unavailable") {
     return invalidResult(
       input.state,
       "unsupportedActOption",
       "Action-time spell act requires a supported prepared spell or cantrip.",
     );
   }
-  const metamagicAdmission = admitSpellMetamagicApplications({
-    state: input.state,
-    actor,
-    actorId: subject.actorId,
-    invocation,
-    subject,
-  });
-  if (metamagicAdmission.tag !== "ok") {
+  if (metamagicAdmission.tag === "spellMetamagicAdmissionIssue") {
     return invalidResult(
       input.state,
       "unsupportedSubject",
       metamagicAdmission.message,
     );
   }
-  invocation = twinnedSpellTargetCountInvocation(
-    invocation,
-    metamagicAdmission.applications,
-  );
+  const invocation = metamagicAdmission.invocation;
   const replayingSpiritualWeaponAttackHit =
     input.handledInterruptTrigger === "attackHit" &&
     (invocation.procedure === "spiritualWeaponAttackProxy" ||
@@ -4232,38 +4271,34 @@ export function resolveBonusActionSpellAct(
       "Bonus Action spell act requires a supported Bonus Action spell.",
     );
   }
-  let invocation = supportedBonusActionSpellInvocationForSubject(
+  const selectedInvocation = supportedBonusActionSpellInvocationForSubject(
     actor,
     subject,
   );
-  if (invocation == null) {
-    invocation = antimagicSuppressedInvocationForStaleSubject(actor, subject);
-  }
-  if (invocation == null) {
+  const invocationCandidate =
+    selectedInvocation ??
+    antimagicSuppressedInvocationForStaleSubject(actor, subject);
+  const metamagicAdmission = admitSpellInvocationForResolution({
+    state: input.state,
+    actor,
+    subject,
+    invocation: invocationCandidate,
+  });
+  if (metamagicAdmission.tag === "unavailable") {
     return invalidResult(
       input.state,
       "unsupportedActOption",
       "Bonus Action spell act requires a supported Bonus Action spell.",
     );
   }
-  const metamagicAdmission = admitSpellMetamagicApplications({
-    state: input.state,
-    actor,
-    actorId: subject.actorId,
-    invocation,
-    subject,
-  });
-  if (metamagicAdmission.tag !== "ok") {
+  if (metamagicAdmission.tag === "spellMetamagicAdmissionIssue") {
     return invalidResult(
       input.state,
       "unsupportedSubject",
       metamagicAdmission.message,
     );
   }
-  invocation = twinnedSpellTargetCountInvocation(
-    invocation,
-    metamagicAdmission.applications,
-  );
+  const invocation = metamagicAdmission.invocation;
   const actionCostOverride = metamagicActionCostOverride(
     metamagicAdmission.applications,
   );
