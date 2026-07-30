@@ -131,6 +131,14 @@ describe("battle runtime: Monk's Focus battle options", () => {
     expect(
       monkFocusResourceForSubject(resolved.state, subject).usesRemaining,
     ).toBe(2);
+
+    expect(
+      resolveBattleSubject({ state: resolved.state, subject, fills: [] }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Monk Focus Bonus Action is no longer available.",
+    });
   });
 
   test("Patient Defense spends a shared Focus Point for Disengage and Dodge", () => {
@@ -254,6 +262,68 @@ describe("battle runtime: Monk's Focus battle options", () => {
       monkFocusResourceForSubject(resolved.state, subject).usesRemaining,
     ).toBe(2);
     expect(monk.activeEffects).toEqual([]);
+  });
+
+  test("Step of the Wind rejects a stored Dash subject after its granted Speed disappears", () => {
+    const state = monkFocusBattle({ usesRemaining: 2 });
+    const monk = state.combatants.get(fighterId);
+    if (monk === undefined) {
+      throw new Error("Expected Monk combatant.");
+    }
+    const speedGrantProcedureRef = battleProcedureExecutionRefForTest(
+      "monk-temporary-fly-speed",
+    );
+    const activeEffects = [
+      ...monk.activeEffects,
+      {
+        kind: "specialSpeedGrant",
+        sourceProcedureRef: speedGrantProcedureRef,
+        sourceCombatantId: fighterId,
+        speedKind: "fly",
+        speed: { kind: "fixed", speedFeet: movementFeet(40) },
+        hover: true,
+        expiresAt: { kind: "untilDispelled" },
+      },
+    ] as const;
+    const withFlySpeed: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(fighterId, {
+        ...monk,
+        activeEffects,
+      }),
+    };
+    const subject = monkFocusSubject(
+      withFlySpeed,
+      (candidate) =>
+        candidate.tag === "monkFocusOption" &&
+        candidate.option === "stepOfTheWind" &&
+        candidate.mode === "freeDash" &&
+        candidate.speedKind === "fly",
+    );
+    const withoutFlySpeed: BattleState = {
+      ...withFlySpeed,
+      combatants: new Map(withFlySpeed.combatants).set(fighterId, {
+        ...monk,
+        activeEffects: activeEffects.filter(
+          (effect) =>
+            effect.kind !== "specialSpeedGrant" ||
+            effect.sourceProcedureRef !== speedGrantProcedureRef,
+        ),
+      }),
+    };
+
+    expect(
+      resolveBattleSubject({
+        state: withoutFlySpeed,
+        subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message:
+        "Step of the Wind speed kind is not represented for this combatant.",
+    });
   });
 
   test("Step of the Wind spends Focus for Disengage and Dash", () => {

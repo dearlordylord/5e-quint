@@ -6,6 +6,7 @@ import {
   validateRolledDiceForDiceExpr,
 } from "@dnd/shared-algebras/runtime-dice-algebra";
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
+import { Match } from "effect";
 import * as Either from "effect/Either";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import type {
@@ -29,10 +30,7 @@ import {
 } from "../character-battle-resource-execution.ts";
 import type { MonkFocusFlurryOfBlowsActionResource } from "./battle-runtime-protocol.ts";
 import { applyDashToActor, applyDisengage } from "./mobility-actions.ts";
-import {
-  combatantCanTakeActions,
-  isCharacterBattleCreatureState,
-} from "./creature-state-execution.ts";
+import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -66,6 +64,7 @@ export function resolveMonkFocusOption(
     input.subject.actorId,
     input.subject.procedureRef,
   );
+  /* v8 ignore start -- Admitted-subject invariant: Monk Focus procedure admission proves the actor's bound support profile and its use-count resource pool before dispatch. */
   if (focus === null) {
     return invalidResult(
       input.state,
@@ -73,13 +72,7 @@ export function resolveMonkFocusOption(
       "Monk Focus option requires the shared Focus Point resource.",
     );
   }
-  if (!combatantCanTakeActions(focus.actor)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Monk Focus options are no longer available for this actor.",
-    );
-  }
+  /* v8 ignore stop */
   if (
     input.subject.option === "flurryOfBlows" &&
     flurryOfBlowsUnarmedStrikeForActor(input.state, input.subject.actorId) ===
@@ -142,60 +135,54 @@ export function resolveMonkFocusOption(
     );
   }
 
-  if (input.subject.option === "flurryOfBlows") {
-    return resolveFlurryOfBlowsActivation(input, focus, spent.right);
-  }
-  if (
-    input.subject.option === "patientDefense" &&
-    input.subject.mode === "freeDisengage"
-  ) {
-    const nextState = applyDisengage(input.state, spent.right);
-    return resolved(nextState);
-  }
-  if (
-    input.subject.option === "patientDefense" &&
-    input.subject.mode === "focusDisengageDodge"
-  ) {
-    return resolvePatientDefenseFocus(input, focus, spent.right);
-  }
-  if (
-    input.subject.option === "stepOfTheWind" &&
-    input.subject.mode === "freeDash"
-  ) {
-    if (
-      !representedMovementSpeedKinds(focus.actor).includes(
-        input.subject.speedKind,
-      )
-    ) {
-      return invalidResult(
-        input.state,
-        "unsupportedActOption",
-        "Step of the Wind speed kind is not represented for this combatant.",
-      );
-    }
-    const nextState = applyDashToActor(
-      input.state,
-      focus.actor,
-      input.subject.speedKind,
-      spent.right,
-    );
-    return resolved(nextState);
-  }
-  if (
-    input.subject.option === "stepOfTheWind" &&
-    input.subject.mode === "focusDisengageDash"
-  ) {
-    return resolveStepOfTheWindFocus(
-      input,
-      focus,
-      spent.right,
-      heightenedStepOfTheWindCarryRequest,
-    );
-  }
-  return invalidResult(
-    input.state,
-    "unsupportedActOption",
-    "Monk Focus option mode is not admitted by the runtime profile.",
+  return Match.value(input.subject).pipe(
+    Match.discriminatorsExhaustive("option")({
+      flurryOfBlows: () =>
+        resolveFlurryOfBlowsActivation(input, focus, spent.right),
+      patientDefense: (subject) =>
+        Match.value(subject.mode).pipe(
+          Match.when("freeDisengage", () =>
+            resolved(applyDisengage(input.state, spent.right)),
+          ),
+          Match.when("focusDisengageDodge", () =>
+            resolvePatientDefenseFocus(input, focus, spent.right),
+          ),
+          Match.exhaustive,
+        ),
+      stepOfTheWind: (subject) =>
+        Match.value(subject.mode).pipe(
+          Match.when("freeDash", () => {
+            if (
+              !representedMovementSpeedKinds(focus.actor).includes(
+                subject.speedKind,
+              )
+            ) {
+              return invalidResult(
+                input.state,
+                "unsupportedActOption",
+                "Step of the Wind speed kind is not represented for this combatant.",
+              );
+            }
+            return resolved(
+              applyDashToActor(
+                input.state,
+                focus.actor,
+                subject.speedKind,
+                spent.right,
+              ),
+            );
+          }),
+          Match.when("focusDisengageDash", () =>
+            resolveStepOfTheWindFocus(
+              input,
+              focus,
+              spent.right,
+              heightenedStepOfTheWindCarryRequest,
+            ),
+          ),
+          Match.exhaustive,
+        ),
+    }),
   );
 }
 
