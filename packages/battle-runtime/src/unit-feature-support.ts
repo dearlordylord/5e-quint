@@ -2873,9 +2873,10 @@ function monkFocusBattleExecution(option: {
       jumpDistanceMultiplier: { multiplier: 2, expires: "end_of_turn" },
     };
   }
-  /* v8 ignore next -- Malformed authored Focus option: known option projections are handled above; any other battle-execution shape remains unsupported. */
+  /* v8 ignore start -- Malformed authored Focus option: known option projections are handled above; any other battle-execution shape remains unsupported. The function terminator shares V8's ignored fallback range. */
   return null;
 }
+/* v8 ignore stop */
 
 function tupleMatches<T extends readonly [string, string]>(
   actual: unknown,
@@ -7185,8 +7186,8 @@ export function battleWeaponMasteryCleaveSupportForUnit(
     return WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE;
   }
   return "unsupported";
-  /* v8 ignore stop */
 }
+/* v8 ignore stop */
 
 function parseBardicInspirationGrantUnitFeatureProfile(
   unit: AuthoredUnitSource,
