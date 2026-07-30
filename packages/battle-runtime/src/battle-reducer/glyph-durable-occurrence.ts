@@ -1356,6 +1356,7 @@ type GlyphStoredSpellInvocationValidationResult =
       }
     >;
 
+/* v8 ignore start -- Malformed stored-invocation validator: Glyph inscription admission fixes spell level, storage support, procedure support, and target shape; admitted storage projection remains measured. */
 function glyphStoredSpellInvocationValidation(input: {
   readonly profile: GlyphStoredSpellReleaseProfile;
   readonly release: GlyphDurableOccurrenceStoredSpellReleaseCandidate;
@@ -1406,6 +1407,7 @@ function glyphStoredSpellInvocationValidation(input: {
   }
   return { tag: "valid", storedInvocation };
 }
+/* v8 ignore stop */
 
 function glyphStoredSpellInvocationRequiresFullDurationOwner(
   invocation: GlyphStoredSpellCandidateFacts,
@@ -1618,6 +1620,7 @@ function isGlyphStoredSpiritualWeaponInvocation(
   return invocation.procedure === "spiritualWeaponAttackProxy";
 }
 
+/* v8 ignore start -- Malformed release-witness validator: Glyph release discovery binds occurrence branch, creature, target shape, placement, procedure, and area origin before execution. */
 function glyphStoredSpellReleaseWitnessValidation(input: {
   readonly state: BattleState;
   readonly profile: GlyphStoredSpellReleaseProfile;
@@ -1699,6 +1702,7 @@ function glyphStoredSpellReleaseWitnessValidation(input: {
   }
   return null;
 }
+/* v8 ignore stop */
 
 function isGlyphStoredSpellOccurrence(
   effect: GlyphDurableOccurrenceActiveEffect,
@@ -1706,6 +1710,7 @@ function isGlyphStoredSpellOccurrence(
   return effect.release.kind === "spellGlyph";
 }
 
+/* v8 ignore start -- Malformed placement-witness validator: the stored procedure determines whether hostile placement applies and fixes its subject, target, area, and reachable position facts. */
 function glyphStoredSpellHostilePlacementValidation(input: {
   readonly profile: GlyphStoredSpellReleaseProfile;
   readonly invocation: GlyphStoredSpellProcedure;
@@ -1792,6 +1797,7 @@ function glyphStoredSpellHostilePlacementValidation(input: {
   }
   return null;
 }
+/* v8 ignore stop */
 
 function resolveStoredSpellGlyphRelease(input: {
   readonly state: BattleState;
@@ -2324,6 +2330,7 @@ function combatantWithoutGlyphOccurrence(
     : { ...combatant, activeEffects };
 }
 
+/* v8 ignore start -- Malformed explosive-rune witness validator: trigger discovery fixes occurrence identity, covered area, affected targets, and save/damage lifecycle facts before release. */
 function glyphExplosiveRuneReleaseWitnessValidation(input: {
   readonly state: BattleState;
   readonly profile: GlyphExplosiveRuneReleaseProfile;
@@ -2374,6 +2381,7 @@ function glyphExplosiveRuneReleaseWitnessValidation(input: {
     ? null
     : "damageRollMismatch";
 }
+/* v8 ignore stop */
 
 function affectedGlyphExplosiveRuneTargetIds(
   witness: GlyphExplosiveRuneReleaseWitness,

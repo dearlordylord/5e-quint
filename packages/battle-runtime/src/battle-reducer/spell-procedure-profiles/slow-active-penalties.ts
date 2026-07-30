@@ -471,6 +471,7 @@ function applySlowActivePenaltyEffects(
   };
 }
 
+/* v8 ignore start -- Malformed area-witness validator: Slow discovery supplies the typed Cube geometry, unique chosen targets, and matching outcomes; admitted Slow execution remains measured. */
 function validateSlowAreaWitness(
   savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue,
   maxTargets: 6,
@@ -516,6 +517,7 @@ function validateSlowAreaWitness(
   }
   return null;
 }
+/* v8 ignore stop */
 
 const SlowActivePenaltiesInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({

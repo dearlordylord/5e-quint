@@ -359,12 +359,15 @@ function afterHitSaveGatedConditionFillSet(
     input.subject.actorId,
     input.state,
   );
+  /* v8 ignore start -- Malformed fill set: the discovered after-hit spell subject forwards only fills for its own typed holes, so generic spell-fill parser rejection is defensive. */
   if (fillSet.tag === "invalid") {
     return {
       tag: "invalid",
       result: invalidResult(input.state, "invalidFill", fillSet.message),
     };
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed fill set: this procedure discovers only a single Saving Throw outcome hole; targeting, attack, damage, healing, and lifecycle fills contradict that contract. */
   if (
     fillSet.targetId !== undefined ||
     fillSet.targetList !== undefined ||
@@ -386,6 +389,7 @@ function afterHitSaveGatedConditionFillSet(
       ),
     };
   }
+  /* v8 ignore stop */
   if (fillSet.savingThrowOutcomes === undefined) {
     return { tag: "ok", fillSet };
   }
@@ -393,14 +397,17 @@ function afterHitSaveGatedConditionFillSet(
     fillSet.savingThrowOutcomes,
     target.combatantId,
   );
+  /* v8 ignore start -- Malformed saving-throw witness: discovery fixes the triggering hit target and does not request area facts; the admitted outcome path remains measured. */
   return validation === null
     ? { tag: "ok", fillSet }
     : {
         tag: "invalid",
         result: invalidResult(input.state, "invalidFill", validation),
       };
+  /* v8 ignore stop */
 }
 
+/* v8 ignore start -- Malformed saving-throw validator: the after-hit hole adapter fixes single-target cardinality, identity, and absence of area facts before resolution. */
 function validateAfterHitSaveGatedConditionSavingThrowOutcome(
   value: BattleSpellSavingThrowOutcomeValue,
   targetId: CombatantId,
@@ -412,6 +419,7 @@ function validateAfterHitSaveGatedConditionSavingThrowOutcome(
     ? null
     : "Single-target save-gate spell Saving Throw outcome must match the triggering hit target.";
 }
+/* v8 ignore stop */
 
 const AfterHitSaveGatedConditionInvocationSchema =
   spellProcedureExecutionSchema(

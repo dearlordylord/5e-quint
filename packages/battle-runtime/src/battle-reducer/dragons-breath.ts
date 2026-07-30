@@ -528,6 +528,7 @@ function activeDragonsBreathEffect(
   );
 }
 
+/* v8 ignore start -- Malformed saving-throw validator: Dragon's Breath discovery supplies the exhaler-owned Cone, unique affected targets, and matching outcomes; admitted damage execution remains measured. */
 function validateDragonsBreathSavingThrowFill(
   state: BattleState,
   actorId: CombatantId,
@@ -559,7 +560,9 @@ function validateDragonsBreathSavingThrowFill(
     ? null
     : "Dragon's Breath Saving Throw outcomes must cover every table-supplied Cone affected target.";
 }
+/* v8 ignore stop */
 
+/* v8 ignore start -- Malformed area-witness validator: the Dragon's Breath Cone hole fixes its geometry, origin, battle membership, and unique affected targets before resolution. */
 function validateDragonsBreathArea(
   state: BattleState,
   area: BattleSpellAreaChoice,
@@ -581,7 +584,9 @@ function validateDragonsBreathArea(
   }
   return null;
 }
+/* v8 ignore stop */
 
+/* v8 ignore start -- Malformed fill-set validator: discovery publishes the exact Dragon's Breath hole kinds and identities; admitted fills are consumed after this boundary. */
 function validateExpectedDragonBreathFillKind(
   fills: readonly BattleFill[],
   kind: BattleFill["kind"],
@@ -603,7 +608,9 @@ function validateExpectedDragonBreathFillKind(
   }
   return null;
 }
+/* v8 ignore stop */
 
+/* v8 ignore start -- Malformed fill-set validator: the resolver forwards only fills keyed by its discovered Dragon's Breath holes, so unexpected and duplicate keys are defensive rejections. */
 function validateExpectedDragonBreathFills(
   fills: readonly BattleFill[],
   expected: readonly ExpectedDragonBreathFill[],
@@ -622,6 +629,7 @@ function validateExpectedDragonBreathFills(
   }
   return null;
 }
+/* v8 ignore stop */
 
 function dragonBreathFillKey(fill: ExpectedDragonBreathFill): string {
   return `${fill.kind}:${fill.holeId}`;

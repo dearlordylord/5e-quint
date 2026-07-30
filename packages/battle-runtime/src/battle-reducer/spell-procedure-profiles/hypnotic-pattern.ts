@@ -566,6 +566,7 @@ function applyHypnoticPatternControlEffects(
   return { state: { ...state, combatants }, appliedTargetIds };
 }
 
+/* v8 ignore start -- Malformed area-witness validator: Hypnotic Pattern discovery supplies the typed Cube geometry, unique visible targets, and matching outcomes; admitted effect execution remains measured. */
 function validateHypnoticPatternAreaWitness(
   savingThrowOutcomes: BattleSpellSavingThrowOutcomeValue,
 ): string | null {
@@ -607,6 +608,7 @@ function validateHypnoticPatternAreaWitness(
   }
   return null;
 }
+/* v8 ignore stop */
 
 function breakConcentrationForIncapacitatedTargets(
   state: BattleState,

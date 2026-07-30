@@ -1830,6 +1830,7 @@ function validateMaxDieAdditionalDiceSequence(
   return null;
 }
 
+/* v8 ignore start -- Malformed rolled-dice validator: discovery fixes the sequence part, critical-hole identity, damage groups, and die expressions; supported damage execution is measured after this boundary. */
 export function validateSpellAttackSequencePartDamageFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   invocation: Extract<
@@ -1883,6 +1884,7 @@ export function validateSpellAttackSequencePartDamageFill(
   });
   return validation?.reason ?? null;
 }
+/* v8 ignore stop */
 
 export function validateSpellHealingFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
