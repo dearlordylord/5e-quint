@@ -8,6 +8,7 @@ import { resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
 import {
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleId,
   characterSeed,
   startBattleSessionRight,
@@ -621,6 +622,11 @@ function castHeightenedGreaseWithSelectedTarget(): BattleRuntimeSession {
   if (awaitingSave.tag !== "needsHoles") {
     throw new Error("Expected Heightened Grease to request a save hole.");
   }
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    snapshot: awaitingSave.snapshot,
+    subject: act.subject,
+    holes: awaitingSave.holes,
+  });
   const savingThrow = requireHole(awaitingSave.holes, "savingThrowOutcome");
   const resolved = resolveBattleSubject({
     state,

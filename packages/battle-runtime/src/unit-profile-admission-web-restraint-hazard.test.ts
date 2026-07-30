@@ -1,6 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleActiveEffectExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -45,7 +46,7 @@ import {
   webUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
-import { discoverBattleActs } from "./index.ts";
+import { discoverBattleActs, snapshotBattle } from "./index.ts";
 
 function castWeb(
   input: { readonly extraTargetIds?: readonly CombatantId[] } = {},
@@ -336,6 +337,11 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       spellTargetId,
       "startsTurnInArea",
     );
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: snapshotBattle(targetTurn.state),
+      subject: entryAct.subject,
+      holes: entryAct.initialHoles,
+    });
     const wrongHole = requireHole(
       startTurnAct.initialHoles,
       "savingThrowOutcome",

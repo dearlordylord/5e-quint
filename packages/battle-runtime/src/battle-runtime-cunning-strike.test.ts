@@ -8,7 +8,10 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.cunning-strike-option-grant
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME rogue_cunning_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-08-ROGUE-SUPREME-SNEAK rogue_supreme_sneak
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   type BattleActiveEffect,
@@ -478,10 +481,19 @@ describe("battle runtime: Cunning Strike", () => {
     const targetTurn = requireResolved(
       endTurn({ state: poisoned, actorId: fighterId }),
     ).state;
-    const repeatSave = requireHole(
-      endTurn({ state: targetTurn, actorId: goblinId }),
-      "savingThrowOutcome",
-    );
+    const repeatSaveRequest = endTurn({
+      state: targetTurn,
+      actorId: goblinId,
+    });
+    if (repeatSaveRequest.tag !== "needsHoles") {
+      throw new Error("Expected Cunning Strike Poison repeat save.");
+    }
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: repeatSaveRequest.snapshot,
+      subject: repeatSaveRequest.subject,
+      holes: repeatSaveRequest.holes,
+    });
+    const repeatSave = requireHole(repeatSaveRequest, "savingThrowOutcome");
     const afterRepeatSave = requireResolved(
       endTurn({
         state: targetTurn,
