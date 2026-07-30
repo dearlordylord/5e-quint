@@ -552,6 +552,7 @@ function resolveMarkedDamageRider(
         spellAbilityChoiceHole(input.invocation),
       ]);
     }
+    /* v8 ignore start -- Parsed fill invariant: a chosen-ability cast is the only admitted invocation whose hole contract can supply an ability choice. */
   } else if (input.fillSet.abilityChoice !== undefined) {
     return invalidResult(
       input.input.state,
@@ -559,6 +560,7 @@ function resolveMarkedDamageRider(
       "This marked damage rider spell does not choose an ability.",
     );
   }
+  /* v8 ignore stop */
   if (input.invocation.action === "cast") {
     const spellCastReactionWindow = maybeOpenSpellCastReactionWindow(
       input,
@@ -711,9 +713,11 @@ function applyMarkedDamageRiderSpellEffect(
   selectedAbility?: Ability,
 ): BattleState {
   const caster = state.combatants.get(actorId);
+  /* v8 ignore start -- Resolver invariant: spell procedure dispatch establishes the acting combatant before this effect helper is called. */
   if (caster === undefined) {
     return state;
   }
+  /* v8 ignore stop */
   const existingExpiresAt =
     invocation.action === "transfer"
       ? invocation.activeEffect.expiresAt
@@ -730,7 +734,9 @@ function applyMarkedDamageRiderSpellEffect(
           state,
           ownerId: actorId,
         });
+  /* v8 ignore start -- Allocation invariant: the caster lookup above proves that the requested effect owner exists in this state. */
   if (occurrence.tag === "ownerNotFound") return state;
+  /* v8 ignore stop */
   const transfer: MarkedDamageRiderTransferState = {
     kind: "awaitingTargetDrop",
     retargetTiming:
@@ -775,7 +781,9 @@ function applyMarkedDamageRiderSpellEffect(
     activeEffect,
   ];
   const owner = occurrence.owner;
+  /* v8 ignore start -- Admission invariant: authored spell executions are installed only for character-origin combatants. */
   if (owner.origin.kind !== "character") return state;
+  /* v8 ignore stop */
   const transferExecution = {
     procedure: "markedDamageRider" as const,
     action: "transfer" as const,
@@ -813,6 +821,7 @@ function markedDamageRiderActiveAbilityCheckBehavior(
       skills: findingAdvantage.skills,
     })),
     Match.when({ kind: "chosenAbilityDisadvantage" }, () =>
+      /* v8 ignore next -- Resolver invariant: this invocation cannot reach effect application until its required ability-choice hole is filled. */
       selectedAbility === undefined
         ? { kind: "none" as const }
         : { kind: "abilityDisadvantage" as const, ability: selectedAbility },

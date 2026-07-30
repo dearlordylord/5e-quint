@@ -768,6 +768,72 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     }
   });
 
+  test("Hunter's Mark rejects a discovered cast after its turn resources become stale", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-hunters-mark-stale-turn-resources"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("hunters_mark")],
+          }),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const act = discoverBattleActs(session).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "hunters_mark",
+    );
+    if (act === undefined) {
+      throw new Error("Expected Hunter's Mark Bonus Action spell act.");
+    }
+    const fills = [
+      targetFill(findHole(act.initialHoles, "targetChoice"), goblinId),
+    ];
+
+    expect(
+      resolveBattleSubject({
+        state: {
+          ...session.state,
+          currentTurnResources: {
+            ...session.state.currentTurnResources,
+            currentHasBonusAction: false,
+          },
+        },
+        subject: act.subject,
+        fills,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Bonus Action spell is no longer available for the current actor.",
+    });
+
+    expect(
+      resolveBattleSubject({
+        state: {
+          ...session.state,
+          currentTurnResources: {
+            ...session.state.currentTurnResources,
+            spellSlotUsesThisTurn: [
+              { kind: "committed", combatantId: fighterId },
+            ],
+          },
+        },
+        subject: act.subject,
+        fills,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "This turn has already expended a Spell Slot.",
+    });
+  });
+
   test("Hex routes target and ability choices independently before applying Necrotic attack-hit damage and chosen-ability check Disadvantage", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-hex"),
@@ -1048,6 +1114,44 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     if (transferAct === undefined) {
       throw new Error("Expected later-turn Hex transfer act.");
     }
+    const transferActor = laterTurn.combatants.get(fighterId);
+    if (transferActor === undefined) {
+      throw new Error("Expected Hex caster.");
+    }
+    const staleTransferState = {
+      ...laterTurn,
+      combatants: new Map(laterTurn.combatants).set(fighterId, {
+        ...transferActor,
+        activeEffects: transferActor.activeEffects.map((effect) =>
+          effect.kind === "spellMarkedDamageRider"
+            ? {
+                ...effect,
+                transfer: {
+                  kind: "awaitingTargetDrop" as const,
+                  retargetTiming: effect.transfer.retargetTiming,
+                },
+              }
+            : effect,
+        ),
+      }),
+    } satisfies BattleState;
+    expect(
+      resolveBattleSubject({
+        state: staleTransferState,
+        subject: transferAct.subject,
+        fills: [
+          targetFill(
+            findHole(transferAct.initialHoles, "targetChoice"),
+            skeletonId,
+          ),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Marked damage rider spells can move only after the marked target drops to 0 Hit Points and any later-turn timing is satisfied.",
+    });
     const transferred = requireResolved(
       resolveBattleSubject({
         state: laterTurn,
