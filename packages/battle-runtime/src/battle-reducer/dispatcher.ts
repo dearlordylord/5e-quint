@@ -3175,7 +3175,7 @@ export function resolveFlySpeedGrantEndFallCleanup(input: {
     };
   }
   /* v8 ignore stop */
-  const cleanedState = battleStateWithoutFlySpeedGrantEndFallCleanupFrame(
+  const cleanedState = battleStateWithoutInterruptStackFrame(
     input.state,
     cleanup.frameIndex,
   );
@@ -3235,19 +3235,6 @@ function flySpeedGrantEndFallCleanupFrame(
   return null;
 }
 
-function battleStateWithoutFlySpeedGrantEndFallCleanupFrame(
-  state: BattleState,
-  frameIndex: number,
-): BattleState {
-  return {
-    ...state,
-    interruptStack: [
-      ...state.interruptStack.slice(0, frameIndex),
-      ...state.interruptStack.slice(frameIndex + 1),
-    ],
-  };
-}
-
 export function resolveFeatherFallLanding(input: {
   readonly state: BattleState;
   readonly targetId: CombatantId;
@@ -3262,21 +3249,28 @@ export function resolveFeatherFallLanding(input: {
       message: "Feather Fall landing target is not in this battle.",
     };
   }
+  return resolveFeatherFallLandingForTarget(input.state, target);
+}
+
+function resolveFeatherFallLandingForTarget(
+  state: BattleState,
+  target: BattleCreatureState,
+): Exclude<BattleFeatherFallLandingResult, { readonly tag: "invalid" }> {
   const cleanup = featherFallLandingCleanupForCombatant(target);
   if (cleanup.tag === "unmitigated") {
     return {
       tag: "unmitigated",
-      state: input.state,
-      snapshot: snapshotBattle(input.state),
-      targetId: input.targetId,
+      state,
+      snapshot: snapshotBattle(state),
+      targetId: target.combatantId,
       fallDamagePrevented: false,
       fallingPronePrevented: false,
     };
   }
   const nextState = {
-    ...input.state,
-    combatants: new Map(input.state.combatants).set(
-      input.targetId,
+    ...state,
+    combatants: new Map(state.combatants).set(
+      target.combatantId,
       cleanup.combatant,
     ),
   };
@@ -3284,7 +3278,7 @@ export function resolveFeatherFallLanding(input: {
     tag: "mitigated",
     state: nextState,
     snapshot: snapshotBattle(nextState),
-    targetId: input.targetId,
+    targetId: target.combatantId,
     fallDamagePrevented: true,
     fallingPronePrevented: true,
   } as const satisfies BattleFeatherFallLandingResult;
@@ -3307,19 +3301,7 @@ export function resolveFallDamageLanding(input: {
       message: "Fall damage landing target is not in this battle.",
     };
   }
-  const featherFall = resolveFeatherFallLanding({
-    state: input.state,
-    targetId: input.targetId,
-  });
-  if (featherFall.tag === "invalid") {
-    return {
-      tag: "invalid",
-      state: input.state,
-      snapshot: snapshotBattle(input.state),
-      reason: "missingCombatant",
-      message: featherFall.message,
-    };
-  }
+  const featherFall = resolveFeatherFallLandingForTarget(input.state, target);
   const mitigationFrameIndex = fallDamageLandingMitigationFrameIndex(
     featherFall.state,
     input.targetId,
