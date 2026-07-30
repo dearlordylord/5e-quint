@@ -681,7 +681,7 @@ describe("Dragon's Breath initial cast admission", () => {
     );
   });
 
-  test("rejects stale fills when the exhale Cone affects no targets", () => {
+  test("rejects stale exhale state and spends the Magic action when the Cone affects no targets", () => {
     const session = spellBattle({
       preparedSpells: [dragonsBreathSpell()],
       spellSlots: [{ spellLevel: 2, count: 1 }],
@@ -693,6 +693,67 @@ describe("Dragon's Breath initial cast admission", () => {
     }
     const exhaleAct = dragonsBreathExhaleAct(endedCasterTurn.state);
     const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
+    expect(
+      resolveBattleSubject({
+        state: endedCasterTurn.state,
+        subject: {
+          ...exhaleAct.subject,
+          actorId: spellCasterId,
+        },
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "wrongActor" });
+    expect(
+      resolveBattleSubject({
+        state: {
+          ...endedCasterTurn.state,
+          currentTurnResources: {
+            ...endedCasterTurn.state.currentTurnResources,
+            actionResources: [],
+          },
+        },
+        subject: exhaleAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    const exhalingTarget = requireCombatant(
+      endedCasterTurn.state,
+      spellTargetId,
+    );
+    expect(
+      resolveBattleSubject({
+        state: {
+          ...endedCasterTurn.state,
+          combatants: new Map(endedCasterTurn.state.combatants).set(
+            spellTargetId,
+            {
+              ...exhalingTarget,
+              activeEffects: exhalingTarget.activeEffects.filter(
+                (effect) => effect.kind !== "dragonsBreath",
+              ),
+            },
+          ),
+        },
+        subject: exhaleAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    const emptyCone = resolveBattleSubject({
+      state: endedCasterTurn.state,
+      subject: exhaleAct.subject,
+      fills: [
+        dragonsBreathSavingThrowOutcomeFill(saveHole, {
+          originAnchorId: spellTargetId,
+          affectedTargetIds: [],
+          outcomes: [],
+        }),
+      ],
+    });
+    expect(emptyCone).toMatchObject({
+      tag: "resolved",
+      snapshot: { turn: { actionResources: [] } },
+    });
 
     expect(
       resolveBattleSubject({
