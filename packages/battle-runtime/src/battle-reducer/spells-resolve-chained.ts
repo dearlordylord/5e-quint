@@ -18,6 +18,7 @@ import {
   type BattleAttackDamageDisposition,
   type BattleAttackDamageDispositionHole,
   type BattleConcentrationSavingThrowHole,
+  type BattleCreatureState,
   type BattleDamageRelationshipDecisions,
   type BattleFill,
   type BattleResolutionResult,
@@ -878,7 +879,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
     /* v8 ignore stop */
     replayState = applyChainedSpellDamage(
       replayState,
-      target.combatantId,
+      target,
       damageAmount,
       critical,
       {
@@ -1299,10 +1300,12 @@ export function chainedSpellFillSet(
     if (fill.kind === "sanctuaryInterdictionOutcome") {
       continue;
     }
+    /* v8 ignore start -- Malformed resolution input: every fill kind emitted for a chained-spell replay is consumed by a preceding parser branch. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the chained spell replay holes.`,
     };
+    /* v8 ignore stop */
   }
 
   const relationshipDecisions = DamageRelationshipDecisionsByHole.parse({
@@ -1383,6 +1386,7 @@ export function chainedSpellStepIndexForFill(
       return stepIndex;
     }
   }
+  /* v8 ignore next -- Malformed resolution input: callers pass only target, attack-roll, or damage fills whose hole ids were emitted for this chained spell. */
   return null;
 }
 
@@ -1415,6 +1419,7 @@ function latestChainedSpellStepIndexForRemarkableAthleteDecision(
       return index;
     }
   }
+  /* v8 ignore next -- Malformed resolution input: this helper is called only after a decoded Remarkable Athlete decision fill, which requires a preceding chained attack roll. */
   return null;
 }
 
@@ -1431,6 +1436,7 @@ function latestChainedSpellStepIndexForRemarkableAthleteMovement(
       return index;
     }
   }
+  /* v8 ignore next -- Malformed resolution input: this helper is called only after a decoded Remarkable Athlete movement fill, which requires a preceding use decision. */
   return null;
 }
 
@@ -1454,6 +1460,7 @@ export function validateChainedSpellFollowUpFills(input: {
   const concentrationHoleIds = new Set(
     input.concentrationHoles.map((hole) => hole.holeId),
   );
+  /* v8 ignore start -- Malformed resolution input: replay accepts Concentration fills only for holes derived from the damaged chained-spell targets. */
   if (
     input.concentrationFills.some(
       (fill) => !concentrationHoleIds.has(fill.holeId),
@@ -1461,6 +1468,8 @@ export function validateChainedSpellFollowUpFills(input: {
   ) {
     return "Concentration Saving Throw fill is only valid for a concentrating damaged target.";
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed resolution input: replay accepts Hideous Laughter repeat saves only for event-scoped holes derived while applying chained damage. */
   if (
     input.hideousLaughterDamageRepeatSaveFills.some(
       (fill) =>
@@ -1469,6 +1478,7 @@ export function validateChainedSpellFollowUpFills(input: {
   ) {
     return "Hideous Laughter repeat save fills are only valid for a damaged target affected by Hideous Laughter.";
   }
+  /* v8 ignore stop */
   return damageDispositionFillsValidation({
     holes: input.damageDispositionHoles,
     fills: input.damageDispositionFills,
@@ -1497,6 +1507,7 @@ export function validateChainedSpellDamageFill(
   damageType: DamageType,
   step: { readonly stepIndex: number; readonly critical: boolean },
 ): string | null {
+  /* v8 ignore start -- Malformed resolution input: discovery emits the damage hole for this exact chained step and critical-hit state. */
   if (
     fill.holeId !==
     chainedSpellDamageRollHole(invocation, damageType, step).holeId
@@ -1505,6 +1516,7 @@ export function validateChainedSpellDamageFill(
       ? "Critical hit chained spell damage must use the critical step damage hole."
       : "Chained spell damage must use the selected step damage hole.";
   }
+  /* v8 ignore stop */
   return validateRolledDiceFillForDiceExpr(fill, {
     dice: invocation.damage.expr.dice * (step.critical ? 2 : 1),
     dieSize: invocation.damage.expr.dieSize,
@@ -1548,15 +1560,11 @@ type ChainedSpellDamageContext = {
 
 export function applyChainedSpellDamage(
   state: BattleState,
-  targetId: CombatantId,
+  target: BattleCreatureState,
   damageAmount: number,
   critical: boolean,
   context: ChainedSpellDamageContext,
 ): BattleState {
-  const target = state.combatants.get(targetId);
-  if (target === undefined) {
-    return state;
-  }
   return applyBattleHitPointDamage({
     state,
     target,

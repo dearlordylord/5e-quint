@@ -392,7 +392,11 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
       warlockCha: 16,
       warlockLevel: 3,
     });
-    const result = applyChainedSpellDamage(state, enemyId, 5, false, {
+    const target = state.combatants.get(enemyId);
+    if (target === undefined) {
+      throw new Error("Expected chained-spell damage target.");
+    }
+    const result = applyChainedSpellDamage(state, target, 5, false, {
       concentrationSavingThrow: undefined,
       damageDisposition: { kind: "ordinaryDamage" },
       wardingBondDamageShareConcentrationSavingThrows: [],
