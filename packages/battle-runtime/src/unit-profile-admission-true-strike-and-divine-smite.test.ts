@@ -25,6 +25,7 @@ import {
   requireCombatant,
   requireHole,
   requireResultHole,
+  sameClubMainAndOffHandLoadout,
   statBlockWithCreatureType,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
@@ -37,6 +38,7 @@ import {
   abilityModifier,
   applyCondition,
   attackBonus,
+  battleObjectId,
   cantripSpellInvocationRef,
   classLevel,
   combatantId,
@@ -172,6 +174,45 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       throw new Error("Expected True Strike to resolve.");
     }
     expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(8));
+  });
+  test("true_strike preserves the selected held-weapon identity for matching main- and off-hand weapons", () => {
+    const spell = spellRecord(trueStrikeUnitId);
+    const clubAttack = zeroAbilityWeaponAttack("weapon_club");
+    const state = spellBattle({
+      cantrips: [spell],
+      spellSlots: [],
+      attack: clubAttack,
+      offHandAttack: clubAttack,
+      selectedLoadout: sameClubMainAndOffHandLoadout(),
+      casterClassLevels: [{ className: "wizard", level: classLevel(1) }],
+      casterWeaponProficiencies: [
+        { kind: "weapon_category", category: "simple" },
+      ],
+    });
+    const mainHandAct = spellAct({
+      session: state,
+      spellId: trueStrikeUnitId,
+      componentWeaponObjectId: battleObjectId("main:weapon_club"),
+    });
+    const offHandAct = spellAct({
+      session: state,
+      spellId: trueStrikeUnitId,
+      componentWeaponObjectId: battleObjectId("off:weapon_club"),
+    });
+
+    expect(mainHandAct.subject.procedureRef).not.toBe(
+      offHandAct.subject.procedureRef,
+    );
+    expect(
+      requireResultHole(
+        resolveBattleSubject({
+          state: state.state,
+          subject: offHandAct.subject,
+          fills: [],
+        }),
+        "damageTypeChoice",
+      ).choices,
+    ).toEqual(["radiant", "bludgeoning"]);
   });
   test("true_strike is not offered for a non-proficient material weapon", () => {
     const unit = decodeUnitRecordSync(trueStrikeInput);

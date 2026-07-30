@@ -156,6 +156,7 @@ export function spellAct(input: {
   readonly session: BattleRuntimeSession;
   readonly spellId: string;
   readonly slotLevel?: number;
+  readonly componentWeaponObjectId?: BattleObjectId;
 }): ActionSpellAct {
   const act = maybeSpellAct(input);
   expect(act).toBeDefined();
@@ -169,6 +170,7 @@ export function maybeSpellAct(input: {
   readonly session: BattleRuntimeSession;
   readonly spellId: string;
   readonly slotLevel?: number;
+  readonly componentWeaponObjectId?: BattleObjectId;
 }): ActionSpellAct | undefined {
   return discoverBattleActs(input.session).find(
     (candidate): candidate is ActionSpellAct => {
@@ -181,7 +183,10 @@ export function maybeSpellAct(input: {
         invocation?.spellId === input.spellId &&
         (input.slotLevel === undefined ||
           (invocation.tag === "spellSlot" &&
-            Number(invocation.slotLevel) === input.slotLevel))
+            Number(invocation.slotLevel) === input.slotLevel)) &&
+        (input.componentWeaponObjectId === undefined ||
+          characterSpellProcedureObjectId(input.session.state, candidate) ===
+            input.componentWeaponObjectId)
       );
     },
   );
