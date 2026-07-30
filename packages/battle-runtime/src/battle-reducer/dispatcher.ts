@@ -1795,9 +1795,12 @@ export function resolveBattleSubjectInternal(
       subject.tag === "runtimeCommand" &&
       subject.command === "releaseReadiedSpell"
     ) {
-      return resolveReleaseReadiedSpellCommand(input, {
-        handledInterruptTrigger: options.handledInterruptTrigger,
-      });
+      return resolveReleaseReadiedSpellCommand(
+        { ...input, subject },
+        {
+          handledInterruptTrigger: options.handledInterruptTrigger,
+        },
+      );
     }
     if (
       subject.tag === "runtimeCommand" &&

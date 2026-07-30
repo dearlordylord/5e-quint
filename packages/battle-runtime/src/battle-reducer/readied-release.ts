@@ -23,7 +23,6 @@ import {
 } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import type {
-  BattleResolutionInput,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
 } from "../battle-state-execution.ts";
@@ -32,26 +31,20 @@ import { characterSpellProcedure } from "../character-execution-queries.ts";
 import { isReadiedSpellInvocation } from "./spells-discovery.ts";
 
 export function resolveReleaseReadiedSpellCommand(
-  input: BattleResolutionInput,
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "releaseReadiedSpell";
+      }
+    >
+  >,
   options: {
     readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
   },
 ): BattleResolutionResult {
-  if (input.subject.tag !== "runtimeCommand") {
-    return invalidResult(
-      input.state,
-      "unsupportedSubject",
-      "Release Readied Spell requires a runtime command subject.",
-    );
-  }
   const subject = input.subject;
-  if (subject.command !== "releaseReadiedSpell") {
-    return invalidResult(
-      input.state,
-      "unsupportedSubject",
-      "Release Readied Spell requires a release command subject.",
-    );
-  }
   const casterId = subject.readiedSpellCasterId;
   const readied = input.state.readiedSpells.get(casterId);
   if (readied === undefined || readied.procedureRef !== subject.procedureRef) {
