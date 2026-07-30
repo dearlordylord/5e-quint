@@ -125,6 +125,95 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
     );
   });
 
+  test("rejects a discovered Expeditious Retreat cast after its caster or resources become stale", () => {
+    const spell = spellRecord(expeditiousRetreatUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = bonusActionDashSpellAct({
+      session,
+      spellId: expeditiousRetreatUnitId,
+    });
+    const caster = requireCombatant(session.state, spellCasterId);
+    if (
+      caster.origin.kind !== "character" ||
+      caster.origin.spellcasting === undefined
+    ) {
+      throw new Error("Expected Expeditious Retreat character spellcaster.");
+    }
+
+    const withoutCaster = {
+      ...session.state,
+      combatants: new Map(
+        [...session.state.combatants].filter(
+          ([combatantId]) => combatantId !== spellCasterId,
+        ),
+      ),
+    };
+    const withoutSpellSlot = {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellCasterId, {
+        ...caster,
+        origin: {
+          ...caster.origin,
+          spellcasting: {
+            ...caster.origin.spellcasting,
+            spellSlots: caster.origin.spellcasting.spellSlots.map((slot) => ({
+              ...slot,
+              expended: slot.count,
+            })),
+          },
+        },
+      }),
+    };
+    const afterSpellSlotUse = {
+      ...session.state,
+      currentTurnResources: {
+        ...session.state.currentTurnResources,
+        spellSlotUsesThisTurn: [
+          { kind: "committed" as const, combatantId: spellCasterId },
+        ],
+      },
+    };
+    const withoutBonusAction = {
+      ...session.state,
+      currentTurnResources: {
+        ...session.state.currentTurnResources,
+        currentHasBonusAction: false,
+      },
+    };
+
+    expect(
+      resolveBattleSubject({
+        state: withoutCaster,
+        subject: act.subject,
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(
+      resolveBattleSubject({
+        state: withoutSpellSlot,
+        subject: act.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Expeditious Retreat no longer has its required runtime spell resource.",
+    });
+    for (const state of [afterSpellSlotUse, withoutBonusAction]) {
+      expect(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [],
+        }),
+      ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    }
+  });
+
   test("expeditious_retreat grants later Bonus Action Dash until Concentration ends", () => {
     const spell = spellRecord(expeditiousRetreatUnitId);
     const session = spellBattle({ preparedSpells: [spell] });

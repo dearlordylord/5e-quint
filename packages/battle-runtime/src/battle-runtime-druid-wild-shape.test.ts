@@ -108,6 +108,8 @@ import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
 import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import { DRUID_BEAST_SPELLS_CLASS_LEVEL } from "./unit-feature-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { shillelaghUnitId } from "./unit-profile-admission-catalog.test-support.ts";
+import { bonusSpellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
 
 const druidId = combatantId("wild-shape-druid");
 const ratId = "stat_block_rat";
@@ -1160,6 +1162,85 @@ test("blocks worn Wild Shape weapon use when form limbs cannot handle objects", 
       ),
     ),
   ).toBe(false);
+});
+
+test("retains Shillelagh only while Wild Shape can keep holding its worn Quarterstaff", () => {
+  const selectedLoadout = {
+    weapon: {
+      itemId: battleObjectId("main:weapon_quarterstaff"),
+      unitId: parseSharedUnitId("weapon_quarterstaff"),
+      grip: "one_handed" as const,
+    },
+  };
+  const session = druidWildShapeSession({
+    armorClass: {
+      ...defaultArmorClassState(),
+      rightHandUse: "mainWeapon",
+    },
+    attack: testCharacterWeaponAttackForUnit(selectedLoadout.weapon.unitId),
+    cantrips: [spellRecord(shillelaghUnitId)],
+    selectedLoadout,
+  });
+  const shillelaghAct = bonusSpellAct({
+    session,
+    spellId: shillelaghUnitId,
+  });
+  const enchanted = requireResolved(
+    resolveBattleSubject({
+      state: session.state,
+      subject: shillelaghAct.subject,
+      fills: [],
+    }),
+  ).state;
+  const readyToShape = restoreBonusAction(enchanted);
+
+  for (const disposition of ["worn", "merges", "falls"] as const) {
+    const subject = wildShapeSubject(readyToShape, {
+      action: "assumeForm",
+      formStatBlockId: ridingHorseId,
+    });
+    const needsDisposition = resolveDruidWildShape(readyToShape, subject);
+    if (needsDisposition.tag !== "needsHoles") {
+      throw new Error("Expected Wild Shape equipment disposition hole.");
+    }
+    const dispositionHole = requireWildShapeEquipmentDispositionHole(
+      needsDisposition.holes,
+    );
+    const mainWeapon = dispositionHole.candidates.find(
+      (candidate) => candidate.kind === "mainWeapon",
+    );
+    if (mainWeapon === undefined) {
+      throw new Error("Expected Quarterstaff disposition candidate.");
+    }
+    const shaped = requireResolved(
+      resolveDruidWildShape(readyToShape, subject, [
+        wildShapeDispositionFill(dispositionHole, [
+          disposition === "worn"
+            ? {
+                item: mainWeapon,
+                disposition,
+                practicality: { kind: "practicalToWear" },
+              }
+            : disposition === "falls"
+              ? {
+                  item: mainWeapon,
+                  disposition,
+                  fallInActorSpace: {
+                    kind: "actorSpace",
+                    positionId: druidGroundPositionId,
+                  },
+                }
+              : { item: mainWeapon, disposition },
+        ]),
+      ]),
+    );
+
+    expect(
+      requireCharacter(shaped.state, druidId).activeEffects.some(
+        (effect) => effect.kind === "spellWeaponAttackOverride",
+      ),
+    ).toBe(disposition === "worn");
+  }
 });
 
 test("projects practical worn Wild Shape armor into the effective loadout", () => {
