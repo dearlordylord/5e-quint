@@ -424,11 +424,7 @@ function validateD20TestNaturalOneRerollFills(
   options: ResolveBattleSubjectInternalOptions,
 ): D20TestNaturalOneRerollFillValidation {
   const actor = input.state.combatants.get(battleSubjectActorId(input.subject));
-  for (let fillIndex = 0; fillIndex < input.fills.length; fillIndex += 1) {
-    const fill = input.fills[fillIndex];
-    if (fill === undefined) {
-      continue;
-    }
+  for (const [fillIndex, fill] of input.fills.entries()) {
     if (fill.kind === "abilityCheck") {
       const abilityCheckHole = abilityCheckHoleForFill({
         resolutionInput: input,
@@ -1840,13 +1836,16 @@ function resolveCompanionLifecycleSubject(
       );
     }
     const heldObjectIds = companionHeldObjectIdsForDismissal(input);
-    return heldObjectIds.tag === "invalid"
-      ? heldObjectIds
-      : temporarilyDismissFindFamiliar({
-          state: input.state,
-          casterId: input.subject.actorId,
-          heldObjectIds: heldObjectIds.objectIds,
-        });
+    /* v8 ignore start -- Malformed replay: temporary-dismiss discovery exposes held-object facts as an initial prerequisite, so execution receives this invalid helper result only when a caller omits that discovered fill. */
+    if (heldObjectIds.tag === "invalid") {
+      return heldObjectIds;
+    }
+    /* v8 ignore stop */
+    return temporarilyDismissFindFamiliar({
+      state: input.state,
+      casterId: input.subject.actorId,
+      heldObjectIds: heldObjectIds.objectIds,
+    });
   }
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.subject.action === "reappear") {
@@ -1901,7 +1900,7 @@ export function resolveAdmittedFindFamiliarReappearanceSubject(input: {
     return placement;
   }
   const initiative = companionReappearanceInitiative(input);
-  if (initiative.tag === "needsHoles" || initiative.tag === "invalid") {
+  if (initiative.tag === "needsHoles") {
     return initiative;
   }
   const result = reappearAdmittedTemporarilyDismissedFindFamiliar({
@@ -1974,10 +1973,7 @@ function companionReappearanceInitiative(
         { readonly kind: "companionReappearanceInitiative" }
       >["value"];
     }
-  | Extract<
-      BattleResolutionResult,
-      { readonly tag: "needsHoles" | "invalid" }
-    > {
+  | Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
   const expectedHole = companionReappearanceInitiativeHole({
     ownerId: input.subject.actorId,
   });
@@ -2052,9 +2048,6 @@ function resolveFindFamiliarTouchSpellSubject(
     return connection;
   }
   const spellSubject = findFamiliarTouchSpellSubject(input.subject);
-  if (spellSubject.tag === "invalid") {
-    return spellSubject;
-  }
   const spellFills = input.fills.filter(
     (fill) =>
       !(
@@ -2187,13 +2180,16 @@ function companionHeldObjectIdsForDismissal(
       candidate.kind === "heldObjectFacts" &&
       candidate.holeId === expectedHole.holeId,
   );
-  return fill === undefined
-    ? invalidResult(
-        input.state,
-        "invalidFill",
-        "Familiar temporary dismissal requires held-object facts for the familiar.",
-      )
-    : { tag: "resolved", objectIds: fill.value.objectIds };
+  /* v8 ignore start -- Malformed replay: temporary-dismiss discovery exposes this exact held-object-facts hole as an initial prerequisite, so omitting it contradicts the discovered subject contract. */
+  if (fill === undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Familiar temporary dismissal requires held-object facts for the familiar.",
+    );
+  }
+  /* v8 ignore stop */
+  return { tag: "resolved", objectIds: fill.value.objectIds };
 }
 
 function findFamiliarConnectionFact(input: {
@@ -2238,15 +2234,13 @@ function findFamiliarConnectionFact(input: {
 
 function findFamiliarTouchSpellSubject(
   subject: Extract<BattleSubject, { readonly tag: "findFamiliarTouchSpell" }>,
-):
-  | {
-      readonly tag: "resolved";
-      readonly subject: Extract<
-        BattleSubject,
-        { readonly tag: "actionSpell" | "bonusActionSpell" }
-      >;
-    }
-  | Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
+): {
+  readonly tag: "resolved";
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell" | "bonusActionSpell" }
+  >;
+} {
   const base = {
     actorId: subject.actorId,
     procedureRef: subject.procedureRef,
