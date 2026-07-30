@@ -65,6 +65,21 @@ const fallingEId = combatantId("feather-fall-target-e");
 const fallingFId = combatantId("feather-fall-target-f");
 
 describe("Feather Fall Reaction spell", () => {
+  test("rejects landing resolution for a combatant outside the battle", () => {
+    const state = battleWithFeatherFall().state;
+
+    expect(
+      resolveFeatherFallLanding({
+        state,
+        targetId: combatantId("missing-feather-fall-target"),
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      state,
+      reason: "missingCombatant",
+    });
+  });
+
   test("opens from a table-supplied falling trigger and applies per-target mitigation effects", () => {
     const state = battleWithFeatherFall();
     const awaitingReaction = openCreatureFallsRuntimeInterruptWindow({

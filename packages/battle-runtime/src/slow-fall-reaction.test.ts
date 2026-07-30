@@ -29,6 +29,22 @@ const monkId = combatantId("slow-fall-monk");
 const slowFallUnitId = "monk_slow_fall";
 
 describe("Slow Fall Reaction", () => {
+  test("rejects fall-damage landing for a combatant outside the battle", () => {
+    const state = battleWithSlowFallMonk({ level: 4 });
+
+    expect(
+      resolveFallDamageLanding({
+        state,
+        targetId: combatantId("missing-fall-damage-target"),
+        fallDamage: { kind: "rawFallDamage", amount: damageAmount(1) },
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      state,
+      reason: "missingCombatant",
+    });
+  });
+
   test("offers selected Monk a fall-damage reduction Reaction when that creature falls", () => {
     const state = battleWithSlowFallMonk({ level: 4 });
     const awaitingReaction = openSlowFallWindow(state);
