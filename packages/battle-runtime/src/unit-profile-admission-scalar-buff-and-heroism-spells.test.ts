@@ -1912,6 +1912,44 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
         }),
       ],
     );
+    const ended = resolveBattleSubject({
+      state: resolved.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endConcentration",
+      },
+      fills: [],
+    });
+    expect(ended).toMatchObject({
+      tag: "resolved",
+      routeEvents: [
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "concentrationTeardown",
+          holes: [],
+          owner: "battleConcentration",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "concentrationTeardown",
+          holes: [],
+          owner: "battleActiveEffect",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "conditionImmunityTemporaryHitPointEffect",
+          holes: [],
+          owner: "battleConcentration",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "conditionImmunityTemporaryHitPointEffect",
+          holes: [],
+          owner: "battleActiveEffect",
+        },
+      ],
+    });
   });
 
   test("heroism grants spellcasting-modifier Temporary Hit Points when the target starts its turn", () => {
