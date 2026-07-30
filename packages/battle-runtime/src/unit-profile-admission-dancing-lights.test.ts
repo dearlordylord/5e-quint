@@ -289,16 +289,43 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     if (combinedAct === undefined) {
       throw new Error("Expected Dancing Lights combined-form act.");
     }
+    const combinedPlacementHole = requireHole(
+      combinedAct.initialHoles,
+      "dancingLightsPlacement",
+    );
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: combinedAct.subject,
+        fills: [
+          {
+            kind: "dancingLightsPlacement",
+            holeId: combinedPlacementHole.holeId,
+            value: {
+              mode: "cast",
+              form: "combinedMediumForm",
+              light: {
+                positionId: battleTablePositionId(
+                  "dancing-lights-combined-out-of-range",
+                ),
+                distanceFromCasterFeet: movementFeet(125),
+              },
+            },
+          } satisfies BattleFill,
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Dancing Lights placement must be within the spell range.",
+    });
     const resolved = resolveBattleSubject({
       state: session.state,
       subject: combinedAct.subject,
       fills: [
         {
           kind: "dancingLightsPlacement",
-          holeId: requireHole(
-            combinedAct.initialHoles,
-            "dancingLightsPlacement",
-          ).holeId,
+          holeId: combinedPlacementHole.holeId,
           value: {
             mode: "cast",
             form: "combinedMediumForm",
@@ -677,26 +704,74 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       separateAct.initialHoles,
       "dancingLightsPlacement",
     );
+    const oneLightPlacement = {
+      kind: "dancingLightsPlacement",
+      holeId: placementHole.holeId,
+      value: {
+        mode: "cast",
+        form: "separateLights",
+        lights: [
+          {
+            positionId: battleTablePositionId("dancing-lights-one"),
+            distanceFromCasterFeet: movementFeet(30),
+            nearestSiblingDistanceFeet: movementFeet(15),
+          },
+        ],
+      },
+    } as const satisfies BattleFill;
+    for (const lights of [
+      [],
+      Array.from({ length: 5 }, (_, index) => ({
+        positionId: battleTablePositionId(`dancing-lights-five-${index}`),
+        distanceFromCasterFeet: movementFeet(30),
+        nearestSiblingDistanceFeet: movementFeet(10),
+      })),
+    ]) {
+      expect(
+        resolveBattleSubject({
+          state: session.state,
+          subject: separateAct.subject,
+          fills: [
+            {
+              ...oneLightPlacement,
+              value: { ...oneLightPlacement.value, lights },
+            },
+          ],
+        }),
+      ).toMatchObject({
+        tag: "invalid",
+        reason: "invalidFill",
+        message: "Dancing Lights separate form requires one to four lights.",
+      });
+    }
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: separateAct.subject,
+        fills: [
+          {
+            ...oneLightPlacement,
+            value: {
+              ...oneLightPlacement.value,
+              lights: [
+                {
+                  ...oneLightPlacement.value.lights[0],
+                  distanceFromCasterFeet: movementFeet(125),
+                },
+              ],
+            },
+          },
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Dancing Lights placement must be within the spell range.",
+    });
     const cast = resolveBattleSubject({
       state: session.state,
       subject: separateAct.subject,
-      fills: [
-        {
-          kind: "dancingLightsPlacement",
-          holeId: placementHole.holeId,
-          value: {
-            mode: "cast",
-            form: "separateLights",
-            lights: [
-              {
-                positionId: battleTablePositionId("dancing-lights-one"),
-                distanceFromCasterFeet: movementFeet(30),
-                nearestSiblingDistanceFeet: movementFeet(15),
-              },
-            ],
-          },
-        } satisfies BattleFill,
-      ],
+      fills: [oneLightPlacement],
     });
     if (cast.tag !== "resolved") {
       throw new Error("Expected one-light Dancing Lights cast.");
