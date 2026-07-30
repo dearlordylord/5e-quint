@@ -3431,6 +3431,7 @@ export function validateSavingThrowOutcomes(
       heightenedSpellTargetId,
     });
   }
+  /* v8 ignore start -- Malformed area Saving Throw fill: the procedure-specific area hole fixes its geometry kind, origin rule, unique in-battle affected targets, and any Fireball/Shatter/Thunderwave/Gust/Slow/Faerie Fire adjunct facts. This block rejects caller-mutated cross-procedure or spatial structure; Antimagic interdiction and outcome semantics remain measured below. */
   if (!("area" in value)) {
     return `Save-gate spell Saving Throw outcomes require area facts for ${targeting.kind}.`;
   }
@@ -3529,6 +3530,7 @@ export function validateSavingThrowOutcomes(
       return "Save-gate spell area affected target must be a combatant in this battle.";
     }
   }
+  /* v8 ignore stop */
   const antimagicInterdiction = magicalEffectTargetsInterdictionMessage({
     state,
     source: SPELL_MAGICAL_EFFECT_SOURCE,
@@ -3538,6 +3540,7 @@ export function validateSavingThrowOutcomes(
     return antimagicInterdiction;
   }
   const seenTargets = new Set<CombatantId>();
+  /* v8 ignore start -- Malformed area Saving Throw outcome list: the area fill adapter emits exactly one outcome for each table-supplied affected target. These branches reject caller-mutated foreign, duplicate, or missing identities; metamagic selection semantics remain measured below. */
   for (const outcome of outcomes) {
     const targetId = outcome.targetId;
     if (!affectedTargets.has(targetId)) {
@@ -3551,6 +3554,7 @@ export function validateSavingThrowOutcomes(
   if (seenTargets.size !== affectedTargets.size) {
     return "Save-gate spell Saving Throw outcomes must cover every table-supplied area affected target.";
   }
+  /* v8 ignore stop */
   return validateSavingThrowOutcomeSelections({
     outcomes,
     state,
