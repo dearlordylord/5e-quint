@@ -62,6 +62,7 @@ const unitLibrary = unitCatalogResult.catalog;
 
 const acidSplashUnitId = "acid_splash";
 const expeditiousRetreatUnitId = "expeditious_retreat";
+const flameBladeUnitId = "flame_blade";
 const magicMissileUnitId = "magic_missile";
 const counterspellUnitId = "counterspell";
 const shieldUnitId = "shield";
@@ -767,6 +768,40 @@ describe("Counterspell Reaction spell", () => {
           ]),
         }),
       }),
+    });
+  });
+
+  test("opens Counterspell for a spell-created held object cast", () => {
+    const session = battleWithCounterspell({
+      casterPreparedSpells: [srdSpellRecord(flameBladeUnitId)],
+      casterSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const subject = requireCastSpellSubject(
+      session,
+      requireCharacterSpellProcedureRefForTest(
+        session,
+        casterId,
+        spellSlotInvocationRef(flameBladeUnitId, 2, "spellCreatedHeldObject"),
+      ),
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject,
+        fills: [
+          spellCastReactionFactsFill([
+            counterspellTriggerFact({
+              session,
+              reactorId: counterspellerId,
+              casterId,
+            }),
+          ]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
   });
 

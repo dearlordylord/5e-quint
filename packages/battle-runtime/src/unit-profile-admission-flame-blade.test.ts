@@ -512,6 +512,78 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
     });
   });
 
+  test("a stored flame_blade cast rejects after its Bonus Action is spent", () => {
+    const session = flameBladeBattle();
+    const act = bonusSpellAct({ session, spellId: flameBladeUnitId });
+    const afterBonusAction: BattleState = {
+      ...session.state,
+      currentTurnResources: {
+        ...session.state.currentTurnResources,
+        currentHasBonusAction: false,
+      },
+    };
+
+    expect(
+      resolveBattleSubject({
+        state: afterBonusAction,
+        subject: act.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+  });
+
+  test("a stored flame_blade re-evocation rejects after concentration ends", () => {
+    const { nextCasterTurn, reEvokeAct } = flameBladeReEvokeScenario();
+    const withoutConcentration = breakBattleConcentration(
+      nextCasterTurn,
+      spellCasterId,
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: withoutConcentration,
+        subject: reEvokeAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Spell-created held object can no longer be re-evoked.",
+    });
+  });
+
+  test("a stored flame_blade re-evocation rejects after its free hand is occupied", () => {
+    const { session, nextCasterTurn, reEvokeAct } = flameBladeReEvokeScenario();
+    const noFreeHand = withCasterHands(nextCasterTurn, {
+      leftHandUse: "shield",
+      rightHandUse: "mainWeapon",
+    });
+
+    expect(
+      maybeSpellAct({
+        session: battleRuntimeSessionForTest({
+          ...session,
+          state: noFreeHand,
+        }),
+        spellId: flameBladeUnitId,
+      }),
+    ).toBeUndefined();
+    expect(
+      resolveBattleSubject({
+        state: noFreeHand,
+        subject: reEvokeAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Spell-created held object requires a free hand.",
+    });
+  });
+
   test("flame_blade rejects fabricated held-object facts fills", () => {
     const state = flameBladeBattle();
     const act = bonusSpellAct({ session: state, spellId: flameBladeUnitId });
@@ -600,6 +672,96 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
     for (const unsupportedSpell of [
       unsupportedOperationSpell,
       unsupportedInitialEffectSpell,
+    ]) {
+      const state = spellBattle({
+        preparedSpells: [unsupportedSpell],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+        casterClassLevels: [{ className: "druid", level: classLevel(3) }],
+        attack: zeroAbilityWeaponAttack("weapon_longsword"),
+      });
+
+      expect(
+        maybeSpellAct({ session: state, spellId: flameBladeUnitId }),
+      ).toBeUndefined();
+    }
+  });
+
+  test("flame_blade support admission rejects near-miss execution shapes", () => {
+    const spell = spellRecord(flameBladeUnitId);
+    const mechanics = requireOngoingEffectMechanics(spell);
+    const attackOperation = mechanics.operations.find(
+      (operation) => operation.effect.kind === "attack_roll",
+    );
+    if (attackOperation?.effect.kind !== "attack_roll") {
+      throw new Error("Expected Flame Blade attack operation.");
+    }
+    const damageEffect = attackOperation.effect.onHit[0];
+    if (
+      damageEffect?.kind !== "damage" ||
+      damageEffect.amount?.kind !== "linear_per_level" ||
+      damageEffect.amount.perLevel === undefined
+    ) {
+      throw new Error("Expected Flame Blade scaling damage effect.");
+    }
+    const scalingAmount = damageEffect.amount;
+
+    const wrongRange = decodeSpellRecordSync({
+      ...spell,
+      mechanics: {
+        ...mechanics,
+        range: { kind: "touch" },
+      },
+    });
+    const wrongAttackKind = decodeSpellRecordSync({
+      ...spell,
+      mechanics: {
+        ...mechanics,
+        operations: mechanics.operations.map((operation) =>
+          operation === attackOperation
+            ? {
+                ...operation,
+                effect: {
+                  ...attackOperation.effect,
+                  attackKind: "ranged_spell_attack",
+                },
+              }
+            : operation,
+        ),
+      },
+    });
+    const wrongDamageScaling = decodeSpellRecordSync({
+      ...spell,
+      mechanics: {
+        ...mechanics,
+        operations: mechanics.operations.map((operation) =>
+          operation === attackOperation
+            ? {
+                ...operation,
+                effect: {
+                  ...attackOperation.effect,
+                  onHit: [
+                    {
+                      ...damageEffect,
+                      amount: {
+                        ...scalingAmount,
+                        perLevel: {
+                          ...scalingAmount.perLevel,
+                          dieSize: 8,
+                        },
+                      },
+                    },
+                  ],
+                },
+              }
+            : operation,
+        ),
+      },
+    });
+
+    for (const unsupportedSpell of [
+      wrongRange,
+      wrongAttackKind,
+      wrongDamageScaling,
     ]) {
       const state = spellBattle({
         preparedSpells: [unsupportedSpell],
@@ -707,6 +869,33 @@ function releaseFlameBladeAct(state: BattleState) {
     throw new Error("Expected Flame Blade release act.");
   }
   return act;
+}
+
+function releaseFlameBlade(state: BattleState): BattleState {
+  const releaseAct = releaseFlameBladeAct(state);
+  const released = resolveBattleSubject({
+    state,
+    subject: releaseAct.subject,
+    fills: [],
+  });
+  if (released.tag !== "resolved") {
+    throw new Error("Expected Flame Blade release to resolve.");
+  }
+  return released.state;
+}
+
+function flameBladeReEvokeScenario() {
+  const session = flameBladeBattle();
+  const released = releaseFlameBlade(castFlameBlade(session).state);
+  const nextCasterTurn = advanceToNextCasterTurn(released);
+  const reEvokeAct = bonusSpellAct({
+    session: battleRuntimeSessionForTest({
+      ...session,
+      state: nextCasterTurn,
+    }),
+    spellId: flameBladeUnitId,
+  });
+  return { session, nextCasterTurn, reEvokeAct };
 }
 
 function advanceToNextCasterTurn(state: BattleState): BattleState {
