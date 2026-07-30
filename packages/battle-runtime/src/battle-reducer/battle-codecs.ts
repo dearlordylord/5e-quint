@@ -41,7 +41,6 @@ import {
 import {
   BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
-  BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
   CUNNING_STRIKE_END_TURN_COVER_DEGREES,
   DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
@@ -7330,9 +7329,7 @@ function serializedBattleActOwnsBoundProcedure(
           const executionKind = procedure.execution.kind;
           return (
             executionKind ===
-              BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE ||
-            executionKind ===
-              BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE
+            BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE
           );
         },
         unitSupportProfile: (procedure) => {
@@ -7340,9 +7337,7 @@ function serializedBattleActOwnsBoundProcedure(
           return (
             executionKind === "alternateActionCost" ||
             executionKind ===
-              BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE ||
-            executionKind ===
-              BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE
+              BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE
           );
         },
       }),

@@ -2,7 +2,6 @@ import { Match } from "effect";
 import { NonNegativeInteger } from "@dnd/shared/types";
 import {
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
-  BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
 } from "./unit-feature-execution-constants.ts";
 
@@ -80,12 +79,10 @@ export const BONUS_ACTION_STANDARD_ACTION_PROCEDURE_QUERY = {
   kind: "unitFeatureOrSupportProfileKinds",
   featureKinds: new Set<UnitFeatureProcedureExecution["kind"]>([
     BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
-    BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
   ]),
   supportKinds: new Set<UnitSupportProfileKind>([
     "alternateActionCost",
     BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
-    BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
   ]),
 } as const satisfies CharacterUnitProcedureQuery;
 export const DRUID_WILD_SHAPE_PROCEDURE_QUERY = {
