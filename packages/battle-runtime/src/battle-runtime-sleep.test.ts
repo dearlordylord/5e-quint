@@ -7,6 +7,7 @@ import { describe, expect, test } from "vitest";
 import {
   applyBattleHitPointDamage,
   armorClass,
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   attackRollFill,
   attackTargetFill,
   battleAfterFailedSleepInitialSave,
@@ -425,10 +426,19 @@ describe("battle runtime: Sleep", () => {
     expect(goblinTurn.combatants.get(goblinId)).toMatchObject({
       conditions: expect.objectContaining({ directIncapacitated: true }),
     });
-    const repeatSave = requireHole(
-      endTurn({ state: goblinTurn, actorId: goblinId }),
-      "savingThrowOutcome",
-    );
+    const repeatSaveRequest = endTurn({
+      state: goblinTurn,
+      actorId: goblinId,
+    });
+    if (repeatSaveRequest.tag !== "needsHoles") {
+      throw new Error("Expected Sleep repeat save.");
+    }
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: repeatSaveRequest.snapshot,
+      subject: repeatSaveRequest.subject,
+      holes: repeatSaveRequest.holes,
+    });
+    const repeatSave = requireHole(repeatSaveRequest, "savingThrowOutcome");
     expect(repeatSave).toMatchObject({
       label: "Repeat WIS save",
       ability: "wis",

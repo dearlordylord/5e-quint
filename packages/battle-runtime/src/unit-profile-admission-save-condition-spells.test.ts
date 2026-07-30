@@ -1630,6 +1630,14 @@ function resolveContagionTargetEndTurnSave(
 ): BattleState {
   const activeEffect = contagionEffect(state);
   const needsSave = endTurn({ state, actorId: spellTargetId });
+  if (needsSave.tag !== "needsHoles") {
+    throw new Error("Expected Contagion counted repeat save.");
+  }
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    snapshot: needsSave.snapshot,
+    subject: needsSave.subject,
+    holes: needsSave.holes,
+  });
   const repeatSave = requireResultHole(needsSave, "savingThrowOutcome");
   expect(repeatSave).toEqual(
     expect.objectContaining({

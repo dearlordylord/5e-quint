@@ -238,6 +238,11 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     if (targetTurnNeedsSave.tag !== "needsHoles") {
       throw new Error("Expected Slow target End Turn to request a save.");
     }
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: targetTurnNeedsSave.snapshot,
+      subject: targetTurnNeedsSave.subject,
+      holes: targetTurnNeedsSave.holes,
+    });
     const repeatSave = requireSlowEndTurnSaveHole(targetTurnNeedsSave.holes);
     expect(repeatSave).toEqual(
       expect.objectContaining({

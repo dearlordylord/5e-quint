@@ -825,6 +825,14 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
         damageRollFillWithGroups(damageHole, [[4, 5]]),
       ],
     });
+    if (needsSave.tag !== "needsHoles") {
+      throw new Error("Expected Heat Metal object-contact save.");
+    }
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: needsSave.snapshot,
+      subject: act.subject,
+      holes: needsSave.holes,
+    });
     const saveHole = requireResultHole(needsSave, "savingThrowOutcome");
     expect(saveHole).toMatchObject({
       objectContactSave: {

@@ -1,6 +1,9 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
+import {
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  battleProcedureExecutionRefForTest,
+  resolveBattleSubject,
+} from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE ray_of_enfeeblement
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -248,8 +251,16 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       state: targetTurn.state,
       actorId: spellTargetId,
     });
+    if (repeatSaveRequest.tag !== "needsHoles") {
+      throw new Error("Expected Ray of Enfeeblement repeat save.");
+    }
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: repeatSaveRequest.snapshot,
+      subject: repeatSaveRequest.subject,
+      holes: repeatSaveRequest.holes,
+    });
     const repeatSaveHole = requireHole(
-      repeatSaveRequest.tag === "needsHoles" ? repeatSaveRequest.holes : [],
+      repeatSaveRequest.holes,
       "savingThrowOutcome",
     );
     expect(repeatSaveHole).toHaveProperty("abilityD20TestRollModeEndTurnSave");
