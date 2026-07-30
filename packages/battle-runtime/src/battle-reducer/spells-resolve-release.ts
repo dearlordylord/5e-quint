@@ -1235,47 +1235,13 @@ export function resolveSpellRelease(
     fillSet.hideousLaughterDamageRepeatSaves,
     hideousLaughterSaveCheck.holes,
   );
-  const releaseResolutionState =
-    effectiveReleaseAttackRoll !== undefined
-      ? (releaseResolutionStateAfterCriticalMovement ??
-        recordAttackRollMissToHitReplacementUsed(
-          consumeHelpAttackForAttackRoll(
-            recordAttackRollOngoingFeatures(
-              input.state,
-              input.subject.actorId,
-              target.combatantId,
-              null,
-              fillSet.targetRelationshipFacts,
-            ),
-            input.subject.actorId,
-            target.combatantId,
-          ),
-          input.subject.actorId,
-          selectedAttackRollMissToHitReplacement({
-            state: input.state,
-            subject: input.subject,
-            attackerId: input.subject.actorId,
-            targetId: target.combatantId,
-            attackRoll: effectiveReleaseAttackRoll,
-            ordinaryHit: attackRollHits(
-              effectiveReleaseAttackRoll,
-              currentArmorClass(activeEffectArmorClass(input.state, target)),
-            ),
-          }),
-          {
-            subject: input.subject,
-            targetId: target.combatantId,
-            attackRoll: effectiveReleaseAttackRoll,
-          },
-        ))
-      : input.state;
   const damageDisposition = damageDispositionForTarget(
     damageDispositionHole === null ? [] : [damageDispositionHole],
     fillSet.damageDispositions,
     target.combatantId,
   );
   const relationshipCheck = damageRelationshipDecisionFillCheck({
-    state: releaseResolutionState,
+    state: releaseDamageBaseState,
     damageEventHoleId: fillSet.damageRoll.holeId,
     damageSourceId: input.subject.actorId,
     targets:
@@ -1305,7 +1271,7 @@ export function resolveSpellRelease(
   }
   /* v8 ignore stop */
   const damaged = applySpellDamage(
-    releaseResolutionState,
+    releaseDamageBaseState,
     target.combatantId,
     invocation,
     fillSet.damageRoll,

@@ -461,6 +461,12 @@ describe("Chromatic Orb chained spell attack", () => {
     if (releaseAct?.subject.tag !== "runtimeCommand") {
       throw new Error("Expected release readied spell act.");
     }
+    expect(
+      requireHole(
+        resolveNeedsHoles(readied.state, releaseAct.subject, []).holes,
+        "damageTypeChoice",
+      ),
+    ).toEqual(requireHole(releaseAct.initialHoles, "damageTypeChoice"));
     const damageTypeHole = requireHole(
       releaseAct.initialHoles,
       "damageTypeChoice",

@@ -1033,7 +1033,8 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       ],
     });
 
-    expect(requireResultHole(awaitingMovement, "movement")).toMatchObject({
+    const movement = requireResultHole(awaitingMovement, "movement");
+    expect(movement).toMatchObject({
       actorId: spellCasterId,
       movementBudgetFeet: movementFeet(15),
     });
@@ -1041,6 +1042,27 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       throw new Error("Expected a Remarkable Athlete movement hole.");
     }
     expect(awaitingMovement.state).toBe(targetTurn.state);
+
+    const invalidMovement = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: releaseSubject,
+      fills: [
+        targetSelection,
+        critical,
+        unitFeatureDecisionFill(decision, "use"),
+        movementFill(movement, {
+          movementCostFeet: 16,
+          provokedOpportunityAttacks: [],
+        }),
+      ],
+    });
+
+    expect(invalidMovement).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Movement cost exceeds the combatant's remaining Movement.",
+    });
+    expect(invalidMovement.snapshot).toEqual(targetTurn.snapshot);
   });
 
   test("Remarkable Athlete resumes an independent spell attack sequence after Critical Hit movement", () => {
