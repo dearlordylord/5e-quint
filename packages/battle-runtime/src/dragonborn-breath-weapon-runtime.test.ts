@@ -30,6 +30,7 @@ import {
   battleUnitRefWithSupportProfiles,
   classLevel,
   combatantId,
+  discoverBattleActs,
   discoverBattleActCandidates,
   resolveBattleSubject,
   startBattle,
@@ -44,7 +45,21 @@ const secondTargetId = combatantId("dragonborn-breath-second-target");
 
 describe("Dragonborn Breath Weapon runtime", () => {
   test("resolves both save outcomes, applies ancestry damage, and spends one use", () => {
-    const state = breathWeaponBattle().state;
+    const session = breathWeaponBattle();
+    const state = session.state;
+    const discovered = discoverBattleActs(session).find(
+      (candidate) =>
+        candidate.subject.tag === "unitFeature" &&
+        candidate.subject.actorId === spellCasterId,
+    );
+    expect(discovered?.routeEvents).toEqual([
+      {
+        kind: "discoverBattleActs",
+        subject: "attackActionAreaSaveDamageReplacement",
+        holes: ["savingThrowOutcome"],
+        owner: "battleFeatureResource",
+      },
+    ]);
     const pendingDamage = resolveBreathWeaponSave(state, {
       outcomes: [
         { targetId: spellTargetId, succeeded: false },
