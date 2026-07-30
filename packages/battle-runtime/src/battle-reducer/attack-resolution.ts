@@ -280,7 +280,7 @@ export function resolveDash(
   }
   /* v8 ignore stop */
   const actor = input.state.combatants.get(input.subject.actorId);
-  /* v8 ignore start -- Defensive internal guard: the dispatcher's missing-combatant check rejects an absent actor before routing Dash here. */
+  /* v8 ignore start -- Defensive internal guard: the dispatcher derives the current actor from the combatant map, so its current-actor gate rejects an absent Dash actor before routing here. */
   if (actor === undefined) {
     return invalidResult(
       input.state,
@@ -461,7 +461,7 @@ export function resolveBonusActionDash(
   }
   /* v8 ignore stop */
   const actor = input.state.combatants.get(input.subject.actorId);
-  /* v8 ignore start -- Defensive internal guard: the dispatcher's missing-combatant check rejects an absent actor before routing a Bonus Action Dash here. */
+  /* v8 ignore start -- Defensive internal guard: the dispatcher derives the current actor from the combatant map, so its current-actor gate rejects an absent Bonus Action Dash actor before routing here. */
   if (actor === undefined) {
     return invalidResult(
       input.state,
@@ -622,7 +622,7 @@ export function resolveDodge(
   }
   /* v8 ignore stop */
   const actor = input.state.combatants.get(input.subject.actorId);
-  /* v8 ignore start -- Defensive internal guard: the dispatcher's missing-combatant check rejects an absent actor before routing Dodge here. */
+  /* v8 ignore start -- Defensive internal guard: the dispatcher derives the current actor from the combatant map, so its current-actor gate rejects an absent Dodge actor before routing here. */
   if (actor === undefined) {
     return invalidResult(
       input.state,
