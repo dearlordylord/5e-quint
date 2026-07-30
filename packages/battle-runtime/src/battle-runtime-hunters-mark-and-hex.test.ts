@@ -15,6 +15,7 @@ import type {
 } from "./battle-runtime.test-support.ts";
 import {
   applyBattleHitPointDamage,
+  abilityCheckFill,
   attackDamageDispositionFill,
   attackDamageHoleAfterHit,
   attackInitialTargetHole,
@@ -914,6 +915,24 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       skill: "perception",
       rollMode: "disadvantage",
     });
+    const searched = resolveBattleSubject({
+      state: hiddenFighterState,
+      subject: searchSubject,
+      fills: [
+        targetFill(searchTarget, fighterId),
+        abilityCheckFill(searchCheck, 10),
+      ],
+    });
+    expect(searched.routeEvents).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "markedDamageRiderEffect",
+          holes: [],
+          owner: "battleAbilityCheckRollMode",
+        },
+      ]),
+    );
   });
 
   test("Hex retarget waits until a later turn after the cursed target drops", () => {
