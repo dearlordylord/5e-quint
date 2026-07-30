@@ -1607,7 +1607,14 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("Stand from Prone spends half Speed as Movement and clears Prone", () => {
-    const state = fighterVsGoblinBattle();
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-stand-from-prone"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const state = session.state;
     const fighter = state.combatants.get(fighterId)!;
     const proneState: BattleState = {
       ...state,
@@ -1619,14 +1626,30 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         ),
       ),
     };
+    const standAct = findAct(
+      battleRuntimeSessionForTest({
+        state: proneState,
+        context: session.context,
+      }),
+      {
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "standFromProne",
+      },
+    );
+    expect(standAct.routeEvents).toEqual([
+      { kind: "startBattle", owner: "battleCreatureState" },
+      {
+        kind: "discoverBattleActs",
+        subject: "creatureStatProjection",
+        holes: [],
+        owner: "battleCreatureState",
+      },
+    ]);
     const stood = requireResolved(
       resolveBattleSubject({
         state: proneState,
-        subject: {
-          tag: "runtimeCommand",
-          actorId: fighterId,
-          command: "standFromProne",
-        },
+        subject: standAct.subject,
         fills: [],
       }),
     );
@@ -1641,6 +1664,20 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         }),
       }),
     );
+    expect(stood.routeEvents).toEqual([
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "creatureStatProjection",
+        holes: [],
+        owner: "battleCreatureState",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "creatureStatProjection",
+        holes: [],
+        owner: "battleMovementResource",
+      },
+    ]);
   });
 
   test("Stand from Prone requires positive Speed and enough remaining Movement", () => {
