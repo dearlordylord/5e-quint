@@ -246,6 +246,7 @@ import type {
   BattleSleetStormAreaHazardTrigger,
   BattleWebRestraintTrigger,
   BattleHideousLaughterRepeatSavingThrowOutcomeHole,
+  BattleHole,
   BattleHoleId,
   BattleJumpMovementReplacementFact,
   BattleMovementFillValue,
@@ -6583,6 +6584,14 @@ function collectRequestedHoleFills<
   return { resolved, missingHoles };
 }
 
+function firstMissingHoleFrontier(
+  ...frontiers: readonly (readonly BattleHole[])[]
+): readonly BattleHole[] {
+  // Argument order is replay-protocol priority: later turn-boundary holes stay
+  // hidden until the caller supplies every hole in the first missing frontier.
+  return frontiers.find((frontier) => frontier.length > 0) ?? [];
+}
+
 export function resolveEndTurnCommand(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
@@ -6911,53 +6920,21 @@ export function resolveEndTurnCommand(
   );
   const abilityD20TestEndTurnSaves =
     abilityD20TestEndTurnSaveCollection.resolved.map(({ fill }) => fill);
-  const missingSleepRepeatSaveHoles = sleepRepeatSaveCollection.missingHoles;
-  if (missingSleepRepeatSaveHoles.length > 0) {
-    return needsHolesResult(input.state, input.subject, [
-      ...missingSleepRepeatSaveHoles,
-    ]);
-  }
-  const missingHideousLaughterRepeatSaveHoles =
-    hideousLaughterRepeatSaveCollection.missingHoles;
-  if (missingHideousLaughterRepeatSaveHoles.length > 0) {
-    return needsHolesResult(input.state, input.subject, [
-      ...missingHideousLaughterRepeatSaveHoles,
-    ]);
-  }
-  const missingSpellConditionEndTurnSaveHoles =
-    spellConditionEndTurnSaveCollection.missingHoles;
-  if (missingSpellConditionEndTurnSaveHoles.length > 0) {
-    return needsHolesResult(input.state, input.subject, [
-      ...missingSpellConditionEndTurnSaveHoles,
-    ]);
-  }
-  const missingSpellConditionCountedEndTurnSaveHoles =
-    spellConditionCountedEndTurnSaveCollection.missingHoles;
-  if (missingSpellConditionCountedEndTurnSaveHoles.length > 0) {
-    return needsHolesResult(input.state, input.subject, [
-      ...missingSpellConditionCountedEndTurnSaveHoles,
-    ]);
-  }
-  const missingUnitFeatureConditionEndTurnSaveHoles =
-    unitFeatureConditionEndTurnSaveCollection.missingHoles;
-  if (missingUnitFeatureConditionEndTurnSaveHoles.length > 0) {
-    return needsHolesResult(input.state, input.subject, [
-      ...missingUnitFeatureConditionEndTurnSaveHoles,
-    ]);
-  }
-  const missingSlowActivePenaltiesEndTurnSaveHoles =
-    slowActivePenaltiesEndTurnSaveCollection.missingHoles;
-  if (missingSlowActivePenaltiesEndTurnSaveHoles.length > 0) {
-    return needsHolesResult(input.state, input.subject, [
-      ...missingSlowActivePenaltiesEndTurnSaveHoles,
-    ]);
-  }
-  const missingAbilityD20TestEndTurnSaveHoles =
-    abilityD20TestEndTurnSaveCollection.missingHoles;
-  if (missingAbilityD20TestEndTurnSaveHoles.length > 0) {
-    return needsHolesResult(input.state, input.subject, [
-      ...missingAbilityD20TestEndTurnSaveHoles,
-    ]);
+  const missingEndTurnSaveHoles = firstMissingHoleFrontier(
+    sleepRepeatSaveCollection.missingHoles,
+    hideousLaughterRepeatSaveCollection.missingHoles,
+    spellConditionEndTurnSaveCollection.missingHoles,
+    spellConditionCountedEndTurnSaveCollection.missingHoles,
+    unitFeatureConditionEndTurnSaveCollection.missingHoles,
+    slowActivePenaltiesEndTurnSaveCollection.missingHoles,
+    abilityD20TestEndTurnSaveCollection.missingHoles,
+  );
+  if (missingEndTurnSaveHoles.length > 0) {
+    return needsHolesResult(
+      input.state,
+      input.subject,
+      missingEndTurnSaveHoles,
+    );
   }
   const endTurnDamageRollCollection = collectRequestedHoleFills(
     endTurnDamageRequests,
@@ -6969,12 +6946,6 @@ export function resolveEndTurnCommand(
   const endTurnDamageRollRequests = endTurnDamageRollCollection.resolved.map(
     ({ request, fill: roll }) => ({ ...request, roll }),
   );
-  const missingEndTurnDamageHoles = endTurnDamageRollCollection.missingHoles;
-  if (missingEndTurnDamageHoles.length > 0) {
-    return needsHolesResult(input.state, input.subject, [
-      ...missingEndTurnDamageHoles,
-    ]);
-  }
   const startTurnDamageRollCollection = collectRequestedHoleFills(
     startTurnDamageRequests,
     (hole) => spellTurnStartDamageRollFor(input.fills, hole),
@@ -6987,12 +6958,16 @@ export function resolveEndTurnCommand(
       ...request,
       roll,
     }));
-  const missingStartTurnDamageHoles =
-    startTurnDamageRollCollection.missingHoles;
-  if (missingStartTurnDamageHoles.length > 0) {
-    return needsHolesResult(input.state, input.subject, [
-      ...missingStartTurnDamageHoles,
-    ]);
+  const missingTurnBoundaryDamageHoles = firstMissingHoleFrontier(
+    endTurnDamageRollCollection.missingHoles,
+    startTurnDamageRollCollection.missingHoles,
+  );
+  if (missingTurnBoundaryDamageHoles.length > 0) {
+    return needsHolesResult(
+      input.state,
+      input.subject,
+      missingTurnBoundaryDamageHoles,
+    );
   }
   const turnBoundaryDamageHoleIds = new Set<BattleHoleId>(
     [...endTurnDamageHoles, ...startTurnDamageHoles].map((hole) => hole.holeId),
@@ -7208,14 +7183,7 @@ export function resolveEndTurnCommand(
     );
   }
   /* v8 ignore stop */
-  for (const request of sleepRepeatSaveRequests) {
-    const fill = sleepRepeatSavingThrowOutcomeFor(
-      savingThrowOutcomeFills,
-      request.hole,
-    );
-    if (fill === undefined) {
-      continue;
-    }
+  for (const { fill } of sleepRepeatSaveCollection.resolved) {
     const validation = validateSleepRepeatSavingThrowOutcome(
       fill.value,
       actorId,
@@ -7226,14 +7194,7 @@ export function resolveEndTurnCommand(
     }
     /* v8 ignore stop */
   }
-  for (const request of slowActivePenaltiesEndTurnSaveRequests) {
-    const fill = slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
-      savingThrowOutcomeFills,
-      request.hole,
-    );
-    if (fill === undefined) {
-      continue;
-    }
+  for (const { fill } of slowActivePenaltiesEndTurnSaveCollection.resolved) {
     const validation = validateSlowActivePenaltiesEndTurnSavingThrowOutcome(
       fill.value,
       actorId,
@@ -7244,14 +7205,7 @@ export function resolveEndTurnCommand(
     }
     /* v8 ignore stop */
   }
-  for (const request of hideousLaughterRepeatSaveRequests) {
-    const fill = hideousLaughterRepeatSavingThrowOutcomeFor(
-      savingThrowOutcomeFills,
-      request.hole,
-    );
-    if (fill === undefined) {
-      continue;
-    }
+  for (const { fill } of hideousLaughterRepeatSaveCollection.resolved) {
     const validation = validateSleepRepeatSavingThrowOutcome(
       fill.value,
       actorId,
@@ -7262,14 +7216,7 @@ export function resolveEndTurnCommand(
     }
     /* v8 ignore stop */
   }
-  for (const request of spellConditionEndTurnSaveRequests) {
-    const fill = spellConditionEndTurnSavingThrowOutcomeFor(
-      savingThrowOutcomeFills,
-      request.hole,
-    );
-    if (fill === undefined) {
-      continue;
-    }
+  for (const { fill } of spellConditionEndTurnSaveCollection.resolved) {
     const validation = validateSpellConditionEndTurnSavingThrowOutcome(
       fill.value,
       actorId,
@@ -7280,14 +7227,7 @@ export function resolveEndTurnCommand(
     }
     /* v8 ignore stop */
   }
-  for (const request of spellConditionCountedEndTurnSaveRequests) {
-    const fill = spellConditionCountedEndTurnSavingThrowOutcomeFor(
-      savingThrowOutcomeFills,
-      request.hole,
-    );
-    if (fill === undefined) {
-      continue;
-    }
+  for (const { fill } of spellConditionCountedEndTurnSaveCollection.resolved) {
     const validation = validateSpellConditionEndTurnSavingThrowOutcome(
       fill.value,
       actorId,
@@ -7298,14 +7238,7 @@ export function resolveEndTurnCommand(
     }
     /* v8 ignore stop */
   }
-  for (const request of unitFeatureConditionEndTurnSaveRequests) {
-    const fill = unitFeatureConditionEndTurnSavingThrowOutcomeFor(
-      savingThrowOutcomeFills,
-      request.hole,
-    );
-    if (fill === undefined) {
-      continue;
-    }
+  for (const { fill } of unitFeatureConditionEndTurnSaveCollection.resolved) {
     const validation = validateSpellConditionEndTurnSavingThrowOutcome(
       fill.value,
       actorId,
@@ -7316,14 +7249,7 @@ export function resolveEndTurnCommand(
     }
     /* v8 ignore stop */
   }
-  for (const request of abilityD20TestEndTurnSaveRequests) {
-    const fill = abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
-      savingThrowOutcomeFills,
-      request.hole,
-    );
-    if (fill === undefined) {
-      continue;
-    }
+  for (const { fill } of abilityD20TestEndTurnSaveCollection.resolved) {
     const validation = validateSpellConditionEndTurnSavingThrowOutcome(
       fill.value,
       actorId,
@@ -7362,14 +7288,7 @@ export function resolveEndTurnCommand(
     }
     /* v8 ignore stop */
   }
-  for (const request of startTurnSaveRequests) {
-    const fill = spellTurnStartSavingThrowOutcomeFor(
-      savingThrowOutcomeFills,
-      request.hole,
-    );
-    if (fill === undefined) {
-      continue;
-    }
+  for (const { fill } of startTurnSaveCollection.resolved) {
     const validation = validateSpellTurnStartSavingThrowOutcome(
       fill.value,
       nextActorId,
