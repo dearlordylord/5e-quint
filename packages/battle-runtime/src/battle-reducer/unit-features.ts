@@ -317,6 +317,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
   }
   /* v8 ignore stop */
   const actor = input.state.combatants.get(input.subject.actorId);
+  /* v8 ignore start -- Admitted-subject invariant: held-weapon Unit subjects pass character-owner procedure admission before this resolver is dispatched. */
   if (!isCharacterBattleCreatureState(actor)) {
     return invalidResult(
       input.state,
@@ -324,11 +325,13 @@ export function resolveUnitFeatureHeldWeaponActivation(
       "Held-weapon Unit feature is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const procedure = characterUnitProcedure(
     actor.origin.execution,
     input.subject.procedureRef,
     CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   );
+  /* v8 ignore start -- Discovered-subject invariant: held-weapon activation discovery emits only the selected Sacred Weapon procedure admitted above. */
   if (
     procedure?.kind !== "unitFeature" ||
     procedure.execution.kind !== "paladinSacredWeapon"
@@ -339,6 +342,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
       "Held-weapon Unit feature is no longer selected for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const unitFeature = procedure.execution;
   if (
     !sacredWeaponHeldMeleeWeapons(input.state, actor).some(
@@ -363,24 +367,17 @@ export function resolveUnitFeatureHeldWeaponActivation(
       "Sacred Weapon has no Channel Divinity uses remaining.",
     );
   }
-  const spentAction = spendActivationResource(
-    input.state.currentTurnResources,
-    {
+  const spentAction = Either.getOrThrow(
+    spendActivationResource(input.state.currentTurnResources, {
       kind: "action",
       action: unitFeature.sacredWeapon.activationCost.action,
-    },
+    }),
   );
-  if (Either.isLeft(spentAction)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Sacred Weapon Attack action is no longer available.",
-    );
-  }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration({
     unit: unitFeature.sacredWeapon.duration.unit,
     amount: unitFeature.sacredWeapon.duration.amount,
   });
+  /* v8 ignore start -- Admitted Sacred Weapon invariant: the support-profile parser accepts the SRD one-minute duration before producing execution facts. */
   if (Either.isLeft(durationTicks)) {
     return invalidResult(
       input.state,
@@ -388,6 +385,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
       "Sacred Weapon duration is not supported by battle runtime.",
     );
   }
+  /* v8 ignore stop */
   const nextActor: CharacterBattleCreatureState = {
     ...actor,
     activeEffects: [
@@ -422,7 +420,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
   };
   const nextState = {
     ...input.state,
-    currentTurnResources: spentAction.right,
+    currentTurnResources: spentAction,
     combatants: new Map(input.state.combatants).set(
       actor.combatantId,
       nextActor,

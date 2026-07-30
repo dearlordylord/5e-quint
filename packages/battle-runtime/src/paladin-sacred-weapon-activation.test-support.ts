@@ -55,6 +55,7 @@ export const clericChannelDivinityUnitId = "cleric_channel_divinity";
 type SacredWeaponFixtureInput = {
   readonly selectedProfile?: boolean;
   readonly channelDivinityUsesRemaining?: number;
+  readonly includeActionSurgeResource?: boolean;
   readonly weaponUnitId?: "weapon_longsword" | "weapon_shortbow";
   readonly charismaScore?: number;
   readonly alternateAbilityChoices?: NonNullable<
@@ -89,7 +90,12 @@ export function sacredWeaponSession(
         initiative: 18,
         characterUnitRefs:
           input.selectedProfile === false ? [] : [unitRef.right],
-        classLevels: [{ className: "paladin", level: 3 }],
+        classLevels: [
+          { className: "paladin", level: 3 },
+          ...(input.includeActionSurgeResource === true
+            ? [{ className: "fighter" as const, level: 2 }]
+            : []),
+        ],
         attack: {
           ...zeroAbilityWeaponAttack(input.weaponUnitId ?? "weapon_longsword"),
           ...(input.alternateAbilityChoices === undefined
@@ -109,6 +115,14 @@ export function sacredWeaponSession(
             unit: channelDivinity,
             usesRemaining: input.channelDivinityUsesRemaining ?? 2,
           },
+          ...(input.includeActionSurgeResource === true
+            ? [
+                {
+                  unit: unitLibrary.requireUnit("fighter_action_surge"),
+                  usesRemaining: 1,
+                },
+              ]
+            : []),
         ],
       }),
       characterCreature({

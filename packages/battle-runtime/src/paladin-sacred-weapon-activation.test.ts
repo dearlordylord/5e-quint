@@ -127,6 +127,36 @@ describe("Sacred Weapon activation", () => {
     });
   });
 
+  test("reactivating the same held weapon replaces rather than stacks its active effect", () => {
+    const state = sacredWeaponBattle({ includeActionSurgeResource: true });
+    const first = resolveSacredWeapon(state, requireSacredWeaponAct(state));
+    const secondReady = withFreshAttackAction(first, state);
+    const second = resolveSacredWeapon(
+      secondReady,
+      requireSacredWeaponAct(secondReady),
+    );
+
+    expect(sacredWeaponProjection(second, "recast")).toMatchObject({
+      channelDivinityUsesRemaining: 0,
+      boundWeaponItemId: "main:weapon_longsword",
+      activeEffectCount: 1,
+      rejected: false,
+    });
+    const paladin = second.combatants.get(paladinId);
+    if (paladin?.origin.kind !== "character") {
+      throw new Error("Expected Sacred Weapon Paladin.");
+    }
+    expect(
+      paladin.origin.resources
+        .map((resource) =>
+          resource.resource.kind === "use_count"
+            ? Number(resource.usesRemaining)
+            : -1,
+        )
+        .sort(),
+    ).toEqual([0, 1]);
+  });
+
   test("active binding adds Charisma attack-roll bonus with minimum 1 and offers normal or Radiant damage", () => {
     const session = sacredWeaponSession({
       charismaScore: 8,
