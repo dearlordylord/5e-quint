@@ -22,7 +22,6 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
-  breakBattleConcentration,
   DieRollResult,
   discoverBattleActCandidates,
   elapsedTimeTicks,
@@ -1013,8 +1012,53 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       throw new Error("Expected Spike Growth cast to resolve.");
     }
 
-    const broken = breakBattleConcentration(cast.state, spellCasterId);
-    expect(requireCombatant(broken, spellCasterId).activeEffects).toEqual([]);
+    const broken = resolveBattleSubject({
+      state: cast.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endConcentration",
+      },
+      fills: [],
+    });
+    if (broken.tag !== "resolved") {
+      throw new Error("Expected Spike Growth concentration to end.");
+    }
+    expect(requireCombatant(broken.state, spellCasterId).activeEffects).toEqual(
+      [],
+    );
+    expect(broken.routeEvents).toEqual([
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleConcentration",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "spatialEffect",
+        holes: [],
+        owner: "battleConcentration",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "spatialEffect",
+        holes: [],
+        owner: "battleAreaHazard",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "spatialEffect",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+    ]);
   });
 
   test("duration expiration removes the spike growth hazard and concentration at ten minutes", () => {
