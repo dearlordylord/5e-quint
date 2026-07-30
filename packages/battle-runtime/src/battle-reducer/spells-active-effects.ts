@@ -2004,46 +2004,65 @@ export function applyGreaseGroundHazardCastEffects(input: {
   >;
   readonly heightenedSpellTargetId: CombatantId | null;
 }): BattleState {
-  const combatants = new Map(input.state.combatants);
-  const caster = combatants.get(input.actorId);
-  if (caster !== undefined) {
-    const replacing = caster.activeEffects.filter(
-      (effect) =>
-        effect.kind === "greaseGroundHazard" &&
-        effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-        effect.sourceCombatantId === input.actorId &&
-        effect.areaId === input.area.areaId,
-    );
-    const activeEffects = [
-      ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
-      {
-        kind: "greaseGroundHazard" as const,
-        sourceProcedureRef: input.invocation.sourceProcedureRef,
-        sourceCombatantId: input.actorId,
-        areaId: input.area.areaId,
-        heightenedSpellTargetDisadvantage:
-          input.heightenedSpellTargetId === null
-            ? null
-            : {
-                kind: "heightenedSpellTargetDisadvantage" as const,
-                targetId: input.heightenedSpellTargetId,
-              },
-        save: {
-          ability: input.invocation.ability,
-          dc: input.invocation.dc,
-        },
-        expiresAt: {
-          kind: "duration" as const,
-          durationTicks: input.invocation.durationTicks,
-        },
+  const stateWithActiveEffect = battleStateAfterReplacingCasterActiveEffect({
+    state: input.state,
+    actorId: input.actorId,
+    activeEffect: {
+      kind: "greaseGroundHazard" as const,
+      sourceProcedureRef: input.invocation.sourceProcedureRef,
+      sourceCombatantId: input.actorId,
+      areaId: input.area.areaId,
+      heightenedSpellTargetDisadvantage:
+        input.heightenedSpellTargetId === null
+          ? null
+          : {
+              kind: "heightenedSpellTargetDisadvantage" as const,
+              targetId: input.heightenedSpellTargetId,
+            },
+      save: {
+        ability: input.invocation.ability,
+        dc: input.invocation.dc,
       },
-    ];
-    combatants.set(input.actorId, { ...caster, activeEffects });
-  }
+      expiresAt: {
+        kind: "duration" as const,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
+    replaces: (activeEffect) =>
+      activeEffect.kind === "greaseGroundHazard" &&
+      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      activeEffect.sourceCombatantId === input.actorId &&
+      activeEffect.areaId === input.area.areaId,
+  });
   return {
-    ...input.state,
-    combatants: applyProneToCombatants(combatants, input.failedTargetIds),
+    ...stateWithActiveEffect,
+    combatants: applyProneToCombatants(
+      new Map(stateWithActiveEffect.combatants),
+      input.failedTargetIds,
+    ),
   };
+}
+
+function battleStateAfterReplacingCasterActiveEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly activeEffect: BattleActiveEffect;
+  readonly replaces: (activeEffect: BattleActiveEffect) => boolean;
+}): BattleState {
+  const caster = input.state.combatants.get(input.actorId);
+  if (caster === undefined) {
+    return input.state;
+  }
+  const combatants = new Map(input.state.combatants).set(input.actorId, {
+    ...caster,
+    activeEffects: [
+      ...caster.activeEffects.filter(
+        (activeEffect) => !input.replaces(activeEffect),
+      ),
+      input.activeEffect,
+    ],
+  });
+  return { ...input.state, combatants };
 }
 
 export function applyFogCloudObscurementCastEffect(input: {
@@ -2055,21 +2074,10 @@ export function applyFogCloudObscurementCastEffect(input: {
     { readonly procedure: "fogCloudObscurement" }
   >;
 }): BattleState {
-  const combatants = new Map(input.state.combatants);
-  const caster = combatants.get(input.actorId);
-  if (caster === undefined) {
-    return input.state;
-  }
-  const replacing = caster.activeEffects.filter(
-    (effect) =>
-      effect.kind === "fogCloudObscurement" &&
-      effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      effect.sourceCombatantId === input.actorId &&
-      effect.areaId === input.areaId,
-  );
-  const activeEffects = [
-    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
-    {
+  return battleStateAfterReplacingCasterActiveEffect({
+    state: input.state,
+    actorId: input.actorId,
+    activeEffect: {
       kind: "fogCloudObscurement" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
@@ -2081,9 +2089,12 @@ export function applyFogCloudObscurementCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-  ];
-  combatants.set(input.actorId, { ...caster, activeEffects });
-  return { ...input.state, combatants };
+    replaces: (activeEffect) =>
+      activeEffect.kind === "fogCloudObscurement" &&
+      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      activeEffect.sourceCombatantId === input.actorId &&
+      activeEffect.areaId === input.areaId,
+  });
 }
 
 export function applyMagicalDarknessPointOriginCastEffect(input: {
@@ -2095,21 +2106,13 @@ export function applyMagicalDarknessPointOriginCastEffect(input: {
     { readonly procedure: "magicalDarknessPointOrigin" }
   >;
 }): BattleState {
-  const combatants = new Map(input.state.combatants);
-  const caster = combatants.get(input.actorId);
-  if (caster === undefined) {
+  if (!input.state.combatants.has(input.actorId)) {
     return input.state;
   }
-  const replacing = caster.activeEffects.filter(
-    (effect) =>
-      effect.kind === "magicalDarknessPointOrigin" &&
-      effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      effect.sourceCombatantId === input.actorId &&
-      effect.areaId === input.areaChoice.areaId,
-  );
-  const activeEffects = [
-    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
-    {
+  const stateWithActiveEffect = battleStateAfterReplacingCasterActiveEffect({
+    state: input.state,
+    actorId: input.actorId,
+    activeEffect: {
       kind: "magicalDarknessPointOrigin" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
@@ -2121,16 +2124,19 @@ export function applyMagicalDarknessPointOriginCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-  ];
-  combatants.set(input.actorId, { ...caster, activeEffects });
+    replaces: (activeEffect) =>
+      activeEffect.kind === "magicalDarknessPointOrigin" &&
+      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      activeEffect.sourceCombatantId === input.actorId &&
+      activeEffect.areaId === input.areaChoice.areaId,
+  });
   const dispelledLightEffectIds = new Set(
     input.areaChoice.spellCreatedLightOverlaps.map(
       (overlap) => overlap.sourceEffectId,
     ),
   );
   return {
-    ...input.state,
-    combatants,
+    ...stateWithActiveEffect,
     lightEmitters: input.state.lightEmitters.filter(
       (emitter) =>
         !(
@@ -2152,21 +2158,10 @@ export function applyFlamingSphereCastEffect(input: {
     { readonly procedure: "flamingSphere" }
   >;
 }): BattleState {
-  const combatants = new Map(input.state.combatants);
-  const caster = combatants.get(input.actorId);
-  if (caster === undefined) {
-    return input.state;
-  }
-  const replacing = caster.activeEffects.filter(
-    (effect) =>
-      effect.kind === "flamingSphere" &&
-      effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      effect.sourceCombatantId === input.actorId &&
-      effect.areaId === input.areaId,
-  );
-  const activeEffects = [
-    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
-    {
+  return battleStateAfterReplacingCasterActiveEffect({
+    state: input.state,
+    actorId: input.actorId,
+    activeEffect: {
       kind: "flamingSphere" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
@@ -2183,9 +2178,12 @@ export function applyFlamingSphereCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-  ];
-  combatants.set(input.actorId, { ...caster, activeEffects });
-  return { ...input.state, combatants };
+    replaces: (activeEffect) =>
+      activeEffect.kind === "flamingSphere" &&
+      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      activeEffect.sourceCombatantId === input.actorId &&
+      activeEffect.areaId === input.areaId,
+  });
 }
 
 export function applySpiritualWeaponAttackProxyEffect(input: {
@@ -2299,21 +2297,10 @@ export function applySpikeGrowthMovementHazardCastEffect(input: {
     { readonly procedure: "spikeGrowthMovementHazard" }
   >;
 }): BattleState {
-  const combatants = new Map(input.state.combatants);
-  const caster = combatants.get(input.actorId);
-  if (caster === undefined) {
-    return input.state;
-  }
-  const replacing = caster.activeEffects.filter(
-    (effect) =>
-      effect.kind === "spikeGrowthHazard" &&
-      effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      effect.sourceCombatantId === input.actorId &&
-      effect.areaId === input.areaId,
-  );
-  const activeEffects = [
-    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
-    {
+  return battleStateAfterReplacingCasterActiveEffect({
+    state: input.state,
+    actorId: input.actorId,
+    activeEffect: {
       kind: "spikeGrowthHazard" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
@@ -2326,9 +2313,12 @@ export function applySpikeGrowthMovementHazardCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-  ];
-  combatants.set(input.actorId, { ...caster, activeEffects });
-  return { ...input.state, combatants };
+    replaces: (activeEffect) =>
+      activeEffect.kind === "spikeGrowthHazard" &&
+      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      activeEffect.sourceCombatantId === input.actorId &&
+      activeEffect.areaId === input.areaId,
+  });
 }
 
 export function applyMoonbeamCastEffect(input: {
@@ -2340,21 +2330,10 @@ export function applyMoonbeamCastEffect(input: {
     { readonly procedure: "moonbeam" }
   >;
 }): BattleState {
-  const combatants = new Map(input.state.combatants);
-  const caster = combatants.get(input.actorId);
-  if (caster === undefined) {
-    return input.state;
-  }
-  const replacing = caster.activeEffects.filter(
-    (effect) =>
-      effect.kind === "moonbeam" &&
-      effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      effect.sourceCombatantId === input.actorId &&
-      effect.areaId === input.areaId,
-  );
-  const activeEffects = [
-    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
-    {
+  return battleStateAfterReplacingCasterActiveEffect({
+    state: input.state,
+    actorId: input.actorId,
+    activeEffect: {
       kind: "moonbeam" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
@@ -2373,9 +2352,12 @@ export function applyMoonbeamCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-  ];
-  combatants.set(input.actorId, { ...caster, activeEffects });
-  return { ...input.state, combatants };
+    replaces: (activeEffect) =>
+      activeEffect.kind === "moonbeam" &&
+      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      activeEffect.sourceCombatantId === input.actorId &&
+      activeEffect.areaId === input.areaId,
+  });
 }
 
 export function applyWebRestraintHazardCastEffect(input: {
@@ -2387,21 +2369,10 @@ export function applyWebRestraintHazardCastEffect(input: {
     { readonly procedure: "webRestraintHazard" }
   >;
 }): BattleState {
-  const combatants = new Map(input.state.combatants);
-  const caster = combatants.get(input.actorId);
-  if (caster === undefined) {
-    return input.state;
-  }
-  const replacing = caster.activeEffects.filter(
-    (effect) =>
-      effect.kind === "webRestraintHazard" &&
-      effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      effect.sourceCombatantId === input.actorId &&
-      effect.areaId === input.areaId,
-  );
-  const activeEffects = [
-    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
-    {
+  return battleStateAfterReplacingCasterActiveEffect({
+    state: input.state,
+    actorId: input.actorId,
+    activeEffect: {
       kind: "webRestraintHazard" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
@@ -2419,9 +2390,12 @@ export function applyWebRestraintHazardCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-  ];
-  combatants.set(input.actorId, { ...caster, activeEffects });
-  return { ...input.state, combatants };
+    replaces: (activeEffect) =>
+      activeEffect.kind === "webRestraintHazard" &&
+      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      activeEffect.sourceCombatantId === input.actorId &&
+      activeEffect.areaId === input.areaId,
+  });
 }
 
 export function applySleetStormAreaHazardCastEffect(input: {
@@ -2433,21 +2407,10 @@ export function applySleetStormAreaHazardCastEffect(input: {
     { readonly procedure: "sleetStormAreaHazard" }
   >;
 }): BattleState {
-  const combatants = new Map(input.state.combatants);
-  const caster = combatants.get(input.actorId);
-  if (caster === undefined) {
-    return input.state;
-  }
-  const replacing = caster.activeEffects.filter(
-    (effect) =>
-      effect.kind === "sleetStormAreaHazard" &&
-      effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      effect.sourceCombatantId === input.actorId &&
-      effect.areaId === input.areaId,
-  );
-  const activeEffects = [
-    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
-    {
+  return battleStateAfterReplacingCasterActiveEffect({
+    state: input.state,
+    actorId: input.actorId,
+    activeEffect: {
       kind: "sleetStormAreaHazard" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
@@ -2465,9 +2428,12 @@ export function applySleetStormAreaHazardCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-  ];
-  combatants.set(input.actorId, { ...caster, activeEffects });
-  return { ...input.state, combatants };
+    replaces: (activeEffect) =>
+      activeEffect.kind === "sleetStormAreaHazard" &&
+      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      activeEffect.sourceCombatantId === input.actorId &&
+      activeEffect.areaId === input.areaId,
+  });
 }
 
 export function applyInsectPlagueAreaHazardCastEffect(input: {
@@ -2479,21 +2445,10 @@ export function applyInsectPlagueAreaHazardCastEffect(input: {
     { readonly procedure: "insectPlagueAreaHazard" }
   >;
 }): BattleState {
-  const combatants = new Map(input.state.combatants);
-  const caster = combatants.get(input.actorId);
-  if (caster === undefined) {
-    return input.state;
-  }
-  const replacing = caster.activeEffects.filter(
-    (effect) =>
-      effect.kind === "insectPlagueAreaHazard" &&
-      effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      effect.sourceCombatantId === input.actorId &&
-      effect.areaId === input.areaId,
-  );
-  const activeEffects = [
-    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
-    {
+  return battleStateAfterReplacingCasterActiveEffect({
+    state: input.state,
+    actorId: input.actorId,
+    activeEffect: {
       kind: "insectPlagueAreaHazard" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
@@ -2511,9 +2466,12 @@ export function applyInsectPlagueAreaHazardCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-  ];
-  combatants.set(input.actorId, { ...caster, activeEffects });
-  return { ...input.state, combatants };
+    replaces: (activeEffect) =>
+      activeEffect.kind === "insectPlagueAreaHazard" &&
+      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      activeEffect.sourceCombatantId === input.actorId &&
+      activeEffect.areaId === input.areaId,
+  });
 }
 
 export function applyCloudkillAreaHazardCastEffect(input: {
@@ -2525,21 +2483,10 @@ export function applyCloudkillAreaHazardCastEffect(input: {
     { readonly procedure: "cloudkillAreaHazard" }
   >;
 }): BattleState {
-  const combatants = new Map(input.state.combatants);
-  const caster = combatants.get(input.actorId);
-  if (caster === undefined) {
-    return input.state;
-  }
-  const replacing = caster.activeEffects.filter(
-    (effect) =>
-      effect.kind === "cloudkillAreaHazard" &&
-      effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      effect.sourceCombatantId === input.actorId &&
-      effect.areaId === input.areaId,
-  );
-  const activeEffects = [
-    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
-    {
+  return battleStateAfterReplacingCasterActiveEffect({
+    state: input.state,
+    actorId: input.actorId,
+    activeEffect: {
       kind: "cloudkillAreaHazard" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
@@ -2557,9 +2504,12 @@ export function applyCloudkillAreaHazardCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-  ];
-  combatants.set(input.actorId, { ...caster, activeEffects });
-  return { ...input.state, combatants };
+    replaces: (activeEffect) =>
+      activeEffect.kind === "cloudkillAreaHazard" &&
+      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      activeEffect.sourceCombatantId === input.actorId &&
+      activeEffect.areaId === input.areaId,
+  });
 }
 
 export function applyGustOfWindLineCastEffect(input: {
@@ -2575,21 +2525,10 @@ export function applyGustOfWindLineCastEffect(input: {
   >;
   readonly heightenedSpellTargetId: CombatantId | null;
 }): BattleState {
-  const combatants = new Map(input.state.combatants);
-  const caster = combatants.get(input.actorId);
-  if (caster === undefined) {
-    return input.state;
-  }
-  const replacing = caster.activeEffects.filter(
-    (effect) =>
-      effect.kind === "gustOfWindLine" &&
-      effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      effect.sourceCombatantId === input.actorId &&
-      effect.areaId === input.area.areaId,
-  );
-  const activeEffects = [
-    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
-    {
+  return battleStateAfterReplacingCasterActiveEffect({
+    state: input.state,
+    actorId: input.actorId,
+    activeEffect: {
       kind: "gustOfWindLine" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
@@ -2622,9 +2561,12 @@ export function applyGustOfWindLineCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-  ];
-  combatants.set(input.actorId, { ...caster, activeEffects });
-  return { ...input.state, combatants };
+    replaces: (activeEffect) =>
+      activeEffect.kind === "gustOfWindLine" &&
+      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
+      activeEffect.sourceCombatantId === input.actorId &&
+      activeEffect.areaId === input.area.areaId,
+  });
 }
 
 export function replaceGustOfWindLineDirection(input: {
