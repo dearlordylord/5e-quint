@@ -352,6 +352,7 @@ import type {
   BattleActiveEffect,
   AdmittedBattleResolutionInput,
   BattleAttackRollResult,
+  BattleInterruptRouteOptions,
   BattleAttackDamageContinuationCunningStrikeFrame,
   BattleAttackDamageContinuationConcentrationFrame,
   BattleAttackDamageContinuationWithoutConcentration,
@@ -368,7 +369,6 @@ import type {
   BattleInterruptedProcedure,
   BattleHole,
   BattleOpportunityAttackThreat,
-  BattlePendingAttackDamageReduction,
   BattleInterruptDecision,
   BattleInterruptCheckpoint,
   BattleInterruptCheckpointInput,
@@ -388,7 +388,6 @@ import type {
   BattleState,
   BattleTargetSpatialFact,
   BattleTurnResources,
-  AttackSpellDamageAddition,
   EndedFlySpeedGrant,
   SpellSlotInvocationResource,
 } from "../battle-state-execution.ts";
@@ -404,10 +403,7 @@ import {
 type ResolveBattleSubjectInternalOptions = {
   readonly executionRegistry: SpellProcedureExecutionRegistry;
   readonly attackResolvers: BattleAttackRouteResolvers;
-  readonly replayingInterruptedProcedure?: boolean;
-  readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  readonly pendingAttackDamageReductions?: readonly BattlePendingAttackDamageReduction[];
-  readonly pendingAttackDamageAdditions?: readonly AttackSpellDamageAddition[];
+  readonly interruptRouteOptions: BattleInterruptRouteOptions;
   readonly skipD20TestNaturalOneRerollValidation?: boolean;
 };
 
@@ -419,6 +415,7 @@ export function resolveAdmittedBattleSubject(
   return resolveBattleSubjectInternal(input, {
     executionRegistry,
     attackResolvers,
+    interruptRouteOptions: {},
   });
 }
 
@@ -735,6 +732,14 @@ export function resolveBattleSubjectInternal(
   input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
 ): BattleResolutionResult {
+  const interruptRouteOptions = options.interruptRouteOptions;
+  const handledInterruptRouteOption =
+    interruptRouteOptions.handledInterruptTrigger === undefined
+      ? {}
+      : {
+          handledInterruptTrigger:
+            interruptRouteOptions.handledInterruptTrigger,
+        };
   const normalizedInputState = normalizeEarlyEndedOngoingFeatures(input.state);
   if (normalizedInputState !== input.state) {
     return resolveBattleSubjectInternal(
@@ -765,7 +770,7 @@ export function resolveBattleSubjectInternal(
   }
   if (
     input.state.interruptStack.length > 0 &&
-    options.replayingInterruptedProcedure !== true
+    interruptRouteOptions.replayingInterruptedProcedure !== true
   ) {
     const activeFrame = currentInterruptFrame(input.state);
     if (activeFrame !== null) {
@@ -855,25 +860,27 @@ export function resolveBattleSubjectInternal(
         const interruptResult = resolveBattleSubjectInternal(input, {
           executionRegistry: options.executionRegistry,
           attackResolvers: options.attackResolvers,
-          replayingInterruptedProcedure: true,
-          ...(activeInterrupt.handledInterruptTrigger === undefined
-            ? {}
-            : {
-                handledInterruptTrigger:
-                  activeInterrupt.handledInterruptTrigger,
-              }),
-          ...(activeInterrupt.pendingAttackDamageReductions === undefined
-            ? {}
-            : {
-                pendingAttackDamageReductions:
-                  activeInterrupt.pendingAttackDamageReductions,
-              }),
-          ...(activeInterrupt.pendingAttackDamageAdditions === undefined
-            ? {}
-            : {
-                pendingAttackDamageAdditions:
-                  activeInterrupt.pendingAttackDamageAdditions,
-              }),
+          interruptRouteOptions: {
+            replayingInterruptedProcedure: true,
+            ...(activeInterrupt.handledInterruptTrigger === undefined
+              ? {}
+              : {
+                  handledInterruptTrigger:
+                    activeInterrupt.handledInterruptTrigger,
+                }),
+            ...(activeInterrupt.pendingAttackDamageReductions === undefined
+              ? {}
+              : {
+                  pendingAttackDamageReductions:
+                    activeInterrupt.pendingAttackDamageReductions,
+                }),
+            ...(activeInterrupt.pendingAttackDamageAdditions === undefined
+              ? {}
+              : {
+                  pendingAttackDamageAdditions:
+                    activeInterrupt.pendingAttackDamageAdditions,
+                }),
+          },
         });
         return interruptResult.tag === "resolved"
           ? completeActiveInterruptProcedure(
@@ -1175,27 +1182,7 @@ export function resolveBattleSubjectInternal(
       return options.attackResolvers.resolveAttack({
         ...input,
         subject,
-        ...(options.replayingInterruptedProcedure === undefined
-          ? {}
-          : {
-              replayingInterruptedProcedure:
-                options.replayingInterruptedProcedure,
-            }),
-        ...(options.handledInterruptTrigger === undefined
-          ? {}
-          : { handledInterruptTrigger: options.handledInterruptTrigger }),
-        ...(options.pendingAttackDamageReductions === undefined
-          ? {}
-          : {
-              pendingAttackDamageReductions:
-                options.pendingAttackDamageReductions,
-            }),
-        ...(options.pendingAttackDamageAdditions === undefined
-          ? {}
-          : {
-              pendingAttackDamageAdditions:
-                options.pendingAttackDamageAdditions,
-            }),
+        ...interruptRouteOptions,
       });
     }
     if (subject.tag === "pactOfTheChainFamiliarAttack") {
@@ -1203,27 +1190,7 @@ export function resolveBattleSubjectInternal(
         {
           ...input,
           subject,
-          ...(options.replayingInterruptedProcedure === undefined
-            ? {}
-            : {
-                replayingInterruptedProcedure:
-                  options.replayingInterruptedProcedure,
-              }),
-          ...(options.handledInterruptTrigger === undefined
-            ? {}
-            : { handledInterruptTrigger: options.handledInterruptTrigger }),
-          ...(options.pendingAttackDamageReductions === undefined
-            ? {}
-            : {
-                pendingAttackDamageReductions:
-                  options.pendingAttackDamageReductions,
-              }),
-          ...(options.pendingAttackDamageAdditions === undefined
-            ? {}
-            : {
-                pendingAttackDamageAdditions:
-                  options.pendingAttackDamageAdditions,
-              }),
+          ...interruptRouteOptions,
         },
       );
     }
@@ -1422,27 +1389,7 @@ export function resolveBattleSubjectInternal(
       return resolveOffHandAttack({
         ...input,
         subject,
-        ...(options.replayingInterruptedProcedure === undefined
-          ? {}
-          : {
-              replayingInterruptedProcedure:
-                options.replayingInterruptedProcedure,
-            }),
-        ...(options.handledInterruptTrigger === undefined
-          ? {}
-          : { handledInterruptTrigger: options.handledInterruptTrigger }),
-        ...(options.pendingAttackDamageReductions === undefined
-          ? {}
-          : {
-              pendingAttackDamageReductions:
-                options.pendingAttackDamageReductions,
-            }),
-        ...(options.pendingAttackDamageAdditions === undefined
-          ? {}
-          : {
-              pendingAttackDamageAdditions:
-                options.pendingAttackDamageAdditions,
-            }),
+        ...interruptRouteOptions,
       });
     }
     if (
@@ -1452,27 +1399,7 @@ export function resolveBattleSubjectInternal(
       return resolveMartialArtsBonusUnarmedStrike({
         ...input,
         subject,
-        ...(options.replayingInterruptedProcedure === undefined
-          ? {}
-          : {
-              replayingInterruptedProcedure:
-                options.replayingInterruptedProcedure,
-            }),
-        ...(options.handledInterruptTrigger === undefined
-          ? {}
-          : { handledInterruptTrigger: options.handledInterruptTrigger }),
-        ...(options.pendingAttackDamageReductions === undefined
-          ? {}
-          : {
-              pendingAttackDamageReductions:
-                options.pendingAttackDamageReductions,
-            }),
-        ...(options.pendingAttackDamageAdditions === undefined
-          ? {}
-          : {
-              pendingAttackDamageAdditions:
-                options.pendingAttackDamageAdditions,
-            }),
+        ...interruptRouteOptions,
       });
     }
     if (subject.tag === "bonusActionStandardAction") {
@@ -1485,27 +1412,7 @@ export function resolveBattleSubjectInternal(
       return options.attackResolvers.resolveMonkFocusFlurryOfBlowsStrike({
         ...input,
         subject,
-        ...(options.replayingInterruptedProcedure === undefined
-          ? {}
-          : {
-              replayingInterruptedProcedure:
-                options.replayingInterruptedProcedure,
-            }),
-        ...(options.handledInterruptTrigger === undefined
-          ? {}
-          : { handledInterruptTrigger: options.handledInterruptTrigger }),
-        ...(options.pendingAttackDamageReductions === undefined
-          ? {}
-          : {
-              pendingAttackDamageReductions:
-                options.pendingAttackDamageReductions,
-            }),
-        ...(options.pendingAttackDamageAdditions === undefined
-          ? {}
-          : {
-              pendingAttackDamageAdditions:
-                options.pendingAttackDamageAdditions,
-            }),
+        ...interruptRouteOptions,
       });
     }
     if (
@@ -1532,10 +1439,7 @@ export function resolveBattleSubjectInternal(
         {
           ...input,
           subject,
-          handledInterruptTrigger: options.handledInterruptTrigger,
-          replayingInterruptedProcedure: options.replayingInterruptedProcedure,
-          pendingAttackDamageReductions: options.pendingAttackDamageReductions,
-          pendingAttackDamageAdditions: options.pendingAttackDamageAdditions,
+          ...interruptRouteOptions,
         },
         options.executionRegistry,
       );
@@ -1545,7 +1449,12 @@ export function resolveBattleSubjectInternal(
         {
           ...input,
           subject,
-          handledInterruptTrigger: options.handledInterruptTrigger,
+          ...(interruptRouteOptions.handledInterruptTrigger === undefined
+            ? {}
+            : {
+                handledInterruptTrigger:
+                  interruptRouteOptions.handledInterruptTrigger,
+              }),
         },
         options.executionRegistry,
       );
@@ -1555,7 +1464,12 @@ export function resolveBattleSubjectInternal(
         {
           ...input,
           subject,
-          handledInterruptTrigger: options.handledInterruptTrigger,
+          ...(interruptRouteOptions.handledInterruptTrigger === undefined
+            ? {}
+            : {
+                handledInterruptTrigger:
+                  interruptRouteOptions.handledInterruptTrigger,
+              }),
         },
         options.executionRegistry,
       );
@@ -1621,7 +1535,7 @@ export function resolveBattleSubjectInternal(
       return resolveGreaseGroundHazardSaveCommand({
         ...input,
         subject,
-        handledInterruptTrigger: options.handledInterruptTrigger,
+        ...handledInterruptRouteOption,
       });
     }
     if (
@@ -1631,7 +1545,7 @@ export function resolveBattleSubjectInternal(
       return resolveWebRestraintSaveCommand({
         ...input,
         subject,
-        handledInterruptTrigger: options.handledInterruptTrigger,
+        ...handledInterruptRouteOption,
       });
     }
     if (
@@ -1641,7 +1555,7 @@ export function resolveBattleSubjectInternal(
       return resolveSleetStormAreaHazardSaveCommand({
         ...input,
         subject,
-        handledInterruptTrigger: options.handledInterruptTrigger,
+        ...handledInterruptRouteOption,
       });
     }
     if (
@@ -1651,7 +1565,7 @@ export function resolveBattleSubjectInternal(
       return resolveInsectPlagueAreaHazardSaveCommand({
         ...input,
         subject,
-        handledInterruptTrigger: options.handledInterruptTrigger,
+        ...handledInterruptRouteOption,
       });
     }
     if (
@@ -1661,7 +1575,7 @@ export function resolveBattleSubjectInternal(
       return resolveCloudkillAreaHazardSaveCommand({
         ...input,
         subject,
-        handledInterruptTrigger: options.handledInterruptTrigger,
+        ...handledInterruptRouteOption,
       });
     }
     if (
@@ -1683,7 +1597,7 @@ export function resolveBattleSubjectInternal(
       return resolveGustOfWindLineSaveCommand({
         ...input,
         subject,
-        handledInterruptTrigger: options.handledInterruptTrigger,
+        ...handledInterruptRouteOption,
       });
     }
     if (
@@ -1700,13 +1614,13 @@ export function resolveBattleSubjectInternal(
         return resolveFlamingSphereSaveCommand({
           ...input,
           subject,
-          handledInterruptTrigger: options.handledInterruptTrigger,
+          ...handledInterruptRouteOption,
         });
       }
       return resolveMoonbeamSaveCommand({
         ...input,
         subject,
-        handledInterruptTrigger: options.handledInterruptTrigger,
+        ...handledInterruptRouteOption,
       });
     }
     if (
@@ -1737,7 +1651,7 @@ export function resolveBattleSubjectInternal(
       return resolveFlamingSphereRamCommand({
         ...input,
         subject,
-        handledInterruptTrigger: options.handledInterruptTrigger,
+        ...handledInterruptRouteOption,
       });
     }
     if (
@@ -1798,7 +1712,7 @@ export function resolveBattleSubjectInternal(
       return resolveReleaseReadiedSpellCommand(
         { ...input, subject },
         {
-          handledInterruptTrigger: options.handledInterruptTrigger,
+          ...handledInterruptRouteOption,
         },
       );
     }
@@ -1822,7 +1736,7 @@ export function resolveBattleSubjectInternal(
         {
           ...input,
           subject,
-          handledInterruptTrigger: options.handledInterruptTrigger,
+          ...handledInterruptRouteOption,
         },
         options.executionRegistry,
       );
@@ -1835,7 +1749,7 @@ export function resolveBattleSubjectInternal(
         {
           ...input,
           subject,
-          handledInterruptTrigger: options.handledInterruptTrigger,
+          ...handledInterruptRouteOption,
         },
         options.executionRegistry,
       );
@@ -1854,8 +1768,13 @@ export function resolveBattleSubjectInternal(
       return resolveOpportunityAttackCommand({
         ...input,
         subject,
-        handledInterruptTrigger: options.handledInterruptTrigger,
-        pendingAttackDamageReductions: options.pendingAttackDamageReductions,
+        ...handledInterruptRouteOption,
+        ...(interruptRouteOptions.pendingAttackDamageReductions === undefined
+          ? {}
+          : {
+              pendingAttackDamageReductions:
+                interruptRouteOptions.pendingAttackDamageReductions,
+            }),
       });
     }
     if (
@@ -3639,7 +3558,9 @@ export function resolveBattleInterrupt(
     const interruptResult = resolveBattleSubjectInternal(admission.input, {
       executionRegistry,
       attackResolvers,
-      replayingInterruptedProcedure: true,
+      interruptRouteOptions: {
+        replayingInterruptedProcedure: true,
+      },
     });
     return withInterruptRoute(
       interruptResult.tag === "resolved"
@@ -3969,7 +3890,7 @@ export function resolveCastTriggeredReactionSpellCommand(
       }
     >
   > & {
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
   executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
@@ -4050,7 +3971,9 @@ export function resolveCastTriggeredReactionSpellCommand(
     frame,
     invocation,
     fills: input.fills,
-    handledInterruptTrigger: input.handledInterruptTrigger,
+    ...(input.handledInterruptTrigger === undefined
+      ? {}
+      : { handledInterruptTrigger: input.handledInterruptTrigger }),
   });
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -4146,7 +4069,7 @@ function maybeOpenTriggeredReactionSpellCastInterrupt(input: {
   readonly frame: BattleInterruptCheckpoint;
   readonly invocation: TriggeredReactionSpellExecution;
   readonly fills: readonly BattleFill[];
-  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
 }): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
   if (input.handledInterruptTrigger === "spellCast") {
     return null;
@@ -4246,7 +4169,7 @@ function resolveCounterspellReactionSpellCommand(
       }
     >
   > & {
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
     readonly frame: BattleInterruptCheckpoint;
     readonly invocation: Extract<
       TriggeredReactionSpellExecution,
@@ -4754,7 +4677,7 @@ type AttackHitBonusActionSpellCommandSubject = Extract<
 >;
 type AttackHitBonusActionSpellCommandInput =
   BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject> & {
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   };
 type AttackHitBonusActionSpellInvocation = Extract<
   BattleSpellProcedureExecution,
@@ -4978,7 +4901,7 @@ export function maybeOpenPostCastReadySpellCastWindow(input: {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly spellProcedure: BattleSpellProcedureExecution["procedure"];
   readonly targetIds: readonly CombatantId[];
-  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
 }): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
   return input.handledInterruptTrigger !== "spellCast"
     ? maybeOpenInterruptWindowWithChoices(
@@ -5882,18 +5805,20 @@ export function resolveReplayContinuationFromState(
   const result = resolveBattleSubjectInternal(admission.input, {
     executionRegistry,
     attackResolvers,
-    replayingInterruptedProcedure: true,
-    handledInterruptTrigger,
-    ...(continuation.attackDamageReductions === undefined
-      ? {}
-      : {
-          pendingAttackDamageReductions: continuation.attackDamageReductions,
-        }),
-    ...(continuation.attackDamageAdditions === undefined
-      ? {}
-      : {
-          pendingAttackDamageAdditions: continuation.attackDamageAdditions,
-        }),
+    interruptRouteOptions: {
+      replayingInterruptedProcedure: true,
+      handledInterruptTrigger,
+      ...(continuation.attackDamageReductions === undefined
+        ? {}
+        : {
+            pendingAttackDamageReductions: continuation.attackDamageReductions,
+          }),
+      ...(continuation.attackDamageAdditions === undefined
+        ? {}
+        : {
+            pendingAttackDamageAdditions: continuation.attackDamageAdditions,
+          }),
+    },
   });
   if (
     result.tag !== "needsHoles" ||

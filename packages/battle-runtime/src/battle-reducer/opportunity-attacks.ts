@@ -6,7 +6,10 @@
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
-import { damageAmount as toDamageAmount } from "@dnd/shared/types";
+import {
+  damageAmount as toDamageAmount,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import {
@@ -117,10 +120,8 @@ export function resolveOpportunityAttackCommand(
       }
     >
   > & {
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
-    readonly pendingAttackDamageReductions?:
-      | readonly BattlePendingAttackDamageReduction[]
-      | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
+    readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
   },
 ): BattleResolutionResult {
   const pendingAttackDamageReductions =

@@ -2373,7 +2373,7 @@ export function resolveGreaseGroundHazardSaveCommand(
         readonly command: "greaseGroundHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
 ): BattleResolutionResult {
   if (input.subject.trigger === "endsTurnInArea") {
@@ -2391,7 +2391,7 @@ function resolveGreaseGroundHazardEntrySaveCommand(
         readonly command: "greaseGroundHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
 ): BattleResolutionResult {
   /* v8 ignore start -- Malformed fill set: the discovered Grease hazard subject exposes at most its one Saving Throw outcome hole. */
@@ -2528,7 +2528,7 @@ export function resolveWebRestraintSaveCommand(
         readonly command: "webRestraintSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
 ): BattleResolutionResult {
   /* v8 ignore start -- Malformed fill set: the discovered Web restraint subject exposes at most its one Saving Throw outcome hole. */
@@ -2742,7 +2742,7 @@ export function resolveSleetStormAreaHazardSaveCommand(
         readonly command: "sleetStormAreaHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
 ): BattleResolutionResult {
   /* v8 ignore start -- Malformed fill set: the discovered Sleet Storm subject exposes at most its one Saving Throw outcome hole. */
@@ -3049,7 +3049,7 @@ export function resolveInsectPlagueAreaHazardSaveCommand(
         readonly command: "insectPlagueAreaHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
 ): BattleResolutionResult {
   /* v8 ignore start -- Malformed fill set: the discovered Insect Plague subject exposes only its save, damage, and possible Concentration holes. */
@@ -3447,7 +3447,7 @@ export function resolveCloudkillAreaHazardSaveCommand(
         readonly command: "cloudkillAreaHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
 ): BattleResolutionResult {
   /* v8 ignore start -- Malformed fill set: the discovered Cloudkill subject exposes only its save, damage, and possible Concentration holes. */
@@ -3736,7 +3736,7 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
         readonly command: "greaseGroundHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
 ): BattleResolutionResult {
   const effect = greaseGroundHazardEffectFor(input.state, input.subject);
@@ -3912,7 +3912,7 @@ export function resolveGustOfWindLineSaveCommand(
         readonly command: "gustOfWindLineSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
 ): BattleResolutionResult {
   const effect = gustOfWindLineEffectFor(input.state, input.subject);
@@ -4317,7 +4317,7 @@ export function resolveFlamingSphereSaveCommand(
         readonly command: "movableZoneSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
 ): BattleResolutionResult {
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -4637,7 +4637,7 @@ export function resolveFlamingSphereRamCommand(
         readonly command: "movableZoneRam";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
 ): BattleResolutionResult {
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -5057,7 +5057,7 @@ export function resolveMoonbeamSaveCommand(
         readonly command: "movableZoneSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
 ): BattleResolutionResult {
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */

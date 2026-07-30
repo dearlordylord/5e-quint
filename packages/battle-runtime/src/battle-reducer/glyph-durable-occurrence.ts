@@ -934,7 +934,7 @@ export function releaseGlyphStoredSpell(input: {
   readonly profile: GlyphStoredSpellReleaseProfile;
   readonly witness: GlyphStoredSpellReleaseWitness;
   readonly executionRegistry: SpellProcedureExecutionRegistry;
-  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
 }): ReleaseGlyphStoredSpellResult {
   const sourceEffectId = input.witness.triggerOccurrence.sourceEffectId;
   const refs = glyphOccurrenceRefs(input.state, sourceEffectId);
@@ -988,7 +988,9 @@ export function releaseGlyphStoredSpell(input: {
     effect: ref.effect,
     witness: input.witness,
     executionRegistry: input.executionRegistry,
-    handledInterruptTrigger: input.handledInterruptTrigger,
+    ...(input.handledInterruptTrigger === undefined
+      ? {}
+      : { handledInterruptTrigger: input.handledInterruptTrigger }),
   });
   if (resolved.tag === "needsHoles") {
     return {
@@ -1773,7 +1775,7 @@ function resolveStoredSpellGlyphRelease(input: {
   readonly effect: GlyphStoredSpellOccurrenceActiveEffect;
   readonly witness: GlyphStoredSpellReleaseWitness;
   readonly executionRegistry: SpellProcedureExecutionRegistry;
-  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
 }): BattleResolutionResult {
   const storedInvocation = input.effect.release.storedProcedure;
   const procedureRef = glyphStoredSpellProcedureRef(input.state, input.effect);
@@ -1827,7 +1829,9 @@ function resolveStoredSpellGlyphRelease(input: {
       state: input.state,
       subject,
       fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      ...(input.handledInterruptTrigger === undefined
+        ? {}
+        : { handledInterruptTrigger: input.handledInterruptTrigger }),
     },
     actorId: input.effect.sourceCombatantId,
     fillSet,

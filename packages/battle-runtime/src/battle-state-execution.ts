@@ -721,8 +721,8 @@ export type BattleInterruptedProcedure =
       readonly subject: BattleSubject;
       readonly fills: readonly BattleFill[];
       readonly glyphStoredSpellReleaseReplay?: never;
-      readonly attackDamageReductions?: readonly BattlePendingAttackDamageReduction[];
-      readonly attackDamageAdditions?: readonly AttackSpellDamageAddition[];
+      readonly attackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
+      readonly attackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
     }
   | {
       readonly kind: "replay";
@@ -1103,13 +1103,9 @@ type BattleActiveInterruptProcedure = {
   readonly responderId: CombatantId;
   readonly subject: BattleInterruptProcedureChoiceWithSubject["subject"];
   readonly fills: readonly BattleFill[];
-  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
-  readonly pendingAttackDamageReductions?:
-    | readonly BattlePendingAttackDamageReduction[]
-    | undefined;
-  readonly pendingAttackDamageAdditions?:
-    | readonly AttackSpellDamageAddition[]
-    | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
+  readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
 };
 type BattleInterruptCheckpointBase = {
   readonly eligibleResponders: readonly CombatantId[];
@@ -6457,18 +6453,23 @@ export type BattleResolutionInputForSubject<TSubject extends BattleSubject> =
   Omit<BattleResolutionCandidateInput, "subject"> & {
     readonly subject: TSubject;
   };
+export type BattleInterruptRouteOptions =
+  | {
+      readonly replayingInterruptedProcedure?: never;
+      readonly handledInterruptTrigger?: BattleInterruptTrigger;
+      readonly pendingAttackDamageReductions?: never;
+      readonly pendingAttackDamageAdditions?: never;
+    }
+  | {
+      readonly replayingInterruptedProcedure: true;
+      readonly handledInterruptTrigger?: BattleInterruptTrigger;
+      readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
+      readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
+    };
 export type AttackBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "action"; readonly action: "attack" }>
-> & {
-  readonly replayingInterruptedProcedure?: boolean;
-  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
-  readonly pendingAttackDamageReductions?:
-    | readonly BattlePendingAttackDamageReduction[]
-    | undefined;
-  readonly pendingAttackDamageAdditions?:
-    | readonly AttackSpellDamageAddition[]
-    | undefined;
-};
+> &
+  BattleInterruptRouteOptions;
 export type MultiattackBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<
     BattleSubject,
@@ -6481,16 +6482,8 @@ export type OffHandAttackBattleResolutionInput =
       BattleSubject,
       { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
     >
-  > & {
-    readonly replayingInterruptedProcedure?: boolean;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
-    readonly pendingAttackDamageReductions?:
-      | readonly BattlePendingAttackDamageReduction[]
-      | undefined;
-    readonly pendingAttackDamageAdditions?:
-      | readonly AttackSpellDamageAddition[]
-      | undefined;
-  };
+  > &
+    BattleInterruptRouteOptions;
 export type MartialArtsBonusUnarmedStrikeBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<
@@ -6500,16 +6493,8 @@ export type MartialArtsBonusUnarmedStrikeBattleResolutionInput =
         readonly action: "martialArtsUnarmedStrike";
       }
     >
-  > & {
-    readonly replayingInterruptedProcedure?: boolean;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
-    readonly pendingAttackDamageReductions?:
-      | readonly BattlePendingAttackDamageReduction[]
-      | undefined;
-    readonly pendingAttackDamageAdditions?:
-      | readonly AttackSpellDamageAddition[]
-      | undefined;
-  };
+  > &
+    BattleInterruptRouteOptions;
 export type StatBlockBonusActionOptionBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<
@@ -6554,31 +6539,22 @@ export type EscapeSpellRestraintBattleResolutionInput =
   >;
 export type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "actionSpell" }>
-> & {
-  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
-  readonly reactionContinuationSubject?: BattleSubject | undefined;
-  readonly glyphStoredSpellReleaseReplay?:
-    | GlyphStoredSpellReleaseReplayContext
-    | undefined;
-  readonly replayingInterruptedProcedure?: boolean | undefined;
-  readonly pendingAttackDamageReductions?:
-    | readonly BattlePendingAttackDamageReduction[]
-    | undefined;
-  readonly pendingAttackDamageAdditions?:
-    | readonly AttackSpellDamageAddition[]
-    | undefined;
-};
+> &
+  BattleInterruptRouteOptions & {
+    readonly reactionContinuationSubject?: BattleSubject;
+    readonly glyphStoredSpellReleaseReplay?: GlyphStoredSpellReleaseReplayContext;
+  };
 export type BonusActionSpellBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "bonusActionSpell" }>
   > & {
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   };
 export type BonusActionDashSpellBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "bonusActionDashSpell" }>
   > & {
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   };
 export type UnitFeatureBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "unitFeature" }>
@@ -6592,16 +6568,8 @@ export type MonkFocusOptionBattleResolutionInput =
     Extract<BattleSubject, { readonly tag: "monkFocusOption" }>
   >;
 export type MonkFocusFlurryOfBlowsStrikeBattleResolutionInput =
-  BattleResolutionInputForSubject<MonkFocusFlurryOfBlowsStrikeSubject> & {
-    readonly replayingInterruptedProcedure?: boolean;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
-    readonly pendingAttackDamageReductions?:
-      | readonly BattlePendingAttackDamageReduction[]
-      | undefined;
-    readonly pendingAttackDamageAdditions?:
-      | readonly AttackSpellDamageAddition[]
-      | undefined;
-  };
+  BattleResolutionInputForSubject<MonkFocusFlurryOfBlowsStrikeSubject> &
+    BattleInterruptRouteOptions;
 export type DruidWildShapeBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "druidWildShape" }>

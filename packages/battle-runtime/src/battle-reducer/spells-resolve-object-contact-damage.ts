@@ -257,7 +257,9 @@ export function resolveObjectContactDamageSpellAct(input: {
       subject: input.input.subject,
       events: damageResolution.events,
       droppedObjects: damageResolution.droppedObjects,
-      handledInterruptTrigger: input.input.handledInterruptTrigger,
+      ...(input.input.handledInterruptTrigger === undefined
+        ? {}
+        : { handledInterruptTrigger: input.input.handledInterruptTrigger }),
     });
   }
 
@@ -296,7 +298,9 @@ export function resolveObjectContactDamageSpellAct(input: {
     subject: input.input.subject,
     events: damageResolution.events,
     droppedObjects: damageResolution.droppedObjects,
-    handledInterruptTrigger: input.input.handledInterruptTrigger,
+    ...(input.input.handledInterruptTrigger === undefined
+      ? {}
+      : { handledInterruptTrigger: input.input.handledInterruptTrigger }),
   });
 }
 
@@ -388,7 +392,9 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
     subject: input.input.subject,
     events: damageResolution.events,
     droppedObjects: damageResolution.droppedObjects,
-    handledInterruptTrigger: input.input.handledInterruptTrigger,
+    ...(input.input.handledInterruptTrigger === undefined
+      ? {}
+      : { handledInterruptTrigger: input.input.handledInterruptTrigger }),
   });
 }
 
@@ -1494,7 +1500,7 @@ function finishObjectContactDamageResolution(input: {
     | BonusActionSpellBattleResolutionInput["subject"];
   readonly events: readonly BattleAfterDamageEvent[];
   readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
-  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
 }): BattleResolutionResult {
   if (input.events.length > 0) {
     const afterDamageReactionWindow = openAfterDamageSequenceInterruptWindow({

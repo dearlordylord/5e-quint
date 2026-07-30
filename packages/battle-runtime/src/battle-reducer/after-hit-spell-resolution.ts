@@ -28,7 +28,7 @@ type AfterHitSpellCastInterruptInput = {
     readonly state: BattleState;
     readonly subject: BattleSubject;
     readonly fills: readonly BattleFill[];
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   };
   readonly invocation: BattleExecutableSpellInvocation;
   readonly fillSet: {
@@ -95,7 +95,7 @@ export function completeAfterHitSpellCast(input: {
   readonly casterId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;
   readonly targetId: CombatantId;
-  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
 }): BattleResolutionResult {
   const nextState: BattleState = {
     ...input.state,
@@ -111,7 +111,9 @@ export function completeAfterHitSpellCast(input: {
     sourceProcedureRef: input.invocation.sourceProcedureRef,
     spellProcedure: input.invocation.procedure,
     targetIds: [input.targetId],
-    handledInterruptTrigger: input.handledInterruptTrigger,
+    ...(input.handledInterruptTrigger === undefined
+      ? {}
+      : { handledInterruptTrigger: input.handledInterruptTrigger }),
   });
   return (
     readiedSpellCastReactionWindow ?? {
@@ -131,7 +133,7 @@ export function completeAfterHitSpellDamageCast(input: {
   readonly targetId: CombatantId;
   readonly damageAddition: AttackSpellDamageAddition;
   readonly applyEffect?: ((state: BattleState) => BattleState) | undefined;
-  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
 }): BattleResolutionResult {
   return completeAfterHitSpellCast({
     ...input,
@@ -153,7 +155,11 @@ export function resolveAfterHitSlotSpellDamageCast(
         ...input,
         state: preparation.state,
         subject: input.input.subject,
-        handledInterruptTrigger: input.input.handledInterruptTrigger,
+        ...(input.input.handledInterruptTrigger === undefined
+          ? {}
+          : {
+              handledInterruptTrigger: input.input.handledInterruptTrigger,
+            }),
       })
     : preparation;
 }

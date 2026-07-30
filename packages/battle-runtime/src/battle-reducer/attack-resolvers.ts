@@ -3,6 +3,7 @@ import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {
   AdmittedMonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
   AttackBattleResolutionInput,
+  BattleInterruptRouteOptions,
   BattleAttackHostSubject,
   BattleFill,
   BattleResolutionResult,
@@ -42,11 +43,7 @@ export type BattleAttackRouteResolvers = BattleAttackResolvers & {
         import("../battle-subjects.ts").BattleSubject,
         { readonly tag: "pactOfTheChainFamiliarAttack" }
       >
-    > & {
-      readonly replayingInterruptedProcedure?: boolean;
-      readonly handledInterruptTrigger?: BattleInterruptTrigger;
-      readonly pendingAttackDamageReductions?: AttackBattleResolutionInput["pendingAttackDamageReductions"];
-      readonly pendingAttackDamageAdditions?: AttackBattleResolutionInput["pendingAttackDamageAdditions"];
-    },
+    > &
+      BattleInterruptRouteOptions,
   ) => BattleResolutionResult;
 };

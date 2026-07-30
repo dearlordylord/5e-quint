@@ -41,7 +41,7 @@ export function resolveReleaseReadiedSpellCommand(
     >
   >,
   options: {
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
 ): BattleResolutionResult {
   const subject = input.subject;
@@ -85,7 +85,9 @@ export function resolveReleaseReadiedSpellCommand(
       state: input.state,
       subject: releaseSubject,
       fills: input.fills,
-      handledInterruptTrigger: options.handledInterruptTrigger,
+      ...(options.handledInterruptTrigger === undefined
+        ? {}
+        : { handledInterruptTrigger: options.handledInterruptTrigger }),
       reactionContinuationSubject: input.subject,
     },
     invocation,

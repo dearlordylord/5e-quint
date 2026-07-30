@@ -15,7 +15,7 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 //   - UBIQUITOUS_LANGUAGE.md: Magic Action, Attack Roll, Damage Type, and
 //     Spell Invocation.
 
-import { attackBonus } from "@dnd/shared/types";
+import { attackBonus, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { DamageType, WeaponProficiency } from "@dnd/surface/surface/types";
 import { Match } from "effect";
 import type {
@@ -298,13 +298,23 @@ function resolveSpellHostedWeaponAttack(
   const attackFills = input.input.fills.filter(
     (fill) => fill.kind !== "damageTypeChoice",
   );
-  const pendingAttackDamageAdditions = [
-    ...(input.input.pendingAttackDamageAdditions ?? []),
-    ...spellHostedWeaponAttackBonusDamageAdditions(
+  const hostedWeaponDamageAdditions =
+    spellHostedWeaponAttackBonusDamageAdditions(
       input.invocation,
       input.actorId,
-    ),
-  ];
+    );
+  const pendingAttackDamageAdditions:
+    | ReadonlyNonEmptyArray<AttackSpellDamageAddition>
+    | undefined =
+    input.input.pendingAttackDamageAdditions === undefined
+      ? hostedWeaponDamageAdditions
+      : hostedWeaponDamageAdditions === undefined
+        ? input.input.pendingAttackDamageAdditions
+        : [
+            input.input.pendingAttackDamageAdditions[0],
+            ...input.input.pendingAttackDamageAdditions.slice(1),
+            ...hostedWeaponDamageAdditions,
+          ];
   const {
     replayingInterruptedProcedure: _replayingInterruptedProcedure,
     handledInterruptTrigger: _handledInterruptTrigger,
@@ -335,7 +345,9 @@ function resolveSpellHostedWeaponAttack(
       ...replayOptions,
       subject: baseInput.subject,
       fills: attackFills,
-      pendingAttackDamageAdditions,
+      ...(pendingAttackDamageAdditions === undefined
+        ? {}
+        : { pendingAttackDamageAdditions }),
     },
     attack,
     (state, actorId) =>
@@ -393,10 +405,10 @@ function spellHostedWeaponAttackForExecution(
 function spellHostedWeaponAttackBonusDamageAdditions(
   invocation: BattleExecutableSpellInvocation<SpellHostedWeaponAttackInvocation>,
   actorId: CombatantId,
-): readonly AttackSpellDamageAddition[] {
+): ReadonlyNonEmptyArray<AttackSpellDamageAddition> | undefined {
   return invocation.bonusDamage === null ||
     invocation.bonusDamage.expr.dice <= 0
-    ? []
+    ? undefined
     : [
         {
           kind: "attackSpellDamageAddition",

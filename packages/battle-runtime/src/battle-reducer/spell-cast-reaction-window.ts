@@ -21,7 +21,7 @@ type SpellCastReactionResolutionContext = {
     readonly state: BattleState;
     readonly subject: BattleSubject;
     readonly fills: readonly BattleFill[];
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   };
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;

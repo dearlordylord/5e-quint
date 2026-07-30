@@ -92,7 +92,7 @@ type AttackHitBonusActionSpellCommandSubject = Extract<
 type AfterHitSaveGatedConditionBattleResolutionInput =
   BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject> & {
     readonly target: BattleCreatureState;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   };
 type AfterHitSaveGatedConditionFillSet = Extract<
   SpellFillSet,
@@ -321,7 +321,9 @@ function resolveAfterHitSaveGatedCondition(
     sourceProcedureRef: input.invocation.sourceProcedureRef,
     spellProcedure: input.invocation.procedure,
     targetIds: [input.input.target.combatantId],
-    handledInterruptTrigger: input.input.handledInterruptTrigger,
+    ...(input.input.handledInterruptTrigger === undefined
+      ? {}
+      : { handledInterruptTrigger: input.input.handledInterruptTrigger }),
   });
   if (readiedSpellCastReactionWindow !== null) {
     return readiedSpellCastReactionWindow;

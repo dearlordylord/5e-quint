@@ -2206,7 +2206,9 @@ export function resolveSaveGateDamageSpellAct(input: {
     afterDamageEvents,
     objectDamages,
     objectIgnitions,
-    handledInterruptTrigger: input.input.handledInterruptTrigger,
+    ...(input.input.handledInterruptTrigger === undefined
+      ? {}
+      : { handledInterruptTrigger: input.input.handledInterruptTrigger }),
   });
   if (forcedMovement !== null) {
     return forcedMovement;
@@ -2431,7 +2433,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
   readonly afterDamageEvents: readonly BattleAfterDamageEvent[];
   readonly objectDamages: readonly BattleObjectDamageOutcome[];
   readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
-  readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
 }): BattleResolutionResult | null {
   const forcedMovementRider = input.invocation.failedSavePostDamageRiders.find(
     (rider) => rider.kind === "forcedReactionMovement",

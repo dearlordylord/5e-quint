@@ -3,6 +3,7 @@
 import * as Either from "effect/Either";
 
 import type {
+  BattleInterruptRouteOptions,
   BattleResolutionResult,
   BattleState,
   BattleResolutionInputForSubject,
@@ -37,18 +38,8 @@ export type PactOfTheChainFamiliarAttackSubject = Extract<
 >;
 
 export type PactOfTheChainFamiliarReactionAttackSubjectInput =
-  BattleResolutionInputForSubject<PactOfTheChainFamiliarAttackSubject> & {
-    readonly replayingInterruptedProcedure?: boolean;
-    readonly handledInterruptTrigger?: Parameters<
-      typeof resolveSelectedAttackProcedure
-    >[0]["handledInterruptTrigger"];
-    readonly pendingAttackDamageReductions?: Parameters<
-      typeof resolveSelectedAttackProcedure
-    >[0]["pendingAttackDamageReductions"];
-    readonly pendingAttackDamageAdditions?: Parameters<
-      typeof resolveSelectedAttackProcedure
-    >[0]["pendingAttackDamageAdditions"];
-  };
+  BattleResolutionInputForSubject<PactOfTheChainFamiliarAttackSubject> &
+    BattleInterruptRouteOptions;
 
 export function resolvePactOfTheChainFamiliarReactionAttack(
   input: PactOfTheChainFamiliarReactionAttackSubjectInput,

@@ -290,7 +290,9 @@ function resolveAfterHitDamage(
     invocation: input.invocation,
     targetId: input.input.target.combatantId,
     damageAddition,
-    handledInterruptTrigger: input.input.handledInterruptTrigger,
+    ...(input.input.handledInterruptTrigger === undefined
+      ? {}
+      : { handledInterruptTrigger: input.input.handledInterruptTrigger }),
   });
 }
 
