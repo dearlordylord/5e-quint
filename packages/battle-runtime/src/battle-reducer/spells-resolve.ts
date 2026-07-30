@@ -1939,18 +1939,28 @@ function resolveSpellActInternal(
   if (slowSomaticSpellFailure.tag !== "continue") {
     return slowSomaticSpellFailure;
   }
-  if (lane.tag === "action" && lane.input.subject.mode.tag === "ready") {
-    if (!isReadiedSpellInvocation(invocation)) {
-      return invalidResult(
-        input.state,
-        "unsupportedSubject",
-        "This spell procedure cannot be readied by this runtime lane.",
+  if (lane.tag === "action") {
+    const actionSubject = lane.input.subject;
+    if (actionSubject.mode.tag === "ready") {
+      if (!isReadiedSpellInvocation(invocation)) {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "This spell procedure cannot be readied by this runtime lane.",
+        );
+      }
+      return resolveReadySpellAct(
+        {
+          ...lane.input,
+          state: castingState,
+          subject: {
+            ...actionSubject,
+            mode: actionSubject.mode,
+          },
+        },
+        invocation,
       );
     }
-    return resolveReadySpellAct(
-      { ...lane.input, state: castingState },
-      invocation,
-    );
   }
 
   if (invocation.procedure === "chainedSpellAttackDamage") {

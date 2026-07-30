@@ -121,6 +121,15 @@ type ReleasableSpellInvocation =
       { readonly procedure: "spiritualWeaponAttackProxy" }
     >;
 
+type ReadySpellBattleResolutionInput = ActionSpellBattleResolutionInput & {
+  readonly subject: ActionSpellBattleResolutionInput["subject"] & {
+    readonly mode: Extract<
+      ActionSpellBattleResolutionInput["subject"]["mode"],
+      { readonly tag: "ready" }
+    >;
+  };
+};
+
 export function resolveReleaseSpellCreatedHeldObjectCommand(
   input: BattleResolutionInputForSubject<
     Extract<
@@ -518,7 +527,7 @@ function dancingLightsSeparatePlacementError(
 }
 
 export function resolveReadySpellAct(
-  input: ActionSpellBattleResolutionInput,
+  input: ReadySpellBattleResolutionInput,
   invocation: BattleExecutableSpellInvocation<ReadiedSpellInvocation>,
 ): BattleResolutionResult {
   const fillSet = spellFillSet(
@@ -551,14 +560,6 @@ export function resolveReadySpellAct(
       "This caster is already holding a readied spell.",
     );
   }
-  if (input.subject.mode.tag !== "ready") {
-    return invalidResult(
-      input.state,
-      "unsupportedSubject",
-      "Ready Spell requires a selected Reaction trigger.",
-    );
-  }
-
   const castingState = invocation.spellRuleFacts.components.verbal
     ? revealHidden(input.state, input.subject.actorId)
     : input.state;
@@ -593,6 +594,7 @@ export function resolveReadySpellAct(
   const refreshedActor = afterPriorConcentration.combatants.get(
     input.subject.actorId,
   );
+  /* v8 ignore start -- Defensive internal guard: invocation admission proves a character caster, and synchronous Concentration teardown preserves that combatant and origin. */
   if (refreshedActor?.origin.kind !== "character") {
     return invalidResult(
       input.state,
@@ -600,6 +602,7 @@ export function resolveReadySpellAct(
       "Ready Spell caster is no longer available.",
     );
   }
+  /* v8 ignore stop */
   const concentratingActor = {
     ...refreshedActor,
     concentration: {
@@ -626,6 +629,7 @@ export function resolveReadySpellAct(
     ),
   };
   const spent = spendAction(withConcentration.currentTurnResources, "magic");
+  /* v8 ignore start -- Defensive internal guard: dispatcher Magic-action admission runs before Ready resolution, and the preceding synchronous setup does not spend an Action. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -633,6 +637,7 @@ export function resolveReadySpellAct(
       "Magic action is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const slotted =
     invocation.resource.tag === "spellSlot"
       ? expendSpellSlot(
@@ -645,6 +650,7 @@ export function resolveReadySpellAct(
     invocation.resource.tag === "spellSlot"
       ? markSpellSlotExpendedThisTurn(spent.right, input.subject.actorId)
       : Either.right(spent.right);
+  /* v8 ignore start -- Defensive internal guard: spell discovery and interrupt-checkpoint admission reject a second committed Spell Slot use before Ready resolution. */
   if (Either.isLeft(nextTurnResources)) {
     return invalidResult(
       input.state,
@@ -652,6 +658,7 @@ export function resolveReadySpellAct(
       "This turn has already expended a Spell Slot.",
     );
   }
+  /* v8 ignore stop */
   const nextState = {
     ...slotted,
     currentTurnResources: nextTurnResources.right,
