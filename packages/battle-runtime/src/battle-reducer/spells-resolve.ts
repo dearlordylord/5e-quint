@@ -1792,27 +1792,27 @@ function resolveSpellActInternal(
     )
       ? boundInvocation
       : undefined);
-  const metamagicAdmission = admitSpellInvocationForResolution({
+  const invocationAdmission = admitSpellInvocationForResolution({
     state: input.state,
     actor,
     subject,
     invocation: invocationCandidate,
   });
-  if (metamagicAdmission.tag === "unavailable") {
+  if (invocationAdmission.tag === "unavailable") {
     return invalidResult(
       input.state,
       "unsupportedActOption",
       "Action-time spell act requires a supported prepared spell or cantrip.",
     );
   }
-  if (metamagicAdmission.tag === "spellMetamagicAdmissionIssue") {
+  if (invocationAdmission.tag === "spellMetamagicAdmissionIssue") {
     return invalidResult(
       input.state,
       "unsupportedSubject",
-      metamagicAdmission.message,
+      invocationAdmission.message,
     );
   }
-  const invocation = metamagicAdmission.invocation;
+  const invocation = invocationAdmission.invocation;
   const replayingSpiritualWeaponAttackHit =
     input.handledInterruptTrigger === "attackHit" &&
     (invocation.procedure === "spiritualWeaponAttackProxy" ||
@@ -1990,7 +1990,7 @@ function resolveSpellActInternal(
     ...(options.actionCostOverride === undefined
       ? {}
       : { actionCostOverride: options.actionCostOverride }),
-    metamagicApplications: metamagicAdmission.applications,
+    metamagicApplications: invocationAdmission.applications,
   });
   if (slowSomaticSpellFailure.tag !== "continue") {
     return slowSomaticSpellFailure;
@@ -2046,7 +2046,7 @@ function resolveSpellActInternal(
         actorId: subject.actorId,
         invocation,
         fillSet,
-        metamagicApplications: metamagicAdmission.applications,
+        metamagicApplications: invocationAdmission.applications,
       }),
     );
   }
@@ -2088,7 +2088,7 @@ function resolveSpellActInternal(
         invocation,
         fillSet,
         spellProcedureAcceptsMetamagicApplications(invocation.procedure)
-          ? { metamagicApplications: metamagicAdmission.applications }
+          ? { metamagicApplications: invocationAdmission.applications }
           : { metamagicApplications: [] },
       ),
     );
@@ -2141,7 +2141,7 @@ function resolveSpellActInternal(
   const invocationForResolution = selectedInvocation.invocation;
   const metamagicApplicationsForResolution =
     spellProcedureAcceptsMetamagicApplications(invocation.procedure)
-      ? metamagicAdmission.applications
+      ? invocationAdmission.applications
       : options.metamagicApplications;
   if (
     (invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
@@ -4278,29 +4278,29 @@ export function resolveBonusActionSpellAct(
   const invocationCandidate =
     selectedInvocation ??
     antimagicSuppressedInvocationForStaleSubject(actor, subject);
-  const metamagicAdmission = admitSpellInvocationForResolution({
+  const invocationAdmission = admitSpellInvocationForResolution({
     state: input.state,
     actor,
     subject,
     invocation: invocationCandidate,
   });
-  if (metamagicAdmission.tag === "unavailable") {
+  if (invocationAdmission.tag === "unavailable") {
     return invalidResult(
       input.state,
       "unsupportedActOption",
       "Bonus Action spell act requires a supported Bonus Action spell.",
     );
   }
-  if (metamagicAdmission.tag === "spellMetamagicAdmissionIssue") {
+  if (invocationAdmission.tag === "spellMetamagicAdmissionIssue") {
     return invalidResult(
       input.state,
       "unsupportedSubject",
-      metamagicAdmission.message,
+      invocationAdmission.message,
     );
   }
-  const invocation = metamagicAdmission.invocation;
+  const invocation = invocationAdmission.invocation;
   const actionCostOverride = metamagicActionCostOverride(
-    metamagicAdmission.applications,
+    invocationAdmission.applications,
   );
   const isQuickenedActionSpellRewrite =
     actionCostOverride === "bonusAction" &&
@@ -4376,7 +4376,7 @@ export function resolveBonusActionSpellAct(
       invocation,
       fills: input.fills,
       ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
-      metamagicApplications: metamagicAdmission.applications,
+      metamagicApplications: invocationAdmission.applications,
     });
   if (invocation.procedure === "weaponAttackOverride") {
     const parsedFillInput = parseWeaponAttackOverrideFillInput(
@@ -4438,7 +4438,7 @@ export function resolveBonusActionSpellAct(
         metamagicApplications: spellProcedureHasQuickenedActionCostRewrite(
           invocation.procedure,
         )
-          ? metamagicAdmission.applications
+          ? invocationAdmission.applications
           : [],
         ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
       },
