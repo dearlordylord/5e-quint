@@ -80,30 +80,74 @@ describe("Dragonborn Breath Weapon runtime", () => {
     if (pendingDamage.tag !== "needsHoles") {
       throw new Error("Expected Breath Weapon to request a damage roll.");
     }
+    expect(pendingDamage.routeEvents).toEqual([
+      {
+        kind: "resolveBattleSubject",
+        subject: "attackActionAreaSaveDamageReplacement",
+        fill: "savingThrowOutcome",
+        holes: ["rolledDice"],
+        owner: "battleAreaShape",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "attackActionAreaSaveDamageReplacement",
+        holes: ["rolledDice"],
+        owner: "battleSavingThrowOutcome",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "attackActionAreaSaveDamageReplacement",
+        holes: ["rolledDice"],
+        owner: "battleDamageType",
+      },
+    ]);
 
-    const resolved = resolvedState(
-      resolveBattleSubject({
-        state,
-        subject: breathWeaponSubject(state),
-        fills: [
-          breathWeaponSavingThrowFill(
-            requireHole(
-              breathWeaponAct(state).initialHoles,
-              "savingThrowOutcome",
-            ),
-            [
-              { targetId: spellTargetId, succeeded: false },
-              { targetId: secondTargetId, succeeded: true },
-            ],
-            [spellTargetId, secondTargetId],
+    const result = resolveBattleSubject({
+      state,
+      subject: breathWeaponSubject(state),
+      fills: [
+        breathWeaponSavingThrowFill(
+          requireHole(
+            breathWeaponAct(state).initialHoles,
+            "savingThrowOutcome",
           ),
-          rolledDiceFill(
-            requireHole(pendingDamage.holes, "rolledDice"),
-            [6, 4],
-          ),
-        ],
-      }),
-    );
+          [
+            { targetId: spellTargetId, succeeded: false },
+            { targetId: secondTargetId, succeeded: true },
+          ],
+          [spellTargetId, secondTargetId],
+        ),
+        rolledDiceFill(requireHole(pendingDamage.holes, "rolledDice"), [6, 4]),
+      ],
+    });
+    expect(result.routeEvents).toEqual([
+      {
+        kind: "resolveBattleSubject",
+        subject: "attackActionAreaSaveDamageReplacement",
+        fill: "rolledDice",
+        holes: [],
+        owner: "battleDamageRoll",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "attackActionAreaSaveDamageReplacement",
+        holes: [],
+        owner: "battleHitPoint",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "attackActionAreaSaveDamageReplacement",
+        holes: [],
+        owner: "battleFeatureResource",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "attackActionAreaSaveDamageReplacement",
+        holes: [],
+        owner: "battleAttackActionProcedure",
+      },
+    ]);
+    const resolved = resolvedState(result);
 
     expect(currentHp(resolved, spellTargetId)).toBe(10);
     expect(currentHp(resolved, secondTargetId)).toBe(15);
@@ -121,26 +165,28 @@ describe("Dragonborn Breath Weapon runtime", () => {
       throw new Error("Expected Breath Weapon to request a damage roll.");
     }
 
-    const resolved = resolvedState(
-      resolveBattleSubject({
-        state,
-        subject: breathWeaponSubject(state),
-        fills: [
-          breathWeaponSavingThrowFill(
-            requireHole(
-              breathWeaponAct(state).initialHoles,
-              "savingThrowOutcome",
-            ),
-            [{ targetId: spellTargetId, succeeded: false }],
-            [spellTargetId],
+    const result = resolveBattleSubject({
+      state,
+      subject: breathWeaponSubject(state),
+      fills: [
+        breathWeaponSavingThrowFill(
+          requireHole(
+            breathWeaponAct(state).initialHoles,
+            "savingThrowOutcome",
           ),
-          rolledDiceFill(
-            requireHole(pendingDamage.holes, "rolledDice"),
-            [5, 5],
-          ),
-        ],
-      }),
-    );
+          [{ targetId: spellTargetId, succeeded: false }],
+          [spellTargetId],
+        ),
+        rolledDiceFill(requireHole(pendingDamage.holes, "rolledDice"), [5, 5]),
+      ],
+    });
+    expect(result.routeEvents).toContainEqual({
+      kind: "discoverBattleActs",
+      subject: "weaponAttack",
+      holes: ["targetChoice"],
+      owner: "battleAttackActionProcedure",
+    });
+    const resolved = resolvedState(result);
 
     expect(resolved.currentTurnResources.actionResources).toEqual([
       expect.objectContaining({
