@@ -199,6 +199,25 @@ export const DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET = movementFeet(10);
 export const SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET = movementFeet(5);
 export const PERCEPTION_LIGHTLY_OBSCURED_ROLL_MODE = "disadvantage" as const;
 const SHINING_SMITE_DIM_ADDITIONAL_RADIUS_FEET = movementFeet(0);
+const CASTER_AREA_SPELL_ACTIVE_EFFECT_KINDS = [
+  "greaseGroundHazard",
+  "fogCloudObscurement",
+  "magicalDarknessPointOrigin",
+  "flamingSphere",
+  "spikeGrowthHazard",
+  "moonbeam",
+  "webRestraintHazard",
+  "sleetStormAreaHazard",
+  "insectPlagueAreaHazard",
+  "cloudkillAreaHazard",
+  "gustOfWindLine",
+] as const satisfies ReadonlyArray<BattleActiveEffect["kind"]>;
+type CasterAreaSpellActiveEffectKind =
+  (typeof CASTER_AREA_SPELL_ACTIVE_EFFECT_KINDS)[number];
+type CasterAreaSpellActiveEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: CasterAreaSpellActiveEffectKind }
+>;
 type DancingLightsActiveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "dancingLights" }
@@ -2028,11 +2047,6 @@ export function applyGreaseGroundHazardCastEffects(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-    replaces: (activeEffect) =>
-      activeEffect.kind === "greaseGroundHazard" &&
-      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      activeEffect.sourceCombatantId === input.actorId &&
-      activeEffect.areaId === input.area.areaId,
   });
   return {
     ...stateWithActiveEffect,
@@ -2046,8 +2060,7 @@ export function applyGreaseGroundHazardCastEffects(input: {
 function battleStateAfterReplacingCasterActiveEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly activeEffect: BattleActiveEffect;
-  readonly replaces: (activeEffect: BattleActiveEffect) => boolean;
+  readonly activeEffect: CasterAreaSpellActiveEffect;
 }): BattleState {
   const caster = input.state.combatants.get(input.actorId);
   if (caster === undefined) {
@@ -2057,12 +2070,36 @@ function battleStateAfterReplacingCasterActiveEffect(input: {
     ...caster,
     activeEffects: [
       ...caster.activeEffects.filter(
-        (activeEffect) => !input.replaces(activeEffect),
+        (activeEffect) =>
+          !sameCasterAreaSpellOccurrence(activeEffect, input.activeEffect),
       ),
       input.activeEffect,
     ],
   });
   return { ...input.state, combatants };
+}
+
+const CASTER_AREA_SPELL_ACTIVE_EFFECT_KIND_SET: ReadonlySet<
+  BattleActiveEffect["kind"]
+> = new Set(CASTER_AREA_SPELL_ACTIVE_EFFECT_KINDS);
+
+function isCasterAreaSpellActiveEffect(
+  activeEffect: BattleActiveEffect,
+): activeEffect is CasterAreaSpellActiveEffect {
+  return CASTER_AREA_SPELL_ACTIVE_EFFECT_KIND_SET.has(activeEffect.kind);
+}
+
+function sameCasterAreaSpellOccurrence(
+  candidate: BattleActiveEffect,
+  activeEffect: CasterAreaSpellActiveEffect,
+): boolean {
+  return (
+    isCasterAreaSpellActiveEffect(candidate) &&
+    candidate.kind === activeEffect.kind &&
+    candidate.sourceProcedureRef === activeEffect.sourceProcedureRef &&
+    candidate.sourceCombatantId === activeEffect.sourceCombatantId &&
+    candidate.areaId === activeEffect.areaId
+  );
 }
 
 export function applyFogCloudObscurementCastEffect(input: {
@@ -2089,11 +2126,6 @@ export function applyFogCloudObscurementCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-    replaces: (activeEffect) =>
-      activeEffect.kind === "fogCloudObscurement" &&
-      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      activeEffect.sourceCombatantId === input.actorId &&
-      activeEffect.areaId === input.areaId,
   });
 }
 
@@ -2124,11 +2156,6 @@ export function applyMagicalDarknessPointOriginCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-    replaces: (activeEffect) =>
-      activeEffect.kind === "magicalDarknessPointOrigin" &&
-      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      activeEffect.sourceCombatantId === input.actorId &&
-      activeEffect.areaId === input.areaChoice.areaId,
   });
   const dispelledLightEffectIds = new Set(
     input.areaChoice.spellCreatedLightOverlaps.map(
@@ -2178,11 +2205,6 @@ export function applyFlamingSphereCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-    replaces: (activeEffect) =>
-      activeEffect.kind === "flamingSphere" &&
-      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      activeEffect.sourceCombatantId === input.actorId &&
-      activeEffect.areaId === input.areaId,
   });
 }
 
@@ -2313,11 +2335,6 @@ export function applySpikeGrowthMovementHazardCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-    replaces: (activeEffect) =>
-      activeEffect.kind === "spikeGrowthHazard" &&
-      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      activeEffect.sourceCombatantId === input.actorId &&
-      activeEffect.areaId === input.areaId,
   });
 }
 
@@ -2352,11 +2369,6 @@ export function applyMoonbeamCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-    replaces: (activeEffect) =>
-      activeEffect.kind === "moonbeam" &&
-      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      activeEffect.sourceCombatantId === input.actorId &&
-      activeEffect.areaId === input.areaId,
   });
 }
 
@@ -2390,11 +2402,6 @@ export function applyWebRestraintHazardCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-    replaces: (activeEffect) =>
-      activeEffect.kind === "webRestraintHazard" &&
-      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      activeEffect.sourceCombatantId === input.actorId &&
-      activeEffect.areaId === input.areaId,
   });
 }
 
@@ -2428,11 +2435,6 @@ export function applySleetStormAreaHazardCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-    replaces: (activeEffect) =>
-      activeEffect.kind === "sleetStormAreaHazard" &&
-      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      activeEffect.sourceCombatantId === input.actorId &&
-      activeEffect.areaId === input.areaId,
   });
 }
 
@@ -2466,11 +2468,6 @@ export function applyInsectPlagueAreaHazardCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-    replaces: (activeEffect) =>
-      activeEffect.kind === "insectPlagueAreaHazard" &&
-      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      activeEffect.sourceCombatantId === input.actorId &&
-      activeEffect.areaId === input.areaId,
   });
 }
 
@@ -2504,11 +2501,6 @@ export function applyCloudkillAreaHazardCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-    replaces: (activeEffect) =>
-      activeEffect.kind === "cloudkillAreaHazard" &&
-      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      activeEffect.sourceCombatantId === input.actorId &&
-      activeEffect.areaId === input.areaId,
   });
 }
 
@@ -2561,11 +2553,6 @@ export function applyGustOfWindLineCastEffect(input: {
         durationTicks: input.invocation.durationTicks,
       },
     },
-    replaces: (activeEffect) =>
-      activeEffect.kind === "gustOfWindLine" &&
-      activeEffect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-      activeEffect.sourceCombatantId === input.actorId &&
-      activeEffect.areaId === input.area.areaId,
   });
 }
 
