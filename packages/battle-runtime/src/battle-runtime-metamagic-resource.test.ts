@@ -3376,6 +3376,57 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     });
   });
 
+  test("Careful Spell rejects duplicate protected targets", () => {
+    const session = saveMetamagicBattle({
+      knownOptions: [carefulMetamagicOption()],
+    });
+    const state = session.state;
+    const act = carefulBurningHandsAct(session);
+    const protectedTargetsHole = findHole(act.initialHoles, "spellTargetList");
+    const protectedTargetsFill = {
+      kind: "spellTargetList" as const,
+      holeId: protectedTargetsHole.holeId,
+      value: { targetIds: [fighterId, fighterId] },
+      spatialFacts: [],
+    };
+    const awaitingSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [protectedTargetsFill],
+    });
+    const saveHole = findHole(
+      awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+      "savingThrowOutcome",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        protectedTargetsFill,
+        {
+          kind: "savingThrowOutcome",
+          holeId: saveHole.holeId,
+          value: {
+            area: {
+              originAnchorId: wizardId,
+              affectedTargetIds: [fighterId, skeletonId],
+            },
+            outcomes: [
+              { targetId: fighterId, succeeded: true },
+              { targetId: skeletonId, succeeded: true },
+            ],
+          },
+        },
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "invalid",
+      message: "Careful Spell protected targets must not repeat.",
+    });
+  });
+
   test("Careful Spell rejects explicitly empty protected-target selections before spending resources", () => {
     const session = saveMetamagicBattle({
       knownOptions: [carefulMetamagicOption()],
