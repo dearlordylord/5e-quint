@@ -405,6 +405,17 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
         rightHandUse: "mainWeapon",
       }),
     );
+    expect(
+      resolveBattleSubject({
+        state: released.state,
+        subject: releaseAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Spell-created held object is no longer held by this actor.",
+    });
 
     const nextCasterTurn = advanceToNextCasterTurn(released.state);
     const reEvokeAct = bonusSpellAct({
