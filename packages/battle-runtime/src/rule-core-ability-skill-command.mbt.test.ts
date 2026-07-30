@@ -592,6 +592,7 @@ function commandApproachContinuesScenario(): Projection {
         commandApproachMovementFill(movement, {
           movementCostFeet: 10,
           movedWithinFiveFeetOfCaster: false,
+          provokedOpportunityAttacks: [],
         }),
       ],
     }),
@@ -616,6 +617,7 @@ function commandApproachWithinFiveScenario(): Projection {
         commandApproachMovementFill(movement, {
           movementCostFeet: 10,
           movedWithinFiveFeetOfCaster: true,
+          provokedOpportunityAttacks: [],
         }),
       ],
     }),

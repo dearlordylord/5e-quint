@@ -24,6 +24,7 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
+  combatantId,
   difficultyClass,
   discoverBattleActCandidates,
   endTurn,
@@ -35,12 +36,17 @@ import type {
   BattleState,
 } from "./unit-profile-admission.test-support.ts";
 
+const commandApproachThreatId = combatantId(
+  "synthetic-command-approach-opportunity-threat",
+);
+
 describe("QMBT14 deterministic Command movement option admission", () => {
   test("command Approach consumes supplied route movement and continues when not within five feet", () => {
     const spell = spellRecord(commandUnitId);
     const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 1, count: 1 }],
+      extraTargetIds: [commandApproachThreatId],
     });
     const act = spellAct({
       session,
@@ -108,6 +114,33 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       throw new Error("Expected Command Approach act.");
     }
     const movement = requireHole(approachAct.initialHoles, "movement");
+    const opportunityAttack = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: approachAct.subject,
+      fills: [
+        commandApproachMovementFill(movement, {
+          movementCostFeet: 10,
+          movedWithinFiveFeetOfCaster: false,
+          provokedOpportunityAttacks: [
+            {
+              reactorId: commandApproachThreatId,
+              ...attackExecutionSelectionForSubjectForTest(
+                characterAttackSubjectForTest(
+                  targetTurn.state,
+                  commandApproachThreatId,
+                  "Unarmed Strike",
+                ),
+              ),
+            },
+          ],
+        }),
+      ],
+    });
+    expect(
+      requireResultHole(opportunityAttack, "interruptDecision"),
+    ).toMatchObject({
+      trigger: "opportunityAttack",
+    });
     const approached = resolveBattleSubject({
       state: targetTurn.state,
       subject: approachAct.subject,
@@ -115,6 +148,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         commandApproachMovementFill(movement, {
           movementCostFeet: 10,
           movedWithinFiveFeetOfCaster: false,
+          provokedOpportunityAttacks: [],
         }),
       ],
     });
@@ -202,6 +236,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
         commandApproachMovementFill(movement, {
           movementCostFeet: 10,
           movedWithinFiveFeetOfCaster: true,
+          provokedOpportunityAttacks: [],
         }),
       ],
     });

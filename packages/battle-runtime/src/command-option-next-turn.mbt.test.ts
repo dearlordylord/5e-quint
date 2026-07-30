@@ -397,6 +397,7 @@ function commandApproachContinuesScenario(): CommandOptionNextTurnProjection {
         commandApproachMovementFill(movement, {
           movementCostFeet: 10,
           movedWithinFiveFeetOfCaster: false,
+          provokedOpportunityAttacks: [],
         }),
       ],
     }),
@@ -425,6 +426,7 @@ function commandApproachWithinFiveScenario(): CommandOptionNextTurnProjection {
         commandApproachMovementFill(movement, {
           movementCostFeet: 10,
           movedWithinFiveFeetOfCaster: true,
+          provokedOpportunityAttacks: [],
         }),
       ],
     }),
@@ -452,6 +454,7 @@ function commandApproachMovementRejectedScenario(): CommandOptionNextTurnProject
       commandApproachMovementFill(movement, {
         movementCostFeet: 35,
         movedWithinFiveFeetOfCaster: false,
+        provokedOpportunityAttacks: [],
       }),
     ],
   });

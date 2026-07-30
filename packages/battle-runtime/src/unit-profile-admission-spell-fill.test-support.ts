@@ -1328,6 +1328,10 @@ export function commandApproachMovementFill(
   value: {
     readonly movementCostFeet: number;
     readonly movedWithinFiveFeetOfCaster: boolean;
+    readonly provokedOpportunityAttacks: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["provokedOpportunityAttacks"];
   },
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return {
@@ -1336,7 +1340,7 @@ export function commandApproachMovementFill(
     value: {
       speedKind: "walk",
       movementCostFeet: movementFeet(value.movementCostFeet),
-      provokedOpportunityAttacks: [],
+      provokedOpportunityAttacks: value.provokedOpportunityAttacks,
       commandApproach: {
         kind: "commandApproachShortestDirectRouteTowardCaster",
         movedWithinFiveFeetOfCaster: value.movedWithinFiveFeetOfCaster,

@@ -776,6 +776,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
           commandApproachMovementFill(movement, {
             movementCostFeet: 15,
             movedWithinFiveFeetOfCaster: false,
+            provokedOpportunityAttacks: [],
           }),
           sourceProcedureRef,
           {
