@@ -2102,6 +2102,7 @@ function parseAuthoredAttackDamageReductionZeroDamageRedirect(
   redirect: unknown,
   expectedResourceUnitId: AuthoredUnitSource["id"],
 ): AuthoredAttackDamageReductionZeroDamageRedirect | null {
+  /* v8 ignore next -- Malformed authored mechanics: the redirect payload must be a non-null object before its nested shape can be parsed. */
   if (typeof redirect !== "object" || redirect === null) return null;
   // Cast justification: the object guard above is the boundary evidence; every
   // nested field read below is checked before returning a freshly built value.
@@ -2707,6 +2708,7 @@ function alternateActionCostActions(
   actions: readonly StandardActionKind[],
 ): ReadonlyNonEmptyArray<AlternateActionCostAction> | null {
   const first = actions[0];
+  /* v8 ignore start -- Malformed authored alternate-cost mechanics: admission requires a non-empty list containing only the supported standard-action subset. */
   if (first === undefined || !isAlternateActionCostAction(first)) {
     return null;
   }
@@ -2714,6 +2716,7 @@ function alternateActionCostActions(
   if (!rest.every(isAlternateActionCostAction)) {
     return null;
   }
+  /* v8 ignore stop */
   return [first, ...rest];
 }
 
@@ -2870,6 +2873,7 @@ function monkFocusBattleExecution(option: {
       jumpDistanceMultiplier: { multiplier: 2, expires: "end_of_turn" },
     };
   }
+  /* v8 ignore next -- Malformed authored Focus option: known option projections are handled above; any other battle-execution shape remains unsupported. */
   return null;
 }
 
