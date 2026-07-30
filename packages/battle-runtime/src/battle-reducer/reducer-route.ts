@@ -943,86 +943,48 @@ export function battleReducerRouteEventsForDiscoveredAct(
   ]);
 }
 
+function firstApplicableRoute(
+  ...routeCandidates: readonly (() => BattleReducerRouteEvents | undefined)[]
+): BattleReducerRouteEvents | undefined {
+  // Candidate order is route-owner priority. Lazy evaluation preserves the
+  // prior short-circuit protocol when one subject matches multiple readers.
+  for (const routeCandidate of routeCandidates) {
+    const route = routeCandidate();
+    if (route !== undefined) {
+      return route;
+    }
+  }
+  return undefined;
+}
+
 export function battleReducerRouteForResolution(
   input: AdmittedBattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
-  const creatureStatProjectionRoute = creatureStatProjectionRouteForResolution(
-    input,
-    result,
-  );
-  if (creatureStatProjectionRoute !== undefined) {
-    return creatureStatProjectionRoute;
-  }
-  const passiveAbilityCheckRollModeRoute =
-    passiveAbilityCheckRollModeRouteForResolution(input, result);
-  if (passiveAbilityCheckRollModeRoute !== undefined) {
-    return passiveAbilityCheckRollModeRoute;
-  }
-  const passiveSavingThrowRollModeRoute =
-    passiveSavingThrowRollModeRouteForResolution(input, result);
-  if (passiveSavingThrowRollModeRoute !== undefined) {
-    return passiveSavingThrowRollModeRoute;
-  }
-  const metamagicEffectiveSpellLevelRoute =
-    metamagicEffectiveSpellLevelRouteForResolution(input, result);
-  if (metamagicEffectiveSpellLevelRoute !== undefined) {
-    return metamagicEffectiveSpellLevelRoute;
-  }
-  const rollModifierRoute = rollModifierRouteForResolution(input, result);
-  if (rollModifierRoute !== undefined) {
-    return rollModifierRoute;
-  }
-  const spellDamageReductionRoute = spellDamageReductionRouteForResolution(
-    input,
-    result,
-  );
-  if (spellDamageReductionRoute !== undefined) {
-    return spellDamageReductionRoute;
-  }
-  const metamagicSpellComponentProjectionRoute =
-    metamagicSpellComponentProjectionRouteForResolution(input, result);
-  if (metamagicSpellComponentProjectionRoute !== undefined) {
-    return metamagicSpellComponentProjectionRoute;
-  }
-  const protectionCharmRoute = protectionCharmRouteForResolution(input, result);
-  if (protectionCharmRoute !== undefined) {
-    return protectionCharmRoute;
-  }
-  const wardedTargetInterdictionRoute =
-    wardedTargetInterdictionRouteForResolution(input, result);
-  if (wardedTargetInterdictionRoute !== undefined) {
-    return wardedTargetInterdictionRoute;
-  }
-  const scalarBuffRoute = scalarBuffRouteForResolution(input, result);
-  if (scalarBuffRoute !== undefined) {
-    return scalarBuffRoute;
-  }
-  const markedDamageAndConditionProtectionRoute =
-    markedDamageAndConditionProtectionRouteForResolution(input, result);
-  if (markedDamageAndConditionProtectionRoute !== undefined) {
-    return markedDamageAndConditionProtectionRoute;
-  }
-  const markedDamageRiderAbilityCheckRoute =
-    markedDamageRiderAbilityCheckRollModeRouteForResolution(input, result);
-  if (markedDamageRiderAbilityCheckRoute !== undefined) {
-    return markedDamageRiderAbilityCheckRoute;
-  }
-  const rollModifierConcentrationRoute =
-    rollModifierConcentrationBreakRouteForResolution(input, result);
-  if (rollModifierConcentrationRoute !== undefined) {
-    return rollModifierConcentrationRoute;
-  }
   const sleepRepeatSaveRoute = sleepRepeatSaveRouteForResolution(input, result);
-  if (sleepRepeatSaveRoute !== undefined && !isEndTurnSubject(input.subject)) {
-    return sleepRepeatSaveRoute;
-  }
-  const afterHitEscapeRoute = afterHitDamageRiderEscapeRouteForResolution(
-    input,
-    result,
+  const firstExclusiveRoute = firstApplicableRoute(
+    () => creatureStatProjectionRouteForResolution(input, result),
+    () => passiveAbilityCheckRollModeRouteForResolution(input, result),
+    () => passiveSavingThrowRollModeRouteForResolution(input, result),
+    () => metamagicEffectiveSpellLevelRouteForResolution(input, result),
+    () => rollModifierRouteForResolution(input, result),
+    () => spellDamageReductionRouteForResolution(input, result),
+    () => metamagicSpellComponentProjectionRouteForResolution(input, result),
+    () => protectionCharmRouteForResolution(input, result),
+    () => wardedTargetInterdictionRouteForResolution(input, result),
+    () => scalarBuffRouteForResolution(input, result),
+    () => markedDamageAndConditionProtectionRouteForResolution(input, result),
+    () =>
+      markedDamageRiderAbilityCheckRollModeRouteForResolution(input, result),
+    () => rollModifierConcentrationBreakRouteForResolution(input, result),
+    () =>
+      sleepRepeatSaveRoute !== undefined && !isEndTurnSubject(input.subject)
+        ? sleepRepeatSaveRoute
+        : undefined,
+    () => afterHitDamageRiderEscapeRouteForResolution(input, result),
   );
-  if (afterHitEscapeRoute !== undefined) {
-    return afterHitEscapeRoute;
+  if (firstExclusiveRoute !== undefined) {
+    return firstExclusiveRoute;
   }
   const repeatSaveConditionEffectRoute =
     repeatSaveConditionEffectRouteForResolution(input, result);
