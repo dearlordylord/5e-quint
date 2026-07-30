@@ -8352,6 +8352,7 @@ export function resolveMovementEffectsAfterMovement(input: {
   let nextState = movedState;
   for (const request of requests) {
     const target = nextState.combatants.get(input.movement.moverId);
+    /* v8 ignore start -- Internal resolved-movement invariant: callers admit movement while its mover exists, applyBattleMovement preserves combatant keys, and Spike Growth damage never removes a combatant. This fallback only protects a direct malformed continuation call. */
     if (target === undefined) {
       return {
         tag: "resolved",
@@ -8361,6 +8362,7 @@ export function resolveMovementEffectsAfterMovement(input: {
         ),
       };
     }
+    /* v8 ignore stop */
     const damageHole = spikeGrowthMovementDamageRollHole(
       input.movement.moverId,
       request,
