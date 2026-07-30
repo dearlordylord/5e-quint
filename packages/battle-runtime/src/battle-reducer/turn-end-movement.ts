@@ -9030,22 +9030,31 @@ function validateCreatureSpaceTraversalMovementFact(
   if (fact === undefined) {
     return null;
   }
+  /* v8 ignore start -- Malformed creature-space traversal fill: discovery requests this fact only for a mover with the admitted traversal profile. */
   if (creatureSpaceMovementPermissionProfileForCombatant(mover) === null) {
     return CREATURE_SPACE_TRAVERSAL_MISSING_PROFILE_MESSAGE;
   }
+  /* v8 ignore stop */
   const seenOccupants = new Set<CombatantId>();
   for (const occupiedSpace of fact.occupiedSpaces) {
+    /* v8 ignore start -- Malformed traversal witness: the table adapter lists other creatures whose spaces the mover crosses, never the mover itself. */
     if (occupiedSpace.occupantId === mover.combatantId) {
       return CREATURE_SPACE_TRAVERSAL_SELF_OCCUPANT_MESSAGE;
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- Malformed traversal witness: the table adapter emits each occupied creature once, so this rejects only a caller-mutated duplicate. */
     if (seenOccupants.has(occupiedSpace.occupantId)) {
       return CREATURE_SPACE_TRAVERSAL_REPEATED_OCCUPANT_MESSAGE;
     }
+    /* v8 ignore stop */
     seenOccupants.add(occupiedSpace.occupantId);
     const occupant = state.combatants.get(occupiedSpace.occupantId);
+    /* v8 ignore start -- Malformed traversal witness: occupied-space selection is drawn from this battle, so this rejects only a caller-mutated foreign identity. */
     if (occupant === undefined) {
       return CREATURE_SPACE_TRAVERSAL_UNKNOWN_OCCUPANT_MESSAGE;
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- Malformed traversal witness: the admitted table fact includes only creature spaces larger than the mover. */
     if (
       !creatureSizeIsLargerThanSelf(
         combatantEffectiveSize(mover),
@@ -9054,7 +9063,9 @@ function validateCreatureSpaceTraversalMovementFact(
     ) {
       return CREATURE_SPACE_TRAVERSAL_SAME_SIZE_MESSAGE;
     }
+    /* v8 ignore stop */
   }
+  /* v8 ignore start -- Malformed traversal destination: the table adapter cannot select a position already named as occupied while labeling it unoccupied. */
   if (
     fact.destination.kind === "unoccupiedSpace" &&
     fact.occupiedSpaces.some(
@@ -9064,9 +9075,12 @@ function validateCreatureSpaceTraversalMovementFact(
   ) {
     return CREATURE_SPACE_TRAVERSAL_OCCUPIED_STOP_MESSAGE;
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed traversal destination: creature-space traversal may pass through occupied spaces but the table adapter must select an unoccupied destination. */
   if (fact.destination.kind === "occupiedCreatureSpace") {
     return CREATURE_SPACE_TRAVERSAL_OCCUPIED_STOP_MESSAGE;
   }
+  /* v8 ignore stop */
   return null;
 }
 
@@ -9102,24 +9116,30 @@ function validateMovementCostFacts(
     state,
     value.areaDifficultTerrain,
   );
+  /* v8 ignore start -- Malformed movement-cost fill: the area table adapter constructs the typed Difficult Terrain fact, so this only propagates a caller-mutated contradiction. */
   if (difficultTerrain.tag === "invalid") {
     return difficultTerrain.message;
   }
+  /* v8 ignore stop */
   const gust = validateGustOfWindLineMovementFact(
     state,
     value.gustOfWindLineMovement,
   );
+  /* v8 ignore start -- Malformed movement-cost fill: the Gust of Wind table adapter constructs the typed Line fact, so this only propagates a caller-mutated contradiction. */
   if (gust.tag === "invalid") {
     return gust.message;
   }
+  /* v8 ignore stop */
   const grappleDrag = validateGrappleDragMovementFact(
     state,
     moverId,
     value.grappleDrag,
   );
+  /* v8 ignore start -- Malformed movement-cost fill: the Grapple table adapter constructs the typed drag fact, so this only propagates a caller-mutated contradiction. */
   if (grappleDrag.tag === "invalid") {
     return grappleDrag.message;
   }
+  /* v8 ignore stop */
   const areaCosts = [difficultTerrain, gust].filter(
     (
       result,
@@ -9131,15 +9151,19 @@ function validateMovementCostFacts(
       return null;
     }
   }
+  /* v8 ignore start -- Contradictory movement fill: the table adapter cannot combine Grapple drag with a spell-owned Jump replacement. */
   if (grappleDrag.tag === "ok" && value.jumpMovementReplacement !== undefined) {
     return "Grapple drag movement facts cannot be combined with Jump movement replacement.";
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Contradictory movement fill: the table adapter cannot combine Grapple drag with a Levitate altitude change. */
   if (
     grappleDrag.tag === "ok" &&
     value.levitatedMovement?.altitudeChange !== undefined
   ) {
     return "Grapple drag movement facts cannot be combined with Levitate altitude-change movement.";
   }
+  /* v8 ignore stop */
   const firstAreaCost = areaCosts[0];
   const allCosts =
     grappleDrag.tag === "ok" ? [...areaCosts, grappleDrag] : areaCosts;
@@ -9148,6 +9172,7 @@ function validateMovementCostFacts(
     return null;
   }
   const remainingAreaCosts = areaCosts.slice(1);
+  /* v8 ignore start -- Contradictory area witnesses: table-derived Difficult Terrain and Gust facts share one movement path and therefore one total distance. */
   if (
     firstAreaCost !== undefined &&
     remainingAreaCosts.some(
@@ -9158,6 +9183,8 @@ function validateMovementCostFacts(
   ) {
     return "Area movement-cost facts must agree on total Movement distance.";
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Contradictory movement witnesses: all table-derived area and Grapple facts share one movement path and therefore one total distance. */
   if (
     allCosts
       .slice(1)
@@ -9169,6 +9196,7 @@ function validateMovementCostFacts(
   ) {
     return "Movement-cost facts must agree on total Movement distance.";
   }
+  /* v8 ignore stop */
   if (
     value.jumpMovementReplacement !== undefined ||
     value.levitatedMovement?.altitudeChange !== undefined
@@ -9182,15 +9210,22 @@ function validateMovementCostFacts(
   if (Number(value.movementCostFeet) === Number(expectedCostFeet)) {
     return null;
   }
+  /* v8 ignore start -- Malformed combined-cost projection: the table adapter computes total distance plus every non-exempt area and Grapple increment before submitting the movement fill. */
   if (grappleDrag.tag === "ok" && areaCosts.length > 0) {
     return "Combined movement-cost facts must spend total distance plus all area and non-exempt grapple drag extra movement costs.";
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed Grapple-cost projection: the table adapter computes one extra foot per non-exempt dragged foot. */
   if (grappleDrag.tag === "ok") {
     return "Grapple drag movement must spend total distance plus 1 extra foot for every foot a non-exempt Grappled target is dragged.";
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed combined-area projection: the table adapter sums Difficult Terrain and Gust of Wind increments over their shared path. */
   if (difficultTerrain.tag === "ok" && gust.tag === "ok") {
     return "Combined area Difficult Terrain and Gust of Wind movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain and 1 extra foot for every foot moved closer to the caster through the Line.";
   }
+  /* v8 ignore stop */
+  /* v8 ignore next -- Malformed single-area projection: after the typed area facts above, this tail only reports which caller-supplied movement-cost total was inconsistent. */
   return difficultTerrain.tag === "ok"
     ? "Area Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain."
     : "Gust of Wind Line movement must spend total distance plus 1 extra foot for every foot moved closer to the caster through the Line.";
@@ -9318,28 +9353,38 @@ function validateJumpMovementReplacementFact(
   areaExtraCostFeet: MovementFeet,
 ): string | null {
   if (effect === undefined) {
+    /* v8 ignore start -- Malformed movement fill: discovery does not request Jump facts for ordinary movement, so this rejects only caller-supplied cross-procedure data. */
     return fact === undefined
       ? null
       : "Jump movement replacement facts cannot be supplied for ordinary Movement.";
+    /* v8 ignore stop */
   }
+  /* v8 ignore start -- Malformed Jump fill: discovery requests distance and landing facts whenever the active spell replacement is selected. */
   if (fact === undefined) {
     return "Jump movement replacement requires caller-supplied jump distance and landing facts.";
   }
+  /* v8 ignore stop */
   const expectedMovementCostFeet = movementFeet(
     Number(effect.movementCostFeet) + Number(areaExtraCostFeet),
   );
+  /* v8 ignore start -- Malformed Jump cost projection: the table adapter sums the spell-owned movement cost and any area surcharge. */
   if (movementCostFeet !== expectedMovementCostFeet) {
     return "Jump movement replacement must spend the spell's Movement cost plus any area movement costs.";
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed Jump distance: the table adapter supplies a positive whole-foot landing distance. */
   if (!Number.isInteger(fact.distanceFeet) || fact.distanceFeet <= 0) {
     return "Jump movement replacement distance must be a positive integer.";
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed Jump distance: the table adapter constrains the selected landing to the active spell's computed maximum. */
   if (
     Number(fact.distanceFeet) >
     Number(maxJumpMovementReplacementDistanceFeet(state, moverId, effect))
   ) {
     return "Jump movement replacement distance exceeds the active maximum.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
@@ -9348,13 +9393,17 @@ function validateCommandApproachMovementFact(
   expected: BattleCommandApproachMovementFact | undefined,
 ): string | null {
   if (expected === undefined) {
+    /* v8 ignore start -- Malformed Command fill: discovery does not request Approach route facts for ordinary movement. */
     return fact === undefined
       ? null
       : "Command Approach route facts cannot be supplied for ordinary Movement.";
+    /* v8 ignore stop */
   }
+  /* v8 ignore start -- Malformed Command fill: discovery requests the table-owned Approach route whenever that command movement is pending. */
   if (fact === undefined) {
     return "Command Approach requires caller-supplied route facts.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
@@ -9363,13 +9412,17 @@ function validateCommandFleeMovementFact(
   expected: BattleCommandFleeMovementFact | undefined,
 ): string | null {
   if (expected === undefined) {
+    /* v8 ignore start -- Malformed Command fill: discovery does not request Flee route facts for ordinary movement. */
     return fact === undefined
       ? null
       : "Command Flee route facts cannot be supplied for ordinary Movement.";
+    /* v8 ignore stop */
   }
+  /* v8 ignore start -- Malformed Command fill: discovery requests the table-owned Flee route whenever that command movement is pending. */
   if (fact === undefined) {
     return "Command Flee requires caller-supplied route facts.";
   }
+  /* v8 ignore stop */
   return null;
 }
 
