@@ -49,6 +49,7 @@ import {
   bonusSpellAct,
   bonusSpellActForItem,
   magicWeaponTargetItemFill,
+  maybeBonusSpellAct,
   spellAct,
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
@@ -1092,9 +1093,19 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
     const magicWeapon = spellRecord(magicWeaponUnitId);
     const session = spellBattle({
       preparedSpells: [magicWeapon],
-      spellSlots: [{ spellLevel: 2, count: 1 }],
+      spellSlots: [
+        { spellLevel: 1, count: 1 },
+        { spellLevel: 2, count: 1 },
+      ],
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
+    expect(
+      maybeBonusSpellAct({
+        session,
+        spellId: magicWeaponUnitId,
+        slotLevel: 1,
+      }),
+    ).toBeUndefined();
     const act = bonusSpellAct({
       session,
       spellId: magicWeaponUnitId,

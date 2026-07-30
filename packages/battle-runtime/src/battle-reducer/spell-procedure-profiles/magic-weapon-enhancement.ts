@@ -274,6 +274,7 @@ function resolveMagicWeaponEnhancement(
   }
 
   const actor = input.input.state.combatants.get(input.actorId);
+  /* v8 ignore start -- Admitted spell-resolution invariant: the bound Magic Weapon procedure and its caster are resolved together before profile dispatch. */
   if (actor === undefined) {
     return invalidResult(
       input.input.state,
@@ -281,6 +282,7 @@ function resolveMagicWeaponEnhancement(
       "Magic Weapon caster is not in this battle.",
     );
   }
+  /* v8 ignore stop */
   const effected = replaceTargetActiveEffect(
     input.input.state,
     input.actorId,
