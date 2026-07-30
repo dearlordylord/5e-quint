@@ -2,6 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV58C faerie_fire
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-attack-roll-advantage-save
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 import { characterAttackSubjectForTest } from "./battle-runtime.test-support.ts";
 import {
@@ -22,6 +23,7 @@ import {
   battleIlluminationFromLightEmitters,
   battleObjectId,
   breakBattleConcentration,
+  combatantId,
   movementFeet,
   resolveBattleSubject,
   snapshotBattle,
@@ -425,6 +427,101 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         undefined,
       ),
     ).toBeNull();
+  });
+
+  test("faerie_fire area outcomes form a bijection with current-battle affected targets", () => {
+    const spell = spellRecord(faerieFireUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = spellAct({ session: state, spellId: faerieFireUnitId });
+    const actor = state.state.combatants.get(spellCasterId);
+    const invocation =
+      actor?.origin.kind === "character"
+        ? characterSpellProcedure(
+            actor.origin.execution,
+            act.subject.procedureRef,
+          )
+        : undefined;
+    if (invocation?.procedure !== "saveGatedAttackRollAdvantage") {
+      throw new Error("Expected Faerie Fire save-gated attack Advantage.");
+    }
+    const foreignTargetId = combatantId("combatant:faerie-fire-foreign-target");
+    const targetId = fc.constantFrom(
+      spellCasterId,
+      spellTargetId,
+      foreignTargetId,
+    );
+    const affectedTargetIds = fc.array(targetId, { maxLength: 4 });
+    const outcomes = fc.array(
+      fc.record({ targetId, succeeded: fc.boolean() }),
+      { maxLength: 4 },
+    );
+
+    fc.assert(
+      fc.property(
+        affectedTargetIds,
+        outcomes,
+        (generatedAffectedTargetIds, generatedOutcomes) => {
+          const validation = validateSavingThrowOutcomes(
+            {
+              area: {
+                kind: "faerieFireArea",
+                originAnchorId: spellCasterId,
+                affectedTargetIds: generatedAffectedTargetIds,
+                affectedObjectIds: [],
+              },
+              outcomes: generatedOutcomes,
+            },
+            invocation,
+            state.state,
+            spellCasterId,
+            undefined,
+          );
+          const affectedSet = new Set(generatedAffectedTargetIds);
+          const outcomeSet = new Set(
+            generatedOutcomes.map((outcome) => outcome.targetId),
+          );
+          const isBijectionOfCurrentBattleTargets =
+            affectedSet.size === generatedAffectedTargetIds.length &&
+            outcomeSet.size === generatedOutcomes.length &&
+            affectedSet.size === outcomeSet.size &&
+            generatedAffectedTargetIds.every(
+              (generatedTargetId) =>
+                state.state.combatants.has(generatedTargetId) &&
+                outcomeSet.has(generatedTargetId),
+            );
+
+          expect(validation === null).toBe(isBijectionOfCurrentBattleTargets);
+        },
+      ),
+      {
+        examples: [
+          [
+            [spellCasterId, spellTargetId],
+            [
+              { targetId: spellTargetId, succeeded: false },
+              { targetId: spellCasterId, succeeded: true },
+            ],
+          ],
+          [
+            [spellTargetId, spellTargetId],
+            [{ targetId: spellTargetId, succeeded: true }],
+          ],
+          [[foreignTargetId], [{ targetId: foreignTargetId, succeeded: true }]],
+          [[spellTargetId], [{ targetId: spellCasterId, succeeded: true }]],
+          [
+            [spellTargetId],
+            [
+              { targetId: spellTargetId, succeeded: true },
+              { targetId: spellTargetId, succeeded: false },
+            ],
+          ],
+          [
+            [spellTargetId, spellCasterId],
+            [{ targetId: spellTargetId, succeeded: true }],
+          ],
+        ],
+      },
+    );
   });
 
   test("faerie_fire object outline grants object-target attack Advantage from supplied sight facts", () => {
