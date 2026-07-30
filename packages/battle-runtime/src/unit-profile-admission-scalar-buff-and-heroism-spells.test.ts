@@ -52,6 +52,7 @@ import {
   Hp,
   elapsedTimeTicks,
   endTurn,
+  hasCondition,
   holeId,
   movementDeltaFeet,
   movementFeet,
@@ -1479,6 +1480,58 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         ],
       },
     });
+  });
+
+  test("aid restores a zero-HP target to consciousness and resets death saves", () => {
+    const spell = spellRecord(aidUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 0,
+      targetMaxHp: 12,
+    });
+    const act = spellAct({ session, spellId: aidUnitId, slotLevel: 2 });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+
+    const resolved = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetListHole, spellCasterId, aidUnitId, [
+          spellTargetId,
+        ]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Aid to restore the zero-HP target.");
+    }
+    const target = resolved.state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected restored Aid target.");
+    }
+
+    expect(Number(target.hp)).toBe(5);
+    expect(Number(target.maxHp)).toBe(12);
+    expect(hasCondition(target.conditions, "unconscious")).toBe(false);
+    expect(target.positiveHpUnconscious).toBeNull();
+    expect(target.zeroHpLifecycle).toMatchObject({
+      policy: "usesDeathSavingThrows",
+      deathSaves: {
+        deathSaves: { successes: 0, failures: 0 },
+        stable: false,
+        dead: false,
+        hpRegained: false,
+      },
+    });
+    expect(resolved.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: spellTargetId,
+          hp: 5,
+          maxHp: 17,
+        }),
+      ]),
+    );
   });
 
   test("aid expiration removes the maximum Hit Point bonus and subtracts the current Hit Point increase", () => {
