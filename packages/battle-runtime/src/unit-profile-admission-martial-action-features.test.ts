@@ -19,6 +19,7 @@ import {
   decodeSpeciesRecordSync,
   decodeUnitRecordSync,
 } from "@dnd/surface/surface/schema";
+import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 import speciesDragonbornInput from "../../surface/content/species_dragonborn.json";
 import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-helpers.ts";
@@ -1379,6 +1380,54 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
         { className: "monk", level: classLevel(2) },
       ]),
     ).toBeNull();
+  });
+
+  test("monk_monks_focus never partially admits an incomplete executable option set", () => {
+    const unit = unitLibrary.requireUnit(monkMonksFocusUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "resource_container"
+    ) {
+      throw new Error("Expected Monk's Focus resource container mechanics.");
+    }
+    const mechanics = unit.mechanics;
+    const optionIndexes = mechanics.optionSet.initialOptions.map(
+      (_, index) => index,
+    );
+
+    fc.assert(
+      fc.property(
+        fc.shuffledSubarray(optionIndexes, {
+          minLength: 1,
+          maxLength: optionIndexes.length,
+        }),
+        (omittedIndexes) => {
+          const omitted = new Set(omittedIndexes);
+          const incompleteUnit = unitMechanicsVariant(unit, {
+            id: "monk_monks_focus_incomplete_battle_options",
+            mechanics: {
+              ...mechanics,
+              optionSet: {
+                ...mechanics.optionSet,
+                initialOptions: mechanics.optionSet.initialOptions.map(
+                  (option, index) => {
+                    if (!omitted.has(index)) return option;
+                    const { battleExecution: _omitted, ...withoutExecution } =
+                      option;
+                    return withoutExecution;
+                  },
+                ),
+              },
+            },
+          });
+
+          expect(
+            battleMonkFocusBattleOptionsSupportForUnit(incompleteUnit),
+          ).toBe(omitted.size === optionIndexes.length ? null : "unsupported");
+        },
+      ),
+      { numRuns: 30 },
+    );
   });
 
   test("monk_stunning_strike admits attack-hit Focus rider executable facts", () => {
