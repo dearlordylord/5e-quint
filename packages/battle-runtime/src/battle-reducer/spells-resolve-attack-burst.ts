@@ -951,32 +951,38 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   const burstDamageByTargetId = new Map(
     failedTargets.flatMap((targetId): readonly [CombatantId, number][] => {
       const burstTarget = damagedByAttack.combatants.get(targetId);
-      return burstTarget === undefined || input.fillSet.damageRoll === undefined
-        ? []
-        : [
-            [
-              targetId,
-              damageAmountByTypeAfterTargetAdjustments(
-                damagedByAttack,
-                burstTarget,
-                burstSourcePenalty.damageByType,
-              ),
-            ],
-          ];
+      /* v8 ignore start -- Internal replay invariant: validated Ice Knife save outcomes name roster targets, and a failed save reaches this projection only after the burst damage roll is filled. */
+      if (burstTarget === undefined || input.fillSet.damageRoll === undefined) {
+        return [];
+      }
+      /* v8 ignore stop */
+      return [
+        [
+          targetId,
+          damageAmountByTypeAfterTargetAdjustments(
+            damagedByAttack,
+            burstTarget,
+            burstSourcePenalty.damageByType,
+          ),
+        ],
+      ];
     }),
   );
   const burstDamageDispositionHoles = Array.from(
     burstDamageByTargetId,
     ([targetId, damageAmount]) => {
       const burstTarget = damagedByAttack.combatants.get(targetId);
-      return burstTarget === undefined
-        ? null
-        : zeroHitPointReplacementDispositionHole({
-            damageSourceId: input.actorId,
-            target: burstTarget,
-            damageAmount,
-            holeKey: iceKnifeDamageDispositionHoleKey("burst", targetId),
-          });
+      /* v8 ignore start -- Internal replay invariant: burstDamageByTargetId contains only targets retained from the immediately preceding validated roster projection. */
+      if (burstTarget === undefined) {
+        return null;
+      }
+      /* v8 ignore stop */
+      return zeroHitPointReplacementDispositionHole({
+        damageSourceId: input.actorId,
+        target: burstTarget,
+        damageAmount,
+        holeKey: iceKnifeDamageDispositionHoleKey("burst", targetId),
+      });
     },
   ).flatMap((hole) => (hole === null ? [] : [hole]));
   const damageDispositionHoles = [
@@ -1023,13 +1029,16 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     concentrationDamageByTargetId,
     ([targetId, damageAmount]) => {
       const damagedTarget = damagedByAttack.combatants.get(targetId);
-      return damagedTarget === undefined
-        ? []
-        : damageLifecycleConcentrationSavingThrowHoles({
-            state: damagedByAttack,
-            target: damagedTarget,
-            damageAmount,
-          });
+      /* v8 ignore start -- Internal replay invariant: concentrationDamageByTargetId is populated only from the retained primary target and validated burst target projection. */
+      if (damagedTarget === undefined) {
+        return [];
+      }
+      /* v8 ignore stop */
+      return damageLifecycleConcentrationSavingThrowHoles({
+        state: damagedByAttack,
+        target: damagedTarget,
+        damageAmount,
+      });
     },
   ).flat();
   const missingConcentrationSaves = concentrationSaves.filter(
@@ -1078,9 +1087,11 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     const burstDamageEventKey = String(
       iceKnifeDamageDispositionHoleKey("burst", targetId).holeId,
     );
+    /* v8 ignore start -- Internal replay invariant: failedTargets was validated against the battle roster, and attack damage application preserves those combatants. */
     if (damagedTarget === undefined) {
       return { tag: "ok" as const, holes: [] };
     }
+    /* v8 ignore stop */
     const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
       state: damagedByAttack,
       target: damagedTarget,
@@ -1281,38 +1292,33 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       ? damagedByAttackWithConcentration
       : failedTargets.reduce((state, targetId) => {
           const damageAmount = burstDamageByTargetId.get(targetId);
-          if (damageAmount === undefined) {
+          const damagedTarget = damagedByAttack.combatants.get(targetId);
+          /* v8 ignore start -- Internal replay invariant: every failed Ice Knife save target is retained in burstDamageByTargetId with its roster combatant before burst application. */
+          if (damageAmount === undefined || damagedTarget === undefined) {
             return state;
           }
-          const damagedTarget = damagedByAttack.combatants.get(targetId);
-          const concentrationLifecycleFills =
-            damagedTarget === undefined
-              ? []
-              : fillsMatchingHoleIds(
-                  input.fillSet.concentrationSavingThrows,
-                  damageLifecycleConcentrationSavingThrowHoles({
-                    state: damagedByAttack,
-                    target: damagedTarget,
-                    damageAmount:
-                      concentrationDamageByTargetId.get(targetId) ??
-                      damageAmount,
-                  }),
-                );
+          /* v8 ignore stop */
+          const concentrationLifecycleFills = fillsMatchingHoleIds(
+            input.fillSet.concentrationSavingThrows,
+            damageLifecycleConcentrationSavingThrowHoles({
+              state: damagedByAttack,
+              target: damagedTarget,
+              damageAmount:
+                concentrationDamageByTargetId.get(targetId) ?? damageAmount,
+            }),
+          );
           const burstDamageEventKey = String(
             iceKnifeDamageDispositionHoleKey("burst", targetId).holeId,
           );
-          const hideousLaughterLifecycleFills =
-            damagedTarget === undefined
-              ? []
-              : fillsMatchingHoleIds(
-                  input.fillSet.hideousLaughterDamageRepeatSaves,
-                  damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-                    state: damagedByAttack,
-                    target: damagedTarget,
-                    damageAmount,
-                    damageEventKey: burstDamageEventKey,
-                  }),
-                );
+          const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
+            input.fillSet.hideousLaughterDamageRepeatSaves,
+            damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+              state: damagedByAttack,
+              target: damagedTarget,
+              damageAmount,
+              damageEventKey: burstDamageEventKey,
+            }),
+          );
           return applyPreparedSlotSpellDamage(state, targetId, damageAmount, {
             concentrationSavingThrow: concentrationSaveByTargetId.get(targetId),
             wardingBondDamageShareConcentrationSavingThrows:
