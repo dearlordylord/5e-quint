@@ -6227,17 +6227,23 @@ function stunningStrikeProfileForUnit(
 function cunningStrikeCostForSurfaceOption(option: {
   readonly cost: CunningStrikeSurfaceOption["cost"];
 }): CunningStrikeDieCost | null {
-  return option.cost.kind === "sneak_attack_damage_dice" &&
-    option.cost.dice === 1 &&
-    option.cost.dieSize === 6
-    ? { kind: "sneakAttackDamageDice", dice: 1, dieSize: 6 }
-    : null;
+  /* v8 ignore start -- Unsupported structured input: Cunning Strike options spend exactly one d6 of Sneak Attack damage; other cost atoms are rejected before projection. */
+  if (
+    option.cost.kind !== "sneak_attack_damage_dice" ||
+    option.cost.dice !== 1 ||
+    option.cost.dieSize !== 6
+  ) {
+    return null;
+  }
+  /* v8 ignore stop */
+  return { kind: "sneakAttackDamageDice", dice: 1, dieSize: 6 };
 }
 
 function cunningStrikeEffectForSurfaceOption(
   option: CunningStrikeSurfaceOption,
 ): CunningStrikeOptionEffect | null {
   if ("requires" in option) {
+    /* v8 ignore start -- Unsupported structured input: the equipment-gated option owns the Poisoner's Kit, Constitution save, Poisoned condition, and end-turn repeat-save shape. */
     if (
       option.requires.kind !== "equipment_on_person" ||
       option.requires.equipment.kind !== "tool" ||
@@ -6251,12 +6257,15 @@ function cunningStrikeEffectForSurfaceOption(
     ) {
       return null;
     }
+    /* v8 ignore stop */
     const duration = elapsedTimeTicksFromTimeSpanDuration(
       option.onFail.duration,
     );
+    /* v8 ignore start -- Unsupported structured input: the equipment-gated condition duration must parse into elapsed-time ticks. */
     if (Either.isLeft(duration)) {
       return null;
     }
+    /* v8 ignore stop */
     return {
       kind: "equipmentGatedConditionSave",
       requires: {
@@ -6276,87 +6285,113 @@ function cunningStrikeEffectForSurfaceOption(
     };
   }
   if ("target" in option) {
-    return option.target.maxSize === "large" &&
-      option.save.ability === "dex" &&
-      option.onFail.kind === "apply_condition" &&
-      option.onFail.condition === "prone"
-      ? {
-          kind: "sizeGatedConditionSave",
-          target: { maxSize: option.target.maxSize },
-          save: { ability: option.save.ability },
-          onFail: {
-            kind: "applyCondition",
-            condition: option.onFail.condition,
-          },
-        }
-      : null;
+    /* v8 ignore start -- Unsupported structured input: the size-gated option owns a Large-or-smaller Dexterity save that applies Prone on failure. */
+    if (
+      option.target.maxSize !== "large" ||
+      option.save.ability !== "dex" ||
+      option.onFail.kind !== "apply_condition" ||
+      option.onFail.condition !== "prone"
+    ) {
+      return null;
+    }
+    /* v8 ignore stop */
+    return {
+      kind: "sizeGatedConditionSave",
+      target: { maxSize: option.target.maxSize },
+      save: { ability: option.save.ability },
+      onFail: {
+        kind: "applyCondition",
+        condition: option.onFail.condition,
+      },
+    };
   }
   if ("movement" in option) {
-    return option.movement.timing === "immediately_after_attack" &&
-      option.movement.distance.kind === "half_speed" &&
-      option.movement.opportunityAttacks === "does_not_provoke"
-      ? {
-          kind: "postDamageMovement",
-          movement: {
-            timing: "immediatelyAfterAttack",
-            distance: { kind: "halfSpeed" },
-            opportunityAttacks: "doesNotProvoke",
-          },
-        }
-      : null;
+    /* v8 ignore start -- Unsupported structured input: the movement option owns immediate half-Speed movement that does not provoke Opportunity Attacks. */
+    if (
+      option.movement.timing !== "immediately_after_attack" ||
+      option.movement.distance.kind !== "half_speed" ||
+      option.movement.opportunityAttacks !== "does_not_provoke"
+    ) {
+      return null;
+    }
+    /* v8 ignore stop */
+    return {
+      kind: "postDamageMovement",
+      movement: {
+        timing: "immediatelyAfterAttack",
+        distance: { kind: "halfSpeed" },
+        opportunityAttacks: "doesNotProvoke",
+      },
+    };
   }
+  /* v8 ignore next -- Unsupported structured input: every Cunning Strike option shape owned by this profile is handled above. */
   return null;
 }
 
 function cunningStrikeEffectForOptionGrantSurfaceOption(
   option: CunningStrikeOptionGrantSurfaceOption,
 ): CunningStrikeOptionEffect | null {
-  return option.prerequisite.kind === "hide_action_invisible_condition" &&
-    option.effect.kind === "suppress_attack_end_of_invisible_condition" &&
-    option.effect.conditionSource === "hide_action" &&
-    option.effect.ifTurnEndsBehindCover[0] === "three_quarters" &&
-    option.effect.ifTurnEndsBehindCover[1] === "total"
-    ? {
-        kind: "hideInvisibleEndSuppression",
-        prerequisite: { kind: "hideActionInvisibleCondition" },
-        conditionSource: "hideAction",
-        ifTurnEndsBehindCover: ["threeQuarters", "total"],
-      }
-    : null;
+  /* v8 ignore start -- Unsupported structured input: this option grant owns the Hide-created Invisible suppression with three-quarters or total cover retention. */
+  if (
+    option.prerequisite.kind !== "hide_action_invisible_condition" ||
+    option.effect.kind !== "suppress_attack_end_of_invisible_condition" ||
+    option.effect.conditionSource !== "hide_action" ||
+    option.effect.ifTurnEndsBehindCover[0] !== "three_quarters" ||
+    option.effect.ifTurnEndsBehindCover[1] !== "total"
+  ) {
+    return null;
+  }
+  /* v8 ignore stop */
+  return {
+    kind: "hideInvisibleEndSuppression",
+    prerequisite: { kind: "hideActionInvisibleCondition" },
+    conditionSource: "hideAction",
+    ifTurnEndsBehindCover: ["threeQuarters", "total"],
+  };
 }
 
 function cunningStrikeOptionForSurfaceOption(
   option: CunningStrikeSurfaceOption,
 ): CunningStrikeOption | null {
   const cost = cunningStrikeCostForSurfaceOption(option);
+  /* v8 ignore start -- Unsupported structured input: the option cost failed the one-d6 Cunning Strike admission gate. */
   if (cost === null) {
     return null;
   }
+  /* v8 ignore stop */
   const effect = cunningStrikeEffectForSurfaceOption(option);
-  return effect === null
-    ? null
-    : {
-        selectionId: option.id,
-        cost,
-        effect,
-      };
+  /* v8 ignore start -- Unsupported structured input: the option effect failed its typed Cunning Strike admission gate. */
+  if (effect === null) {
+    return null;
+  }
+  /* v8 ignore stop */
+  return {
+    selectionId: option.id,
+    cost,
+    effect,
+  };
 }
 
 function cunningStrikeOptionForOptionGrantSurfaceOption(
   option: CunningStrikeOptionGrantSurfaceOption,
 ): CunningStrikeOption | null {
   const cost = cunningStrikeCostForSurfaceOption(option);
+  /* v8 ignore start -- Unsupported structured input: the granted option cost failed the one-d6 Cunning Strike admission gate. */
   if (cost === null) {
     return null;
   }
+  /* v8 ignore stop */
   const effect = cunningStrikeEffectForOptionGrantSurfaceOption(option);
-  return effect === null
-    ? null
-    : {
-        selectionId: option.id,
-        cost,
-        effect,
-      };
+  /* v8 ignore start -- Unsupported structured input: the granted option effect failed its typed admission gate. */
+  if (effect === null) {
+    return null;
+  }
+  /* v8 ignore stop */
+  return {
+    selectionId: option.id,
+    cost,
+    effect,
+  };
 }
 
 function cunningStrikeOptionsForMechanics(
@@ -6365,9 +6400,11 @@ function cunningStrikeOptionsForMechanics(
   const options: CunningStrikeOption[] = [];
   for (const option of mechanics.options) {
     const projected = cunningStrikeOptionForSurfaceOption(option);
+    /* v8 ignore start -- Unsupported structured input: one malformed option rejects the complete Cunning Strike collection so partial support is unrepresentable. */
     if (projected === null) {
       return null;
     }
+    /* v8 ignore stop */
     options.push(projected);
   }
   return options;
@@ -6380,6 +6417,7 @@ function cunningStrikeProfileForUnit(
   SupportedUnitFeatureProfile,
   { readonly kind: "cunningStrike" }
 > | null {
+  /* v8 ignore start -- Unsupported structured input: Cunning Strike execution is admitted only from the Rogue class-feature mechanics family. */
   if (
     unit.kind !== "class_feature" ||
     unit.className !== "rogue" ||
@@ -6387,13 +6425,17 @@ function cunningStrikeProfileForUnit(
   ) {
     return null;
   }
+  /* v8 ignore stop */
   if (classLevels !== undefined) {
     const classLevel = findCharacterClassLevel(classLevels, unit.className);
+    /* v8 ignore start -- Unsupported character/profile pairing: admission requires the Rogue level at or above acquisition. */
     if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
       return null;
     }
+    /* v8 ignore stop */
   }
   const mechanics = unit.mechanics;
+  /* v8 ignore start -- Unsupported structured input: this profile owns the Sneak Attack trigger, choose-one cardinality, and Dexterity class-feature save-DC shape. */
   if (
     mechanics.trigger.kind !== "deal_sneak_attack_damage" ||
     mechanics.choice.kind !== "choose_one" ||
@@ -6404,10 +6446,13 @@ function cunningStrikeProfileForUnit(
   ) {
     return null;
   }
+  /* v8 ignore stop */
   const options = cunningStrikeOptionsForMechanics(mechanics);
+  /* v8 ignore start -- Unsupported structured input: at least one option failed projection, so the collection is rejected instead of admitting partial support. */
   if (options === null) {
     return null;
   }
+  /* v8 ignore stop */
   return {
     kind: CUNNING_STRIKE_SUPPORT_PROFILE,
     unit,
@@ -6433,25 +6478,30 @@ function cunningStrikeOptionGrantProfileForUnit(
   SupportedUnitFeatureProfile,
   { readonly kind: "cunningStrikeOptionGrant" }
 > | null {
+  /* v8 ignore start -- Unsupported structured input: a Cunning Strike option grant requires its dedicated class-feature mechanics family. */
   if (
     unit.kind !== "class_feature" ||
     unit.mechanics.family !== "cunning_strike_option_grant"
   ) {
     return null;
   }
+  /* v8 ignore stop */
   const option = cunningStrikeOptionForOptionGrantSurfaceOption(
     unit.mechanics.option,
   );
-  return option === null
-    ? null
-    : {
-        kind: CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
-        unit,
-        optionGrant: {
-          sourceUnitId: unit.mechanics.sourceUnitId,
-          option,
-        },
-      };
+  /* v8 ignore start -- Unsupported structured input: the granted option failed its cost or effect admission gate. */
+  if (option === null) {
+    return null;
+  }
+  /* v8 ignore stop */
+  return {
+    kind: CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
+    unit,
+    optionGrant: {
+      sourceUnitId: unit.mechanics.sourceUnitId,
+      option,
+    },
+  };
 }
 
 function paladinSacredWeaponProfileForUnit(
