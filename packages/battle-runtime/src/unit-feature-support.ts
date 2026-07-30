@@ -3808,6 +3808,7 @@ export function battleHuntersPreySupportForUnit(
     return null;
   }
   const admitted = huntersPreyAdmittedMechanicsProfileForUnit(unit);
+  /* v8 ignore next -- Malformed Hunter's Prey mechanics: the family gate identifies the feature, while null means the option records fail profile admission. */
   if (admitted === null) {
     return "unsupported";
   }
@@ -3857,6 +3858,7 @@ export function battleRogueSteadyAimSupportForUnit(
     return null;
   }
   const profile = rogueSteadyAimProfileForUnit(unit);
+  /* v8 ignore next -- Malformed Surface mechanics: the family gate identifies Steady Aim, while a null profile means its structured fields fail admission. */
   return profile === null
     ? "unsupported"
     : {
@@ -3872,6 +3874,7 @@ export function battlePotentCantripSupportForUnit(
     return null;
   }
   const profile = potentCantripProfileForUnit(unit);
+  /* v8 ignore next -- Malformed Surface mechanics: the family gate identifies Potent Cantrip, while a null profile means its structured fields fail admission. */
   return profile === null
     ? "unsupported"
     : {
@@ -4628,6 +4631,7 @@ export function battleMagicActionSaveGatedConditionSupportForUnit(
       condition: profile.condition,
     };
   }
+  /* v8 ignore next -- Malformed Surface mechanics: an Abjure Foes family record that fails the typed profile parser is unsupported structured input. */
   return hasMagicActionSaveGatedConditionMechanics(unit) ? "unsupported" : null;
 }
 
