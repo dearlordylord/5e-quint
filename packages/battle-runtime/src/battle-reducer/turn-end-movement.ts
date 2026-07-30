@@ -7707,7 +7707,9 @@ export function statBlockRechargeRollFillMatchesHole(
 
   const matchedTargetIndexes = new Set<number>();
   for (const result of value) {
-    if (result.roll < 1 || result.roll > 6) return false;
+    /* v8 ignore next -- DieRollResult is parsed as a PositiveInteger, so only the d6 upper bound remains a reachable recharge-fill failure. */
+    if (result.roll < 1) return false;
+    if (result.roll > 6) return false;
     const targetIndex = rechargeHole.rechargeTargets.findIndex(
       (target, index) =>
         !matchedTargetIndexes.has(index) && target === result.target,

@@ -1,5 +1,6 @@
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import fc from "fast-check";
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.attack-control
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS druid_wild_shape
@@ -73,6 +74,7 @@ import {
 } from "./identity.ts";
 import { creatureNamedAttackRollIsSupported } from "./statblock-action-support.ts";
 import { supportedStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-support.ts";
+import { statBlockRechargeRollFillMatchesHole } from "./battle-reducer/turn-end-movement.ts";
 
 function discoverStatBlockActs(state: BattleState) {
   return discoverBattleActs(
@@ -1661,6 +1663,58 @@ describe("battle runtime: Stat Block actions", () => {
     if (rechargeRequest.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${rechargeRequest.tag}.`);
     }
+    const rechargeHole = requireHole(rechargeRequest, "statBlockRechargeRoll");
+    if (rechargeHole.kind !== "statBlockRechargeRoll") {
+      throw new Error("Expected a Stat Block Recharge roll hole.");
+    }
+    expect(statBlockRechargeRollFillMatchesHole([], null)).toBe(true);
+    expect(
+      statBlockRechargeRollFillMatchesHole(
+        [{ target: cinderBreathPoolRef, roll: DieRollResult(1) }],
+        null,
+      ),
+    ).toBe(false);
+    expect(statBlockRechargeRollFillMatchesHole([], rechargeHole)).toBe(false);
+    expect(
+      statBlockRechargeRollFillMatchesHole(
+        [
+          { target: cinderBreathPoolRef, roll: DieRollResult(7) },
+          { target: ashCloudPoolRef, roll: DieRollResult(6) },
+        ],
+        rechargeHole,
+      ),
+    ).toBe(false);
+    expect(
+      statBlockRechargeRollFillMatchesHole(
+        [
+          { target: cinderBreathPoolRef, roll: DieRollResult(1) },
+          { target: cinderBreathPoolRef, roll: DieRollResult(6) },
+        ],
+        rechargeHole,
+      ),
+    ).toBe(false);
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 1, max: 6 }),
+        fc.integer({ min: 1, max: 6 }),
+        fc.boolean(),
+        (cinderRoll, ashRoll, reverse) => {
+          const results = [
+            {
+              target: cinderBreathPoolRef,
+              roll: DieRollResult(cinderRoll),
+            },
+            { target: ashCloudPoolRef, roll: DieRollResult(ashRoll) },
+          ] as const;
+          expect(
+            statBlockRechargeRollFillMatchesHole(
+              reverse ? [...results].reverse() : results,
+              rechargeHole,
+            ),
+          ).toBe(true);
+        },
+      ),
+    );
 
     const recharged = requireResolved(
       resolveBattleSubject({
