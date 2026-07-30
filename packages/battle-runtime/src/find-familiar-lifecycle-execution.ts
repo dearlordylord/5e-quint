@@ -400,6 +400,7 @@ export function withFindFamiliarCombatant(input: {
 }):
   | { readonly tag: "resolved"; readonly state: BattleState }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
+  /* v8 ignore start -- Internal commit invariant: cast and reappearance workflows establish the caster in the battle before constructing an admitted familiar. */
   if (!input.state.combatants.has(input.casterId)) {
     return invalidFindFamiliarResult(
       input.state,
@@ -407,14 +408,18 @@ export function withFindFamiliarCombatant(input: {
       "Find Familiar caster is not in this battle.",
     );
   }
+  /* v8 ignore stop */
   const priorWithoutFamiliar = withoutPresentFindFamiliarCombatant(
     input.state,
     input.familiarId,
   );
+  /* v8 ignore start -- Internal commit invariant: callers collision-check familiar identity, so removing the prior manifestation cannot fail its roster checks. */
   if (priorWithoutFamiliar.tag === "invalid") {
     return priorWithoutFamiliar;
   }
+  /* v8 ignore stop */
   const maxHp = input.combatantAdmission.initialization.maxHp;
+  /* v8 ignore start -- Admitted Stat Block invariant: combatant admission parses maximum HP as a positive integer before this commit helper receives it. */
   if (maxHp < Hp(1)) {
     return invalidFindFamiliarResult(
       input.state,
@@ -422,6 +427,8 @@ export function withFindFamiliarCombatant(input: {
       "Present Find Familiar requires maximum HP above 0.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Retained-companion invariant: reappearance HP is captured only from a previously admitted, living familiar manifestation. */
   if (input.currentHp !== undefined && input.currentHp < Hp(1)) {
     return invalidFindFamiliarResult(
       input.state,
@@ -429,6 +436,8 @@ export function withFindFamiliarCombatant(input: {
       "Present Find Familiar admission requires current HP above 0.",
     );
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Retained-companion invariant: stored current HP originates from the same admitted form and therefore cannot exceed its maximum HP. */
   if (input.currentHp !== undefined && input.currentHp > maxHp) {
     return invalidFindFamiliarResult(
       input.state,
@@ -436,6 +445,7 @@ export function withFindFamiliarCombatant(input: {
       "Present Find Familiar admission current HP must not exceed maximum HP.",
     );
   }
+  /* v8 ignore stop */
   const added = addBattleStatBlockCombatant({
     state: priorWithoutFamiliar.state,
     combatant: {
@@ -446,6 +456,7 @@ export function withFindFamiliarCombatant(input: {
       tempHp: input.tempHp ?? Hp(0),
     },
   });
+  /* v8 ignore start -- Internal commit invariant: the familiar identity was collision-checked and its Stat Block combatant admission succeeded immediately before insertion. */
   if (Either.isLeft(added)) {
     return invalidFindFamiliarResult(
       input.state,
@@ -453,6 +464,7 @@ export function withFindFamiliarCombatant(input: {
       battleStateInitIssueMessage(added.left),
     );
   }
+  /* v8 ignore stop */
   return {
     tag: "resolved",
     state: withFindFamiliar(added.right, input.familiar),
