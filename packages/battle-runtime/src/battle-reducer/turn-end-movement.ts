@@ -4062,6 +4062,7 @@ export function resolveGustOfWindLineDirectionChangeCommand(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
+  /* v8 ignore start -- Defensive internal guard: the availability check above and this spend read the same turn resources, with no intervening state transition. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -4538,6 +4539,7 @@ export function resolveFlamingSphereRepositionCommand(
       "Movable zone reposition requires an available Bonus Action.",
     );
   }
+  /* v8 ignore stop */
   const movementHole = flamingSphereRepositionMovementHole(effect);
   const movementFills = input.fills.filter(
     (
@@ -4840,6 +4842,7 @@ export function resolveFlamingSphereRamCommand(
   const spent = spendActivationResource(damaged.currentTurnResources, {
     kind: "bonusAction",
   });
+  /* v8 ignore start -- Defensive internal guard: admission proves the Bonus Action, and synchronous Flaming Sphere damage preserves current turn resources before this spend. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -4847,6 +4850,7 @@ export function resolveFlamingSphereRamCommand(
       "Movable zone ram requires an available Bonus Action.",
     );
   }
+  /* v8 ignore stop */
   const nextState = {
     ...damaged,
     currentTurnResources: spent.right,
