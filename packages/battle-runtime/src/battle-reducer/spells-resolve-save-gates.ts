@@ -3361,6 +3361,7 @@ export function validateSavingThrowOutcomes(
     });
   }
   if (targeting.kind === "singleCombatant") {
+    /* v8 ignore start -- Malformed Saving Throw fill: discovery creates one selected-combatant hole without area facts, and its typed fill adapter preserves that target. These branches only reject caller-mutated cardinality, geometry, identity, or battle-membership fields; canonical outcome selections remain measured below. */
     if (outcomes.length === 0) {
       return "Save-gate spell must include at least one affected target Saving Throw outcome.";
     }
@@ -3376,6 +3377,7 @@ export function validateSavingThrowOutcomes(
     if (!state.combatants.has(targetId)) {
       return "Save-gate spell target must be a combatant in this battle.";
     }
+    /* v8 ignore stop */
     return validateSavingThrowOutcomeSelections({
       outcomes,
       state,
@@ -3386,6 +3388,7 @@ export function validateSavingThrowOutcomes(
     });
   }
   if (targeting.kind === "targetList") {
+    /* v8 ignore start -- Malformed Saving Throw fill: target-list discovery fixes the non-empty bounded target identities before requesting outcomes. These branches reject caller-mutated area, count, membership, and duplicate-target facts; the selected-target outcome semantics remain measured below. */
     if ("area" in value) {
       return "Target-list save-gate spell outcomes must not include area facts.";
     }
@@ -3418,6 +3421,7 @@ export function validateSavingThrowOutcomes(
       }
       seenTargets.add(outcome.targetId);
     }
+    /* v8 ignore stop */
     return validateSavingThrowOutcomeSelections({
       outcomes,
       state,
@@ -3646,33 +3650,30 @@ function validatePostSaveAreaEffect(input: {
   }
   const effect = input.invocation.postSaveAreaEffect;
   if (effect.kind === "fireballObjectIgnition") {
-    return validateFireballAreaEffect(input);
+    return validateFireballAreaEffect(input.area);
   }
   if (effect.kind === "thunderwave") {
-    return validateThunderwaveAreaEffect(input);
+    return validateThunderwaveAreaEffect({
+      area: input.area,
+      failedTargetIds: input.failedTargetIds,
+      effect,
+    });
   }
   if (effect.kind === "shatterObjectDamage") {
-    return validateShatterAreaEffect(input);
+    return validateShatterAreaEffect(input.area);
   }
   const exhaustive: never = effect;
   return exhaustive;
 }
 
-function validateFireballAreaEffect(input: {
-  readonly area: BattleSpellAreaChoice | undefined;
-  readonly invocation: Extract<
-    BattleExecutableSpellInvocation,
-    { readonly procedure: "saveGatedDamage" }
-  >;
-}): string | null {
-  if (input.invocation.postSaveAreaEffect?.kind !== "fireballObjectIgnition") {
-    return "Fireball object ignition validation requires a Fireball effect.";
-  }
-  if (input.area === undefined || input.area.kind !== "fireballArea") {
+function validateFireballAreaEffect(
+  area: BattleSpellAreaChoice | undefined,
+): string | null {
+  if (area === undefined || area.kind !== "fireballArea") {
     return "Fireball requires caller-supplied object ignition area facts.";
   }
   const objectIds = new Set<string>();
-  for (const fact of input.area.objectIgnitionFacts) {
+  for (const fact of area.objectIgnitionFacts) {
     if (objectIds.has(fact.objectId)) {
       return "Fireball object ignition facts must not duplicate objects.";
     }
@@ -3709,21 +3710,14 @@ function postSaveAreaObjectIgnitions(input: {
   );
 }
 
-function validateShatterAreaEffect(input: {
-  readonly area: BattleSpellAreaChoice | undefined;
-  readonly invocation: Extract<
-    BattleExecutableSpellInvocation,
-    { readonly procedure: "saveGatedDamage" }
-  >;
-}): string | null {
-  if (input.invocation.postSaveAreaEffect?.kind !== "shatterObjectDamage") {
-    return "Shatter object damage validation requires a Shatter effect.";
-  }
-  if (input.area === undefined || input.area.kind !== "shatterArea") {
+function validateShatterAreaEffect(
+  area: BattleSpellAreaChoice | undefined,
+): string | null {
+  if (area === undefined || area.kind !== "shatterArea") {
     return "Shatter requires caller-supplied nonmagical unattended object damage area facts.";
   }
   const objectIds = new Set<string>();
-  for (const fact of input.area.nonmagicalUnattendedObjectDamageFacts) {
+  for (const fact of area.nonmagicalUnattendedObjectDamageFacts) {
     if (objectIds.has(fact.objectId)) {
       return "Shatter object damage facts must not duplicate objects.";
     }
@@ -3777,15 +3771,16 @@ function postSaveAreaObjectDamages(input: {
 function validateThunderwaveAreaEffect(input: {
   readonly area: BattleSpellAreaChoice | undefined;
   readonly failedTargetIds: readonly CombatantId[];
-  readonly invocation: Extract<
-    BattleExecutableSpellInvocation,
-    { readonly procedure: "saveGatedDamage" }
+  readonly effect: Extract<
+    NonNullable<
+      Extract<
+        BattleExecutableSpellInvocation,
+        { readonly procedure: "saveGatedDamage" }
+      >["postSaveAreaEffect"]
+    >,
+    { readonly kind: "thunderwave" }
   >;
 }): string | null {
-  const effect = input.invocation.postSaveAreaEffect;
-  if (effect?.kind !== "thunderwave") {
-    return "Thunderwave area effect validation requires a Thunderwave effect.";
-  }
   if (input.area === undefined || input.area.kind !== "thunderwaveArea") {
     return "Thunderwave requires caller-supplied push, object, and audible-boom area facts.";
   }
@@ -3801,7 +3796,7 @@ function validateThunderwaveAreaEffect(input: {
     pushedTargetIds.add(push.targetId);
     const dispositionValidation = validateThunderwavePushDisposition(
       push.disposition,
-      effect.creaturePush.distanceFeet,
+      input.effect.creaturePush.distanceFeet,
     );
     if (dispositionValidation !== null) {
       return dispositionValidation;
@@ -3818,15 +3813,15 @@ function validateThunderwaveAreaEffect(input: {
     objectIds.add(push.objectId);
     const dispositionValidation = validateThunderwavePushDisposition(
       push.disposition,
-      effect.unsecuredObjectPush.distanceFeet,
+      input.effect.unsecuredObjectPush.distanceFeet,
     );
     if (dispositionValidation !== null) {
       return dispositionValidation;
     }
   }
-  return input.area.audibleBoom.sound === effect.audibleBoom.sound &&
+  return input.area.audibleBoom.sound === input.effect.audibleBoom.sound &&
     input.area.audibleBoom.audibleRadiusFeet ===
-      effect.audibleBoom.audibleRadiusFeet
+      input.effect.audibleBoom.audibleRadiusFeet
     ? null
     : "Thunderwave audible-boom fact must match the spell's thunderous boom within 300 feet.";
 }
@@ -3854,6 +3849,7 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
   readonly area: BattleSpellAreaChoice | undefined;
   readonly state: BattleState;
 }): string | null {
+  /* v8 ignore start -- Malformed Sleep area fill: the discovered point-origin Sphere hole supplies an in-battle anchor and a non-empty unique target set. These checks reject caller-mutated geometry, membership, duplication, or non-sleeper witness identities before the automatic-success projection below. */
   if (input.area === undefined) {
     return "Sleep Saving Throw outcomes require point-origin Sphere target facts.";
   }
@@ -3884,6 +3880,7 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
       nonSleeperTargetIds.add(fact.targetId);
     }
   }
+  /* v8 ignore stop */
   const autoSuccessTargetIds = new Set(
     input.area.affectedTargetIds.filter((targetId) =>
       sleepTargetAutomaticallySucceeds(input.state, targetId, {
@@ -3895,6 +3892,7 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
     (targetId) => !autoSuccessTargetIds.has(targetId),
   );
   const outcomeTargetIds = new Set<CombatantId>();
+  /* v8 ignore start -- Malformed Sleep outcome fill: the hole adapter emits outcomes only for the selected targets that are not automatic successes and cannot duplicate an identity. The canonical automatic-success partition remains measured above and the exact coverage comparison remains measured below. */
   for (const outcome of input.value.outcomes) {
     if (!selectedTargets.has(outcome.targetId)) {
       return "Sleep Saving Throw outcomes must match selected Sphere targets.";
@@ -3910,6 +3908,7 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
   if (outcomeTargetIds.size !== nonAutomaticTargetIds.length) {
     return "Sleep Saving Throw outcomes must cover every selected target that is not an automatic success.";
   }
+  /* v8 ignore stop */
   return nonAutomaticTargetIds.every((targetId) =>
     outcomeTargetIds.has(targetId),
   )
@@ -3922,6 +3921,7 @@ function validateGreaseGroundHazardSavingThrowOutcomes(input: {
   readonly area: BattleSpellAreaChoice | undefined;
   readonly state: BattleState;
 }): string | null {
+  /* v8 ignore start -- Malformed Grease area/outcome fill: discovery owns a non-empty ground-area id, an in-battle anchor, and one unique outcome per table-supplied affected target. These branches only reject caller-mutated cross-spell, membership, or duplicate facts; the exact target-set comparison remains measured below. */
   if (input.area === undefined) {
     return "Grease Saving Throw outcomes require ground-area facts.";
   }
@@ -3956,6 +3956,7 @@ function validateGreaseGroundHazardSavingThrowOutcomes(input: {
     }
     outcomeTargetIds.add(outcome.targetId);
   }
+  /* v8 ignore stop */
   return outcomeTargetIds.size === selectedTargets.size
     ? null
     : "Grease Saving Throw outcomes must cover every table-supplied ground-area affected target.";

@@ -4694,13 +4694,6 @@ export function resolveCastAttackHitBonusActionSpellCommand(
       "Attack-hit Bonus Action spell is unavailable while an active ongoing feature prevents spellcasting.",
     );
   }
-  if (frame.continuation.kind !== "replay") {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Attack-hit Bonus Action spell requires a replayable attack-hit window.",
-    );
-  }
   if (!spellHasAvailableSpend(actor, invocation)) {
     return invalidResult(
       input.state,
