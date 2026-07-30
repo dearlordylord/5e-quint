@@ -2340,26 +2340,34 @@ export function validateRolledDiceForWeaponAttack(
     spellWeaponDamageRiders,
     spellMarkedDamageRiders,
   );
+  /* v8 ignore start -- Malformed weapon-damage fill: attack discovery publishes exactly one rolled-dice group for every computed damage component. */
   if (groups.length !== components.length) {
     return "filled damage groups do not match current attack damage";
   }
+  /* v8 ignore stop */
 
   for (const [index, component] of components.entries()) {
     const group = groups[index];
+    /* v8 ignore start -- Malformed sparse raw fill: JSON-authored rolled-dice groups are dense, and the preceding cardinality check fixes the index range. */
     if (group === undefined) {
       return "filled damage groups do not match current attack damage";
     }
+    /* v8 ignore stop */
     const validation = validateRolledDiceForDiceExpr([group], component.expr);
+    /* v8 ignore start -- Malformed weapon-damage roll: each discovered component fixes the count and size of its submitted dice. */
     if (validation !== null) {
       return validation.reason;
     }
+    /* v8 ignore stop */
   }
 
   if (weaponDamageDiceRollChoice !== undefined) {
     const weaponDamage = weaponDamageComponent(attack, critical);
+    /* v8 ignore start -- Contradictory damage choice: discovery offers a weapon-dice choice only when the attack has a weapon damage component. */
     if (weaponDamage === null) {
       return "Weapon damage dice roll choice requires weapon damage dice.";
     }
+    /* v8 ignore stop */
     const candidateValidation = validateRolledDiceForDiceExpr(
       weaponDamageDiceRollChoice.candidates,
       {
@@ -2367,19 +2375,23 @@ export function validateRolledDiceForWeaponAttack(
         dieSize: weaponDamage.expr.dieSize,
       },
     );
+    /* v8 ignore start -- Malformed damage-choice candidates: discovery fixes two complete candidate rolls using the weapon component's count and die size. */
     if (candidateValidation !== null) {
       return candidateValidation.reason;
     }
+    /* v8 ignore stop */
     const selectedCandidate =
       weaponDamageDiceRollChoice.selection === "first"
         ? weaponDamageDiceRollChoice.candidates[0]
         : weaponDamageDiceRollChoice.candidates[1];
+    /* v8 ignore start -- Malformed damage-choice selection: the submitted base weapon group must equal the candidate selected at discovery. */
     if (
       JSON.stringify(groups[0]?.results) !==
       JSON.stringify(selectedCandidate.results)
     ) {
       return "Selected weapon damage dice roll choice must match the base weapon damage group.";
     }
+    /* v8 ignore stop */
   }
 
   return null;

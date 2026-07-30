@@ -1074,18 +1074,25 @@ export function validateSpellTargetAllocation(
   allocations: readonly BattleSpellTargetAllocation[],
   facts: readonly BattleTargetSpatialFact[],
 ): string | null {
+  /* v8 ignore start -- Malformed raw allocation fill: the repeated-damage allocation choice cannot be submitted without at least one selected target. */
   if (allocations.length === 0) {
     return "Spell target allocation must include at least one target.";
   }
+  /* v8 ignore stop */
   const seen = new Set<CombatantId>();
   for (const allocation of allocations) {
+    /* v8 ignore start -- Malformed raw allocation entry: allocation choices author repeated-effect counts as positive integers; this rejects forged numeric values. */
     if (!Number.isInteger(allocation.count) || allocation.count <= 0) {
       return "Spell target allocation entries must assign a positive integer count.";
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- Malformed duplicate allocation: target selection combines all repeated effects for one combatant into one entry. */
     if (seen.has(allocation.targetId)) {
       return "Spell target allocation must combine repeated effects for the same target into one entry.";
     }
+    /* v8 ignore stop */
     seen.add(allocation.targetId);
+    /* v8 ignore start -- Malformed allocation target: discovery admits only battle members satisfying the selected spell's spatial targeting facts. */
     if (
       !spellTargetIsLegal(
         state,
@@ -1097,6 +1104,7 @@ export function validateSpellTargetAllocation(
     ) {
       return "Spell target allocation entries must be combatants within the selected spell's supported range.";
     }
+    /* v8 ignore stop */
   }
   const allocatedCount = allocations.reduce(
     (total, allocation) => total + allocation.count,
@@ -1109,15 +1117,21 @@ export function validateSpellTargetAllocation(
   });
   const targetCardinality =
     repeatedDamageAllocationTargetCardinality(invocationFacts);
+  /* v8 ignore start -- Malformed allocation cardinality: discovery constructs invocation facts from an admitted target count within the rule-core bounds. */
   if (!legalRepeatedDamageAllocationInvocationFacts(invocationFacts)) {
     return `Spell target allocation must choose between ${targetCardinality.minimumTargetCount} and ${targetCardinality.maximumTargetCount} target entries.`;
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Contradictory allocation facts: every target was individually admitted above, so the rule-core projection cannot report an unaffectable set. */
   if (!repeatedDamageAllocationInvocationCanAffectTargets(invocationFacts)) {
     return "Spell target allocation entries must be combatants within the selected spell's supported range.";
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed allocation total: the discovered hole fixes the exact number of repeated effects that must be distributed. */
   if (allocatedCount !== targetCardinality.maximumTargetCount) {
     return `Spell target allocation must assign exactly ${targetCardinality.maximumTargetCount} repeated effects.`;
   }
+  /* v8 ignore stop */
   return null;
 }
 

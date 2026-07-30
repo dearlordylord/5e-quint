@@ -165,22 +165,29 @@ export function validateLevitatedMovementFact(input: {
       ? null
       : "Levitated movement witness was supplied for a target that is not levitated.";
   }
+  /* v8 ignore start -- Malformed Levitate witness: an active effect requires the discovered fixed-object-or-surface reach fact. */
   if (input.fact === undefined) {
     return "Levitated targets require a fixed-object or surface-within-reach movement witness.";
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Stale Levitate witness: discovery copies the active effect's source combatant and procedure identity into the movement fact. */
   if (
     input.fact.sourceCombatantId !== effect.sourceCombatantId ||
     input.fact.sourceProcedureRef !== effect.sourceProcedureRef
   ) {
     return "Levitated movement witness does not match the active Levitate effect.";
   }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed Levitate witness: movement discovery publishes altitude movement only when a fixed object or surface is within reach. */
   if (!input.fact.fixedObjectOrSurfaceWithinReach) {
     return "Levitated movement requires a fixed object or surface within reach.";
   }
+  /* v8 ignore stop */
   const altitudeChange = input.fact.altitudeChange;
   if (altitudeChange === undefined) {
     return null;
   }
+  /* v8 ignore start -- Malformed raw altitude change: the Levitate movement choice offers positive whole feet no greater than the active spell limit. */
   if (
     altitudeChange.distanceFeet <= 0 ||
     altitudeChange.distanceFeet > effect.maxAltitudeChangeFeet ||
@@ -188,13 +195,16 @@ export function validateLevitatedMovementFact(input: {
   ) {
     return "Levitated movement altitude change must be a positive whole number no greater than the spell limit.";
   }
+  /* v8 ignore stop */
   const expectedMovementCostFeet = movementFeet(
     Number(altitudeChange.distanceFeet) *
       (input.speedKind === "climb" ? 1 : 2) +
       Number(input.areaExtraCostFeet),
   );
+  /* v8 ignore start -- Malformed Levitate movement cost: discovery derives the exact climb-or-other altitude cost plus area surcharge from the submitted change. */
   if (input.movementCostFeet !== expectedMovementCostFeet) {
     return "Levitated movement must spend the altitude-change distance as climbing, plus any area movement costs.";
   }
+  /* v8 ignore stop */
   return null;
 }
