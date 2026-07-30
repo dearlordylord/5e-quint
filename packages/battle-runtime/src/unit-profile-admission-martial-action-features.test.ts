@@ -14,6 +14,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-05-FIGHTER-TACTICAL-MASTER fighter_tactical_master mastery_push mastery_slow
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.creature-space-movement-permission unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-ability-check-roll-mode unit-feature.passive-damage-resistance unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction unit-feature.stunning-strike
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   decodeSpeciesRecordSync,
   decodeUnitRecordSync,
@@ -877,22 +878,54 @@ describe("L3MSPEC species battle support", () => {
       parseSupportedUnitFeatureProfile(genericGrappledFilterUnit, []),
     ).toBeNull();
 
-    const selected = powerfulBuildEscapeGrappleHole({ selected: true });
+    const selectedScenario = powerfulBuildEscapeGrappleScenario({
+      selected: true,
+    });
+    expect(selectedScenario.discoveryRouteEvents).toEqual([
+      {
+        kind: "discoverBattleActs",
+        subject: "passiveAbilityCheckRollMode",
+        holes: ["grappleOutcome"],
+        owner: "battleAbilityCheckRollMode",
+      },
+    ]);
+    const selected = requireHole(selectedScenario.result, "grappleOutcome");
     expect(selected.kind).toBe("grappleOutcome");
     if (selected.kind !== "grappleOutcome") {
       throw new Error("Expected Powerful Build selected escape Grapple hole.");
     }
     expect(selected.rollMode).toBe("advantage");
-    const poisoned = powerfulBuildEscapeGrappleHole({
-      selected: true,
-      poisoned: true,
-    });
+    expect(
+      resolveBattleSubject({
+        state: selectedScenario.state,
+        subject: selectedScenario.subject,
+        fills: [grappleOutcomeFill(selected, true)],
+      }).routeEvents,
+    ).toEqual([
+      {
+        kind: "resolveBattleSubject",
+        subject: "passiveAbilityCheckRollMode",
+        fill: "grappleOutcome",
+        holes: [],
+        owner: "battleAbilityCheckRollMode",
+      },
+    ]);
+    const poisoned = requireHole(
+      powerfulBuildEscapeGrappleScenario({
+        selected: true,
+        poisoned: true,
+      }).result,
+      "grappleOutcome",
+    );
     expect(poisoned.kind).toBe("grappleOutcome");
     if (poisoned.kind !== "grappleOutcome") {
       throw new Error("Expected Powerful Build poisoned escape Grapple hole.");
     }
     expect(poisoned).not.toHaveProperty("rollMode");
-    const unselected = powerfulBuildEscapeGrappleHole({ selected: false });
+    const unselected = requireHole(
+      powerfulBuildEscapeGrappleScenario({ selected: false }).result,
+      "grappleOutcome",
+    );
     expect(unselected.kind).toBe("grappleOutcome");
     if (unselected.kind !== "grappleOutcome") {
       throw new Error(
@@ -903,7 +936,7 @@ describe("L3MSPEC species battle support", () => {
   });
 });
 
-function powerfulBuildEscapeGrappleHole(input: {
+function powerfulBuildEscapeGrappleScenario(input: {
   readonly selected: boolean;
   readonly poisoned?: boolean;
 }) {
@@ -988,14 +1021,30 @@ function powerfulBuildEscapeGrappleHole(input: {
   const goliathTurn = requireResolved(
     endTurn({ state: grappled.state, actorId: grapplerId }),
   ).state;
-  return requireHole(
-    resolveBattleSubject({
+  const discoveredEscape = discoverBattleActs(
+    battleRuntimeSessionForTest({
+      ...state.right,
+      state: goliathTurn,
+    }),
+  ).find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "escapeGrapple" &&
+      act.subject.actorId === goliathId,
+  );
+  if (discoveredEscape === undefined) {
+    throw new Error("Expected Powerful Build escape Grapple act.");
+  }
+  return {
+    discoveryRouteEvents: discoveredEscape.routeEvents,
+    state: goliathTurn,
+    subject: escapeSubject,
+    result: resolveBattleSubject({
       state: goliathTurn,
       subject: escapeSubject,
       fills: [],
     }),
-    "grappleOutcome",
-  );
+  };
 }
 
 function dwarvenResilienceBattle() {
