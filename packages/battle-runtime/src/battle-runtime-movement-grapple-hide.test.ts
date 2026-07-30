@@ -1240,7 +1240,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     });
   });
 
-  test("Ready holds executable Reaction movement until its trigger", () => {
+  test("Ready holds Reaction movement until its trigger or the actor's next turn", () => {
     const state = fighterVsGoblinBattle();
     const readied = requireResolved(
       resolveBattleSubject({
@@ -1280,6 +1280,11 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    const nextFighterTurn = requireResolved(
+      endTurn({ state: goblinTurn, actorId: goblinId }),
+    ).state;
+    expect(nextFighterTurn.readiedMovements.has(fighterId)).toBe(false);
+
     const attackSubject = goblinAttackSubject(goblinTurn, "Scimitar");
     const target = requireHole(
       resolveBattleSubject({
