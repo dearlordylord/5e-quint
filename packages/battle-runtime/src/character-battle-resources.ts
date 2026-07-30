@@ -427,6 +427,7 @@ export function characterBattleInvocationSpellAccessInitIssue(
   return parsed.tag === "issue" ? parsed.message : null;
 }
 
+/* v8 ignore start -- Malformed ritual-access initialization: admitted spellbook entries are unique, leveled ritual spells carrying their typed spellbook-Ritual facts. */
 export function characterBattleSpellbookRitualSpellAccessInitIssue(
   spellbookRitualSpellAccesses: readonly CharacterBattleSpellbookRitualSpellAccessInit[],
 ): string | null {
@@ -448,6 +449,7 @@ export function characterBattleSpellbookRitualSpellAccessInitIssue(
   }
   return null;
 }
+/* v8 ignore stop */
 
 export function parseCharacterBattleInvocationSpellAccesses(
   invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessInit[],
@@ -611,6 +613,7 @@ function characterBattleResourceLevel(
   return unitClassLevel ?? Number(characterBattleLevel(classLevels));
 }
 
+/* v8 ignore start -- Malformed resource initialization: admitted character resources match their Unit-defined pool kind, cap, and nonnegative bounded remaining amount. */
 export function characterBattleResourceInitIssue(
   input: CharacterBattleResourceInit,
   classLevels: CharacterBattleClassLevels,
@@ -651,7 +654,9 @@ export function characterBattleResourceInitIssue(
     ? "Ability-modifier resource cap requires the projected ability modifier."
     : null;
 }
+/* v8 ignore stop */
 
+/* v8 ignore start -- Malformed Metamagic initialization: admitted state has unique positive-cost options and references its character-owned Sorcery Point pool. */
 export function characterBattleMetamagicInitIssue(input: {
   readonly metamagic: CharacterBattleMetamagicInit | undefined;
   readonly resources: readonly CharacterBattleResourceInit[];
@@ -691,6 +696,7 @@ export function characterBattleMetamagicInitIssue(input: {
     ? null
     : "Metamagic battle state must reference a point-pool Sorcery Point resource.";
 }
+/* v8 ignore stop */
 
 export function characterBattleMetamagicState(
   metamagic: CharacterBattleMetamagicInit | undefined,

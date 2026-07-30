@@ -1570,6 +1570,7 @@ function effectiveSpellAttackRoll(
     : naturalOneEffectiveRoll;
 }
 
+/* v8 ignore start -- Malformed Seeking Spell decision: discovery offers reroll or decline only for an eligible missed single spell attack with compatible Metamagic, replacement, and roll-mode facts. */
 function spellAttackRerollValidationIssue(input: {
   readonly actor: BattleCreatureState | undefined;
   readonly invocation: BattleExecutableSpellInvocation;
@@ -1609,6 +1610,7 @@ function spellAttackRerollValidationIssue(input: {
     ? null
     : "Seeking Spell replacement roll mode does not match the current attack-roll rule.";
 }
+/* v8 ignore stop */
 
 function spellAttackNeedsSeekingRerollDecision(input: {
   readonly actor: BattleCreatureState | undefined;

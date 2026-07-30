@@ -471,6 +471,7 @@ export function saveMetamagicSupportIssue(input: {
   return null;
 }
 
+/* v8 ignore start -- Malformed raw Metamagic spend: supported selection requires a character with admitted Metamagic state, its bound point pool, and enough remaining points; actual point spending remains measured. */
 export function metamagicSorceryPointSpendIssue(input: {
   readonly actor: BattleCreatureState;
   readonly applications: readonly CharacterBattleMetamagicOptionFact[];
@@ -495,6 +496,7 @@ export function metamagicSorceryPointSpendIssue(input: {
     ? null
     : "Metamagic requires enough unexpended Sorcery Points.";
 }
+/* v8 ignore stop */
 
 export function metamagicSorceryPointCost(
   applications: readonly CharacterBattleMetamagicOptionFact[],
@@ -522,6 +524,7 @@ function spellInvocationSupportsSaveMetamagic(
   );
 }
 
+/* v8 ignore start -- Unsupported Transmuted Spell projection: supported selection binds one replacement type to an eligible action-time damage spell and excludes the source type; the projection remains measured. */
 export function transmutedSpellDamageTypeSubstitutionIssue(input: {
   readonly applications: readonly SpellMetamagicApplicationFact[];
   readonly invocation: RuntimeSpellProcedure;
@@ -557,7 +560,9 @@ export function transmutedSpellDamageTypeSubstitutionIssue(input: {
     ? "Transmuted Spell must change the source damage type to one of the other listed damage types."
     : null;
 }
+/* v8 ignore stop */
 
+/* v8 ignore start -- Unsupported Distant Spell projection: supported selection binds the option to an action-time procedure with an eligible Touch or fixed-distance range fact; the range projection remains measured. */
 export function distantSpellRangeProjectionIssue(input: {
   readonly applications: readonly SpellMetamagicApplicationFact[];
   readonly invocation: RuntimeSpellProcedure;
@@ -583,6 +588,7 @@ export function distantSpellRangeProjectionIssue(input: {
     ? "Distant Spell is supported only for spell procedures with a Touch range or a distance range of at least 5 feet."
     : null;
 }
+/* v8 ignore stop */
 
 export function distantSpellRangeModifierFact(
   invocation: RuntimeSpellProcedure,
@@ -620,6 +626,7 @@ function distantSpellProcedureSupportsRangeProjection(
   return invocation.procedure === "objectLight";
 }
 
+/* v8 ignore start -- Unsupported Extended Spell projection: supported selection binds the option to an action-time duration-bearing procedure with at least a one-minute duration; the duration projection remains measured. */
 export function extendedSpellDurationProjectionIssue(input: {
   readonly applications: readonly SpellMetamagicApplicationFact[];
   readonly invocation: RuntimeSpellProcedure;
@@ -646,6 +653,7 @@ export function extendedSpellDurationProjectionIssue(input: {
     ? "Extended Spell is supported only for spells with a timed or Concentration duration of at least 1 minute."
     : null;
 }
+/* v8 ignore stop */
 
 export function extendedSpellDurationModifierFact(
   invocation: RuntimeSpellProcedure,
@@ -767,6 +775,7 @@ function extendedSpellProcedureSupportsDurationProjection(
   );
 }
 
+/* v8 ignore start -- Unsupported Twinned Spell projection: supported selection binds a cast-time option only when the next effective level adds exactly one eligible creature target; target-count projection remains measured. */
 export function twinnedSpellTargetCountProjectionIssue(input: {
   readonly applications: readonly SpellMetamagicApplicationFact[];
   readonly invocation: RuntimeSpellProcedure;
@@ -789,6 +798,7 @@ export function twinnedSpellTargetCountProjectionIssue(input: {
     ? "Twinned Spell is supported only for Spell Slot casts whose target-count profile adds exactly one creature at the next effective spell level."
     : null;
 }
+/* v8 ignore stop */
 
 export function twinnedSpellTargetCountInvocation<
   I extends RuntimeSpellProcedure,

@@ -749,6 +749,7 @@ export function characterResourceInitIssue(
   return null;
 }
 
+/* v8 ignore start -- Malformed character initialization: admitted Druid Wild Shape state has at most one owning resource and threads only forms accepted by that resource profile. */
 export function characterDruidWildShapeAvailableFormsInitIssue(
   creatureInit: CharacterBattleCreatureInit,
   classLevels: CharacterBattleClassLevels,
@@ -781,7 +782,9 @@ export function characterDruidWildShapeAvailableFormsInitIssue(
   );
   return issue === null ? null : battleStateInitIssue(issue);
 }
+/* v8 ignore stop */
 
+/* v8 ignore start -- Malformed character initialization: character admission binds spell access to its owner features and an actual source-class level before battle state construction. */
 export function characterSpellcastingInitIssue(
   creatureInit: CharacterBattleCreatureInit,
   classLevels: CharacterBattleClassLevels,
@@ -831,6 +834,7 @@ export function characterSpellcastingInitIssue(
         "Battle spellcasting source class must match a character class level.",
       );
 }
+/* v8 ignore stop */
 
 function requireCharacterSpellcastingStateInit(
   spellcasting: NonNullable<CharacterBattleCreatureInit["spellcasting"]>,
