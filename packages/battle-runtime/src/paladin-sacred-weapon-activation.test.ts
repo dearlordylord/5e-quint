@@ -93,6 +93,13 @@ describe("Sacred Weapon activation", () => {
       tag: "invalid",
       reason: "staleSubject",
     });
+    expect(
+      resolveBattleSubject({
+        state: sacredWeaponBattle({ channelDivinityUsesRemaining: 0 }),
+        subject: act.subject,
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
     expect(sacredWeaponProjection(staleState, "rangedWeapon")).toMatchObject({
       channelDivinityUsesRemaining: 2,
       activeEffectCount: 0,
