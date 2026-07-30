@@ -6,6 +6,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
   damageRollFillWithGroups,
+  interruptDecisionFill,
   requireCombatant,
   requireHole,
   requireResultHole,
@@ -24,12 +25,16 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
+  abilityModifier,
   assertBattleSnapshotCodecRoundTripForTest,
   battleAreaId,
+  cantripSpellInvocationRef,
   elapsedTimeTicks,
   endTurn,
   Hp,
   movementFeet,
+  proficiencyBonus,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   sameBattleSubject,
   spellSlotInvocationRef,
@@ -37,6 +42,7 @@ import {
 import {
   flamingSphereAreaId,
   flamingSphereUnitId,
+  rayOfFrostUnitId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
@@ -477,6 +483,131 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       false,
     );
     expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(17));
+  });
+
+  test("failed ram save opens a readied-spell reaction once before damage", () => {
+    const spell = spellRecord(flamingSphereUnitId);
+    const rayOfFrost = spellRecord(rayOfFrostUnitId);
+    const initialSession = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetSpellcasting: {
+        sourceClassName: "wizard",
+        spellcastingAbilityModifier: abilityModifier(3),
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [rayOfFrost],
+        preparedSpells: [],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [],
+      },
+    });
+    const targetTurn = endTurn({
+      state: initialSession.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected target turn to begin.");
+    }
+    const targetTurnSession = battleRuntimeSessionForTest({
+      ...initialSession,
+      state: targetTurn.state,
+    });
+    const readiedRay = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "actionSpell",
+        actorId: spellTargetId,
+        procedureRef: requireCharacterSpellProcedureRefForTest(
+          targetTurnSession,
+          spellTargetId,
+          cantripSpellInvocationRef(rayOfFrostUnitId, "spellAttackDamage"),
+        ),
+        mode: { tag: "ready", trigger: "saveFailed" },
+      },
+      fills: [],
+    });
+    if (readiedRay.tag !== "resolved") {
+      throw new Error("Expected target to ready Ray of Frost.");
+    }
+    const casterTurn = endTurn({
+      state: readiedRay.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected caster turn to resume.");
+    }
+    const casterTurnSession = battleRuntimeSessionForTest({
+      ...initialSession,
+      state: casterTurn.state,
+    });
+    const castAct = spellAct({
+      session: casterTurnSession,
+      spellId: flamingSphereUnitId,
+      slotLevel: 2,
+    });
+    const cast = resolveBattleSubject({
+      state: casterTurn.state,
+      subject: castAct.subject,
+      fills: [
+        flamingSphereAreaFill(
+          requireHole(castAct.initialHoles, "spellAreaChoice"),
+        ),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Flaming Sphere cast to resolve.");
+    }
+
+    const ram = flamingSphereRamAct(
+      battleRuntimeSessionForTest({ ...initialSession, state: cast.state }),
+    );
+    const movement = requireHole(ram.initialHoles, "movableZoneRamMovement");
+    const save = requireHole(ram.initialHoles, "savingThrowOutcome");
+    const awaitingReaction = resolveBattleSubject({
+      state: cast.state,
+      subject: ram.subject,
+      fills: [
+        flamingSphereRamMovementFill(movement),
+        singleTargetSavingThrowOutcomeFill(save, spellTargetId, false),
+      ],
+    });
+
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      snapshot: {
+        pendingInterrupt: {
+          trigger: "saveFailed",
+          choices: [
+            expect.objectContaining({ readiedSpellCasterId: spellTargetId }),
+          ],
+        },
+      },
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected failed ram save reaction.");
+    }
+    const pendingInterrupt = awaitingReaction.snapshot.pendingInterrupt;
+    if (pendingInterrupt === null) {
+      throw new Error("Expected a pending failed-save interrupt.");
+    }
+
+    const afterDecline = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(pendingInterrupt.decisionHole, {
+        kind: "decline",
+        responderId: spellTargetId,
+      }),
+    });
+
+    expect(afterDecline).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "rolledDice" }],
+      snapshot: { pendingInterrupt: null },
+    });
   });
 
   test("ram discovery includes the caster as a creature-space target", () => {
