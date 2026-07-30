@@ -630,10 +630,46 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       }),
     );
 
-    const broken = breakBattleConcentration(marked.state, fighterId);
+    const broken = requireResolved(
+      resolveBattleSubject({
+        state: marked.state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "endConcentration",
+        },
+        fills: [],
+      }),
+    );
 
-    expect(broken.combatants.get(fighterId)?.concentration).toBeNull();
-    expect(broken.combatants.get(fighterId)?.activeEffects).toEqual([]);
+    expect(broken.state.combatants.get(fighterId)?.concentration).toBeNull();
+    expect(broken.state.combatants.get(fighterId)?.activeEffects).toEqual([]);
+    expect(broken.routeEvents).toEqual([
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleConcentration",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "concentrationTeardown",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "markedDamageRiderEffect",
+        holes: [],
+        owner: "battleConcentration",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "markedDamageRiderEffect",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+    ]);
   });
 
   test("Hunter's Mark projects slot-scaled Concentration maximum duration", () => {
