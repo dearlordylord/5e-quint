@@ -812,6 +812,37 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       ],
     });
 
+    const actorWithoutFly = state.combatants.get(remarkableAthleteActorId);
+    if (actorWithoutFly === undefined) {
+      throw new Error("Expected Remarkable Athlete actor.");
+    }
+    const stateWithoutFly = {
+      ...state,
+      combatants: new Map(state.combatants).set(remarkableAthleteActorId, {
+        ...actorWithoutFly,
+        activeEffects: actorWithoutFly.activeEffects.filter(
+          (effect) =>
+            effect.kind !== "specialSpeedGrant" || effect.speedKind !== "fly",
+        ),
+      }),
+    };
+    expect(
+      resolveBattleSubject({
+        state: stateWithoutFly,
+        subject: prefix.subject,
+        fills: [
+          prefix.target,
+          critical,
+          unitFeatureDecisionFill(decision, "use"),
+          movementFill(movement, {
+            speedKind: "fly",
+            movementCostFeet: 20,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+
     const moved = resolveBattleSubject({
       state,
       subject: prefix.subject,
