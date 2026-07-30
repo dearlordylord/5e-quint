@@ -4010,27 +4010,7 @@ export function resolveCastTriggeredReactionSpellCommand(
       fillSet,
     });
   }
-  if (invocation.procedure === "featherFallMitigation") {
-    return resolveFeatherFallReactionSpellCommand(
-      {
-        ...input,
-        frame,
-        invocation,
-      },
-      executionRegistry,
-    );
-  }
-  if (invocation.procedure === "counterspell") {
-    return resolveCounterspellReactionSpellCommand(
-      {
-        ...input,
-        frame,
-        invocation,
-      },
-      executionRegistry,
-    );
-  }
-  return resolveShieldReactionSpellCommand(
+  return resolveDirectTriggeredReactionSpellCommand(
     {
       ...input,
       frame,
@@ -4056,6 +4036,16 @@ type TriggeredReactionSpellExecution =
     > & {
       readonly castingTime: { readonly kind: "reaction" };
     });
+
+type DirectTriggeredReactionSpellExecution = Extract<
+  TriggeredReactionSpellExecution,
+  {
+    readonly procedure:
+      | "shieldReaction"
+      | "featherFallMitigation"
+      | "counterspell";
+  }
+>;
 
 function maybeOpenTriggeredReactionSpellCastInterrupt(input: {
   readonly state: BattleState;
@@ -4159,7 +4149,9 @@ function isPreparedSlottedSaveGatedDamageInvocation(
   );
 }
 
-function resolveCounterspellReactionSpellCommand(
+const byDirectTriggeredReactionProcedure = Match.discriminator("procedure");
+
+function resolveDirectTriggeredReactionSpellCommand(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
@@ -4171,10 +4163,7 @@ function resolveCounterspellReactionSpellCommand(
   > & {
     readonly handledInterruptTrigger?: BattleInterruptTrigger;
     readonly frame: BattleInterruptCheckpoint;
-    readonly invocation: Extract<
-      TriggeredReactionSpellExecution,
-      { readonly procedure: "counterspell" }
-    >;
+    readonly invocation: DirectTriggeredReactionSpellExecution;
   },
   executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
@@ -4191,99 +4180,37 @@ function resolveCounterspellReactionSpellCommand(
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
   /* v8 ignore stop */
-  return spellProcedureExecutionFor(
-    executionRegistry,
-    input.invocation.procedure,
-  ).resolve({
-    input,
-    actorId: input.subject.reactorId,
-    invocation: input.invocation,
-    fillSet,
-  });
-}
-
-function resolveFeatherFallReactionSpellCommand(
-  input: BattleResolutionInputForSubject<
-    Extract<
-      BattleSubject,
-      {
-        readonly tag: "runtimeCommand";
-        readonly command: "castTriggeredReactionSpell";
-      }
-    >
-  > & {
-    readonly frame: BattleInterruptCheckpoint;
-    readonly invocation: Extract<
-      TriggeredReactionSpellExecution,
-      { readonly procedure: "featherFallMitigation" }
-    >;
-  },
-  executionRegistry: SpellProcedureExecutionRegistry,
-): BattleResolutionResult {
-  const fillSet = spellFillSet(
-    input.fills,
-    input.invocation,
-    input.subject.procedureRef,
-    input.subject.actorId,
-    input.state,
+  const { invocation, ...resolutionInput } = input;
+  return Match.value(invocation).pipe(
+    byDirectTriggeredReactionProcedure("counterspell", (invocation) =>
+      spellProcedureExecutionFor(executionRegistry, "counterspell").resolve({
+        input: resolutionInput,
+        actorId: input.subject.reactorId,
+        invocation,
+        fillSet,
+      }),
+    ),
+    byDirectTriggeredReactionProcedure("featherFallMitigation", (invocation) =>
+      spellProcedureExecutionFor(
+        executionRegistry,
+        "featherFallMitigation",
+      ).resolve({
+        input: resolutionInput,
+        actorId: input.subject.reactorId,
+        invocation,
+        fillSet,
+      }),
+    ),
+    byDirectTriggeredReactionProcedure("shieldReaction", (invocation) =>
+      spellProcedureExecutionFor(executionRegistry, "shieldReaction").resolve({
+        input: resolutionInput,
+        actorId: input.subject.reactorId,
+        invocation,
+        fillSet,
+      }),
+    ),
+    Match.exhaustive,
   );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (fillSet.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", fillSet.message);
-  }
-  /* v8 ignore stop */
-  return spellProcedureExecutionFor(
-    executionRegistry,
-    input.invocation.procedure,
-  ).resolve({
-    input,
-    actorId: input.subject.reactorId,
-    invocation: input.invocation,
-    fillSet,
-  });
-}
-
-function resolveShieldReactionSpellCommand(
-  input: BattleResolutionInputForSubject<
-    Extract<
-      BattleSubject,
-      {
-        readonly tag: "runtimeCommand";
-        readonly command: "castTriggeredReactionSpell";
-      }
-    >
-  > & {
-    readonly frame: BattleInterruptCheckpoint;
-    readonly invocation: Extract<
-      TriggeredReactionSpellExecution,
-      { readonly procedure: "shieldReaction" }
-    >;
-  },
-  executionRegistry: SpellProcedureExecutionRegistry,
-): BattleResolutionResult {
-  const fillSet = spellFillSet(
-    input.fills,
-    input.invocation,
-    input.subject.procedureRef,
-    input.subject.actorId,
-    input.state,
-  );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (fillSet.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", fillSet.message);
-  }
-  /* v8 ignore stop */
-  return spellProcedureExecutionFor(
-    executionRegistry,
-    input.invocation.procedure,
-  ).resolve({
-    input,
-    actorId: input.subject.reactorId,
-    invocation: input.invocation,
-    fillSet,
-  });
 }
 
 export function resolveTriggeredReactionSaveGatedDamage(
