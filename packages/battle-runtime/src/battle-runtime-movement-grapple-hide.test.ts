@@ -3060,6 +3060,23 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
     expect(dashAct.summary).toBe("Dash as a Bonus Action.");
     expect(disengageAct.summary).toBe("Disengage as a Bonus Action.");
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "bonusActionStandardAction",
+          actorId: dashSubject.actorId,
+          procedureRef: dashSubject.procedureRef,
+          action: "dash",
+          speedKind: "fly",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message: "Dash speed kind is not represented for this combatant.",
+    });
 
     const dashed = requireResolved(
       resolveBattleSubject({ state, subject: dashAct.subject, fills: [] }),

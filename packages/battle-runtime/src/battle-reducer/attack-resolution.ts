@@ -451,6 +451,7 @@ export function resolveBonusActionDash(
   }
   /* v8 ignore stop */
   const actor = input.state.combatants.get(input.subject.actorId);
+  /* v8 ignore start -- Defensive internal guard: the dispatcher's missing-combatant check rejects an absent actor before routing a Bonus Action Dash here. */
   if (actor === undefined) {
     return invalidResult(
       input.state,
@@ -458,6 +459,7 @@ export function resolveBonusActionDash(
       "Dash actor is not in this battle.",
     );
   }
+  /* v8 ignore stop */
   const procedure = bonusActionStandardActionProcedure(actor, input.subject);
   const dashTemporaryHitPoints =
     procedure?.kind === "unit" &&
@@ -497,6 +499,7 @@ export function resolveBonusActionDash(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
+  /* v8 ignore start -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing Dash here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -504,6 +507,7 @@ export function resolveBonusActionDash(
       "Dash is no longer available.",
     );
   }
+  /* v8 ignore stop */
   const nextState = applyDashToActor(
     input.state,
     actor,
@@ -581,6 +585,7 @@ export function resolveBonusActionDisengage(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
+  /* v8 ignore start -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing Disengage here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -588,6 +593,7 @@ export function resolveBonusActionDisengage(
       "Disengage is no longer available.",
     );
   }
+  /* v8 ignore stop */
   const nextState = applyDisengage(input.state, spent.right);
   return {
     tag: "resolved",
@@ -606,6 +612,7 @@ export function resolveDodge(
   }
   /* v8 ignore stop */
   const actor = input.state.combatants.get(input.subject.actorId);
+  /* v8 ignore start -- Defensive internal guard: the dispatcher's missing-combatant check rejects an absent actor before routing Dodge here. */
   if (actor === undefined) {
     return invalidResult(
       input.state,
@@ -613,7 +620,9 @@ export function resolveDodge(
       "Dodge actor is not in this battle.",
     );
   }
+  /* v8 ignore stop */
   const spent = spendAction(input.state.currentTurnResources, "dodge");
+  /* v8 ignore start -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Dodge here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -621,6 +630,7 @@ export function resolveDodge(
       "Dodge is no longer available.",
     );
   }
+  /* v8 ignore stop */
   const combatants = new Map(input.state.combatants).set(actor.combatantId, {
     ...actor,
     dodging: true,
@@ -649,6 +659,7 @@ export function resolveReady(
   }
   /* v8 ignore stop */
   const spent = spendAction(input.state.currentTurnResources, "ready");
+  /* v8 ignore start -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Ready here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -656,6 +667,7 @@ export function resolveReady(
       "Ready is no longer available.",
     );
   }
+  /* v8 ignore stop */
   const nextState = {
     ...input.state,
     currentTurnResources: spent.right,
@@ -759,6 +771,7 @@ export function resolveHelpAttack(
   }
   /* v8 ignore stop */
   const spent = spendAction(input.state.currentTurnResources, "help");
+  /* v8 ignore start -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Help here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -766,6 +779,7 @@ export function resolveHelpAttack(
       "Help is no longer available.",
     );
   }
+  /* v8 ignore stop */
   const nextState = {
     ...input.state,
     currentTurnResources: spent.right,
@@ -931,6 +945,7 @@ export function resolveHide(
   input: HideBattleResolutionInput,
 ): BattleResolutionResult {
   const actor = input.state.combatants.get(input.subject.actorId);
+  /* v8 ignore start -- Defensive internal guard: dispatcher combatant and action-eligibility admission rejects a missing or ineligible actor before routing Hide here. */
   if (actor === undefined || !combatantCanTakeActions(actor)) {
     return invalidResult(
       input.state,
@@ -938,6 +953,7 @@ export function resolveHide(
       "Hide is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const bonusActionProcedure =
     input.subject.tag === "bonusActionStandardAction"
       ? bonusActionStandardActionProcedure(actor, input.subject)
@@ -990,6 +1006,7 @@ export function resolveHide(
           kind: "bonusAction",
         })
       : spendAction(input.state.currentTurnResources, "hide");
+  /* v8 ignore start -- Defensive internal guard: dispatcher standard- or Bonus Action resource admission rejects an exhausted resource before routing Hide here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -997,6 +1014,7 @@ export function resolveHide(
       "Hide is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const hidden =
     check.value.value.total >= HIDE_DC
       ? { discoveryDc: difficultyClass(check.value.value.total) }
@@ -1177,6 +1195,7 @@ export function resolveSearch(
     return needsHolesResult(input.state, input.subject, [checkHole]);
   }
   const spent = spendAction(input.state.currentTurnResources, "search");
+  /* v8 ignore start -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Search here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1184,6 +1203,7 @@ export function resolveSearch(
       "Search is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const found = check.value.value.total >= target.hidden.discoveryDc;
   const nextTarget = found ? { ...target, hidden: null } : target;
   const nextState = normalizeBattleGrapples({
@@ -1293,6 +1313,7 @@ export function resolveStatBlockBonusActionDisengage(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
+  /* v8 ignore start -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing the Stat Block option here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1300,6 +1321,7 @@ export function resolveStatBlockBonusActionDisengage(
       "Bonus Action is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const nextState = updateStatBlockActorResources(
     {
       ...input.state,
@@ -1348,6 +1370,7 @@ export function resolveStatBlockBonusActionHide(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
+  /* v8 ignore start -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing the Stat Block option here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1355,6 +1378,7 @@ export function resolveStatBlockBonusActionHide(
       "Bonus Action is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const hidden =
     check.value.value.total >= HIDE_DC
       ? { discoveryDc: difficultyClass(check.value.value.total) }
