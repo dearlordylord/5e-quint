@@ -26,7 +26,6 @@ import {
   type BattleExecutableSpellInvocation,
   type BonusActionSpellBattleResolutionInput,
   type ReadiedSpellInvocation,
-  type SpiritualWeaponRepeatTargeting,
   type SupportedDamageSpellInvocation,
   type SpellMarkedDamageRider,
 } from "../battle-state-execution.ts";
@@ -35,7 +34,7 @@ import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
-import type { BattleTablePositionId, CombatantId } from "../identity.ts";
+import type { CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
@@ -977,7 +976,16 @@ export function resolveSpellRelease(
         fills: fillSet,
       });
     if (remarkableAthleteMovement.tag === "result") {
-      return remarkableAthleteMovement.result;
+      return remarkableAthleteMovement.result.tag === "needsHoles"
+        ? {
+            ...remarkableAthleteMovement.result,
+            state: input.state,
+            snapshot: snapshotBattle(input.state),
+          }
+        : {
+            ...remarkableAthleteMovement.result,
+            snapshot: snapshotBattle(input.state),
+          };
     }
     const spiritualWeaponRepeatTargeting = {
       kind: "fixedCombatant" as const,
@@ -986,21 +994,13 @@ export function resolveSpellRelease(
     releaseResolutionStateAfterCriticalMovement =
       invocation.procedure === "spiritualWeaponAttackProxy" &&
       fillSet.spiritualWeaponForcePosition !== undefined
-        ? spiritualWeaponReleaseEffectAlreadyApplied({
+        ? applySpiritualWeaponAttackProxyEffect({
             state: remarkableAthleteMovement.state,
             actorId: input.subject.actorId,
-            invocation,
             forcePositionId: fillSet.spiritualWeaponForcePosition.positionId,
             repeatTargeting: spiritualWeaponRepeatTargeting,
+            invocation,
           })
-          ? remarkableAthleteMovement.state
-          : applySpiritualWeaponAttackProxyEffect({
-              state: remarkableAthleteMovement.state,
-              actorId: input.subject.actorId,
-              forcePositionId: fillSet.spiritualWeaponForcePosition.positionId,
-              repeatTargeting: spiritualWeaponRepeatTargeting,
-              invocation,
-            })
         : remarkableAthleteMovement.state;
     if (hit && fillSet.damageRoll == null) {
       /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -1013,11 +1013,9 @@ export function resolveSpellRelease(
         );
       }
       /* v8 ignore stop */
-      return needsHolesResult(
-        releaseResolutionStateAfterCriticalMovement,
-        input.subject,
-        [spellDamageHole(invocation, critical, spellMarkedDamageRiders)],
-      );
+      return needsHolesResult(input.state, input.subject, [
+        spellDamageHole(invocation, critical, spellMarkedDamageRiders),
+      ]);
     }
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
@@ -1143,7 +1141,7 @@ export function resolveSpellRelease(
   }
   /* v8 ignore stop */
   if (sourcePenalty.tag === "needsHoles") {
-    return needsHolesResult(releaseDamageBaseState, input.subject, [
+    return needsHolesResult(input.state, input.subject, [
       ...sourcePenalty.holes,
     ]);
   }
@@ -1181,7 +1179,7 @@ export function resolveSpellRelease(
       fills: fillSet.concentrationSavingThrows,
     });
   if (concentrationSaveCheck.tag === "needsHoles") {
-    return needsHolesResult(releaseDamageBaseState, input.subject, [
+    return needsHolesResult(input.state, input.subject, [
       ...concentrationSaveCheck.holes,
     ]);
   }
@@ -1221,7 +1219,7 @@ export function resolveSpellRelease(
       damageDispositionHole,
     ) === undefined
   ) {
-    return needsHolesResult(releaseDamageBaseState, input.subject, [
+    return needsHolesResult(input.state, input.subject, [
       damageDispositionHole,
     ]);
   }
@@ -1233,7 +1231,7 @@ export function resolveSpellRelease(
       fills: fillSet.hideousLaughterDamageRepeatSaves,
     });
   if (hideousLaughterSaveCheck.tag === "needsHoles") {
-    return needsHolesResult(releaseDamageBaseState, input.subject, [
+    return needsHolesResult(input.state, input.subject, [
       ...hideousLaughterSaveCheck.holes,
     ]);
   }
@@ -1309,7 +1307,7 @@ export function resolveSpellRelease(
   });
   if (relationshipCheck.tag === "needsHoles") {
     return needsHolesResult(
-      releaseResolutionState,
+      input.state,
       input.subject,
       relationshipCheck.holes,
     );
@@ -1368,46 +1366,4 @@ export function resolveSpellRelease(
     state: resolvedState,
     snapshot: snapshotBattle(resolvedState),
   };
-}
-
-function spiritualWeaponReleaseEffectAlreadyApplied(input: {
-  readonly state: BattleState;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    BattleExecutableSpellInvocation<SupportedDamageSpellInvocation>,
-    { readonly procedure: "spiritualWeaponAttackProxy" }
-  >;
-  readonly forcePositionId: BattleTablePositionId;
-  readonly repeatTargeting: SpiritualWeaponRepeatTargeting;
-}): boolean {
-  return (
-    input.state.combatants
-      .get(input.actorId)
-      ?.activeEffects.some(
-        (effect) =>
-          effect.kind === "spiritualWeapon" &&
-          effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-          effect.sourceCombatantId === input.actorId &&
-          effect.forcePositionId === input.forcePositionId &&
-          spiritualWeaponRepeatTargetingEquals(
-            effect.repeatTargeting,
-            input.repeatTargeting,
-          ),
-      ) ?? false
-  );
-}
-
-function spiritualWeaponRepeatTargetingEquals(
-  left: SpiritualWeaponRepeatTargeting,
-  right: SpiritualWeaponRepeatTargeting,
-): boolean {
-  if (left.kind !== right.kind) {
-    return false;
-  }
-  if (left.kind === "unrestricted") {
-    return true;
-  }
-  return (
-    right.kind === "fixedCombatant" && left.combatantId === right.combatantId
-  );
 }

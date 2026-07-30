@@ -2783,7 +2783,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     ]);
   });
 
-  test("stored harmful-object release consumes close-placement force witness and lasts full duration", () => {
+  test("stored harmful-object release keeps frontiers durable and lasts full duration", () => {
     const storedInvocation = storedSpellInvocation(spiritualWeaponUnitId, 2);
     expect(storedInvocation.procedure).toBe("spiritualWeaponAttackProxy");
     expect(storedInvocation.spell.mechanics.duration.kind).toBe(
@@ -2963,10 +2963,11 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(needsDamageRoll.tag).toBe("needsHoles");
     if (needsDamageRoll.tag !== "needsHoles") return;
+    expect(needsDamageRoll.state).toEqual(state);
     const damageRoll = requireReleaseHole(needsDamageRoll.holes, "rolledDice");
     const released = releaseGlyphStoredSpell({
       executionRegistry,
-      state,
+      state: needsDamageRoll.state,
       profile: requireGlyphStoredSpellProfile(),
       witness: storedSingleCreatureReleaseWitness(
         [
