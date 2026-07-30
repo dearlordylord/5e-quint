@@ -28,6 +28,7 @@ import {
   abilityModifier,
   assertBattleSnapshotCodecRoundTripForTest,
   battleAreaId,
+  breakBattleConcentration,
   cantripSpellInvocationRef,
   elapsedTimeTicks,
   endTurn,
@@ -227,6 +228,17 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       );
     }
     expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(13));
+    expect(
+      resolveBattleSubject({
+        state: breakBattleConcentration(targetTurn.state, spellCasterId),
+        subject: endWithinFiveFeet.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Movable zone save is no longer available.",
+    });
   });
 
   test("end-within-5-feet save rejects duplicate target Concentration fills", () => {

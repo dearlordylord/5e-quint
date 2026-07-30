@@ -30,6 +30,7 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   battleObscurementZones,
+  breakBattleConcentration,
   elapsedTimeTicks,
   endTurn,
   Hp,
@@ -237,6 +238,27 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
           expect.objectContaining({ combatantId: spellTargetId, hp: Hp(15) }),
         ]),
       },
+    });
+  });
+
+  test("a discovered save becomes stale when Cloudkill Concentration ends", () => {
+    const { targetTurn, session } = castCloudkill();
+    const saveAct = cloudkillAreaHazardSaveAct(
+      battleRuntimeSessionForTest({ ...session, state: targetTurn }),
+      spellTargetId,
+      "endsTurnInArea",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: breakBattleConcentration(targetTurn, spellCasterId),
+        subject: saveAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Cloudkill save is no longer available.",
     });
   });
 

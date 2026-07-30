@@ -3428,17 +3428,22 @@ export function resolveCloudkillAreaHazardSaveCommand(
   /* v8 ignore stop */
   const effect = cloudkillAreaHazardEffectFor(input.state, input.subject);
   const target = input.state.combatants.get(input.subject.actorId);
-  if (
-    effect === undefined ||
-    /* v8 ignore next -- Defensive internal guard: the dispatcher's missing-combatant check rejects an absent hazard target before routing this subject here. */
-    target === undefined
-  ) {
+  if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
       "Cloudkill save is no longer available.",
     );
   }
+  /* v8 ignore start -- Dispatcher invariant: a Cloudkill save subject is routed here only after its target combatant has been found in the current state. */
+  if (target === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Cloudkill save target is no longer available.",
+    );
+  }
+  /* v8 ignore stop */
   const trigger = cloudkillAreaHazardTriggerFromMembershipFact(
     input.subject.areaMembershipTrigger,
   );
@@ -4338,17 +4343,22 @@ export function resolveFlamingSphereSaveCommand(
   /* v8 ignore stop */
   const effect = flamingSphereEffectFor(input.state, input.subject);
   const target = input.state.combatants.get(input.subject.actorId);
-  if (
-    effect === undefined ||
-    /* v8 ignore next -- Defensive internal guard: the dispatcher's missing-combatant check rejects an absent movable-zone target before routing this subject here. */
-    target === undefined
-  ) {
+  if (effect === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
       "Movable zone save is no longer available.",
     );
   }
+  /* v8 ignore start -- Dispatcher invariant: a Flaming Sphere save subject is routed here only after its target combatant has been found in the current state. */
+  if (target === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Movable zone save target is no longer available.",
+    );
+  }
+  /* v8 ignore stop */
   // Dispatcher only routes here when trigger === "endsTurnWithinFiveFeetOfSphere".
   const flamingSphereTrigger = input.subject
     .trigger as BattleFlamingSphereTrigger;
