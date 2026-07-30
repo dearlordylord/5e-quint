@@ -32,6 +32,10 @@ import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { expect, test } from "vitest";
 import { resolveReplayContinuationFromState } from "./battle-execution-composition.ts";
+import {
+  resourceHasUsesRemaining,
+  spendCharacterResourceUse,
+} from "./character-battle-resource-execution.ts";
 import { spellDefinitionHasPricedOrConsumedMaterialComponent } from "./battle-reducer/spells-invocation-guards.ts";
 
 type CharacterSeedInput = Parameters<typeof characterSeed>[0];
@@ -239,6 +243,68 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
   const dismissedSnapshot = snapshotCreature(dismissed.snapshot, druidId);
   expect(dismissedSnapshot.size).toBe("medium");
   expect(Number(dismissedSnapshot.movement.speedFeet)).toBe(30);
+});
+
+test("rejects Wild Shape subjects when their form lifecycle becomes stale", () => {
+  const initial = druidWildShapeBattle();
+  const assumeSubject = wildShapeSubject(initial, {
+    action: "assumeForm",
+    formStatBlockId: ridingHorseId,
+  });
+  const dismissSubject: Extract<
+    BattleSubject,
+    { readonly tag: "druidWildShape" }
+  > = {
+    tag: "druidWildShape",
+    actorId: druidId,
+    procedureRef: assumeSubject.procedureRef,
+    action: "dismiss",
+  };
+  expect(resolveDruidWildShape(initial, dismissSubject)).toMatchObject({
+    tag: "invalid",
+    reason: "staleSubject",
+  });
+
+  const initialDruid = requireCharacter(initial, druidId);
+  const unavailableFormState = {
+    ...initial,
+    combatants: new Map(initial.combatants).set(druidId, {
+      ...initialDruid,
+      origin: {
+        ...initialDruid.origin,
+        druidWildShapeAvailableForms: [],
+      },
+    }),
+  };
+  expect(
+    resolveDruidWildShape(unavailableFormState, assumeSubject),
+  ).toMatchObject({
+    tag: "invalid",
+    reason: "staleSubject",
+  });
+
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(initial, assumeSubject),
+  );
+  const assumedDruid = requireCharacter(assumed.state, druidId);
+  const exhaustedState = restoreBonusAction({
+    ...assumed.state,
+    combatants: new Map(assumed.state.combatants).set(druidId, {
+      ...assumedDruid,
+      origin: {
+        ...assumedDruid.origin,
+        resources: assumedDruid.origin.resources.map((resource) =>
+          resourceHasUsesRemaining(resource)
+            ? spendCharacterResourceUse(resource)
+            : resource,
+        ),
+      },
+    }),
+  });
+  expect(resolveDruidWildShape(exhaustedState, assumeSubject)).toMatchObject({
+    tag: "invalid",
+    reason: "staleSubject",
+  });
 });
 
 test("re-assuming a Wild Shape form preserves its committed Stat Block resources", () => {
