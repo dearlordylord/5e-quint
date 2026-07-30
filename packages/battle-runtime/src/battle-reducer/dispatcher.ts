@@ -5674,13 +5674,13 @@ function replayContinuationSameKindSemanticFillEquals(
   if (recordedFill.kind === "attackRoll") {
     return (
       submittedFill.kind === "attackRoll" &&
-      battleFillEquals(recordedFill, submittedFill)
+      battleContinuationFillEquals(recordedFill, submittedFill)
     );
   }
   if (recordedFill.kind === "rolledDice") {
     return (
       submittedFill.kind === "rolledDice" &&
-      battleFillEquals(recordedFill, submittedFill)
+      battleContinuationFillEquals(recordedFill, submittedFill)
     );
   }
   const exhaustive: never = recordedFill;
@@ -5688,12 +5688,14 @@ function replayContinuationSameKindSemanticFillEquals(
 }
 
 function battleFillPrefixAccumulated(
-  prefix: readonly BattleFill[],
-  fills: readonly BattleFill[],
+  prefix: readonly BattleContinuationComparableFill[],
+  fills: readonly BattleContinuationComparableFill[],
 ): boolean {
   return (
     fills.length >= prefix.length &&
-    prefix.every((fill, index) => battleFillEquals(fill, fills[index]!))
+    prefix.every((fill, index) =>
+      battleContinuationFillEquals(fill, fills[index]!),
+    )
   );
 }
 
@@ -6248,76 +6250,129 @@ function attackDamageContinuationCunningStrikeFillSet(
   return { tag: "ok", savingThrow, movement, toolPossession, endTurnCover };
 }
 
-export function battleFillEquals(a: BattleFill, b: BattleFill): boolean {
-  if (a.kind !== b.kind || a.holeId !== b.holeId) {
+export type BattleContinuationComparableFill = Extract<
+  BattleFill,
+  {
+    readonly kind:
+      | "targetChoice"
+      | "attackRoll"
+      | "rolledDice"
+      | "attackDamageDisposition"
+      | "concentrationSavingThrow"
+      | "savingThrowOutcome"
+      | "movement"
+      | "toolPossessionFacts"
+      | "cunningStrikeEndTurnCoverFacts"
+      | "deathSavingThrow";
+  }
+>;
+
+type SameKindBattleContinuationFillPair = {
+  [Kind in BattleContinuationComparableFill["kind"]]: {
+    readonly kind: Kind;
+    readonly left: Extract<
+      BattleContinuationComparableFill,
+      { readonly kind: Kind }
+    >;
+    readonly right: Extract<
+      BattleContinuationComparableFill,
+      { readonly kind: Kind }
+    >;
+  };
+}[BattleContinuationComparableFill["kind"]];
+
+function sameKindBattleContinuationFillPair(
+  a: BattleContinuationComparableFill,
+  b: BattleContinuationComparableFill,
+): SameKindBattleContinuationFillPair | null {
+  if (a.kind !== b.kind) {
+    return null;
+  }
+  // The runtime comparison proves both members share one discriminant; TypeScript cannot preserve that correlation when the values arrive as separate unions.
+  return {
+    kind: a.kind,
+    left: a,
+    right: b,
+  } as SameKindBattleContinuationFillPair;
+}
+
+export function battleContinuationFillEquals(
+  a: BattleContinuationComparableFill,
+  b: BattleContinuationComparableFill,
+): boolean {
+  const pair = sameKindBattleContinuationFillPair(a, b);
+  if (pair === null || a.holeId !== b.holeId) {
     return false;
   }
-  if (a.kind === "targetChoice" && b.kind === "targetChoice") {
-    return a.value === b.value;
+  if (pair.kind === "targetChoice") {
+    return pair.left.value === pair.right.value;
   }
-  if (a.kind === "attackRoll" && b.kind === "attackRoll") {
-    return attackRollResultsEqual(a.value, b.value);
+  if (pair.kind === "attackRoll") {
+    return attackRollResultsEqual(pair.left.value, pair.right.value);
   }
-  if (a.kind === "rolledDice" && b.kind === "rolledDice") {
+  if (pair.kind === "rolledDice") {
     return (
-      rolledDiceGroupsEqual(a.value, b.value) &&
+      rolledDiceGroupsEqual(pair.left.value, pair.right.value) &&
       attackDamageRiderSelectionsEqual(
-        a.selectedAttackDamageRiderProcedureRefs,
-        b.selectedAttackDamageRiderProcedureRefs,
+        pair.left.selectedAttackDamageRiderProcedureRefs,
+        pair.right.selectedAttackDamageRiderProcedureRefs,
       ) &&
       cunningStrikeOptionSelectionsEqual(
-        a.cunningStrikeOption,
-        b.cunningStrikeOption,
+        pair.left.cunningStrikeOption,
+        pair.right.cunningStrikeOption,
       ) &&
-      spellDamageRerollDecisionsEqual(a.spellDamageReroll, b.spellDamageReroll)
+      spellDamageRerollDecisionsEqual(
+        pair.left.spellDamageReroll,
+        pair.right.spellDamageReroll,
+      )
     );
   }
-  if (
-    a.kind === "attackDamageDisposition" &&
-    b.kind === "attackDamageDisposition"
-  ) {
-    return a.value.kind === b.value.kind;
+  if (pair.kind === "attackDamageDisposition") {
+    return pair.left.value.kind === pair.right.value.kind;
   }
-  if (
-    a.kind === "concentrationSavingThrow" &&
-    b.kind === "concentrationSavingThrow"
-  ) {
+  if (pair.kind === "concentrationSavingThrow") {
     return (
-      a.value.succeeded === b.value.succeeded &&
-      a.value.naturalD20 === b.value.naturalD20 &&
-      rolledD20sEqual(a.value.rolledD20s, b.value.rolledD20s) &&
-      a.value.withoutRoll === b.value.withoutRoll &&
+      pair.left.value.succeeded === pair.right.value.succeeded &&
+      pair.left.value.naturalD20 === pair.right.value.naturalD20 &&
+      rolledD20sEqual(
+        pair.left.value.rolledD20s,
+        pair.right.value.rolledD20s,
+      ) &&
+      pair.left.value.withoutRoll === pair.right.value.withoutRoll &&
       d20TestNaturalOneRerollOutcomeDecisionsEqual(
-        a.value.d20TestNaturalOneReroll,
-        b.value.d20TestNaturalOneReroll,
+        pair.left.value.d20TestNaturalOneReroll,
+        pair.right.value.d20TestNaturalOneReroll,
       )
     );
   }
-  if (a.kind === "savingThrowOutcome" && b.kind === "savingThrowOutcome") {
-    return savingThrowOutcomeValuesEqual(a.value, b.value);
+  if (pair.kind === "savingThrowOutcome") {
+    return savingThrowOutcomeValuesEqual(pair.left.value, pair.right.value);
   }
-  if (a.kind === "movement" && b.kind === "movement") {
-    return movementFillValuesEqual(a.value, b.value);
+  if (pair.kind === "movement") {
+    return movementFillValuesEqual(pair.left.value, pair.right.value);
   }
-  if (a.kind === "toolPossessionFacts" && b.kind === "toolPossessionFacts") {
-    return arrayValuesEqual(a.value.toolIdsOnPerson, b.value.toolIdsOnPerson);
+  if (pair.kind === "toolPossessionFacts") {
+    return arrayValuesEqual(
+      pair.left.value.toolIdsOnPerson,
+      pair.right.value.toolIdsOnPerson,
+    );
   }
-  if (
-    a.kind === "cunningStrikeEndTurnCoverFacts" &&
-    b.kind === "cunningStrikeEndTurnCoverFacts"
-  ) {
-    return a.value.cover === b.value.cover;
+  if (pair.kind === "cunningStrikeEndTurnCoverFacts") {
+    return pair.left.value.cover === pair.right.value.cover;
   }
-  if (a.kind === "deathSavingThrow" && b.kind === "deathSavingThrow") {
+  if (pair.kind === "deathSavingThrow") {
     return (
-      a.value === b.value &&
+      pair.left.value === pair.right.value &&
       d20TestNaturalOneRerollDieDecisionsEqual(
-        a.d20TestNaturalOneReroll,
-        b.d20TestNaturalOneReroll,
+        pair.left.d20TestNaturalOneReroll,
+        pair.right.d20TestNaturalOneReroll,
       )
     );
   }
-  return false;
+  /* v8 ignore start -- BattleContinuationComparableFill is exhausted above, so this emitted tail is unreachable unless the type widens without a comparator branch, which fails compilation. */
+  const exhaustive: never = pair;
+  return exhaustive;
+  /* v8 ignore stop */
 }
 
 type ComparableAttackRollResult = Pick<

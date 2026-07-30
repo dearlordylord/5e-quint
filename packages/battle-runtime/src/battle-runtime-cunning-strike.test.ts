@@ -17,7 +17,7 @@ import {
   type BattleHole,
   type BattleState,
 } from "./battle-state-execution.ts";
-import { battleFillEquals } from "./battle-reducer/dispatcher.ts";
+import { battleContinuationFillEquals } from "./battle-reducer/dispatcher.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { classLevel, difficultyClass, movementFeet } from "@dnd/shared/types";
@@ -212,10 +212,10 @@ describe("battle runtime: Cunning Strike", () => {
       [sneakAttackProcedureRef],
     );
 
-    expect(battleFillEquals(roll, { ...roll })).toBe(true);
-    expect(battleFillEquals(roll, omittedSelection)).toBe(false);
+    expect(battleContinuationFillEquals(roll, { ...roll })).toBe(true);
+    expect(battleContinuationFillEquals(roll, omittedSelection)).toBe(false);
     expect(
-      battleFillEquals(roll, {
+      battleContinuationFillEquals(roll, {
         ...roll,
         cunningStrikeOption: {
           procedureRef: poisonProcedureRef,
@@ -228,9 +228,11 @@ describe("battle runtime: Cunning Strike", () => {
       holeId: holeId("cunning-strike-tool-possession"),
       value: { toolIdsOnPerson: ["poisoners_kit"] },
     } satisfies Extract<BattleFill, { readonly kind: "toolPossessionFacts" }>;
-    expect(battleFillEquals(toolPossession, { ...toolPossession })).toBe(true);
     expect(
-      battleFillEquals(toolPossession, {
+      battleContinuationFillEquals(toolPossession, { ...toolPossession }),
+    ).toBe(true);
+    expect(
+      battleContinuationFillEquals(toolPossession, {
         ...toolPossession,
         value: { toolIdsOnPerson: [] },
       }),

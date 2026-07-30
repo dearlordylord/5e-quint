@@ -55,7 +55,7 @@ import {
   twinnedSpellTargetCountInvocation,
 } from "./battle-reducer/metamagic.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
-import { battleFillEquals } from "./battle-reducer/dispatcher.ts";
+import { battleContinuationFillEquals } from "./battle-reducer/dispatcher.ts";
 import {
   attackRollFill,
   battleId,
@@ -1727,7 +1727,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       },
     };
 
-    expect(battleFillEquals(first, reordered)).toBe(true);
+    expect(battleContinuationFillEquals(first, reordered)).toBe(true);
   });
 
   test("Empowered Spell normalizes duplicate original rolls as one dice multiset", () => {
@@ -1766,7 +1766,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     };
     const reordered = effectiveEmpoweredSpellDamageRoll(reorderedDamageRoll);
 
-    expect(battleFillEquals(damageRoll, reorderedDamageRoll)).toBe(true);
+    expect(battleContinuationFillEquals(damageRoll, reorderedDamageRoll)).toBe(
+      true,
+    );
     expect(effectiveEmpoweredSpellDamageRoll(damageRoll).value).toEqual([
       { results: [DieRollResult(5), DieRollResult(6)] },
     ]);

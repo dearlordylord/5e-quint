@@ -59,7 +59,7 @@ import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { classLevel } from "@dnd/shared/types";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
-import { battleFillEquals } from "./battle-reducer/dispatcher.ts";
+import { battleContinuationFillEquals } from "./battle-reducer/dispatcher.ts";
 import { BattleStatBlockProcedureExecutionRef } from "./identity.ts";
 
 function goblinOpportunityAttackThreat(state: BattleState) {
@@ -1216,13 +1216,13 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       ],
     });
     expect(
-      battleFillEquals(
+      battleContinuationFillEquals(
         movementWithProcedureRefs,
         movementWithReorderedProcedureRefs,
       ),
     ).toBe(true);
     expect(
-      battleFillEquals(
+      battleContinuationFillEquals(
         movementWithChangedMultiplicity,
         movementWithProcedureRefs,
       ),

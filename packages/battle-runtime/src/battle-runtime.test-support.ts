@@ -3313,7 +3313,7 @@ export function damageRollFillWithGroups(
     BattleFill,
     { readonly kind: "rolledDice" }
   >["cunningStrikeOption"],
-): BattleFill {
+): Extract<BattleFill, { readonly kind: "rolledDice" }> {
   if (hole.kind !== "rolledDice") {
     throw new Error("Expected rolledDice hole.");
   }

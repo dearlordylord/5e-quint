@@ -25,7 +25,7 @@ import {
   type BattleTrackedOngoingSpellLightEmitter,
 } from "./battle-state-execution.ts";
 import { BattleFillSchema } from "./battle-reducer/battle-codecs.ts";
-import { battleFillEquals } from "./battle-reducer/dispatcher.ts";
+import { battleContinuationFillEquals } from "./battle-reducer/dispatcher.ts";
 import {
   D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE,
@@ -990,9 +990,11 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         }),
       },
     ]);
-    expect(battleFillEquals(rerolledSave, { ...rerolledSave })).toBe(true);
     expect(
-      battleFillEquals(rerolledSave, {
+      battleContinuationFillEquals(rerolledSave, { ...rerolledSave }),
+    ).toBe(true);
+    expect(
+      battleContinuationFillEquals(rerolledSave, {
         ...rerolledSave,
         value: {
           ...rerolledSave.value,
@@ -1592,9 +1594,11 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     if (restoredDeathSave.kind !== "deathSavingThrow") {
       throw new Error("Expected a Death Saving Throw fill.");
     }
-    expect(battleFillEquals(restoredDeathSave, { ...restoredDeathSave })).toBe(
-      true,
-    );
+    expect(
+      battleContinuationFillEquals(restoredDeathSave, {
+        ...restoredDeathSave,
+      }),
+    ).toBe(true);
     const replayMetadata: { readonly source: string; cycle?: unknown } = {
       source: "synthetic replay metadata",
     };
@@ -1611,10 +1615,13 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       },
     };
     expect(
-      battleFillEquals(restoredDeathSave, restoredDeathSaveWithReplayMetadata),
+      battleContinuationFillEquals(
+        restoredDeathSave,
+        restoredDeathSaveWithReplayMetadata,
+      ),
     ).toBe(true);
     expect(
-      battleFillEquals(restoredDeathSave, {
+      battleContinuationFillEquals(restoredDeathSave, {
         ...restoredDeathSave,
         d20TestNaturalOneReroll: rerollDie(12),
       }),
