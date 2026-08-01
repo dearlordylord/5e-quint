@@ -3285,19 +3285,14 @@ export function resolveOngoingFeatureUnitFeature(
     );
   }
 
-  const spent =
+  const currentTurnResources =
     unitFeature.activationTrigger === "bonusAction"
-      ? spendActivationResource(input.state.currentTurnResources, {
-          kind: "bonusAction",
-        })
-      : Either.right(input.state.currentTurnResources);
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Unit feature is no longer available for the current actor.",
-    );
-  }
+      ? Either.getOrThrow(
+          spendActivationResource(input.state.currentTurnResources, {
+            kind: "bonusAction",
+          }),
+        )
+      : input.state.currentTurnResources;
 
   const occurrenceKey = input.subject.procedureRef;
   const activeOngoingFeature = activeOngoingFeatureOccurrencesForCombatant(
@@ -3343,7 +3338,7 @@ export function resolveOngoingFeatureUnitFeature(
       input.subject.actorId,
       nextActor,
     ),
-    currentTurnResources: spent.right,
+    currentTurnResources,
   };
   const nextState =
     unitFeature.concentrationEffect === "breakAndPrevent"

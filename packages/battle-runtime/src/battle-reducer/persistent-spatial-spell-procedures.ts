@@ -1582,7 +1582,10 @@ function resolveFlamingSphereRepositionCommand(
       "Movable zone reposition is no longer available.",
     );
   }
-  if (!canSpendBonusAction(input.state.currentTurnResources)) {
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1630,16 +1633,6 @@ function resolveFlamingSphereRepositionCommand(
     return invalidResult(input.state, "invalidFill", movementValidation);
   }
   /* v8 ignore stop */
-  const spent = spendActivationResource(input.state.currentTurnResources, {
-    kind: "bonusAction",
-  });
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Movable zone reposition requires an available Bonus Action.",
-    );
-  }
   const nextState = {
     ...input.state,
     currentTurnResources: spent.right,
