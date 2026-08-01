@@ -1889,6 +1889,21 @@ describe("Find Familiar lifecycle", () => {
   test("rejects stale familiar lifecycle transitions at their public boundaries", () => {
     const withoutFamiliar = startFixtureBattle();
     expect(
+      resolveBattleSubject({
+        state: withoutFamiliar,
+        subject: {
+          tag: "companionLifecycle",
+          actorId: casterId,
+          action: "permanentlyDismiss",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Familiar lifecycle act requires the actor's retained familiar.",
+    });
+    expect(
       temporarilyDismissFindFamiliar({
         state: withoutFamiliar,
         casterId,
@@ -2964,6 +2979,19 @@ describe("Find Familiar lifecycle", () => {
       [droppedObjectId],
     );
 
+    expect(
+      resolveBattleSubject({
+        state: cast.state,
+        subject: temporaryDismiss.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Familiar temporary dismissal requires held-object facts for the familiar.",
+    });
+
     const shared = resolveBattleRuntimeSubject({
       session: battleRuntimeSessionForTest({
         state: cast.state,
@@ -2975,6 +3003,16 @@ describe("Find Familiar lifecycle", () => {
           requireHole(shareSenses.initialHoles, "findFamiliarConnection"),
         ),
       ],
+    });
+    expect(
+      resolveBattleSubject({
+        state: cast.state,
+        subject: shareSenses.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "findFamiliarConnection" })],
     });
     expect(shared.tag).toBe("resolved");
     if (shared.tag !== "resolved") return;
@@ -3042,6 +3080,17 @@ describe("Find Familiar lifecycle", () => {
       state: reappearanceReadyState,
       context: session.context,
     });
+    expect(
+      resolveBattleSubject({
+        state: reappearanceReadyState,
+        subject: reappearanceAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Familiar reappearance is a session-owned admitted operation.",
+    });
     const missingCatalog = resolveBattleRuntimeSubject({
       session: reappearanceSession,
       subject: reappearanceAct.subject,
@@ -3070,19 +3119,66 @@ describe("Find Familiar lifecycle", () => {
       message: "Find Familiar can reappear only from temporary dismissal.",
     });
 
+    const awaitingPlacement = resolveBattleRuntimeSubject({
+      session: reappearanceSession,
+      subject: reappearanceAct.subject,
+      fills: [],
+      statBlockCatalog,
+    });
+    expect(awaitingPlacement).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({ kind: "companionReappearancePlacement" }),
+      ],
+    });
+    if (awaitingPlacement.tag !== "needsHoles") return;
+    const placementHole = requireHole(
+      awaitingPlacement.holes,
+      "companionReappearancePlacement",
+    );
+    const placementFill = companionReappearancePlacementFill(placementHole);
+
+    expect(
+      resolveBattleRuntimeSubject({
+        session: reappearanceSession,
+        subject: reappearanceAct.subject,
+        fills: [
+          {
+            ...placementFill,
+            value: { kind: "unoccupiedSpaceWithinSpellRange" },
+          },
+        ],
+        statBlockCatalog,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Familiar reappearance placement must be an unoccupied space within 30 feet.",
+    });
+
+    const awaitingInitiative = resolveBattleRuntimeSubject({
+      session: reappearanceSession,
+      subject: reappearanceAct.subject,
+      fills: [placementFill],
+      statBlockCatalog,
+    });
+    expect(awaitingInitiative).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({ kind: "companionReappearanceInitiative" }),
+      ],
+    });
+    if (awaitingInitiative.tag !== "needsHoles") return;
+
     const reappeared = resolveBattleRuntimeSubject({
       session: reappearanceSession,
       subject: reappearanceAct.subject,
       fills: [
-        companionReappearancePlacementFill(
-          requireHole(
-            reappearanceAct.initialHoles,
-            "companionReappearancePlacement",
-          ),
-        ),
+        placementFill,
         companionReappearanceInitiativeFill(
           requireHole(
-            reappearanceAct.initialHoles,
+            awaitingInitiative.holes,
             "companionReappearanceInitiative",
           ),
         ),

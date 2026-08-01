@@ -110,8 +110,6 @@ export function resolveBattleRuntimeSubject(
       };
     }
     const result = resolveAdmittedFindFamiliarReappearanceSubject({
-      state: input.session.state,
-      subject: { ...input.subject, action: "reappear" },
       fills: input.fills,
       admission: admission.right.mechanics,
     });

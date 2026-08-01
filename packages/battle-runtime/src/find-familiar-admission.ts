@@ -96,7 +96,12 @@ export function admitFindFamiliarReappearance(input: {
   }
   return Either.right({
     mechanics: AdmittedFindFamiliarReappearance({
-      ownerId: input.casterId,
+      state: input.state,
+      subject: {
+        tag: "companionLifecycle",
+        actorId: input.casterId,
+        action: "reappear",
+      },
       combatantAdmission: combatantAdmission.right,
     }),
     presentation: {

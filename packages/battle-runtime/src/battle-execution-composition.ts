@@ -90,7 +90,7 @@ export function resolveAdmittedFindFamiliarReappearanceSubject(
 ): BattleResolutionResult {
   const executionRegistry = spellProcedureExecutionRegistry();
   return battleResolutionWithExecutionSnapshot(
-    input.state,
+    input.admission.state,
     resolveAdmittedFindFamiliarReappearanceSubjectStateOnly(input),
     executionRegistry,
   );

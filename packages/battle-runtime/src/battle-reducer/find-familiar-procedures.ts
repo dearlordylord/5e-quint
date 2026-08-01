@@ -91,7 +91,10 @@ export function resolveCompanionLifecycleSubject(
         "Familiar temporary dismissal requires the actor's present familiar.",
       );
     }
-    const heldObjectIds = companionHeldObjectIdsForDismissal(input);
+    const heldObjectIds = companionHeldObjectIdsForDismissal(
+      input,
+      familiar.combatantId,
+    );
     if (heldObjectIds.tag === "invalid") {
       return heldObjectIds;
     }
@@ -114,51 +117,32 @@ export function resolveCompanionLifecycleSubject(
       casterId: input.subject.actorId,
     });
   }
+  /* v8 ignore next -- Exhaustive-match harness: every compile-time-known companion lifecycle action is handled above. */
   const exhaustive: never = input.subject.action;
+  /* v8 ignore next -- Exhaustive-match harness: the never value cannot be returned for a compile-time-known lifecycle action. */
   return exhaustive;
 }
 
-type FindFamiliarReappearanceResolutionSubject = Omit<
-  Extract<BattleSubject, { readonly tag: "companionLifecycle" }>,
-  "action"
-> & { readonly action: "reappear" };
-
 export function resolveAdmittedFindFamiliarReappearanceSubject(input: {
-  readonly state: BattleState;
-  readonly subject: FindFamiliarReappearanceResolutionSubject;
   readonly fills: readonly BattleFill[];
   readonly admission: AdmittedFindFamiliarReappearance;
 }): BattleResolutionResult {
-  const familiarEntry = findFamiliarCompanionEntryForOwner(
-    input.state,
-    input.subject.actorId,
-  );
-  if (
-    familiarEntry === null ||
-    familiarEntry.companion.status !== "temporarilyDismissed"
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Familiar reappearance requires the actor's temporarily dismissed familiar.",
-    );
-  }
-  const placement = companionReappearancePlacement(input);
+  const { state, subject } = input.admission;
+  const resolutionInput = { state, subject, fills: input.fills };
+  const placement = companionReappearancePlacement(resolutionInput);
   if (placement.tag === "needsHoles" || placement.tag === "invalid") {
     return placement;
   }
-  const initiative = companionReappearanceInitiative(input);
+  const initiative = companionReappearanceInitiative(resolutionInput);
   if (initiative.tag === "needsHoles") {
     return initiative;
   }
   const result = reappearAdmittedTemporarilyDismissedFindFamiliar({
-    state: input.state,
-    casterId: input.subject.actorId,
     admission: input.admission,
     initiative: initiative.initiative,
     placement: placement.placement,
   });
-  return consumeOrCloseLegendaryActionWindow(input.subject, result);
+  return consumeOrCloseLegendaryActionWindow(subject, result);
 }
 
 function companionReappearancePlacement(
@@ -433,25 +417,15 @@ function companionHeldObjectIdsForDismissal(
   input: BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "companionLifecycle" }>
   >,
+  companionId: CombatantId,
 ):
   | {
       readonly tag: "resolved";
       readonly objectIds: readonly BattleDroppedObjectOutcome["objectId"][];
     }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
-  const companionEntry = findFamiliarCompanionEntryForOwner(
-    input.state,
-    input.subject.actorId,
-  );
-  if (companionEntry?.companion.status !== "present") {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Familiar dismissal held-object facts require a present familiar.",
-    );
-  }
   const expectedHole = companionHeldObjectFactsHole({
-    companionId: companionEntry.companion.combatantId,
+    companionId,
   });
   const fill = input.fills.find(
     (

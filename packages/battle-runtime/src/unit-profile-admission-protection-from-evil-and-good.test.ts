@@ -98,6 +98,24 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       sourceCombatantId: spellCasterId,
       targetId: missingTargetId,
     });
+
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: spellCasterId,
+          command: "creatureTypeProtectionPossessionAttempt",
+          sourceCombatantId: missingSourceId,
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Creature Type Protection possession attempt requires known source and target creature types.",
+    });
   });
 
   test("protection from evil and good imposes attack Disadvantage only for scoped creature types", () => {
@@ -379,6 +397,23 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       sourceCombatantId: spellCasterId,
       targetId: spellTargetId,
     });
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: spellTargetId,
+          command: "creatureTypeProtectionPossessionAttempt",
+          sourceCombatantId: spellCasterId,
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Creature Type Protection possession attempt requires scoped possession prevention.",
+    });
 
     const scopedSourceApplied = applyFailedSaveSpellConditionEffects(
       protectedResult.state,
@@ -415,6 +450,25 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
           condition: "charmed",
         }),
       ]),
+    });
+
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: spellTargetId,
+          command: "creatureTypeProtectionConditionAttempt",
+          sourceCombatantId: spellCasterId,
+          condition: "frightened",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Creature Type Protection condition attempt requires a scoped protected condition.",
     });
   });
   test("protection from evil and good condition prevention ends with Concentration", () => {
@@ -725,7 +779,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       ]),
     );
 
-    const relevantEffectSaveNeedsHoles = (
+    const resolveRelevantEffectSave = (
       effect: SpellActiveEffect,
       relevantEffect: "charmed" | "frightened" | "possession",
     ) =>
@@ -740,22 +794,48 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         },
         fills: [],
       });
-    const feyCharmSave = relevantEffectSaveNeedsHoles(
+    const feyCharmSave = resolveRelevantEffectSave(
       repeatCharmedEffect,
       "charmed",
     );
-    const feyFrightenedSave = relevantEffectSaveNeedsHoles(
+    const feyFrightenedSave = resolveRelevantEffectSave(
       repeatFrightenedEffect,
       "frightened",
     );
-    const feyPossessionSave = relevantEffectSaveNeedsHoles(
+    const feyPossessionSave = resolveRelevantEffectSave(
       possessionEffect,
       "possession",
     );
-    const humanoidCharmSave = relevantEffectSaveNeedsHoles(
+    const humanoidCharmSave = resolveRelevantEffectSave(
       humanoidCharmEffect,
       "charmed",
     );
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: spellTargetId,
+          command: "protectionRelevantEffectSave",
+          effectRef: spellActiveEffectExecutionRef(repeatCharmedEffect),
+          relevantEffect: "charmed",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Protection from Evil and Good relevant-effect save requires a matching active effect on the target.",
+    });
+    expect(
+      resolveRelevantEffectSave(repeatCharmedEffect, "frightened"),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Protection relevant-effect identity no longer matches the selected active effect.",
+    });
     for (const result of [feyCharmSave, feyFrightenedSave, feyPossessionSave]) {
       expect(result).toMatchObject({
         tag: "needsHoles",

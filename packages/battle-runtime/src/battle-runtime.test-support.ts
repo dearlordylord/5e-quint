@@ -2262,8 +2262,6 @@ function resolveBattleSubjectWithOptionalFamiliarAdmission(
   return Either.isLeft(admission)
     ? resolveBattleSubjectRuntime(input)
     : resolveAdmittedFindFamiliarReappearanceSubject({
-        state: input.state,
-        subject: { ...input.subject, action: "reappear" },
         fills: input.fills,
         admission: admission.right.mechanics,
       });

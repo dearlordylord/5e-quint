@@ -35,7 +35,10 @@ import {
   companionRouteForDiscoveredAct,
   findFamiliarCompanionLifecycleRouteEvents,
 } from "./companion-routes.ts";
-import { conditionImmunityTemporaryHitPointRouteForDiscoveredAct } from "./condition-immunity-temporary-hit-point-routes.ts";
+import {
+  conditionImmunityTemporaryHitPointRouteForDiscoveredAct,
+  conditionImmunityTemporaryHitPointRouteForResolution,
+} from "./condition-immunity-temporary-hit-point-routes.ts";
 import { sleepRepeatSaveRouteForDiscoveredAct } from "./effect-lifecycle-routes.ts";
 import { unitFeatureBonusActionRouteForDiscoveredAct } from "./feature-action-routes.ts";
 import { markedDamageRiderRouteForDiscoveredAct } from "./marked-damage-routes.ts";
@@ -96,12 +99,31 @@ describe("extracted route owner boundaries", () => {
         routedAct("mage_armor"),
       ),
     ).toMatchObject({ subject: "spellBaseArmorClassEffect" });
+    const heroismAct = routedAct("heroism");
     expect(
       conditionImmunityTemporaryHitPointRouteForDiscoveredAct(
         session.state,
-        routedAct("heroism"),
+        heroismAct,
       ),
     ).toMatchObject({ subject: "conditionImmunityTemporaryHitPointEffect" });
+    const heroismNeedsTarget = resolveBattleSubject({
+      state: session.state,
+      subject: heroismAct.subject,
+      fills: [],
+    });
+    expect(
+      conditionImmunityTemporaryHitPointRouteForResolution(
+        { state: session.state, subject: heroismAct.subject, fills: [] },
+        heroismNeedsTarget,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        kind: "discoverBattleActs",
+        subject: "conditionImmunityTemporaryHitPointEffect",
+        holes: ["targetChoice"],
+        owner: "battleTargetSelection",
+      }),
+    ]);
     expect(
       protectionCharmRouteForDiscoveredAct(
         session.state,

@@ -50,8 +50,6 @@ export type FindFamiliarLifecycleInputBase = FindFamiliarOwnerInput & {
 };
 
 export type AdmittedFindFamiliarReappearanceInput = {
-  readonly state: BattleState;
-  readonly casterId: CombatantId;
   readonly admission: AdmittedFindFamiliarReappearance;
   readonly initiative: InitiativeScore;
   readonly placement: Extract<
@@ -285,44 +283,42 @@ export function permanentlyDismissFindFamiliar(
 export function reappearAdmittedTemporarilyDismissedFindFamiliar(
   input: AdmittedFindFamiliarReappearanceInput,
 ): BattleResolutionResult {
-  const familiarEntry = findCompanionEntryByOwner(
-    input.state.companions,
-    input.casterId,
-  );
+  const state = input.admission.state;
+  const casterId = input.admission.subject.actorId;
+  const familiarEntry = findCompanionEntryByOwner(state.companions, casterId);
   /* v8 ignore start -- Reappearance admission proves this owner has the temporarily dismissed companion represented by the admitted form. */
   if (
     familiarEntry === undefined ||
     familiarEntry.companion.status !== "temporarilyDismissed"
   ) {
     return invalidFindFamiliarResult(
-      input.state,
+      state,
       "invalidFill",
       "Find Familiar can reappear only from temporary dismissal.",
     );
   }
   /* v8 ignore stop */
   const familiar = familiarEntry.companion;
-  /* v8 ignore start -- The admission object is constructed from this retained companion; differing owner or reappearance ids require mixing records from separate admissions. */
+  /* v8 ignore start -- The admission object is constructed from this retained companion; a differing reappearance id requires corrupting the branded admission. */
   if (
-    input.admission.ownerId !== input.casterId ||
     input.admission.combatantAdmission.combatantId !==
-      familiar.reappearanceCombatantId
+    familiar.reappearanceCombatantId
   ) {
     return invalidFindFamiliarResult(
-      input.state,
+      state,
       "invalidFill",
       "Find Familiar reappearance admission does not match the retained familiar.",
     );
   }
   /* v8 ignore stop */
   const identityIssue = findFamiliarIdentityIssue(
-    input.state,
-    input.casterId,
+    state,
+    casterId,
     familiar.reappearanceCombatantId,
   );
   /* v8 ignore start -- Reappearance admission collision-checks the retained combatant id against the current roster immediately before commit. */
   if (identityIssue !== null) {
-    return invalidFindFamiliarResult(input.state, "invalidFill", identityIssue);
+    return invalidFindFamiliarResult(state, "invalidFill", identityIssue);
   }
   /* v8 ignore stop */
   const nextFamiliar = findFamiliarPresentState({
@@ -332,11 +328,11 @@ export function reappearAdmittedTemporarilyDismissedFindFamiliar(
     protocol: familiar.protocol,
     creatureTypeOverride: familiar.creatureTypeOverride,
     placement: input.placement,
-    ownerId: input.casterId,
+    ownerId: casterId,
   });
   const spent = spendFindFamiliarMagicAction(
-    input.state,
-    input.casterId,
+    state,
+    casterId,
     "Find Familiar reappearance",
   );
   if (spent.tag === "invalid") {
@@ -344,7 +340,7 @@ export function reappearAdmittedTemporarilyDismissedFindFamiliar(
   }
   const nextState = withFindFamiliarCombatant({
     state: spent.state,
-    casterId: input.casterId,
+    casterId,
     familiarId: familiar.reappearanceCombatantId,
     familiar: nextFamiliar,
     initiative: input.initiative,

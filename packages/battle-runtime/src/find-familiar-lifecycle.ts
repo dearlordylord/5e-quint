@@ -79,8 +79,6 @@ export function reappearTemporarilyDismissedFindFamiliar(
         admission.left.message,
       )
     : reappearAdmittedTemporarilyDismissedFindFamiliar({
-        state: input.state,
-        casterId: input.casterId,
         admission: admission.right.mechanics,
         initiative: input.initiative,
         placement: input.placement,

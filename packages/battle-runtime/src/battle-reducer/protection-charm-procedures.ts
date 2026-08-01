@@ -121,13 +121,16 @@ export function resolveCreatureTypeProtectionConditionAttemptCommand(
   }
   /* v8 ignore stop */
   const target = input.state.combatants.get(input.subject.actorId);
+  /* v8 ignore start -- Dispatcher invariant: runtime-command resolution admits only a subject whose actor is the current known combatant. */
   if (target === undefined) {
+    /* v8 ignore next -- Dispatcher invariant: the public resolver rejects an unknown subject actor before this handler runs. */
     return invalidResult(
       input.state,
       "staleSubject",
       "Creature Type Protection condition attempt requires a known target.",
     );
   }
+  /* v8 ignore stop */
   if (
     !conditionApplicationPreventedByCreatureTypeProtection(
       input.state,
