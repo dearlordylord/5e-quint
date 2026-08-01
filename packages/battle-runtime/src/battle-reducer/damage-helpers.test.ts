@@ -3,7 +3,10 @@ import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
-import { spellTargetId } from "../unit-profile-admission-catalog.test-support.ts";
+import {
+  spellCasterId,
+  spellTargetId,
+} from "../unit-profile-admission-catalog.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "../battle-runtime.test-support.ts";
 import {
   damageRollFillWithGroups,
@@ -16,6 +19,7 @@ import { combatantId } from "../identity.ts";
 import type { BattleActiveEffect } from "../battle-state-execution.ts";
 import {
   applyAvailableSpellDamageReduction,
+  applyAvailableSourceDamageRollPenalty,
   entriesAfterProportionalDamageReduction,
   type DamageAmountByTypeEntry,
 } from "./damage-helpers.ts";
@@ -79,6 +83,48 @@ function availableSlashingReduction() {
   return { target, damageByType, hole };
 }
 
+function availableSourceDamageRollPenalty() {
+  const session = spellBattle({ spellSlots: [] });
+  const sourceWithoutPenalty = requireCombatant(session.state, spellTargetId);
+  const source = {
+    ...sourceWithoutPenalty,
+    activeEffects: [
+      ...sourceWithoutPenalty.activeEffects,
+      {
+        kind: "sourceDamageRollPenalty",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "source-damage-roll-penalty",
+        ),
+        sourceCombatantId: spellCasterId,
+        amount: { dice: 1, dieSize: 8 },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+        },
+      },
+    ],
+  } satisfies typeof sourceWithoutPenalty;
+  const damageByType = new Map<DamageType, number>([
+    ["slashing", 4],
+    ["fire", 6],
+  ]);
+  const damageRollHoleId = holeId("battle:test:source-damage-roll");
+  const requested = applyAvailableSourceDamageRollPenalty(
+    source,
+    damageByType,
+    damageRollHoleId,
+    undefined,
+  );
+  if (requested.tag !== "needsHoles") {
+    throw new Error("Expected an available source damage roll penalty.");
+  }
+  const hole = requireHole(requested.holes, "rolledDice");
+  if (!("sourceDamageRollPenalty" in hole)) {
+    throw new Error("Expected a source damage roll penalty hole.");
+  }
+  return { source, damageByType, damageRollHoleId, hole };
+}
+
 describe("damage reduction helper boundaries", () => {
   test("accepts the requested roll and rejects mismatched or invalid dice fills", () => {
     const { target, damageByType, hole } = availableSlashingReduction();
@@ -125,6 +171,59 @@ describe("damage reduction helper boundaries", () => {
         target,
         damageByType,
         damageRollFillWithGroups(hole, [[5]]),
+      ),
+    ).toEqual({ tag: "invalid" });
+  });
+});
+
+describe("source damage roll penalty helper boundaries", () => {
+  test("applies the requested roll and rejects stale, mismatched, or invalid fills", () => {
+    const { source, damageByType, damageRollHoleId, hole } =
+      availableSourceDamageRollPenalty();
+    const validRoll = damageRollFillWithGroups(hole, [[4]]);
+
+    const applied = applyAvailableSourceDamageRollPenalty(
+      source,
+      damageByType,
+      damageRollHoleId,
+      validRoll,
+    );
+    expect(applied).toMatchObject({ tag: "ok" });
+    if (applied.tag !== "ok") {
+      throw new Error("Expected the source damage roll penalty to apply.");
+    }
+    expect([...applied.damageByType]).toEqual([
+      ["slashing", 2],
+      ["fire", 4],
+    ]);
+
+    expect(
+      applyAvailableSourceDamageRollPenalty(
+        source,
+        damageByType,
+        damageRollHoleId,
+        { ...validRoll, holeId: holeId("battle:unrelated-roll") },
+      ),
+    ).toEqual({ tag: "invalid" });
+    expect(
+      applyAvailableSourceDamageRollPenalty(
+        {
+          ...source,
+          activeEffects: source.activeEffects.filter(
+            (effect) => effect.kind !== "sourceDamageRollPenalty",
+          ),
+        },
+        damageByType,
+        damageRollHoleId,
+        validRoll,
+      ),
+    ).toEqual({ tag: "invalid" });
+    expect(
+      applyAvailableSourceDamageRollPenalty(
+        source,
+        damageByType,
+        damageRollHoleId,
+        damageRollFillWithGroups(hole, [[9]]),
       ),
     ).toEqual({ tag: "invalid" });
   });

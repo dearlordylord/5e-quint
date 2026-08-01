@@ -1099,6 +1099,53 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     ).toBe(12);
   });
 
+  test("Reduce raises a negative-modifier weapon hit to its one-damage floor", () => {
+    const spell = spellRecord(enlargeReduceUnitId);
+    const baseAttack = zeroAbilityWeaponAttack("weapon_longsword");
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      attack: {
+        ...baseAttack,
+        abilityModifier: abilityModifier(-5),
+        damageAbilityModifier: abilityModifier(-5),
+      },
+    });
+    const reduceAct = creatureSizeActInSession(session, "creatureSizeDecrease");
+    const reduceTarget = requireHole(reduceAct.initialHoles, "targetChoice");
+    const reduced = resolveBattleSubject({
+      state: session.state,
+      subject: reduceAct.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          reduceTarget,
+          enlargeReduceUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+      ],
+    });
+    expect(reduced).toMatchObject({ tag: "resolved" });
+    if (reduced.tag !== "resolved") {
+      throw new Error("Expected Reduce self cast to resolve.");
+    }
+
+    expect(
+      resolveAttackHitHp(
+        battleRuntimeSessionForTest({
+          state: {
+            ...reduced.state,
+            currentTurnResources: INITIAL_TURN_RESOURCES,
+          },
+          context: session.context,
+        }),
+        "Longsword",
+        [[1], [4]],
+        { total: 15, naturalD20: 18 },
+      ),
+    ).toBe(11);
+  });
+
   test("Reduce subtracts from total attack-hit damage including marked riders", () => {
     const spell = spellRecord(enlargeReduceUnitId);
     const session = spellBattle({
@@ -1354,6 +1401,7 @@ function resolveAttackHitHp(
   session: BattleRuntimeSession,
   attackName: "Longsword" | "Unarmed Strike",
   damageRolls: readonly (readonly number[])[],
+  attackRollValue?: { readonly total: number; readonly naturalD20: number },
 ): number {
   const state = session.state;
   const subject = weaponAttackSubject(session, attackName);
@@ -1366,7 +1414,13 @@ function resolveAttackHitHp(
     resolveBattleSubject({ state, subject, fills: [targetFill] }),
     "attackRoll",
   );
-  const rollFill = attackRollFill(roll, { total: 15, naturalD20: 10 });
+  const rollFill = attackRollFill(
+    roll,
+    attackRollValue ?? {
+      total: 15,
+      naturalD20: 15 - Number(roll.attackBonus),
+    },
+  );
   const damage = requireResultHole(
     resolveBattleSubject({
       state,
