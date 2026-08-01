@@ -4,6 +4,13 @@ import {
   battleActSpellPresentation,
   battleSelectedSpellInvocationForProcedure,
 } from "./battle-act-composition.ts";
+import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
+import { admitBattleResolutionInput } from "./battle-reducer/resolution-admission.ts";
+import {
+  resolveBonusActionSpellAct,
+  resolveSpellAct,
+} from "./battle-reducer/spells-resolve.ts";
+import type { BattleCreatureState } from "./index.ts";
 import type {
   BattleState,
   BattleSubject,
@@ -51,6 +58,108 @@ import {
 } from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: spellcasting actions and slots", () => {
+  test("admitted Action and Bonus Action spell subjects reject depleted spell resources", () => {
+    const actionSession = wizardVsSkeletonBattle();
+    const actionAct = discoverBattleActs(actionSession).find(
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(act)?.invocation.spellId === "magic_missile",
+    );
+    if (actionAct?.subject.tag !== "actionSpell") {
+      throw new Error("Expected Magic Missile Action spell act.");
+    }
+    const actionAdmission = admitBattleResolutionInput({
+      state: actionSession.state,
+      subject: actionAct.subject,
+      fills: [],
+    });
+    if (actionAdmission.tag !== "admitted") {
+      throw new Error("Expected admitted Magic Missile resolution input.");
+    }
+    const depletedActionActor = characterWithDepletedSpellSlots(
+      actionSession.state.combatants.get(actionAct.subject.actorId),
+    );
+    expect(
+      resolveSpellAct(
+        {
+          ...actionAdmission.input,
+          subject: actionAct.subject,
+          state: {
+            ...actionAdmission.input.state,
+            combatants: new Map(actionSession.state.combatants).set(
+              depletedActionActor.combatantId,
+              depletedActionActor,
+            ),
+          },
+        },
+        spellProcedureExecutionRegistry(),
+      ),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: expect.stringContaining("required runtime spell resource"),
+    });
+
+    const bonusActionSession = startBattleSessionRight({
+      battleId: battleId("battle-stale-bonus-action-spell-caster"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Healer",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("healing_word")],
+          }),
+        }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          initiative: 10,
+          currentHp: 5,
+        }),
+      ],
+    });
+    const bonusActionAct = discoverBattleActs(bonusActionSession).find(
+      (act) =>
+        act.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(act)?.invocation.spellId === "healing_word",
+    );
+    if (bonusActionAct?.subject.tag !== "bonusActionSpell") {
+      throw new Error("Expected Healing Word Bonus Action spell act.");
+    }
+    const bonusActionAdmission = admitBattleResolutionInput({
+      state: bonusActionSession.state,
+      subject: bonusActionAct.subject,
+      fills: [],
+    });
+    if (bonusActionAdmission.tag !== "admitted") {
+      throw new Error("Expected admitted Healing Word resolution input.");
+    }
+    const depletedBonusActionActor = characterWithDepletedSpellSlots(
+      bonusActionSession.state.combatants.get(bonusActionAct.subject.actorId),
+    );
+    expect(
+      resolveBonusActionSpellAct(
+        {
+          ...bonusActionAdmission.input,
+          subject: bonusActionAct.subject,
+          state: {
+            ...bonusActionAdmission.input.state,
+            combatants: new Map(bonusActionSession.state.combatants).set(
+              depletedBonusActionActor.combatantId,
+              depletedBonusActionActor,
+            ),
+          },
+        },
+        spellProcedureExecutionRegistry(),
+      ),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: expect.stringContaining("required runtime spell resource"),
+    });
+  });
+
   test("Wizard action-time spell acts spend slots for prepared level-1 spells but not cantrips", () => {
     const magicMissileState = wizardVsSkeletonBattle();
     const magicMissileProcedureRef = requireCharacterSpellProcedureRefForTest(
@@ -1345,3 +1454,27 @@ describe("battle runtime: spellcasting actions and slots", () => {
     ).toBe("Use Slot Save Damage.");
   });
 });
+
+function characterWithDepletedSpellSlots(
+  actor: BattleCreatureState | undefined,
+) {
+  if (
+    actor?.origin.kind !== "character" ||
+    actor.origin.spellcasting === undefined
+  ) {
+    throw new Error("Expected character spell caster.");
+  }
+  return {
+    ...actor,
+    origin: {
+      ...actor.origin,
+      spellcasting: {
+        ...actor.origin.spellcasting,
+        spellSlots: actor.origin.spellcasting.spellSlots.map((slot) => ({
+          ...slot,
+          expended: slot.count,
+        })),
+      },
+    },
+  };
+}
