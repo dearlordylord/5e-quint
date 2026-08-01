@@ -14,7 +14,6 @@ import {
   characterUnitProcedure,
 } from "../character-execution-queries.ts";
 import {
-  canSpendBonusAction,
   enableMovementActionBonusActionExclusion,
   grantUnitActionResource,
   spendActivationResource,
@@ -1262,10 +1261,10 @@ export function resolveBardicInspirationGrantUnitFeature(
   resource: CharacterBattleResourceState,
   unitFeature: MechanicalUnitFeature<"bardicInspirationGrant">,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
-  if (
-    !resourceHasUsesRemaining(resource) ||
-    !canSpendBonusAction(input.state.currentTurnResources)
-  ) {
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (!resourceHasUsesRemaining(resource) || Either.isLeft(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1380,17 +1379,6 @@ export function resolveBardicInspirationGrantUnitFeature(
     );
   }
   /* v8 ignore stop */
-
-  const spent = spendActivationResource(input.state.currentTurnResources, {
-    kind: "bonusAction",
-  });
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Bardic Inspiration is no longer available for the current actor.",
-    );
-  }
 
   const nextActor: BattleCreatureState = {
     ...actor,
@@ -3211,10 +3199,10 @@ export function resolveSelfBonusActionHealingUnitFeature(
   resource: CharacterBattleResourceState,
   unitFeature: MechanicalUnitFeature<"selfBonusActionHealing">,
 ): BattleResolutionResult {
-  if (
-    !resourceHasUsesRemaining(resource) ||
-    !canSpendBonusAction(input.state.currentTurnResources)
-  ) {
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "bonusAction",
+  });
+  if (!resourceHasUsesRemaining(resource) || Either.isLeft(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3233,17 +3221,6 @@ export function resolveSelfBonusActionHealingUnitFeature(
     return needsHolesResult(input.state, input.subject, [
       selfBonusActionHealingRollHole(unitFeature),
     ]);
-  }
-
-  const spent = spendActivationResource(input.state.currentTurnResources, {
-    kind: "bonusAction",
-  });
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      selfBonusActionHealingStaleMessage(),
-    );
   }
 
   const nextActor = applyHpHealing(
