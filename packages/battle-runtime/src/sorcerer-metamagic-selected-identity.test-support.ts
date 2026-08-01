@@ -23,6 +23,7 @@ import {
   discoverBattleActCandidates,
   resolveBattleSubject,
 } from "./index.ts";
+import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 import {
   attackRollFill,
@@ -62,6 +63,13 @@ function spellInvocationForAct(
         subject.procedureRef,
       )
     : undefined;
+}
+
+function discoveryRouteForAct(
+  state: BattleState,
+  act: BattleActDiscoveryCandidate,
+): readonly BattleReducerRouteEvent[] {
+  return battleReducerRouteEventsForDiscoveredAct(state, act) ?? [];
 }
 
 export type SorcererMetamagicProjection = {
@@ -140,7 +148,7 @@ export function observeQuickenedBurningHandsRoute(
 
   return [
     battleReducerStartRouteEvent(),
-    ...(act.routeEvents ?? []),
+    ...discoveryRouteForAct(state, act),
     ...(awaitingDamage.routeEvents ?? []),
     ...(resolved.routeEvents ?? []),
   ];
@@ -227,7 +235,7 @@ export function observeQuickenedRayOfFrostRoute(
 
   return [
     battleReducerStartRouteEvent(),
-    ...(act.routeEvents ?? []),
+    ...discoveryRouteForAct(state, act),
     ...(awaitingAttackRoll.routeEvents ?? []),
     ...(awaitingDamage.routeEvents ?? []),
     ...(resolved.routeEvents ?? []),
@@ -467,7 +475,7 @@ export function observeQuickenedEldritchBlastRoute(
 
   return [
     battleReducerStartRouteEvent(),
-    ...(act.routeEvents ?? []),
+    ...discoveryRouteForAct(state, act),
     ...(awaitingFirstAttackRoll.routeEvents ?? []),
     ...(awaitingFirstDamage.routeEvents ?? []),
     ...(awaitingSecondAttackRoll.routeEvents ?? []),
@@ -589,7 +597,7 @@ export function observeCarefulSavingThrowProtectionRoute(
 
   return [
     battleReducerStartRouteEvent(),
-    ...(act.routeEvents ?? []),
+    ...discoveryRouteForAct(state, act),
     ...(awaitingSave.routeEvents ?? []),
     ...(awaitingDamage.routeEvents ?? []),
     ...(resolved.routeEvents ?? []),
@@ -637,7 +645,7 @@ export function observeCarefulCommandNoEffectRoute(
 
   return [
     battleReducerStartRouteEvent(),
-    ...(act.routeEvents ?? []),
+    ...discoveryRouteForAct(state, act),
     ...(awaitingSave.routeEvents ?? []),
     ...(resolved.routeEvents ?? []),
   ];
@@ -1108,7 +1116,7 @@ export function observeTransmutedBurningHandsToPoisonRoute(
 
   return [
     battleReducerStartRouteEvent(),
-    ...(act.routeEvents ?? []),
+    ...discoveryRouteForAct(state, act),
     ...(awaitingDamage.routeEvents ?? []),
     ...(resolved.routeEvents ?? []),
   ];
@@ -1203,7 +1211,7 @@ export function observeTwinnedBlessRoute(
 
   return [
     battleReducerStartRouteEvent(),
-    ...(act.routeEvents ?? []),
+    ...discoveryRouteForAct(state, act),
     ...(resolved.routeEvents ?? []),
   ];
 }
