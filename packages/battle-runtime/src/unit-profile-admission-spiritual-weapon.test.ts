@@ -1023,15 +1023,57 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       }),
       "rolledDice",
     );
+    const completedRepeatFills = [
+      repeatForceFill,
+      repeatTargetFill,
+      attackRollFill(repeatAttackRoll, { total: 18, naturalD20: 12 }),
+      damageRollFillWithGroups(damage, [[4]]),
+    ];
+    // Stale-session counterexample: a later-turn subject must not become usable
+    // against its same-turn cast snapshot even if that snapshot is externally
+    // supplied with a restored Bonus Action.
+    expect(
+      resolveBattleSubject({
+        state: {
+          ...cast.state,
+          currentTurnResources: {
+            ...cast.state.currentTurnResources,
+            currentHasBonusAction: true,
+          },
+        },
+        subject: repeatAct.subject,
+        fills: completedRepeatFills,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Spiritual Weapon repeat attack is only available on later turns.",
+    });
+    // The discovered repeat also fails closed if another operation spends the
+    // current Bonus Action before this subject resolves.
+    expect(
+      resolveBattleSubject({
+        state: {
+          ...casterTurn.state,
+          currentTurnResources: {
+            ...casterTurn.state.currentTurnResources,
+            currentHasBonusAction: false,
+          },
+        },
+        subject: repeatAct.subject,
+        fills: completedRepeatFills,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Bonus Action spell is no longer available for the current actor.",
+    });
     const repeated = resolveBattleSubject({
       state: casterTurn.state,
       subject: repeatAct.subject,
-      fills: [
-        repeatForceFill,
-        repeatTargetFill,
-        attackRollFill(repeatAttackRoll, { total: 18, naturalD20: 12 }),
-        damageRollFillWithGroups(damage, [[4]]),
-      ],
+      fills: completedRepeatFills,
     });
 
     expect(repeated).toMatchObject({ tag: "resolved" });
