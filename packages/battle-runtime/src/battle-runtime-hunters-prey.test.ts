@@ -1,12 +1,13 @@
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.hunters-prey
 import { describe, expect, test } from "vitest";
-import { movementFeet } from "@dnd/shared/types";
+import { Hp, movementFeet } from "@dnd/shared/types";
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   battleUnitRefWithSupportProfiles,
 } from "./unit-feature-support.ts";
 import {
+  attackDamageDispositionFill,
   attackDamageHoleAfterHit,
   attackInitialTargetHole,
   attackRollFill,
@@ -16,6 +17,7 @@ import {
   attackTargetSpatialFact,
   battleId,
   battleProcedureExecutionRefForSpellHoleForTest,
+  characterBattleFeatureInitForTest,
   characterSeed,
   damageRollFillWithGroups,
   discoverBattleActs,
@@ -36,6 +38,7 @@ import {
   startBattleRight,
   startBattleSessionRight,
   statBlockCreatureInit,
+  supportedBattleUnitRef,
   testDaggerAttack,
   targetFill,
   testLongswordAttack,
@@ -206,6 +209,122 @@ function resolveHordeBreakerUse(
       ],
     }),
   ).state;
+}
+
+type HordeBreakerAfterPrimaryMissFixtureInput = {
+  readonly battleId: ReturnType<typeof battleId>;
+  readonly secondTargetHp: Hp;
+};
+
+function hordeBreakerAfterPrimaryMissFixture(
+  input: HordeBreakerAfterPrimaryMissFixtureInput,
+): {
+  readonly session: BattleRuntimeSession;
+  readonly state: BattleState;
+  readonly subject: ReturnType<typeof fighterAttackSubject>;
+  readonly primaryFills: readonly [
+    ReturnType<typeof attackTargetFill>,
+    ReturnType<typeof attackRollFill>,
+  ];
+  readonly decision: Extract<
+    ReturnType<typeof requireHole>,
+    { readonly kind: "unitFeatureDecision" }
+  >;
+} {
+  const halflingLuckUnit = unitLibrary.requireUnit("species_halfling_luck");
+  const session = startBattleSessionRight({
+    battleId: input.battleId,
+    combatants: [
+      characterSeed({
+        initiative: 20,
+        characterUnitRefs: [
+          huntersPreyUnitRef("hordeBreaker"),
+          supportedBattleUnitRef(halflingLuckUnit),
+        ],
+        unitFeatures: [characterBattleFeatureInitForTest(halflingLuckUnit)],
+        attack: testLongswordAttack(),
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+      statBlockCreatureInit({
+        combatantId: skeletonId,
+        displayName: "Second Target",
+        initiative: 9,
+        currentHp: input.secondTargetHp,
+      }),
+    ],
+  });
+  const state = session.state;
+  const subject = fighterAttackSubject(state, "Longsword");
+  const primaryTarget = attackInitialTargetHole(state, subject);
+  const primaryRoll = attackRollHoleAfterTarget(
+    state,
+    primaryTarget,
+    subject,
+    goblinId,
+  );
+  const primaryFills = [
+    attackTargetFill(
+      primaryTarget,
+      fighterId,
+      goblinId,
+      attackExecutionSelectionForSubjectForTest(subject),
+    ),
+    attackRollFill(primaryRoll, { total: 7, naturalD20: 2 }),
+  ] as const;
+  const decision = requireHole(
+    resolveBattleSubject({ state, subject, fills: primaryFills }),
+    "unitFeatureDecision",
+  );
+  return { session, state, subject, primaryFills, decision };
+}
+
+function hordeBreakerFollowupAttackFixture(
+  input: HordeBreakerAfterPrimaryMissFixtureInput,
+): ReturnType<typeof hordeBreakerAfterPrimaryMissFixture> & {
+  readonly secondTargetFill: ReturnType<typeof targetFill>;
+  readonly hordeRoll: Extract<
+    ReturnType<typeof requireHole>,
+    { readonly kind: "attackRoll" }
+  >;
+} {
+  const fixture = hordeBreakerAfterPrimaryMissFixture(input);
+  const { state, subject, primaryFills, decision } = fixture;
+  const target = requireHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [...primaryFills, unitFeatureDecisionFill(decision, "use")],
+    }),
+    "targetChoice",
+  );
+  const secondTargetFill = targetFill(target, skeletonId, [
+    attackTargetSpatialFact(
+      fighterId,
+      skeletonId,
+      attackExecutionSelectionForSubjectForTest(subject),
+    ),
+    {
+      kind: "hordeBreakerSecondTargetEligible",
+      attackerId: fighterId,
+      sourceProcedureRef:
+        battleProcedureExecutionRefForSpellHoleForTest(target),
+      originalTargetId: goblinId,
+      secondTargetId: skeletonId,
+    },
+  ]);
+  const hordeRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        ...primaryFills,
+        unitFeatureDecisionFill(decision, "use"),
+        secondTargetFill,
+      ],
+    }),
+    "attackRoll",
+  );
+  return { ...fixture, secondTargetFill, hordeRoll };
 }
 
 describe("battle runtime: Hunter's Prey", () => {
@@ -609,6 +728,158 @@ describe("battle runtime: Hunter's Prey", () => {
     ).toEqual([
       { attackerId: fighterId, procedureRef: huntersPreyProcedureRef(session) },
     ]);
+  });
+
+  test("Horde Breaker can be declined after the original weapon attack misses", () => {
+    const { state, subject, primaryFills, decision } =
+      hordeBreakerAfterPrimaryMissFixture({
+        battleId: battleId(
+          "battle-hunters-prey-horde-breaker-declined-after-miss",
+        ),
+        secondTargetHp: Hp(10),
+      });
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [...primaryFills, unitFeatureDecisionFill(decision, "decline")],
+      }),
+    );
+
+    expect(resolved.state.combatants.get(goblinId)?.hp).toBe(10);
+    expect(
+      resolved.state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn,
+    ).toEqual([]);
+  });
+
+  test("a missed Horde Breaker follow-up consumes its once-per-turn use without requesting damage", () => {
+    const {
+      session,
+      state,
+      subject,
+      primaryFills,
+      decision,
+      secondTargetFill,
+      hordeRoll,
+    } = hordeBreakerFollowupAttackFixture({
+      battleId: battleId("battle-hunters-prey-horde-breaker-followup-miss"),
+      secondTargetHp: Hp(10),
+    });
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(decision, "use"),
+          secondTargetFill,
+          attackRollFill(hordeRoll, { total: 7, naturalD20: 2 }),
+        ],
+      }),
+    );
+
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(10);
+    expect(
+      resolved.state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn,
+    ).toEqual([
+      { attackerId: fighterId, procedureRef: huntersPreyProcedureRef(session) },
+    ]);
+  });
+
+  test("Horde Breaker offers an admitted natural-1 reroll before resolving its follow-up attack", () => {
+    const {
+      state,
+      subject,
+      primaryFills,
+      decision,
+      secondTargetFill,
+      hordeRoll,
+    } = hordeBreakerFollowupAttackFixture({
+      battleId: battleId(
+        "battle-hunters-prey-horde-breaker-natural-one-reroll",
+      ),
+      secondTargetHp: Hp(10),
+    });
+
+    const rerollRequested = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        ...primaryFills,
+        unitFeatureDecisionFill(decision, "use"),
+        secondTargetFill,
+        attackRollFill(hordeRoll, { total: 6, naturalD20: 1 }),
+      ],
+    });
+
+    expect(rerollRequested).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({
+          kind: "attackRoll",
+          d20TestNaturalOneRerolls: [
+            {
+              effectKind: "d20_test_natural_one_reroll",
+              label: "D20 Test natural-1 reroll",
+            },
+          ],
+        }),
+      ],
+    });
+  });
+
+  test("Horde Breaker requests the melee zero-hit-point disposition independently for its follow-up target", () => {
+    const {
+      state,
+      subject,
+      primaryFills,
+      decision,
+      secondTargetFill,
+      hordeRoll,
+    } = hordeBreakerFollowupAttackFixture({
+      battleId: battleId(
+        "battle-hunters-prey-horde-breaker-zero-hp-disposition",
+      ),
+      secondTargetHp: Hp(1),
+    });
+    const fillsThroughRoll = [
+      ...primaryFills,
+      unitFeatureDecisionFill(decision, "use"),
+      secondTargetFill,
+      attackRollFill(hordeRoll, { total: 15, naturalD20: 10 }),
+    ];
+    const damage = requireHole(
+      resolveBattleSubject({ state, subject, fills: fillsThroughRoll }),
+      "rolledDice",
+    );
+    const fillsThroughDamage = [
+      ...fillsThroughRoll,
+      damageRollFillWithGroups(damage, [[1]]),
+    ];
+    const disposition = requireHole(
+      resolveBattleSubject({ state, subject, fills: fillsThroughDamage }),
+      "attackDamageDisposition",
+    );
+
+    expect(disposition).toMatchObject({
+      label: "Attack damage disposition",
+      targetId: skeletonId,
+      choices: [{ kind: "ordinaryDamage" }, { kind: "knockOut" }],
+    });
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...fillsThroughDamage,
+          attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
+        ],
+      }),
+    );
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(0);
   });
 
   test("Horde Breaker target choices include a different non-enemy creature", () => {

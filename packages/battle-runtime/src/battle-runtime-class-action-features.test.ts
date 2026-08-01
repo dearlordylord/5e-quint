@@ -3005,6 +3005,79 @@ describe("battle runtime: class action features", () => {
     });
   });
 
+  test("Brutal Strike adds bludgeoning damage to a Strength-based Unarmed Strike", () => {
+    const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-barbarian-brutal-strike-unarmed-damage"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "barbarian", level: 9 }],
+          unitFeatures: [recklessAttackFeature()],
+          characterUnitRefs: [supportedBattleUnitRef(brutalStrikeUnit)],
+          attack: null,
+          unarmedStrike: testUnarmedStrikeDamageAttack(),
+          selectedLoadout: {},
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const state = session.state;
+    const subject = fighterAttackSubject(state, "Unarmed Strike");
+    const target = attackInitialTargetHole(state, subject);
+    const decision = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "unitFeatureDecision",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          unitFeatureDecisionFill(decision, "hamstring_blow"),
+        ],
+      }),
+      "attackRoll",
+    );
+
+    const afterRoll = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(target, goblinId),
+        unitFeatureDecisionFill(decision, "hamstring_blow"),
+        attackRollFill(roll, {
+          total: 15,
+          naturalD20: 10,
+          activatedOngoingFeatureProcedureRef:
+            requireRecklessAttackProcedureRef(state),
+        }),
+      ],
+    });
+    if (afterRoll.tag !== "needsHoles") {
+      throw new Error("Expected Unarmed Brutal Strike hit to need damage.");
+    }
+
+    expect(findHole(afterRoll.holes, "rolledDice")).toMatchObject({
+      attackDamageRiders: [
+        {
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            session,
+            fighterId,
+            brutalStrikeUnit.id,
+          ),
+          optional: false,
+          damage: { dice: 1, dieSize: 10, damageType: "bludgeoning" },
+        },
+      ],
+    });
+  });
+
   test("Brutal Strike can forgo Reckless Advantage after Reckless Attack is already active", () => {
     const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
     const extraAttackUnit = unitLibrary.requireUnit("barbarian_extra_attack");

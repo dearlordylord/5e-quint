@@ -1907,10 +1907,16 @@ export function characterWithDeathSaveCounters(input: {
   };
 }
 
-export function requireHole(
+function battleHoleHasKind<Kind extends BattleHole["kind"]>(kind: Kind) {
+  return (
+    hole: BattleHole,
+  ): hole is Extract<BattleHole, { readonly kind: Kind }> => hole.kind === kind;
+}
+
+export function requireHole<Kind extends BattleHole["kind"]>(
   result: ReturnType<typeof resolveBattleSubject>,
-  kind: BattleHole["kind"],
-): BattleHole {
+  kind: Kind,
+): Extract<BattleHole, { readonly kind: Kind }> {
   if (result.tag !== "needsHoles") {
     throw new Error(
       `Expected needsHoles, got ${result.tag}${
@@ -1918,18 +1924,18 @@ export function requireHole(
       }.`,
     );
   }
-  const hole = result.holes.find((candidate) => candidate.kind === kind);
+  const hole = result.holes.find(battleHoleHasKind(kind));
   if (hole == null) {
     throw new Error(`Expected ${kind} hole.`);
   }
   return hole;
 }
 
-export function findHole(
+export function findHole<Kind extends BattleHole["kind"]>(
   holes: readonly BattleHole[],
-  kind: BattleHole["kind"],
-): BattleHole {
-  const hole = holes.find((candidate) => candidate.kind === kind);
+  kind: Kind,
+): Extract<BattleHole, { readonly kind: Kind }> {
+  const hole = holes.find(battleHoleHasKind(kind));
   if (hole == null) {
     throw new Error(`Expected ${kind} hole.`);
   }
