@@ -519,6 +519,15 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     }
     const targetHole = requireHole(act.initialHoles, "targetChoice");
     expect(targetHole.choices).toEqual([spellTargetId]);
+    const replayed = resolveBattleSubject({
+      state: targetTurnEnded.state,
+      subject: act.subject,
+      fills: [],
+    });
+    if (replayed.tag !== "needsHoles") {
+      throw new Error("Expected Hypnotic Pattern shake-awake target replay.");
+    }
+    expect(requireHole(replayed.holes, "targetChoice")).toEqual(targetHole);
 
     const shaken = resolveBattleSubject({
       state: targetTurnEnded.state,

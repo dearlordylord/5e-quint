@@ -16,6 +16,7 @@ import {
   startBattleWithInitialInitiativeSetup,
   unitLibrary,
 } from "./unit-profile-admission.test-support.ts";
+import { initiativeProficiencyAndSwapProfileForUnit } from "./unit-feature-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import type {
@@ -90,10 +91,42 @@ describe("L12G deterministic Alert Initiative admission", () => {
     );
   });
 
+  test("Initiative admission is invariant under grant order", () => {
+    const mechanics = alertPassiveMechanics();
+    const initiativeBonus = mechanics.grants.find(
+      (grant) => grant.kind === "modify_roll_numeric",
+    );
+    const initiativeSwap = mechanics.grants.find(
+      (grant) => grant.kind === "initiative_swap",
+    );
+    if (initiativeBonus === undefined || initiativeSwap === undefined) {
+      throw new Error(
+        "Expected Alert to have Initiative bonus and swap grants.",
+      );
+    }
+
+    const unit = {
+      ...alertShapedUnitWithMechanics(
+        parseSharedUnitId("synthetic_reversed_initiative_training"),
+        { ...mechanics, grants: [initiativeSwap, initiativeBonus] },
+      ),
+      name: "Synthetic Reversed Initiative Training",
+    } as const satisfies UnitRecord;
+
+    expect(battleInitiativeProficiencyAndSwapSupportForUnit(unit)).toEqual(
+      alertSupportProfile,
+    );
+  });
+
   test("Initiative support gate rejects unprojected optional passive facts", () => {
     const mechanics = alertPassiveMechanics();
-    const [left, right] = mechanics.grants;
-    if (left === undefined || right === undefined) {
+    const initiativeBonus = mechanics.grants.find(
+      (grant) => grant.kind === "modify_roll_numeric",
+    );
+    const initiativeSwap = mechanics.grants.find(
+      (grant) => grant.kind === "initiative_swap",
+    );
+    if (initiativeBonus === undefined || initiativeSwap === undefined) {
       throw new Error(
         "Expected Alert to have Initiative bonus and swap grants.",
       );
@@ -103,12 +136,11 @@ describe("L12G deterministic Alert Initiative admission", () => {
         parseSharedUnitId("synthetic_initiative_training_with_count"),
         {
           ...mechanics,
-          grants: [
-            left.kind === "modify_roll_numeric" ? { ...left, count: 1 } : left,
-            right.kind === "modify_roll_numeric"
-              ? { ...right, count: 1 }
-              : right,
-          ],
+          grants: mechanics.grants.map((grant) =>
+            grant.kind === "modify_roll_numeric"
+              ? { ...grant, count: 1 }
+              : grant,
+          ),
         },
       ),
       alertShapedUnitWithMechanics(
@@ -162,6 +194,25 @@ describe("L12G deterministic Alert Initiative admission", () => {
         }),
       );
       expect(parseSupportedUnitFeatureProfile(adjacentUnit, [])).toBeNull();
+    }
+
+    const nonInitiativePassiveUnits = [
+      alertShapedUnitWithMechanics(
+        parseSharedUnitId("synthetic_initiative_training_with_two_bonuses"),
+        { ...mechanics, grants: [initiativeBonus, initiativeBonus] },
+      ),
+      alertShapedUnitWithMechanics(
+        parseSharedUnitId("synthetic_initiative_training_with_two_swaps"),
+        { ...mechanics, grants: [initiativeSwap, initiativeSwap] },
+      ),
+    ] as const satisfies readonly UnitRecord[];
+    for (const nonInitiativeUnit of nonInitiativePassiveUnits) {
+      expect(
+        initiativeProficiencyAndSwapProfileForUnit(nonInitiativeUnit),
+      ).toBeNull();
+      expect(
+        battleInitiativeProficiencyAndSwapSupportForUnit(nonInitiativeUnit),
+      ).toBeNull();
     }
   });
 
@@ -395,6 +446,10 @@ function alertShapedUnitWithMechanics(
     ...unit,
     id,
     name: "Synthetic Initiative Training",
+    provenance: {
+      kind: "synthetic-test",
+      section: "Synthetic Initiative training",
+    },
     mechanics,
   };
 }

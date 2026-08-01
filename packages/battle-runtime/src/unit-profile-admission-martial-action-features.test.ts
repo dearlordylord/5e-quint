@@ -19,6 +19,7 @@ import {
   decodeSpeciesRecordSync,
   decodeUnitRecordSync,
 } from "@dnd/surface/surface/schema";
+import { CONDITIONS } from "@dnd/shared/types";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 import speciesDragonbornInput from "../../surface/content/species_dragonborn.json";
@@ -96,6 +97,7 @@ import {
   battleWeaponOrUnarmedCriticalRange19SupportForUnit,
   battleWeaponMasteryPushSupportForUnit,
   battleWeaponMasterySlowSupportForUnit,
+  passiveSavingThrowRollModeProfileForUnit,
   TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
   TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
@@ -116,6 +118,9 @@ import {
 import type { UnitRecord } from "./unit-profile-admission.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
+const UNSUPPORTED_PASSIVE_SAVE_CONDITIONS = CONDITIONS.filter(
+  (condition) => condition !== "poisoned" && condition !== "frightened",
+);
 const speciesGoliathPowerfulBuildUnitId = "species_goliath_powerful_build";
 const speciesHalflingNimblenessUnitId = "species_halfling_nimbleness";
 
@@ -694,6 +699,50 @@ describe("L3MSPEC species battle support", () => {
     expect(
       battlePassiveSavingThrowRollModeSupportForUnit(syntheticUnit),
     ).toEqual(expectedPoisonedSaveAdvantageSupport);
+  });
+
+  test("condition-specific saving throw admission rejects unsupported conditions independently of authored identity", () => {
+    const unit = unitLibrary.requireUnit(dwarfDwarvenResilienceUnitId);
+    if (
+      unit.kind !== "species_trait" ||
+      unit.mechanics.family !== "passive" ||
+      !("grants" in unit.mechanics)
+    ) {
+      throw new Error("Expected Dwarven Resilience passive trait.");
+    }
+    const mechanics = unit.mechanics;
+    const savingThrowGrant = mechanics.grants.find(
+      (grant) => grant.kind === "modify_roll_advantage",
+    );
+    if (savingThrowGrant?.kind !== "modify_roll_advantage") {
+      throw new Error("Expected a saving throw Advantage grant.");
+    }
+
+    for (const condition of UNSUPPORTED_PASSIVE_SAVE_CONDITIONS) {
+      const syntheticUnit = {
+        ...unitMechanicsVariant(unit, {
+          id: `synthetic_${condition}_save_advantage`,
+          mechanics: {
+            ...mechanics,
+            grants: [
+              ...mechanics.grants.filter((grant) => grant !== savingThrowGrant),
+              { ...savingThrowGrant, conditionFilter: [condition] },
+            ],
+          },
+        }),
+        provenance: {
+          kind: "synthetic-test",
+          section: "Synthetic condition-specific saving throw Advantage",
+        },
+      } as const satisfies UnitRecord;
+
+      expect(
+        passiveSavingThrowRollModeProfileForUnit(syntheticUnit),
+      ).toBeNull();
+      expect(
+        battlePassiveSavingThrowRollModeSupportForUnit(syntheticUnit),
+      ).toBe("unsupported");
+    }
   });
 
   test("Dwarven Resilience projects Advantage only for Saving Throws against Poisoned", () => {

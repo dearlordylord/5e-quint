@@ -2928,6 +2928,17 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       action: "hide",
     };
     const hide = findAct(state, hideSubject);
+    const failedHide = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: hide.subject,
+        fills: [
+          abilityCheckFill(findHole(hide.initialHoles, "abilityCheck"), 10),
+        ],
+      }),
+    );
+    expect(failedHide.state.combatants.get(fighterId)?.hidden).toBeNull();
+
     const hidden = requireResolved(
       resolveBattleSubject({
         state,
@@ -2979,6 +2990,19 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       kind: "abilityCheck",
       skill: "perception",
       dc: 18,
+    });
+    const notFound = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: searchSubject,
+        fills: [
+          targetFill(searchTarget, fighterId),
+          abilityCheckFill(searchCheck, 17),
+        ],
+      }),
+    );
+    expect(notFound.state.combatants.get(fighterId)?.hidden).toEqual({
+      discoveryDc: difficultyClass(18),
     });
 
     const found = requireResolved(

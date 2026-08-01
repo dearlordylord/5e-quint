@@ -23,6 +23,7 @@ import {
   fighterAttackSubject,
   fighterId,
   findAct,
+  findHole,
   goblinAttackSubject,
   goblinId,
   Hp,
@@ -1338,7 +1339,12 @@ describe("battle runtime: Sleep", () => {
       { readonly tag: "action"; readonly action: "shakeAwakeFromSleep" }
     > = { tag: "action", actorId: fighterId, action: "shakeAwakeFromSleep" };
     const act = findAct(fighterTurn, subject);
-    const target = act.initialHoles[0]!;
+    const target = findHole(act.initialHoles, "targetChoice");
+    const replayTarget = requireHole(
+      resolveBattleSubject({ state: fighterTurn, subject, fills: [] }),
+      "targetChoice",
+    );
+    expect(replayTarget).toEqual(target);
 
     expect(
       resolveBattleSubject({

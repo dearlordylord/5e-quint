@@ -25,6 +25,10 @@ import {
   parseSupportedUnitFeatureProfile,
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
 } from "./unit-profile-admission.test-support.ts";
+import {
+  battlePassiveArmorClassBonusSupportForUnit,
+  battlePassiveRangedAttackRollBonusSupportForUnit,
+} from "./unit-feature-support.ts";
 import type { UnitRecord } from "./unit-profile-admission.test-support.ts";
 
 describe("QMBT18 deterministic unsupported feature profile slice", () => {
@@ -193,6 +197,83 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
         }),
       );
       expect(parseSupportedUnitFeatureProfile(adjacentUnit, [])).toBeNull();
+    }
+  });
+
+  test("passive numeric support rejects larger fixed magnitudes", () => {
+    const defense = unitLibrary.requireUnit(defenseUnitId);
+    const archery = archeryFeatureUnit();
+    if (
+      defense.kind !== "feat" ||
+      defense.mechanics.family !== "passive" ||
+      !("grants" in defense.mechanics)
+    ) {
+      throw new Error("Expected Defense passive Armor Class mechanics.");
+    }
+    const defenseEffect = defense.mechanics.grants.find(
+      (grant) => grant.kind === "modify_ac",
+    );
+    const archeryEffect = archery.mechanics.grants.find(
+      (grant) => grant.kind === "modify_roll_numeric",
+    );
+    if (
+      defenseEffect?.kind !== "modify_ac" ||
+      defenseEffect.delta.kind !== "fixed_dice" ||
+      archeryEffect?.kind !== "modify_roll_numeric" ||
+      archeryEffect.delta.kind !== "fixed_dice"
+    ) {
+      throw new Error("Expected fixed-dice Defense and Archery modifiers.");
+    }
+    const passiveDefense = defense;
+    const defenseDelta = defenseEffect.delta;
+    const archeryDelta = archeryEffect.delta;
+
+    for (let defenseMagnitude = 2; defenseMagnitude <= 20; defenseMagnitude++) {
+      const adjacentDefense = {
+        ...passiveDefense,
+        id: parseSharedUnitId(`synthetic_defense_plus_${defenseMagnitude}`),
+        name: `Synthetic Defense +${defenseMagnitude}`,
+        provenance: {
+          kind: "synthetic-test",
+          section: "Synthetic passive Armor Class bonus",
+        },
+        mechanics: {
+          ...passiveDefense.mechanics,
+          grants: [
+            {
+              ...defenseEffect,
+              delta: { ...defenseDelta, dice: defenseMagnitude },
+            },
+          ],
+        },
+      } as const;
+      expect(battlePassiveArmorClassBonusSupportForUnit(adjacentDefense)).toBe(
+        "unsupported",
+      );
+    }
+
+    for (let archeryMagnitude = 3; archeryMagnitude <= 20; archeryMagnitude++) {
+      const adjacentArchery = {
+        ...archery,
+        id: parseSharedUnitId(`synthetic_archery_plus_${archeryMagnitude}`),
+        name: `Synthetic Archery +${archeryMagnitude}`,
+        provenance: {
+          kind: "synthetic-test",
+          section: "Synthetic passive ranged attack-roll bonus",
+        },
+        mechanics: {
+          ...archery.mechanics,
+          grants: [
+            {
+              ...archeryEffect,
+              delta: { ...archeryDelta, dice: archeryMagnitude },
+            },
+          ],
+        },
+      } as const;
+      expect(
+        battlePassiveRangedAttackRollBonusSupportForUnit(adjacentArchery),
+      ).toBe("unsupported");
     }
   });
 });
