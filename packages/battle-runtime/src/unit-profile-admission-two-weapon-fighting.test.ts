@@ -17,6 +17,7 @@ import {
   attackRollFill,
   battleAbilityModifier,
   battleId,
+  battleProcedureExecutionRefForTest,
   characterSeed,
   damageRollFill,
   fighterAttackSubject,
@@ -130,7 +131,7 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
         }),
       ),
       damageRoll: 4,
-      attackDamageAbilityModifierSelection: "apply",
+      attackDamageAbilityModifierChoice: { selection: "apply" },
     });
 
     expect(result.damage).toMatchObject({
@@ -157,6 +158,30 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
     });
   });
 
+  test("rejects a damage ability modifier choice from a procedure the damage hole did not offer", () => {
+    const result = resolveOffHandHit({
+      state: afterQualifyingLightAttack(
+        lightAttackBattle({
+          characterUnitRefs: [twoWeaponFightingBattleUnitRef()],
+        }),
+      ),
+      damageRoll: 4,
+      attackDamageAbilityModifierChoice: {
+        procedureRef: battleProcedureExecutionRefForTest(
+          "foreign-two-weapon-fighting-procedure",
+        ),
+        selection: "apply",
+      },
+    });
+
+    expect(result.resolved).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Attack damage ability modifier choice is not eligible for this attack.",
+    });
+  });
+
   test("selected Two-Weapon Fighting can decline the optional damage ability modifier", () => {
     const result = resolveOffHandHit({
       state: afterQualifyingLightAttack(
@@ -165,7 +190,7 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
         }),
       ),
       damageRoll: 4,
-      attackDamageAbilityModifierSelection: "decline",
+      attackDamageAbilityModifierChoice: { selection: "decline" },
     });
 
     expect(result.damage).toMatchObject({
@@ -199,7 +224,7 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
         }),
       ),
       damageRoll: 4,
-      attackDamageAbilityModifierSelection: "apply",
+      attackDamageAbilityModifierChoice: { selection: "apply" },
       attackAbility: "dex",
     });
 
@@ -236,7 +261,7 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
         }),
       ),
       damageRoll: 4,
-      attackDamageAbilityModifierSelection: "decline",
+      attackDamageAbilityModifierChoice: { selection: "decline" },
       attackAbility: "dex",
     });
 
@@ -413,12 +438,17 @@ function resolveOffHandHit(input: {
   readonly damageRoll: number;
   readonly attackAbility?: "dex";
   readonly expectsAttackDamageAbilityModifierChoice?: true;
-  readonly attackDamageAbilityModifierSelection?: NonNullable<
-    Extract<
-      BattleFill,
-      { readonly kind: "rolledDice" }
-    >["attackDamageAbilityModifierChoice"]
-  >["selection"];
+  readonly attackDamageAbilityModifierChoice?: {
+    readonly procedureRef?: ReturnType<
+      typeof battleProcedureExecutionRefForTest
+    >;
+    readonly selection: NonNullable<
+      Extract<
+        BattleFill,
+        { readonly kind: "rolledDice" }
+      >["attackDamageAbilityModifierChoice"]
+    >["selection"];
+  };
 }) {
   const subject: BattleSubject = characterBonusAttackSubjectForTest(
     input.state.state,
@@ -456,7 +486,7 @@ function resolveOffHandHit(input: {
   );
   if (
     input.expectsAttackDamageAbilityModifierChoice === true ||
-    input.attackDamageAbilityModifierSelection !== undefined
+    input.attackDamageAbilityModifierChoice !== undefined
   ) {
     expect(damage).toMatchObject({
       attackDamageAbilityModifierChoice: {
@@ -484,15 +514,17 @@ function resolveOffHandHit(input: {
         damageRollFill(
           damage,
           input.damageRoll,
-          input.attackDamageAbilityModifierSelection === undefined
+          input.attackDamageAbilityModifierChoice === undefined
             ? undefined
             : {
-                procedureRef: requireCharacterUnitProcedureRefForTest(
-                  input.state,
-                  fighterId,
-                  twoWeaponFightingUnitId,
-                ),
-                selection: input.attackDamageAbilityModifierSelection,
+                procedureRef:
+                  input.attackDamageAbilityModifierChoice.procedureRef ??
+                  requireCharacterUnitProcedureRefForTest(
+                    input.state,
+                    fighterId,
+                    twoWeaponFightingUnitId,
+                  ),
+                selection: input.attackDamageAbilityModifierChoice.selection,
               },
         ),
       ],
@@ -601,7 +633,7 @@ function replayTwoWeaponFighting(selection: "apply" | "decline"): {
       }),
     ),
     damageRoll: 4,
-    attackDamageAbilityModifierSelection: selection,
+    attackDamageAbilityModifierChoice: { selection },
   });
   if (result.resolved.tag !== "resolved") {
     throw new Error("Expected selected Two-Weapon Fighting replay.");

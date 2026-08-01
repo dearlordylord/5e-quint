@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 import {
   characterAttackSubjectForTest,
   characterBattleFeatureInitForTest,
+  battleProcedureExecutionRefForTest,
   requireCharacterUnitProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -145,6 +146,63 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
           ],
         },
       },
+    });
+  });
+
+  test("rejects a weapon dice roll choice from a procedure the damage hole did not offer", () => {
+    const session = savageAttackerBattle({
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+    const state = session.state;
+    const subject = weaponAttackSubject(session, "Longsword");
+    const target = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const roll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [attackTargetFill(target, spellCasterId, spellTargetId)],
+      }),
+      "attackRoll",
+    );
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          attackTargetFill(target, spellCasterId, spellTargetId),
+          attackRollFill(roll, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          attackTargetFill(target, spellCasterId, spellTargetId),
+          attackRollFill(roll, { total: 15, naturalD20: 10 }),
+          damageRollFillWithGroups(damage, [[8]], undefined, {
+            procedureRef: battleProcedureExecutionRefForTest(
+              "foreign-savage-attacker-procedure",
+            ),
+            selection: "second",
+            candidates: [
+              { results: [DieRollResult(2)] },
+              { results: [DieRollResult(8)] },
+            ],
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Weapon damage dice roll choice is not eligible for this attack.",
     });
   });
 

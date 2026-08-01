@@ -93,7 +93,7 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
       state,
       attackName: "Greataxe",
       damageGroups: [[1]],
-      attackDamageDieFloorSelection: "apply",
+      attackDamageDieFloorChoice: { selection: "apply" },
     });
 
     expect(resolved).toMatchObject({
@@ -104,6 +104,36 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
           { combatantId: spellTargetId, hp: 11 },
         ],
       },
+    });
+  });
+
+  test("rejects a damage die floor choice from a procedure the damage hole did not offer", () => {
+    const attack = zeroAbilityWeaponAttack("weapon_greataxe");
+    const state = greatWeaponFightingBattle({
+      attack,
+      selectedLoadout: mainWeaponLoadout(
+        parseSharedUnitId("weapon_greataxe"),
+        "two_handed",
+      ),
+    });
+
+    expect(
+      resolveWeaponHit({
+        state,
+        attackName: "Greataxe",
+        damageGroups: [[1]],
+        attackDamageDieFloorChoice: {
+          procedureRef: battleProcedureExecutionRefForTest(
+            "foreign-great-weapon-fighting-procedure",
+          ),
+          selection: "apply",
+        },
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Attack damage die floor choice is not eligible for this attack.",
     });
   });
 
@@ -122,7 +152,7 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
         state,
         attackName: "Greatsword",
         damageGroups: [[1, 2]],
-        attackDamageDieFloorSelection: "apply",
+        attackDamageDieFloorChoice: { selection: "apply" },
       }),
     ).toMatchObject({
       tag: "resolved",
@@ -150,7 +180,7 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
         state,
         attackName: "Greatsword",
         damageGroups: [[1, 2]],
-        attackDamageDieFloorSelection: "decline",
+        attackDamageDieFloorChoice: { selection: "decline" },
       }),
     ).toMatchObject({
       tag: "resolved",
@@ -178,7 +208,7 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
         state,
         attackName: "Longsword",
         damageGroups: [[1]],
-        attackDamageDieFloorSelection: "apply",
+        attackDamageDieFloorChoice: { selection: "apply" },
       }),
     ).toMatchObject({
       tag: "resolved",
@@ -308,12 +338,17 @@ function resolveWeaponHit(input: {
   readonly attackName: string;
   readonly damageGroups: readonly (readonly number[])[];
   readonly expectsAttackDamageDieFloorChoice?: true;
-  readonly attackDamageDieFloorSelection?: NonNullable<
-    Extract<
-      BattleFill,
-      { readonly kind: "rolledDice" }
-    >["attackDamageDieFloorChoice"]
-  >["selection"];
+  readonly attackDamageDieFloorChoice?: {
+    readonly procedureRef?: ReturnType<
+      typeof battleProcedureExecutionRefForTest
+    >;
+    readonly selection: NonNullable<
+      Extract<
+        BattleFill,
+        { readonly kind: "rolledDice" }
+      >["attackDamageDieFloorChoice"]
+    >["selection"];
+  };
 }) {
   const subject = weaponAttackSubject(input.state, input.attackName);
   const target = requireResultHole(
@@ -341,7 +376,7 @@ function resolveWeaponHit(input: {
   );
   if (
     input.expectsAttackDamageDieFloorChoice === true ||
-    input.attackDamageDieFloorSelection !== undefined
+    input.attackDamageDieFloorChoice !== undefined
   ) {
     expect(damage).toMatchObject({
       attackDamageDieFloorChoiceProcedureRefs: [
@@ -368,15 +403,17 @@ function resolveWeaponHit(input: {
         input.damageGroups,
         undefined,
         undefined,
-        input.attackDamageDieFloorSelection === undefined
+        input.attackDamageDieFloorChoice === undefined
           ? undefined
           : {
-              procedureRef: requireCharacterUnitProcedureRefForTest(
-                input.state,
-                spellCasterId,
-                greatWeaponFightingUnitId,
-              ),
-              selection: input.attackDamageDieFloorSelection,
+              procedureRef:
+                input.attackDamageDieFloorChoice.procedureRef ??
+                requireCharacterUnitProcedureRefForTest(
+                  input.state,
+                  spellCasterId,
+                  greatWeaponFightingUnitId,
+                ),
+              selection: input.attackDamageDieFloorChoice.selection,
             },
       ),
     ],
@@ -444,7 +481,7 @@ defineSelectedIdentityReplayWitness({
               state,
               attackName: "Greatsword",
               damageGroups: [[1, 2]],
-              attackDamageDieFloorSelection: "apply",
+              attackDamageDieFloorChoice: { selection: "apply" },
             });
             if (resolved.tag !== "resolved") {
               throw new Error(

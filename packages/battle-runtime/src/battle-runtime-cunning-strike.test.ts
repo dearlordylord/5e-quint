@@ -242,6 +242,36 @@ describe("battle runtime: Cunning Strike", () => {
     ).toBe(false);
   });
 
+  test("rejects a Cunning Strike option from a procedure the damage hole did not offer", () => {
+    const window = cunningStrikeDamageWindow("trip");
+    const forgedFills = window.damageAppliedFills.map((fill) =>
+      fill.kind === "rolledDice" && fill.cunningStrikeOption !== undefined
+        ? {
+            ...fill,
+            cunningStrikeOption: {
+              ...fill.cunningStrikeOption,
+              procedureRef: battleProcedureExecutionRefForTest(
+                "foreign-cunning-strike-procedure",
+              ),
+            },
+          }
+        : fill,
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: window.state,
+        subject: window.subject,
+        fills: forgedFills,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Selected Cunning Strike option is not eligible for this attack.",
+    });
+  });
+
   test("Trip forgoes one Sneak Attack die before rolling and applies Prone after damage", () => {
     const window = cunningStrikeDamageWindow("trip");
     const save = requireHole(
