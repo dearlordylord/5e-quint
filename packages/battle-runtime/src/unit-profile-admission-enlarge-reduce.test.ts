@@ -660,6 +660,61 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     );
   });
 
+  test("rejects saving-throw outcomes that contradict the selected willingness facts", () => {
+    const { session, act } = creatureSizeAct("creatureSizeIncrease");
+    const state = session.state;
+    const target = requireHole(act.initialHoles, "targetChoice");
+    const unwillingTarget = spellTargetFill(
+      target,
+      enlargeReduceUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const needsSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [unwillingTarget],
+    });
+    const save = requireResultHole(needsSave, "savingThrowOutcome");
+
+    const willingWithSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          target,
+          enlargeReduceUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        savingThrowOutcomeFill(save, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    expect(willingWithSave).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Willing creature size-change targets do not make a Saving Throw.",
+    });
+
+    const wrongUnwillingSaveTarget = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        unwillingTarget,
+        savingThrowOutcomeFill(save, [
+          { targetId: spellCasterId, succeeded: false },
+        ]),
+      ],
+    });
+    expect(wrongUnwillingSaveTarget).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+  });
+
   test("opposite-mode recast replaces the prior creature size-change effect", () => {
     const spell = spellRecord(enlargeReduceUnitId);
     const session = spellBattle({

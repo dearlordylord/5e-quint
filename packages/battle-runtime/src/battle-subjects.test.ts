@@ -23,6 +23,10 @@ import {
   battleSubjectProcedureRefs,
 } from "./battle-subjects.ts";
 import {
+  SUBTLE_METAMAGIC_EFFECT_KIND,
+  TRANSMUTED_METAMAGIC_EFFECT_KIND,
+} from "./battle-reducer/metamagic-support.ts";
+import {
   battleAttackExecutionScopeRef,
   battleAttackProcedureExecutionRef,
   battleCharacterExecutionScopeRef,
@@ -241,7 +245,7 @@ describe("BattleSubject identity", () => {
     );
   });
 
-  test("reference-bearing non-action subjects roundtrip with stable projections", () => {
+  test("non-standard-action subjects roundtrip with distinct stable identities", () => {
     const actorId = combatantId("reference-bearing-subject-actor");
     const companionId = combatantId("reference-bearing-subject-companion");
     const battle = battleId("reference-bearing-subject-battle");
@@ -261,6 +265,19 @@ describe("BattleSubject identity", () => {
       ),
       NonNegativeInteger(0),
     );
+    const attackProcedureRef = battleAttackProcedureExecutionRef(
+      battleAttackExecutionScopeRef(
+        battle,
+        actorId,
+        battleExecutionScopeOrdinal(2),
+      ),
+      NonNegativeInteger(0),
+    );
+    const formExecutionRef = battleStatBlockExecutionScopeRef(
+      battle,
+      actorId,
+      battleExecutionScopeOrdinal(3),
+    );
     const effectRef = battleActiveEffectExecutionRefForTest(
       "reference-bearing-subject-effect",
     );
@@ -270,6 +287,41 @@ describe("BattleSubject identity", () => {
         actorId,
         familiarId: companionId,
         procedureRef: statBlockProcedureRef,
+      },
+      {
+        tag: "pactOfTheChainFamiliarAttack",
+        actorId,
+        familiarId: companionId,
+        procedureRef: statBlockProcedureRef,
+        statBlockDamageNotation: "static",
+      },
+      {
+        tag: "creatureAttack",
+        actorId,
+        targetId: companionId,
+      },
+      {
+        tag: "bonusAction",
+        actorId,
+        action: "offHandAttack",
+        procedureRef: attackProcedureRef,
+        attackAbility: "str",
+        attackDamageType: "slashing",
+      },
+      {
+        tag: "bonusAction",
+        actorId,
+        action: "martialArtsUnarmedStrike",
+        procedureRef: attackProcedureRef,
+        attackAbility: "dex",
+        attackDamageType: "bludgeoning",
+      },
+      {
+        tag: "bonusAction",
+        actorId,
+        action: "statBlockActionOption",
+        procedureRef: statBlockProcedureRef,
+        standardAction: "dodge",
       },
       {
         tag: "bonusActionStandardAction",
@@ -287,6 +339,51 @@ describe("BattleSubject identity", () => {
         mode: "focusDisengageDodge",
       },
       {
+        tag: "monkFocusOption",
+        actorId,
+        procedureRef,
+        option: "flurryOfBlows",
+      },
+      {
+        tag: "monkFocusOption",
+        actorId,
+        procedureRef,
+        option: "stepOfTheWind",
+        mode: "focusDisengageDash",
+        speedKind: "fly",
+      },
+      {
+        tag: "monkFocusFlurryOfBlowsStrike",
+        actorId,
+        focusProcedureRef: procedureRef,
+        procedureRef: attackProcedureRef,
+      },
+      {
+        tag: "actionSpell",
+        actorId,
+        procedureRef,
+        mode: { tag: "cast" },
+      },
+      {
+        tag: "actionSpell",
+        actorId,
+        procedureRef,
+        mode: { tag: "ready", trigger: "attackHit" },
+        metamagic: [
+          {
+            effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND,
+            targetDamageType: "cold",
+          },
+          { effectKind: SUBTLE_METAMAGIC_EFFECT_KIND },
+        ],
+      },
+      {
+        tag: "bonusActionSpell",
+        actorId,
+        procedureRef,
+        mode: { tag: "cast" },
+      },
+      {
         tag: "bonusActionDashSpell",
         actorId,
         procedureRef,
@@ -301,6 +398,39 @@ describe("BattleSubject identity", () => {
         weaponItemId: battleObjectId("reference-bearing-subject-weapon"),
       },
       {
+        tag: "druidWildShape",
+        actorId,
+        procedureRef,
+        action: "assumeForm",
+        formExecutionRef,
+      },
+      {
+        tag: "druidWildShape",
+        actorId,
+        procedureRef,
+        action: "dismiss",
+      },
+      {
+        tag: "companionLifecycle",
+        actorId,
+        action: "temporarilyDismiss",
+      },
+      {
+        tag: "companionLifecycle",
+        actorId,
+        action: "reappear",
+      },
+      {
+        tag: "companionLifecycle",
+        actorId,
+        action: "permanentlyDismiss",
+      },
+      {
+        tag: "findFamiliarSharedSenses",
+        actorId,
+        familiarId: companionId,
+      },
+      {
         tag: "findFamiliarTouchSpell",
         actorId,
         procedureRef,
@@ -308,10 +438,23 @@ describe("BattleSubject identity", () => {
         spellAction: "action",
         mode: { tag: "cast" },
       },
-    ] as const;
+      {
+        tag: "findFamiliarTouchSpell",
+        actorId,
+        procedureRef,
+        companionId,
+        spellAction: "bonusAction",
+        mode: { tag: "cast" },
+        metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
+      },
+    ] as const satisfies ReadonlyArray<BattleSubject>;
 
-    for (const candidate of candidates) {
+    for (const [candidateIndex, candidate] of candidates.entries()) {
       expectStableBattleSubjectRoundtrip(candidate);
+
+      for (const distinctCandidate of candidates.slice(candidateIndex + 1)) {
+        expect(sameBattleSubject(candidate, distinctCandidate)).toBe(false);
+      }
     }
   });
 

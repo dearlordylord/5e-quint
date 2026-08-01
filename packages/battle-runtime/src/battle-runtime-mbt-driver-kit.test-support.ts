@@ -18501,10 +18501,8 @@ function preserveLifeDistributionFill(
         kind: "magicActionHealingPoolTargetWithinRange" as const,
         actorId: fighterId,
         targetId: allocation.targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          "cleric_preserve_life",
-        ),
-        rangeFeet: movementFeet(30),
+        sourceProcedureRef: hole.healingPool.sourceProcedureRef,
+        rangeFeet: hole.healingPool.rangeFeet,
       })),
   };
 }

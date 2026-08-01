@@ -6,13 +6,13 @@ import { DieRollResult } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
-import type {
-  BattleFill,
-  BattleHole,
-  BattleResolutionResult,
-  BattleRuntimeSession,
-  BattleState,
-  CombatantId,
+import {
+  type BattleFill,
+  type BattleHole,
+  type BattleResolutionResult,
+  type BattleRuntimeSession,
+  type BattleState,
+  type CombatantId,
 } from "./index.ts";
 import {
   characterCreature,
@@ -199,10 +199,102 @@ describe("Dragonborn Breath Weapon runtime", () => {
       }),
     ]);
   });
+
+  test("routes invalid fills and rejects exhausted resources and unowned procedures", () => {
+    const state = breathWeaponBattle().state;
+    const act = breathWeaponAct(state);
+    const savingThrowHole = requireHole(act.initialHoles, "savingThrowOutcome");
+    const savingThrowFill = breathWeaponSavingThrowFill(
+      savingThrowHole,
+      [{ targetId: spellTargetId, succeeded: false }],
+      [spellTargetId],
+    );
+    const pendingDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [savingThrowFill],
+    });
+    if (pendingDamage.tag !== "needsHoles") {
+      throw new Error("Expected Breath Weapon to request a damage roll.");
+    }
+    const damageHole = requireHole(pendingDamage.holes, "rolledDice");
+
+    const invalidSavingThrowFill = breathWeaponSavingThrowFill(
+      savingThrowHole,
+      [{ targetId: spellTargetId, succeeded: false }],
+      [],
+    );
+    const invalidSavingThrow = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [invalidSavingThrowFill],
+    });
+    expect(invalidSavingThrow).toMatchObject({ tag: "invalid" });
+    expect(invalidSavingThrow.routeEvents).toEqual([
+      expect.objectContaining({
+        fill: "savingThrowOutcome",
+        owner: "battleAreaShape",
+      }),
+    ]);
+
+    const invalidDamageFill = rolledDiceFill(damageHole, [1]);
+    const invalidDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [savingThrowFill, invalidDamageFill],
+    });
+    expect(invalidDamage).toMatchObject({ tag: "invalid" });
+    expect(invalidDamage.routeEvents).toEqual([
+      expect.objectContaining({
+        fill: "rolledDice",
+        owner: "battleDamageRoll",
+      }),
+    ]);
+
+    const unexpectedFill = {
+      kind: "unitFeatureDecision",
+      holeId: savingThrowHole.holeId,
+      value: "decline",
+    } as const satisfies BattleFill;
+    const unexpected = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [unexpectedFill],
+    });
+    expect(unexpected).toMatchObject({ tag: "invalid" });
+    expect(unexpected.routeEvents).toBeUndefined();
+
+    const spentState = breathWeaponBattle({ usesRemaining: 0 }).state;
+    const stale = resolveBattleSubject({
+      state: spentState,
+      subject: act.subject,
+      fills: [],
+    });
+    expect(stale).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(stale.routeEvents).toEqual([
+      expect.objectContaining({
+        owner: "battleFeatureResource",
+      }),
+    ]);
+
+    const unownedProcedure = resolveBattleSubject({
+      state,
+      subject: { ...act.subject, actorId: spellTargetId },
+      fills: [],
+    });
+    expect(unownedProcedure).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+    expect(unownedProcedure.routeEvents).toBeUndefined();
+  });
 });
 
 function breathWeaponBattle(
-  input: { readonly extraAttack?: boolean } = {},
+  input: {
+    readonly extraAttack?: boolean;
+    readonly usesRemaining?: number;
+  } = {},
 ): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("dragonborn-breath-weapon-runtime"),
@@ -216,7 +308,14 @@ function breathWeaponBattle(
           breathWeaponUnitRef(),
           ...(input.extraAttack === true ? [extraAttackBattleUnitRef()] : []),
         ],
-        resources: [{ unit: breathWeaponUnit }],
+        resources: [
+          {
+            unit: breathWeaponUnit,
+            ...(input.usesRemaining === undefined
+              ? {}
+              : { usesRemaining: input.usesRemaining }),
+          },
+        ],
       }),
       characterCreature({
         combatantId: spellTargetId,
