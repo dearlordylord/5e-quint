@@ -127,17 +127,13 @@ export function fixedAttackDamageByTypeEntries(
         damageType: component.damageType,
         amount: Math.max(0, component.static),
       }));
-      const baseStaticDamageWithModifier = addDamageModifierToFirstEntry(
-        baseStaticDamage,
-        ongoingFeatureDamageModifier(state, attacker, statBlockAttack),
-      );
       const advantageBonus =
         damage.advantageBonus !== undefined &&
         attackRoll?.rollMode === "advantage"
           ? damage.advantageBonus
           : undefined;
       return [
-        ...baseStaticDamageWithModifier,
+        ...baseStaticDamage,
         ...(advantageBonus === undefined
           ? []
           : [
@@ -150,23 +146,6 @@ export function fixedAttackDamageByTypeEntries(
     }),
     Match.exhaustive,
   );
-}
-
-function addDamageModifierToFirstEntry(
-  entries: readonly DamageAmountByTypeEntry[],
-  modifier: number,
-): readonly DamageAmountByTypeEntry[] {
-  const [first, ...rest] = entries;
-  if (first === undefined || modifier === 0) {
-    return entries;
-  }
-  return [
-    {
-      ...first,
-      amount: Math.max(0, first.amount + modifier),
-    },
-    ...rest,
-  ];
 }
 
 export function attackDamageByTypeEntries(

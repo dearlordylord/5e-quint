@@ -2211,6 +2211,51 @@ describe("battle runtime: Stat Block actions", () => {
     });
   });
 
+  test("Goblin Warrior static damage includes its Advantage rider without a damage-roll frontier", () => {
+    const state = goblinTurnBattle({ fighterHp: 12 });
+    const subject = discoveredStatBlockAttackSubject(
+      state,
+      "Scimitar",
+      "static",
+    );
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(
+      state,
+      targetHole,
+      subject,
+      fighterId,
+    );
+    const target = targetFill(targetHole, fighterId);
+
+    const normal = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          target,
+          attackRollFill(rollHole, { total: 18, naturalD20: 14 }),
+        ],
+      }),
+    );
+    expect(normal.state.combatants.get(fighterId)?.hp).toBe(7);
+
+    const withAdvantage = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          target,
+          attackRollFill(rollHole, {
+            total: 18,
+            naturalD20: 14,
+            rollMode: "advantage",
+          }),
+        ],
+      }),
+    );
+    expect(withAdvantage.state.combatants.get(fighterId)?.hp).toBe(5);
+  });
+
   test("same-type Stat Block attack damage applies Resistance once after combining components", () => {
     const state = startBattleRight({
       battleId: battleId("battle-combined-resistance-damage"),

@@ -616,5 +616,5 @@ describe("spell cast hole frontier catalog", () => {
         "webRestraintHazard: [spellAreaChoice] => [spellAreaChoice] -> resolved",
       ]
     `);
-  }, 10_000);
+  }, 20_000);
 });

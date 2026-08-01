@@ -108,6 +108,20 @@ describe("damage reduction helper boundaries", () => {
     ).toEqual({ tag: "invalid" });
     expect(
       applyAvailableSpellDamageReduction(
+        {
+          ...target,
+          activeEffects: target.activeEffects.map((effect) =>
+            effect.kind === "spellDamageReduction"
+              ? { ...effect, usedThisTurn: true }
+              : effect,
+          ),
+        },
+        damageByType,
+        validRoll,
+      ),
+    ).toEqual({ tag: "invalid" });
+    expect(
+      applyAvailableSpellDamageReduction(
         target,
         damageByType,
         damageRollFillWithGroups(hole, [[5]]),
