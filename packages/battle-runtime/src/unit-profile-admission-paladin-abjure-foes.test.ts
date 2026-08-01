@@ -15,9 +15,12 @@ import * as Either from "effect/Either";
 
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import {
+  characterBattleResourceIsUnlimited,
+  characterBattleResourceIsUseCount,
   requireCharacterUnitProcedureRefForTest,
   characterBattleFeatureInitForTest,
   characterSeed,
+  resourceCount,
   savingThrowOutcomeFill,
   testCharacterD20Statistics,
   wizardSpellcasting,
@@ -194,6 +197,52 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
       message: expect.stringContaining("visibility and range evidence"),
     });
   });
+
+  test("rejects a replay after Channel Divinity or the Magic Action becomes unavailable", () => {
+    const session = abjureFoesBattle();
+    const act = abjureFoesAct(session);
+    const save = requireHole(act.initialHoles, "savingThrowOutcome");
+    const procedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      spellCasterId,
+      paladinAbjureFoesUnitId,
+    );
+    const fills = [
+      abjureFoesSavingThrowFill(procedureRef, save, [
+        { targetId: spellTargetId, succeeded: false },
+      ]),
+    ];
+
+    expect(
+      resolveBattleSubject({
+        state: stateWithDepletedChannelDivinity(session),
+        subject: act.subject,
+        fills,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Magic Action condition has no resource uses remaining.",
+    });
+
+    expect(
+      resolveBattleSubject({
+        state: {
+          ...session.state,
+          currentTurnResources: {
+            ...session.state.currentTurnResources,
+            actionResources: [],
+          },
+        },
+        subject: act.subject,
+        fills,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Magic Action condition is no longer available.",
+    });
+  });
 });
 
 function abjureFoesBattle(
@@ -315,11 +364,7 @@ function channelDivinityUsesRemaining(session: BattleRuntimeSession): number {
   if (actor?.origin.kind !== "character") {
     throw new Error("Expected Paladin actor.");
   }
-  const resourcePoolRef = session.context.characters
-    .get(spellCasterId)
-    ?.resourceOwnership.find(
-      (ownership) => ownership.unit.id === paladinChannelDivinityUnitId,
-    )?.resourcePoolRef;
+  const resourcePoolRef = channelDivinityResourcePoolRef(session);
   const resource = actor.origin.resources.find(
     (candidate) => candidate.resourcePoolRef === resourcePoolRef,
   );
@@ -327,6 +372,52 @@ function channelDivinityUsesRemaining(session: BattleRuntimeSession): number {
     throw new Error("Expected Paladin Channel Divinity resource.");
   }
   return Number(resource.usesRemaining);
+}
+
+function stateWithDepletedChannelDivinity(
+  session: BattleRuntimeSession,
+): BattleState {
+  const actor = session.state.combatants.get(spellCasterId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Paladin actor.");
+  }
+  const resourcePoolRef = channelDivinityResourcePoolRef(session);
+  const channelDivinity = actor.origin.resources.find(
+    (resource) => resource.resourcePoolRef === resourcePoolRef,
+  );
+  if (
+    channelDivinity === undefined ||
+    !characterBattleResourceIsUseCount(channelDivinity) ||
+    characterBattleResourceIsUnlimited(channelDivinity)
+  ) {
+    throw new Error("Expected limited Paladin Channel Divinity resource.");
+  }
+  return {
+    ...session.state,
+    combatants: new Map(session.state.combatants).set(spellCasterId, {
+      ...actor,
+      origin: {
+        ...actor.origin,
+        resources: actor.origin.resources.map((resource) =>
+          resource === channelDivinity
+            ? { ...channelDivinity, usesRemaining: resourceCount(0) }
+            : resource,
+        ),
+      },
+    }),
+  };
+}
+
+function channelDivinityResourcePoolRef(session: BattleRuntimeSession) {
+  const resourcePoolRef = session.context.characters
+    .get(spellCasterId)
+    ?.resourceOwnership.find(
+      (ownership) => ownership.unit.id === paladinChannelDivinityUnitId,
+    )?.resourcePoolRef;
+  if (resourcePoolRef === undefined) {
+    throw new Error("Expected Paladin Channel Divinity resource ownership.");
+  }
+  return resourcePoolRef;
 }
 
 function hasMoveAct(state: BattleState, actorId: CombatantId): boolean {

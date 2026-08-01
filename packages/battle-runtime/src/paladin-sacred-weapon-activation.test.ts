@@ -280,6 +280,17 @@ describe("Sacred Weapon activation", () => {
       activeEffectCount: 0,
       boundWeaponItemId: "none",
     });
+    expect(
+      resolveBattleSubject({
+        state: dismissed.state,
+        subject: dismiss.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Sacred Weapon is not active for this actor.",
+    });
 
     const detached = normalizeEarlyEndedOngoingFeatures(
       withMainWeaponItemId(activated, "dropped:weapon_longsword"),
