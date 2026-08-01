@@ -42,7 +42,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
 } from "../interrupt-execution.ts";
-import { spellReactionContinuation } from "../spell-reaction-continuation.ts";
+import { spellReplayContinuation } from "../spell-reaction-continuation.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resource-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
@@ -434,19 +434,9 @@ function resolveHypnoticPattern(
     outcome.succeeded ? [] : [outcome.targetId],
   );
   if (failedTargets.length > 0) {
-    const continuation: BattleInterruptedProcedure =
-      input.input.glyphStoredSpellReleaseReplay === undefined
-        ? {
-            kind: "replay",
-            ...spellReactionContinuation(input.input),
-          }
-        : {
-            kind: "replay",
-            subject: input.input.subject,
-            fills: input.input.fills,
-            glyphStoredSpellReleaseReplay:
-              input.input.glyphStoredSpellReleaseReplay,
-          };
+    const continuation: BattleInterruptedProcedure = spellReplayContinuation(
+      input.input,
+    );
     const saveFailedReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
       {

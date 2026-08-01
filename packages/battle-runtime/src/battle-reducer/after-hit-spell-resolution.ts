@@ -17,7 +17,7 @@ import {
   maybeOpenPostCastReadySpellCastWindow,
   maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
 } from "./interrupt-execution.ts";
-import { spellReactionContinuation } from "./spell-reaction-continuation.ts";
+import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { fillsBelongToSpellCastHoles } from "./fill-hole-protocol.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
@@ -50,10 +50,7 @@ export function maybeOpenAfterHitSpellCastInterrupt(
       targetIds: [input.targetId],
       reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
       castingResource: { kind: "bonusAction" },
-      continuation: {
-        kind: "replay",
-        ...spellReactionContinuation(input.input),
-      },
+      continuation: spellReplayContinuation(input.input),
     }),
     input.input.handledInterruptTrigger,
   );

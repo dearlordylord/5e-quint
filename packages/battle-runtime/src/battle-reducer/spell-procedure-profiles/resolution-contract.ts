@@ -7,7 +7,7 @@ import type {
   BattleInterruptCheckpoint,
   BattleResolutionInputForSubject,
   BattleState,
-  GlyphStoredSpellReleaseReplayContext,
+  GlyphStoredSpellReleaseReplayInput,
 } from "../../battle-state-execution.ts";
 import type { BattleInterruptTrigger } from "../../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../../battle-subjects.ts";
@@ -277,7 +277,6 @@ export type StoredGlyphSpellReleasePlan =
       readonly kind: "areaControl";
       readonly invocation: BattleSpellProcedureExecution<GlyphStoredAreaControlInvocation>;
       readonly anchorId: CombatantId;
-      readonly replayContext: GlyphStoredSpellReleaseReplayContext;
     }
   | {
       readonly kind: "greaseGroundHazard";
@@ -324,11 +323,22 @@ export type StoredGlyphSpellReleasePlan =
       readonly anchorId: CombatantId;
     };
 
+type WithoutSpellReplayOwner<TInput> = TInput extends unknown
+  ? Omit<TInput, "reactionContinuation" | "glyphStoredSpellReleaseReplay"> & {
+      readonly reactionContinuation?: never;
+      readonly glyphStoredSpellReleaseReplay?: never;
+    }
+  : never;
+
+type StoredGlyphSpellProcedureInput =
+  WithoutSpellReplayOwner<ActionSpellBattleResolutionInput>;
+
 export type StoredGlyphSpellProcedureResolution = {
-  readonly input: ActionSpellBattleResolutionInput;
+  readonly input: StoredGlyphSpellProcedureInput;
   readonly actorId: CombatantId;
   readonly fillSet: OkSpellFillSet;
   readonly release: StoredGlyphSpellReleasePlan;
+  readonly replay: GlyphStoredSpellReleaseReplayInput;
 };
 
 type TriggeredReactionSaveGatedDamageExecution =

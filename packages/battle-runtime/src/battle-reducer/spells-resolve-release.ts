@@ -30,7 +30,7 @@ import {
 } from "../battle-state-execution.ts";
 import { attackRollIsCriticalHit } from "./attack-resolution.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
-import { spellReactionContinuation } from "./spell-reaction-continuation.ts";
+import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
@@ -228,10 +228,7 @@ export function resolveDancingLightsCastSpellAct(input: {
       targetIds: [],
       reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
       castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        ...spellReactionContinuation(input.input),
-      },
+      continuation: spellReplayContinuation(input.input),
     }),
     input.input.handledInterruptTrigger,
   );
@@ -581,10 +578,7 @@ export function resolveReadySpellAct(
       targetIds: [],
       reactionSpellTargetFacts: fillSet.reactionSpellTargetFacts,
       castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        ...spellReactionContinuation(input),
-      },
+      continuation: spellReplayContinuation(input),
     }),
     input.handledInterruptTrigger,
   );

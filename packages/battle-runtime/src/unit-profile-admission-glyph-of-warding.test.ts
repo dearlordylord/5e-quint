@@ -1098,7 +1098,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     ).toBeUndefined();
   });
 
-  test("stored Concentration release lasts for full duration without spell Concentration ownership", () => {
+  test("stored single-creature Concentration release survives a save-failed interrupt for its full duration", () => {
     const storedInvocation = storedSpellInvocation(holdPersonUnitId, 2);
     const session = glyphBattleSession({
       preparedSpells: [
@@ -1121,6 +1121,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
         ),
         context: session.context,
       }),
+      "saveFailed",
     ).state;
     const readiedBefore = state.readiedSpells.get(spellCasterId);
     const readiedConcentration = {
@@ -1147,7 +1148,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       needsSave.holes,
       "savingThrowOutcome",
     );
-    const released = releaseGlyphStoredSpell({
+    const awaitingInterrupt = releaseGlyphStoredSpell({
       executionRegistry,
       state,
       profile: requireGlyphStoredSpellProfile(),
@@ -1165,8 +1166,21 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       ),
     });
 
-    expect(released.tag).toBe("released");
-    if (released.tag !== "released") return;
+    expect(awaitingInterrupt).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+    });
+    if (awaitingInterrupt.tag !== "needsHoles") return;
+    const released = resolveBattleInterrupt({
+      state: awaitingInterrupt.state,
+      fill: interruptDecisionFill(
+        requireReleaseHole(awaitingInterrupt.holes, "interruptDecision"),
+        { kind: "decline", responderId: spellCasterId },
+      ),
+    });
+
+    expect(released.tag).toBe("resolved");
+    if (released.tag !== "resolved") return;
     expect(glyphEffects(released.state)).toEqual([]);
     expect(
       requireCombatant(released.state, spellCasterId).concentration,
@@ -2443,6 +2457,83 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     expect(
       afterDecline.state.currentTurnResources.spellSlotUsesThisTurn,
     ).toEqual(priorTurnSpellSlotUses);
+  });
+
+  test("stored area damage release resumes from a save-failed interrupt into its damage roll", () => {
+    const storedInvocation = storedSpellInvocation(fireballUnitId, 3);
+    const session = sessionWithGlyphEffect(
+      requireCompletedGlyphEffect({
+        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+        release: { kind: "spellGlyph", storedInvocation },
+      }),
+      {
+        preparedSpells: [
+          spellRecord(guidingBoltUnitId),
+          spellRecord(fireballUnitId),
+        ],
+        spellSlots: [
+          { spellLevel: 1, count: 1 },
+          { spellLevel: 3, count: 1 },
+        ],
+        targetHp: 50,
+        targetMaxHp: 50,
+      },
+    );
+    const state = stateWithUnrelatedReadiedSpell(session, "saveFailed").state;
+    const needsSave = releaseGlyphStoredSpell({
+      executionRegistry,
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedAreaReleaseWitness({
+        originAnchorId: spellTargetId,
+        fills: [],
+      }),
+    });
+    expect(needsSave.tag).toBe("needsHoles");
+    if (needsSave.tag !== "needsHoles") return;
+    const save = requireReleaseHole(needsSave.holes, "savingThrowOutcome");
+    const saveFill = fireballGlyphSavingThrowOutcomeFill(
+      save,
+      [{ targetId: spellTargetId, succeeded: false }],
+      [],
+    );
+
+    const awaitingInterrupt = releaseGlyphStoredSpell({
+      executionRegistry,
+      state,
+      profile: requireGlyphStoredSpellProfile(),
+      witness: storedAreaReleaseWitness({
+        originAnchorId: spellTargetId,
+        fills: [saveFill],
+      }),
+    });
+    expect(awaitingInterrupt).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+    });
+    if (awaitingInterrupt.tag !== "needsHoles") return;
+
+    const resumed = resolveBattleInterrupt({
+      state: awaitingInterrupt.state,
+      fill: interruptDecisionFill(
+        requireReleaseHole(awaitingInterrupt.holes, "interruptDecision"),
+        { kind: "decline", responderId: spellCasterId },
+      ),
+    });
+    expect(resumed.tag).toBe("needsHoles");
+    if (resumed.tag !== "needsHoles") return;
+    const damage = requireReleaseHole(resumed.holes, "rolledDice");
+
+    const released = resolveBattleSubject({
+      state: resumed.state,
+      subject: resumed.subject,
+      fills: [glyphDamageRollFill(damage, [[4, 4, 4, 4, 4, 4, 4, 4]])],
+    });
+    expect(released.tag).toBe("resolved");
+    if (released.tag !== "resolved") return;
+    expect(glyphEffects(released.state)).toEqual([]);
+    expect(Number(released.state.combatants.get(spellTargetId)?.hp)).toBe(18);
+    expect(released.state.interruptStack).toEqual([]);
   });
 
   test("rejects non-Concentration save-gated condition stored spells outside Task 29 scope", () => {

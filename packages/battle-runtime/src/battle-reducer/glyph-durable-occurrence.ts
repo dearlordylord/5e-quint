@@ -77,7 +77,6 @@ import type {
   BattleSpellDamageReductionRollHole,
   BattleSpellTargetListSpatialFact,
   BattleState,
-  GlyphStoredSpellReleaseReplayContext,
   GlyphDurableOccurrenceActiveEffect,
   GlyphDurableOccurrenceAnchor,
   GlyphStoredSpellInvocation,
@@ -1866,6 +1865,7 @@ function resolveStoredSpellGlyphRelease(input: {
     actorId: input.effect.sourceCombatantId,
     fillSet,
     release,
+    replay: { profile: input.profile, witness: input.witness },
   });
 }
 
@@ -1889,7 +1889,6 @@ function storedGlyphSpellReleasePlan(
       kind: "areaControl",
       invocation,
       anchorId: triggeringCreatureId,
-      replayContext: glyphStoredSpellReleaseReplayContext(input),
     };
   }
   if (invocation.procedure === "greaseGroundHazard") {
@@ -1990,22 +1989,6 @@ function glyphStoredSpellProcedureRef(
         effect.release.storedProcedure,
       )
     : undefined;
-}
-
-function glyphStoredSpellReleaseReplayContext(input: {
-  readonly profile: GlyphStoredSpellReleaseProfile;
-  readonly witness: GlyphStoredSpellReleaseWitness;
-}): GlyphStoredSpellReleaseReplayContext {
-  return {
-    profile: input.profile,
-    witness: {
-      kind: input.witness.kind,
-      triggerOccurrence: input.witness.triggerOccurrence,
-      triggeringCreatureId: input.witness.triggeringCreatureId,
-      targeting: input.witness.targeting,
-      hostilePlacement: input.witness.hostilePlacement,
-    },
-  };
 }
 
 function glyphStoredSpellReleaseFills(input: {

@@ -52,7 +52,7 @@ import { spellSavingThrowOutcomeHole } from "./spells-damage-fills.ts";
 import { spellAreaChoiceHole } from "./spells-holes-fills.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
-import { spellReactionContinuation } from "./spell-reaction-continuation.ts";
+import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import {
   saveMetamagicSelectionState,
@@ -1184,10 +1184,7 @@ export function resolveGustOfWindLineSpellAct(input: {
         trigger: "saveFailed",
         targetId: failedTargetIds[0]!,
         sourceProcedureRef: input.invocation.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          ...spellReactionContinuation(input.input),
-        },
+        continuation: spellReplayContinuation(input.input),
       },
       input.input.handledInterruptTrigger,
     );

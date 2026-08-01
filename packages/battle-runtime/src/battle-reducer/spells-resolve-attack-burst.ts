@@ -30,7 +30,7 @@ import {
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
 } from "./interrupt-execution.ts";
-import { spellReactionContinuation } from "./spell-reaction-continuation.ts";
+import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
@@ -277,10 +277,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
         invocation: input.invocation,
         actionCostOverride: input.actionCostOverride,
       }),
-      continuation: {
-        kind: "replay",
-        ...spellReactionContinuation(input.input),
-      },
+      continuation: spellReplayContinuation(input.input),
     }),
     input.input.handledInterruptTrigger,
   );
@@ -511,10 +508,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
             ...spellMarkedDamageRiders.map((rider) => rider.damage.damageType),
           ]),
         ],
-        continuation: {
-          kind: "replay",
-          ...spellReactionContinuation(input.input),
-        },
+        continuation: spellReplayContinuation(input.input),
       },
       input.input.handledInterruptTrigger,
     );
@@ -813,10 +807,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
         trigger: "saveFailed",
         targetId: failedTargets[0]!,
         sourceProcedureRef: input.invocation.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          ...spellReactionContinuation(input.input),
-        },
+        continuation: spellReplayContinuation(input.input),
       },
       input.input.handledInterruptTrigger,
     );

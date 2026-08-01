@@ -30,7 +30,7 @@ import {
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
 } from "./interrupt-execution.ts";
-import { spellReactionContinuation } from "./spell-reaction-continuation.ts";
+import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
@@ -198,10 +198,7 @@ export function resolveSpellAttackSequenceAct(input: {
         actionCostOverride: input.actionCostOverride,
       }),
       ...spellCastMetamagicApplicationsInput(input.metamagicApplications ?? []),
-      continuation: {
-        kind: "replay",
-        ...spellReactionContinuation(input.input),
-      },
+      continuation: spellReplayContinuation(input.input),
     }),
     input.input.handledInterruptTrigger,
   );
@@ -685,10 +682,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
             ...spellMarkedDamageRiders.map((rider) => rider.damage.damageType),
           ]),
         ],
-        continuation: {
-          kind: "replay",
-          ...spellReactionContinuation(input.input),
-        },
+        continuation: spellReplayContinuation(input.input),
       },
       input.input.handledInterruptTrigger,
     );

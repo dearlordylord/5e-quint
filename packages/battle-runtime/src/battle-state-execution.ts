@@ -658,6 +658,10 @@ export type GlyphStoredSpellReleaseReplayContext = {
   readonly profile: GlyphStoredSpellReleaseProfile;
   readonly witness: Omit<GlyphStoredSpellReleaseWitness, "fills">;
 };
+export type GlyphStoredSpellReleaseReplayInput = {
+  readonly profile: GlyphStoredSpellReleaseProfile;
+  readonly witness: GlyphStoredSpellReleaseWitness;
+};
 export type BattleAttackDamageCriticalConsequence =
   | {
       readonly kind: "ordinaryHit";
@@ -6541,13 +6545,20 @@ export type EscapeSpellRestraintBattleResolutionInput =
 export type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "actionSpell" }>
 > &
-  BattleInterruptRouteOptions & {
-    readonly reactionContinuation?: {
-      readonly subject: BattleSubject;
-      readonly fills: readonly BattleFill[];
-    };
-    readonly glyphStoredSpellReleaseReplay?: GlyphStoredSpellReleaseReplayContext;
-  };
+  BattleInterruptRouteOptions &
+  (
+    | {
+        readonly reactionContinuation?: {
+          readonly subject: BattleSubject;
+          readonly fills: readonly BattleFill[];
+        };
+        readonly glyphStoredSpellReleaseReplay?: never;
+      }
+    | {
+        readonly reactionContinuation?: never;
+        readonly glyphStoredSpellReleaseReplay: GlyphStoredSpellReleaseReplayInput;
+      }
+  );
 export type BonusActionSpellBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "bonusActionSpell" }>
@@ -6586,10 +6597,12 @@ export type DruidWildShapeBattleResolutionInput =
 type WithAdmittedSubject<
   TInput extends BattleResolutionInput,
   TTag extends BattleSubject["tag"],
-> = Omit<TInput, "subject"> &
-  AdmittedBattleResolutionInput & {
-    readonly subject: Extract<BattleSubject, { readonly tag: TTag }>;
-  };
+> = TInput extends BattleResolutionInput
+  ? Omit<TInput, "subject"> &
+      AdmittedBattleResolutionInput & {
+        readonly subject: Extract<BattleSubject, { readonly tag: TTag }>;
+      }
+  : never;
 
 export type AdmittedActionSpellBattleResolutionInput = WithAdmittedSubject<
   ActionSpellBattleResolutionInput,

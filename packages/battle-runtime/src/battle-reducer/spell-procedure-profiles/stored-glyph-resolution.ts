@@ -22,11 +22,15 @@ export function executeStoredGlyphSpellProcedure(
   resolution: StoredGlyphSpellProcedureResolution,
   executionRegistry: SpellProcedureExecutionRegistry,
 ): BattleResolutionResult {
-  const { input, actorId, fillSet } = resolution;
+  const { input, actorId, fillSet, replay } = resolution;
+  const glyphInput = {
+    ...input,
+    glyphStoredSpellReleaseReplay: replay,
+  } as const;
   return Match.value(resolution.release).pipe(
     byReleaseKind("areaOngoing", (release) =>
       resolveStoredGlyphAreaOngoingSpellRelease({
-        input,
+        input: glyphInput,
         actorId,
         invocation: release.invocation,
         fillSet,
@@ -35,10 +39,7 @@ export function executeStoredGlyphSpellProcedure(
     ),
     byReleaseKind("areaControl", (release) =>
       resolveStoredGlyphAreaControlSpellRelease({
-        input: {
-          ...input,
-          glyphStoredSpellReleaseReplay: release.replayContext,
-        },
+        input: glyphInput,
         actorId,
         invocation: release.invocation,
         fillSet,
@@ -47,7 +48,7 @@ export function executeStoredGlyphSpellProcedure(
     ),
     byReleaseKind("greaseGroundHazard", (release) =>
       resolveGreaseGroundHazardSpellAct({
-        input,
+        input: glyphInput,
         actorId,
         invocation: release.invocation,
         fillSet,
@@ -56,7 +57,7 @@ export function executeStoredGlyphSpellProcedure(
     ),
     byReleaseKind("saveGatedCondition", (release) =>
       resolveSaveGateConditionSpellAct({
-        input,
+        input: glyphInput,
         actorId,
         invocation: release.invocation,
         fillSet,
@@ -65,7 +66,7 @@ export function executeStoredGlyphSpellProcedure(
     ),
     byReleaseKind("fullDurationSaveGatedDamage", (release) =>
       resolveSaveGateDamageSpellRelease({
-        input,
+        input: glyphInput,
         actorId,
         invocation: release.invocation,
         fillSet,
@@ -75,7 +76,7 @@ export function executeStoredGlyphSpellProcedure(
     ),
     byReleaseKind("singleCreatureActiveEffect", (release) => {
       const releaseInput = {
-        input,
+        input: glyphInput,
         actorId,
         fillSet,
         storedGlyphRelease: { kind: "storedGlyphSpellRelease" },
@@ -142,23 +143,23 @@ export function executeStoredGlyphSpellProcedure(
     }),
     byReleaseKind("selfTransformation", (release) =>
       resolveStoredGlyphSelfTransformationModeSpellRelease({
-        state: input.state,
-        subject: input.subject,
+        state: glyphInput.state,
+        subject: glyphInput.subject,
         targetId: release.targetId,
         sourceCombatantId: actorId,
         invocation: release.invocation,
-        fills: input.fills,
+        fills: glyphInput.fills,
         fillSet,
       }),
     ),
     byReleaseKind("ordinaryArea", (release) =>
-      resolveSpellRelease(input, release.invocation, {
+      resolveSpellRelease(glyphInput, release.invocation, {
         selfOriginAreaAnchorId: release.anchorId,
         opensSpellCastReactionWindow: false,
       }),
     ),
     byReleaseKind("ordinaryTriggeringCreature", (release) =>
-      resolveSpellRelease(input, release.invocation, {
+      resolveSpellRelease(glyphInput, release.invocation, {
         storedGlyphTriggeringCreatureTargetId: release.targetId,
         opensSpellCastReactionWindow: false,
       }),

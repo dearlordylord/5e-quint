@@ -34,7 +34,7 @@ import {
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
 } from "./interrupt-execution.ts";
-import { spellReactionContinuation } from "./spell-reaction-continuation.ts";
+import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
@@ -434,10 +434,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
             invocation: input.invocation,
             actionCostOverride: input.actionCostOverride,
           }),
-          continuation: {
-            kind: "replay",
-            ...spellReactionContinuation(input.input),
-          },
+          continuation: spellReplayContinuation(input.input),
         }),
         input.input.handledInterruptTrigger,
       );
@@ -651,10 +648,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
         attackKind: spellAttackKindForRedirect(input.invocation.attackKind),
         attackHitTriggerKind: "otherAttack",
         damageTypes: [selectedDamageType],
-        continuation: {
-          kind: "replay",
-          ...spellReactionContinuation(input.input),
-        },
+        continuation: spellReplayContinuation(input.input),
       },
       input.input.handledInterruptTrigger,
     );

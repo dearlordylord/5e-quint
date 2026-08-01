@@ -35,7 +35,7 @@ import {
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
 } from "./interrupt-execution.ts";
-import { spellReactionContinuation } from "./spell-reaction-continuation.ts";
+import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
@@ -206,10 +206,7 @@ export function resolveObjectContactDamageSpellAct(input: {
       targetIds: contactSelection.targetIds,
       reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
       castingResource: { kind: "magicAction" },
-      continuation: {
-        kind: "replay",
-        ...spellReactionContinuation(input.input),
-      },
+      continuation: spellReplayContinuation(input.input),
     }),
     input.input.handledInterruptTrigger,
   );
