@@ -42,6 +42,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
 } from "../interrupt-execution.ts";
+import { spellReactionContinuation } from "../spell-reaction-continuation.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../../character-battle-resource-execution.ts";
 import { type CombatantId } from "../../identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
@@ -437,9 +438,7 @@ function resolveHypnoticPattern(
       input.input.glyphStoredSpellReleaseReplay === undefined
         ? {
             kind: "replay",
-            subject:
-              input.input.reactionContinuationSubject ?? input.input.subject,
-            fills: input.input.fills,
+            ...spellReactionContinuation(input.input),
           }
         : {
             kind: "replay",

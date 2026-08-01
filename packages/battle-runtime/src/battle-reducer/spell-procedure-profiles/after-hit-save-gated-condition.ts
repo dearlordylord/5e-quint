@@ -49,6 +49,7 @@ import {
   maybeOpenPostCastReadySpellCastWindow,
   maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
 } from "../interrupt-execution.ts";
+import { spellReactionContinuation } from "../spell-reaction-continuation.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -234,8 +235,7 @@ function resolveAfterHitSaveGatedCondition(
     castingResource: { kind: "bonusAction" },
     continuation: {
       kind: "replay",
-      subject: input.input.subject,
-      fills: input.input.fills,
+      ...spellReactionContinuation(input.input),
     },
   });
   const spellCastReactionWindow =
@@ -273,8 +273,7 @@ function resolveAfterHitSaveGatedCondition(
         sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
+          ...spellReactionContinuation(input.input),
         },
       },
       input.input.handledInterruptTrigger,

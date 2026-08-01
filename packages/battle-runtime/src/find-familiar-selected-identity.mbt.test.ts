@@ -1,6 +1,8 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
-import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
+import {
+  battleProcedureExecutionRefForSpellHoleForTest,
+  resolveBattleSubject,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.find-familiar-lifecycle
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay B22-FIND-FAMILIAR-IDENTITY-WITNESS find_familiar
@@ -20,7 +22,6 @@ import { expect, it } from "vitest";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
-import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   characterCreature,
@@ -368,22 +369,9 @@ function deliverTouchSpellThroughFindFamiliarProjection(): FindFamiliarSelectedI
   if (cureWoundsAct?.subject.tag !== "actionSpell") {
     throw new Error("Expected Cure Wounds action spell act.");
   }
-  const targetFill = {
-    kind: "targetChoice" as const,
-    holeId: ATTACK_TARGET_HOLE_ID,
-    value: targetId,
-    spatialFacts: [
-      {
-        kind: "findFamiliarTouchSpellTarget" as const,
-        ownerId: casterId,
-        familiarId,
-        targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(cureWoundsUnitId),
-        ),
-      },
-    ],
-  };
+  const targetFill = selectedTouchSpellTargetFill(
+    requireHole(cureWoundsAct.initialHoles, "targetChoice"),
+  );
   const awaitingHealingRoll = deliverTouchSpellThroughFindFamiliar({
     state: cast.state,
     subject: cureWoundsAct.subject,
@@ -536,9 +524,8 @@ function selectedTouchSpellTargetFill(
         ownerId: casterId,
         familiarId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(cureWoundsUnitId),
-        ),
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(hole),
       },
     ],
   };

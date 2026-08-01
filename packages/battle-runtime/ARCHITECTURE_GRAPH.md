@@ -44,6 +44,19 @@ execution capability so the dispatcher supplies admitted subject resolution and
 continuation resumption without recreating lifecycle state or introducing a
 reverse module dependency.
 
+Find Familiar lifecycle, reappearance, shared-senses, and touch-delivery
+procedures belong to `battle-reducer/find-familiar-procedures.ts`. Touch
+delivery receives admitted spell resolution as a closed execution capability,
+so its connection fact, target-fact translation, spell result, and familiar
+Reaction commitment remain one procedure without reversing the dispatcher
+dependency. `battle-reducer/spell-reaction-continuation.ts` owns the paired
+wrapper subject and original fills used by every spell interrupt producer;
+the state-backed replay-continuation route is the authority that tells Find
+Familiar its Reaction is already committed, so a caller cannot forge that
+state and later holes cannot bypass or double-spend it. Legendary-action window
+consumption and closure are centralized in
+`battle-reducer/legendary-action-window.ts` for every delegated procedure.
+
 Post-cast persistent spatial spell procedures are owned by
 `battle-reducer/persistent-spatial-spell-procedures.ts`. It owns the admitted command
 boundary and the save, damage, cleanup, direction-change, reposition, and ram

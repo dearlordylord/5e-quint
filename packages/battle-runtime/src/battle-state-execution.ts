@@ -6541,7 +6541,10 @@ export type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "actionSpell" }>
 > &
   BattleInterruptRouteOptions & {
-    readonly reactionContinuationSubject?: BattleSubject;
+    readonly reactionContinuation?: {
+      readonly subject: BattleSubject;
+      readonly fills: readonly BattleFill[];
+    };
     readonly glyphStoredSpellReleaseReplay?: GlyphStoredSpellReleaseReplayContext;
   };
 export type BonusActionSpellBattleResolutionInput =
@@ -6549,6 +6552,10 @@ export type BonusActionSpellBattleResolutionInput =
     Extract<BattleSubject, { readonly tag: "bonusActionSpell" }>
   > & {
     readonly handledInterruptTrigger?: BattleInterruptTrigger;
+    readonly reactionContinuation?: {
+      readonly subject: BattleSubject;
+      readonly fills: readonly BattleFill[];
+    };
   };
 export type BonusActionDashSpellBattleResolutionInput =
   BattleResolutionInputForSubject<

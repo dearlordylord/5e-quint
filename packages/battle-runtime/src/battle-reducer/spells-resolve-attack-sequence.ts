@@ -30,6 +30,7 @@ import {
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
 } from "./interrupt-execution.ts";
+import { spellReactionContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
@@ -199,8 +200,7 @@ export function resolveSpellAttackSequenceAct(input: {
       ...spellCastMetamagicApplicationsInput(input.metamagicApplications ?? []),
       continuation: {
         kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
+        ...spellReactionContinuation(input.input),
       },
     }),
     input.input.handledInterruptTrigger,
@@ -687,8 +687,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
         ],
         continuation: {
           kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
+          ...spellReactionContinuation(input.input),
         },
       },
       input.input.handledInterruptTrigger,

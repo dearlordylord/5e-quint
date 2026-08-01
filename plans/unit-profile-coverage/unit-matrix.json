@@ -3292,7 +3292,8 @@
         "packages/battle-runtime/src/find-familiar-lifecycle.ts",
         "packages/battle-runtime/src/find-familiar-state.ts",
         "packages/battle-runtime/src/find-familiar-telepathy.ts",
-        "packages/battle-runtime/src/find-familiar-pact-chain.ts"
+        "packages/battle-runtime/src/find-familiar-pact-chain.ts",
+        "packages/battle-runtime/src/battle-reducer/find-familiar-procedures.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, caller-supplied 100-foot connection facts, ordinary spell fills for Touch delivery, selected Pact of the Chain Spell Access, owner Attack-action attack availability, familiar Reaction availability, supported familiar Stat Block action attacks, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state, inserts a present familiar as an allied combatant with its own Initiative turn and ordinary action/Reaction resources, allows supported non-attack actions, rejects ordinary Find Familiar attacks, projects telepathic communication without shared language, applies the caster Bonus Action shared-senses effect until the caster's next turn, resolves Touch spell delivery atomically with the familiar Reaction spend, and resolves the Pact of the Chain familiar attack exception atomically with one owner Attack-action attack forgone and the familiar Reaction spent.",
       "taskRefs": [
@@ -37596,7 +37597,8 @@
             "packages/battle-runtime/src/find-familiar-lifecycle.ts",
             "packages/battle-runtime/src/find-familiar-state.ts",
             "packages/battle-runtime/src/find-familiar-telepathy.ts",
-            "packages/battle-runtime/src/find-familiar-pact-chain.ts"
+            "packages/battle-runtime/src/find-familiar-pact-chain.ts",
+            "packages/battle-runtime/src/battle-reducer/find-familiar-procedures.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Find Familiar spell form catalog, caller-selected form and Celestial/Fey/Fiend type choice, caller-supplied unoccupied placement facts, caller-supplied familiar identity and Initiative facts, caller-supplied 100-foot connection facts, ordinary spell fills for Touch delivery, selected Pact of the Chain Spell Access, owner Attack-action attack availability, familiar Reaction availability, supported familiar Stat Block action attacks, and caller-supplied held-item drop boundary facts. It records companion lifecycle and replacement state, inserts a present familiar as an allied combatant with its own Initiative turn and ordinary action/Reaction resources, allows supported non-attack actions, rejects ordinary Find Familiar attacks, projects telepathic communication without shared language, applies the caster Bonus Action shared-senses effect until the caster's next turn, resolves Touch spell delivery atomically with the familiar Reaction spend, and resolves the Pact of the Chain familiar attack exception atomically with one owner Attack-action attack forgone and the familiar Reaction spent.",
           "taskRefs": [

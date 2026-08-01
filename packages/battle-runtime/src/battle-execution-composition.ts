@@ -10,18 +10,22 @@ import type {
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {
-  deliverTouchSpellThroughFindFamiliar as deliverTouchSpellThroughFindFamiliarWithRegistry,
   endTurn as endTurnWithRegistry,
   openCreatureFallsInterruptWindow as openCreatureFallsInterruptWindowStateOnly,
   resolveAdmittedBattleSubject as resolveAdmittedBattleSubjectWithRegistry,
-  resolveAdmittedFindFamiliarReappearanceSubject as resolveAdmittedFindFamiliarReappearanceSubjectStateOnly,
   resolveBattleInterrupt as resolveBattleInterruptWithRegistry,
   resolveFallDamageLanding as resolveFallDamageLandingStateOnly,
   resolveFeatherFallLanding as resolveFeatherFallLandingStateOnly,
   resolveFlySpeedGrantEndFallCleanup as resolveFlySpeedGrantEndFallCleanupStateOnly,
   resolveAdmittedReplayContinuationSubject,
-  shareFindFamiliarSenses as shareFindFamiliarSensesStateOnly,
 } from "./battle-reducer/dispatcher.ts";
+import {
+  FindFamiliarProcedureExecution,
+  resolveAdmittedFindFamiliarReappearanceSubject as resolveAdmittedFindFamiliarReappearanceSubjectStateOnly,
+  resolveFindFamiliarTouchSpellSubject,
+  shareFindFamiliarSenses as shareFindFamiliarSensesStateOnly,
+} from "./battle-reducer/find-familiar-procedures.ts";
+import { findFamiliarConnectionHole } from "./find-familiar-companion-subjects.ts";
 import {
   ReplayContinuationExecution,
   resolveReplayContinuationFromState as resolveReplayContinuationFromStateWithRegistry,
@@ -117,12 +121,58 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
   readonly fact: FindFamiliarWithin100FeetFact;
 }): BattleResolutionResult {
   const executionRegistry = spellProcedureExecutionRegistry();
+  if (input.subject.mode.tag !== "cast") {
+    return {
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message: "Find Familiar touch delivery requires an immediate spell cast.",
+      snapshot: snapshotBattleWithExecutionRegistry(
+        input.state,
+        executionRegistry,
+      ),
+    };
+  }
+  const subject: Extract<
+    BattleSubject,
+    { readonly tag: "findFamiliarTouchSpell" }
+  > = {
+    tag: "findFamiliarTouchSpell",
+    actorId: input.subject.actorId,
+    procedureRef: input.subject.procedureRef,
+    companionId: input.fact.familiarId,
+    spellAction: input.subject.tag === "actionSpell" ? "action" : "bonusAction",
+    mode: input.subject.mode,
+    ...(input.subject.metamagic === undefined
+      ? {}
+      : { metamagic: input.subject.metamagic }),
+  };
+  const connectionHole = findFamiliarConnectionHole({
+    ownerId: input.fact.ownerId,
+    companionId: input.fact.familiarId,
+  });
   return battleResolutionWithExecutionSnapshot(
     input.state,
-    deliverTouchSpellThroughFindFamiliarWithRegistry(
-      input,
-      executionRegistry,
-      BATTLE_ATTACK_ROUTE_RESOLVERS,
+    resolveFindFamiliarTouchSpellSubject(
+      {
+        state: input.state,
+        subject,
+        fills: [
+          {
+            kind: "findFamiliarConnection",
+            holeId: connectionHole.holeId,
+            value: { withinRange: true },
+          },
+          ...input.fills,
+        ],
+      },
+      FindFamiliarProcedureExecution.fromResolver((admitted) =>
+        resolveAdmittedBattleSubjectWithRegistry(
+          admitted,
+          executionRegistry,
+          BATTLE_ATTACK_ROUTE_RESOLVERS,
+        ),
+      ),
+      "uncommitted",
     ),
     executionRegistry,
   );

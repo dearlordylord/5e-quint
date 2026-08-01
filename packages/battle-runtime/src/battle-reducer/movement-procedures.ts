@@ -6,10 +6,7 @@ import {
   canSpendMovement,
   markMovementSpentForMovementActionBonusActionExclusion,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import {
-  hasCondition,
-  removeCondition,
-} from "@dnd/shared-algebras/conditions-algebra";
+import { removeCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { ordinaryMovementCost } from "@dnd/shared-algebras/movement-cost-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
@@ -70,7 +67,6 @@ import { concentrationSavingThrowHole } from "./damage-apply.ts";
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import { rolledDiceFillForHole } from "./fill-hole-protocol.ts";
-import { hideousLaughterEffects } from "./hideous-laughter-repeat-save.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { maxJumpMovementReplacementDistanceFeet } from "./jump-movement-replacement.ts";
 import { validateLevitatedMovementFact } from "./levitate-creature.ts";
@@ -79,12 +75,12 @@ import {
   battleMovementBudgetForActor,
   combatantCanMoveWithBudget,
   creatureSizeIsLargerThanSelf,
-  effectiveWalkSpeed,
   grappleTargetExemptFromDragCost,
   interruptAttackExecutionSelectionMatchesOption,
   opportunityAttackThreatsForMovement,
   representedMovementSpeedKinds,
 } from "./movement-speed.ts";
+import { standFromProneCostFeet } from "./stand-from-prone-policy.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import type { GustOfWindLineEffect } from "./persistent-spatial-spell-discovery.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -132,28 +128,6 @@ export function resolveMovementProcedure(
     ),
     Match.exhaustive,
   );
-}
-
-export function standFromProneCostFeet(
-  state: BattleState,
-  actorId: CombatantId,
-): number | null {
-  const actor = state.combatants.get(actorId);
-  if (actor === undefined || !hasCondition(actor.conditions, "prone")) {
-    return null;
-  }
-  if (hideousLaughterEffects(actor).length > 0) {
-    return null;
-  }
-  const speed = effectiveWalkSpeed(
-    state,
-    actor,
-    state.grapples.some((grapple) => grapple.targetId === actorId),
-  );
-  const cost = Math.floor(Number(speed) / 2);
-  const remaining = battleMovementBudgetForActor(state, actorId).remainingFeet;
-  if (cost <= 0 || Number(remaining) < cost) return null;
-  return cost;
 }
 
 function resolveMoveCommand(

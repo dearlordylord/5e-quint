@@ -88,7 +88,10 @@ export function resolveReleaseReadiedSpellCommand(
       ...(options.handledInterruptTrigger === undefined
         ? {}
         : { handledInterruptTrigger: options.handledInterruptTrigger }),
-      reactionContinuationSubject: input.subject,
+      reactionContinuation: {
+        subject: input.subject,
+        fills: input.fills,
+      },
     },
     invocation,
   );

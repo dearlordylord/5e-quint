@@ -69,6 +69,7 @@ import {
   reappearTemporarilyDismissedFindFamiliar,
   resolveBattleRuntimeSubject,
   resolveBattleInterrupt,
+  SPELL_CAST_REACTION_FACTS_HOLE_ID,
   shareFindFamiliarSenses,
   snapshotBattle,
   startBattle,
@@ -81,10 +82,16 @@ import {
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
 import {
+  deliverTouchSpellThroughFindFamiliar as deliverTouchSpellThroughFindFamiliarWithExecution,
+  FindFamiliarProcedureExecution,
+} from "./battle-reducer/find-familiar-procedures.ts";
+import {
   assertBattleSnapshotCodecRoundTripForTest,
   characterBattleFeatureInitForTest,
+  requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
+import { spellSlotInvocationRef } from "./battle-subjects.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
@@ -128,6 +135,8 @@ const unitCatalog = unitCatalogResult.catalog;
 const findFamiliarSpell = requireSpellRecord("find_familiar");
 const cureWoundsSpell = requireSpellRecord("cure_wounds");
 const healingWordSpell = requireSpellRecord("healing_word");
+const counterspellSpell = requireSpellRecord("counterspell");
+const shockingGraspSpell = requireSpellRecord("shocking_grasp");
 const shieldSpell = requireSpellRecord("shield");
 const druidWildShapeUnit = unitCatalog.requireUnit("druid_wild_shape");
 const familiarEligibility: FindFamiliarFormEligibility =
@@ -275,7 +284,9 @@ function startFixtureBattle(
   return result.right.state;
 }
 
-function startSpellcasterFixtureBattle(): BattleRuntimeSession {
+function startSpellcasterFixtureBattle(
+  input: { readonly enemyCanCounterspell?: boolean } = {},
+): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("find-familiar-telepathy-test"),
     combatants: [
@@ -288,7 +299,7 @@ function startSpellcasterFixtureBattle(): BattleRuntimeSession {
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
-          cantrips: [],
+          cantrips: [shockingGraspSpell],
           preparedSpells: [cureWoundsSpell, healingWordSpell],
           featurePreparedSpells: [],
           spellbookRitualSpellAccesses: [],
@@ -302,6 +313,23 @@ function startSpellcasterFixtureBattle(): BattleRuntimeSession {
         initiative: 10,
         currentHp: 1,
         maxHp: 12,
+        ...(input.enemyCanCounterspell !== true
+          ? {}
+          : {
+              classLevel: 5,
+              spellcasting: {
+                sourceClassName: "wizard",
+                spellcastingAbilityModifier: abilityModifier(3),
+                proficiencyBonus: proficiencyBonus(3),
+                canCastSpells: true,
+                cantrips: [],
+                preparedSpells: [counterspellSpell],
+                featurePreparedSpells: [],
+                spellbookRitualSpellAccesses: [],
+                invocationSpellAccesses: [],
+                spellSlots: [{ spellLevel: 3, count: 1 }],
+              },
+            }),
       }),
     ],
   });
@@ -845,6 +873,28 @@ function findFamiliarConnectionFill(
     kind: "findFamiliarConnection",
     holeId: hole.holeId,
     value: { withinRange: true },
+  };
+}
+
+function counterspellTriggerFactsFill(
+  session: BattleRuntimeSession,
+): Extract<BattleFill, { readonly kind: "targetSpatialFacts" }> {
+  return {
+    kind: "targetSpatialFacts",
+    holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+    spatialFacts: [
+      {
+        kind: "counterspellTriggerCasterVisibleWithinRange",
+        reactorId: enemyId,
+        casterId,
+        sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+          session,
+          enemyId,
+          spellSlotInvocationRef("counterspell", 3, "counterspell"),
+        ),
+        rangeFeet: movementFeet(60),
+      },
+    ],
   };
 }
 
@@ -2489,6 +2539,184 @@ describe("Find Familiar lifecycle", () => {
     ).toBe(true);
   });
 
+  test("commits the familiar Reaction through a declined spell-cast interrupt and resumes the wrapper fills", () => {
+    const session = startSpellcasterFixtureBattle({
+      enemyCanCounterspell: true,
+    });
+    const cast = castCatFamiliar(session);
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+    const act = discoverBattleActs(
+      battleRuntimeSessionForTest({ ...session, state: cast.state }),
+    ).find(
+      (candidate) =>
+        candidate.subject.tag === "findFamiliarTouchSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "cure_wounds",
+    );
+    expect(act?.subject.tag).toBe("findFamiliarTouchSpell");
+    if (act?.subject.tag !== "findFamiliarTouchSpell") return;
+    const connectionFill = findFamiliarConnectionFill(
+      requireHole(act.initialHoles, "findFamiliarConnection"),
+    );
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = {
+      kind: "targetChoice" as const,
+      holeId: targetHole.holeId,
+      value: enemyId,
+      spatialFacts: [
+        {
+          kind: "findFamiliarTouchSpellTarget" as const,
+          ownerId: casterId,
+          familiarId,
+          targetId: enemyId,
+          sourceProcedureRef: act.subject.procedureRef,
+        },
+      ],
+    };
+    const counterspellFacts = counterspellTriggerFactsFill(
+      battleRuntimeSessionForTest({ ...session, state: cast.state }),
+    );
+    const originalFills = [connectionFill, targetFill, counterspellFacts];
+    const interrupted = resolveBattleSubject({
+      state: cast.state,
+      subject: act.subject,
+      fills: originalFills,
+    });
+    expect(interrupted).toMatchObject({
+      tag: "needsHoles",
+      subject: {
+        tag: "findFamiliarTouchSpell",
+      },
+      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
+    });
+    if (interrupted.tag !== "needsHoles") return;
+    expect(
+      interrupted.state.combatants.get(familiarId)?.reactionAvailable,
+    ).toBe(false);
+
+    const resumed = resolveBattleInterrupt({
+      state: interrupted.state,
+      fill: {
+        kind: "interruptDecision",
+        holeId: requireHole(interrupted.holes, "interruptDecision").holeId,
+        value: { kind: "decline", responderId: enemyId },
+      },
+    });
+    expect(resumed).toMatchObject({
+      tag: "needsHoles",
+      subject: {
+        tag: "findFamiliarTouchSpell",
+      },
+      snapshot: { pendingInterrupt: null },
+    });
+    if (resumed.tag !== "needsHoles") return;
+    const completed = resolveBattleSubject({
+      state: resumed.state,
+      subject: resumed.subject,
+      fills: [
+        connectionFill,
+        targetFill,
+        damageRollFill(requireHole(resumed.holes, "rolledDice"), [4, 4]),
+      ],
+    });
+    expect(completed.tag).toBe("resolved");
+    if (completed.tag !== "resolved") return;
+    expect(completed.state.combatants.get(familiarId)?.reactionAvailable).toBe(
+      false,
+    );
+    expect(Number(completed.state.combatants.get(enemyId)?.hp)).toBe(12);
+  });
+
+  test("resumes a familiar-delivered touch attack spell through its wrapper after a spell-cast interrupt", () => {
+    const session = startSpellcasterFixtureBattle({
+      enemyCanCounterspell: true,
+    });
+    const cast = castCatFamiliar(session);
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+    const runtimeSession = battleRuntimeSessionForTest({
+      ...session,
+      state: cast.state,
+    });
+    const act = discoverBattleActs(runtimeSession).find(
+      (candidate) =>
+        candidate.subject.tag === "findFamiliarTouchSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "shocking_grasp",
+    );
+    expect(act?.subject.tag).toBe("findFamiliarTouchSpell");
+    if (act?.subject.tag !== "findFamiliarTouchSpell") return;
+    const connectionFill = findFamiliarConnectionFill(
+      requireHole(act.initialHoles, "findFamiliarConnection"),
+    );
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = {
+      kind: "targetChoice" as const,
+      holeId: targetHole.holeId,
+      value: enemyId,
+      spatialFacts: [
+        {
+          kind: "findFamiliarTouchSpellTarget" as const,
+          ownerId: casterId,
+          familiarId,
+          targetId: enemyId,
+          sourceProcedureRef: act.subject.procedureRef,
+        },
+      ],
+    };
+    const interrupted = resolveBattleSubject({
+      state: cast.state,
+      subject: act.subject,
+      fills: [
+        connectionFill,
+        targetFill,
+        counterspellTriggerFactsFill(runtimeSession),
+      ],
+    });
+    expect(interrupted).toMatchObject({
+      tag: "needsHoles",
+      subject: { tag: "findFamiliarTouchSpell" },
+      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
+    });
+    if (interrupted.tag !== "needsHoles") return;
+    expect(
+      interrupted.state.combatants.get(familiarId)?.reactionAvailable,
+    ).toBe(false);
+    const resumed = resolveBattleInterrupt({
+      state: interrupted.state,
+      fill: {
+        kind: "interruptDecision",
+        holeId: requireHole(interrupted.holes, "interruptDecision").holeId,
+        value: { kind: "decline", responderId: enemyId },
+      },
+    });
+    expect(resumed).toMatchObject({
+      tag: "needsHoles",
+      subject: { tag: "findFamiliarTouchSpell" },
+      snapshot: { pendingInterrupt: null },
+    });
+    if (resumed.tag !== "needsHoles") return;
+    const completed = resolveBattleSubject({
+      state: resumed.state,
+      subject: resumed.subject,
+      fills: [
+        connectionFill,
+        targetFill,
+        attackRollFill(requireHole(resumed.holes, "attackRoll"), {
+          total: 1,
+          naturalD20: 2,
+        }),
+      ],
+    });
+    expect(completed.tag).toBe("resolved");
+    if (completed.tag !== "resolved") return;
+    expect(completed.state.combatants.get(familiarId)?.reactionAvailable).toBe(
+      false,
+    );
+    expect(Number(completed.state.combatants.get(enemyId)?.hp)).toBe(1);
+  });
+
   test("ordinary spell resolution rejects forged familiar-delivery spatial facts", () => {
     const session = startSpellcasterFixtureBattle();
     const cast = castCatFamiliar(session);
@@ -2622,6 +2850,78 @@ describe("Find Familiar lifecycle", () => {
         (use) => use.kind === "committed",
       ),
     ).toBe(false);
+  });
+
+  test("rejects touch-delivery completion when another transition spent the familiar Reaction", () => {
+    const session = startSpellcasterFixtureBattle();
+    const cast = castCatFamiliar(session);
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+    const cureWoundsAct = discoverBattleActs(
+      battleRuntimeSessionForTest({ ...session, state: cast.state }),
+    ).find(
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(act)?.invocation.spellId === "cure_wounds",
+    );
+    expect(cureWoundsAct?.subject.tag).toBe("actionSpell");
+    if (cureWoundsAct?.subject.tag !== "actionSpell") return;
+    const familiar = cast.state.combatants.get(familiarId);
+    expect(familiar).toBeDefined();
+    if (familiar === undefined) return;
+    const stateAfterCompetingReaction = {
+      ...cast.state,
+      combatants: new Map(cast.state.combatants).set(familiarId, {
+        ...familiar,
+        reactionAvailable: false,
+      }),
+    };
+
+    const targetFill = {
+      kind: "targetChoice" as const,
+      holeId: ATTACK_TARGET_HOLE_ID,
+      value: enemyId,
+      spatialFacts: [
+        {
+          kind: "findFamiliarTouchSpellTarget" as const,
+          ownerId: casterId,
+          familiarId,
+          targetId: enemyId,
+          sourceProcedureRef: cureWoundsAct.subject.procedureRef,
+        },
+      ],
+    };
+    const result = deliverTouchSpellThroughFindFamiliarWithExecution(
+      {
+        state: cast.state,
+        subject: cureWoundsAct.subject,
+        fills: [targetFill],
+        fact: {
+          kind: "findFamiliarWithin100FeetOfOwner",
+          ownerId: casterId,
+          familiarId,
+        },
+        reactionContinuation: {
+          subject: cureWoundsAct.subject,
+          fills: [targetFill],
+        },
+      },
+      FindFamiliarProcedureExecution.fromResolver(() => ({
+        tag: "resolved",
+        state: stateAfterCompetingReaction,
+        snapshot: snapshotBattle(stateAfterCompetingReaction),
+      })),
+      "uncommitted",
+    );
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Find Familiar touch delivery requires the familiar's available Reaction at completion.",
+    });
+    expect(result.snapshot.combatants).toEqual(
+      snapshotBattle(cast.state).combatants,
+    );
   });
 
   test("discovers and resolves present familiar lifecycle subjects through generic battle acts", () => {

@@ -21,6 +21,7 @@ import {
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
 } from "./interrupt-execution.ts";
+import { spellReactionContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import type { CombatantId } from "../identity.ts";
 import {
@@ -305,8 +306,7 @@ export function resolvePreparedSlotSpellAct(input: {
         castingResource: { kind: "magicAction" },
         continuation: {
           kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
+          ...spellReactionContinuation(input.input),
         },
       }),
       input.input.handledInterruptTrigger,

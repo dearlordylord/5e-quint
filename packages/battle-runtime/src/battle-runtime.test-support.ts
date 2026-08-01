@@ -23,7 +23,7 @@ import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
 import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
-import { resolveAdmittedFindFamiliarReappearanceSubject } from "./battle-reducer/dispatcher.ts";
+import { resolveAdmittedFindFamiliarReappearanceSubject } from "./battle-reducer/find-familiar-procedures.ts";
 
 import {
   abilityModifier,

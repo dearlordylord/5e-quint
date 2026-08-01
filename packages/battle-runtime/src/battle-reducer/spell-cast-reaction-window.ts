@@ -15,6 +15,7 @@ import {
   spellCastInterruptFrame,
   spellCastMetamagicApplicationsInput,
 } from "./spell-cast-interrupt-frame.ts";
+import { spellReactionContinuation } from "./spell-reaction-continuation.ts";
 
 type SpellCastReactionResolutionContext = {
   readonly input: {
@@ -22,6 +23,10 @@ type SpellCastReactionResolutionContext = {
     readonly subject: BattleSubject;
     readonly fills: readonly BattleFill[];
     readonly handledInterruptTrigger?: BattleInterruptTrigger;
+    readonly reactionContinuation?: {
+      readonly subject: BattleSubject;
+      readonly fills: readonly BattleFill[];
+    };
   };
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;
@@ -38,6 +43,7 @@ export function maybeOpenSpellCastReactionWindow(
     | readonly CharacterBattleMetamagicOptionFact[]
     | undefined,
 ): BattleResolutionResult | null {
+  const continuation = spellReactionContinuation(resolution.input);
   return maybeOpenInterruptWindow(
     resolution.input.state,
     spellCastInterruptFrame({
@@ -49,8 +55,7 @@ export function maybeOpenSpellCastReactionWindow(
       ...spellCastMetamagicApplicationsInput(metamagicApplications ?? []),
       continuation: {
         kind: "replay",
-        subject: resolution.input.subject,
-        fills: resolution.input.fills,
+        ...continuation,
       },
     }),
     resolution.input.handledInterruptTrigger,

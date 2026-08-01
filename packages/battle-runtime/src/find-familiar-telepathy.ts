@@ -160,6 +160,7 @@ export function prepareTouchSpellDeliveryThroughFindFamiliar(input: {
   >;
   readonly fills: BattleResolutionInput["fills"];
   readonly fact: FindFamiliarWithin100FeetFact;
+  readonly reactionCommitment: "uncommitted" | "committed";
 }):
   | PreparedFindFamiliarTouchSpellDelivery
   | Exclude<FindFamiliarMechanicalTransition, { readonly tag: "resolved" }> {
@@ -199,10 +200,22 @@ export function prepareTouchSpellDeliveryThroughFindFamiliar(input: {
     );
   }
   const familiar = input.state.combatants.get(connection.familiarId);
-  if (!combatantCanTakeReactions(familiar)) {
+  if (
+    input.reactionCommitment === "uncommitted" &&
+    !combatantCanTakeReactions(familiar)
+  ) {
     return invalidTransition(
       "staleSubject",
       "Find Familiar touch delivery requires the familiar's available Reaction.",
+    );
+  }
+  if (
+    input.reactionCommitment === "committed" &&
+    familiar?.reactionAvailable !== false
+  ) {
+    return invalidTransition(
+      "staleSubject",
+      "Find Familiar touch delivery continuation requires its committed Reaction.",
     );
   }
   const deliveryFills = findFamiliarTouchDeliveryFills({
@@ -229,7 +242,7 @@ export function spendFindFamiliarTouchDeliveryReaction(input: {
   | { readonly tag: "resolved"; readonly state: BattleState }
   | { readonly tag: "invalid"; readonly message: string } {
   const familiar = input.state.combatants.get(input.familiarId);
-  /* v8 ignore start -- Preparation and Reaction spending are one atomic reducer operation; the already-proven present familiar cannot disappear between those steps. */
+  /* v8 ignore start -- Preparation and Reaction spending are one atomic reducer operation; a missing familiar requires a malformed execution callback. */
   if (familiar === undefined) {
     return {
       tag: "invalid",
@@ -238,6 +251,13 @@ export function spendFindFamiliarTouchDeliveryReaction(input: {
     };
   }
   /* v8 ignore stop */
+  if (!combatantCanTakeReactions(familiar)) {
+    return {
+      tag: "invalid",
+      message:
+        "Find Familiar touch delivery requires the familiar's available Reaction at completion.",
+    };
+  }
   return {
     tag: "resolved",
     state: {

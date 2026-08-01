@@ -74,6 +74,7 @@ import {
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
 import { attackRollIsCriticalHit } from "./attack-resolution.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
+import { spellReactionContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import {
   spellAttackRerollUnsupportedIssue,
@@ -2447,8 +2448,7 @@ function resolveSpellActInternal(
           ),
           continuation: {
             kind: "replay",
-            subject: input.subject,
-            fills: input.fills,
+            ...spellReactionContinuation(input),
           },
         }),
         input.handledInterruptTrigger,
@@ -2821,8 +2821,7 @@ function resolveSpellActInternal(
           ],
           continuation: {
             kind: "replay",
-            subject: input.subject,
-            fills: input.fills,
+            ...spellReactionContinuation(input),
           },
         },
         input.handledInterruptTrigger,
@@ -3926,8 +3925,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
       ...spellCastMetamagicApplicationsInput(input.metamagicApplications ?? []),
       continuation: {
         kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
+        ...spellReactionContinuation(input.input),
       },
     }),
     input.input.handledInterruptTrigger,

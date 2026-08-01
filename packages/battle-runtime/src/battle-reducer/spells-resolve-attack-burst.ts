@@ -30,6 +30,7 @@ import {
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
 } from "./interrupt-execution.ts";
+import { spellReactionContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
@@ -278,8 +279,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       }),
       continuation: {
         kind: "replay",
-        subject: input.input.subject,
-        fills: input.input.fills,
+        ...spellReactionContinuation(input.input),
       },
     }),
     input.input.handledInterruptTrigger,
@@ -513,8 +513,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
         ],
         continuation: {
           kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
+          ...spellReactionContinuation(input.input),
         },
       },
       input.input.handledInterruptTrigger,
@@ -816,11 +815,7 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
         sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
-          subject:
-            ("reactionContinuationSubject" in input.input
-              ? input.input.reactionContinuationSubject
-              : undefined) ?? input.input.subject,
-          fills: input.input.fills,
+          ...spellReactionContinuation(input.input),
         },
       },
       input.input.handledInterruptTrigger,

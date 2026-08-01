@@ -40,6 +40,7 @@ import {
   maybeOpenInterruptWindow,
   snapshotBattle,
 } from "../interrupt-execution.ts";
+import { spellReactionContinuation } from "../spell-reaction-continuation.ts";
 import { battleCreatureWithSpellActiveEffects } from "../../active-effect/lifecycle.ts";
 import { type CombatantId } from "../../identity.ts";
 import {
@@ -361,9 +362,7 @@ function resolveSlowActivePenalties(
         sourceProcedureRef: input.invocation.sourceProcedureRef,
         continuation: {
           kind: "replay",
-          subject:
-            input.input.reactionContinuationSubject ?? input.input.subject,
-          fills: input.input.fills,
+          ...spellReactionContinuation(input.input),
         },
       },
       input.input.handledInterruptTrigger,

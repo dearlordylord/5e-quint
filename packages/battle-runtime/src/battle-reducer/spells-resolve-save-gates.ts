@@ -140,6 +140,7 @@ import {
   openAfterDamageSequenceInterruptWindow,
   spendReaction,
 } from "./interrupt-execution.ts";
+import { spellReactionContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 
 type SaveMetamagicSelectionState =
@@ -161,14 +162,6 @@ type SaveGatedSpellResolutionInput =
   | ActionSpellBattleResolutionInput
   | BonusActionSpellBattleResolutionInput;
 
-function spellReactionContinuationSubject(
-  input: SaveGatedSpellResolutionInput,
-): BattleSubject {
-  return "reactionContinuationSubject" in input
-    ? (input.reactionContinuationSubject ?? input.subject)
-    : input.subject;
-}
-
 function maybeOpenSpellSaveFailedInterruptWindow(
   input: SaveGatedSpellResolutionInput,
   sourceProcedureRef: BattleProcedureExecutionRef,
@@ -178,6 +171,7 @@ function maybeOpenSpellSaveFailedInterruptWindow(
   if (triggeringTargetId === undefined) {
     return null;
   }
+  const continuation = spellReactionContinuation(input);
   return maybeOpenInterruptWindow(
     input.state,
     {
@@ -186,8 +180,7 @@ function maybeOpenSpellSaveFailedInterruptWindow(
       sourceProcedureRef,
       continuation: {
         kind: "replay",
-        subject: spellReactionContinuationSubject(input),
-        fills: input.fills,
+        ...continuation,
       },
     },
     input.handledInterruptTrigger,
@@ -1427,8 +1420,7 @@ export function resolveSaveGateDamageSpellAct(input: {
         ),
         continuation: {
           kind: "replay",
-          subject: input.input.subject,
-          fills: input.input.fills,
+          ...spellReactionContinuation(input.input),
         },
       }),
       input.input.handledInterruptTrigger,

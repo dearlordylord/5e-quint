@@ -126,7 +126,7 @@ import {
   commandDropHeldObjectFactsHole,
   commandPendingEffectsForActor,
 } from "./command-procedure-discovery.ts";
-import { standFromProneCostFeet } from "./movement-procedures.ts";
+import { standFromProneCostFeet } from "./stand-from-prone-policy.ts";
 import { readiedSpellInitialHoles } from "./readied-initial-holes.ts";
 import { movementHole } from "./movement-holes.ts";
 import {

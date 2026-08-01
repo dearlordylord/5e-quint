@@ -89,25 +89,6 @@ export {
 import * as Either from "effect/Either";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
-  permanentlyDismissFindFamiliar,
-  reappearAdmittedTemporarilyDismissedFindFamiliar,
-  temporarilyDismissFindFamiliar,
-} from "../find-familiar-lifecycle-execution.ts";
-import {
-  prepareTouchSpellDeliveryThroughFindFamiliar,
-  shareFindFamiliarSenses as applyFindFamiliarSharedSenses,
-  spendFindFamiliarTouchDeliveryReaction,
-  type FindFamiliarWithin100FeetFact,
-} from "../find-familiar-telepathy.ts";
-import {
-  companionReappearanceInitiativeHole,
-  companionReappearancePlacementHole,
-  findFamiliarConnectionHole,
-  companionHeldObjectFactsHole,
-  findFamiliarTouchDeliveryTargetHoles,
-} from "../find-familiar-companion-subjects.ts";
-import { findFamiliarCompanionEntryForOwner } from "../find-familiar-state.ts";
-import {
   sameBattleSubject,
   type BattleSubject,
   type ActionHideSubject,
@@ -136,14 +117,19 @@ import {
 } from "./levitate-creature.ts";
 import {
   battleSubjectActorId,
-  closeLegendaryActionWindow,
   combatantCanTakeActions,
-  consumeLegendaryActionWindow,
   isCharacterBattleCreatureState,
   isLegendaryAttackSubject,
   normalizeEarlyEndedOngoingFeatures,
   statBlockLegendaryActionWindowIsOpen,
 } from "./creature-state-execution.ts";
+import { consumeOrCloseLegendaryActionWindow } from "./legendary-action-window.ts";
+import {
+  FindFamiliarProcedureExecution,
+  resolveCompanionLifecycleSubject,
+  resolveFindFamiliarSharedSensesSubject,
+  resolveFindFamiliarTouchSpellSubject,
+} from "./find-familiar-procedures.ts";
 import {
   applyAttackDamageAmount,
   breakBattleConcentration,
@@ -332,7 +318,6 @@ import type {
   BattleAttackDamageContinuationWithoutConcentration,
   BattleAttackHitTriggerKind,
   BattleConcentrationSavingThrowHole,
-  BattleDroppedObjectOutcome,
   BattleFill,
   BattleCreatureState,
   BattleFeatherFallLandingResult,
@@ -1314,8 +1299,12 @@ export function resolveBattleSubjectInternal(
     if (subject.tag === "findFamiliarTouchSpell") {
       return resolveFindFamiliarTouchSpellSubject(
         { ...input, subject },
-        options.executionRegistry,
-        options.attackResolvers,
+        FindFamiliarProcedureExecution.fromResolver((admitted) =>
+          resolveBattleSubjectInternal(admitted, options),
+        ),
+        options.interruptRouteOptions.replayingInterruptedProcedure === true
+          ? "committed"
+          : "uncommitted",
       );
     }
     if (subject.tag === "actionSpell") {
@@ -1542,464 +1531,6 @@ export function resolveBattleSubjectInternal(
     /* v8 ignore stop */
   })();
   return consumeOrCloseLegendaryActionWindow(input.subject, result);
-}
-
-function resolveCompanionLifecycleSubject(
-  input: BattleResolutionInputForSubject<
-    Extract<BattleSubject, { readonly tag: "companionLifecycle" }>
-  >,
-): BattleResolutionResult {
-  const familiarEntry = findFamiliarCompanionEntryForOwner(
-    input.state,
-    input.subject.actorId,
-  );
-  /* v8 ignore start -- Malformed direct subject: lifecycle discovery requires a retained familiar, while ordinary replay preserves its retained entry (including dismissed states). Reaching no entry requires forging a lifecycle subject for an actor that never owned one. */
-  if (familiarEntry === null) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Familiar lifecycle act requires the actor's retained familiar.",
-    );
-  }
-  /* v8 ignore stop */
-  const familiar = familiarEntry.companion;
-  if (input.subject.action === "temporarilyDismiss") {
-    if (familiar.status !== "present") {
-      return invalidResult(
-        input.state,
-        "staleSubject",
-        "Familiar temporary dismissal requires the actor's present familiar.",
-      );
-    }
-    const heldObjectIds = companionHeldObjectIdsForDismissal(input);
-    /* v8 ignore start -- Malformed replay: temporary-dismiss discovery exposes held-object facts as an initial prerequisite, so execution receives this invalid helper result only when a caller omits that discovered fill. */
-    if (heldObjectIds.tag === "invalid") {
-      return heldObjectIds;
-    }
-    /* v8 ignore stop */
-    return temporarilyDismissFindFamiliar({
-      state: input.state,
-      casterId: input.subject.actorId,
-      heldObjectIds: heldObjectIds.objectIds,
-    });
-  }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (input.subject.action === "reappear") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Familiar reappearance is a session-owned admitted operation.",
-    );
-  }
-  /* v8 ignore stop */
-  if (input.subject.action === "permanentlyDismiss") {
-    return permanentlyDismissFindFamiliar({
-      state: input.state,
-      casterId: input.subject.actorId,
-    });
-  }
-  /* v8 ignore start -- Companion lifecycle actions are exhausted above; widening the action union without a handler fails compilation at this assignment. */
-  const exhaustive: never = input.subject.action;
-  return exhaustive;
-  /* v8 ignore stop */
-}
-
-type FindFamiliarReappearanceResolutionSubject = Omit<
-  Extract<BattleSubject, { readonly tag: "companionLifecycle" }>,
-  "action"
-> & { readonly action: "reappear" };
-
-/** Resolve the session-owned reappearance operation after catalog admission. */
-export function resolveAdmittedFindFamiliarReappearanceSubject(input: {
-  readonly state: BattleState;
-  readonly subject: FindFamiliarReappearanceResolutionSubject;
-  readonly fills: readonly BattleFill[];
-  readonly admission: import("../find-familiar-admission-state.ts").AdmittedFindFamiliarReappearance;
-}): BattleResolutionResult {
-  const familiarEntry = findFamiliarCompanionEntryForOwner(
-    input.state,
-    input.subject.actorId,
-  );
-  if (
-    familiarEntry === null ||
-    familiarEntry.companion.status !== "temporarilyDismissed"
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Familiar reappearance requires the actor's temporarily dismissed familiar.",
-    );
-  }
-  const placement = companionReappearancePlacement(input);
-  if (placement.tag === "needsHoles" || placement.tag === "invalid") {
-    return placement;
-  }
-  const initiative = companionReappearanceInitiative(input);
-  if (initiative.tag === "needsHoles") {
-    return initiative;
-  }
-  const result = reappearAdmittedTemporarilyDismissedFindFamiliar({
-    state: input.state,
-    casterId: input.subject.actorId,
-    admission: input.admission,
-    initiative: initiative.initiative,
-    placement: placement.placement,
-  });
-  return consumeOrCloseLegendaryActionWindow(input.subject, result);
-}
-
-function companionReappearancePlacement(
-  input: BattleResolutionInputForSubject<
-    Extract<BattleSubject, { readonly tag: "companionLifecycle" }>
-  >,
-):
-  | {
-      readonly tag: "resolved";
-      readonly placement: Extract<
-        Extract<
-          BattleFill,
-          { readonly kind: "companionReappearancePlacement" }
-        >["value"],
-        { readonly kind: "unoccupiedSpaceWithin30Feet" }
-      >;
-    }
-  | Extract<
-      BattleResolutionResult,
-      { readonly tag: "needsHoles" | "invalid" }
-    > {
-  const expectedHole = companionReappearancePlacementHole({
-    ownerId: input.subject.actorId,
-  });
-  const fill = input.fills.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleFill,
-      { readonly kind: "companionReappearancePlacement" }
-    > =>
-      candidate.kind === "companionReappearancePlacement" &&
-      candidate.holeId === expectedHole.holeId,
-  );
-  if (fill === undefined) {
-    return needsHolesResult(input.state, input.subject, [expectedHole]);
-  }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (fill.value.kind !== "unoccupiedSpaceWithin30Feet") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Familiar reappearance placement must be an unoccupied space within 30 feet.",
-    );
-  }
-  /* v8 ignore stop */
-  return { tag: "resolved", placement: fill.value };
-}
-
-function companionReappearanceInitiative(
-  input: BattleResolutionInputForSubject<
-    Extract<BattleSubject, { readonly tag: "companionLifecycle" }>
-  >,
-):
-  | {
-      readonly tag: "resolved";
-      readonly initiative: Extract<
-        BattleFill,
-        { readonly kind: "companionReappearanceInitiative" }
-      >["value"];
-    }
-  | Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
-  const expectedHole = companionReappearanceInitiativeHole({
-    ownerId: input.subject.actorId,
-  });
-  const fill = input.fills.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleFill,
-      { readonly kind: "companionReappearanceInitiative" }
-    > =>
-      candidate.kind === "companionReappearanceInitiative" &&
-      candidate.holeId === expectedHole.holeId,
-  );
-  return fill === undefined
-    ? needsHolesResult(input.state, input.subject, [expectedHole])
-    : { tag: "resolved", initiative: fill.value };
-}
-
-function resolveFindFamiliarSharedSensesSubject(
-  input: BattleResolutionInputForSubject<
-    Extract<BattleSubject, { readonly tag: "findFamiliarSharedSenses" }>
-  >,
-): BattleResolutionResult {
-  const connection = findFamiliarConnectionFact({
-    state: input.state,
-    ownerId: input.subject.actorId,
-    companionId: input.subject.familiarId,
-    fills: input.fills,
-    subject: input.subject,
-    actionLabel: "Familiar shared senses",
-  });
-  return connection.tag !== "resolved"
-    ? connection
-    : shareFindFamiliarSenses({
-        state: input.state,
-        casterId: input.subject.actorId,
-        fact: connection.fact,
-      });
-}
-
-export function shareFindFamiliarSenses(input: {
-  readonly state: BattleState;
-  readonly casterId: CombatantId;
-  readonly fact: FindFamiliarWithin100FeetFact;
-}): BattleResolutionResult {
-  const transition = applyFindFamiliarSharedSenses(input);
-  return transition.tag === "invalid"
-    ? invalidResult(input.state, transition.reason, transition.message)
-    : {
-        tag: "resolved",
-        state: transition.state,
-        snapshot: snapshotBattle(transition.state),
-      };
-}
-
-function resolveFindFamiliarTouchSpellSubject(
-  input: BattleResolutionInputForSubject<
-    Extract<BattleSubject, { readonly tag: "findFamiliarTouchSpell" }>
-  >,
-  executionRegistry: SpellProcedureExecutionRegistry,
-  attackResolvers: BattleAttackRouteResolvers,
-): BattleResolutionResult {
-  const connection = findFamiliarConnectionFact({
-    state: input.state,
-    ownerId: input.subject.actorId,
-    companionId: input.subject.companionId,
-    fills: input.fills,
-    subject: input.subject,
-    actionLabel: "Familiar touch spell delivery",
-  });
-  if (connection.tag !== "resolved") {
-    return connection;
-  }
-  const spellSubject = findFamiliarTouchSpellSubject(input.subject);
-  const spellFills = input.fills.filter(
-    (fill) =>
-      !(
-        fill.kind === "findFamiliarConnection" &&
-        fill.holeId === connection.holeId
-      ),
-  );
-  const delivered = deliverTouchSpellThroughFindFamiliar(
-    {
-      state: input.state,
-      subject: spellSubject.subject,
-      fills: spellFills,
-      fact: connection.fact,
-    },
-    executionRegistry,
-    attackResolvers,
-  );
-  return delivered.tag === "needsHoles"
-    ? {
-        ...delivered,
-        subject: input.subject,
-        holes: findFamiliarTouchDeliveryTargetHoles(delivered.holes),
-      }
-    : delivered;
-}
-
-export function deliverTouchSpellThroughFindFamiliar(
-  input: {
-    readonly state: BattleState;
-    readonly subject: Extract<
-      BattleSubject,
-      { readonly tag: "actionSpell" | "bonusActionSpell" }
-    >;
-    readonly fills: BattleResolutionInput["fills"];
-    readonly fact: FindFamiliarWithin100FeetFact;
-  },
-  executionRegistry: SpellProcedureExecutionRegistry,
-  attackResolvers: BattleAttackRouteResolvers,
-): BattleResolutionResult {
-  const prepared = prepareTouchSpellDeliveryThroughFindFamiliar(input);
-  if (prepared.tag === "invalid") {
-    return invalidResult(input.state, prepared.reason, prepared.message);
-  }
-  const candidate = {
-    state: input.state,
-    subject: input.subject,
-    fills: prepared.fills,
-  };
-  const admission = admitBattleResolutionInput(candidate);
-  if (admission.tag === "staleCharacterProcedure") {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "The familiar-delivered spell procedure is no longer bound to its caster.",
-    );
-  }
-  const cast = resolveAdmittedBattleSubject(
-    admission.input,
-    executionRegistry,
-    attackResolvers,
-  );
-  if (cast.tag === "invalid") {
-    return { ...cast, snapshot: snapshotBattle(input.state) };
-  }
-  if (cast.tag !== "resolved") return cast;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!cast.state.combatants.has(prepared.familiarId)) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Find Familiar touch delivery requires the familiar to remain present.",
-    );
-  }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (prepared.targetChoiceCount === 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Find Familiar touch delivery currently supports exactly one selected target choice.",
-    );
-  }
-  /* v8 ignore stop */
-  const spent = spendFindFamiliarTouchDeliveryReaction({
-    state: cast.state,
-    familiarId: prepared.familiarId,
-  });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (spent.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", spent.message);
-  }
-  /* v8 ignore stop */
-  return {
-    tag: "resolved",
-    state: spent.state,
-    snapshot: snapshotBattle(spent.state),
-  };
-}
-
-function companionHeldObjectIdsForDismissal(
-  input: BattleResolutionInputForSubject<
-    Extract<BattleSubject, { readonly tag: "companionLifecycle" }>
-  >,
-):
-  | {
-      readonly tag: "resolved";
-      readonly objectIds: readonly BattleDroppedObjectOutcome["objectId"][];
-    }
-  | Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
-  const companionEntry = findFamiliarCompanionEntryForOwner(
-    input.state,
-    input.subject.actorId,
-  );
-  if (companionEntry?.companion.status !== "present") {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Familiar dismissal held-object facts require a present familiar.",
-    );
-  }
-  const companionId = companionEntry.companion.combatantId;
-  const expectedHole = companionHeldObjectFactsHole({ companionId });
-  const fill = input.fills.find(
-    (
-      candidate,
-    ): candidate is Extract<BattleFill, { readonly kind: "heldObjectFacts" }> =>
-      candidate.kind === "heldObjectFacts" &&
-      candidate.holeId === expectedHole.holeId,
-  );
-  /* v8 ignore start -- Malformed replay: temporary-dismiss discovery exposes this exact held-object-facts hole as an initial prerequisite, so omitting it contradicts the discovered subject contract. */
-  if (fill === undefined) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Familiar temporary dismissal requires held-object facts for the familiar.",
-    );
-  }
-  /* v8 ignore stop */
-  return { tag: "resolved", objectIds: fill.value.objectIds };
-}
-
-function findFamiliarConnectionFact(input: {
-  readonly state: BattleState;
-  readonly ownerId: CombatantId;
-  readonly companionId: CombatantId;
-  readonly fills: readonly BattleFill[];
-  readonly subject: BattleSubject;
-  readonly actionLabel: string;
-}):
-  | {
-      readonly tag: "resolved";
-      readonly fact: FindFamiliarWithin100FeetFact;
-      readonly holeId: BattleFill["holeId"];
-    }
-  | Extract<
-      BattleResolutionResult,
-      { readonly tag: "needsHoles" | "invalid" }
-    > {
-  const expectedHole = findFamiliarConnectionHole({
-    ownerId: input.ownerId,
-    companionId: input.companionId,
-  });
-  const fill = input.fills.find(
-    (candidate) =>
-      candidate.kind === "findFamiliarConnection" &&
-      candidate.holeId === expectedHole.holeId,
-  );
-  if (fill === undefined) {
-    return needsHolesResult(input.state, input.subject, [expectedHole]);
-  }
-  return {
-    tag: "resolved",
-    holeId: expectedHole.holeId,
-    fact: {
-      kind: "findFamiliarWithin100FeetOfOwner",
-      ownerId: input.ownerId,
-      familiarId: input.companionId,
-    },
-  };
-}
-
-function findFamiliarTouchSpellSubject(
-  subject: Extract<BattleSubject, { readonly tag: "findFamiliarTouchSpell" }>,
-): {
-  readonly tag: "resolved";
-  readonly subject: Extract<
-    BattleSubject,
-    { readonly tag: "actionSpell" | "bonusActionSpell" }
-  >;
-} {
-  const base = {
-    actorId: subject.actorId,
-    procedureRef: subject.procedureRef,
-    mode: subject.mode,
-    ...(subject.metamagic === undefined
-      ? {}
-      : { metamagic: subject.metamagic }),
-  };
-  return subject.spellAction === "action"
-    ? {
-        tag: "resolved",
-        subject: {
-          tag: "actionSpell",
-          ...base,
-        },
-      }
-    : {
-        tag: "resolved",
-        subject: {
-          tag: "bonusActionSpell",
-          ...base,
-        },
-      };
 }
 
 function resolveDisperseFogCloudCommand(
@@ -2650,26 +2181,6 @@ function isCloudkillAppearanceSaveSubject(
     subject.command === "cloudkillAreaHazardSave" &&
     subject.areaMembershipTrigger.kind === "appearsInArea"
   );
-}
-
-export function consumeOrCloseLegendaryActionWindow(
-  subject: BattleSubject,
-  result: BattleResolutionResult,
-): BattleResolutionResult {
-  if (result.tag !== "resolved") return result;
-  if (subject.tag === "runtimeCommand" && subject.command === "endTurn") {
-    const normalized = normalizeEarlyEndedOngoingFeatures(result.state);
-    return normalized === result.state
-      ? result
-      : { ...result, state: normalized, snapshot: snapshotBattle(normalized) };
-  }
-  const normalized = normalizeEarlyEndedOngoingFeatures(result.state);
-  const state = isLegendaryAttackSubject(normalized, subject)
-    ? consumeLegendaryActionWindow(normalized)
-    : closeLegendaryActionWindow(normalized);
-  return state === result.state
-    ? result
-    : { ...result, state, snapshot: snapshotBattle(state) };
 }
 
 export function openCreatureFallsInterruptWindow(input: {

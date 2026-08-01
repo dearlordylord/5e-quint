@@ -752,7 +752,8 @@
         "packages/battle-runtime/src/find-familiar-lifecycle.ts",
         "packages/battle-runtime/src/find-familiar-state.ts",
         "packages/battle-runtime/src/find-familiar-telepathy.ts",
-        "packages/battle-runtime/src/find-familiar-pact-chain.ts"
+        "packages/battle-runtime/src/find-familiar-pact-chain.ts",
+        "packages/battle-runtime/src/battle-reducer/find-familiar-procedures.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
