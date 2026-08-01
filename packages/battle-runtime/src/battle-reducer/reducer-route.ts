@@ -17,7 +17,6 @@ import type {
   BattleResolutionInput,
   BattleResolutionResult,
   BattleState,
-  SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
@@ -102,6 +101,11 @@ import {
   passiveProjectionRouteForResolution,
 } from "./passive-projection-routes.ts";
 import { spellInvocationForRouteSubject } from "./reducer-route-spell-query.ts";
+import { battleActiveEffects } from "./reducer-route-state-query.ts";
+import {
+  weaponSpellRouteForDiscoveredAct,
+  weaponSpellRouteForResolution,
+} from "./weapon-spell-routes.ts";
 import {
   movementRouteForDiscoveredAct,
   movementRouteForResolution,
@@ -404,12 +408,12 @@ export function battleReducerRouteEventsForDiscoveredAct(
         : passiveDamageAdjustmentRouteForSpellDiscovery(state)),
     ]);
   }
-  const weaponHostedDiscoveryRoute = weaponHostedRouteForDiscoveredAct(
+  const weaponSpellDiscoveryRoute = weaponSpellRouteForDiscoveredAct(
     state,
     act,
   );
-  if (weaponHostedDiscoveryRoute !== undefined) {
-    return [weaponHostedDiscoveryRoute];
+  if (weaponSpellDiscoveryRoute !== undefined) {
+    return [weaponSpellDiscoveryRoute];
   }
   if (isSlotSpellDiscoverySubject(state, act.subject)) {
     return [
@@ -677,23 +681,10 @@ export function battleReducerRouteForResolution(
       activeFormLifecycleTerminalRoute,
     );
   }
-  const weaponHostedSpellRoute = weaponHostedSpellRouteForResolution(
-    input,
-    result,
-  );
-  if (weaponHostedSpellRoute !== undefined) {
+  const weaponSpellRoute = weaponSpellRouteForResolution(input, result);
+  if (weaponSpellRoute !== undefined) {
     return composeWithActiveFormLifecycleTerminalRoute(
-      weaponHostedSpellRoute,
-      activeFormLifecycleTerminalRoute,
-    );
-  }
-  const weaponHostedCleanupRoute = weaponHostedCleanupRouteForResolution(
-    input,
-    result,
-  );
-  if (weaponHostedCleanupRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
-      weaponHostedCleanupRoute,
+      weaponSpellRoute,
       activeFormLifecycleTerminalRoute,
     );
   }
@@ -1610,254 +1601,6 @@ function activeFeatureSpellAttackRollModeResolutionRouteEvents(
       "battleSpellAttackProcedure",
     ),
   ];
-}
-
-function weaponHostedRouteForDiscoveredAct(
-  state: BattleState,
-  act: BattleActDiscoveryCandidate,
-): BattleReducerRouteEvent | undefined {
-  const subject = weaponHostedSpellRouteSubject(state, act.subject);
-  if (subject === undefined) {
-    return undefined;
-  }
-  return discoverBattleActsRoute(
-    subject,
-    weaponHostedSpellDiscoveryHoles(subject, act.initialHoles),
-    weaponHostedSpellDiscoveryOwner(subject),
-  );
-}
-
-function weaponHostedSpellRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): BattleReducerRouteEvents | undefined {
-  const subject = weaponHostedSpellRouteSubject(input.state, input.subject);
-  if (subject === undefined) {
-    return undefined;
-  }
-  if (result.tag === "invalid") {
-    return result.reason === "staleSubject"
-      ? [
-          resolveBattleSubjectWithoutFillRoute(
-            subject,
-            [],
-            "battleHoleFrontier",
-          ),
-        ]
-      : undefined;
-  }
-  const fill = input.fills.at(-1);
-  if (fill === undefined) {
-    if (result.tag !== "resolved" || subject === "spellHostedWeaponAttack") {
-      return undefined;
-    }
-    return [
-      resolveBattleSubjectWithoutFillRoute(subject, [], "battleActiveEffect"),
-    ];
-  }
-  const routeFill = battleReducerRouteFill(fill);
-  if (routeFill === undefined) {
-    return undefined;
-  }
-  if (
-    subject === "weaponEnhancementItemTarget" &&
-    routeFill === "magicWeaponTargetItem" &&
-    result.tag === "resolved"
-  ) {
-    return [
-      resolveBattleSubjectWithoutFillRoute(subject, [], "battleActiveEffect"),
-    ];
-  }
-  if (subject !== "spellHostedWeaponAttack") {
-    return undefined;
-  }
-  const owners = spellHostedWeaponAttackRouteOwners(routeFill);
-  if (owners === undefined) {
-    return undefined;
-  }
-  const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
-  const route: BattleReducerRouteEvent[] = [
-    resolveBattleSubjectRoute(subject, routeFill, holes, owners.resolveOwner),
-  ];
-  const nextDiscoveryOwner = spellHostedWeaponAttackNextDiscoveryOwner(holes);
-  if (nextDiscoveryOwner !== undefined) {
-    route.push(discoverBattleActsRoute(subject, holes, nextDiscoveryOwner));
-  }
-  return nonEmptyRouteEvents(route);
-}
-
-function weaponHostedSpellRouteSubject(
-  state: BattleState,
-  subject: BattleResolutionInput["subject"],
-): BattleReducerRouteSubjectFamily | undefined {
-  if (
-    subject.tag !== "actionSpell" &&
-    subject.tag !== "bonusActionSpell" &&
-    subject.tag !== "bonusActionDashSpell"
-  ) {
-    return undefined;
-  }
-  const invocation = spellInvocationForRouteSubject(state, subject);
-  return invocation === undefined
-    ? undefined
-    : weaponHostedRouteSubjectForProcedure(invocation.procedure);
-}
-
-function weaponHostedRouteSubjectForProcedure(
-  procedure: SupportedSpellInvocation["procedure"],
-): BattleReducerRouteSubjectFamily | undefined {
-  if (procedure === "spellHostedWeaponAttack") {
-    return "spellHostedWeaponAttack";
-  }
-  if (procedure === "weaponDamageRider") {
-    return "weaponDamageRider";
-  }
-  if (procedure === "weaponAttackOverride") {
-    return "heldWeaponActiveEffect";
-  }
-  if (procedure === "magicWeaponEnhancement") {
-    return "weaponEnhancementItemTarget";
-  }
-  return undefined;
-}
-
-function weaponHostedSpellDiscoveryOwner(
-  subject: BattleReducerRouteSubjectFamily,
-): BattleReducerRouteOwnerGroup {
-  if (subject === "weaponDamageRider") {
-    return "battleSpellSlotAndActionEconomy";
-  }
-  if (subject === "weaponEnhancementItemTarget") {
-    return "battleItemTargetBoundary";
-  }
-  return "battleActionEconomy";
-}
-
-function weaponHostedSpellDiscoveryHoles(
-  subject: BattleReducerRouteSubjectFamily,
-  holes: readonly BattleHole[],
-): readonly BattleReducerRouteHole[] {
-  return subject === "weaponEnhancementItemTarget"
-    ? []
-    : battleReducerRouteHoles(holes);
-}
-
-function spellHostedWeaponAttackRouteOwners(fill: BattleReducerRouteFill):
-  | {
-      readonly resolveOwner: BattleReducerRouteOwnerGroup;
-    }
-  | undefined {
-  if (fill === "damageTypeChoice") {
-    return {
-      resolveOwner: "battleHoleFrontier",
-    };
-  }
-  if (fill === "targetChoice") {
-    return {
-      resolveOwner: "battleTargetSelection",
-    };
-  }
-  if (fill === "attackRoll") {
-    return {
-      resolveOwner: "battleAttackRoll",
-    };
-  }
-  if (fill === "rolledDice") {
-    return {
-      resolveOwner: "battleHitPoint",
-    };
-  }
-  return undefined;
-}
-
-function spellHostedWeaponAttackNextDiscoveryOwner(
-  holes: readonly BattleReducerRouteHole[],
-): BattleReducerRouteOwnerGroup | undefined {
-  if (holes.includes("targetChoice")) {
-    return "battleTargetSelection";
-  }
-  if (holes.includes("attackRoll")) {
-    return "battleAttackRoll";
-  }
-  if (holes.includes("rolledDice")) {
-    return "battleHitPoint";
-  }
-  return undefined;
-}
-
-function weaponHostedCleanupRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): BattleReducerRouteEvents | undefined {
-  if (
-    result.tag !== "resolved" ||
-    input.subject.tag !== "runtimeCommand" ||
-    input.subject.command !== "endTurn" ||
-    !weaponHostedActiveEffectWasRemoved(input.state, result.state)
-  ) {
-    return undefined;
-  }
-  return [
-    discoverBattleActsRoute(
-      "weaponHostedSpellEffectCleanup",
-      [],
-      "battleActiveEffect",
-    ),
-    resolveBattleSubjectWithoutFillRoute(
-      "weaponHostedSpellEffectCleanup",
-      [],
-      "battleActiveEffect",
-    ),
-  ];
-}
-
-function weaponHostedActiveEffectWasRemoved(
-  before: BattleState,
-  after: BattleState,
-): boolean {
-  const beforeCounts = weaponHostedActiveEffectCounts(before);
-  const afterCounts = weaponHostedActiveEffectCounts(after);
-  return (
-    afterCounts.weaponAttackOverride < beforeCounts.weaponAttackOverride ||
-    afterCounts.weaponDamageRider < beforeCounts.weaponDamageRider ||
-    afterCounts.magicWeaponEnhancement < beforeCounts.magicWeaponEnhancement
-  );
-}
-
-function weaponHostedActiveEffectCounts(state: BattleState): {
-  readonly weaponAttackOverride: number;
-  readonly weaponDamageRider: number;
-  readonly magicWeaponEnhancement: number;
-} {
-  return activeEffects(state).reduce(
-    (counts, effect) => {
-      if (effect.kind === "spellWeaponAttackOverride") {
-        return {
-          ...counts,
-          weaponAttackOverride: counts.weaponAttackOverride + 1,
-        };
-      }
-      if (effect.kind === "spellWeaponDamageRider") {
-        return {
-          ...counts,
-          weaponDamageRider: counts.weaponDamageRider + 1,
-        };
-      }
-      if (effect.kind === "spellMagicWeaponEnhancement") {
-        return {
-          ...counts,
-          magicWeaponEnhancement: counts.magicWeaponEnhancement + 1,
-        };
-      }
-      return counts;
-    },
-    {
-      weaponAttackOverride: 0,
-      weaponDamageRider: 0,
-      magicWeaponEnhancement: 0,
-    },
-  );
 }
 
 function attackActionAreaSaveDamageReplacementRouteForDiscoveredAct(
@@ -4683,7 +4426,7 @@ function activeEffectKindsAdded(
 ): readonly BattleActiveEffect["kind"][] {
   const beforeCounts = battleActiveEffectKindCounts(before);
   const added = new Set<BattleActiveEffect["kind"]>();
-  for (const effect of activeEffects(after)) {
+  for (const effect of battleActiveEffects(after)) {
     const previous = beforeCounts.get(effect.kind) ?? 0;
     if (previous === 0) {
       added.add(effect.kind);
@@ -4698,16 +4441,10 @@ function battleActiveEffectKindCounts(
   state: BattleState,
 ): Map<BattleActiveEffect["kind"], number> {
   const counts = new Map<BattleActiveEffect["kind"], number>();
-  for (const effect of activeEffects(state)) {
+  for (const effect of battleActiveEffects(state)) {
     counts.set(effect.kind, (counts.get(effect.kind) ?? 0) + 1);
   }
   return counts;
-}
-
-function activeEffects(state: BattleState): readonly BattleActiveEffect[] {
-  return [...state.combatants.values()].flatMap(
-    (combatant) => combatant.activeEffects,
-  );
 }
 
 function interruptStackResumeDiscoveryRouteForResolution(
