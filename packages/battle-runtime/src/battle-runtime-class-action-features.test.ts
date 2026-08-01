@@ -1,6 +1,7 @@
 import {
   battleObjectId,
   BattleStatBlockProcedureExecutionRef,
+  combatantId,
 } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
@@ -1343,7 +1344,7 @@ describe("battle runtime: class action features", () => {
     ).toEqual(expect.objectContaining({ usesRemaining: 2 }));
   });
 
-  test("Tactical Mind rejects successful checks, depleted Second Wind, and unsupported Unit projection", () => {
+  test("Tactical Mind rejects successful checks, depleted Second Wind, unsupported Unit projection, and missing actors", () => {
     const tacticalMindUnit = unitLibrary.requireUnit("fighter_tactical_mind");
     const baseSession = startBattleSessionRight({
       battleId: battleId("battle-tactical-mind-invalid"),
@@ -1442,6 +1443,20 @@ describe("battle runtime: class action features", () => {
         abilityCheck: {
           actorId: fighterId,
           ability: "cha",
+          originalTotal: 14,
+          dc: difficultyClass(15),
+        },
+        boostRoll: 1,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+
+    expect(
+      resolveFailedAbilityCheckResourceBoost({
+        state: baseState,
+        procedureRef: tacticalMindProcedureRef,
+        abilityCheck: {
+          actorId: combatantId("missing-tactical-mind-actor"),
+          ability: "int",
           originalTotal: 14,
           dc: difficultyClass(15),
         },

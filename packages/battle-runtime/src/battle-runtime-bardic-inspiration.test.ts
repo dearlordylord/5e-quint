@@ -1,4 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { combatantId } from "./identity.ts";
 import { describe, expect, test } from "vitest";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 import { reactionReductionResourceDieLabel } from "./battle-reducer/reaction-modifiers.ts";
@@ -619,7 +620,7 @@ describe("battle runtime: Bardic Inspiration", () => {
     );
   });
 
-  test("Bardic Inspiration failed D20 Test use rejects successes, invalid die rolls, and double spend", () => {
+  test("Bardic Inspiration failed D20 Test use rejects successes, invalid die rolls, double spend, and missing actors", () => {
     const state = grantBardicInspirationToGoblin();
 
     expect(
@@ -681,6 +682,25 @@ describe("battle runtime: Bardic Inspiration", () => {
           actorId: goblinId,
           attackRoll: { total: 12, naturalD20: DieRollResult(10) },
           armorClass: armorClass(15),
+        },
+        bardicInspirationRoll: 1,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Bardic Inspiration is no longer available for the D20 Test actor.",
+    });
+
+    expect(
+      resolveBardicInspirationFailedD20Test({
+        state,
+        d20Test: {
+          kind: "savingThrow",
+          actorId: combatantId("missing-bardic-inspiration-actor"),
+          ability: "wis",
+          originalTotal: 12,
+          dc: difficultyClass(15),
         },
         bardicInspirationRoll: 1,
       }),

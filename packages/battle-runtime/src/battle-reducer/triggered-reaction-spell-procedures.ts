@@ -518,6 +518,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
   }
   /* v8 ignore stop */
   const target = input.state.combatants.get(input.frame.damageSourceId);
+  /* v8 ignore start -- The public interrupt dispatcher proves every checkpoint actor is still present before admitting this reaction command. */
   if (target === undefined) {
     return invalidResult(
       input.state,
@@ -525,6 +526,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
       "Hellish Rebuke target is no longer in the battle.",
     );
   }
+  /* v8 ignore stop */
   const spellDamageByType = spellDamageByTypeForTarget(
     target,
     input.invocation,

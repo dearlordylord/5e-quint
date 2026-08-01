@@ -125,6 +125,7 @@ const spiderId = "stat_block_spider";
 const syntheticCoordinatedShapeId = "synthetic_coordinated_shape";
 const syntheticProseProneFormId = "synthetic_prose_prone_form";
 const syntheticActionSectionFormId = "synthetic_action_section_form";
+const syntheticTypedRidersFormId = "synthetic_typed_riders_form";
 const packAllyId = combatantId("wild-shape-pack-ally");
 const druidGroundPositionId = battleTablePositionId(
   "wild-shape-druid-ground-position",
@@ -2323,6 +2324,70 @@ test("rejects known Beast forms without promoted movement facts", () => {
   }
 });
 
+test.each([
+  {
+    label: "literal Armor Class",
+    expected: "Druid Wild Shape battle forms require literal Armor Class.",
+    mutate: (form: StatBlockRecord): StatBlockRecord => ({
+      ...form,
+      statBlock: {
+        ...form.statBlock,
+        ac: { kind: "caster_derived", source: "spell_save_dc" },
+      },
+    }),
+  },
+  {
+    label: "literal Size",
+    expected: "Druid Wild Shape battle forms require literal Size.",
+    mutate: (form: StatBlockRecord): StatBlockRecord => ({
+      ...form,
+      statBlock: {
+        ...form.statBlock,
+        size: {
+          kind: "choice",
+          label: "Synthetic form size",
+          options: ["small", "medium"],
+        },
+      },
+    }),
+  },
+  {
+    label: "unconditional literal Speeds",
+    expected:
+      "Druid Wild Shape battle forms require unconditional literal Speeds.",
+    mutate: (form: StatBlockRecord): StatBlockRecord => ({
+      ...form,
+      statBlock: {
+        ...form.statBlock,
+        speeds: [
+          { ...form.statBlock.speeds[0], requiresSlotLevel: 2 },
+          ...form.statBlock.speeds.slice(1),
+        ],
+      },
+    }),
+  },
+] as const)(
+  "rejects known Beast forms without $label",
+  ({ mutate, expected }) => {
+    const profile = parseSupportedUnitFeatureProfile(
+      unitLibrary.requireUnit("druid_wild_shape"),
+      [{ className: "druid", level: ClassLevel.make(2) }],
+    );
+    if (profile?.kind !== "druidWildShapeKnownForm") {
+      throw new Error("Expected Druid Wild Shape support profile.");
+    }
+    const result = battleAvailableDruidWildShapeKnownForms({
+      profile,
+      forms: [mutate(statBlockCatalog.requireStatBlock(ratId))],
+    });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isLeft(result)) {
+      expect(result.left.message).toBe(expected);
+    }
+  },
+);
+
 test("admits selected Beast forms with multi-component attack damage and typed hit riders", () => {
   const profile = parseSupportedUnitFeatureProfile(
     unitLibrary.requireUnit("druid_wild_shape"),
@@ -2507,6 +2572,7 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
       ...statBlockCatalog.listStatBlocks(),
       statBlockCatalog.requireStatBlock("stat_block_skeleton"),
       syntheticProseProneForm(),
+      syntheticTypedRidersForm(),
       syntheticActionSectionForm(),
     ],
     profile,
@@ -2534,6 +2600,7 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
         category: "attackHitConditionRider",
         exampleStatBlockIds: expect.arrayContaining([
           syntheticProseProneFormId,
+          syntheticTypedRidersFormId,
         ]),
         closedBoundary: expect.objectContaining({
           owner: expect.stringContaining("condition rider owner"),
@@ -2541,6 +2608,18 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
             "outside the typed target Size Prone payload",
           ),
         }),
+      }),
+      expect.objectContaining({
+        category: "attackHitForcedMovementRider",
+        exampleStatBlockIds: expect.arrayContaining([
+          syntheticTypedRidersFormId,
+        ]),
+      }),
+      expect.objectContaining({
+        category: "attackHitOtherRider",
+        exampleStatBlockIds: expect.arrayContaining([
+          syntheticTypedRidersFormId,
+        ]),
       }),
       expect.objectContaining({
         category: "tableOrProseOnlyTrait",
@@ -2648,7 +2727,7 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
     inventory.some(
       (entry) => entry.category === "attackHitForcedMovementRider",
     ),
-  ).toBe(false);
+  ).toBe(true);
 });
 
 function syntheticProseProneForm(): StatBlockRecord {
@@ -2671,6 +2750,47 @@ function syntheticProseProneForm(): StatBlockRecord {
             description:
               "If the target is a Medium or smaller creature, it has the Prone condition.",
             name: "Synthetic Bite",
+          },
+        ],
+      },
+    },
+  };
+}
+
+function syntheticTypedRidersForm(): StatBlockRecord {
+  const base = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const hooves = base.statBlock.actions?.attacks?.[0];
+  if (hooves === undefined) {
+    throw new Error("Expected Riding Horse Hooves fixture.");
+  }
+  return {
+    ...base,
+    id: parseSharedStatBlockId(syntheticTypedRidersFormId),
+    name: "Synthetic Typed Riders Form",
+    statBlock: {
+      ...base.statBlock,
+      displayName: "Synthetic Typed Riders Form",
+      actions: {
+        attacks: [
+          {
+            ...hooves,
+            description:
+              "The target gains the Prone condition and is pushed 5 feet.",
+            name: "Synthetic Rider Strike",
+            onHit: [
+              ...hooves.onHit,
+              { kind: "apply_condition", condition: "prone" },
+              {
+                kind: "force_move",
+                movementKind: "push",
+                distanceFeet: 5,
+              },
+              {
+                kind: "audible",
+                sound: "Synthetic chime",
+                audibleRadiusFeet: 30,
+              },
+            ],
           },
         ],
       },

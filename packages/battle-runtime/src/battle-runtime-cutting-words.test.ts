@@ -1,6 +1,7 @@
 import { attackDamageInterruptionFrame } from "./battle-reducer/attack-damage-events.ts";
 import { classLevel } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
+import { combatantId } from "./identity.ts";
 import {
   attackDamageHoleAfterHit,
   attackInitialTargetHole,
@@ -395,7 +396,7 @@ describe("battle runtime: Cutting Words", () => {
     expect(bard.origin.resources[0]?.usesRemaining).toBe(0);
   });
 
-  test("Cutting Words ability-check reduction rejects pre-reduction failures and missing range facts", () => {
+  test("Cutting Words ability-check reduction rejects pre-reduction failures, missing range facts, and missing actors", () => {
     const cuttingWords = cuttingWordsUnit();
     const session = startBattleSessionRight({
       battleId: battleId("battle-cutting-words-ability-check-rejected"),
@@ -472,6 +473,26 @@ describe("battle runtime: Cutting Words", () => {
       reason: "invalidFill",
       message:
         "Ability-check Reaction reduction requires the creature to be within range.",
+    });
+
+    expect(
+      resolveSuccessfulAbilityCheckReactionReduction({
+        state,
+        reactorId: fighterId,
+        procedureRef,
+        abilityCheck: {
+          actorId: combatantId("missing-cutting-words-target"),
+          ability: "str",
+          originalTotal: 15,
+          dc: difficultyClass(14),
+          targetSpatialFacts: [],
+        },
+        reductionRoll: 3,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Ability-check Reaction reduction is no longer available.",
     });
   });
 

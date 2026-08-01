@@ -23,6 +23,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record.test-support.
 import {
   abilityModifier,
   assertBattleSnapshotCodecRoundTripForTest,
+  battleLightEmitterProjection,
   battleTablePositionId,
   breakBattleConcentration,
   canSpendAction,
@@ -147,6 +148,27 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
         }),
       ]),
     );
+    const dancingEmitter = resolved.snapshot.lightEmitters[0];
+    if (
+      dancingEmitter?.kind !== "spellLightEmitter" ||
+      dancingEmitter.attachment.kind !== "dancingLight"
+    ) {
+      throw new Error("Expected projected Dancing Light emitter.");
+    }
+    const dancingLightFact = {
+      ...dancingEmitter.attachment,
+      distanceFeet: movementFeet(5),
+    };
+    expect(
+      battleLightEmitterProjection(dancingEmitter, dancingLightFact),
+    ).toEqual({ emitter: dancingEmitter, illumination: "dimLight" });
+    expect(
+      battleLightEmitterProjection(dancingEmitter, {
+        ...dancingLightFact,
+        positionId: battleTablePositionId("wrong-dancing-light-position"),
+      }),
+    ).toBeNull();
+
     expect(canSpendAction(resolved.state.currentTurnResources, "magic")).toBe(
       false,
     );

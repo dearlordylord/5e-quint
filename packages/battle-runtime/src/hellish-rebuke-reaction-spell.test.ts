@@ -291,6 +291,206 @@ describe("Hellish Rebuke Reaction spell", () => {
     });
   });
 
+  test("rejects an ineligible responder for a pending Hellish Rebuke", () => {
+    const session = battleWithHellishRebuke(
+      srdSpellRecord(hellishRebukeUnitId),
+    );
+    const awaitingReaction = resolveUnarmedStrikeAgainstCaster({
+      state: session,
+      includeHellishRebukeTriggerFact: true,
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
+    }
+    const choice = requireHellishRebukeChoice(
+      awaitingReaction,
+      spellCasterId,
+      session,
+    );
+    expect(
+      resolveBattleInterrupt({
+        state: awaitingReaction.state,
+        fill: interruptDecisionFill(
+          requireHole(awaitingReaction.holes, "interruptDecision"),
+          {
+            kind: "resolve",
+            responderId: damagerId,
+            choice: {
+              kind: "castTriggeredReactionSpell",
+              procedureRef: choice.subject.procedureRef,
+              fills: [],
+            },
+          },
+        ),
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Interrupt decision responder is not eligible for the pending interrupt checkpoint.",
+    });
+  });
+
+  test("rejects a pending Hellish Rebuke after its spell slot is expended", () => {
+    const session = battleWithHellishRebuke(
+      srdSpellRecord(hellishRebukeUnitId),
+    );
+    const awaitingReaction = resolveUnarmedStrikeAgainstCaster({
+      state: session,
+      includeHellishRebukeTriggerFact: true,
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
+    }
+    const choice = requireHellishRebukeChoice(
+      awaitingReaction,
+      spellCasterId,
+      session,
+    );
+    const withoutSlot = withCombatant(
+      awaitingReaction.state,
+      spellCasterId,
+      (caster) => {
+        if (
+          caster.origin.kind !== "character" ||
+          caster.origin.spellcasting === undefined
+        ) {
+          throw new Error("Expected the Hellish Rebuke caster.");
+        }
+        return {
+          ...caster,
+          origin: {
+            ...caster.origin,
+            spellcasting: {
+              ...caster.origin.spellcasting,
+              spellSlots: caster.origin.spellcasting.spellSlots.map((slot) =>
+                slot.spellLevel === 2
+                  ? { ...slot, expended: slot.count }
+                  : slot,
+              ),
+            },
+          },
+        };
+      },
+    );
+
+    expect(
+      resolveBattleInterrupt({
+        state: withoutSlot,
+        fill: interruptDecisionFill(
+          requireHole(awaitingReaction.holes, "interruptDecision"),
+          {
+            kind: "resolve",
+            responderId: spellCasterId,
+            choice: {
+              kind: "castTriggeredReactionSpell",
+              procedureRef: choice.subject.procedureRef,
+              fills: [],
+            },
+          },
+        ),
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Triggered Reaction spell no longer has its required runtime spell resource.",
+    });
+  });
+
+  test("rejects a pending Hellish Rebuke after another slot use commits this turn", () => {
+    const session = battleWithHellishRebuke(
+      srdSpellRecord(hellishRebukeUnitId),
+    );
+    const awaitingReaction = resolveUnarmedStrikeAgainstCaster({
+      state: session,
+      includeHellishRebukeTriggerFact: true,
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
+    }
+    const choice = requireHellishRebukeChoice(
+      awaitingReaction,
+      spellCasterId,
+      session,
+    );
+    const afterPriorSlotUse = {
+      ...awaitingReaction.state,
+      currentTurnResources: {
+        ...awaitingReaction.state.currentTurnResources,
+        spellSlotUsesThisTurn: [
+          { kind: "committed" as const, combatantId: spellCasterId },
+        ],
+      },
+    };
+
+    expect(
+      resolveBattleInterrupt({
+        state: afterPriorSlotUse,
+        fill: interruptDecisionFill(
+          requireHole(awaitingReaction.holes, "interruptDecision"),
+          {
+            kind: "resolve",
+            responderId: spellCasterId,
+            choice: {
+              kind: "castTriggeredReactionSpell",
+              procedureRef: choice.subject.procedureRef,
+              fills: [],
+            },
+          },
+        ),
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "This turn has already expended a Spell Slot.",
+    });
+  });
+
+  test("retains a supplied saving throw while requesting Hellish Rebuke damage", () => {
+    const session = battleWithHellishRebuke(
+      srdSpellRecord(hellishRebukeUnitId),
+    );
+    const awaitingReaction = resolveUnarmedStrikeAgainstCaster({
+      state: session,
+      includeHellishRebukeTriggerFact: true,
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
+    }
+    const choice = requireHellishRebukeChoice(
+      awaitingReaction,
+      spellCasterId,
+      session,
+    );
+    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
+
+    const result = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
+        {
+          kind: "resolve",
+          responderId: spellCasterId,
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            procedureRef: choice.subject.procedureRef,
+            fills: [
+              savingThrowOutcomeFill(save, [
+                { targetId: damagerId, succeeded: false },
+              ]),
+            ],
+          },
+        },
+      ),
+    });
+
+    expect(result).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "rolledDice" })],
+    });
+  });
+
   test("is not offered without caller-supplied visibility and range facts for the damaging creature", () => {
     const state = battleWithHellishRebuke(srdSpellRecord(hellishRebukeUnitId));
     const result = resolveUnarmedStrikeAgainstCaster({
