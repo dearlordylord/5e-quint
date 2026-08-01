@@ -1,4 +1,5 @@
 import { Hp } from "@dnd/shared/types";
+import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
@@ -14,6 +15,8 @@ import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   characterSeed,
+  fighterId,
+  removeBattleCombatantsRight,
   startBattleRight,
   statBlockRecord,
 } from "./battle-runtime.test-support.ts";
@@ -22,11 +25,14 @@ describe("Stat Block combatant admission capability", () => {
   const admittedCombatantId = combatantId("admitted-stat-block");
   const otherCombatantId = combatantId("other-stat-block");
 
-  function admittedFor(admittedBattleId: ReturnType<typeof battleId>) {
+  function admittedFor(
+    admittedBattleId: ReturnType<typeof battleId>,
+    combatant = admittedCombatantId,
+  ) {
     const source = statBlockRecord();
     const admission = admitBattleStatBlockCombatant({
       battleId: admittedBattleId,
-      combatantId: admittedCombatantId,
+      combatantId: combatant,
       statBlock: source,
       startingScopeOrdinal: battleExecutionScopeOrdinal(0),
     });
@@ -40,6 +46,22 @@ describe("Stat Block combatant admission capability", () => {
       battleId: destinationBattleId,
       combatants: [characterSeed({ initiative: 20 })],
     });
+  }
+
+  function combatantFor(
+    admission: ReturnType<typeof admittedFor>["admission"],
+    input: {
+      readonly initiative?: ReturnType<typeof initiativeScore>;
+      readonly currentHp?: Hp;
+    } = {},
+  ): Parameters<typeof addBattleStatBlockCombatant>[0]["combatant"] {
+    return {
+      combatantId: admission.combatantId,
+      initiative: input.initiative ?? initiativeScore(10),
+      admission,
+      currentHp: input.currentHp ?? Hp(1),
+      tempHp: Hp(0),
+    };
   }
 
   test("rejects unresolved choose-one resistance before execution allocation", () => {
@@ -218,5 +240,120 @@ describe("Stat Block combatant admission capability", () => {
         ? battleStateInitIssueMessage(added.left)
         : "resolved",
     ).toBe("Stat Block combatant admission belongs to a different combatant.");
+  });
+
+  test("rejects duplicate combatants before attempting to replay their admission", () => {
+    const destinationBattleId = battleId("duplicate-admitted-combatant");
+    const admission = admittedFor(destinationBattleId).admission;
+    const first = addBattleStatBlockCombatant({
+      state: destinationState(destinationBattleId),
+      combatant: combatantFor(admission),
+    });
+    if (Either.isLeft(first)) {
+      throw new Error(battleStateInitIssueMessage(first.left));
+    }
+
+    const duplicate = addBattleStatBlockCombatant({
+      state: first.right,
+      combatant: combatantFor(admission),
+    });
+    expect(
+      Either.isLeft(duplicate)
+        ? battleStateInitIssueMessage(duplicate.left)
+        : "resolved",
+    ).toBe(`Duplicate combatant id: ${admittedCombatantId}`);
+  });
+
+  test("rejects an execution scope belonging to a different admitted destination", () => {
+    const destinationBattleId = battleId("mismatched-admission-scope");
+    const admission = admittedFor(destinationBattleId).admission;
+    const otherAdmission = admittedFor(
+      destinationBattleId,
+      otherCombatantId,
+    ).admission;
+    const mismatchedScopeAdmission = {
+      ...admission,
+      origin: {
+        ...admission.origin,
+        execution: {
+          ...admission.origin.execution,
+          scopeRef: otherAdmission.origin.execution.scopeRef,
+        },
+      },
+    };
+
+    const added = addBattleStatBlockCombatant({
+      state: destinationState(destinationBattleId),
+      combatant: combatantFor(mismatchedScopeAdmission),
+    });
+    expect(
+      Either.isLeft(added)
+        ? battleStateInitIssueMessage(added.left)
+        : "resolved",
+    ).toBe(
+      "Stat Block combatant admission execution scope belongs to a different destination.",
+    );
+  });
+
+  test("rejects replay after removal advances the destination execution-scope cursor", () => {
+    const destinationBattleId = battleId("retired-admission-cursor");
+    const admission = admittedFor(destinationBattleId).admission;
+    const first = addBattleStatBlockCombatant({
+      state: destinationState(destinationBattleId),
+      combatant: combatantFor(admission),
+    });
+    if (Either.isLeft(first)) {
+      throw new Error(battleStateInitIssueMessage(first.left));
+    }
+    const removed = removeBattleCombatantsRight({
+      state: first.right,
+      combatantIds: [admittedCombatantId],
+    });
+
+    const replayed = addBattleStatBlockCombatant({
+      state: removed,
+      combatant: combatantFor(admission),
+    });
+    expect(
+      Either.isLeft(replayed)
+        ? battleStateInitIssueMessage(replayed.left)
+        : "resolved",
+    ).toBe(
+      "Stat Block combatant admission does not match the current execution-scope cursor.",
+    );
+  });
+
+  test("rejects current Hit Points above the admitted Stat Block maximum", () => {
+    const destinationBattleId = battleId("admitted-current-hp-overflow");
+    const admission = admittedFor(destinationBattleId).admission;
+    const added = addBattleStatBlockCombatant({
+      state: destinationState(destinationBattleId),
+      combatant: combatantFor(admission, { currentHp: Hp(999) }),
+    });
+
+    expect(
+      Either.isLeft(added)
+        ? battleStateInitIssueMessage(added.left)
+        : "resolved",
+    ).toBe("Battle initialization current HP exceeds max HP.");
+  });
+
+  test("inserts an admitted combatant after every existing Initiative tie", () => {
+    const destinationBattleId = battleId("admitted-initiative-tie");
+    const state = destinationState(destinationBattleId);
+    const admission = admittedFor(destinationBattleId).admission;
+    const added = addBattleStatBlockCombatant({
+      state,
+      combatant: combatantFor(admission, {
+        initiative: initiativeScore(20),
+      }),
+    });
+    if (Either.isLeft(added)) {
+      throw new Error(battleStateInitIssueMessage(added.left));
+    }
+
+    expect(
+      initiativeEntries(added.right.initiative).map((entry) => entry.creature),
+    ).toEqual([fighterId, admittedCombatantId]);
   });
 });

@@ -26,6 +26,7 @@ import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-help
 import {
   passiveProjectionRouteForDiscoveredAct,
   passiveProjectionRouteForResolution,
+  passiveSavingThrowRollModeRouteEvents,
 } from "./battle-reducer/passive-projection-routes.ts";
 import { admitBattleResolutionInput } from "./battle-reducer/resolution-admission.ts";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
@@ -709,6 +710,35 @@ describe("L3MSPEC species battle support", () => {
     expect(
       savingThrowRollModeProjections(state, "wis", { condition: "poisoned" }),
     ).toEqual([{ targetId, rollMode: "advantage" }]);
+    expect(
+      passiveSavingThrowRollModeRouteEvents({
+        state,
+        ability: "con",
+        condition: "poisoned",
+      }),
+    ).toEqual([
+      { kind: "startBattle", owner: "battleSavingThrowRollMode" },
+      {
+        kind: "discoverBattleActs",
+        subject: "passiveSavingThrowRollMode",
+        holes: ["savingThrowOutcome"],
+        owner: "battleSavingThrowRollMode",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "passiveSavingThrowRollMode",
+        fill: "savingThrowOutcome",
+        holes: [],
+        owner: "battleSavingThrowRollMode",
+      },
+    ]);
+    expect(
+      passiveSavingThrowRollModeRouteEvents({
+        state,
+        ability: "con",
+        condition: "charmed",
+      }),
+    ).toBeUndefined();
   });
 
   test("species_halfling_brave admits Frightened save Advantage facts", () => {

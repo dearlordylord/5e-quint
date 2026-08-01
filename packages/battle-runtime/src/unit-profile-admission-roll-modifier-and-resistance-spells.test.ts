@@ -457,6 +457,24 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     expect(skillHole.choices).toContain("stealth");
     expect(targetHole.choices).toEqual([spellCasterId, spellTargetId]);
 
+    expect(
+      resolveBattleSubject({
+        state: state.state,
+        subject: act.subject,
+        fills: [
+          spellTargetFill(
+            targetHole,
+            guidanceUnitId,
+            spellCasterId,
+            spellCasterId,
+          ),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "skillChoice" })],
+    });
+
     const unwillingTarget = resolveBattleSubject({
       state: state.state,
       subject: act.subject,
@@ -644,18 +662,26 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     expect(targetHole.choices).toContain(spellTargetId);
     expect(abilityHole.choices).toEqual(["str", "dex", "int", "wis", "cha"]);
 
+    const targetFill = spellTargetFill(
+      targetHole,
+      enhanceAbilityUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    expect(
+      resolveBattleSubject({
+        state: state.state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "abilityChoice" })],
+    });
     const resolved = resolveBattleSubject({
       state: state.state,
       subject: act.subject,
-      fills: [
-        spellTargetFill(
-          targetHole,
-          enhanceAbilityUnitId,
-          spellCasterId,
-          spellTargetId,
-        ),
-        abilityChoiceFill(abilityHole, "dex"),
-      ],
+      fills: [targetFill, abilityChoiceFill(abilityHole, "dex")],
     });
 
     expect(resolved).toMatchObject({

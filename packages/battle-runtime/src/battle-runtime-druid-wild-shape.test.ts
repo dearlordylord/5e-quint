@@ -26,6 +26,7 @@ import {
   attackBonus,
   ClassLevel,
   DieRollResult,
+  Hp,
 } from "@dnd/shared/types";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
@@ -48,6 +49,7 @@ import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-appl
 import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
 import {
   attackInitialTargetHole,
+  attackDamageDispositionFill,
   attackRollFill,
   attackTargetFill,
   battleId,
@@ -60,6 +62,7 @@ import {
   discoverBattleActs,
   endTurn,
   findHole,
+  goblinAttackSubject,
   goblinId,
   requireHole,
   requireResolved,
@@ -2929,6 +2932,88 @@ test("projects automatic reversion when Wild Shape ends from Incapacitated", () 
   expect(Number(snapshot.movement.speedFeet)).toBe(30);
 });
 
+test("reverts Wild Shape and projects the terminal route when damage causes Instant Death after exhausting its Temporary Hit Points", () => {
+  const initial = druidWildShapeBattle({
+    hitPointMaximum: Hp(1),
+  });
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
+      initial,
+      wildShapeSubject(initial, {
+        action: "assumeForm",
+        formStatBlockId: ridingHorseId,
+      }),
+    ),
+  );
+  const goblinTurn = requireResolved(
+    endTurn({ state: assumed.state, actorId: druidId }),
+  );
+  const subject = goblinAttackSubject(goblinTurn.state, "Scimitar");
+  const target = attackInitialTargetHole(goblinTurn.state, subject);
+  const targetSelection = attackTargetFill(target, goblinId, druidId);
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state: goblinTurn.state,
+      subject,
+      fills: [targetSelection],
+    }),
+    "attackRoll",
+  );
+  const attackRollSelection = attackRollFill(attackRoll, {
+    total: 20,
+    naturalD20: 15,
+  });
+  const damage = requireHole(
+    resolveBattleSubject({
+      state: goblinTurn.state,
+      subject,
+      fills: [targetSelection, attackRollSelection],
+    }),
+    "rolledDice",
+  );
+  const damageFills = [
+    targetSelection,
+    attackRollSelection,
+    damageRollFill(damage, 2),
+  ];
+  const damageResult = resolveBattleSubject({
+    state: goblinTurn.state,
+    subject,
+    fills: damageFills,
+  });
+  const disposition = requireHole(damageResult, "attackDamageDisposition");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: goblinTurn.state,
+      subject,
+      fills: [
+        ...damageFills,
+        attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
+      ],
+    }),
+  );
+
+  const druid = requireCharacter(resolved.state, druidId);
+  expect(activeDruidWildShapeEffect(druid)).toBeNull();
+  expect(Number(druid.hp)).toBe(0);
+  expect(Number(druid.tempHp)).toBe(0);
+  const routeEvents = resolved.routeEvents;
+  if (routeEvents === undefined) {
+    throw new Error("Expected Wild Shape terminal route events.");
+  }
+  expect(
+    routeEvents.filter(
+      (event) => "subject" in event && event.subject === "activeFormLifecycle",
+    ),
+  ).toEqual([
+    expect.objectContaining({ owner: "battleHitPointAndZeroHpLifecycle" }),
+    expect.objectContaining({ owner: "battleHitPointAndZeroHpLifecycle" }),
+    expect.objectContaining({ owner: "battleActiveEffect" }),
+    expect.objectContaining({ owner: "battleCreatureState" }),
+    expect.objectContaining({ owner: "battleMovementResource" }),
+  ]);
+});
+
 test("shared shape-shift owner projects and reverts active Wild Shape", () => {
   const initial = druidWildShapeBattle();
   const assumed = requireResolved(
@@ -3338,8 +3423,9 @@ test("rounds odd-level duration down through the general division rule", () => {
   expect(Number(effect?.expiresAt.durationTicks)).toBe(600);
 });
 
-function druidWildShapeBattle(input?: {
+type DruidWildShapeCreatureInput = {
   readonly druidLevel?: number;
+  readonly hitPointMaximum?: Hp;
   readonly armorClass?: ArmorClassState;
   readonly unarmoredArmorClassBases?: CharacterSeedInput["unarmoredArmorClassBases"];
   readonly attack?: CharacterSeedInput["attack"];
@@ -3353,30 +3439,20 @@ function druidWildShapeBattle(input?: {
     readonly spellLevel: 1 | 2 | 3 | 4 | 5;
     readonly count: number;
   }[];
+};
+
+type DruidWildShapeBattleInput = DruidWildShapeCreatureInput & {
   readonly extraCombatants?: readonly ReturnType<typeof characterSeed>[];
   readonly targetStatBlock?: StatBlockRecord;
-}): BattleState {
+};
+
+function druidWildShapeBattle(input?: DruidWildShapeBattleInput): BattleState {
   return druidWildShapeSession(input).state;
 }
 
-function druidWildShapeSession(input?: {
-  readonly druidLevel?: number;
-  readonly armorClass?: ArmorClassState;
-  readonly unarmoredArmorClassBases?: CharacterSeedInput["unarmoredArmorClassBases"];
-  readonly attack?: CharacterSeedInput["attack"];
-  readonly offHandAttack?: CharacterSeedInput["offHandAttack"];
-  readonly d20Statistics?: CharacterBattleD20Statistics;
-  readonly knownForms?: readonly StatBlockRecord[];
-  readonly preparedSpells?: readonly SpellRecord[];
-  readonly cantrips?: readonly SpellRecord[];
-  readonly selectedLoadout?: CharacterBattleCreatureState["origin"]["selectedLoadout"];
-  readonly spellSlots?: readonly {
-    readonly spellLevel: 1 | 2 | 3 | 4 | 5;
-    readonly count: number;
-  }[];
-  readonly extraCombatants?: readonly ReturnType<typeof characterSeed>[];
-  readonly targetStatBlock?: StatBlockRecord;
-}): BattleRuntimeSession {
+function druidWildShapeSession(
+  input?: DruidWildShapeBattleInput,
+): BattleRuntimeSession {
   return startBattleSessionRight({
     battleId: battleId("battle-druid-wild-shape"),
     combatants: [
@@ -3392,26 +3468,17 @@ function druidWildShapeSession(input?: {
   });
 }
 
-function druidWildShapeCreatureInit(input?: {
-  readonly druidLevel?: number;
-  readonly armorClass?: ArmorClassState;
-  readonly unarmoredArmorClassBases?: CharacterSeedInput["unarmoredArmorClassBases"];
-  readonly attack?: CharacterSeedInput["attack"];
-  readonly offHandAttack?: CharacterSeedInput["offHandAttack"];
-  readonly d20Statistics?: CharacterBattleD20Statistics;
-  readonly knownForms?: readonly StatBlockRecord[];
-  readonly preparedSpells?: readonly SpellRecord[];
-  readonly cantrips?: readonly SpellRecord[];
-  readonly selectedLoadout?: CharacterBattleCreatureState["origin"]["selectedLoadout"];
-  readonly spellSlots?: readonly {
-    readonly spellLevel: 1 | 2 | 3 | 4 | 5;
-    readonly count: number;
-  }[];
-}) {
+function druidWildShapeCreatureInit(input?: DruidWildShapeCreatureInput) {
   return characterSeed({
     combatantId: druidId,
     displayName: "Druid",
     initiative: 20,
+    ...(input?.hitPointMaximum === undefined
+      ? {}
+      : {
+          currentHp: input.hitPointMaximum,
+          maxHp: input.hitPointMaximum,
+        }),
     classLevels: [{ className: "druid", level: input?.druidLevel ?? 2 }],
     resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
     ...(input?.d20Statistics === undefined

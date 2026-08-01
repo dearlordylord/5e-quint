@@ -1,4 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { spellTargetListFillForTest } from "./spell-target-list.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84G sanctuary
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-sanctuary-targeting-interdiction
@@ -42,6 +43,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
+import { targetChoiceFillAfterSanctuaryAttackRollReplacement } from "./battle-reducer/sanctuary-targeting-interdiction.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
@@ -72,6 +74,37 @@ const attackerId = combatantId("sanctuary-attacker");
 const replacementId = combatantId("sanctuary-replacement");
 
 describe("Sanctuary targeting interdiction", () => {
+  test("retargeting an attack preserves the replacement target's relationship fact", () => {
+    const relationshipFact = {
+      kind: "attackRollTargetIsEnemy" as const,
+      attackerId,
+      targetId: replacementId,
+      targetIsEnemy: true,
+    };
+
+    expect(
+      targetChoiceFillAfterSanctuaryAttackRollReplacement({
+        fill: {
+          kind: "targetChoice",
+          holeId: holeId("synthetic-sanctuary-target"),
+          value: wardedId,
+        },
+        replacement: {
+          tag: "newTarget",
+          targetId: replacementId,
+          spatialFacts: [],
+          relationshipFacts: [relationshipFact],
+        },
+      }),
+    ).toEqual({
+      kind: "targetChoice",
+      holeId: holeId("synthetic-sanctuary-target"),
+      value: replacementId,
+      spatialFacts: [],
+      relationshipFacts: [relationshipFact],
+    });
+  });
+
   test("casts as a Bonus Action and wards one creature", () => {
     const state = battleWithSanctuary();
     const cast = castSanctuary(state, wardedId);
