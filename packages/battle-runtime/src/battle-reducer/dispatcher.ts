@@ -130,7 +130,6 @@ import {
   characterSpellProcedure,
   type BattleSpellProcedureExecution,
 } from "../character-execution-queries.ts";
-import { sameMultisetBy } from "../mechanical-equality.ts";
 import { CombatantId, type BattleProcedureExecutionRef } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
@@ -181,6 +180,13 @@ import {
 
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { interruptAttackExecutionSelectionsEqual } from "./movement-speed.ts";
+import { battleFillPrefixAccumulated } from "./battle-fill-equality.ts";
+import {
+  resolveReplayContinuation,
+  resolveReplayContinuationFromState,
+  type AdmittedReplayContinuationSubject,
+  ReplayContinuationExecution,
+} from "./replay-continuation.ts";
 import {
   applyProtectionRelevantEffectSaveOutcome,
   conditionApplicationPreventedByCreatureTypeProtection,
@@ -218,7 +224,6 @@ import {
 } from "./reducer-route.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import { stateAfterSpellCastDeclared } from "./spell-cast-declaration.ts";
-import { releaseGlyphStoredSpell } from "./glyph-durable-occurrence.ts";
 import {
   antimagicFieldInterdictionMessage,
   battleSubjectInterdictedByAntimagicField,
@@ -351,7 +356,6 @@ import type {
   BattleAfterDamageEvent,
   BattleActiveEffect,
   AdmittedBattleResolutionInput,
-  BattleAttackRollResult,
   BattleInterruptRouteOptions,
   BattleAttackDamageContinuationCunningStrikeFrame,
   BattleAttackDamageContinuationConcentrationFrame,
@@ -368,7 +372,6 @@ import type {
   BattleInterruptFrame,
   BattleInterruptedProcedure,
   BattleHole,
-  BattleOpportunityAttackThreat,
   BattleInterruptDecision,
   BattleInterruptCheckpoint,
   BattleInterruptCheckpointInput,
@@ -377,12 +380,9 @@ import type {
   BattleInterruptProcedureModifierChoice,
   BattleInterruptProcedureSelection,
   BattleCunningStrikeContinuationFill,
-  BattleReplayContinuationFrame,
   BattleResolutionInput,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
-  BattleRolledDiceFill,
-  BattleD20TestRolledD20s,
   BattleSavingThrowOutcome,
   BattleSnapshot,
   BattleState,
@@ -417,6 +417,33 @@ export function resolveAdmittedBattleSubject(
     attackResolvers,
     interruptRouteOptions: {},
   });
+}
+
+export function resolveAdmittedReplayContinuationSubject(
+  admitted: AdmittedReplayContinuationSubject,
+  executionRegistry: SpellProcedureExecutionRegistry,
+  attackResolvers: BattleAttackRouteResolvers,
+): BattleResolutionResult {
+  return resolveBattleSubjectInternal(admitted.input, {
+    executionRegistry,
+    attackResolvers,
+    interruptRouteOptions: admitted.interruptRouteOptions,
+  });
+}
+
+function replayContinuationExecution(
+  executionRegistry: SpellProcedureExecutionRegistry,
+  attackResolvers: BattleAttackRouteResolvers,
+): ReplayContinuationExecution {
+  return ReplayContinuationExecution.fromExecutionRegistry(
+    executionRegistry,
+    (admitted, boundExecutionRegistry) =>
+      resolveAdmittedReplayContinuationSubject(
+        admitted,
+        boundExecutionRegistry,
+        attackResolvers,
+      ),
+  );
 }
 
 function validateD20TestNaturalOneRerollFills(
@@ -814,22 +841,14 @@ export function resolveBattleSubjectInternal(
         });
       }
       if (activeFrame.kind === "replayContinuation") {
-        if (
-          !sameBattleSubject(input.subject, activeFrame.continuation.subject)
-        ) {
-          return invalidResult(
-            input.state,
-            "staleSubject",
-            "Interrupted attack replay must be resolved before other battle subjects.",
-          );
-        }
         return resolveReplayContinuation({
           state: input.state,
-          frame: activeFrame,
           subject: input.subject,
           fills: input.fills,
-          executionRegistry: options.executionRegistry,
-          attackResolvers: options.attackResolvers,
+          execution: replayContinuationExecution(
+            options.executionRegistry,
+            options.attackResolvers,
+          ),
         });
       }
       /* v8 ignore start -- Defensive stale-subject rejection: these typed cleanup frames are resolved by their dedicated witness APIs, not ordinary subject dispatch. */
@@ -5372,14 +5391,16 @@ function resumeInterruptedProcedureWithExecutionRegistry(
   attackResolvers: BattleAttackRouteResolvers,
 ): BattleResolutionResult {
   return continuation.kind === "replay"
-    ? resolveReplayContinuationFromState(
+    ? resolveReplayContinuationFromState({
         state,
         continuation,
         handledInterruptTrigger,
-        continuation.fills,
-        executionRegistry,
-        attackResolvers,
-      )
+        fills: continuation.fills,
+        execution: replayContinuationExecution(
+          executionRegistry,
+          attackResolvers,
+        ),
+      })
     : resumeInterruptedProcedure(
         state,
         continuation,
@@ -5514,363 +5535,6 @@ function attackDamageDeathFailuresAtZeroHp(
     Match.when("criticalHit", (): 2 => 2),
     Match.exhaustive,
   );
-}
-
-export function replayContinuationFrame(
-  continuation: Extract<
-    BattleInterruptedProcedure,
-    { readonly kind: "replay" }
-  >,
-  handledInterruptTrigger: BattleInterruptTrigger,
-): BattleReplayContinuationFrame {
-  return {
-    kind: "replayContinuation",
-    continuation,
-    handledInterruptTrigger,
-  };
-}
-
-export function resolveReplayContinuation(input: {
-  readonly state: BattleState;
-  readonly frame: BattleReplayContinuationFrame;
-  readonly subject: BattleSubject;
-  readonly fills: readonly BattleFill[];
-  readonly executionRegistry: SpellProcedureExecutionRegistry;
-  readonly attackResolvers: BattleAttackRouteResolvers;
-}): BattleResolutionResult {
-  const stateWithoutFrame = {
-    ...input.state,
-    interruptStack: input.state.interruptStack.slice(0, -1),
-  };
-  return resolveReplayContinuationFromState(
-    stateWithoutFrame,
-    input.frame.continuation,
-    input.frame.handledInterruptTrigger,
-    replayContinuationFills(input.frame.continuation.fills, input.fills),
-    input.executionRegistry,
-    input.attackResolvers,
-  );
-}
-
-function replayContinuationFills(
-  recordedFills: readonly BattleFill[],
-  submittedFills: readonly BattleFill[],
-): readonly BattleFill[] {
-  return [
-    ...recordedFills,
-    ...replayContinuationSuffixFills(recordedFills, submittedFills),
-  ];
-}
-
-function replayContinuationSuffixFills(
-  recordedFills: readonly BattleFill[],
-  submittedFills: readonly BattleFill[],
-): readonly BattleFill[] {
-  let recordedSearchStart = 0;
-  return submittedFills.filter((submittedFill) => {
-    const recordedIndex = recordedFills.findIndex(
-      (recordedFill, index) =>
-        index >= recordedSearchStart &&
-        replayContinuationRecordedFillMatches(recordedFill, submittedFill),
-    );
-    if (recordedIndex === -1) {
-      return true;
-    }
-    recordedSearchStart = recordedIndex + 1;
-    return false;
-  });
-}
-
-const replayContinuationSemanticFillKinds = [
-  "targetChoice",
-  "attackRoll",
-  "rolledDice",
-] as const satisfies ReadonlyArray<BattleFill["kind"]>;
-
-type ReplayContinuationSemanticFill = Extract<
-  BattleFill,
-  { readonly kind: (typeof replayContinuationSemanticFillKinds)[number] }
->;
-
-function replayContinuationRecordedFillMatches(
-  recordedFill: BattleFill,
-  submittedFill: BattleFill,
-): boolean {
-  if (recordedFill === submittedFill) {
-    return true;
-  }
-  return replayContinuationSemanticFillEquals(recordedFill, submittedFill);
-}
-
-function replayContinuationSemanticFillEquals(
-  recordedFill: BattleFill,
-  submittedFill: BattleFill,
-): boolean {
-  if (
-    !isReplayContinuationSemanticFill(recordedFill) ||
-    !isReplayContinuationSemanticFill(submittedFill)
-  ) {
-    return false;
-  }
-  if (recordedFill.kind !== submittedFill.kind) {
-    return false;
-  }
-  return replayContinuationSameKindSemanticFillEquals(
-    recordedFill,
-    submittedFill,
-  );
-}
-
-function isReplayContinuationSemanticFill(
-  fill: BattleFill,
-): fill is ReplayContinuationSemanticFill {
-  return replayContinuationSemanticFillKinds.some((kind) => kind === fill.kind);
-}
-
-function replayContinuationSameKindSemanticFillEquals(
-  recordedFill: ReplayContinuationSemanticFill,
-  submittedFill: ReplayContinuationSemanticFill,
-): boolean {
-  if (recordedFill.kind === "targetChoice") {
-    return (
-      submittedFill.kind === "targetChoice" &&
-      recordedFill.holeId === submittedFill.holeId &&
-      recordedFill.value === submittedFill.value
-    );
-  }
-  if (recordedFill.kind === "attackRoll") {
-    return (
-      submittedFill.kind === "attackRoll" &&
-      battleContinuationFillEquals(recordedFill, submittedFill)
-    );
-  }
-  if (recordedFill.kind === "rolledDice") {
-    return (
-      submittedFill.kind === "rolledDice" &&
-      battleContinuationFillEquals(recordedFill, submittedFill)
-    );
-  }
-  /* v8 ignore start -- ReplayContinuationSemanticFill is exhausted above; widening it without an equality arm fails compilation at this assignment. */
-  const exhaustive: never = recordedFill;
-  return exhaustive;
-  /* v8 ignore stop */
-}
-
-function battleFillPrefixAccumulated(
-  prefix: readonly BattleContinuationComparableFill[],
-  fills: readonly BattleContinuationComparableFill[],
-): boolean {
-  return (
-    fills.length >= prefix.length &&
-    prefix.every((fill, index) =>
-      battleContinuationFillEquals(fill, fills[index]!),
-    )
-  );
-}
-
-export function resolveReplayContinuationFromState(
-  state: BattleState,
-  continuation: Extract<
-    BattleInterruptedProcedure,
-    { readonly kind: "replay" }
-  >,
-  handledInterruptTrigger: BattleInterruptTrigger,
-  fills: readonly BattleFill[],
-  executionRegistry: SpellProcedureExecutionRegistry,
-  attackResolvers: BattleAttackRouteResolvers,
-): BattleResolutionResult {
-  if (continuation.glyphStoredSpellReleaseReplay !== undefined) {
-    return resolveGlyphStoredSpellReplayContinuationFromState(
-      state,
-      continuation,
-      handledInterruptTrigger,
-      fills,
-      executionRegistry,
-    );
-  }
-  const admission = admitBattleResolutionInput({
-    state,
-    subject: continuation.subject,
-    fills,
-  });
-  if (admission.tag === "staleCharacterProcedure") {
-    return invalidResult(
-      state,
-      "staleSubject",
-      "The interrupted character procedure reference is no longer bound to its actor.",
-    );
-  }
-  const result = resolveBattleSubjectInternal(admission.input, {
-    executionRegistry,
-    attackResolvers,
-    interruptRouteOptions: {
-      replayingInterruptedProcedure: true,
-      handledInterruptTrigger,
-      ...(continuation.attackDamageReductions === undefined
-        ? {}
-        : {
-            pendingAttackDamageReductions: continuation.attackDamageReductions,
-          }),
-      ...(continuation.attackDamageAdditions === undefined
-        ? {}
-        : {
-            pendingAttackDamageAdditions: continuation.attackDamageAdditions,
-          }),
-    },
-  });
-  if (
-    result.tag !== "needsHoles" ||
-    result.state.interruptStack.length !== state.interruptStack.length
-  ) {
-    return result;
-  }
-  const activeInterrupt = currentInterruptCheckpoint(
-    result.state,
-  )?.activeInterrupt;
-  if (
-    activeInterrupt !== undefined &&
-    sameBattleSubject(activeInterrupt.subject, continuation.subject)
-  ) {
-    const pendingState =
-      activeInterruptWithReplayContinuationAttackDamageChanges(
-        result.state,
-        continuation,
-      );
-    return {
-      ...result,
-      state: pendingState,
-      snapshot: snapshotBattle(pendingState),
-    };
-  }
-  const pendingState = {
-    ...result.state,
-    interruptStack: [
-      ...result.state.interruptStack,
-      replayContinuationFrame(continuation, handledInterruptTrigger),
-    ],
-  };
-  return {
-    ...result,
-    state: pendingState,
-    snapshot: snapshotBattle(pendingState),
-  };
-}
-
-function resolveGlyphStoredSpellReplayContinuationFromState(
-  state: BattleState,
-  continuation: Extract<
-    BattleInterruptedProcedure,
-    { readonly kind: "replay" }
-  >,
-  handledInterruptTrigger: BattleInterruptTrigger,
-  fills: readonly BattleFill[],
-  executionRegistry: SpellProcedureExecutionRegistry,
-): BattleResolutionResult {
-  const replay = continuation.glyphStoredSpellReleaseReplay;
-  if (replay === undefined) {
-    return invalidResult(
-      state,
-      "staleSubject",
-      "Glyph stored spell replay context is missing.",
-    );
-  }
-  const result = releaseGlyphStoredSpell({
-    state,
-    profile: replay.profile,
-    executionRegistry,
-    witness: {
-      ...replay.witness,
-      fills,
-    },
-    handledInterruptTrigger,
-  });
-  if (result.tag === "released") {
-    return {
-      tag: "resolved",
-      state: result.state,
-      snapshot: snapshotBattle(result.state),
-    };
-  }
-  if (result.tag === "needsHoles") {
-    if (result.state.interruptStack.length !== state.interruptStack.length) {
-      return needsHolesResult(result.state, continuation.subject, result.holes);
-    }
-    const pendingState = {
-      ...result.state,
-      interruptStack: [
-        ...result.state.interruptStack,
-        replayContinuationFrame(continuation, handledInterruptTrigger),
-      ],
-    };
-    return needsHolesResult(pendingState, continuation.subject, result.holes);
-  }
-  if (result.tag === "notFound") {
-    return invalidResult(
-      result.state,
-      "staleSubject",
-      "Glyph stored spell release replay no longer has a matching durable occurrence.",
-    );
-  }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (result.tag === "ambiguousOccurrence") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      result.state,
-      "invalidFill",
-      "Glyph stored spell release replay matched multiple durable occurrences.",
-    );
-  }
-  /* v8 ignore stop */
-  /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-  return invalidResult(
-    result.state,
-    "invalidFill",
-    result.message ??
-      `Glyph stored spell release replay witness is invalid: ${result.reason}.`,
-  );
-}
-
-export function activeInterruptWithReplayContinuationAttackDamageChanges(
-  state: BattleState,
-  continuation: Extract<
-    BattleInterruptedProcedure,
-    { readonly kind: "replay" }
-  >,
-): BattleState {
-  if (
-    continuation.attackDamageReductions === undefined &&
-    continuation.attackDamageAdditions === undefined
-  ) {
-    return state;
-  }
-  const frame = currentInterruptCheckpoint(state);
-  if (frame?.activeInterrupt === undefined) {
-    return state;
-  }
-  return {
-    ...state,
-    interruptStack: [
-      ...state.interruptStack.slice(0, -1),
-      interruptCheckpointFrame({
-        ...frame,
-        activeInterrupt: {
-          ...frame.activeInterrupt,
-          ...(continuation.attackDamageReductions === undefined
-            ? {}
-            : {
-                pendingAttackDamageReductions:
-                  continuation.attackDamageReductions,
-              }),
-          ...(continuation.attackDamageAdditions === undefined
-            ? {}
-            : {
-                pendingAttackDamageAdditions:
-                  continuation.attackDamageAdditions,
-              }),
-        },
-      }),
-    ],
-  };
 }
 
 export function attackDamageContinuationAmount(
@@ -6217,416 +5881,6 @@ function attackDamageContinuationCunningStrikeFillSet(
     toolPossession = fill;
   }
   return { tag: "ok", savingThrow, movement, toolPossession, endTurnCover };
-}
-
-export type BattleContinuationComparableFill = Extract<
-  BattleFill,
-  {
-    readonly kind:
-      | "targetChoice"
-      | "attackRoll"
-      | "rolledDice"
-      | "attackDamageDisposition"
-      | "concentrationSavingThrow"
-      | "savingThrowOutcome"
-      | "movement"
-      | "toolPossessionFacts"
-      | "cunningStrikeEndTurnCoverFacts"
-      | "deathSavingThrow";
-  }
->;
-
-type SameKindBattleContinuationFillPair = {
-  [Kind in BattleContinuationComparableFill["kind"]]: {
-    readonly kind: Kind;
-    readonly left: Extract<
-      BattleContinuationComparableFill,
-      { readonly kind: Kind }
-    >;
-    readonly right: Extract<
-      BattleContinuationComparableFill,
-      { readonly kind: Kind }
-    >;
-  };
-}[BattleContinuationComparableFill["kind"]];
-
-function sameKindBattleContinuationFillPair(
-  a: BattleContinuationComparableFill,
-  b: BattleContinuationComparableFill,
-): SameKindBattleContinuationFillPair | null {
-  if (a.kind !== b.kind) {
-    return null;
-  }
-  // The runtime comparison proves both members share one discriminant; TypeScript cannot preserve that correlation when the values arrive as separate unions.
-  return {
-    kind: a.kind,
-    left: a,
-    right: b,
-  } as SameKindBattleContinuationFillPair;
-}
-
-export function battleContinuationFillEquals(
-  a: BattleContinuationComparableFill,
-  b: BattleContinuationComparableFill,
-): boolean {
-  const pair = sameKindBattleContinuationFillPair(a, b);
-  if (pair === null || a.holeId !== b.holeId) {
-    return false;
-  }
-  if (pair.kind === "targetChoice") {
-    return pair.left.value === pair.right.value;
-  }
-  if (pair.kind === "attackRoll") {
-    return attackRollResultsEqual(pair.left.value, pair.right.value);
-  }
-  if (pair.kind === "rolledDice") {
-    return (
-      rolledDiceGroupsEqual(pair.left.value, pair.right.value) &&
-      attackDamageRiderSelectionsEqual(
-        pair.left.selectedAttackDamageRiderProcedureRefs,
-        pair.right.selectedAttackDamageRiderProcedureRefs,
-      ) &&
-      cunningStrikeOptionSelectionsEqual(
-        pair.left.cunningStrikeOption,
-        pair.right.cunningStrikeOption,
-      ) &&
-      spellDamageRerollDecisionsEqual(
-        pair.left.spellDamageReroll,
-        pair.right.spellDamageReroll,
-      )
-    );
-  }
-  if (pair.kind === "attackDamageDisposition") {
-    return pair.left.value.kind === pair.right.value.kind;
-  }
-  if (pair.kind === "concentrationSavingThrow") {
-    return (
-      pair.left.value.succeeded === pair.right.value.succeeded &&
-      pair.left.value.naturalD20 === pair.right.value.naturalD20 &&
-      rolledD20sEqual(
-        pair.left.value.rolledD20s,
-        pair.right.value.rolledD20s,
-      ) &&
-      pair.left.value.withoutRoll === pair.right.value.withoutRoll &&
-      d20TestNaturalOneRerollOutcomeDecisionsEqual(
-        pair.left.value.d20TestNaturalOneReroll,
-        pair.right.value.d20TestNaturalOneReroll,
-      )
-    );
-  }
-  if (pair.kind === "savingThrowOutcome") {
-    return savingThrowOutcomeValuesEqual(pair.left.value, pair.right.value);
-  }
-  if (pair.kind === "movement") {
-    return movementFillValuesEqual(pair.left.value, pair.right.value);
-  }
-  if (pair.kind === "toolPossessionFacts") {
-    return arrayValuesEqual(
-      pair.left.value.toolIdsOnPerson,
-      pair.right.value.toolIdsOnPerson,
-    );
-  }
-  if (pair.kind === "cunningStrikeEndTurnCoverFacts") {
-    return pair.left.value.cover === pair.right.value.cover;
-  }
-  if (pair.kind === "deathSavingThrow") {
-    return (
-      pair.left.value === pair.right.value &&
-      d20TestNaturalOneRerollDieDecisionsEqual(
-        pair.left.d20TestNaturalOneReroll,
-        pair.right.d20TestNaturalOneReroll,
-      )
-    );
-  }
-  /* v8 ignore start -- BattleContinuationComparableFill is exhausted above, so this emitted tail is unreachable unless the type widens without a comparator branch, which fails compilation. */
-  const exhaustive: never = pair;
-  return exhaustive;
-  /* v8 ignore stop */
-}
-
-type ComparableAttackRollResult = Pick<
-  BattleAttackRollResult,
-  "total" | "naturalD20" | "rollMode" | "rolledD20s"
-> &
-  Partial<
-    Pick<
-      BattleAttackRollResult,
-      | "activatedOngoingFeatureProcedureRef"
-      | "missToHitReplacementProcedureRef"
-      | "spellAttackReroll"
-      | "d20TestNaturalOneReroll"
-    >
-  >;
-
-function attackRollResultsEqual(
-  a: ComparableAttackRollResult,
-  b: ComparableAttackRollResult,
-): boolean {
-  return (
-    a.total === b.total &&
-    a.naturalD20 === b.naturalD20 &&
-    a.rollMode === b.rollMode &&
-    rolledD20sEqual(a.rolledD20s, b.rolledD20s) &&
-    a.activatedOngoingFeatureProcedureRef ===
-      b.activatedOngoingFeatureProcedureRef &&
-    a.missToHitReplacementProcedureRef === b.missToHitReplacementProcedureRef &&
-    spellAttackRerollDecisionsEqual(a.spellAttackReroll, b.spellAttackReroll) &&
-    d20TestNaturalOneRerollDecisionsEqual(
-      a.d20TestNaturalOneReroll,
-      b.d20TestNaturalOneReroll,
-    )
-  );
-}
-
-function spellAttackRerollDecisionsEqual(
-  a: BattleAttackRollResult["spellAttackReroll"],
-  b: BattleAttackRollResult["spellAttackReroll"],
-): boolean {
-  if (a === undefined || b === undefined) {
-    return a === b;
-  }
-  if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
-    return false;
-  }
-  if (a.kind === "decline" || b.kind === "decline") {
-    return a.kind === b.kind;
-  }
-  return attackRollResultsEqual(a.replacement, b.replacement);
-}
-
-function d20TestNaturalOneRerollDecisionsEqual(
-  a: BattleAttackRollResult["d20TestNaturalOneReroll"],
-  b: BattleAttackRollResult["d20TestNaturalOneReroll"],
-): boolean {
-  if (a === undefined || b === undefined) {
-    return a === b;
-  }
-  if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
-    return false;
-  }
-  if (a.kind === "decline" || b.kind === "decline") {
-    return a.kind === b.kind;
-  }
-  if (a.kind === "rerollRolledDie" || b.kind === "rerollRolledDie") {
-    return (
-      a.kind === "rerollRolledDie" &&
-      b.kind === "rerollRolledDie" &&
-      a.replacement.die === b.replacement.die &&
-      a.replacement.naturalD20 === b.replacement.naturalD20 &&
-      attackRollResultsEqual(a.replacement.result, b.replacement.result)
-    );
-  }
-  return attackRollResultsEqual(a.replacement, b.replacement);
-}
-
-function d20TestNaturalOneRerollOutcomeDecisionsEqual(
-  a: Extract<
-    BattleFill,
-    { readonly kind: "concentrationSavingThrow" }
-  >["value"]["d20TestNaturalOneReroll"],
-  b: Extract<
-    BattleFill,
-    { readonly kind: "concentrationSavingThrow" }
-  >["value"]["d20TestNaturalOneReroll"],
-): boolean {
-  if (a === undefined || b === undefined) {
-    return a === b;
-  }
-  if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
-    return false;
-  }
-  if (a.kind === "decline" || b.kind === "decline") {
-    return a.kind === b.kind;
-  }
-  if (a.kind === "rerollRolledDie" || b.kind === "rerollRolledDie") {
-    return (
-      a.kind === "rerollRolledDie" &&
-      b.kind === "rerollRolledDie" &&
-      a.replacement.die === b.replacement.die &&
-      a.replacement.naturalD20 === b.replacement.naturalD20 &&
-      a.replacement.result.succeeded === b.replacement.result.succeeded &&
-      a.replacement.result.naturalD20 === b.replacement.result.naturalD20
-    );
-  }
-  return (
-    a.replacement.succeeded === b.replacement.succeeded &&
-    a.replacement.naturalD20 === b.replacement.naturalD20
-  );
-}
-
-function d20TestNaturalOneRerollDieDecisionsEqual(
-  a: Extract<
-    BattleFill,
-    { readonly kind: "deathSavingThrow" }
-  >["d20TestNaturalOneReroll"],
-  b: Extract<
-    BattleFill,
-    { readonly kind: "deathSavingThrow" }
-  >["d20TestNaturalOneReroll"],
-): boolean {
-  if (a === undefined || b === undefined) {
-    return a === b;
-  }
-  if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
-    return false;
-  }
-  return a.kind === "decline" || b.kind === "decline"
-    ? a.kind === b.kind
-    : a.replacement === b.replacement;
-}
-
-function rolledD20sEqual(
-  a: BattleD20TestRolledD20s | undefined,
-  b: BattleD20TestRolledD20s | undefined,
-): boolean {
-  if (a === undefined || b === undefined) {
-    return a === b;
-  }
-  return (
-    a.first === b.first && a.second === b.second && a.selected === b.selected
-  );
-}
-
-function savingThrowOutcomeValuesEqual(
-  a: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>["value"],
-  b: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>["value"],
-): boolean {
-  return (
-    a.outcomes.length === b.outcomes.length &&
-    a.outcomes.every((outcome, index) =>
-      savingThrowOutcomesEqual(outcome, b.outcomes[index]),
-    )
-  );
-}
-
-function savingThrowOutcomesEqual(
-  a: BattleSavingThrowOutcome,
-  b: BattleSavingThrowOutcome | undefined,
-): boolean {
-  return (
-    b !== undefined &&
-    a.targetId === b.targetId &&
-    a.succeeded === b.succeeded &&
-    a.naturalD20 === b.naturalD20 &&
-    a.withoutRoll === b.withoutRoll &&
-    rolledD20sEqual(a.rolledD20s, b.rolledD20s) &&
-    d20TestNaturalOneRerollOutcomeDecisionsEqual(
-      a.d20TestNaturalOneReroll,
-      b.d20TestNaturalOneReroll,
-    )
-  );
-}
-
-function movementFillValuesEqual(
-  a: Extract<BattleFill, { readonly kind: "movement" }>["value"],
-  b: Extract<BattleFill, { readonly kind: "movement" }>["value"],
-): boolean {
-  return (
-    a.speedKind === b.speedKind &&
-    a.movementCostFeet === b.movementCostFeet &&
-    acrobaticMovementFactsEqual(a.acrobaticMovement, b.acrobaticMovement) &&
-    opportunityAttackThreatsEqual(
-      a.provokedOpportunityAttacks,
-      b.provokedOpportunityAttacks,
-    )
-  );
-}
-
-function acrobaticMovementFactsEqual(
-  a: Extract<
-    BattleFill,
-    { readonly kind: "movement" }
-  >["value"]["acrobaticMovement"],
-  b: Extract<
-    BattleFill,
-    { readonly kind: "movement" }
-  >["value"]["acrobaticMovement"],
-): boolean {
-  if (a === undefined || b === undefined) {
-    return a === b;
-  }
-  return (
-    a.kind === b.kind &&
-    a.withoutFallingDuringMovement === b.withoutFallingDuringMovement &&
-    arrayValuesEqual(a.paths, b.paths)
-  );
-}
-
-function opportunityAttackThreatsEqual(
-  a: readonly BattleOpportunityAttackThreat[],
-  b: readonly BattleOpportunityAttackThreat[],
-): boolean {
-  if (a.length !== b.length) return false;
-  const unmatched = [...b];
-  return a.every((threat) => {
-    const matchingIndex = unmatched.findIndex(
-      (other) =>
-        threat.reactorId === other.reactorId &&
-        interruptAttackExecutionSelectionsEqual(threat, other),
-    );
-    if (matchingIndex === -1) return false;
-    unmatched.splice(matchingIndex, 1);
-    return true;
-  });
-}
-
-function arrayValuesEqual<T>(a: readonly T[], b: readonly T[]): boolean {
-  return a.length === b.length && a.every((value, index) => value === b[index]);
-}
-
-export function rolledDiceGroupsEqual(
-  a: BattleRolledDiceFill["value"],
-  b: BattleRolledDiceFill["value"],
-): boolean {
-  return (
-    a.length === b.length &&
-    a.every(
-      (group, index) =>
-        group.results.length === b[index]?.results.length &&
-        group.results.every(
-          (result, resultIndex) => result === b[index]?.results[resultIndex],
-        ),
-    )
-  );
-}
-
-export function attackDamageRiderSelectionsEqual(
-  a: readonly BattleProcedureExecutionRef[] | undefined,
-  b: readonly BattleProcedureExecutionRef[] | undefined,
-): boolean {
-  return (
-    (a ?? []).length === (b ?? []).length &&
-    (a ?? []).every((procedureRef, index) => procedureRef === (b ?? [])[index])
-  );
-}
-
-function cunningStrikeOptionSelectionsEqual(
-  a: BattleRolledDiceFill["cunningStrikeOption"],
-  b: BattleRolledDiceFill["cunningStrikeOption"],
-): boolean {
-  if (a === undefined || b === undefined) {
-    return a === b;
-  }
-  return a.procedureRef === b.procedureRef && a.optionId === b.optionId;
-}
-
-function spellDamageRerollDecisionsEqual(
-  a: BattleRolledDiceFill["spellDamageReroll"],
-  b: BattleRolledDiceFill["spellDamageReroll"],
-): boolean {
-  if (a === undefined || b === undefined) {
-    return a === b;
-  }
-  if (a.kind !== b.kind || a.effectKind !== b.effectKind) {
-    return false;
-  }
-  return sameMultisetBy(
-    a.dice,
-    b.dice,
-    (left, right) =>
-      left.original === right.original &&
-      left.replacement === right.replacement,
-  );
 }
 
 export function endTurn(

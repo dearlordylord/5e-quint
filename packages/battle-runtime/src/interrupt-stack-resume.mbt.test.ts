@@ -61,7 +61,7 @@ import {
   wizardId,
 } from "./battle-runtime.test-support.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { replayContinuationFrame } from "./battle-reducer/dispatcher.ts";
+import { replayContinuationFrame } from "./battle-reducer/replay-continuation.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleId,

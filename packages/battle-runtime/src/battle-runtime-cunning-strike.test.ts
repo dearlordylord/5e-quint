@@ -20,7 +20,7 @@ import {
   type BattleHole,
   type BattleState,
 } from "./battle-state-execution.ts";
-import { battleContinuationFillEquals } from "./battle-reducer/dispatcher.ts";
+import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { classLevel, difficultyClass, movementFeet } from "@dnd/shared/types";

@@ -12,6 +12,15 @@ modeled obligations to TypeScript behavior. There is no current package-local
 full-shell aggregation spec; focused specs import the narrower modules they use
 directly.
 
+Within the TypeScript reducer, `battle-reducer/dispatcher.ts` owns admitted
+subject selection and delegates replay protocol execution to
+`battle-reducer/replay-continuation.ts`. That replay owner reconstructs the
+recorded fill prefix and submitted suffix, resumes ordinary and stored-glyph
+procedures, and restores replay frames when more holes remain. Mechanical
+equality for continuation fills is owned by
+`battle-reducer/battle-fill-equality.ts`, so replay, reroll, and continuation
+callers share one comparison algorithm.
+
 Keep battle-runtime integration vocabulary such as `Actor`, `Combatant`,
 `BattleState`, `ActiveEffect`, `Hole`, and replay variants in battle-runtime QNT
 model modules, starting with

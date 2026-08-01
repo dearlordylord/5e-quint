@@ -6,7 +6,7 @@ import { describe, expect, test } from "vitest";
 import {
   battleContinuationFillEquals,
   type BattleContinuationComparableFill,
-} from "./battle-reducer/dispatcher.ts";
+} from "./battle-reducer/battle-fill-equality.ts";
 import { combatantId } from "./battle-runtime.test-support.ts";
 import {
   type BattleAttackRollResult,

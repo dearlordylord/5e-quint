@@ -25,7 +25,7 @@ import {
   type BattleTrackedOngoingSpellLightEmitter,
 } from "./battle-state-execution.ts";
 import { BattleFillSchema } from "./battle-reducer/battle-codecs.ts";
-import { battleContinuationFillEquals } from "./battle-reducer/dispatcher.ts";
+import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
 import {
   D20_TEST_NATURAL_ONE_REROLL_DIE_FACE_REQUIRED_MESSAGE,
   D20_TEST_NATURAL_ONE_REROLL_DIE_SELECTION_REQUIRED_MESSAGE,

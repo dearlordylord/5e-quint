@@ -59,7 +59,7 @@ import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { classLevel, DieRollResult } from "@dnd/shared/types";
 import { sourceDamageRollPenaltyRollHole } from "./battle-reducer/damage-helpers.ts";
-import { battleContinuationFillEquals } from "./battle-reducer/dispatcher.ts";
+import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
 import { BattleStatBlockProcedureExecutionRef } from "./identity.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
 import {

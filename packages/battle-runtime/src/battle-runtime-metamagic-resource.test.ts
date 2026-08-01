@@ -56,7 +56,7 @@ import {
   twinnedSpellTargetCountInvocation,
 } from "./battle-reducer/metamagic.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
-import { battleContinuationFillEquals } from "./battle-reducer/dispatcher.ts";
+import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
 import {
   attackRollFill,
   battleId,

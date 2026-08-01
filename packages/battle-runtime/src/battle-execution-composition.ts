@@ -19,9 +19,13 @@ import {
   resolveFallDamageLanding as resolveFallDamageLandingStateOnly,
   resolveFeatherFallLanding as resolveFeatherFallLandingStateOnly,
   resolveFlySpeedGrantEndFallCleanup as resolveFlySpeedGrantEndFallCleanupStateOnly,
-  resolveReplayContinuationFromState as resolveReplayContinuationFromStateWithRegistry,
+  resolveAdmittedReplayContinuationSubject,
   shareFindFamiliarSenses as shareFindFamiliarSensesStateOnly,
 } from "./battle-reducer/dispatcher.ts";
+import {
+  ReplayContinuationExecution,
+  resolveReplayContinuationFromState as resolveReplayContinuationFromStateWithRegistry,
+} from "./battle-reducer/replay-continuation.ts";
 import type { BattleInterruptTrigger } from "./battle-interrupt-triggers.ts";
 import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 import { discoverBattleActCandidatesWithExecutionRegistry } from "./battle-reducer/battle-discovery.ts";
@@ -188,15 +192,28 @@ export function resolveReplayContinuationFromState(
   const executionRegistry = spellProcedureExecutionRegistry();
   return battleResolutionWithExecutionSnapshot(
     state,
-    resolveReplayContinuationFromStateWithRegistry(
+    resolveReplayContinuationFromStateWithRegistry({
       state,
       continuation,
       handledInterruptTrigger,
       fills,
-      executionRegistry,
-      BATTLE_ATTACK_ROUTE_RESOLVERS,
-    ),
+      execution: replayContinuationExecution(executionRegistry),
+    }),
     executionRegistry,
+  );
+}
+
+function replayContinuationExecution(
+  executionRegistry: ReturnType<typeof spellProcedureExecutionRegistry>,
+): ReplayContinuationExecution {
+  return ReplayContinuationExecution.fromExecutionRegistry(
+    executionRegistry,
+    (admitted, boundExecutionRegistry) =>
+      resolveAdmittedReplayContinuationSubject(
+        admitted,
+        boundExecutionRegistry,
+        BATTLE_ATTACK_ROUTE_RESOLVERS,
+      ),
   );
 }
 
