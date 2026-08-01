@@ -8,9 +8,11 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 
 import {
+  characterExecutionFromUnits,
   unitFeatureProcedureExecution,
   unitSupportProcedureExecution,
 } from "./character-execution-admission.ts";
+import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import {
   battleUnitSupportProfilesForUnit,
   parseSupportedUnitFeatureProfile,
@@ -38,6 +40,12 @@ const classLevels = CLASS_NAMES.map((className) => ({
   className,
   level: classLevel(20),
 }));
+const FIGHTER_TACTICAL_MIND_CLASS_LEVELS = [
+  { className: "fighter", level: classLevel(2) },
+] as const satisfies ReadonlyArray<CharacterBattleClassLevel>;
+const ROGUE_SUPREME_SNEAK_CLASS_LEVELS = [
+  { className: "rogue", level: classLevel(9) },
+] as const satisfies ReadonlyArray<CharacterBattleClassLevel>;
 const scopeRef = battleCharacterExecutionScopeRef(
   battleId("character-execution-profile-projection"),
   combatantId("profile-projection-character"),
@@ -235,7 +243,133 @@ describe("character execution profile projection", () => {
       ),
     );
   });
+
+  test("rejects character admission when a Unit feature resource is absent", () => {
+    const unit = requireUnit(unitId("fighter_tactical_mind"));
+    const profile = parseSupportedUnitFeatureProfile(
+      unit,
+      FIGHTER_TACTICAL_MIND_CLASS_LEVELS,
+      sourceFacts,
+    );
+    if (profile === null) {
+      throw new Error("Expected Tactical Mind feature profile.");
+    }
+
+    const admission = characterExecutionFromUnits({
+      battleId: battleId("missing-feature-resource"),
+      combatantId: combatantId("missing-feature-resource-character"),
+      scopeOrdinal: battleExecutionScopeOrdinal(0),
+      unitFeatureProfiles: [profile],
+      resourceUnits: [],
+      units: [unit],
+      unitRefs: [],
+      classLevels: FIGHTER_TACTICAL_MIND_CLASS_LEVELS,
+    });
+
+    expect(admission).toEqual(
+      Either.left([
+        {
+          tag: "battleUnitSupportProfileIssue",
+          message:
+            "Unit feature profile failedAbilityCheckResourceBoost references an unavailable mechanical execution resource.",
+        },
+      ]),
+    );
+  });
+
+  test("rejects character admission when a primary support dependency is absent", () => {
+    const unit = requireUnit(unitId("fighter_tactical_mind"));
+    const profile = requireSupportProfile(
+      unit,
+      "failedAbilityCheckResourceBoost",
+      FIGHTER_TACTICAL_MIND_CLASS_LEVELS,
+    );
+
+    const admission = characterExecutionFromUnits({
+      battleId: battleId("missing-primary-support-resource"),
+      combatantId: combatantId("missing-primary-support-resource-character"),
+      scopeOrdinal: battleExecutionScopeOrdinal(0),
+      unitFeatureProfiles: [],
+      resourceUnits: [],
+      units: [unit],
+      unitRefs: [{ unit, supportProfiles: [profile] }],
+      classLevels: FIGHTER_TACTICAL_MIND_CLASS_LEVELS,
+    });
+
+    expect(admission).toEqual(
+      Either.left([
+        {
+          tag: "battleUnitSupportProfileIssue",
+          message:
+            "Unit support profile failedAbilityCheckResourceBoost references an unavailable mechanical execution resource or procedure.",
+        },
+      ]),
+    );
+  });
+
+  test("rejects character admission when an option grant has no primary procedure", () => {
+    const unit = requireUnit(unitId("rogue_supreme_sneak"));
+    const profile = requireSupportProfile(
+      unit,
+      "cunningStrikeOptionGrant",
+      ROGUE_SUPREME_SNEAK_CLASS_LEVELS,
+    );
+
+    const admission = characterExecutionFromUnits({
+      battleId: battleId("missing-option-grant-procedure"),
+      combatantId: combatantId("missing-option-grant-procedure-character"),
+      scopeOrdinal: battleExecutionScopeOrdinal(0),
+      unitFeatureProfiles: [],
+      resourceUnits: [],
+      units: [unit],
+      unitRefs: [{ unit, supportProfiles: [profile] }],
+      classLevels: ROGUE_SUPREME_SNEAK_CLASS_LEVELS,
+    });
+
+    expect(admission).toEqual(
+      Either.left([
+        {
+          tag: "battleUnitSupportProfileIssue",
+          message:
+            "Unit support profile cunningStrikeOptionGrant references an unavailable mechanical procedure.",
+        },
+      ]),
+    );
+  });
 });
+
+function requireUnit(
+  requiredUnitId: (typeof units)[number]["id"],
+): (typeof units)[number] {
+  const unit = units.find((candidate) => candidate.id === requiredUnitId);
+  if (unit === undefined) {
+    throw new Error(`Expected SRD Unit ${requiredUnitId}.`);
+  }
+  return unit;
+}
+
+function requireSupportProfile(
+  unit: (typeof units)[number],
+  kind: BattleUnitSupportProfileKind,
+  focusedClassLevels: ReadonlyArray<CharacterBattleClassLevel>,
+): BattleUnitSupportProfile {
+  const profiles = battleUnitSupportProfilesForUnit({
+    unit,
+    classLevels: focusedClassLevels,
+    sourceFacts,
+  });
+  if (Either.isLeft(profiles)) {
+    throw new Error(`Expected admitted support profiles for ${unit.id}.`);
+  }
+  const profile = profiles.right.find(
+    (candidate) =>
+      (typeof candidate === "string" ? candidate : candidate.kind) === kind,
+  );
+  if (profile === undefined) {
+    throw new Error(`Expected ${kind} support profile for ${unit.id}.`);
+  }
+  return profile;
+}
 
 function compareProjectionFailures(
   left: UnitFeatureProjectionFailure | UnitSupportProjectionFailure,
