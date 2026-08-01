@@ -45,7 +45,6 @@ import {
 } from "./spell-condition-effects-helpers.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-  characterSpellProcedure,
   type BattleSpellProcedureExecution,
   characterUnitProcedure,
   unitSupportProfileKind,
@@ -55,12 +54,7 @@ import {
   sleepRepeatSaveSavingThrowHoleIds,
   spellTurnStartSavingThrowOutcomeHoleId,
 } from "./turn-end-movement.ts";
-import { battleLightEmitters } from "./spells-active-effects.ts";
-import {
-  activeOngoingFeatureOccurrencesForCombatant,
-  isCharacterBattleCreatureState,
-  ongoingFeatureProfileForSourceKey,
-} from "./creature-state-execution.ts";
+import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 import {
   ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
   ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
@@ -125,6 +119,20 @@ import {
 } from "./movement-routes.ts";
 import { reactionSpellRouteForInterrupt } from "./reaction-spell-routes.ts";
 import { interruptStackResumeDiscoveryRouteForResolution } from "./interrupt-stack-routes.ts";
+import {
+  saveGatedSpellRouteForDiscoveredAct,
+  saveGatedSpellRouteForResolution,
+  spellAttackProcedureBaseRouteForResolution,
+  spellAttackProcedureRouteForDiscoveredAct,
+  spellAttackProcedureRouteHoles,
+  slotSpellRouteForDiscoveredAct,
+  slotSpellRouteForResolution,
+} from "./spell-invocation-routes.ts";
+import {
+  activeFeatureSpellAttackRollModeDiscoveryRouteEvents,
+  activeFeatureSpellAttackRollModeResolutionRouteEvents,
+  hasActiveFeatureSpellSaveDcModifier,
+} from "./active-feature-spell-routes.ts";
 
 export function battleReducerStartRouteEvent(): BattleReducerRouteEvent {
   return startBattleRoute("battleActionEconomy");
@@ -363,14 +371,9 @@ export function battleReducerRouteEventsForDiscoveredAct(
   if (weaponSpellDiscoveryRoute !== undefined) {
     return [weaponSpellDiscoveryRoute];
   }
-  if (isSlotSpellDiscoverySubject(state, act.subject)) {
-    return [
-      discoverBattleActsRoute(
-        "slotSpell",
-        battleReducerRouteHoles(act.initialHoles),
-        "battleSpellSlotAndActionEconomy",
-      ),
-    ];
+  const slotSpellDiscoveryRoute = slotSpellRouteForDiscoveredAct(state, act);
+  if (slotSpellDiscoveryRoute !== undefined) {
+    return slotSpellDiscoveryRoute;
   }
   if (saveGatedDiscoveryRoute !== undefined) {
     return nonEmptyRouteEvents([
@@ -378,68 +381,17 @@ export function battleReducerRouteEventsForDiscoveredAct(
       ...passiveDamageAdjustmentRouteForSpellDiscovery(state),
     ]);
   }
-  const invocation = spellInvocationForRouteSubject(state, act.subject);
-  if (
-    act.subject.tag !== "actionSpell" ||
-    invocation === undefined ||
-    !isSpellAttackProcedure(invocation.procedure)
-  ) {
-    return undefined;
-  }
-  const actionOwner =
-    invocation.procedure === "spellAttackSequence"
-      ? "battleSpellAttackProcedure"
-      : invocation.resource.tag === "spellSlot"
-        ? "battleSpellSlotAndActionEconomy"
-        : "battleActionEconomy";
-  const actionEconomyEvent: BattleReducerRouteEvent = discoverBattleActsRoute(
-    "spellAttackProcedure",
-    invocation.procedure === "spellAttackSequence"
-      ? spellAttackSequenceRouteHoles(battleReducerRouteHoles(act.initialHoles))
-      : battleReducerRouteHoles(act.initialHoles),
-    actionOwner,
+  const spellAttackRoute = spellAttackProcedureRouteForDiscoveredAct(
+    state,
+    act,
   );
-  if (invocation.procedure === "spellAttackSequence") {
-    return nonEmptyRouteEvents([
-      actionEconomyEvent,
-      ...passiveDamageAdjustmentRouteForSpellDiscovery(state),
-      ...activeFeatureSpellAttackRollModeDiscoveryRouteEvents(
-        state,
-        act.subject,
-        act.initialHoles,
-      ),
-    ]);
-  }
-  const hasObjectTargetBoundary = act.initialHoles.some(
-    (hole) => hole.kind === "objectTargetChoice",
-  );
-  if (!hasObjectTargetBoundary) {
-    return nonEmptyRouteEvents([
-      actionEconomyEvent,
-      ...passiveDamageAdjustmentRouteForSpellDiscovery(state),
-      ...activeFeatureSpellAttackRollModeDiscoveryRouteEvents(
-        state,
-        act.subject,
-        act.initialHoles,
-      ),
-    ]);
-  }
-  return nonEmptyRouteEvents([
-    actionEconomyEvent,
-    discoverBattleActsRoute(
-      "spellAttackProcedure",
-      battleReducerRouteHoles(
-        act.initialHoles.filter((hole) => hole.kind === "objectTargetChoice"),
-      ),
-      "battleObjectTargetBoundary",
-    ),
-    ...passiveDamageAdjustmentRouteForSpellDiscovery(state),
-    ...activeFeatureSpellAttackRollModeDiscoveryRouteEvents(
-      state,
-      act.subject,
-      act.initialHoles,
-    ),
-  ]);
+  return spellAttackRoute === undefined
+    ? undefined
+    : nonEmptyRouteEvents([
+        ...spellAttackRoute,
+        ...passiveDamageAdjustmentRouteForSpellDiscovery(state),
+        ...activeFeatureSpellAttackRollModeDiscoveryRouteEvents(state, act),
+      ]);
 }
 
 function firstApplicableRoute(
@@ -623,7 +575,18 @@ export function battleReducerRouteForResolution(
   const slotSpellRoute = slotSpellRouteForResolution(input, result);
   if (slotSpellRoute !== undefined) {
     return composeWithWildShapeLifecycleTerminalRoute(
-      nonEmptyRouteEvents(slotSpellRoute),
+      nonEmptyRouteEvents([
+        ...slotSpellRoute.route,
+        ...(slotSpellRoute.tag === "replayInterruptionCompletion"
+          ? [
+              resolveBattleSubjectWithoutFillRoute(
+                "reactionSpellInterruption",
+                [],
+                "battleInterruptStack",
+              ),
+            ]
+          : []),
+      ]),
       wildShapeLifecycleTerminalRoute,
     );
   }
@@ -1143,57 +1106,13 @@ function spellAttackProcedureRouteForResolution(
   input: AdmittedBattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
-  const invocation = spellInvocationForRouteSubject(input.state, input.subject);
-  if (
-    input.subject.tag !== "actionSpell" ||
-    invocation === undefined ||
-    !isSpellAttackProcedure(invocation.procedure)
-  ) {
-    return undefined;
-  }
-  const objectTargetRoute = objectTargetSpellAttackRouteForResolution(
-    input,
-    result,
-  );
-  if (objectTargetRoute !== undefined) {
-    return objectTargetRoute;
-  }
-  if (result.tag === "invalid") {
-    if (result.reason === "staleSubject") {
-      return [
-        resolveBattleSubjectWithoutFillRoute(
-          "spellAttackProcedure",
-          [],
-          "battleHoleFrontier",
-        ),
-      ];
-    }
-    return undefined;
-  }
-  const fill = input.fills.at(-1);
-  if (fill === undefined) {
-    return undefined;
-  }
-  const routeFill = battleReducerRouteFill(fill);
-  if (routeFill === undefined) {
-    return undefined;
-  }
+  const base = spellAttackProcedureBaseRouteForResolution(input, result);
+  if (base === undefined) return undefined;
+  if (base.tag === "terminal") return base.route;
+  const fill = base.fill;
   const holes = spellAttackProcedureRouteHoles(input, result);
-  const [firstOwner, ...remainingOwners] = spellAttackProcedureRouteOwners({
-    input,
-    fill,
-    result,
-  });
-  if (firstOwner === undefined) {
-    return undefined;
-  }
-  const eventForOwner = (
-    owner: BattleReducerRouteOwnerGroup,
-  ): BattleReducerRouteEvent =>
-    resolveBattleSubjectRoute("spellAttackProcedure", routeFill, holes, owner);
   return [
-    eventForOwner(firstOwner),
-    ...remainingOwners.map(eventForOwner),
+    ...base.route,
     ...passiveDamageAdjustmentRouteForSpellDamageResolution(input, result),
     ...activeFeatureSpellAttackRollModeResolutionRouteEvents(input, result),
     ...spellAttackHitActiveEffectAdmissionRouteForResolution(input, result),
@@ -1204,95 +1123,6 @@ function spellAttackProcedureRouteForResolution(
       holes,
     }) ?? []),
   ];
-}
-
-function objectTargetSpellAttackRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): BattleReducerRouteEvents | undefined {
-  const fill = input.fills.at(-1);
-  if (fill === undefined) {
-    return undefined;
-  }
-  const hasObjectTarget = input.fills.some(
-    (candidate) => battleFillKind(candidate) === "objectTargetChoice",
-  );
-  const fillKind = battleFillKind(fill);
-  if (fillKind === "objectTargetChoice") {
-    return [
-      resolveBattleSubjectWithoutFillRoute(
-        "objectTargetSpellAttack",
-        result.tag === "needsHoles"
-          ? battleReducerRouteHoles(result.holes)
-          : [],
-        "battleObjectTargetBoundary",
-      ),
-    ];
-  }
-  if (!hasObjectTarget) {
-    return undefined;
-  }
-  if (result.tag === "invalid") {
-    return result.reason === "staleSubject"
-      ? [
-          resolveBattleSubjectWithoutFillRoute(
-            "objectTargetSpellAttack",
-            [],
-            "battleHoleFrontier",
-          ),
-        ]
-      : undefined;
-  }
-  if (fillKind === "attackRoll") {
-    return [
-      resolveBattleSubjectRoute(
-        "objectTargetSpellAttack",
-        "attackRoll",
-        result.tag === "needsHoles"
-          ? battleReducerRouteHoles(result.holes)
-          : [],
-        "battleAttackRoll",
-      ),
-    ];
-  }
-  if (fillKind !== "rolledDice") {
-    return undefined;
-  }
-  const route: BattleReducerRouteEvent[] = [
-    resolveBattleSubjectRoute(
-      "objectTargetSpellAttack",
-      "rolledDice",
-      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
-      "battleObjectTargetBoundary",
-    ),
-  ];
-  if (
-    result.tag === "resolved" &&
-    objectInvisibleRevealLightEmitterWasAdded(input.state, result.state)
-  ) {
-    route.push(
-      resolveBattleSubjectWithoutFillRoute(
-        "objectTargetSpellAttack",
-        [],
-        "battleActiveEffect",
-      ),
-    );
-  }
-  return nonEmptyRouteEvents(route);
-}
-
-function objectInvisibleRevealLightEmitterWasAdded(
-  before: BattleState,
-  after: BattleState,
-): boolean {
-  const beforeCount = battleLightEmitters(before).filter(
-    (emitter) => emitter.kind === "objectInvisibleRevealLightEmitter",
-  ).length;
-  return (
-    battleLightEmitters(after).filter(
-      (emitter) => emitter.kind === "objectInvisibleRevealLightEmitter",
-    ).length > beforeCount
-  );
 }
 
 export function battleReducerRouteForInterrupt(
@@ -1439,119 +1269,6 @@ function activeFeatureBonusActionRouteForResolution(
       "unitFeatureBonusAction",
       [],
       "battleActiveEffect",
-    ),
-  ];
-}
-
-function hasActiveFeatureSpellSaveDcModifier(
-  state: BattleState,
-  casterId: CombatantId,
-): boolean {
-  return activeFeatureSpellModifierExists(
-    state,
-    casterId,
-    (modifier) => modifier.saveDcBonus !== 0,
-  );
-}
-
-function hasActiveFeatureSpellAttackRollModeModifier(
-  state: BattleState,
-  casterId: CombatantId,
-): boolean {
-  return activeFeatureSpellModifierExists(
-    state,
-    casterId,
-    (modifier) => modifier.attackRollMode !== undefined,
-  );
-}
-
-function activeFeatureSpellModifierExists(
-  state: BattleState,
-  casterId: CombatantId,
-  predicate: (
-    modifier: ReturnType<typeof activeFeatureSpellModifiers>[number],
-  ) => boolean,
-): boolean {
-  const caster = state.combatants.get(casterId);
-  return activeFeatureSpellModifiers(state, caster).some(predicate);
-}
-
-function activeFeatureSpellModifiers(
-  state: BattleState,
-  caster: BattleCreatureState | undefined,
-) {
-  if (!isCharacterBattleCreatureState(caster)) {
-    return [];
-  }
-  return [
-    ...activeOngoingFeatureOccurrencesForCombatant(state, caster),
-  ].flatMap(
-    ([key]) =>
-      ongoingFeatureProfileForSourceKey(caster, key)?.spellModifiers ?? [],
-  );
-}
-
-function activeFeatureSpellAttackRollModeDiscoveryRouteEvents(
-  state: BattleState,
-  subject: Extract<
-    BattleResolutionInput["subject"],
-    { readonly tag: "actionSpell" }
-  >,
-  initialHoles: readonly BattleHole[],
-): readonly BattleReducerRouteEvent[] {
-  if (!hasActiveFeatureSpellAttackRollModeModifier(state, subject.actorId)) {
-    return [];
-  }
-  const holes = battleReducerRouteHoles(initialHoles);
-  if (!holes.includes("targetChoice")) {
-    return [];
-  }
-  return [
-    discoverBattleActsRoute(
-      "activeFeatureSpellAttackRollMode",
-      ["targetChoice"],
-      "battleSpellSlotAndActionEconomy",
-    ),
-  ];
-}
-
-function activeFeatureSpellAttackRollModeResolutionRouteEvents(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): readonly BattleReducerRouteEvent[] {
-  if (
-    input.subject.tag !== "actionSpell" ||
-    !hasActiveFeatureSpellAttackRollModeModifier(
-      input.state,
-      input.subject.actorId,
-    )
-  ) {
-    return [];
-  }
-  const fill = input.fills.at(-1);
-  if (fill?.kind !== "targetChoice" || result.tag !== "needsHoles") {
-    return [];
-  }
-  const holes = battleReducerRouteHoles(result.holes);
-  if (!holes.includes("attackRoll")) {
-    return [];
-  }
-  return [
-    resolveBattleSubjectRoute(
-      "activeFeatureSpellAttackRollMode",
-      "targetChoice",
-      ["attackRoll"],
-      "battleTargetSelection",
-    ),
-    resolveBattleSubjectWithoutFillRoute(
-      "activeFeatureSpellAttackRollMode",
-      ["attackRoll"],
-      "battleActiveEffect",
-    ),
-    resolveBattleSubjectWithoutFillRoute(
-      "activeFeatureSpellAttackRollMode",
-      ["attackRoll"],
-      "battleSpellAttackProcedure",
     ),
   ];
 }
@@ -2035,51 +1752,6 @@ function hitPointRestorationRouteOwner(
   return "battleHoleFrontier";
 }
 
-function slotSpellRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): readonly BattleReducerRouteEvent[] | undefined {
-  if (!isSlotSpellResolutionSubject(input.state, input.subject)) {
-    return undefined;
-  }
-  if (result.tag === "invalid" && result.reason !== "invalidFill") {
-    return undefined;
-  }
-
-  const fill = input.fills.at(-1);
-  if (fill === undefined) {
-    return undefined;
-  }
-
-  const routeFill = battleReducerRouteFill(fill);
-  if (routeFill !== "spellTargetAllocation" && routeFill !== "rolledDice") {
-    return undefined;
-  }
-
-  const routeEvent: BattleReducerRouteEvent = resolveBattleSubjectRoute(
-    "slotSpell",
-    routeFill,
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
-    routeFill === "rolledDice" && result.tag === "resolved"
-      ? "battleHitPoint"
-      : "battleHoleFrontier",
-  );
-  return [
-    routeEvent,
-    ...(input.state.interruptStack.at(-1)?.kind === "replayContinuation" &&
-    routeFill === "rolledDice" &&
-    result.tag === "resolved"
-      ? [
-          resolveBattleSubjectWithoutFillRoute(
-            "reactionSpellInterruption" as const,
-            [],
-            "battleInterruptStack" as const,
-          ),
-        ]
-      : []),
-  ];
-}
-
 function commandRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
@@ -2176,95 +1848,6 @@ function commandRouteOwner(
     }
   }
   return "battleActiveEffect";
-}
-
-function saveGatedSpellRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): BattleReducerRouteEvents | undefined {
-  if (!isSaveGatedSpellResolution(input)) {
-    return undefined;
-  }
-  const fill = input.fills.at(-1);
-  if (fill === undefined) {
-    return undefined;
-  }
-  const routeFill = battleReducerRouteFill(fill);
-  if (routeFill === undefined) {
-    return undefined;
-  }
-  const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
-  const owner = saveGatedSpellRouteOwner(routeFill);
-  if (owner === undefined) {
-    return undefined;
-  }
-  const primaryRoute: BattleReducerRouteEvent = resolveBattleSubjectRoute(
-    "saveGatedSpell",
-    routeFill,
-    holes,
-    owner,
-  );
-  if (result.tag !== "needsHoles") {
-    return [primaryRoute];
-  }
-  if (
-    !holes.includes("interruptDecision") ||
-    routeFill !== "savingThrowOutcome"
-  ) {
-    return [primaryRoute];
-  }
-
-  return [
-    primaryRoute,
-    resolveBattleSubjectRoute(
-      "saveGatedSpell",
-      routeFill,
-      holes,
-      "battleInterruptStack",
-    ),
-  ];
-}
-
-function saveGatedSpellRouteForDiscoveredAct(
-  state: BattleState,
-  act: BattleActDiscoveryCandidate,
-): BattleReducerRouteEvents | undefined {
-  const invocation = spellInvocationForRouteSubject(state, act.subject);
-  if (
-    act.subject.tag !== "actionSpell" ||
-    invocation === undefined ||
-    !isSaveGatedSpellProcedure(invocation.procedure)
-  ) {
-    return undefined;
-  }
-  return [
-    discoverBattleActsRoute(
-      "saveGatedSpell",
-      battleReducerRouteHoles(act.initialHoles),
-      invocation.resource.tag === "spellSlot"
-        ? "battleSpellSlotAndActionEconomy"
-        : "battleActionEconomy",
-    ),
-  ];
-}
-
-function saveGatedSpellRouteOwner(
-  fill: BattleReducerRouteFill,
-): BattleReducerRouteOwnerGroup | undefined {
-  if (fill === "targetChoice") {
-    return "battleTargetSelection";
-  }
-  if (fill === "spellTargetList") {
-    return "battleHoleFrontier";
-  }
-  if (fill === "savingThrowOutcome") {
-    return "battleHoleFrontier";
-  }
-  if (fill === "rolledDice") {
-    return "battleHitPoint";
-  }
-  return undefined;
 }
 
 function spatialEffectCompositionRouteForDiscoveredAct(
@@ -5580,81 +5163,6 @@ function commandRouteFill(
   return undefined;
 }
 
-function isSpellAttackProcedure(procedure: string): boolean {
-  return (
-    procedure === "chainedSpellAttackDamage" ||
-    procedure === "spellAttackDamage" ||
-    procedure === "spellAttackSequence"
-  );
-}
-
-function isSlotSpellDiscoverySubject(
-  state: BattleState,
-  subject: BattleResolutionInput["subject"],
-): boolean {
-  return isSlotSpellResolutionSubject(state, subject);
-}
-
-function isSlotSpellResolutionSubject(
-  state: BattleState,
-  subject: BattleResolutionInput["subject"],
-): subject is Extract<
-  BattleResolutionInput["subject"],
-  { readonly tag: "actionSpell" }
-> {
-  const invocation = spellInvocationForRouteSubject(state, subject);
-  return (
-    subject.tag === "actionSpell" &&
-    invocation?.resource.tag === "spellSlot" &&
-    invocation.procedure === "repeatedDamageAllocation"
-  );
-}
-
-function isSaveGatedSpellResolution(input: BattleResolutionInput): boolean {
-  if (input.subject.tag === "actionSpell") {
-    const invocation = spellInvocationForRouteSubject(
-      input.state,
-      input.subject,
-    );
-    return (
-      invocation !== undefined &&
-      isSaveGatedSpellProcedure(invocation.procedure)
-    );
-  }
-  if (
-    input.subject.tag === "runtimeCommand" &&
-    input.subject.command === "releaseReadiedSpell"
-  ) {
-    const readied = input.state.readiedSpells.get(
-      input.subject.readiedSpellCasterId,
-    );
-    const caster = input.state.combatants.get(
-      input.subject.readiedSpellCasterId,
-    );
-    const invocation =
-      readied !== undefined && caster?.origin.kind === "character"
-        ? characterSpellProcedure(
-            caster.origin.execution,
-            readied.procedureRef,
-            caster,
-          )
-        : undefined;
-    return (
-      invocation !== undefined &&
-      isSaveGatedSpellProcedure(invocation.procedure)
-    );
-  }
-  return false;
-}
-
-function isSaveGatedSpellProcedure(procedure: string): boolean {
-  return (
-    procedure === "hypnoticPattern" ||
-    procedure === "saveGatedDamage" ||
-    procedure === "saveGatedCondition"
-  );
-}
-
 function isRollModifierEffectDiscoverySubject(
   state: BattleState,
   subject: BattleActDiscoveryCandidate["subject"],
@@ -5926,87 +5434,6 @@ function isCommandPendingRuntimeSubject(
     subject.command === "commandApproach" ||
     subject.command === "commandFlee"
   );
-}
-
-function spellAttackProcedureRouteOwners(input: {
-  input: BattleResolutionInput;
-  fill: BattleFill;
-  result: BattleResolutionResult;
-}): readonly BattleReducerRouteOwnerGroup[] {
-  const kind = battleFillKind(input.fill);
-  const isChainedSpellAttack =
-    input.input.subject.tag === "actionSpell" &&
-    spellInvocationForRouteSubject(input.input.state, input.input.subject)
-      ?.procedure === "chainedSpellAttackDamage";
-  if (kind === "attackRoll") {
-    if (spellAttackResolutionRequestsHole(input.result, "targetChoice")) {
-      return ["battleHoleFrontier"];
-    }
-    return ["battleAttackRoll"];
-  }
-  if (kind === "damageTypeChoice") return ["battleSpellAttackProcedure"];
-  if (kind === "rolledDice") {
-    if (spellAttackResolutionRequestsHole(input.result, "attackRoll")) {
-      return ["battleHoleFrontier"];
-    }
-    const hitPointOwner =
-      input.result.tag === "needsHoles" &&
-      input.result.holes.some(
-        (hole) => hole.kind === "concentrationSavingThrow",
-      )
-        ? "battleHitPointAndZeroHpLifecycle"
-        : "battleHitPoint";
-    return isChainedSpellAttack
-      ? [hitPointOwner, "battleSpellAttackProcedure"]
-      : [hitPointOwner];
-  }
-  if (kind === "targetChoice") {
-    return isChainedSpellAttack
-      ? ["battleTargetSelection", "battleSpellAttackProcedure"]
-      : ["battleTargetSelection"];
-  }
-  if (kind === "concentrationSavingThrow") return ["battleConcentration"];
-  return [];
-}
-
-function spellAttackResolutionRequestsHole(
-  result: BattleResolutionResult,
-  holeKind: BattleReducerRouteHole,
-): boolean {
-  return (
-    result.tag === "needsHoles" &&
-    battleReducerRouteHoles(result.holes).includes(holeKind)
-  );
-}
-
-function spellAttackProcedureRouteHoles(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): readonly BattleReducerRouteHole[] {
-  if (result.tag !== "needsHoles") {
-    return [];
-  }
-  const holes = battleReducerRouteHoles(result.holes);
-  return input.subject.tag === "actionSpell" &&
-    spellInvocationForRouteSubject(input.state, input.subject)?.procedure ===
-      "spellAttackSequence"
-    ? spellAttackSequenceRouteHoles(holes)
-    : holes;
-}
-
-function spellAttackSequenceRouteHoles(
-  holes: readonly BattleReducerRouteHole[],
-): readonly BattleReducerRouteHole[] {
-  if (holes.includes("targetChoice")) {
-    return ["attackRoll", "rolledDice", "targetChoice"];
-  }
-  if (holes.includes("attackRoll")) {
-    return ["attackRoll", "rolledDice"];
-  }
-  if (holes.includes("rolledDice")) {
-    return ["rolledDice"];
-  }
-  return holes;
 }
 
 function zeroHitPointSpellEffectTeardownRouteForResolution(
