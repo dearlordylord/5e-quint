@@ -18,7 +18,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 import type { ActionEconomyState } from "@dnd/shared-algebras/action-economy-algebra";
 import {
-  actionResourceAllows,
   canSpendAction,
   canSpendBonusAction,
   canSpendMovement,
@@ -131,6 +130,7 @@ import { standFromProneCostFeet } from "./movement-procedures.ts";
 import { readiedSpellInitialHoles } from "./readied-initial-holes.ts";
 import { movementHole } from "./movement-holes.ts";
 import {
+  canSpendEscapeGrappleActionResource,
   isClassFeatureExtraAttackActionResource,
   isStatBlockMultiattackActionResource,
 } from "./action-resource-kinds.ts";
@@ -482,7 +482,7 @@ function discoverBattleActsWithoutRouteEvents(
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     !actorHasStatBlockMultiattackActionResource(state, actorId) &&
-    canSpendEscapeGrappleActionResource(state, actorId) &&
+    canSpendEscapeGrappleActionResource(state.currentTurnResources, actorId) &&
     grappledBy(state, actorId) !== undefined
   ) {
     const grapple = grappledBy(state, actorId);
@@ -1750,17 +1750,6 @@ export function actorHasClassFeatureExtraAttackActionResource(
 ): boolean {
   return state.currentTurnResources.actionResources.some((resource) =>
     isClassFeatureExtraAttackActionResource(resource, actorId),
-  );
-}
-
-export function canSpendEscapeGrappleActionResource(
-  state: BattleState,
-  actorId: CombatantId,
-): boolean {
-  return state.currentTurnResources.actionResources.some(
-    (resource) =>
-      !isClassFeatureExtraAttackActionResource(resource, actorId) &&
-      actionResourceAllows(resource, "attack"),
   );
 }
 

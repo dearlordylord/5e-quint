@@ -11215,9 +11215,6 @@ export function createExtraAttackDriver(
       },
       doResolveSecondExtraAttackMiss: resolveAttackMiss,
       doRejectThirdExtraAttack: () => {
-        subject = fighterAttackSubject(
-          battleRuntimeSessionForTest({ state, context: session.context }),
-        );
         recordResult(resolveBattleSubject({ state, subject, fills: [] }));
       },
       doEndTurnClosesExtraAttackSlot: () => {

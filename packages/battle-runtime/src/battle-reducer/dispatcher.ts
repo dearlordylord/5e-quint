@@ -35,12 +35,10 @@ import {
 import {
   canSpendAction,
   canSpendBonusAction,
-  canSpendUnarmedStrikeActionResource,
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { type StandardActionKind } from "@dnd/shared/game-facts";
 import {
   damageAmount as toDamageAmount,
   type DamageAmount,
@@ -108,10 +106,7 @@ import {
   companionHeldObjectFactsHole,
   findFamiliarTouchDeliveryTargetHoles,
 } from "../find-familiar-companion-subjects.ts";
-import {
-  findFamiliarCompanionEntryForOwner,
-  isPresentFindFamiliarCombatant,
-} from "../find-familiar-state.ts";
+import { findFamiliarCompanionEntryForOwner } from "../find-familiar-state.ts";
 import {
   sameBattleSubject,
   type BattleSubject,
@@ -355,12 +350,12 @@ import type {
   BattleSnapshot,
   BattleState,
   BattleTargetSpatialFact,
-  BattleTurnResources,
   EndedFlySpeedGrant,
   SpellSlotInvocationResource,
 } from "../battle-state-execution.ts";
 import { KnockedOutConditionState } from "./knocked-out-state.ts";
 import { admitBattleResolutionInput } from "./resolution-admission.ts";
+import { battleSubjectActionEligibilityIssue } from "./action-eligibility.ts";
 import {
   attackDamageEventAmountForTarget,
   battleAttackHostParticipantId,
@@ -957,46 +952,12 @@ export function resolveBattleSubjectInternal(
     );
   }
 
-  if (
-    subjectRequiresActionEligibility(input.subject) &&
-    !combatantCanTakeActions(input.state.combatants.get(actorId))
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Attack is no longer available for the current actor.",
-    );
-  }
-
-  const standardActionKind = standardActionKindForSubject(
+  const actionEligibilityIssue = battleSubjectActionEligibilityIssue(
     input.state,
     input.subject,
   );
-  /* v8 ignore start -- Defensive stale-subject rejection: ordinary familiar attacks are absent from legal act discovery. */
-  if (
-    isPresentFindFamiliarCombatant(input.state, actorId) &&
-    subjectIsOrdinaryAttack(input.subject)
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Find Familiar familiars can't attack.",
-    );
-  }
-  /* v8 ignore stop */
-  if (
-    standardActionKind !== null &&
-    !subjectCanSpendStandardActionResource(
-      input.state.currentTurnResources,
-      input.subject,
-      standardActionKind,
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Attack is no longer available for the current actor.",
-    );
+  if (actionEligibilityIssue !== null) {
+    return invalidResult(input.state, "staleSubject", actionEligibilityIssue);
   }
   if (
     input.subject.tag === "bonusAction" &&
@@ -1053,19 +1014,6 @@ export function resolveBattleSubjectInternal(
       input.state,
       "staleSubject",
       "Unit feature is no longer available for the current actor.",
-    );
-  }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Defensive stale-subject rejection: rediscovery removes held-weapon activations after action eligibility or the Attack action is lost. */
-  if (
-    input.subject.tag === "unitFeatureHeldWeaponActivation" &&
-    (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
-      !canSpendAction(input.state.currentTurnResources, "attack"))
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Attack action feature is no longer available for the current actor.",
     );
   }
   /* v8 ignore stop */
@@ -1156,7 +1104,11 @@ export function resolveBattleSubjectInternal(
           "Creature Attack requires an actor that can take actions.",
         );
       }
-      if (!canSpendAction(input.state.currentTurnResources, "attack")) {
+      const spentAttackResources = spendAction(
+        input.state.currentTurnResources,
+        "attack",
+      );
+      if (Either.isLeft(spentAttackResources)) {
         return invalidResult(
           input.state,
           "staleSubject",
@@ -1193,9 +1145,7 @@ export function resolveBattleSubjectInternal(
         /* v8 ignore stop */
         const nextState = {
           ...input.state,
-          currentTurnResources: spendAdmittedCreatureAttackAction(
-            input.state.currentTurnResources,
-          ),
+          currentTurnResources: spentAttackResources.right,
         };
         return {
           tag: "resolved" as const,
@@ -1259,9 +1209,7 @@ export function resolveBattleSubjectInternal(
       const nextState = battleStateAfterCreatureAttackDamage({
         state: {
           ...input.state,
-          currentTurnResources: spendAdmittedCreatureAttackAction(
-            input.state.currentTurnResources,
-          ),
+          currentTurnResources: spentAttackResources.right,
         },
         actor: combatants.actor,
         target: combatants.target,
@@ -1594,12 +1542,6 @@ export function resolveBattleSubjectInternal(
     /* v8 ignore stop */
   })();
   return consumeOrCloseLegendaryActionWindow(input.subject, result);
-}
-
-function spendAdmittedCreatureAttackAction(
-  resources: BattleTurnResources,
-): BattleTurnResources {
-  return Either.getOrThrow(spendAction(resources, "attack"));
 }
 
 function resolveCompanionLifecycleSubject(
@@ -2643,31 +2585,6 @@ function resolveCreatureTypeProtectionPossessionAttemptCommand(
   };
 }
 
-function subjectRequiresActionEligibility(subject: BattleSubject): boolean {
-  return (
-    subject.tag === "monkFocusOption" ||
-    subject.tag === "monkFocusFlurryOfBlowsStrike" ||
-    subject.tag === "unitFeatureHeldWeaponActivation" ||
-    subject.tag === "pactOfTheChainFamiliarAttack" ||
-    (subject.tag === "action" &&
-      (subject.action === "attack" ||
-        subject.action === "dash" ||
-        subject.action === "disengage" ||
-        subject.action === "dodge" ||
-        subject.action === "helpAttack" ||
-        subject.action === "hide" ||
-        subject.action === "multiattack" ||
-        subject.action === "ready" ||
-        subject.action === "search" ||
-        subject.action === "grapple" ||
-        subject.action === "shove" ||
-        subject.action === "escapeGrapple" ||
-        subject.action === "escapeSpellRestraint" ||
-        subject.action === "shakeAwakeFromSleep" ||
-        subject.action === "shakeAwakeFromHypnoticPattern"))
-  );
-}
-
 export function actionHideSubject(subject: {
   readonly tag: "action";
   readonly actorId: CombatantId;
@@ -2732,64 +2649,6 @@ function isCloudkillAppearanceSaveSubject(
     subject.tag === "runtimeCommand" &&
     subject.command === "cloudkillAreaHazardSave" &&
     subject.areaMembershipTrigger.kind === "appearsInArea"
-  );
-}
-
-function subjectIsOrdinaryAttack(subject: BattleSubject): boolean {
-  return (
-    subject.tag === "action" &&
-    (subject.action === "attack" ||
-      subject.action === "multiattack" ||
-      subject.action === "grapple" ||
-      subject.action === "shove")
-  );
-}
-
-function subjectCanSpendStandardActionResource(
-  resources: BattleState["currentTurnResources"],
-  subject: BattleSubject,
-  action: StandardActionKind,
-): boolean {
-  if (
-    subject.tag === "action" &&
-    (subject.action === "grapple" || subject.action === "shove")
-  ) {
-    return canSpendUnarmedStrikeActionResource(resources);
-  }
-  return canSpendAction(resources, action);
-}
-
-export function standardActionKindForSubject(
-  state: BattleState,
-  subject: BattleSubject,
-): StandardActionKind | null {
-  if (subject.tag === "pactOfTheChainFamiliarAttack") {
-    return "attack";
-  }
-  if (subject.tag !== "action" || isLegendaryAttackSubject(state, subject)) {
-    return null;
-  }
-  if (
-    subject.action === "shakeAwakeFromSleep" ||
-    subject.action === "shakeAwakeFromHypnoticPattern"
-  ) {
-    return null;
-  }
-  return Match.value(subject.action).pipe(
-    Match.when("attack", () => "attack" as const),
-    Match.when("dash", () => "dash" as const),
-    Match.when("disengage", () => "disengage" as const),
-    Match.when("dodge", () => "dodge" as const),
-    Match.when("helpAttack", () => "help" as const),
-    Match.when("hide", () => "hide" as const),
-    Match.when("multiattack", () => "attack" as const),
-    Match.when("ready", () => "ready" as const),
-    Match.when("search", () => "search" as const),
-    Match.when("grapple", () => "attack" as const),
-    Match.when("shove", () => "attack" as const),
-    Match.when("escapeGrapple", () => "attack" as const),
-    Match.when("escapeSpellRestraint", () => "utilize" as const),
-    Match.exhaustive,
   );
 }
 

@@ -3411,4 +3411,53 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       Either.right([ROGUE_CUNNING_ACTION_SUPPORT_PROFILE]),
     );
   });
+
+  test("Escape Grapple rejects a stale subject when only an Extra Attack slot remains", () => {
+    const grappled = fighterGrapplesGoblin(
+      startBattleRight({
+        battleId: battleId("battle-escape-grapple-extra-attack-slot"),
+        combatants: [
+          characterSeed({ initiative: 20 }),
+          characterSeed({
+            combatantId: goblinId,
+            displayName: "Synthetic Extra Attacker",
+            initiative: 10,
+            classLevel: 5,
+          }),
+        ],
+      }),
+    ).state;
+    const goblinTurn = requireResolved(
+      endTurn({ state: grappled, actorId: fighterId }),
+    ).state;
+    const extraAttackOnly: BattleState = {
+      ...goblinTurn,
+      currentTurnResources: {
+        ...goblinTurn.currentTurnResources,
+        actionResources: [
+          {
+            kind: "action",
+            source: "classFeatureExtraAttack",
+            sourceOwnerId: goblinId,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              "escape-grapple-extra-attack",
+            ),
+            restriction: { kind: "none" },
+          },
+        ],
+      },
+    };
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: goblinId,
+      action: "escapeGrapple",
+    };
+
+    expect(
+      discoverBattleActCandidates(extraAttackOnly).map((act) => act.subject),
+    ).not.toContainEqual(subject);
+    expect(
+      resolveBattleSubject({ state: extraAttackOnly, subject, fills: [] }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
 });

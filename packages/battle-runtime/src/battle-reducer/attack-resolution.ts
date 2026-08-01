@@ -227,8 +227,8 @@ import {
   supportedStatBlockBonusActionStandardAction,
 } from "./battle-discovery.ts";
 import {
-  isClassFeatureExtraAttackActionResource,
   isStatBlockMultiattackActionResource,
+  spendEscapeGrappleActionResource,
 } from "./action-resource-kinds.ts";
 import { spellDamageRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import {
@@ -1743,11 +1743,9 @@ export function resolveEscapeGrapple(
       "Escape Grapple is not available during a Stat Block Multiattack dispatch.",
     );
   }
-  const spent = spendMatchingActionResource(
+  const spent = spendEscapeGrappleActionResource(
     input.state.currentTurnResources,
-    "attack",
-    (resource) =>
-      !isClassFeatureExtraAttackActionResource(resource, input.subject.actorId),
+    input.subject.actorId,
   );
   if (Either.isLeft(spent)) {
     return invalidResult(
