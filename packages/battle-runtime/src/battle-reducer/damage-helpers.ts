@@ -43,7 +43,6 @@ import {
   type BattleRolledDiceFill,
   type BattleSpellDamageReductionRollHole,
   type BattleSourceDamageRollPenaltyRollHole,
-  type SpellDamageReductionFill,
   type SpellDamageReductionRoll,
   type SpellMarkedDamageRider,
   type SpellAttackDamageComponent,
@@ -478,20 +477,48 @@ export function availableSpellDamageReduction(
   target: BattleCreatureState,
   damageByType: ReadonlyMap<DamageType, number>,
 ): SpellDamageReductionRoll | null {
-  const effect = target.activeEffects.find(
+  const available = availableSpellDamageReductionEffect(target, damageByType);
+  if (available === null) {
+    return null;
+  }
+  return spellDamageReductionRollForAvailable(target, available);
+}
+
+type AvailableSpellDamageReduction = {
+  readonly effectIndex: number;
+  readonly effect: Extract<
+    BattleCreatureState["activeEffects"][number],
+    { readonly kind: "spellDamageReduction" }
+  >;
+};
+
+function spellDamageReductionRollForAvailable(
+  target: BattleCreatureState,
+  available: AvailableSpellDamageReduction,
+): SpellDamageReductionRoll {
+  const { effect } = available;
+  return {
+    sourceProcedureRef: effect.sourceProcedureRef,
+    sourceCombatantId: effect.sourceCombatantId,
+    targetId: target.combatantId,
+    damageType: effect.damageType,
+    amount: effect.amount,
+  };
+}
+
+function availableSpellDamageReductionEffect(
+  target: BattleCreatureState,
+  damageByType: ReadonlyMap<DamageType, number>,
+): AvailableSpellDamageReduction | null {
+  const effectIndex = target.activeEffects.findIndex(
     (candidate) =>
       candidate.kind === "spellDamageReduction" &&
       !candidate.usedThisTurn &&
       (damageByType.get(candidate.damageType) ?? 0) > 0,
   );
+  const effect = target.activeEffects[effectIndex];
   return effect?.kind === "spellDamageReduction"
-    ? {
-        sourceProcedureRef: effect.sourceProcedureRef,
-        sourceCombatantId: effect.sourceCombatantId,
-        targetId: target.combatantId,
-        damageType: effect.damageType,
-        amount: effect.amount,
-      }
+    ? { effectIndex, effect }
     : null;
 }
 
@@ -582,19 +609,26 @@ export function applyAvailableSpellDamageReduction(
     }
   | { readonly tag: "needsHoles"; readonly holes: readonly BattleHole[] }
   | { readonly tag: "invalid" } {
-  const reduction = availableSpellDamageReduction(target, damageByType);
-  const reductionHole =
-    reduction === null ? null : rollHoleForReduction(reduction);
+  const available = availableSpellDamageReductionEffect(target, damageByType);
   if (roll === undefined) {
-    return reduction === null
-      ? { tag: "ok", target, damageByType }
-      : { tag: "needsHoles", holes: [rollHoleForReduction(reduction)] };
+    if (available === null) {
+      return { tag: "ok", target, damageByType };
+    }
+    return {
+      tag: "needsHoles",
+      holes: [
+        rollHoleForReduction(
+          spellDamageReductionRollForAvailable(target, available),
+        ),
+      ],
+    };
   }
-  if (
-    reduction === null ||
-    reductionHole === null ||
-    roll.holeId !== reductionHole.holeId
-  ) {
+  if (available === null) {
+    return { tag: "invalid" };
+  }
+  const reduction = spellDamageReductionRollForAvailable(target, available);
+  const reductionHole = rollHoleForReduction(reduction);
+  if (roll.holeId !== reductionHole.holeId) {
     return { tag: "invalid" };
   }
   const validation = validateRolledDiceFillForDiceExpr(roll, {
@@ -604,16 +638,24 @@ export function applyAvailableSpellDamageReduction(
   if (validation !== null) {
     return { tag: "invalid" };
   }
-  const applied = applySpellDamageReductions(target, damageByType, [
-    {
-      sourceProcedureRef: reduction.sourceProcedureRef,
-      sourceCombatantId: reduction.sourceCombatantId,
-      targetId: reduction.targetId,
-      damageType: reduction.damageType,
-      roll: DieRollResult(rolledDiceTotal(roll.value)),
-    },
-  ]);
-  return applied;
+  const rolledReduction = DieRollResult(rolledDiceTotal(roll.value));
+  const reducedDamageByType = new Map(damageByType).set(
+    reduction.damageType,
+    Math.max(
+      0,
+      (damageByType.get(reduction.damageType) ?? 0) - Number(rolledReduction),
+    ),
+  );
+  const activeEffects = target.activeEffects.map((candidate, index) =>
+    index === available.effectIndex
+      ? { ...available.effect, usedThisTurn: true }
+      : candidate,
+  );
+  return {
+    tag: "ok",
+    target: { ...target, activeEffects },
+    damageByType: reducedDamageByType,
+  };
 }
 
 export function applyAvailableSourceDamageRollPenalty(
@@ -663,64 +705,6 @@ export function applyAvailableSourceDamageRollPenalty(
   return {
     tag: "ok",
     damageByType: damageAmountByTypeEntriesToMap(reducedEntries),
-  };
-}
-
-export function applySpellDamageReductions(
-  target: BattleCreatureState,
-  damageByType: ReadonlyMap<DamageType, number>,
-  reductions: readonly SpellDamageReductionFill[],
-):
-  | {
-      readonly tag: "ok";
-      readonly target: BattleCreatureState;
-      readonly damageByType: ReadonlyMap<DamageType, number>;
-    }
-  | { readonly tag: "invalid" } {
-  if (reductions.length === 0) {
-    return { tag: "ok", target, damageByType };
-  }
-  if (reductions.length !== 1) {
-    return { tag: "invalid" };
-  }
-  const reduction = reductions[0];
-  if (reduction === undefined || reduction.targetId !== target.combatantId) {
-    return { tag: "invalid" };
-  }
-  const effectIndex = target.activeEffects.findIndex(
-    (effect) =>
-      effect.kind === "spellDamageReduction" &&
-      effect.sourceProcedureRef === reduction.sourceProcedureRef &&
-      effect.sourceCombatantId === reduction.sourceCombatantId &&
-      effect.damageType === reduction.damageType &&
-      !effect.usedThisTurn,
-  );
-  const effect = target.activeEffects[effectIndex];
-  if (
-    effect?.kind !== "spellDamageReduction" ||
-    !Number.isInteger(Number(reduction.roll)) ||
-    Number(reduction.roll) < effect.amount.dice ||
-    Number(reduction.roll) > effect.amount.dice * effect.amount.dieSize ||
-    (damageByType.get(reduction.damageType) ?? 0) <= 0
-  ) {
-    return { tag: "invalid" };
-  }
-  const reducedDamageByType = new Map(damageByType).set(
-    reduction.damageType,
-    Math.max(
-      0,
-      (damageByType.get(reduction.damageType) ?? 0) - Number(reduction.roll),
-    ),
-  );
-  const activeEffects = target.activeEffects.map((candidate, index) =>
-    index === effectIndex && candidate.kind === "spellDamageReduction"
-      ? { ...candidate, usedThisTurn: true }
-      : candidate,
-  );
-  return {
-    tag: "ok",
-    target: { ...target, activeEffects },
-    damageByType: reducedDamageByType,
   };
 }
 

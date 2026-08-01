@@ -6076,17 +6076,11 @@ export function cunningStrikeOptionUnsupportedIssue(
     ? null
     : CUNNING_STRIKE_OPTION_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE;
 }
-export type SpellDamageReductionFill = {
+export type SpellDamageReductionRoll = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly sourceCombatantId: CombatantId;
   readonly targetId: CombatantId;
   readonly damageType: DamageType;
-  readonly roll: DieRollResult;
-};
-export type SpellDamageReductionRoll = Omit<
-  SpellDamageReductionFill,
-  "roll"
-> & {
   readonly amount: {
     readonly dice: 1;
     readonly dieSize: 4;
