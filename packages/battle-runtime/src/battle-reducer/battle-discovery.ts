@@ -116,15 +116,17 @@ import {
   flamingSphereSavingThrowOutcomeHole,
   moonbeamSavingThrowOutcomeHole,
   moonbeamRepositionMovementHole,
-  canonicalHeldObjectIdsForActor,
-  commandDropHeldObjectFactsHole,
-  commandPendingEffectsForActor,
-  standFromProneCostFeet,
   type GreaseGroundHazardEffect,
   type WebRestraintHazardEffect,
   type GustOfWindLineEffect,
   type FlamingSphereEffect,
   type MoonbeamEffect,
+} from "./persistent-spatial-spell-discovery.ts";
+import {
+  canonicalHeldObjectIdsForActor,
+  commandDropHeldObjectFactsHole,
+  commandPendingEffectsForActor,
+  standFromProneCostFeet,
 } from "./turn-movement-discovery.ts";
 import { readiedSpellInitialHoles } from "./readied-initial-holes.ts";
 import { movementHole } from "./movement-holes.ts";

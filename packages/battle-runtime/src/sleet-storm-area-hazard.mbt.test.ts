@@ -52,7 +52,7 @@ import {
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
-import type { SleetStormAreaHazardEffect } from "./battle-reducer/turn-end-movement.ts";
+import type { SleetStormAreaHazardEffect } from "./battle-reducer/persistent-spatial-spell-procedures.ts";
 
 const sleetStormMovementSpentFeet = 15;
 const syntheticTargetConcentrationSpellId =

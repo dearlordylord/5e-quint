@@ -58,7 +58,7 @@ import {
   type BattleProcedureExecutionRef,
   type BattleSubject,
 } from "./index.ts";
-import type { GustOfWindLineEffect } from "./battle-reducer/turn-end-movement.ts";
+import type { GustOfWindLineEffect } from "./battle-reducer/persistent-spatial-spell-discovery.ts";
 
 const gustMovementTotalFeet = 5;
 const gustMovementCloserFeet = 5;

@@ -304,7 +304,6 @@ import {
 import { applyBattleMovement } from "./battle-movement.ts";
 import {
   commandPendingEffectsForActor,
-  resolveCloudkillAreaHazardSaveCommand,
   resolveCommandApproachAfterMovement,
   resolveCommandApproachCommand,
   resolveCommandDropCommand,
@@ -312,25 +311,15 @@ import {
   resolveCommandFleeCommand,
   resolveCommandGrovelCommand,
   resolveEndTurnCommand,
-  resolveFlamingSphereRamCommand,
-  resolveFlamingSphereRepositionCommand,
-  resolveFlamingSphereSaveCommand,
-  resolveGreaseGroundHazardSaveCommand,
-  resolveGustOfWindLineDirectionChangeCommand,
-  resolveGustOfWindLineSaveCommand,
-  resolveInsectPlagueAreaHazardSaveCommand,
   resolveJumpMovementReplacementCommand,
-  resolveMoonbeamCylinderExitCommand,
-  resolveMoonbeamRepositionCommand,
-  resolveMoonbeamSaveCommand,
   resolveMoveAfterMovement,
   resolveMoveCommand,
-  resolveSleetStormAreaHazardSaveCommand,
   resolveStandFromProneCommand,
-  resolveWebAreaRemovedCommand,
-  resolveWebRestrainedNoLongerInAreaCommand,
-  resolveWebRestraintSaveCommand,
 } from "./turn-end-movement.ts";
+import {
+  isPersistentSpatialSpellProcedureSubject,
+  resolvePersistentSpatialSpellProcedureCommand,
+} from "./persistent-spatial-spell-procedures.ts";
 import {
   resolveDruidWildShapeUnitFeature,
   resolveUnitFeature,
@@ -1525,127 +1514,8 @@ export function resolveBattleSubjectInternal(
     ) {
       return resolveLevitateAltitudeControlCommand({ ...input, subject });
     }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "greaseGroundHazardSave"
-    ) {
-      return resolveGreaseGroundHazardSaveCommand({
-        ...input,
-        subject,
-        ...handledInterruptRouteOption,
-      });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "webRestraintSave"
-    ) {
-      return resolveWebRestraintSaveCommand({
-        ...input,
-        subject,
-        ...handledInterruptRouteOption,
-      });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "sleetStormAreaHazardSave"
-    ) {
-      return resolveSleetStormAreaHazardSaveCommand({
-        ...input,
-        subject,
-        ...handledInterruptRouteOption,
-      });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "insectPlagueAreaHazardSave"
-    ) {
-      return resolveInsectPlagueAreaHazardSaveCommand({
-        ...input,
-        subject,
-        ...handledInterruptRouteOption,
-      });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "cloudkillAreaHazardSave"
-    ) {
-      return resolveCloudkillAreaHazardSaveCommand({
-        ...input,
-        subject,
-        ...handledInterruptRouteOption,
-      });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "webRestrainedNoLongerInArea"
-    ) {
-      return resolveWebRestrainedNoLongerInAreaCommand({ ...input, subject });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "webAreaRemoved"
-    ) {
-      return resolveWebAreaRemovedCommand({ ...input, subject });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "gustOfWindLineSave"
-    ) {
-      return resolveGustOfWindLineSaveCommand({
-        ...input,
-        subject,
-        ...handledInterruptRouteOption,
-      });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "gustOfWindLineDirectionChange"
-    ) {
-      return resolveGustOfWindLineDirectionChangeCommand({ ...input, subject });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "movableZoneSave"
-    ) {
-      if (subject.trigger === "endsTurnWithinFiveFeetOfSphere") {
-        return resolveFlamingSphereSaveCommand({
-          ...input,
-          subject,
-          ...handledInterruptRouteOption,
-        });
-      }
-      return resolveMoonbeamSaveCommand({
-        ...input,
-        subject,
-        ...handledInterruptRouteOption,
-      });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "moonbeamCylinderExit"
-    ) {
-      return resolveMoonbeamCylinderExitCommand({ ...input, subject });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "movableZoneReposition"
-    ) {
-      const hasFlamingSphere = [...input.state.combatants.values()].some(
-        (combatant) =>
-          combatant.activeEffects.some(
-            (e) => e.kind === "flamingSphere" && e.areaId === subject.areaId,
-          ),
-      );
-      if (hasFlamingSphere) {
-        return resolveFlamingSphereRepositionCommand({ ...input, subject });
-      }
-      return resolveMoonbeamRepositionCommand({ ...input, subject });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "movableZoneRam"
-    ) {
-      return resolveFlamingSphereRamCommand({
+    if (isPersistentSpatialSpellProcedureSubject(subject)) {
+      return resolvePersistentSpatialSpellProcedureCommand({
         ...input,
         subject,
         ...handledInterruptRouteOption,

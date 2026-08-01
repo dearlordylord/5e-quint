@@ -52,7 +52,7 @@ import {
   type BattleRuntimeSession,
   type BattleSubject,
 } from "./index.ts";
-import type { WebRestraintHazardEffect } from "./battle-reducer/turn-end-movement.ts";
+import type { WebRestraintHazardEffect } from "./battle-reducer/persistent-spatial-spell-discovery.ts";
 
 const webMovementSpentFeet = 15;
 

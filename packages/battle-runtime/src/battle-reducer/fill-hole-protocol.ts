@@ -9,6 +9,30 @@ export function fillsBelongToDeclaredHoles(
   return fills.every((fill) => declaredHoles.has(fill.holeId));
 }
 
+export function savingThrowOutcomeFillForHole(
+  fills: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+  hole: { readonly holeId: BattleHoleId },
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
+  return fills.find((fill) => fill.holeId === hole.holeId);
+}
+
+export function rolledDiceFillForHole(
+  fills: readonly Extract<BattleFill, { readonly kind: "rolledDice" }>[],
+  hole: { readonly holeId: BattleHoleId },
+): Extract<BattleFill, { readonly kind: "rolledDice" }> | undefined {
+  return fills.find((fill) => fill.holeId === hole.holeId);
+}
+
+export function everyFillUsesHoleId(
+  fills: readonly { readonly holeId: BattleHoleId }[],
+  expectedHoleId: BattleHoleId,
+): boolean {
+  return fills.every((fill) => fill.holeId === expectedHoleId);
+}
+
 export function fillsBelongToSpellCastHoles(
   fills: readonly BattleFill[],
   additionalHoleIds: readonly BattleHoleId[] = [],

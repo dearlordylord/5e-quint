@@ -28,6 +28,7 @@ import {
   requireHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
+  battleAreaId,
   type AvailableBattleAct,
   type BattleRuntimeSession,
   type BattleState,
@@ -485,7 +486,11 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
     expect(
       sameBattleSubject(
         { ...base, trigger: "entersArea" },
-        { ...base, areaId: "second-grease-ground-area", trigger: "entersArea" },
+        {
+          ...base,
+          areaId: battleAreaId("second-grease-ground-area"),
+          trigger: "entersArea",
+        },
       ),
     ).toBe(false);
   });

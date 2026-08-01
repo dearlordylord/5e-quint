@@ -17,7 +17,7 @@ import {
   insectPlagueAreaHazardSavingThrowOutcomeHole,
   cloudkillAreaHazardSavingThrowOutcomeHole,
   sleetStormAreaHazardSavingThrowOutcomeHole,
-} from "./battle-reducer/turn-end-movement.ts";
+} from "./battle-reducer/persistent-spatial-spell-procedures.ts";
 import {
   battleAreaId,
   battleActSpellPresentation,

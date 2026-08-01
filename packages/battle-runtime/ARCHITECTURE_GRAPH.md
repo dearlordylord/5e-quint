@@ -30,6 +30,17 @@ execution capability so the dispatcher supplies admitted subject resolution and
 continuation resumption without recreating lifecycle state or introducing a
 reverse module dependency.
 
+Post-cast persistent spatial spell procedures are owned by
+`battle-reducer/persistent-spatial-spell-procedures.ts`. It owns the admitted command
+boundary and the save, damage, cleanup, direction-change, reposition, and ram
+flows for Grease, Web, Sleet Storm, Insect Plague, Cloudkill, Gust of Wind,
+Flaming Sphere, and Moonbeam. The dispatcher delegates the family as one unit;
+turn-boundary orchestration remains in `turn-end-movement.ts`, while
+distance-triggered Spike Growth damage remains part of movement resolution.
+`battle-reducer/persistent-spatial-spell-discovery.ts` owns the active-effect
+vocabulary and hole/projection construction shared with `discoverBattleActs`;
+procedure-only staged holes remain local to the execution owner.
+
 Keep battle-runtime integration vocabulary such as `Actor`, `Combatant`,
 `BattleState`, `ActiveEffect`, `Hole`, and replay variants in battle-runtime QNT
 model modules, starting with
