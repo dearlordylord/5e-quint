@@ -363,6 +363,24 @@ type ResolveSpellActInternalOptions =
       readonly metamagicApplications?: never;
     };
 
+type SpellDamageAttackOutcome =
+  | { readonly tag: "notSpellAttack" }
+  | { readonly tag: "spellAttackMiss" }
+  | {
+      readonly tag: "spellAttackHit";
+      readonly critical: boolean;
+      readonly markedDamageRiders: readonly SpellMarkedDamageRider[];
+    };
+
+type SpellDamageResolutionContext = {
+  readonly tag: "damageContext";
+  readonly spellResolutionState: BattleState;
+  readonly metamagicApplicationsForDamageAndSpend:
+    | readonly SpellMetamagicApplicationFact[]
+    | undefined;
+  readonly attackOutcome: SpellDamageAttackOutcome;
+};
+
 type SpellActInternalInput =
   | ActionSpellBattleResolutionInput
   | BonusActionSpellBattleResolutionInput;
@@ -2455,312 +2473,449 @@ function resolveSpellActInternal(
     return spellCastReactionWindow;
   }
 
-  let spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [];
-  let spellResolutionStateAfterCriticalMovement: BattleState | null = null;
-  let metamagicApplicationsForDamageAndSpend =
-    metamagicApplicationsForResolution;
-  if (
-    invocationForResolution.procedure === "spellAttackDamage" ||
-    invocationForResolution.procedure === "heldLightHurl" ||
-    invocationForResolution.procedure === "spellCreatedHeldObjectAttack" ||
-    invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
-    invocationForResolution.procedure === "spiritualWeaponRepeatAttack"
-  ) {
-    const requiredRollMode = requiredSpellAttackRollMode(
-      castingState,
-      subject.actorId,
-      target.combatantId,
-      invocationForResolution,
-      fillSet.targetSpatialFacts,
-    );
-    if (fillSet.attackRoll == null) {
-      return needsHolesResult(castingState, input.subject, [
-        spellAttackRollHole(
-          castingState,
-          subject.actorId,
-          invocationForResolution,
-          requiredRollMode,
-        ),
-      ]);
-    }
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (!attackRollResultIsValid(fillSet.attackRoll)) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Spell attack roll result is outside the d20 attack-roll protocol.",
-      );
-    }
-    /* v8 ignore stop */
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Spell attack roll mode does not match the current attack-roll rule.",
-      );
-    }
-    /* v8 ignore stop */
-    const actorBeforeSpellAttack = castingState.combatants.get(subject.actorId);
+  const spellDamageContext = (():
+    | BattleResolutionResult
+    | SpellDamageResolutionContext => {
     if (
-      d20TestNaturalOneRerollRollDecisionRequired({
-        actor: actorBeforeSpellAttack,
-        originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
-        rollMode: fillSet.attackRoll.rollMode,
-        rolledD20s: fillSet.attackRoll.rolledD20s,
-        decision: fillSet.attackRoll.d20TestNaturalOneReroll,
-      })
+      invocationForResolution.procedure === "spellAttackDamage" ||
+      invocationForResolution.procedure === "heldLightHurl" ||
+      invocationForResolution.procedure === "spellCreatedHeldObjectAttack" ||
+      invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
+      invocationForResolution.procedure === "spiritualWeaponRepeatAttack"
     ) {
-      return needsHolesResult(castingState, input.subject, [
-        attackRollHoleWithD20TestNaturalOneRerollOption(
+      const requiredRollMode = requiredSpellAttackRollMode(
+        castingState,
+        subject.actorId,
+        target.combatantId,
+        invocationForResolution,
+        fillSet.targetSpatialFacts,
+      );
+      if (fillSet.attackRoll == null) {
+        return needsHolesResult(castingState, input.subject, [
           spellAttackRollHole(
             castingState,
             subject.actorId,
             invocationForResolution,
             requiredRollMode,
           ),
-        ),
-      ]);
-    }
-    const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-      actor: actorBeforeSpellAttack,
-      total: fillSet.attackRoll.total,
-      originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
-      rollMode: fillSet.attackRoll.rollMode,
-      rolledD20s: fillSet.attackRoll.rolledD20s,
-      decision: fillSet.attackRoll.d20TestNaturalOneReroll,
-      requiredRollMode,
-      otherD20RerollPresent: fillSet.attackRoll.spellAttackReroll !== undefined,
-    });
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (d20TestNaturalOneRerollIssue !== null) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        d20TestNaturalOneRerollIssue,
-      );
-    }
-    /* v8 ignore stop */
-    const naturalOneEffectiveAttackRoll =
-      effectiveD20TestNaturalOneRerollAttackRoll(fillSet.attackRoll);
-    const originalHit = attackRollHits(
-      naturalOneEffectiveAttackRoll,
-      currentArmorClass(activeEffectArmorClass(input.state, target)),
-    );
-    const spellAttackRerollIssue = spellAttackRerollValidationIssue({
-      actor: actorBeforeSpellAttack,
-      invocation: invocationForResolution,
-      originalAttackRoll: naturalOneEffectiveAttackRoll,
-      originalHit,
-      requiredRollMode,
-      castMetamagicApplications: metamagicApplicationsForResolution ?? [],
-    });
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (spellAttackRerollIssue !== null) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(input.state, "invalidFill", spellAttackRerollIssue);
-    }
-    /* v8 ignore stop */
-    if (
-      spellAttackNeedsSeekingRerollDecision({
-        actor: actorBeforeSpellAttack,
-        invocation: invocationForResolution,
-        attackRoll: naturalOneEffectiveAttackRoll,
-        originalHit,
-        castMetamagicApplications: metamagicApplicationsForResolution ?? [],
-      })
-    ) {
-      return needsHolesResult(castingState, input.subject, [
-        spellAttackRollHoleWithSeekingOption(
-          castingState,
-          subject.actorId,
-          invocationForResolution,
-          requiredRollMode,
-        ),
-      ]);
-    }
-    const seekingApplication =
-      fillSet.attackRoll.spellAttackReroll?.kind === "reroll"
-        ? seekingSpellRerollApplicationForAttackRoll({
-            actor: actorBeforeSpellAttack,
-            attackRoll: fillSet.attackRoll,
-            castApplications: metamagicApplicationsForResolution ?? [],
-          })
-        : null;
-    if (seekingApplication !== null && typeof seekingApplication !== "string") {
-      metamagicApplicationsForDamageAndSpend = [
-        ...(metamagicApplicationsForDamageAndSpend ?? []),
-        seekingApplication,
-      ];
-    }
-    const effectiveAttackRoll = effectiveSpellAttackRoll(fillSet.attackRoll);
-    const ordinaryHit = attackRollHits(
-      effectiveAttackRoll,
-      currentArmorClass(activeEffectArmorClass(input.state, target)),
-    );
-    const missToHitReplacement = selectedAttackRollMissToHitReplacement({
-      state: castingState,
-      subject: input.subject,
-      attackerId: subject.actorId,
-      targetId: target.combatantId,
-      attackRoll: effectiveAttackRoll,
-      ordinaryHit,
-    });
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (
-      fillSet.attackRoll.missToHitReplacementProcedureRef !== undefined &&
-      missToHitReplacement === null
-    ) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        ordinaryHit
-          ? "Attack-roll miss-to-hit replacement can only be selected after a miss."
-          : "Attack-roll miss-to-hit replacement is not available for this spell attack roll.",
-      );
-    }
-    /* v8 ignore stop */
-    const hit = ordinaryHit || missToHitReplacement !== null;
-    const potentCantripMiss =
-      !hit &&
-      potentCantripAppliesToMissedSpellAttack({
-        actor: castingState.combatants.get(subject.actorId),
-        invocation: invocationForResolution,
-        target,
-      });
-    const critical = attackRollIsCriticalHit(effectiveAttackRoll);
-    const attackRollState = stateAfterSpellAttackRollMadeForInvocation(
-      castingState,
-      subject.actorId,
-      invocationForResolution,
-    );
-    const attackRolledState = recordAttackRollMissToHitReplacementUsed(
-      consumeHelpAttackForAttackRoll(
-        recordAttackRollOngoingFeatures(
-          attackRollState,
-          subject.actorId,
-          target.combatantId,
-          null,
-          fillSet.targetRelationshipFacts,
-        ),
-        subject.actorId,
-        target.combatantId,
-      ),
-      subject.actorId,
-      missToHitReplacement,
-      {
-        subject: input.subject,
-        targetId: target.combatantId,
-        attackRoll: effectiveAttackRoll,
-      },
-    );
-    const attackRolledStateAfterHurl = stateAfterResolvedHeldLightHurl(
-      attackRolledState,
-      subject.actorId,
-      invocationForResolution,
-    );
-    const attackRolledStateWithSpiritualWeaponCast = hit
-      ? stateAfterSpiritualWeaponCastProxyCreatedBeforeImmediateAttack({
-          state: attackRolledStateAfterHurl,
-          actorId: subject.actorId,
-          invocation: invocationForResolution,
-          errorState: input.state,
-          ...(options.actionCostOverride === undefined
-            ? {}
-            : { actionCostOverride: options.actionCostOverride }),
-          ...(metamagicApplicationsForDamageAndSpend === undefined
-            ? {}
-            : {
-                metamagicApplications: metamagicApplicationsForDamageAndSpend,
-              }),
-          ...(spiritualWeaponForcePosition === undefined
-            ? {}
-            : { spiritualWeaponForcePosition }),
-        })
-      : {
-          tag: "resolved" as const,
-          state: attackRolledStateAfterHurl,
-          snapshot: snapshotBattle(attackRolledStateAfterHurl),
-        };
-    if (attackRolledStateWithSpiritualWeaponCast.tag !== "resolved") {
-      return attackRolledStateWithSpiritualWeaponCast;
-    }
-    const attackRolledStateBeforeHitContinuations =
-      attackRolledStateWithSpiritualWeaponCast.state;
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (!hit && fillSet.mirrorImageDuplicateRoll !== undefined) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Mirror Image duplicate roll is only valid after an attack-roll hit.",
-      );
-    }
-    /* v8 ignore stop */
-    if (hit) {
-      const mirrorImageAttacker =
-        attackRolledStateBeforeHitContinuations.combatants.get(subject.actorId);
-      if (mirrorImageAttacker === undefined) {
-        return invalidResult(
-          input.state,
-          "missingCombatant",
-          "Spell attack actor is no longer in this battle.",
-        );
-      }
-      const mirrorImageCheck = mirrorImageHitInterceptionCheck({
-        state: attackRolledStateBeforeHitContinuations,
-        attacker: mirrorImageAttacker,
-        target:
-          attackRolledStateBeforeHitContinuations.combatants.get(
-            target.combatantId,
-          ) ?? target,
-        targetSpatialFacts: fillSet.targetSpatialFacts,
-        triggeringAttackRollHoleId: ATTACK_ROLL_HOLE_ID,
-        fill: fillSet.mirrorImageDuplicateRoll,
-      });
-      if (mirrorImageCheck.tag === "needsHoles") {
-        return needsHolesResult(
-          attackRolledStateBeforeHitContinuations,
-          input.subject,
-          [mirrorImageCheck.hole],
-        );
+        ]);
       }
       /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (mirrorImageCheck.tag === "invalid") {
+      if (!attackRollResultIsValid(fillSet.attackRoll)) {
         /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
         return invalidResult(
           input.state,
           "invalidFill",
-          mirrorImageCheck.message,
+          "Spell attack roll result is outside the d20 attack-roll protocol.",
         );
       }
       /* v8 ignore stop */
-      if (mirrorImageCheck.tag === "hitDuplicate") {
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      if (!attackRollModeMatches(fillSet.attackRoll, requiredRollMode)) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          "Spell attack roll mode does not match the current attack-roll rule.",
+        );
+      }
+      /* v8 ignore stop */
+      const actorBeforeSpellAttack = castingState.combatants.get(
+        subject.actorId,
+      );
+      if (
+        d20TestNaturalOneRerollRollDecisionRequired({
+          actor: actorBeforeSpellAttack,
+          originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+          rollMode: fillSet.attackRoll.rollMode,
+          rolledD20s: fillSet.attackRoll.rolledD20s,
+          decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+        })
+      ) {
+        return needsHolesResult(castingState, input.subject, [
+          attackRollHoleWithD20TestNaturalOneRerollOption(
+            spellAttackRollHole(
+              castingState,
+              subject.actorId,
+              invocationForResolution,
+              requiredRollMode,
+            ),
+          ),
+        ]);
+      }
+      const d20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
+        actor: actorBeforeSpellAttack,
+        total: fillSet.attackRoll.total,
+        originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+        rollMode: fillSet.attackRoll.rollMode,
+        rolledD20s: fillSet.attackRoll.rolledD20s,
+        decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+        requiredRollMode,
+        otherD20RerollPresent:
+          fillSet.attackRoll.spellAttackReroll !== undefined,
+      });
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      if (d20TestNaturalOneRerollIssue !== null) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          d20TestNaturalOneRerollIssue,
+        );
+      }
+      /* v8 ignore stop */
+      const naturalOneEffectiveAttackRoll =
+        effectiveD20TestNaturalOneRerollAttackRoll(fillSet.attackRoll);
+      const originalHit = attackRollHits(
+        naturalOneEffectiveAttackRoll,
+        currentArmorClass(activeEffectArmorClass(input.state, target)),
+      );
+      const spellAttackRerollIssue = spellAttackRerollValidationIssue({
+        actor: actorBeforeSpellAttack,
+        invocation: invocationForResolution,
+        originalAttackRoll: naturalOneEffectiveAttackRoll,
+        originalHit,
+        requiredRollMode,
+        castMetamagicApplications: metamagicApplicationsForResolution ?? [],
+      });
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      if (spellAttackRerollIssue !== null) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          spellAttackRerollIssue,
+        );
+      }
+      /* v8 ignore stop */
+      if (
+        spellAttackNeedsSeekingRerollDecision({
+          actor: actorBeforeSpellAttack,
+          invocation: invocationForResolution,
+          attackRoll: naturalOneEffectiveAttackRoll,
+          originalHit,
+          castMetamagicApplications: metamagicApplicationsForResolution ?? [],
+        })
+      ) {
+        return needsHolesResult(castingState, input.subject, [
+          spellAttackRollHoleWithSeekingOption(
+            castingState,
+            subject.actorId,
+            invocationForResolution,
+            requiredRollMode,
+          ),
+        ]);
+      }
+      const seekingApplication =
+        fillSet.attackRoll.spellAttackReroll?.kind === "reroll"
+          ? seekingSpellRerollApplicationForAttackRoll({
+              actor: actorBeforeSpellAttack,
+              attackRoll: fillSet.attackRoll,
+              castApplications: metamagicApplicationsForResolution ?? [],
+            })
+          : null;
+      const metamagicApplicationsForDamageAndSpend =
+        seekingApplication !== null && typeof seekingApplication !== "string"
+          ? [...(metamagicApplicationsForResolution ?? []), seekingApplication]
+          : metamagicApplicationsForResolution;
+      const effectiveAttackRoll = effectiveSpellAttackRoll(fillSet.attackRoll);
+      const ordinaryHit = attackRollHits(
+        effectiveAttackRoll,
+        currentArmorClass(activeEffectArmorClass(input.state, target)),
+      );
+      const missToHitReplacement = selectedAttackRollMissToHitReplacement({
+        state: castingState,
+        subject: input.subject,
+        attackerId: subject.actorId,
+        targetId: target.combatantId,
+        attackRoll: effectiveAttackRoll,
+        ordinaryHit,
+      });
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      if (
+        fillSet.attackRoll.missToHitReplacementProcedureRef !== undefined &&
+        missToHitReplacement === null
+      ) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          ordinaryHit
+            ? "Attack-roll miss-to-hit replacement can only be selected after a miss."
+            : "Attack-roll miss-to-hit replacement is not available for this spell attack roll.",
+        );
+      }
+      /* v8 ignore stop */
+      const hit = ordinaryHit || missToHitReplacement !== null;
+      const potentCantripMiss =
+        !hit &&
+        potentCantripAppliesToMissedSpellAttack({
+          actor: castingState.combatants.get(subject.actorId),
+          invocation: invocationForResolution,
+          target,
+        });
+      const critical = attackRollIsCriticalHit(effectiveAttackRoll);
+      const attackRollState = stateAfterSpellAttackRollMadeForInvocation(
+        castingState,
+        subject.actorId,
+        invocationForResolution,
+      );
+      const attackRolledState = recordAttackRollMissToHitReplacementUsed(
+        consumeHelpAttackForAttackRoll(
+          recordAttackRollOngoingFeatures(
+            attackRollState,
+            subject.actorId,
+            target.combatantId,
+            null,
+            fillSet.targetRelationshipFacts,
+          ),
+          subject.actorId,
+          target.combatantId,
+        ),
+        subject.actorId,
+        missToHitReplacement,
+        {
+          subject: input.subject,
+          targetId: target.combatantId,
+          attackRoll: effectiveAttackRoll,
+        },
+      );
+      const attackRolledStateAfterHurl = stateAfterResolvedHeldLightHurl(
+        attackRolledState,
+        subject.actorId,
+        invocationForResolution,
+      );
+      const attackRolledStateWithSpiritualWeaponCast = hit
+        ? stateAfterSpiritualWeaponCastProxyCreatedBeforeImmediateAttack({
+            state: attackRolledStateAfterHurl,
+            actorId: subject.actorId,
+            invocation: invocationForResolution,
+            errorState: input.state,
+            ...(options.actionCostOverride === undefined
+              ? {}
+              : { actionCostOverride: options.actionCostOverride }),
+            ...(metamagicApplicationsForDamageAndSpend === undefined
+              ? {}
+              : {
+                  metamagicApplications: metamagicApplicationsForDamageAndSpend,
+                }),
+            ...(spiritualWeaponForcePosition === undefined
+              ? {}
+              : { spiritualWeaponForcePosition }),
+          })
+        : {
+            tag: "resolved" as const,
+            state: attackRolledStateAfterHurl,
+            snapshot: snapshotBattle(attackRolledStateAfterHurl),
+          };
+      if (attackRolledStateWithSpiritualWeaponCast.tag !== "resolved") {
+        return attackRolledStateWithSpiritualWeaponCast;
+      }
+      const attackRolledStateBeforeHitContinuations =
+        attackRolledStateWithSpiritualWeaponCast.state;
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      if (!hit && fillSet.mirrorImageDuplicateRoll !== undefined) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          "Mirror Image duplicate roll is only valid after an attack-roll hit.",
+        );
+      }
+      /* v8 ignore stop */
+      if (hit) {
+        const mirrorImageAttacker =
+          attackRolledStateBeforeHitContinuations.combatants.get(
+            subject.actorId,
+          );
+        if (mirrorImageAttacker === undefined) {
+          return invalidResult(
+            input.state,
+            "missingCombatant",
+            "Spell attack actor is no longer in this battle.",
+          );
+        }
+        const mirrorImageCheck = mirrorImageHitInterceptionCheck({
+          state: attackRolledStateBeforeHitContinuations,
+          attacker: mirrorImageAttacker,
+          target:
+            attackRolledStateBeforeHitContinuations.combatants.get(
+              target.combatantId,
+            ) ?? target,
+          targetSpatialFacts: fillSet.targetSpatialFacts,
+          triggeringAttackRollHoleId: ATTACK_ROLL_HOLE_ID,
+          fill: fillSet.mirrorImageDuplicateRoll,
+        });
+        if (mirrorImageCheck.tag === "needsHoles") {
+          return needsHolesResult(
+            attackRolledStateBeforeHitContinuations,
+            input.subject,
+            [mirrorImageCheck.hole],
+          );
+        }
         /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-        if (spellAttackPostMirrorImageFillsArePresent(fillSet)) {
+        if (mirrorImageCheck.tag === "invalid") {
           /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
           return invalidResult(
             input.state,
             "invalidFill",
-            "Spell attack damage and after-hit fills are not valid when Mirror Image redirects the hit to a duplicate.",
+            mirrorImageCheck.message,
           );
         }
         /* v8 ignore stop */
-        if (
-          invocationForResolution.procedure === "spiritualWeaponAttackProxy"
-        ) {
-          return {
-            tag: "resolved",
+        if (mirrorImageCheck.tag === "hitDuplicate") {
+          /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+          if (spellAttackPostMirrorImageFillsArePresent(fillSet)) {
+            /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+            return invalidResult(
+              input.state,
+              "invalidFill",
+              "Spell attack damage and after-hit fills are not valid when Mirror Image redirects the hit to a duplicate.",
+            );
+          }
+          /* v8 ignore stop */
+          if (
+            invocationForResolution.procedure === "spiritualWeaponAttackProxy"
+          ) {
+            return {
+              tag: "resolved",
+              state: mirrorImageCheck.state,
+              snapshot: snapshotBattle(mirrorImageCheck.state),
+            };
+          }
+          return spendSpellActResolutionResources({
             state: mirrorImageCheck.state,
-            snapshot: snapshotBattle(mirrorImageCheck.state),
-          };
+            actorId: subject.actorId,
+            invocation: invocationForResolution,
+            errorState: input.state,
+            ...(options.actionCostOverride === undefined
+              ? {}
+              : { actionCostOverride: options.actionCostOverride }),
+            ...(metamagicApplicationsForDamageAndSpend === undefined
+              ? {}
+              : {
+                  metamagicApplications: metamagicApplicationsForDamageAndSpend,
+                }),
+            ...(spiritualWeaponForcePosition === undefined
+              ? {}
+              : { spiritualWeaponForcePosition }),
+          });
         }
+      }
+      const spellMarkedDamageRiders = hit
+        ? activeMarkedDamageRiders(
+            attackRolledStateBeforeHitContinuations.combatants.get(
+              subject.actorId,
+            ),
+            target.combatantId,
+          )
+        : [];
+      if (hit && input.handledInterruptTrigger !== "attackHit") {
+        const attackHitDamageTypes = isSupportedDamageSpellInvocation(
+          invocationForResolution,
+        )
+          ? spellDamageTypes(
+              transmutedSpellDamageInvocation(
+                invocationForResolution,
+                metamagicApplicationsForDamageAndSpend,
+              ),
+            )
+          : spellDamageTypes(invocationForResolution);
+        const reactionWindow = maybeOpenInterruptWindow(
+          attackRolledStateBeforeHitContinuations,
+          {
+            trigger: "attackHit",
+            attackerId: subject.actorId,
+            targetId: target.combatantId,
+            attackRoll: effectiveAttackRoll,
+            attackKind: spellAttackKindForRedirect(
+              invocationForResolution.attackKind,
+            ),
+            attackHitTriggerKind: "otherAttack",
+            damageTypes: [
+              ...new Set([
+                ...attackHitDamageTypes,
+                ...spellMarkedDamageRiders.map(
+                  (rider) => rider.damage.damageType,
+                ),
+              ]),
+            ],
+            continuation: spellReplayContinuation(input),
+          },
+          input.handledInterruptTrigger,
+        );
+        if (reactionWindow !== null) {
+          return reactionWindow;
+        }
+      }
+      const remarkableAthleteMovement =
+        resolveRemarkableAthleteCriticalHitMovement({
+          state: attackRolledStateBeforeHitContinuations,
+          subject: input.subject,
+          attackerId: subject.actorId,
+          scoredCriticalHit: critical,
+          fills: fillSet,
+        });
+      if (remarkableAthleteMovement.tag === "result") {
+        return remarkableAthleteMovement.result;
+      }
+      const spellResolutionState = remarkableAthleteMovement.state;
+      const spellAttackHalfInitialMiss =
+        !hit &&
+        invocationForResolution.procedure === "spellAttackDamage" &&
+        invocationForResolution.missDamage === "halfInitialOnly";
+      if (
+        (hit || potentCantripMiss || spellAttackHalfInitialMiss) &&
+        fillSet.damageRoll == null
+      ) {
+        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+        if (!isSupportedDamageSpellInvocation(invocationForResolution)) {
+          /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+          return invalidResult(
+            input.state,
+            "invalidFill",
+            "Selected spell act does not use a damage roll.",
+          );
+        }
+        /* v8 ignore stop */
+        const requestedDamageInvocation = transmutedSpellDamageInvocation(
+          invocationForResolution,
+          metamagicApplicationsForDamageAndSpend,
+        );
+        return needsHolesResult(spellResolutionState, input.subject, [
+          spellDamageHoleWithEmpoweredOption(
+            spellResolutionState,
+            subject.actorId,
+            {
+              ...requestedDamageInvocation,
+              sourceProcedureRef: invocationForResolution.sourceProcedureRef,
+            },
+            hit && critical,
+            metamagicApplicationsForDamageAndSpend ?? [],
+            spellMarkedDamageRiders,
+          ),
+        ]);
+      }
+      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+      if (
+        !hit &&
+        !potentCantripMiss &&
+        !spellAttackHalfInitialMiss &&
+        (fillSet.damageRoll != null ||
+          fillSet.damageDispositions.length > 0 ||
+          fillSet.sourceDamageRollPenaltyRolls.length > 0)
+      ) {
+        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+        return invalidResult(
+          input.state,
+          "invalidFill",
+          "Spell damage can only be filled after a hit.",
+        );
+      }
+      /* v8 ignore stop */
+      if (!hit && !potentCantripMiss && !spellAttackHalfInitialMiss) {
         return spendSpellActResolutionResources({
-          state: mirrorImageCheck.state,
+          state: attackRolledStateAfterHurl,
           actorId: subject.actorId,
           invocation: invocationForResolution,
           errorState: input.state,
@@ -2777,147 +2932,48 @@ function resolveSpellActInternal(
             : { spiritualWeaponForcePosition }),
         });
       }
-    }
-    spellMarkedDamageRiders = hit
-      ? activeMarkedDamageRiders(
-          attackRolledStateBeforeHitContinuations.combatants.get(
-            subject.actorId,
-          ),
-          target.combatantId,
-        )
-      : [];
-    if (hit && input.handledInterruptTrigger !== "attackHit") {
-      const attackHitDamageTypes = isSupportedDamageSpellInvocation(
-        invocationForResolution,
-      )
-        ? spellDamageTypes(
-            transmutedSpellDamageInvocation(
-              invocationForResolution,
-              metamagicApplicationsForDamageAndSpend,
-            ),
-          )
-        : spellDamageTypes(invocationForResolution);
-      const reactionWindow = maybeOpenInterruptWindow(
-        attackRolledStateBeforeHitContinuations,
-        {
-          trigger: "attackHit",
-          attackerId: subject.actorId,
-          targetId: target.combatantId,
-          attackRoll: effectiveAttackRoll,
-          attackKind: spellAttackKindForRedirect(
-            invocationForResolution.attackKind,
-          ),
-          attackHitTriggerKind: "otherAttack",
-          damageTypes: [
-            ...new Set([
-              ...attackHitDamageTypes,
-              ...spellMarkedDamageRiders.map(
-                (rider) => rider.damage.damageType,
-              ),
-            ]),
-          ],
-          continuation: spellReplayContinuation(input),
-        },
-        input.handledInterruptTrigger,
-      );
-      if (reactionWindow !== null) {
-        return reactionWindow;
-      }
-    }
-    const remarkableAthleteMovement =
-      resolveRemarkableAthleteCriticalHitMovement({
-        state: attackRolledStateBeforeHitContinuations,
-        subject: input.subject,
-        attackerId: subject.actorId,
-        scoredCriticalHit: critical,
-        fills: fillSet,
-      });
-    if (remarkableAthleteMovement.tag === "result") {
-      return remarkableAthleteMovement.result;
-    }
-    spellResolutionStateAfterCriticalMovement = remarkableAthleteMovement.state;
-    const spellAttackHalfInitialMiss =
-      !hit &&
-      invocationForResolution.procedure === "spellAttackDamage" &&
-      invocationForResolution.missDamage === "halfInitialOnly";
-    if (
-      (hit || potentCantripMiss || spellAttackHalfInitialMiss) &&
-      fillSet.damageRoll == null
-    ) {
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (!isSupportedDamageSpellInvocation(invocationForResolution)) {
-        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-        return invalidResult(
-          input.state,
-          "invalidFill",
-          "Selected spell act does not use a damage roll.",
-        );
-      }
-      /* v8 ignore stop */
-      const requestedDamageInvocation = transmutedSpellDamageInvocation(
-        invocationForResolution,
+      return {
+        tag: "damageContext" as const,
+        spellResolutionState,
         metamagicApplicationsForDamageAndSpend,
-      );
-      return needsHolesResult(
-        spellResolutionStateAfterCriticalMovement,
-        input.subject,
-        [
-          spellDamageHoleWithEmpoweredOption(
-            spellResolutionStateAfterCriticalMovement,
-            subject.actorId,
-            {
-              ...requestedDamageInvocation,
-              sourceProcedureRef: invocationForResolution.sourceProcedureRef,
-            },
-            hit && critical,
-            metamagicApplicationsForDamageAndSpend ?? [],
-            spellMarkedDamageRiders,
-          ),
-        ],
-      );
-    }
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (
-      !hit &&
-      !potentCantripMiss &&
-      !spellAttackHalfInitialMiss &&
-      (fillSet.damageRoll != null ||
-        fillSet.damageDispositions.length > 0 ||
-        fillSet.sourceDamageRollPenaltyRolls.length > 0)
-    ) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+        attackOutcome: hit
+          ? {
+              tag: "spellAttackHit" as const,
+              critical,
+              markedDamageRiders: spellMarkedDamageRiders,
+            }
+          : { tag: "spellAttackMiss" as const },
+      };
+    } else if (fillSet.attackRoll != null) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered hole contract. */
       return invalidResult(
         input.state,
         "invalidFill",
-        "Spell damage can only be filled after a hit.",
+        "Magic Missile does not use an attack roll.",
       );
     }
-    /* v8 ignore stop */
-    if (!hit && !potentCantripMiss && !spellAttackHalfInitialMiss) {
-      return spendSpellActResolutionResources({
-        state: attackRolledStateAfterHurl,
-        actorId: subject.actorId,
-        invocation: invocationForResolution,
-        errorState: input.state,
-        ...(options.actionCostOverride === undefined
-          ? {}
-          : { actionCostOverride: options.actionCostOverride }),
-        ...(metamagicApplicationsForDamageAndSpend === undefined
-          ? {}
-          : { metamagicApplications: metamagicApplicationsForDamageAndSpend }),
-        ...(spiritualWeaponForcePosition === undefined
-          ? {}
-          : { spiritualWeaponForcePosition }),
-      });
-    }
-  } else if (fillSet.attackRoll != null) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Magic Missile does not use an attack roll.",
-    );
+    return {
+      tag: "damageContext" as const,
+      spellResolutionState: castingState,
+      metamagicApplicationsForDamageAndSpend:
+        metamagicApplicationsForResolution,
+      attackOutcome: { tag: "notSpellAttack" as const },
+    };
+  })();
+  if (spellDamageContext.tag !== "damageContext") {
+    return spellDamageContext;
   }
+  const {
+    spellResolutionState,
+    metamagicApplicationsForDamageAndSpend,
+    attackOutcome,
+  } = spellDamageContext;
+  const spellAttackHitOutcome =
+    attackOutcome.tag === "spellAttackHit" ? attackOutcome : null;
+  const spellAttackHit = spellAttackHitOutcome !== null;
+  const critical = spellAttackHitOutcome?.critical ?? false;
+  const spellMarkedDamageRiders =
+    spellAttackHitOutcome?.markedDamageRiders ?? [];
 
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (!isSupportedDamageSpellInvocation(invocationForResolution)) {
@@ -2954,58 +3010,6 @@ function resolveSpellActInternal(
       ),
     ]);
   }
-  const spellAttackMissToHitReplacement =
-    (invocationForResolution.procedure === "spellAttackDamage" ||
-      invocationForResolution.procedure === "heldLightHurl" ||
-      invocationForResolution.procedure === "spellCreatedHeldObjectAttack" ||
-      invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
-      invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
-    fillSet.attackRoll != null
-      ? selectedAttackRollMissToHitReplacement({
-          state: castingState,
-          subject: input.subject,
-          attackerId: subject.actorId,
-          targetId: target.combatantId,
-          attackRoll: effectiveSpellAttackRoll(fillSet.attackRoll),
-          ordinaryHit: attackRollHits(
-            effectiveSpellAttackRoll(fillSet.attackRoll),
-            currentArmorClass(activeEffectArmorClass(castingState, target)),
-          ),
-        })
-      : null;
-  const spellResolutionState =
-    (invocationForResolution.procedure === "spellAttackDamage" ||
-      invocationForResolution.procedure === "heldLightHurl" ||
-      invocationForResolution.procedure === "spellCreatedHeldObjectAttack" ||
-      invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
-      invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
-    fillSet.attackRoll != null
-      ? (spellResolutionStateAfterCriticalMovement ??
-        recordAttackRollMissToHitReplacementUsed(
-          consumeHelpAttackForAttackRoll(
-            recordAttackRollOngoingFeatures(
-              stateAfterSpellAttackRollMadeForInvocation(
-                castingState,
-                subject.actorId,
-                invocationForResolution,
-              ),
-              subject.actorId,
-              target.combatantId,
-              null,
-              fillSet.targetRelationshipFacts,
-            ),
-            subject.actorId,
-            target.combatantId,
-          ),
-          subject.actorId,
-          spellAttackMissToHitReplacement,
-          {
-            subject: input.subject,
-            targetId: target.combatantId,
-            attackRoll: effectiveSpellAttackRoll(fillSet.attackRoll),
-          },
-        ))
-      : castingState;
   const spellDamageBaseStateResult =
     stateAfterSpiritualWeaponCastProxyCreatedBeforeImmediateAttack({
       state: spellResolutionState,
@@ -3022,26 +3026,6 @@ function resolveSpellActInternal(
   const spellDamageBaseState = spellDamageBaseStateResult.state;
   const targetBeforeDamage =
     spellDamageBaseState.combatants.get(target.combatantId) ?? target;
-  const critical =
-    (invocationForResolution.procedure === "spellAttackDamage" ||
-      invocationForResolution.procedure === "heldLightHurl" ||
-      invocationForResolution.procedure === "spellCreatedHeldObjectAttack" ||
-      invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
-      invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
-    fillSet.attackRoll != null &&
-    attackRollIsCriticalHit(effectiveSpellAttackRoll(fillSet.attackRoll));
-  const spellAttackHit =
-    (invocationForResolution.procedure === "spellAttackDamage" ||
-      invocationForResolution.procedure === "heldLightHurl" ||
-      invocationForResolution.procedure === "spellCreatedHeldObjectAttack" ||
-      invocationForResolution.procedure === "spiritualWeaponAttackProxy" ||
-      invocationForResolution.procedure === "spiritualWeaponRepeatAttack") &&
-    fillSet.attackRoll != null &&
-    (attackRollHits(
-      effectiveSpellAttackRoll(fillSet.attackRoll),
-      currentArmorClass(activeEffectArmorClass(castingState, target)),
-    ) ||
-      spellAttackMissToHitReplacement !== null);
   const spellDamageResult =
     !spellAttackHit &&
     invocationForResolution.procedure === "spellAttackDamage" &&
@@ -3087,15 +3071,13 @@ function resolveSpellActInternal(
           castApplications: metamagicApplicationsForDamageAndSpend ?? [],
         })
       : null;
-  if (
-    empoweredApplication !== null &&
-    typeof empoweredApplication !== "string"
-  ) {
-    metamagicApplicationsForDamageAndSpend = [
-      ...(metamagicApplicationsForDamageAndSpend ?? []),
-      empoweredApplication,
-    ];
-  }
+  const metamagicApplicationsAfterEmpowered =
+    empoweredApplication !== null && typeof empoweredApplication !== "string"
+      ? [
+          ...(metamagicApplicationsForDamageAndSpend ?? []),
+          empoweredApplication,
+        ]
+      : metamagicApplicationsForDamageAndSpend;
   const effectiveDamageRoll = effectiveEmpoweredSpellDamageRoll(
     fillSet.damageRoll,
   );
@@ -3383,10 +3365,10 @@ function resolveSpellActInternal(
           ...(options.actionCostOverride === undefined
             ? {}
             : { actionCostOverride: options.actionCostOverride }),
-          ...(metamagicApplicationsForDamageAndSpend === undefined
+          ...(metamagicApplicationsAfterEmpowered === undefined
             ? {}
             : {
-                metamagicApplications: metamagicApplicationsForDamageAndSpend,
+                metamagicApplications: metamagicApplicationsAfterEmpowered,
               }),
           ...(spiritualWeaponForcePosition === undefined
             ? {}
