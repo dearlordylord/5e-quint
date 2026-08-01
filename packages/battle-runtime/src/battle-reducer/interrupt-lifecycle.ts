@@ -102,7 +102,7 @@ type InterruptDecisionFill = Extract<
   { readonly kind: "interruptDecision" }
 >;
 
-export type InterruptLifecycleDecisionOutcome =
+type InterruptLifecycleDecisionOutcome =
   | {
       readonly tag: "withoutInterruptRoute";
       readonly result: BattleResolutionResult;

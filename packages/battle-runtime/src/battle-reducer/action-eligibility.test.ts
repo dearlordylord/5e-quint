@@ -45,11 +45,13 @@ describe("battle subject action eligibility", () => {
     };
 
     expect(
-      battleSubjectActionEligibilityIssue(
-        withoutAction,
-        fighterAttackSubject(state, "Longsword"),
-      ),
-    ).toBe("Attack is no longer available for the current actor.");
+      battleSubjectActionEligibilityIssue(withoutAction, {
+        tag: "action",
+        actorId: fighterId,
+        action: "dash",
+        speedKind: "walk",
+      }),
+    ).toBe("The selected action is no longer available for the current actor.");
   });
 
   test("reports an actor that cannot take actions before resource eligibility", () => {
@@ -74,7 +76,7 @@ describe("battle subject action eligibility", () => {
         incapacitated,
         fighterAttackSubject(state, "Longsword"),
       ),
-    ).toBe("Attack is no longer available for the current actor.");
+    ).toBe("The selected action is no longer available for the current actor.");
   });
 
   test("does not claim eligibility ownership for unrelated subjects", () => {

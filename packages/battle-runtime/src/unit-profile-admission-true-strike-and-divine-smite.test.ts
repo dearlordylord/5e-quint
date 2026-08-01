@@ -1,5 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { resolveCastAttackHitBonusActionSpellCommand } from "./battle-reducer/dispatcher.ts";
+import { resolveCastAttackHitBonusActionSpellCommand } from "./battle-reducer/attack-hit-bonus-action-spell-procedures.ts";
 import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31F true_strike

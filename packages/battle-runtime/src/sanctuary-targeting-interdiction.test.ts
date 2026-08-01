@@ -1,4 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { spellTargetListFillForTest } from "./spell-target-list.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84G sanctuary
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-sanctuary-targeting-interdiction
 import { battleProcedureExecutionRefForSpellHoleForTest } from "./battle-runtime.test-support.ts";
@@ -1395,7 +1396,7 @@ function castSanctuary(
   const resolved = resolveBattleSubject({
     state: session.state,
     subject: act.subject,
-    fills: [sanctuaryTargetListFill(targetHole, targetId)],
+    fills: [spellTargetListFillForTest(targetHole, casterId, targetId)],
   });
   if (resolved.tag !== "resolved") {
     throw new Error("Expected Sanctuary cast to resolve.");
@@ -1469,26 +1470,6 @@ type AvailableAttackAct = ReturnType<
     { readonly tag: "action"; readonly action: "attack" }
   >;
 };
-
-function sanctuaryTargetListFill(
-  hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
-  targetId: CombatantId,
-): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
-  return {
-    kind: "spellTargetList",
-    holeId: hole.holeId,
-    value: { targetIds: [targetId] },
-    spatialFacts: [
-      {
-        kind: "spellTarget",
-        casterId,
-        targetId,
-        sourceProcedureRef:
-          battleProcedureExecutionRefForSpellHoleForTest(hole),
-      },
-    ],
-  };
-}
 
 function attackTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,

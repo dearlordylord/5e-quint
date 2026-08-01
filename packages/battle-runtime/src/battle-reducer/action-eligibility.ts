@@ -17,7 +17,8 @@ import {
 } from "./creature-state-execution.ts";
 
 const ACTION_ELIGIBILITY_ISSUES = {
-  unavailable: "Attack is no longer available for the current actor.",
+  unavailable:
+    "The selected action is no longer available for the current actor.",
   familiarCannotAttack: "Find Familiar familiars can't attack.",
   heldWeaponActivationUnavailable:
     "Attack action feature is no longer available for the current actor.",

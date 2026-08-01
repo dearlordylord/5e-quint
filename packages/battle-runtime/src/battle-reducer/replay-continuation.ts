@@ -113,7 +113,7 @@ export function resolveReplayContinuation(input: {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Interrupted attack replay must be resolved before other battle subjects.",
+      "Interrupted procedure replay must be resolved before other battle subjects.",
     );
   }
   return resolveReplayContinuationFromState({

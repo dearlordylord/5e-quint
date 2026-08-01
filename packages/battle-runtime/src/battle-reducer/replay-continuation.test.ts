@@ -1,9 +1,30 @@
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { describe, expect, test } from "vitest";
 
+import {
+  battleId,
+  characterSeed,
+  combatantId,
+  fighterId,
+  startBattleRight,
+  statBlockCreatureInit,
+} from "../battle-runtime.test-support.ts";
 import type { BattleFill } from "../battle-state-execution.ts";
-import { combatantId } from "../battle-runtime.test-support.ts";
-import { reconstructReplayContinuationFills } from "./replay-continuation.ts";
+import {
+  reconstructReplayContinuationFills,
+  ReplayContinuationExecution,
+  resolveReplayContinuation,
+} from "./replay-continuation.ts";
+import { spellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-composition.ts";
+
+const replayExecution = ReplayContinuationExecution.fromExecutionRegistry(
+  spellProcedureExecutionRegistry(),
+  () => {
+    throw new Error(
+      "A stale replay subject must not reach procedure execution.",
+    );
+  },
+);
 
 describe("reconstructReplayContinuationFills", () => {
   test("keeps the recorded prefix and appends only new submitted suffix fills", () => {
@@ -53,5 +74,35 @@ describe("reconstructReplayContinuationFills", () => {
         [{ ...secondTarget }, { ...firstTarget }],
       ),
     ).toEqual([firstTarget, secondTarget, { ...firstTarget }]);
+  });
+});
+
+describe("resolveReplayContinuation", () => {
+  test("reports a procedure-neutral diagnostic when no replay frame owns the subject", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-stale-replay-subject"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    expect(
+      resolveReplayContinuation({
+        state,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: fighterId,
+          command: "endTurn",
+        },
+        fills: [],
+        execution: replayExecution,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Interrupted procedure replay must be resolved before other battle subjects.",
+    });
   });
 });

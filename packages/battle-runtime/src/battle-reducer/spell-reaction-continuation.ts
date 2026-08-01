@@ -1,7 +1,7 @@
 import type { BattleSubject } from "../battle-subjects.ts";
 import type { BattleFill } from "../battle-state-execution.ts";
 
-export type SpellReactionContinuation = {
+type SpellReactionContinuation = {
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
 };

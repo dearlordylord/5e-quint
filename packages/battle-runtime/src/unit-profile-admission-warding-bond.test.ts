@@ -20,7 +20,7 @@ import {
   concentrationSavingThrowFill,
 } from "./battle-runtime.test-support.ts";
 import { type BattleInterruptedProcedure } from "./battle-state-execution.ts";
-import { resumeInterruptedProcedure } from "./battle-reducer/dispatcher.ts";
+import { resumeInterruptedProcedure } from "./battle-reducer/interrupt-continuation.ts";
 import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
 import { attackDamageInterruptionFrame } from "./battle-reducer/attack-damage-events.ts";
 import {

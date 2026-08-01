@@ -113,7 +113,7 @@ import {
   attackFillsForAttackHitReplay,
 } from "./attack-damage-events.ts";
 import { resolveAttackDamageReductionZeroDamageRedirectAfterReduction } from "./attack-damage-redirect.ts";
-import { resumeInterruptedProcedure } from "./dispatcher.ts";
+import { resumeInterruptedProcedure } from "./interrupt-continuation.ts";
 import type { BattleAttackResolvers } from "./attack-resolvers.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";

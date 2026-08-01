@@ -11,14 +11,16 @@ import type {
 import type { BattleSubject } from "./battle-subjects.ts";
 import {
   endTurn as endTurnWithRegistry,
-  openCreatureFallsInterruptWindow as openCreatureFallsInterruptWindowStateOnly,
   resolveAdmittedBattleSubject as resolveAdmittedBattleSubjectWithRegistry,
   resolveBattleInterrupt as resolveBattleInterruptWithRegistry,
+  resolveAdmittedReplayContinuationSubject,
+} from "./battle-reducer/dispatcher.ts";
+import {
+  openCreatureFallsInterruptWindow as openCreatureFallsInterruptWindowStateOnly,
   resolveFallDamageLanding as resolveFallDamageLandingStateOnly,
   resolveFeatherFallLanding as resolveFeatherFallLandingStateOnly,
   resolveFlySpeedGrantEndFallCleanup as resolveFlySpeedGrantEndFallCleanupStateOnly,
-  resolveAdmittedReplayContinuationSubject,
-} from "./battle-reducer/dispatcher.ts";
+} from "./battle-reducer/environmental-fall-procedures.ts";
 import {
   FindFamiliarProcedureExecution,
   resolveAdmittedFindFamiliarReappearanceSubject as resolveAdmittedFindFamiliarReappearanceSubjectStateOnly,

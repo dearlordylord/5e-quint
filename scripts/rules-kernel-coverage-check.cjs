@@ -3121,7 +3121,12 @@ function buildKernelCoverage({
   };
 }
 
-function main() {
+async function formatGeneratedOutput(filePath, text) {
+  const prettier = await import("prettier");
+  return prettier.format(text, { filepath: filePath });
+}
+
+async function main() {
   const { runSelfTest } = require("./rules-kernel-coverage-self-test.cjs");
   if (selfTest) {
     runSelfTest();
@@ -3143,9 +3148,17 @@ function main() {
       root,
       write,
       paths.matrix,
-      `${JSON.stringify(result.matrix, null, 2)}\n`,
+      await formatGeneratedOutput(
+        paths.matrix,
+        `${JSON.stringify(result.matrix, null, 2)}\n`,
+      ),
     ),
-    ...compareOrWrite(root, write, paths.report, result.report),
+    ...compareOrWrite(
+      root,
+      write,
+      paths.report,
+      await formatGeneratedOutput(paths.report, result.report),
+    ),
   ];
   if (outputIssues.length > 0) {
     for (const issue of outputIssues) {
@@ -3164,4 +3177,9 @@ module.exports = {
   renderReport,
 };
 
-if (require.main === module) main();
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}

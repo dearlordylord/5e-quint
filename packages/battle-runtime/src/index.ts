@@ -556,12 +556,12 @@ export {
   scoreModifier,
 } from "./battle-reducer/domain-helpers.ts";
 export { discoverBattleActCandidates } from "./battle-execution-composition.ts";
+export { openBattleInterruptWindow } from "./battle-reducer/dispatcher.ts";
 export {
-  openBattleInterruptWindow,
   type FlyEndCanStopFallReason,
   type FlySpeedGrantEndFallWitness,
   type FlySpeedGrantEndFallWitnessResult,
-} from "./battle-reducer/dispatcher.ts";
+} from "./battle-reducer/environmental-fall-procedures.ts";
 export {
   battleSnapshotProjection,
   endTurn,

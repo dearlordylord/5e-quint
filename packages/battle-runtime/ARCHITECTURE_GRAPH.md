@@ -13,13 +13,30 @@ full-shell aggregation spec; focused specs import the narrower modules they use
 directly.
 
 Within the TypeScript reducer, `battle-reducer/dispatcher.ts` owns admitted
-subject selection and delegates replay protocol execution to
+subject selection and the exhaustive typed-procedure dispatch table; procedure
+algorithms remain in their focused owners. It delegates replay execution to
 `battle-reducer/replay-continuation.ts`. That replay owner reconstructs the
 recorded fill prefix and submitted suffix, resumes ordinary and stored-glyph
 procedures, and restores replay frames when more holes remain. Mechanical
 equality for continuation fills is owned by
 `battle-reducer/battle-fill-equality.ts`, so replay, reroll, and continuation
 callers share one comparison algorithm.
+Triggered Reaction spells are executed by
+`battle-reducer/triggered-reaction-spell-procedures.ts`; Falling, Feather Fall
+landing, and fly-speed cleanup are executed by
+`battle-reducer/environmental-fall-procedures.ts`. The dispatcher selects and
+delegates these admitted procedures without owning their staged algorithms.
+Natural-1 D20 reroll fill replay and decision-hole projection are owned by
+`battle-reducer/d20-test-natural-one-reroll-procedures.ts`, which receives the
+post-D20 prefix-resolution operation as a closed capability. Attack-hit Bonus Action
+spell admission, fill parsing, and execution are owned by
+`battle-reducer/attack-hit-bonus-action-spell-procedures.ts`.
+Levitate altitude and self-transformation controls live in
+`battle-reducer/active-spell-control-procedures.ts`; Fog Cloud, Cloudkill, and
+Warding Bond cleanup commands live in
+`battle-reducer/spell-effect-cleanup-procedures.ts`; creature-type protection
+save, condition, and possession procedures live in
+`battle-reducer/protection-charm-procedures.ts`.
 
 Standard-action, familiar-attack, and held-weapon activation eligibility is
 projected exhaustively by `battle-reducer/action-eligibility.ts`. Escape
@@ -28,12 +45,22 @@ Grapple discovery, stale-subject eligibility, and execution share the typed spen
 Multiattack resource cannot be mistaken for the creature's Action.
 
 `battle-reducer/reducer-route.ts` composes route candidates through the typed
-protocol in `battle-reducer/reducer-route-protocol.ts`; the composer alone owns
-first-applicable precedence. Movement, weapon-hosted spells, after-hit spells,
-metamagic, reaction spells, spell invocation, Wild Shape lifecycle, and passive
-projection routes live in their corresponding `*-routes.ts` owners. Route
-families return terminal or composable results explicitly rather than relying
-on callers to remember short-circuit rules.
+protocol in `battle-reducer/reducer-route-protocol.ts` and
+`battle-reducer/reducer-route-composition.ts`; the composer alone owns terminal
+and composable first-applicable precedence. `attack-routes.ts` owns weapon,
+creature, and general battle-action routes; `combatant-lifecycle-routes.ts`
+owns zero-Hit-Point stabilization, death saves, Concentration teardown, and Hit
+Point restoration routes; `command-routes.ts` owns Command effect projection;
+`spell-defense-routes.ts` owns defensive armor, warding, and spell-attack
+routes; and `effect-lifecycle-routes.ts` owns repeat-save, roll-modifier,
+damage-reduction, and scalar-effect lifecycle routes. Companion lifecycle,
+feature actions, spatial effects, marked-damage riders,
+condition-immunity/temporary-HP lifecycle, and protection/charm behavior live
+in their corresponding focused `*-routes.ts` owners, alongside the movement,
+weapon-hosted spell, after-hit spell, metamagic, reaction-spell,
+spell-invocation, Wild Shape, and passive-projection owners. Route families
+return terminal or composable results explicitly rather than relying on callers
+to remember short-circuit rules.
 
 Interrupt windows are split by lifecycle responsibility. Opening and discovery
 belong to `battle-reducer/interrupt-execution.ts`; decision admission, Reaction
@@ -43,6 +70,13 @@ closure, and continuation resumption belong to
 execution capability so the dispatcher supplies admitted subject resolution and
 continuation resumption without recreating lifecycle state or introducing a
 reverse module dependency.
+`battle-reducer/interrupt-route-projection.ts` owns route events for interrupt
+resolution, creature-fall windows, and Feather Fall landing.
+`battle-reducer/interrupt-continuation.ts` owns the replay-versus-non-replay
+choice, active continuation-frame selection, and the sequencing of every
+non-replay continuation variant. The dispatcher supplies its closed replay and
+attack-resolution capabilities, then delegates continuation resolution through
+that single typed owner.
 
 Find Familiar lifecycle, reappearance, shared-senses, and touch-delivery
 procedures belong to `battle-reducer/find-familiar-procedures.ts`. Touch
@@ -58,11 +92,15 @@ consumption and closure are centralized in
 `battle-reducer/legendary-action-window.ts` for every delegated procedure.
 
 Post-cast persistent spatial spell procedures are owned by
-`battle-reducer/persistent-spatial-spell-procedures.ts`. It owns the admitted command
-boundary and the save, damage, cleanup, direction-change, reposition, and ram
-flows for Grease, Web, Sleet Storm, Insect Plague, Cloudkill, Gust of Wind,
-Flaming Sphere, and Moonbeam. The dispatcher delegates the family as one unit;
-turn-boundary orchestration remains in `turn-boundary-lifecycle.ts`, while
+`battle-reducer/persistent-spatial-spell-procedures.ts`. It owns the admitted
+command boundary and the spell-specific cleanup, direction-change, reposition,
+and ram flows for Grease, Web, Sleet Storm, Gust of Wind, Flaming Sphere, and
+Moonbeam. The dispatcher delegates the family as one unit;
+`battle-reducer/persistent-area-save-damage.ts` binds each Cloudkill or Insect
+Plague subject to its trigger, holes, effect, fill parsing, and per-turn marking
+behavior as one typed procedure, so their shared save/damage replay algorithm
+has one owner.
+Turn-boundary orchestration remains in `turn-boundary-lifecycle.ts`, while
 distance-triggered Spike Growth damage remains part of movement resolution.
 `battle-reducer/persistent-spatial-spell-discovery.ts` owns the active-effect
 vocabulary and hole/projection construction shared with `discoverBattleActs`;

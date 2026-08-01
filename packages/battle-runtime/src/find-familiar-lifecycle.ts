@@ -46,7 +46,7 @@ import {
   characterUnitProcedureBindings,
   type CharacterExecutionState,
 } from "./character-execution-admission.ts";
-import { findFamiliarCompanionLifecycleRouteEvents } from "./battle-reducer/reducer-route.ts";
+import { findFamiliarCompanionLifecycleRouteEvents } from "./battle-reducer/companion-routes.ts";
 import { createInitialInitiativeForCombatants } from "./battle-reducer/api-lifecycle.ts";
 import {
   battleStateInitIssue,

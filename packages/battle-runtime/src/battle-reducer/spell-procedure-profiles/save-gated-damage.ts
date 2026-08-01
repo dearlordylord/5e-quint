@@ -31,7 +31,7 @@ import {
   supportedPreparedSaveGateDamageProfile,
 } from "./_save-gate-helpers.ts";
 import { resolveSaveGateDamageSpellAct } from "../spells-resolve-save-gates.ts";
-import { resolveTriggeredReactionSaveGatedDamage } from "../dispatcher.ts";
+import { resolveTriggeredReactionSaveGatedDamage } from "../triggered-reaction-spell-procedures.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,

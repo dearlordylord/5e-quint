@@ -33,6 +33,8 @@ import {
 import type { FindFamiliarCreatureTypeOverride } from "@dnd/shared/game-facts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { retainedStoredFormForPresentCompanion } from "./companion-stored-form.ts";
+import { findFamiliarCompanionLifecycleRouteEvents } from "./battle-reducer/companion-routes.ts";
+import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route-protocol.ts";
 
 type FindFamiliarCombatantRemoval =
   | { readonly tag: "resolved"; readonly state: BattleState }
@@ -650,24 +652,4 @@ export function invalidFindFamiliarResult(
     message,
     snapshot: snapshotBattle(state),
   };
-}
-type BattleReducerRouteEvents = NonNullable<
-  Extract<BattleResolutionResult, { readonly tag: "resolved" }>["routeEvents"]
->;
-
-function findFamiliarCompanionLifecycleRouteEvents(): BattleReducerRouteEvents {
-  return [
-    {
-      kind: "discoverBattleActs",
-      subject: "companionLifecycle",
-      holes: [],
-      owner: "battleCompanion",
-    },
-    {
-      kind: "resolveBattleSubjectWithoutFill",
-      subject: "companionLifecycle",
-      holes: [],
-      owner: "battleCompanion",
-    },
-  ];
 }
