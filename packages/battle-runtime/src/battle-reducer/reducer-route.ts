@@ -1,7 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 import { battleFillKind } from "../battle-protocol-kinds.ts";
-import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 import type {
   AttackSpellDamageAddition,
   BattleActDiscoveryCandidate,
@@ -54,17 +53,12 @@ import {
   sleepRepeatSaveSavingThrowHoleIds,
   spellTurnStartSavingThrowOutcomeHoleId,
 } from "./turn-end-movement.ts";
-import { activeDruidWildShapeEffect } from "./druid-wild-shape.ts";
 import { battleLightEmitters } from "./spells-active-effects.ts";
 import {
   activeOngoingFeatureOccurrencesForCombatant,
   isCharacterBattleCreatureState,
   ongoingFeatureProfileForSourceKey,
 } from "./creature-state-execution.ts";
-import {
-  currentActorId,
-  zeroHpLifecycleIsTerminal,
-} from "./creature-state-leaves.ts";
 import {
   ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
   ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
@@ -106,6 +100,12 @@ import {
   weaponSpellRouteForDiscoveredAct,
   weaponSpellRouteForResolution,
 } from "./weapon-spell-routes.ts";
+import {
+  wildShapeLifecycleRouteForDiscoveredAct,
+  wildShapeLifecycleRouteForResolution,
+  wildShapeLifecycleTerminalRouteForResolution,
+  wildShapeLifecycleTurnBoundaryRouteForResolution,
+} from "./wild-shape-lifecycle-routes.ts";
 import {
   movementRouteForDiscoveredAct,
   movementRouteForResolution,
@@ -243,10 +243,9 @@ export function battleReducerRouteEventsForDiscoveredAct(
   if (attackActionAreaSaveDamageReplacementRoute !== undefined) {
     return [attackActionAreaSaveDamageReplacementRoute];
   }
-  const activeFormLifecycleRoute =
-    activeFormLifecycleRouteForDiscoveredAct(act);
-  if (activeFormLifecycleRoute !== undefined) {
-    return [activeFormLifecycleRoute];
+  const wildShapeLifecycleRoute = wildShapeLifecycleRouteForDiscoveredAct(act);
+  if (wildShapeLifecycleRoute !== undefined) {
+    return [wildShapeLifecycleRoute];
   }
   if (isStatBlockActionRouteSubject(state, act.subject)) {
     return [
@@ -548,8 +547,8 @@ export function battleReducerRouteForResolution(
       input,
       result,
     );
-  const activeFormLifecycleTurnBoundaryRoute =
-    activeFormLifecycleTurnBoundaryRouteForResolution(input, result);
+  const wildShapeLifecycleTurnBoundaryRoute =
+    wildShapeLifecycleTurnBoundaryRouteForResolution(input, result);
   const afterHitTurnBoundaryRoute =
     afterHitDamageRiderTurnBoundaryRouteForResolution(input, result);
   const markedDamageRiderTurnBoundaryRoute =
@@ -562,7 +561,7 @@ export function battleReducerRouteForResolution(
     deathSavingThrowRoute !== undefined ||
     turnBoundaryEffectLifecycleRoute !== undefined ||
     conditionImmunityTemporaryHitPointTurnBoundaryRoute !== undefined ||
-    activeFormLifecycleTurnBoundaryRoute !== undefined ||
+    wildShapeLifecycleTurnBoundaryRoute !== undefined ||
     afterHitTurnBoundaryRoute !== undefined ||
     markedDamageRiderTurnBoundaryRoute !== undefined ||
     spellBaseArmorClassTurnBoundaryRoute !== undefined
@@ -573,7 +572,7 @@ export function battleReducerRouteForResolution(
       ...(deathSavingThrowRoute ?? []),
       ...(turnBoundaryEffectLifecycleRoute ?? []),
       ...(conditionImmunityTemporaryHitPointTurnBoundaryRoute ?? []),
-      ...(activeFormLifecycleTurnBoundaryRoute ?? []),
+      ...(wildShapeLifecycleTurnBoundaryRoute ?? []),
       ...(afterHitTurnBoundaryRoute ?? []),
       ...(markedDamageRiderTurnBoundaryRoute ?? []),
       ...(spellBaseArmorClassTurnBoundaryRoute ?? []),
@@ -584,47 +583,47 @@ export function battleReducerRouteForResolution(
   if (metamagicSpellDurationProjectionRoute !== undefined) {
     return metamagicSpellDurationProjectionRoute;
   }
-  const activeFormLifecycleTerminalRoute =
-    activeFormLifecycleTerminalRouteForResolution(input, result);
+  const wildShapeLifecycleTerminalRoute =
+    wildShapeLifecycleTerminalRouteForResolution(input, result);
   const concentrationRoute = concentrationRouteForResolution(input, result);
   if (concentrationRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       concentrationRoute,
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const commandRoute = commandRouteForResolution(input, result);
   const movementRoute = movementRouteForResolution(input, result);
   if (movementRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       nonEmptyRouteEvents([
         ...(commandRoute === undefined ? [] : [commandRoute]),
         ...movementRoute,
       ]),
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   if (commandRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       [commandRoute],
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
-  const activeFormLifecycleRoute = activeFormLifecycleRouteForResolution(
+  const wildShapeLifecycleRoute = wildShapeLifecycleRouteForResolution(
     input,
     result,
   );
-  if (activeFormLifecycleRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
-      activeFormLifecycleRoute,
-      activeFormLifecycleTerminalRoute,
+  if (wildShapeLifecycleRoute !== undefined) {
+    return composeWithWildShapeLifecycleTerminalRoute(
+      wildShapeLifecycleRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const metamagicRoute = metamagicRouteForResolution(input, result);
   if (metamagicRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       metamagicRoute,
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const hitPointRestorationRoute = hitPointRestorationRouteForResolution(
@@ -632,17 +631,17 @@ export function battleReducerRouteForResolution(
     result,
   );
   if (hitPointRestorationRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       [hitPointRestorationRoute],
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const zeroHitPointStabilizationRoute =
     zeroHitPointStabilizationRouteForResolution(input, result);
   if (zeroHitPointStabilizationRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       [zeroHitPointStabilizationRoute],
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const spellBaseArmorClassRoute = spellBaseArmorClassEffectRouteForResolution(
@@ -650,72 +649,72 @@ export function battleReducerRouteForResolution(
     result,
   );
   if (spellBaseArmorClassRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       spellBaseArmorClassRoute,
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const spatialEffectCompositionRoute =
     spatialEffectCompositionRouteForResolution(input, result);
   if (spatialEffectCompositionRoute !== undefined) {
     const saveGatedRoute = saveGatedSpellRouteForResolution(input, result);
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       nonEmptyRouteEvents([
         ...spatialEffectCompositionRoute,
         ...(saveGatedRoute ?? []),
       ]),
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const slotSpellRoute = slotSpellRouteForResolution(input, result);
   if (slotSpellRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       nonEmptyRouteEvents(slotSpellRoute),
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const saveGatedRoute = saveGatedSpellRouteForResolution(input, result);
   if (saveGatedRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       saveGatedRoute,
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const weaponSpellRoute = weaponSpellRouteForResolution(input, result);
   if (weaponSpellRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       weaponSpellRoute,
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const attackActionAreaSaveDamageReplacementRoute =
     attackActionAreaSaveDamageReplacementRouteForResolution(input, result);
   if (attackActionAreaSaveDamageReplacementRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       attackActionAreaSaveDamageReplacementRoute,
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const activeFeatureBonusActionRoute =
     activeFeatureBonusActionRouteForResolution(input, result);
   if (activeFeatureBonusActionRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       activeFeatureBonusActionRoute,
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const battleActionRoute = battleActionRouteForResolution(input, result);
   if (battleActionRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       [battleActionRoute],
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const companionRoute = companionRouteForResolution(input, result);
   if (companionRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       companionRoute,
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const interruptResumeDiscoveryRoute =
@@ -729,7 +728,7 @@ export function battleReducerRouteForResolution(
     afterHitDamageRiderDiscoveryRoutes !== undefined ||
     spellDamageReductionAdjustmentDiscoveryRoute !== undefined
   ) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       nonEmptyRouteEvents([
         ...(interruptResumeDiscoveryRoute === undefined
           ? []
@@ -739,38 +738,38 @@ export function battleReducerRouteForResolution(
           ? []
           : [spellDamageReductionAdjustmentDiscoveryRoute]),
       ]),
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const spellDamageReductionAdjustmentRoute =
     spellDamageReductionAdjustmentRouteForResolution(input, result);
   if (spellDamageReductionAdjustmentRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       spellDamageReductionAdjustmentRoute,
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const weaponAttackRoute = weaponAttackRouteForResolution(input, result);
   if (weaponAttackRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       weaponAttackRoute,
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const creatureAttackRoute = creatureAttackRouteForResolution(input, result);
   if (creatureAttackRoute !== undefined) {
-    return composeWithActiveFormLifecycleTerminalRoute(
+    return composeWithWildShapeLifecycleTerminalRoute(
       creatureAttackRoute,
-      activeFormLifecycleTerminalRoute,
+      wildShapeLifecycleTerminalRoute,
     );
   }
   const spellAttackRoute = spellAttackProcedureRouteForResolution(
     input,
     result,
   );
-  return composeWithActiveFormLifecycleTerminalRoute(
+  return composeWithWildShapeLifecycleTerminalRoute(
     spellAttackRoute,
-    activeFormLifecycleTerminalRoute,
+    wildShapeLifecycleTerminalRoute,
   );
 }
 
@@ -5723,139 +5722,6 @@ function protectionCharmResolveWithoutFill(
   );
 }
 
-function activeFormLifecycleRouteForDiscoveredAct(
-  act: BattleActDiscoveryCandidate,
-): BattleReducerRouteEvent | undefined {
-  if (act.subject.tag !== "druidWildShape") {
-    return undefined;
-  }
-  return discoverBattleActsRoute(
-    "activeFormLifecycle",
-    battleReducerRouteHoles(act.initialHoles),
-    "battleActionEconomy",
-  );
-}
-
-function activeFormLifecycleRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): BattleReducerRouteEvents | undefined {
-  if (input.subject.tag !== "druidWildShape" || result.tag !== "resolved") {
-    return undefined;
-  }
-  if (input.subject.action === "dismiss") {
-    return activeFormLifecycleResolveWithoutFillRoute(
-      "battleActionEconomy",
-      "battleActiveEffect",
-      "battleCreatureState",
-      "battleMovementResource",
-    );
-  }
-
-  const fill = input.fills.at(-1);
-  if (
-    fill === undefined ||
-    battleReducerRouteFill(fill) !== "wildShapeEquipmentDisposition"
-  ) {
-    return undefined;
-  }
-  return [
-    resolveBattleSubjectRoute(
-      "activeFormLifecycle",
-      "wildShapeEquipmentDisposition",
-      [],
-      "battleActionEconomy",
-    ),
-    ...activeFormLifecycleResolveWithoutFillRoute(
-      "battleFeatureResource",
-      "battleTemporaryHitPoint",
-      "battleActiveEffect",
-      "battleCreatureState",
-      "battleMovementResource",
-    ),
-  ];
-}
-
-function activeFormLifecycleTurnBoundaryRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): BattleReducerRouteEvents | undefined {
-  if (!isEndTurnSubject(input.subject) || result.tag !== "resolved") {
-    return undefined;
-  }
-  const nextActor = result.state.combatants.get(currentActorId(result.state));
-  if (activeDruidWildShapeEffect(nextActor) === null) {
-    return undefined;
-  }
-  return [
-    discoverBattleActsRoute("activeFormLifecycle", [], "battleTurnBoundary"),
-    ...activeFormLifecycleResolveWithoutFillRoute(
-      "battleTurnBoundary",
-      "battleActionEconomy",
-    ),
-  ];
-}
-
-function activeFormLifecycleTerminalRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): BattleReducerRouteEvents | undefined {
-  if (result.tag !== "resolved") {
-    return undefined;
-  }
-  for (const [combatantId, before] of input.state.combatants) {
-    if (activeDruidWildShapeEffect(before) === null) {
-      continue;
-    }
-    const after = result.state.combatants.get(combatantId);
-    if (after === undefined || activeDruidWildShapeEffect(after) !== null) {
-      continue;
-    }
-    if (zeroHpLifecycleIsTerminal(after)) {
-      return [
-        discoverBattleActsRoute(
-          "activeFormLifecycle",
-          [],
-          "battleHitPointAndZeroHpLifecycle",
-        ),
-        ...activeFormLifecycleResolveWithoutFillRoute(
-          "battleHitPointAndZeroHpLifecycle",
-          "battleActiveEffect",
-          "battleCreatureState",
-          "battleMovementResource",
-        ),
-      ];
-    }
-    if (isIncapacitated(after.conditions)) {
-      return [
-        discoverBattleActsRoute(
-          "activeFormLifecycle",
-          [],
-          "battleConditionLifecycle",
-        ),
-        ...activeFormLifecycleResolveWithoutFillRoute(
-          "battleConditionLifecycle",
-          "battleActiveEffect",
-          "battleCreatureState",
-          "battleMovementResource",
-        ),
-      ];
-    }
-  }
-  return undefined;
-}
-
-function activeFormLifecycleResolveWithoutFillRoute(
-  owner: BattleReducerRouteOwnerGroup,
-  ...owners: readonly BattleReducerRouteOwnerGroup[]
-): BattleReducerRouteEvents {
-  const eventForOwner = (
-    routeOwner: BattleReducerRouteOwnerGroup,
-  ): BattleReducerRouteEvent =>
-    resolveBattleSubjectWithoutFillRoute("activeFormLifecycle", [], routeOwner);
-  return [eventForOwner(owner), ...owners.map(eventForOwner)];
-}
-
 function scalarBuffRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
@@ -5947,18 +5813,18 @@ function scalarBuffResolveOwners(
   ];
 }
 
-function composeWithActiveFormLifecycleTerminalRoute(
+function composeWithWildShapeLifecycleTerminalRoute(
   route: BattleReducerRouteEvents | undefined,
-  activeFormLifecycleTerminalRoute: BattleReducerRouteEvents | undefined,
+  wildShapeLifecycleTerminalRoute: BattleReducerRouteEvents | undefined,
 ): BattleReducerRouteEvents | undefined {
   if (route === undefined) {
-    return activeFormLifecycleTerminalRoute;
+    return wildShapeLifecycleTerminalRoute;
   }
-  if (activeFormLifecycleTerminalRoute === undefined) {
+  if (wildShapeLifecycleTerminalRoute === undefined) {
     return route;
   }
   const [first, ...rest] = route;
-  return [first, ...rest, ...activeFormLifecycleTerminalRoute];
+  return [first, ...rest, ...wildShapeLifecycleTerminalRoute];
 }
 
 function combatantTemporaryHitPointsIncreased(
