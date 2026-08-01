@@ -918,7 +918,7 @@ type ReducerRouteSubjectFamily =
   | "creatureStatProjection"
   | "movementResource"
   | "specialSpeedProjection"
-  | "forcedMovement"
+  | "compelledMovement"
   | "movementPresentation"
   | "activeFormLifecycle"
   | "creatureTypeTargetAdmission"
@@ -1023,7 +1023,6 @@ type ReducerRouteHole =
   | "wildShapeEquipmentDisposition";
 type ReducerRouteFillKind =
   | "abilityCheck"
-  | "abilityChoice"
   | "attackDamageDisposition"
   | "attackRoll"
   | "commandOptionChoice"
@@ -1047,12 +1046,10 @@ type ReducerRouteFillKind =
   | "savingThrowOutcome"
   | "selfTransformationModeChoice"
   | "shoveOutcome"
-  | "skillChoice"
   | "slowSomaticSpellFailureOutcome"
   | "spellTargetAllocation"
   | "spellTargetList"
   | "statBlockRechargeRoll"
-  | "targetAbilityChoices"
   | "targetChoice"
   | "unitFeatureDecision"
   | "wildShapeEquipmentDisposition";
@@ -12310,7 +12307,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   CreatureStatProjectionRouteSubject: "creatureStatProjection",
   MovementResourceRouteSubject: "movementResource",
   SpecialSpeedProjectionRouteSubject: "specialSpeedProjection",
-  ForcedMovementRouteSubject: "forcedMovement",
+  CompelledMovementRouteSubject: "compelledMovement",
   MovementPresentationRouteSubject: "movementPresentation",
   ActiveFormLifecycleRouteSubject: "activeFormLifecycle",
   CreatureTypeTargetAdmissionRouteSubject: "creatureTypeTargetAdmission",
@@ -12767,7 +12764,6 @@ const REDUCER_ROUTE_HOLE_BY_VARIANT_TAG = {
 
 const REDUCER_ROUTE_FILL_BY_VARIANT_TAG = {
   AbilityCheckFillKind: "abilityCheck",
-  AbilityChoiceFillKind: "abilityChoice",
   AttackDamageDispositionFillKind: "attackDamageDisposition",
   AttackRollFillKind: "attackRoll",
   CommandOptionChoiceFillKind: "commandOptionChoice",
@@ -12791,12 +12787,10 @@ const REDUCER_ROUTE_FILL_BY_VARIANT_TAG = {
   SavingThrowOutcomeFillKind: "savingThrowOutcome",
   SelfTransformationModeChoiceFillKind: "selfTransformationModeChoice",
   ShoveOutcomeFillKind: "shoveOutcome",
-  SkillChoiceFillKind: "skillChoice",
   SlowSomaticSpellFailureOutcomeFillKind: "slowSomaticSpellFailureOutcome",
   SpellTargetAllocationFillKind: "spellTargetAllocation",
   SpellTargetListFillKind: "spellTargetList",
   StatBlockRechargeRollFillKind: "statBlockRechargeRoll",
-  TargetAbilityChoicesFillKind: "targetAbilityChoices",
   TargetChoiceFillKind: "targetChoice",
   UnitFeatureDecisionFillKind: "unitFeatureDecision",
   WildShapeEquipmentDispositionFillKind: "wildShapeEquipmentDisposition",

@@ -1,6 +1,6 @@
 import { Match } from "effect";
 import * as Either from "effect/Either";
-import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route.ts";
+import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route-protocol.ts";
 import { battleReducerRouteForResolution } from "./battle-reducer/reducer-route.ts";
 import {
   endTurn,

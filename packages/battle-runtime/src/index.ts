@@ -533,14 +533,16 @@ export {
 export {
   activeFeatureSpellSaveDcRouteEvents,
   battleReducerStartRouteEvent,
-  passiveSavingThrowRollModeRouteEvents,
-  type BattleReducerRouteEvent,
-  type BattleReducerRouteEvents,
-  type BattleReducerRouteFill,
-  type BattleReducerRouteHole,
-  type BattleReducerRouteOwnerGroup,
-  type BattleReducerRouteSubjectFamily,
 } from "./battle-reducer/reducer-route.ts";
+export { passiveSavingThrowRollModeRouteEvents } from "./battle-reducer/passive-projection-routes.ts";
+export type {
+  BattleReducerRouteEvent,
+  BattleReducerRouteEvents,
+  BattleReducerRouteFill,
+  BattleReducerRouteHole,
+  BattleReducerRouteOwnerGroup,
+  BattleReducerRouteSubjectFamily,
+} from "./battle-reducer/reducer-route-protocol.ts";
 export { battleCreatureInitFromStatBlock } from "./battle-init.ts";
 export { spellSaveDcForCaster } from "./battle-reducer/spell-save-dc.ts";
 export {

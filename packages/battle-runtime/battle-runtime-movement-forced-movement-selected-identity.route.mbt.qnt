@@ -19,12 +19,12 @@
 //   defines a spell-granted Dash action.
 // - UBIQUITOUS_LANGUAGE.md: Speed, Movement, Bonus Action, Reaction, Spell
 //   Effect, and Boundary Crossing.
-module battleRuntimeMovementForcedMovementSelectedIdentityRouteMbt {
+module battleRuntimeMovementCompelledMovementSelectedIdentityRouteMbt {
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
   import battleRuntimeReducerRoute.* from "./battle-runtime-reducer-route"
 
-  type MovementForcedMovementRouteStage =
+  type MovementCompelledMovementRouteStage =
     | Init
     | DissonantForcedReactionMovement
     | CommandFleeMovement
@@ -33,7 +33,7 @@ module battleRuntimeMovementForcedMovementSelectedIdentityRouteMbt {
     | BarbarianFastMovementDash
     | MonkUnarmoredMovementDash
 
-  var qStage: MovementForcedMovementRouteStage
+  var qStage: MovementCompelledMovementRouteStage
   var qRoute: List[ReducerRouteEvent]
 
   pure val noHoles: Set[BattleHoleFamilyKind] = Set()
@@ -69,34 +69,34 @@ module battleRuntimeMovementForcedMovementSelectedIdentityRouteMbt {
   ): ReducerRouteEvent =
     routeResolveBattleSubjectWithoutFill(subject, noHoles, owner)
 
-  pure def appendForcedMovementRoute(
+  pure def appendCompelledMovementRoute(
     route: List[ReducerRouteEvent],
     holes: Set[BattleHoleFamilyKind],
   ): List[ReducerRouteEvent] =
     route
       .append(
         discoverRouteSubject(
-          ForcedMovementRouteSubject,
+          CompelledMovementRouteSubject,
           holes,
           BattleSpellSlotAndActionEconomyOwner,
         )
       )
       .append(
         resolveRouteSubjectWithMovementFill(
-          ForcedMovementRouteSubject,
+          CompelledMovementRouteSubject,
           noHoles,
           BattleMovementResourceOwner,
         )
       )
       .append(
         resolveRouteSubjectWithoutFill(
-          ForcedMovementRouteSubject,
+          CompelledMovementRouteSubject,
           BattleActionEconomyOwner,
         )
       )
       .append(
         resolveRouteSubjectWithoutFill(
-          ForcedMovementRouteSubject,
+          CompelledMovementRouteSubject,
           BattleInterruptStackOwner,
         )
       )
@@ -207,22 +207,22 @@ module battleRuntimeMovementForcedMovementSelectedIdentityRouteMbt {
   action doDissonantWhispersForcedReactionMovement = all {
     qStage == Init,
     qStage' = DissonantForcedReactionMovement,
-    qRoute' = appendForcedMovementRoute(qRoute, forcedSpellMovementHoles),
+    qRoute' = appendCompelledMovementRoute(qRoute, forcedSpellMovementHoles),
   }
 
   action doCommandFleeTargetTurn = all {
     qStage == Init,
     qStage' = CommandFleeMovement,
-    qRoute' = appendForcedMovementRoute(qRoute, commandMovementHoles)
+    qRoute' = appendCompelledMovementRoute(qRoute, commandMovementHoles)
       .append(
         resolveRouteSubjectWithoutFill(
-          ForcedMovementRouteSubject,
+          CompelledMovementRouteSubject,
           BattleActiveEffectOwner,
         )
       )
       .append(
         resolveRouteSubjectWithoutFill(
-          ForcedMovementRouteSubject,
+          CompelledMovementRouteSubject,
           BattleTurnBoundaryOwner,
         )
       ),

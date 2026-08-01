@@ -250,13 +250,6 @@ function dragonbornDamageResistanceBattle(): BattleState {
         displayName: "Dragonborn Target",
         initiative: 10,
         characterUnitRefs: [unitRef.right],
-        unitFeatures: [
-          characterBattleFeatureInitForTest(
-            unit,
-            [],
-            draconicAncestrySourceFacts,
-          ),
-        ],
       }),
       characterCreature({
         combatantId: combatantId("species-passive-dragonborn-attacker"),

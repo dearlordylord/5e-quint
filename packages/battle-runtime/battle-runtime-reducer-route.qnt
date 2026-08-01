@@ -59,7 +59,7 @@ module battleRuntimeReducerRoute {
     | CreatureStatProjectionRouteSubject
     | MovementResourceRouteSubject
     | SpecialSpeedProjectionRouteSubject
-    | ForcedMovementRouteSubject
+    | CompelledMovementRouteSubject
     | MovementPresentationRouteSubject
     | ActiveFormLifecycleRouteSubject
     | CreatureTypeTargetAdmissionRouteSubject

@@ -52,6 +52,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   decodeReducerRoute,
@@ -75,16 +76,16 @@ import {
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
-type MovementForcedMovementSpellId =
+type MovementCompelledMovementSpellId =
   | "dissonant_whispers"
   | "command"
   | "expeditious_retreat";
-type MovementForcedMovementFeatureId =
+type MovementCompelledMovementFeatureId =
   | "ranger_roving"
   | "barbarian_fast_movement"
   | "monk_unarmored_movement";
 
-type MovementForcedMovementSelectedIdentityProjection = {
+type MovementCompelledMovementSelectedIdentityProjection = {
   readonly casterSpeedFeet: number;
   readonly casterRemainingFeet: number;
   readonly casterDashBonusFeet: number;
@@ -254,7 +255,7 @@ defineSelectedIdentityReplayAndQntReplay({
   ],
 });
 
-type MovementForcedMovementRouteProjection = {
+type MovementCompelledMovementRouteProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
 
@@ -305,7 +306,7 @@ type MovementPresentationRouteProjection = {
   readonly facts: readonly MovementPresentationRouteFact[];
 };
 
-const movementForcedMovementRouteDriverSchema = {
+const movementCompelledMovementRouteDriverSchema = {
   init: {},
   doDissonantWhispersForcedReactionMovement: {},
   doCommandFleeTargetTurn: {},
@@ -330,7 +331,7 @@ const movementPresentationRouteDriverSchema = {
 
 describe("Movement and forced movement substrate route MBT", () => {
   it(
-    "routes movement, forced movement, and special-speed substrates",
+    "routes movement, compelled movement, and special-speed substrates",
     async () => {
       await run({
         spec: mbtSpecPath(
@@ -339,11 +340,11 @@ describe("Movement and forced movement substrate route MBT", () => {
         ),
         init: "init",
         step: "step",
-        driver: createMovementForcedMovementRouteDriver(),
+        driver: createMovementCompelledMovementRouteDriver(),
         backend: "typescript",
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(1),
-        stateCheck: movementForcedMovementRouteStateCheck,
+        stateCheck: movementCompelledMovementRouteStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -370,42 +371,44 @@ describe("Movement and forced movement substrate route MBT", () => {
   );
 });
 
-describe("Movement and forced movement public reducer route replay", () => {
+describe("Movement and compelled movement public reducer route replay", () => {
   it("observes copied movement substrate qRoute through public reducer entrypoints", () => {
     expect(replayDissonantWhispersForcedReactionMovementRoute()).toEqual(
-      movementForcedMovementRouteProjection(
+      movementCompelledMovementRouteProjection(
         "doDissonantWhispersForcedReactionMovement",
       ),
     );
     expect(replayCommandFleeTargetTurnRoute()).toEqual(
-      movementForcedMovementRouteProjection("doCommandFleeTargetTurn"),
+      movementCompelledMovementRouteProjection("doCommandFleeTargetTurn"),
     );
     expect(replayExpeditiousRetreatImmediateDashRoute()).toEqual(
-      movementForcedMovementRouteProjection(
+      movementCompelledMovementRouteProjection(
         "doExpeditiousRetreatImmediateDash",
       ),
     );
     expect(replayRangerRovingSpecialSpeedMovementRoute()).toEqual(
-      movementForcedMovementRouteProjection("doRangerRovingClimbSwimMovement"),
+      movementCompelledMovementRouteProjection(
+        "doRangerRovingClimbSwimMovement",
+      ),
     );
     expect(replayBarbarianFastMovementDashRoute()).toEqual(
-      movementForcedMovementRouteProjection("doBarbarianFastMovementDash"),
+      movementCompelledMovementRouteProjection("doBarbarianFastMovementDash"),
     );
     expect(replayMonkUnarmoredMovementDashRoute()).toEqual(
-      movementForcedMovementRouteProjection("doMonkUnarmoredMovementDash"),
+      movementCompelledMovementRouteProjection("doMonkUnarmoredMovementDash"),
     );
   });
 });
 
-type MovementForcedMovementRouteAction = Exclude<
-  keyof typeof movementForcedMovementRouteDriverSchema,
+type MovementCompelledMovementRouteAction = Exclude<
+  keyof typeof movementCompelledMovementRouteDriverSchema,
   "init" | "step"
 >;
 
-function movementForcedMovementRouteProjection(
-  actionName: MovementForcedMovementRouteAction,
+function movementCompelledMovementRouteProjection(
+  actionName: MovementCompelledMovementRouteAction,
 ): readonly ReducerRouteEvent[] {
-  const driver = createMovementForcedMovementRouteDriver()();
+  const driver = createMovementCompelledMovementRouteDriver()();
   driver.actions.init.handler({});
   driver.actions[actionName].handler({});
   if (driver.getState === undefined) {
@@ -415,7 +418,7 @@ function movementForcedMovementRouteProjection(
 }
 
 function replayDissonantWhispersForcedReactionMovementRoute(): readonly BattleReducerRouteEvent[] {
-  const state = movementForcedMovementSpellBattle({
+  const state = movementCompelledMovementSpellBattle({
     sourceClassName: "bard",
     preparedSpells: [spellRecord("dissonant_whispers")],
     targetHp: 30,
@@ -470,7 +473,7 @@ function replayDissonantWhispersForcedReactionMovementRoute(): readonly BattleRe
 }
 
 function replayCommandFleeTargetTurnRoute(): readonly BattleReducerRouteEvent[] {
-  const state = movementForcedMovementSpellBattle({
+  const state = movementCompelledMovementSpellBattle({
     sourceClassName: "cleric",
     preparedSpells: [spellRecord("command")],
   });
@@ -527,7 +530,7 @@ function replayCommandFleeTargetTurnRoute(): readonly BattleReducerRouteEvent[] 
 }
 
 function replayExpeditiousRetreatImmediateDashRoute(): readonly BattleReducerRouteEvent[] {
-  const state = movementForcedMovementSpellBattle({
+  const state = movementCompelledMovementSpellBattle({
     sourceClassName: "wizard",
     preparedSpells: [spellRecord("expeditious_retreat")],
   });
@@ -605,7 +608,7 @@ type BattleReducerRouteSubject = Exclude<
   { readonly kind: "startBattle" }
 >["subject"];
 const MOVEMENT_SUBSTRATE_ROUTE_SUBJECTS = [
-  "forcedMovement",
+  "compelledMovement",
   "movementResource",
   "specialSpeedProjection",
 ] as const satisfies ReadonlyArray<BattleReducerRouteSubject>;
@@ -650,11 +653,11 @@ function requireResolvedRouteResult(
   }
 }
 
-function createMovementForcedMovementRouteDriver() {
+function createMovementCompelledMovementRouteDriver() {
   return defineDriver<
-    typeof movementForcedMovementRouteDriverSchema,
-    MovementForcedMovementRouteProjection
-  >(movementForcedMovementRouteDriverSchema, () => {
+    typeof movementCompelledMovementRouteDriverSchema,
+    MovementCompelledMovementRouteProjection
+  >(movementCompelledMovementRouteDriverSchema, () => {
     let route: readonly ReducerRouteEvent[] = [];
 
     function reset(): void {
@@ -666,7 +669,7 @@ function createMovementForcedMovementRouteDriver() {
     return {
       init: reset,
       doDissonantWhispersForcedReactionMovement: () => {
-        route = appendForcedMovementRoute(route, [
+        route = appendCompelledMovementRoute(route, [
           { kind: "targetChoice" },
           { kind: "savingThrowOutcome" },
           { kind: "rolledDice" },
@@ -675,13 +678,16 @@ function createMovementForcedMovementRouteDriver() {
       },
       doCommandFleeTargetTurn: () => {
         route = [
-          ...appendForcedMovementRoute(route, [
+          ...appendCompelledMovementRoute(route, [
             { kind: "spellTargetList" },
             { kind: "commandOptionChoice" },
             { kind: "savingThrowOutcome" },
             { kind: "movement" },
           ]),
-          ...forcedMovementOwners("battleActiveEffect", "battleTurnBoundary"),
+          ...compelledMovementOwners(
+            "battleActiveEffect",
+            "battleTurnBoundary",
+          ),
         ];
       },
       doExpeditiousRetreatImmediateDash: () => {
@@ -702,33 +708,33 @@ function createMovementForcedMovementRouteDriver() {
   });
 }
 
-function appendForcedMovementRoute(
+function appendCompelledMovementRoute(
   route: readonly ReducerRouteEvent[],
   holes: readonly Pick<BattleHole, "kind">[],
 ): readonly ReducerRouteEvent[] {
   return [
     ...route,
     reducerRouteDiscoverBattleActs({
-      subject: "forcedMovement",
+      subject: "compelledMovement",
       holes,
       owner: "battleSpellSlotAndActionEconomy",
     }),
     reducerRouteResolveBattleSubject({
-      subject: "forcedMovement",
+      subject: "compelledMovement",
       fill: "movement",
       holes: [],
       owner: "battleMovementResource",
     }),
-    ...forcedMovementOwners("battleActionEconomy", "battleInterruptStack"),
+    ...compelledMovementOwners("battleActionEconomy", "battleInterruptStack"),
   ];
 }
 
-function forcedMovementOwners(
+function compelledMovementOwners(
   ...owners: readonly ReducerRouteEvent["owner"][]
 ): readonly ReducerRouteEvent[] {
   return owners.map((owner) =>
     reducerRouteResolveBattleSubjectWithoutFill({
-      subject: "forcedMovement",
+      subject: "compelledMovement",
       holes: [],
       owner,
     }),
@@ -823,9 +829,9 @@ function specialSpeedProjectionOwners(
   );
 }
 
-const movementForcedMovementRouteStateCheck = stateCheck(
-  normalizeMovementForcedMovementRouteQuintState,
-  compareMovementForcedMovementRouteStates,
+const movementCompelledMovementRouteStateCheck = stateCheck(
+  normalizeMovementCompelledMovementRouteQuintState,
+  compareMovementCompelledMovementRouteStates,
 );
 
 function createMovementPresentationRouteDriver() {
@@ -1195,18 +1201,18 @@ function movementPresentationFactPayload(
   return quintStateRecord(value);
 }
 
-function normalizeMovementForcedMovementRouteQuintState(
+function normalizeMovementCompelledMovementRouteQuintState(
   raw: unknown,
-): MovementForcedMovementRouteProjection {
+): MovementCompelledMovementRouteProjection {
   const state = quintStateRecord(raw);
   return {
     route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
 
-function compareMovementForcedMovementRouteStates(
-  spec: MovementForcedMovementRouteProjection,
-  impl: MovementForcedMovementRouteProjection,
+function compareMovementCompelledMovementRouteStates(
+  spec: MovementCompelledMovementRouteProjection,
+  impl: MovementCompelledMovementRouteProjection,
 ): boolean {
   expect(impl).toEqual(spec);
   return true;
@@ -1216,14 +1222,14 @@ function resolvedProjection(
   result: BattleResolutionResult,
   flags: {
     readonly lastResult: Exclude<
-      MovementForcedMovementSelectedIdentityProjection["lastResult"],
+      MovementCompelledMovementSelectedIdentityProjection["lastResult"],
       "init"
     >;
     readonly dissonantMovementFillRequired?: boolean;
     readonly commandMovementFillRequired?: boolean;
     readonly commandPendingEffectObserved?: boolean;
   },
-): MovementForcedMovementSelectedIdentityProjection {
+): MovementCompelledMovementSelectedIdentityProjection {
   if (result.tag !== "resolved") {
     throw new Error(
       `Expected movement and forced movement action to resolve, got ${result.tag}: ${
@@ -1231,7 +1237,7 @@ function resolvedProjection(
       } ${"message" in result ? result.message : ""}`,
     );
   }
-  return projectMovementForcedMovementSelectedIdentityState(result.state, {
+  return projectMovementCompelledMovementSelectedIdentityState(result.state, {
     lastResult: flags.lastResult,
     dissonantMovementFillRequired: flags.dissonantMovementFillRequired ?? false,
     commandMovementFillRequired: flags.commandMovementFillRequired ?? false,
@@ -1239,9 +1245,9 @@ function resolvedProjection(
   });
 }
 
-function dissonantWhispersForcedReactionMovement(): MovementForcedMovementSelectedIdentityProjection {
+function dissonantWhispersForcedReactionMovement(): MovementCompelledMovementSelectedIdentityProjection {
   let dissonantMovementFillRequired = false;
-  const state = movementForcedMovementSpellBattle({
+  const state = movementCompelledMovementSpellBattle({
     sourceClassName: "bard",
     preparedSpells: [spellRecord("dissonant_whispers")],
     targetHp: 30,
@@ -1255,10 +1261,10 @@ function dissonantWhispersForcedReactionMovement(): MovementForcedMovementSelect
   );
 }
 
-function commandFleeTargetTurn(): MovementForcedMovementSelectedIdentityProjection {
+function commandFleeTargetTurn(): MovementCompelledMovementSelectedIdentityProjection {
   let commandPendingEffectObserved = false;
   let commandMovementFillRequired = false;
-  const state = movementForcedMovementSpellBattle({
+  const state = movementCompelledMovementSpellBattle({
     sourceClassName: "cleric",
     preparedSpells: [spellRecord("command")],
   });
@@ -1281,8 +1287,8 @@ function commandFleeTargetTurn(): MovementForcedMovementSelectedIdentityProjecti
   );
 }
 
-function expeditiousRetreatImmediateDash(): MovementForcedMovementSelectedIdentityProjection {
-  const state = movementForcedMovementSpellBattle({
+function expeditiousRetreatImmediateDash(): MovementCompelledMovementSelectedIdentityProjection {
+  const state = movementCompelledMovementSpellBattle({
     sourceClassName: "wizard",
     preparedSpells: [spellRecord("expeditious_retreat")],
   });
@@ -1291,13 +1297,13 @@ function expeditiousRetreatImmediateDash(): MovementForcedMovementSelectedIdenti
   });
 }
 
-function rangerRovingClimbSwimMovement(): MovementForcedMovementSelectedIdentityProjection {
+function rangerRovingClimbSwimMovement(): MovementCompelledMovementSelectedIdentityProjection {
   return resolvedProjection(resolveRovingClimbSwimMovement(rovingBattle()), {
     lastResult: "rangerRoving",
   });
 }
 
-function barbarianFastMovementDash(): MovementForcedMovementSelectedIdentityProjection {
+function barbarianFastMovementDash(): MovementCompelledMovementSelectedIdentityProjection {
   return resolvedProjection(
     resolveBarbarianFastMovementDash(fastMovementBattle()),
     {
@@ -1306,7 +1312,7 @@ function barbarianFastMovementDash(): MovementForcedMovementSelectedIdentityProj
   );
 }
 
-function monkUnarmoredMovementDash(): MovementForcedMovementSelectedIdentityProjection {
+function monkUnarmoredMovementDash(): MovementCompelledMovementSelectedIdentityProjection {
   return resolvedProjection(
     resolveMonkUnarmoredMovementDash(monkUnarmoredMovementBattle()),
     { lastResult: "monkUnarmoredMovement" },
@@ -1314,8 +1320,8 @@ function monkUnarmoredMovementDash(): MovementForcedMovementSelectedIdentityProj
 }
 
 function expectedProjection(
-  overrides: Partial<MovementForcedMovementSelectedIdentityProjection> = {},
-): MovementForcedMovementSelectedIdentityProjection {
+  overrides: Partial<MovementCompelledMovementSelectedIdentityProjection> = {},
+): MovementCompelledMovementSelectedIdentityProjection {
   return {
     casterSpeedFeet: 30,
     casterRemainingFeet: 30,
@@ -1521,7 +1527,7 @@ function resolveMonkUnarmoredMovementDash(
   });
 }
 
-function movementForcedMovementSpellBattle(
+function movementCompelledMovementSpellBattle(
   input: {
     readonly sourceClassName?: "bard" | "cleric" | "wizard";
     readonly preparedSpells?: readonly SpellRecord[];
@@ -1533,7 +1539,7 @@ function movementForcedMovementSpellBattle(
     readonly targetMaxHp?: number;
   } = {},
 ): BattleState {
-  return movementForcedMovementBattle({
+  return movementCompelledMovementBattle({
     caster: {
       spellcasting: {
         sourceClassName: input.sourceClassName ?? "wizard",
@@ -1557,7 +1563,7 @@ function movementForcedMovementSpellBattle(
 }
 
 function fastMovementBattle(): BattleState {
-  return movementForcedMovementBattle({
+  return movementCompelledMovementBattle({
     battleName: "fast-movement",
     caster: {
       displayName: "Fast Barbarian",
@@ -1568,7 +1574,7 @@ function fastMovementBattle(): BattleState {
 }
 
 function monkUnarmoredMovementBattle(): BattleState {
-  return movementForcedMovementBattle({
+  return movementCompelledMovementBattle({
     battleName: "monk-unarmored-movement",
     caster: {
       displayName: "Unarmored Monk",
@@ -1579,7 +1585,7 @@ function monkUnarmoredMovementBattle(): BattleState {
 }
 
 function rovingBattle(): BattleState {
-  return movementForcedMovementBattle({
+  return movementCompelledMovementBattle({
     battleName: "roving",
     caster: {
       displayName: "Roving Ranger",
@@ -1589,7 +1595,7 @@ function rovingBattle(): BattleState {
   });
 }
 
-function movementForcedMovementBattle(input: {
+function movementCompelledMovementBattle(input: {
   readonly battleName?: string;
   readonly caster?: {
     readonly displayName?: string;
@@ -1615,7 +1621,7 @@ function movementForcedMovementBattle(input: {
       }`,
     ),
     combatants: [
-      movementForcedMovementCreature({
+      movementCompelledMovementCreature({
         combatantId: casterId,
         displayName: input.caster?.displayName ?? "Movement spellcaster",
         initiative: 20,
@@ -1627,7 +1633,7 @@ function movementForcedMovementBattle(input: {
           ? {}
           : { classLevels: input.caster.classLevels }),
       }),
-      movementForcedMovementCreature({
+      movementCompelledMovementCreature({
         combatantId: targetId,
         displayName: "Movement target",
         initiative: 10,
@@ -1646,7 +1652,7 @@ function movementForcedMovementBattle(input: {
   return result.right.state;
 }
 
-function movementForcedMovementCreature(input: {
+function movementCompelledMovementCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
@@ -1705,7 +1711,7 @@ function movementForcedMovementCreature(input: {
   };
 }
 
-function spellRecord(spellId: MovementForcedMovementSpellId): SpellRecord {
+function spellRecord(spellId: MovementCompelledMovementSpellId): SpellRecord {
   const unit = unitLibrary.requireUnit(spellId);
   if (unit.kind !== "spell") {
     throw new Error(`Expected SRD catalog unit ${spellId} to be a Spell.`);
@@ -1714,7 +1720,7 @@ function spellRecord(spellId: MovementForcedMovementSpellId): SpellRecord {
 }
 
 function featureBattleUnitRef(
-  unitId: MovementForcedMovementFeatureId,
+  unitId: MovementCompelledMovementFeatureId,
 ): BattleUnitRef {
   const unit = unitLibrary.requireUnit(unitId);
   const unitRef = battleUnitRefWithSupportProfiles({
@@ -1730,7 +1736,7 @@ function featureBattleUnitRef(
 function actionSpellAct(
   state: BattleState,
   spellId: Extract<
-    MovementForcedMovementSpellId,
+    MovementCompelledMovementSpellId,
     "command" | "dissonant_whispers"
   >,
 ): ActionSpellAct {
@@ -1741,12 +1747,12 @@ function actionSpellAct(
   if (act === undefined) {
     throw new Error(`Expected ${spellId} action Spell act.`);
   }
-  return act;
+  return withReducerRouteEvents(state, act);
 }
 
 function bonusActionDashSpellAct(
   state: BattleState,
-  spellId: Extract<MovementForcedMovementSpellId, "expeditious_retreat">,
+  spellId: Extract<MovementCompelledMovementSpellId, "expeditious_retreat">,
 ): BonusActionDashSpellAct {
   const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is BonusActionDashSpellAct =>
@@ -1755,7 +1761,7 @@ function bonusActionDashSpellAct(
   if (act === undefined) {
     throw new Error(`Expected ${spellId} Bonus Action Dash spell act.`);
   }
-  return act;
+  return withReducerRouteEvents(state, act);
 }
 
 function moveAct(state: BattleState): RuntimeMoveAct {
@@ -1768,7 +1774,7 @@ function moveAct(state: BattleState): RuntimeMoveAct {
   if (act === undefined) {
     throw new Error("Expected runtime Movement command.");
   }
-  return act;
+  return withReducerRouteEvents(state, act);
 }
 
 function dashAct(state: BattleState): DashAct {
@@ -1781,7 +1787,17 @@ function dashAct(state: BattleState): DashAct {
   if (act === undefined) {
     throw new Error("Expected Dash action.");
   }
-  return act;
+  return withReducerRouteEvents(state, act);
+}
+
+function withReducerRouteEvents<TAct extends AvailableBattleAct>(
+  state: BattleState,
+  act: TAct,
+): TAct & { readonly routeEvents: readonly BattleReducerRouteEvent[] } {
+  return {
+    ...act,
+    routeEvents: battleReducerRouteEventsForDiscoveredAct(state, act) ?? [],
+  };
 }
 
 function commandFleeAct(state: BattleState): RuntimeCommandFleeAct {
@@ -1988,15 +2004,15 @@ function spellDashBonusActionEffectCount(state: BattleState): number {
   );
 }
 
-function projectMovementForcedMovementSelectedIdentityState(
+function projectMovementCompelledMovementSelectedIdentityState(
   state: BattleState,
   flags: {
-    readonly lastResult: MovementForcedMovementSelectedIdentityProjection["lastResult"];
+    readonly lastResult: MovementCompelledMovementSelectedIdentityProjection["lastResult"];
     readonly dissonantMovementFillRequired: boolean;
     readonly commandMovementFillRequired: boolean;
     readonly commandPendingEffectObserved: boolean;
   },
-): MovementForcedMovementSelectedIdentityProjection {
+): MovementCompelledMovementSelectedIdentityProjection {
   const snapshot = snapshotBattle(state);
   const caster = snapshot.combatants.find(
     (combatant) => combatant.combatantId === casterId,

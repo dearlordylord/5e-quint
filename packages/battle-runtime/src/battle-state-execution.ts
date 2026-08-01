@@ -292,7 +292,7 @@ import type {
   BattleCompanionSnapshot,
   BattleCompanions,
 } from "./companion-state.ts";
-import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route.ts";
+import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route-protocol.ts";
 import type { ZeroHpLifecycle } from "./zero-hp-lifecycle.ts";
 import type {
   BattleActiveEffect,

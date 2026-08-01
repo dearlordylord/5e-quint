@@ -69,18 +69,18 @@ module battleRuntimeCommandOptionNextTurnMbt {
       owner,
     )
 
-  pure def forcedMovementResolveRoute(
+  pure def compelledMovementResolveRoute(
     fill: BattleFillKind,
     holes: Set[BattleHoleFamilyKind],
     owner: ReducerRouteOwnerGroup,
   ): ReducerRouteEvent =
-    routeResolveBattleSubject(ForcedMovementRouteSubject, fill, holes, owner)
+    routeResolveBattleSubject(CompelledMovementRouteSubject, fill, holes, owner)
 
-  pure def forcedMovementResolveWithoutFillRoute(
+  pure def compelledMovementResolveWithoutFillRoute(
     owner: ReducerRouteOwnerGroup,
   ): ReducerRouteEvent =
     routeResolveBattleSubjectWithoutFill(
-      ForcedMovementRouteSubject,
+      CompelledMovementRouteSubject,
       noRouteHoles,
       owner,
     )
@@ -372,21 +372,21 @@ module battleRuntimeCommandOptionNextTurnMbt {
           noRouteHoles,
           BattleMovementResourceOwner,
         ),
-        forcedMovementResolveRoute(
+        compelledMovementResolveRoute(
           MovementFillKind,
           noRouteHoles,
           BattleMovementResourceOwner,
         ),
-        forcedMovementResolveWithoutFillRoute(
+        compelledMovementResolveWithoutFillRoute(
           BattleActionEconomyOwner,
         ),
-        forcedMovementResolveWithoutFillRoute(
+        compelledMovementResolveWithoutFillRoute(
           BattleInterruptStackOwner,
         ),
-        forcedMovementResolveWithoutFillRoute(
+        compelledMovementResolveWithoutFillRoute(
           BattleActiveEffectOwner,
         ),
-        forcedMovementResolveWithoutFillRoute(
+        compelledMovementResolveWithoutFillRoute(
           BattleTurnBoundaryOwner,
         ),
       )),

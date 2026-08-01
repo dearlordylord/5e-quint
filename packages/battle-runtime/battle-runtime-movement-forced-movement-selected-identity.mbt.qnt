@@ -1,14 +1,14 @@
 // -*- mode: Bluespec; -*-
 
-module battleRuntimeMovementForcedMovementSelectedIdentityMbt {
+module battleRuntimeMovementCompelledMovementSelectedIdentityMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   type WitnessHole = | WitnessProtocolHole
 
-  type MovementForcedMovementSelectedIdentityScenarioOutcome = | Init | DissonantWhispers | CommandFlee | ExpeditiousRetreat | RangerRoving | BarbarianFastMovement | MonkUnarmoredMovement
+  type MovementCompelledMovementSelectedIdentityScenarioOutcome = | Init | DissonantWhispers | CommandFlee | ExpeditiousRetreat | RangerRoving | BarbarianFastMovement | MonkUnarmoredMovement
 
 
-  type MovementForcedMovementSelectedIdentityWitnessState = {
+  type MovementCompelledMovementSelectedIdentityWitnessState = {
     qCasterSpeedFeet: int,
     qCasterRemainingFeet: int,
     qCasterDashBonusFeet: int,
@@ -26,11 +26,11 @@ module battleRuntimeMovementForcedMovementSelectedIdentityMbt {
     qCommandPendingEffectCount: int,
     qClimbSpeedFeet: int,
     qSwimSpeedFeet: int,
-    qScenarioOutcome: MovementForcedMovementSelectedIdentityScenarioOutcome,
+    qScenarioOutcome: MovementCompelledMovementSelectedIdentityScenarioOutcome,
     protocol: WitnessProtocol[WitnessHole],
   }
 
-  var qState: MovementForcedMovementSelectedIdentityWitnessState
+  var qState: MovementCompelledMovementSelectedIdentityWitnessState
 
   pure def qCasterSpeedFeet: int = qState.qCasterSpeedFeet
   pure def qCasterRemainingFeet: int = qState.qCasterRemainingFeet
@@ -49,11 +49,11 @@ module battleRuntimeMovementForcedMovementSelectedIdentityMbt {
   pure def qCommandPendingEffectCount: int = qState.qCommandPendingEffectCount
   pure def qClimbSpeedFeet: int = qState.qClimbSpeedFeet
   pure def qSwimSpeedFeet: int = qState.qSwimSpeedFeet
-  pure def scenarioOutcome: MovementForcedMovementSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def scenarioOutcome: MovementCompelledMovementSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
-    scenarioOutcome: MovementForcedMovementSelectedIdentityScenarioOutcome,
+    scenarioOutcome: MovementCompelledMovementSelectedIdentityScenarioOutcome,
   ): WitnessProtocol[WitnessHole] =
     if (scenarioOutcome == Init) witnessInit(WitnessProtocolHole)
     else if (holes != Set()) witnessNeedsHoles(holes)
@@ -77,7 +77,7 @@ module battleRuntimeMovementForcedMovementSelectedIdentityMbt {
     commandPendingEffectCount: int,
     climbSpeedFeet: int,
     swimSpeedFeet: int,
-    lastResult: MovementForcedMovementSelectedIdentityScenarioOutcome,
+    lastResult: MovementCompelledMovementSelectedIdentityScenarioOutcome,
   ): bool = all {
     qState' = {
       qCasterSpeedFeet: casterSpeedFeet,

@@ -23,6 +23,11 @@ import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 import speciesDragonbornInput from "../../surface/content/species_dragonborn.json";
 import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-helpers.ts";
+import {
+  passiveProjectionRouteForDiscoveredAct,
+  passiveProjectionRouteForResolution,
+} from "./battle-reducer/passive-projection-routes.ts";
+import { admitBattleResolutionInput } from "./battle-reducer/resolution-admission.ts";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
@@ -892,19 +897,25 @@ describe("L3MSPEC species battle support", () => {
         owner: "battleAbilityCheckRollMode",
       },
     ]);
+    expect(
+      passiveProjectionRouteForDiscoveredAct(
+        selectedScenario.state,
+        selectedScenario.discoveredAct,
+      ),
+    ).toEqual(selectedScenario.discoveryRouteEvents);
     const selected = requireHole(selectedScenario.result, "grappleOutcome");
     expect(selected.kind).toBe("grappleOutcome");
     if (selected.kind !== "grappleOutcome") {
       throw new Error("Expected Powerful Build selected escape Grapple hole.");
     }
     expect(selected.rollMode).toBe("advantage");
-    expect(
-      resolveBattleSubject({
-        state: selectedScenario.state,
-        subject: selectedScenario.subject,
-        fills: [grappleOutcomeFill(selected, true)],
-      }).routeEvents,
-    ).toEqual([
+    const resolutionInput = {
+      state: selectedScenario.state,
+      subject: selectedScenario.subject,
+      fills: [grappleOutcomeFill(selected, true)],
+    } as const;
+    const resolution = resolveBattleSubject(resolutionInput);
+    expect(resolution.routeEvents).toEqual([
       {
         kind: "resolveBattleSubject",
         subject: "passiveAbilityCheckRollMode",
@@ -913,6 +924,14 @@ describe("L3MSPEC species battle support", () => {
         owner: "battleAbilityCheckRollMode",
       },
     ]);
+    const admission = admitBattleResolutionInput(resolutionInput);
+    expect(admission.tag).toBe("admitted");
+    if (admission.tag !== "admitted") {
+      throw new Error("Expected admitted Powerful Build resolution input.");
+    }
+    expect(
+      passiveProjectionRouteForResolution(admission.input, resolution),
+    ).toEqual(resolution.routeEvents);
     const poisoned = requireHole(
       powerfulBuildEscapeGrappleScenario({
         selected: true,
@@ -1039,6 +1058,7 @@ function powerfulBuildEscapeGrappleScenario(input: {
     throw new Error("Expected Powerful Build escape Grapple act.");
   }
   return {
+    discoveredAct: discoveredEscape,
     discoveryRouteEvents: discoveredEscape.routeEvents,
     state: goliathTurn,
     subject: escapeSubject,
