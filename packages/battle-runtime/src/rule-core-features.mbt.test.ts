@@ -1698,7 +1698,12 @@ function resolveDamageRollReductionWindow(input: {
 }
 
 const featureStateCheck = stateCheck(
-  normalizeRuleCoreFeatureQuintState,
+  (raw) => normalizeRuleCoreFeatureQuintState(raw, "projectionNotOwned"),
+  compareRuleCoreFeatureState,
+);
+
+const attackRiderFeatureStateCheck = stateCheck(
+  (raw) => normalizeRuleCoreFeatureQuintState(raw, "projectionRequired"),
   compareRuleCoreFeatureState,
 );
 
@@ -1801,7 +1806,7 @@ describe("rule-core Feature focused MBT", () => {
         seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(ruleCoreFeatureDefaultMbtSteps),
-        stateCheck: featureStateCheck,
+        stateCheck: attackRiderFeatureStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -1821,7 +1826,7 @@ describe("rule-core Feature focused MBT", () => {
         backend: "typescript",
         nTraces: 1,
         maxSteps: 5,
-        stateCheck: featureStateCheck,
+        stateCheck: attackRiderFeatureStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -3068,6 +3073,7 @@ function projectFeatureHole(hole: BattleHole): RuleCoreFeatureMbtHole {
 
 function normalizeRuleCoreFeatureQuintState(
   raw: unknown,
+  frenzyProjectionPolicy: "projectionNotOwned" | "projectionRequired",
 ): RuleCoreFeatureProjection {
   const state = quintStateRecord(raw);
   const protocol = decodeWitnessProtocolState({
@@ -3102,8 +3108,9 @@ function normalizeRuleCoreFeatureQuintState(
       state["qLastDamageAmount"],
       "qLastDamageAmount",
     ),
-    frenzyDamageTypeSelection: frenzyDamageTypeSelectionProjection(
+    frenzyDamageTypeSelection: frenzyDamageTypeSelectionForDriver(
       state["qFrenzyDamageTypeSelection"],
+      frenzyProjectionPolicy,
     ),
     abilityCheckBoostedTotal: numberFromQuintInt(
       state["qAbilityCheckBoostedTotal"],
@@ -3216,6 +3223,21 @@ function featureHoleName(raw: unknown): RuleCoreFeatureMbtHole {
   const tag = quintVariantTag(raw);
   if (isRuleCoreFeatureMbtHole(tag)) return tag;
   throw new Error(`Unknown Quint rule-core Feature hole variant: ${tag}`);
+}
+
+function frenzyDamageTypeSelectionForDriver(
+  raw: unknown,
+  policy: "projectionNotOwned" | "projectionRequired",
+): FrenzyDamageTypeSelectionProjection {
+  if (raw !== undefined) {
+    return frenzyDamageTypeSelectionProjection(raw);
+  }
+  if (policy === "projectionNotOwned") {
+    return { tag: "notObserved" };
+  }
+  throw new Error(
+    "Attack-rider Quint driver must export qFrenzyDamageTypeSelection.",
+  );
 }
 
 function frenzyDamageTypeSelectionProjection(

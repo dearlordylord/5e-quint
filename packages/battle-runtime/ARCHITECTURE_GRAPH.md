@@ -21,6 +21,15 @@ equality for continuation fills is owned by
 `battle-reducer/battle-fill-equality.ts`, so replay, reroll, and continuation
 callers share one comparison algorithm.
 
+Interrupt windows are split by lifecycle responsibility. Opening and discovery
+belong to `battle-reducer/interrupt-execution.ts`; decision admission, Reaction
+resource spending, active interrupt re-entry, responder progression, checkpoint
+closure, and continuation resumption belong to
+`battle-reducer/interrupt-lifecycle.ts`. The lifecycle owner exposes an opaque
+execution capability so the dispatcher supplies admitted subject resolution and
+continuation resumption without recreating lifecycle state or introducing a
+reverse module dependency.
+
 Keep battle-runtime integration vocabulary such as `Actor`, `Combatant`,
 `BattleState`, `ActiveEffect`, `Hole`, and replay variants in battle-runtime QNT
 model modules, starting with

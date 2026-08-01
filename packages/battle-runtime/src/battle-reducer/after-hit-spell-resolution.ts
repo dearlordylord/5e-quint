@@ -11,12 +11,12 @@ import type {
   BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
+import { snapshotBattle } from "./dispatcher.ts";
 import {
-  maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
+  interruptCheckpointFrame,
   maybeOpenPostCastReadySpellCastWindow,
-  snapshotBattle,
-} from "./dispatcher.ts";
-import { interruptCheckpointFrame } from "./interrupt-execution.ts";
+  maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
+} from "./interrupt-execution.ts";
 import { fillsBelongToSpellCastHoles } from "./fill-hole-protocol.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";

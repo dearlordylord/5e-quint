@@ -7,7 +7,7 @@ import {
   characterSpellProcedure,
   type BattleSpellProcedureExecution,
 } from "../character-execution-queries.ts";
-import { CombatantId } from "../identity.ts";
+import { CombatantId, type BattleProcedureExecutionRef } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
   combatantCanTakeActions,
@@ -320,6 +320,94 @@ export function maybeOpenInterruptWindow(
     handledInterruptTrigger,
   );
   return progress.tag === "windowOpened" ? progress.result : null;
+}
+
+export function maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices(
+  state: BattleState,
+  frame: BattleInterruptCheckpointInput,
+  handledInterruptTrigger: BattleInterruptTrigger | undefined,
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
+  if (frame.trigger === handledInterruptTrigger) {
+    return null;
+  }
+  const checkpointState = stateForOpeningInterruptCheckpoint(state, frame);
+  return checkpointState === null
+    ? null
+    : openPreparedInterruptWindowWithOptionalChoices(
+        checkpointState,
+        frame,
+        triggeredReactionSpellChoices(checkpointState, frame),
+      );
+}
+
+function maybeOpenInterruptWindowWithChoices(
+  state: BattleState,
+  frame: BattleInterruptCheckpointInput,
+  handledInterruptTrigger: BattleInterruptTrigger | undefined,
+  choices: readonly BattleInterruptProcedureChoice[],
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
+  if (frame.trigger === handledInterruptTrigger) {
+    return null;
+  }
+  const checkpointState = stateForOpeningInterruptCheckpoint(state, frame);
+  return checkpointState === null
+    ? null
+    : openPreparedInterruptWindowWithOptionalChoices(
+        checkpointState,
+        frame,
+        choices,
+      );
+}
+
+export function maybeOpenPostCastReadySpellCastWindow(input: {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly casterId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly spellProcedure: BattleSpellProcedureExecution["procedure"];
+  readonly targetIds: readonly CombatantId[];
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+}): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
+  return input.handledInterruptTrigger !== "spellCast"
+    ? maybeOpenInterruptWindowWithChoices(
+        input.state,
+        {
+          trigger: "spellCast",
+          casterId: input.casterId,
+          sourceProcedureRef: input.sourceProcedureRef,
+          spellProcedure: input.spellProcedure,
+          castLevel: 0,
+          components: [],
+          castingResource: { kind: "alreadySpent" },
+          spellSlotCommitment: { kind: "none" },
+          metamagicCommitment: { kind: "none" },
+          concentrationCommitment: { kind: "none" },
+          targetIds: input.targetIds,
+          reactionSpellTargetFacts: [],
+          continuation: { kind: "resolved", subject: input.subject },
+        },
+        input.handledInterruptTrigger,
+        [
+          ...readiedSpellReactionChoices(input.state, "spellCast"),
+          ...readiedMovementReactionChoices(input.state, "spellCast"),
+        ],
+      )
+    : null;
+}
+
+function openPreparedInterruptWindowWithOptionalChoices(
+  checkpointState: BattleState,
+  frame: BattleInterruptCheckpointInput,
+  choices: readonly BattleInterruptProcedureChoice[],
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
+  const nonEmptyChoices = nonEmptyInterruptChoices(choices);
+  return nonEmptyChoices === null
+    ? null
+    : openPreparedInterruptWindowWithChoices(
+        checkpointState,
+        frame,
+        nonEmptyChoices,
+      );
 }
 
 function nonEmptyInterruptChoices(

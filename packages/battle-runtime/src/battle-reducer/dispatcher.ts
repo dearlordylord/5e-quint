@@ -48,23 +48,14 @@ import {
 import { Match } from "effect";
 import {
   attackDamageContinuationConcentrationFrame,
-  interruptCheckpointFrame,
-  interruptedProcedureSubject,
   interruptedProcedureSupportsAttackDamageChanges,
   maybeOpenInterruptWindow,
   openAfterDamageSequenceInterruptWindow,
-  openBattleInterruptWindow,
-  readiedMovementReactionChoices,
-  readiedSpellReactionChoices,
-  spendReaction,
-  type BattleOpenedInterruptWindowResult,
 } from "./interrupt-execution.ts";
 import {
   currentInterruptCheckpoint,
   currentInterruptFrame,
-  interruptDecisionHole,
   snapshotBattle,
-  unofferedEligibleResponders,
 } from "./battle-snapshot.ts";
 export {
   attackDamageContinuationConcentrationFrame,
@@ -75,6 +66,7 @@ export {
   interruptedProcedureSubject,
   interruptedProcedureSupportsAttackDamageChanges,
   maybeOpenInterruptWindow,
+  maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
   openAfterDamageSequenceInterruptWindow,
   openBattleInterruptWindow,
   opportunityAttackReactionChoices,
@@ -130,7 +122,7 @@ import {
   characterSpellProcedure,
   type BattleSpellProcedureExecution,
 } from "../character-execution-queries.ts";
-import { CombatantId, type BattleProcedureExecutionRef } from "../identity.ts";
+import { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
   battleStateAfterCreatureAttackDamage,
@@ -151,7 +143,6 @@ import {
   battleSubjectActorId,
   closeLegendaryActionWindow,
   combatantCanTakeActions,
-  combatantCanTakeReactions,
   consumeLegendaryActionWindow,
   isCharacterBattleCreatureState,
   isLegendaryAttackSubject,
@@ -179,7 +170,6 @@ import {
 } from "./attack-damage-apply.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
-import { interruptAttackExecutionSelectionsEqual } from "./movement-speed.ts";
 import { battleFillPrefixAccumulated } from "./battle-fill-equality.ts";
 import {
   resolveReplayContinuation,
@@ -187,6 +177,12 @@ import {
   type AdmittedReplayContinuationSubject,
   ReplayContinuationExecution,
 } from "./replay-continuation.ts";
+import {
+  type AdmittedActiveInterruptProcedure,
+  InterruptLifecycleExecution,
+  resolveActiveInterruptProcedure,
+  resolveInterruptLifecycleDecision,
+} from "./interrupt-lifecycle.ts";
 import {
   applyProtectionRelevantEffectSaveOutcome,
   conditionApplicationPreventedByCreatureTypeProtection,
@@ -205,12 +201,6 @@ import {
 } from "./d20-test-natural-one-reroll.ts";
 import { resolveCunningStrikeAfterAttackDamage } from "./cunning-strike.ts";
 import {
-  reactionModifierReductionRoll,
-  reactionRollOrDamageReductionChoices,
-  spendReactionModifierResource,
-} from "./reaction-modifiers.ts";
-import {
-  triggeredReactionSpellChoices,
   hellishRebukeReactionSpellMatchesTrigger,
   reactionSpellTargetFactsForAfterDamage,
   triggeredReactionSpellTurnResourceAvailable,
@@ -222,7 +212,6 @@ import {
   battleReducerRouteForInterrupt,
   battleReducerRouteForResolution,
 } from "./reducer-route.ts";
-import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import { stateAfterSpellCastDeclared } from "./spell-cast-declaration.ts";
 import {
   antimagicFieldInterdictionMessage,
@@ -262,9 +251,7 @@ import {
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
 import {
-  claimPendingSpellSlotUseThisTurn,
   markSpellSlotExpendedThisTurn,
-  releasePendingSpellSlotUseThisTurn,
   spellActTurnResourceAvailable,
   spellHasAvailableSpend,
 } from "./spell-turn-resources.ts";
@@ -282,7 +269,6 @@ import { resolveDragonsBreathExhaleCommand } from "./dragons-breath.ts";
 import { spellFillSet } from "./spells-resolve-fill-set.ts";
 import { fillsBelongToSpellCastHoles } from "./fill-hole-protocol.ts";
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
-import { INTERRUPT_DECISION_HOLE_ID } from "./battle-runtime-protocol.ts";
 import { activeOngoingFeaturesPreventSpellInvocation } from "./spells-invocation-guards.ts";
 import type {
   BattleAttackResolvers,
@@ -360,7 +346,6 @@ import type {
   BattleAttackDamageContinuationCunningStrikeFrame,
   BattleAttackDamageContinuationConcentrationFrame,
   BattleAttackDamageContinuationWithoutConcentration,
-  BattleAttackDamageEvent,
   BattleAttackHitTriggerKind,
   BattleConcentrationSavingThrowHole,
   BattleDroppedObjectOutcome,
@@ -372,13 +357,7 @@ import type {
   BattleInterruptFrame,
   BattleInterruptedProcedure,
   BattleHole,
-  BattleInterruptDecision,
   BattleInterruptCheckpoint,
-  BattleInterruptCheckpointInput,
-  BattleReactionModifierChoice,
-  BattleInterruptProcedureChoice,
-  BattleInterruptProcedureModifierChoice,
-  BattleInterruptProcedureSelection,
   BattleCunningStrikeContinuationFill,
   BattleResolutionInput,
   BattleResolutionInputForSubject,
@@ -395,9 +374,7 @@ import { KnockedOutConditionState } from "./knocked-out-state.ts";
 import { admitBattleResolutionInput } from "./resolution-admission.ts";
 import {
   attackDamageEventAmountForTarget,
-  attackDamageEventEntries,
   battleAttackHostParticipantId,
-  damageAmountByTypeEntriesAfterScalarReduction,
 } from "./attack-damage-events.ts";
 
 type ResolveBattleSubjectInternalOptions = {
@@ -429,6 +406,40 @@ export function resolveAdmittedReplayContinuationSubject(
     attackResolvers,
     interruptRouteOptions: admitted.interruptRouteOptions,
   });
+}
+
+function resolveAdmittedActiveInterruptSubject(
+  admitted: AdmittedActiveInterruptProcedure,
+  executionRegistry: SpellProcedureExecutionRegistry,
+  attackResolvers: BattleAttackRouteResolvers,
+): BattleResolutionResult {
+  return resolveBattleSubjectInternal(admitted.input, {
+    executionRegistry,
+    attackResolvers,
+    interruptRouteOptions: admitted.interruptRouteOptions,
+  });
+}
+
+function interruptLifecycleExecution(
+  executionRegistry: SpellProcedureExecutionRegistry,
+  attackResolvers: BattleAttackRouteResolvers,
+): InterruptLifecycleExecution {
+  return InterruptLifecycleExecution.fromResolvers(
+    (admitted) =>
+      resolveAdmittedActiveInterruptSubject(
+        admitted,
+        executionRegistry,
+        attackResolvers,
+      ),
+    ({ state, continuation, handledInterruptTrigger }) =>
+      resumeInterruptedProcedureWithExecutionRegistry(
+        state,
+        continuation,
+        handledInterruptTrigger,
+        executionRegistry,
+        attackResolvers,
+      ),
+  );
 }
 
 function replayContinuationExecution(
@@ -867,43 +878,14 @@ export function resolveBattleSubjectInternal(
         );
       }
       /* v8 ignore stop */
-      const activeInterrupt = activeFrame.frame.activeInterrupt;
-      if (
-        activeInterrupt !== undefined &&
-        sameBattleSubject(input.subject, activeInterrupt.subject)
-      ) {
-        const interruptResult = resolveBattleSubjectInternal(input, {
-          executionRegistry: options.executionRegistry,
-          attackResolvers: options.attackResolvers,
-          interruptRouteOptions: {
-            replayingInterruptedProcedure: true,
-            ...(activeInterrupt.handledInterruptTrigger === undefined
-              ? {}
-              : {
-                  handledInterruptTrigger:
-                    activeInterrupt.handledInterruptTrigger,
-                }),
-            ...(activeInterrupt.pendingAttackDamageReductions === undefined
-              ? {}
-              : {
-                  pendingAttackDamageReductions:
-                    activeInterrupt.pendingAttackDamageReductions,
-                }),
-            ...(activeInterrupt.pendingAttackDamageAdditions === undefined
-              ? {}
-              : {
-                  pendingAttackDamageAdditions:
-                    activeInterrupt.pendingAttackDamageAdditions,
-                }),
-          },
+      if (activeFrame.frame.activeInterrupt !== undefined) {
+        return resolveActiveInterruptProcedure({
+          resolution: input,
+          execution: interruptLifecycleExecution(
+            options.executionRegistry,
+            options.attackResolvers,
+          ),
         });
-        return interruptResult.tag === "resolved"
-          ? completeActiveInterruptProcedure(
-              interruptResult.state,
-              options.executionRegistry,
-              options.attackResolvers,
-            )
-          : interruptResult;
       }
     }
     return invalidResult(
@@ -3416,461 +3398,20 @@ export function resolveBattleInterrupt(
   executionRegistry: SpellProcedureExecutionRegistry,
   attackResolvers: BattleAttackRouteResolvers,
 ): BattleResolutionResult {
-  const withInterruptRoute = (
-    result: BattleResolutionResult,
-  ): BattleResolutionResult => ({
-    ...result,
-    routeEvents: battleReducerRouteForInterrupt(
-      input.state,
-      input.fill,
-      result,
-    ),
+  const outcome = resolveInterruptLifecycleDecision({
+    ...input,
+    execution: interruptLifecycleExecution(executionRegistry, attackResolvers),
   });
-  const frame = currentInterruptCheckpoint(input.state);
-  if (frame === null) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "No interrupt checkpoint is pending.",
-    );
-  }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (input.fill.holeId !== INTERRUPT_DECISION_HOLE_ID) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Interrupt decision fill does not match the pending interrupt checkpoint.",
-    );
-  }
-  /* v8 ignore stop */
-
-  const responder = input.state.combatants.get(input.fill.value.responderId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    responder === undefined ||
-    !unofferedEligibleResponders(frame).includes(input.fill.value.responderId)
-  ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Interrupt decision responder is not eligible for the pending interrupt checkpoint.",
-    );
-  }
-  /* v8 ignore stop */
-
-  if (input.fill.value.kind === "resolve") {
-    const choice = admittedInterruptChoice(frame, input.fill.value);
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (choice === null) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Interrupt choice is not admitted for the pending interrupt checkpoint.",
-      );
-    }
-    /* v8 ignore stop */
-    const choiceTurnResource = interruptChoiceTurnResource(choice);
-    if (
-      choiceTurnResource === "reaction" &&
-      !combatantCanTakeReactions(responder)
-    ) {
-      return invalidResult(
-        input.state,
-        "staleSubject",
-        "Selected responder has no Reaction available.",
-      );
-    }
-    if (choice.kind === "reactionRollOrDamageReduction") {
-      const currentChoice = reactionRollOrDamageReductionChoices(
-        input.state,
-        frame,
-      ).find(
-        (candidate): candidate is BattleInterruptProcedureModifierChoice =>
-          candidate.kind === "reactionRollOrDamageReduction" &&
-          candidate.reactorId === choice.reactorId &&
-          candidate.choice.procedureRef === choice.choice.procedureRef &&
-          candidate.choice.kind === choice.choice.kind,
-      );
-      if (currentChoice === undefined) {
-        return invalidResult(
-          input.state,
-          "staleSubject",
-          "The selected Reaction modifier is no longer bound to this responder.",
-        );
-      }
-      return withInterruptRoute(
-        resolveReactionRollOrDamageReduction(
-          {
-            state: input.state,
-            frame,
-            choice: currentChoice,
-            selection: input.fill.value.choice,
-          },
-          executionRegistry,
-          attackResolvers,
-        ),
-      );
-    }
-    const activeFrame = {
-      ...frame,
-      activeInterrupt: {
-        responderId: input.fill.value.responderId,
-        subject: choice.subject,
-        fills: input.fill.value.choice.fills,
-      },
-    };
-    const stackWithoutCurrent = input.state.interruptStack.slice(0, -1);
-    const stateWithActiveInterrupt = {
-      ...input.state,
-      interruptStack: [
-        ...stackWithoutCurrent,
-        interruptCheckpointFrame(activeFrame),
-      ],
-    };
-    const activeState =
-      choiceTurnResource === "none"
-        ? stateWithActiveInterrupt
-        : spendReaction(stateWithActiveInterrupt, input.fill.value.responderId);
-    const admission = admitBattleResolutionInput({
-      state: activeState,
-      subject: choice.subject,
-      fills: input.fill.value.choice.fills,
-    });
-    if (admission.tag === "staleCharacterProcedure") {
-      return withInterruptRoute(
-        invalidResult(
-          activeState,
-          "staleSubject",
-          "The selected interrupt procedure is no longer bound to its responder.",
-        ),
-      );
-    }
-    const interruptResult = resolveBattleSubjectInternal(admission.input, {
-      executionRegistry,
-      attackResolvers,
-      interruptRouteOptions: {
-        replayingInterruptedProcedure: true,
-      },
-    });
-    return withInterruptRoute(
-      interruptResult.tag === "resolved"
-        ? completeActiveInterruptProcedure(
-            interruptResult.state,
-            executionRegistry,
-            attackResolvers,
-          )
-        : interruptResult,
-    );
-  }
-
-  const updatedFrame = {
-    ...frame,
-    offeredResponders: [
-      ...frame.offeredResponders,
-      input.fill.value.responderId,
-    ],
-  };
-  const remainingResponders = unofferedEligibleResponders(updatedFrame);
-  const stackWithoutCurrent = input.state.interruptStack.slice(0, -1);
-  const closedState =
-    remainingResponders.length === 0
-      ? {
-          ...input.state,
-          interruptStack: interruptStackAfterInterruptCheckpointClosure(
-            stackWithoutCurrent,
-            updatedFrame,
-          ),
-        }
-      : {
-          ...input.state,
-          interruptStack: [
-            ...stackWithoutCurrent,
-            interruptCheckpointFrame(updatedFrame),
-          ],
-        };
-  const nextState =
-    remainingResponders.length === 0
-      ? recordHandledInterruptTriggerForActiveInterrupt(
-          closedState,
-          frame.trigger,
-        )
-      : closedState;
-
-  return withInterruptRoute(
-    remainingResponders.length === 0
-      ? completeResolvedActiveInterruptIfPending(
-          resumeInterruptedProcedureWithExecutionRegistry(
-            stateForContinuingInterruptCheckpoint(nextState, updatedFrame),
-            updatedFrame.continuation,
-            updatedFrame.trigger,
-            executionRegistry,
-            attackResolvers,
-          ),
-          executionRegistry,
-          attackResolvers,
-        )
-      : {
-          tag: "resolved",
-          state: nextState,
-          snapshot: snapshotBattle(nextState),
-        },
-  );
-}
-
-function stateForOpeningInterruptCheckpoint(
-  state: BattleState,
-  frame: BattleInterruptCheckpointInput,
-): BattleState | null {
-  const actionDeclaredState =
-    frame.trigger === "spellCast" &&
-    frame.castingResource.kind !== "alreadySpent"
-      ? battleStateAfterTargetActionEarlyEndForActor(state, frame.casterId)
-      : state;
-  const castingState =
-    frame.trigger === "spellCast" &&
-    frame.concentrationCommitment.kind === "breakExisting"
-      ? breakBattleConcentration(actionDeclaredState, frame.casterId)
-      : actionDeclaredState;
-  if (
-    frame.trigger !== "spellCast" ||
-    frame.spellSlotCommitment.kind === "none"
-  ) {
-    return castingState;
-  }
-  const combatantId = frame.casterId;
-  if (
-    castingState.currentTurnResources.spellSlotUsesThisTurn.some(
-      (use) => use.kind === "pending" && use.combatantId === combatantId,
-    )
-  ) {
-    return castingState;
-  }
-  const claimed = claimPendingSpellSlotUseThisTurn(
-    castingState.currentTurnResources,
-    combatantId,
-  );
-  return Either.isLeft(claimed)
-    ? null
-    : { ...castingState, currentTurnResources: claimed.right };
-}
-
-function stateForContinuingInterruptCheckpoint(
-  state: BattleState,
-  frame: BattleInterruptCheckpoint,
-): BattleState {
-  return frame.trigger === "spellCast" &&
-    frame.spellSlotCommitment.kind === "pendingCasterSpellSlot"
-    ? {
-        ...state,
-        currentTurnResources: releasePendingSpellSlotUseThisTurn(
-          state.currentTurnResources,
-          frame.casterId,
-        ),
-      }
-    : state;
-}
-
-export function resolveReactionRollOrDamageReduction(
-  input: {
-    readonly state: BattleState;
-    readonly frame: BattleInterruptCheckpoint;
-    readonly choice: BattleInterruptProcedureModifierChoice;
-    readonly selection: BattleInterruptProcedureSelection;
-  },
-  executionRegistry: SpellProcedureExecutionRegistry,
-  attackResolvers: BattleAttackRouteResolvers,
-): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (input.selection.kind !== "reactionRollOrDamageReduction") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Reaction modifier selection does not match the admitted choice.",
-    );
-  }
-  /* v8 ignore stop */
-  const reactor = input.state.combatants.get(input.choice.reactorId);
-  const sourceProcedure =
-    reactor?.origin.kind === "character"
-      ? reactor.origin.execution.procedureBindings.find(
-          (binding) =>
-            binding.procedureRef === input.choice.choice.procedureRef,
-        )?.procedure
-      : undefined;
-  if (sourceProcedure?.kind !== "unitFeature") {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "The selected Reaction modifier procedure is no longer bound to this responder.",
-    );
-  }
-  const reductionRoll = reactionModifierReductionRoll(
-    input.choice.choice,
-    input.selection.fills,
-  );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (reductionRoll.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", reductionRoll.message);
-  }
-  /* v8 ignore stop */
-  const reduction = reductionRoll.value;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.choice.choice.kind === "attackDamageReduction" &&
-    input.frame.trigger !== "attackHit"
-  ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Attack damage reductions must be chosen when the attack roll hits.",
-    );
-  }
-  /* v8 ignore stop */
-  if (
-    input.choice.choice.kind === "attackDamageReduction" &&
-    input.frame.trigger === "attackHit"
-  ) {
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (
-      input.choice.reactorId !== input.frame.targetId ||
-      reactor?.origin.kind !== "character"
-    ) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Attack damage reductions require the damaged character as the reactor.",
-      );
-    }
-    /* v8 ignore stop */
-  }
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.choice.choice.kind === "damageRollReduction" &&
-    (input.frame.trigger !== "attackDamage" ||
-      input.frame.continuation.damageInput.kind !== "rolledDamage")
-  ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Damage-roll reductions require unresolved rolled attack damage.",
-    );
-  }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.choice.choice.kind === "fallDamageReduction" &&
-    input.frame.trigger !== "creatureFalls"
-  ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Fall damage reductions must be chosen when the creature falls.",
-    );
-  }
-  /* v8 ignore stop */
-  const spent = spendReactionModifierResource(
-    spendReaction(input.state, input.choice.reactorId),
-    input.choice.reactorId,
-    sourceProcedure.source,
-    input.choice.choice,
-  );
-  const updatedFrame = interruptCheckpointAfterReactionModifierCompletion(
-    interruptCheckpointAfterModifier(
-      input.frame,
-      input.choice.reactorId,
-      input.choice.choice,
-      reduction,
-    ),
-    input.choice.choice,
-  );
-  const completedFrame: BattleInterruptCheckpoint = {
-    ...updatedFrame,
-    offeredResponders: [
-      ...updatedFrame.offeredResponders,
-      input.choice.reactorId,
-    ],
-  };
-  const remainingResponders = unofferedEligibleResponders(completedFrame);
-  const stackWithoutCurrent = spent.interruptStack.slice(0, -1);
-  const nextState =
-    remainingResponders.length === 0
-      ? {
-          ...spent,
-          interruptStack: interruptStackAfterInterruptCheckpointClosure(
-            stackWithoutCurrent,
-            completedFrame,
-          ),
-        }
-      : {
-          ...spent,
-          interruptStack: [
-            ...stackWithoutCurrent,
-            interruptCheckpointFrame(completedFrame),
-          ],
-        };
-
-  return remainingResponders.length === 0
-    ? completeResolvedActiveInterruptIfPending(
-        resumeInterruptedProcedureWithExecutionRegistry(
-          stateForContinuingInterruptCheckpoint(nextState, completedFrame),
-          completedFrame.continuation,
-          completedFrame.trigger,
-          executionRegistry,
-          attackResolvers,
-        ),
-        executionRegistry,
-        attackResolvers,
-      )
+  return outcome.tag === "withoutInterruptRoute"
+    ? outcome.result
     : {
-        tag: "resolved",
-        state: nextState,
-        snapshot: snapshotBattle(nextState),
+        ...outcome.result,
+        routeEvents: battleReducerRouteForInterrupt(
+          input.state,
+          input.fill,
+          outcome.result,
+        ),
       };
-}
-
-function interruptCheckpointAfterReactionModifierCompletion(
-  frame: BattleInterruptCheckpoint,
-  choice: BattleReactionModifierChoice,
-): BattleInterruptCheckpoint {
-  if (
-    frame.trigger !== "creatureFalls" ||
-    choice.kind !== "fallDamageReduction"
-  ) {
-    return frame;
-  }
-  return {
-    ...frame,
-    landingMitigations: [
-      ...frame.landingMitigations,
-      {
-        kind: "fallDamageLandingMitigation",
-        targetId: frame.fallingCreatureId,
-        reductionAmount: choice.reduction.amount,
-      },
-    ],
-  };
-}
-
-function interruptStackAfterInterruptCheckpointClosure(
-  stackWithoutCurrent: readonly BattleInterruptFrame[],
-  frame: BattleInterruptCheckpoint,
-): readonly BattleInterruptFrame[] {
-  if (
-    frame.trigger !== "creatureFalls" ||
-    frame.landingMitigations.length === 0
-  ) {
-    return stackWithoutCurrent;
-  }
-  return [...stackWithoutCurrent, ...frame.landingMitigations];
 }
 
 export function resolveCastTriggeredReactionSpellCommand(
@@ -4807,45 +4348,6 @@ export function resolveCastAttackHitBonusActionSpellCommand(
   );
 }
 
-export function maybeOpenPostCastReadySpellCastWindow(input: {
-  readonly state: BattleState;
-  readonly subject: BattleSubject;
-  readonly casterId: CombatantId;
-  readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly spellProcedure: BattleSpellProcedureExecution["procedure"];
-  readonly targetIds: readonly CombatantId[];
-  readonly handledInterruptTrigger?: BattleInterruptTrigger;
-}): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
-  return input.handledInterruptTrigger !== "spellCast"
-    ? maybeOpenInterruptWindowWithChoices(
-        input.state,
-        {
-          trigger: "spellCast",
-          casterId: input.casterId,
-          sourceProcedureRef: input.sourceProcedureRef,
-          spellProcedure: input.spellProcedure,
-          castLevel: 0,
-          components: [],
-          castingResource: { kind: "alreadySpent" },
-          spellSlotCommitment: { kind: "none" },
-          metamagicCommitment: { kind: "none" },
-          concentrationCommitment: { kind: "none" },
-          targetIds: input.targetIds,
-          reactionSpellTargetFacts: [],
-          continuation: {
-            kind: "resolved",
-            subject: input.subject,
-          },
-        },
-        input.handledInterruptTrigger,
-        [
-          ...readiedSpellReactionChoices(input.state, "spellCast"),
-          ...readiedMovementReactionChoices(input.state, "spellCast"),
-        ],
-      )
-    : null;
-}
-
 function attackHitBonusActionSpellFillValidation(
   input: BattleResolutionInputForSubject<AttackHitBonusActionSpellCommandSubject>,
   invocation: AttackHitBonusActionSpellInvocation,
@@ -4901,312 +4403,6 @@ function afterHitSpellMatchesAttackTrigger(
     return triggerKind === "meleeWeapon" || triggerKind === "unarmedStrike";
   }
   return triggerKind === "meleeWeapon" || triggerKind === "rangedWeapon";
-}
-
-export function completeResolvedActiveInterruptIfPending(
-  result: BattleResolutionResult,
-  executionRegistry: SpellProcedureExecutionRegistry,
-  attackResolvers: BattleAttackRouteResolvers,
-): BattleResolutionResult {
-  if (result.tag !== "resolved") {
-    return result;
-  }
-  return currentInterruptCheckpoint(result.state)?.activeInterrupt === undefined
-    ? result
-    : completeActiveInterruptProcedure(
-        result.state,
-        executionRegistry,
-        attackResolvers,
-      );
-}
-
-export function interruptCheckpointAfterModifier(
-  frame: BattleInterruptCheckpoint,
-  reactorId: CombatantId,
-  choice: BattleReactionModifierChoice,
-  reduction: number,
-): BattleInterruptCheckpoint {
-  if (frame.trigger === "attackHit" && choice.kind === "attackRollReduction") {
-    return {
-      ...frame,
-      attackRoll: {
-        ...frame.attackRoll,
-        total: frame.attackRoll.total - reduction,
-      },
-      continuation:
-        frame.continuation.kind === "replay"
-          ? {
-              ...frame.continuation,
-              fills: reactionModifiedAttackRollFills(
-                frame.continuation.fills,
-                frame.attackRoll.total - reduction,
-              ),
-            }
-          : frame.continuation,
-    };
-  }
-  if (
-    frame.trigger === "attackHit" &&
-    choice.kind === "attackDamageReduction" &&
-    frame.continuation.kind === "replay" &&
-    frame.continuation.glyphStoredSpellReleaseReplay === undefined
-  ) {
-    return {
-      ...frame,
-      continuation: {
-        ...frame.continuation,
-        attackDamageReductions: [
-          ...(frame.continuation.attackDamageReductions ?? []),
-          {
-            reactorId,
-            procedureRef: choice.procedureRef,
-            reduction: choice.reduction,
-            reductionAmount: reduction,
-            ...(choice.zeroDamageRedirect === undefined
-              ? {}
-              : { zeroDamageRedirect: choice.zeroDamageRedirect }),
-          },
-        ],
-      },
-    };
-  }
-  if (
-    frame.trigger === "attackDamage" &&
-    choice.kind === "damageRollReduction"
-  ) {
-    const nextDamageEntries = damageAmountByTypeEntriesAfterScalarReduction(
-      attackDamageEventEntries(frame.continuation.damageInput),
-      choice.reduction.kind,
-      reduction,
-    );
-    const nextDamageEvent =
-      frame.continuation.damageInput.kind === "rolledDamage"
-        ? ({
-            kind: "rolledDamage" as const,
-            damageRollByType: nextDamageEntries,
-          } satisfies BattleAttackDamageEvent)
-        : ({
-            kind: "aggregateDamage" as const,
-            damageByTypeBeforeTargetAdjustments: nextDamageEntries,
-          } satisfies BattleAttackDamageEvent);
-    return {
-      ...frame,
-      continuation: {
-        ...frame.continuation,
-        damageInput: nextDamageEvent,
-      },
-    };
-  }
-  return frame;
-}
-
-export function reactionModifiedAttackRollFills(
-  fills: readonly BattleFill[],
-  total: number,
-): readonly BattleFill[] {
-  return fills.flatMap<BattleFill>((fill) => {
-    if (fill.kind === "attackRoll") {
-      return [{ ...fill, value: { ...fill.value, total } }];
-    }
-    return fill.kind === "rolledDice" ||
-      fill.kind === "concentrationSavingThrow"
-      ? []
-      : [fill];
-  });
-}
-
-export function admittedInterruptChoice(
-  frame: BattleInterruptCheckpoint,
-  decision: Extract<BattleInterruptDecision, { readonly kind: "resolve" }>,
-): BattleInterruptProcedureChoice | null {
-  return (
-    frame.choices.find(
-      (choice) =>
-        choice.kind === decision.choice.kind &&
-        choice.reactorId === decision.responderId &&
-        sameInterruptProcedureChoice(choice, decision.choice),
-    ) ?? null
-  );
-}
-
-type BattleInterruptChoiceTurnResource = "none" | "reaction";
-
-function interruptChoiceTurnResource(
-  choice: BattleInterruptProcedureChoice,
-): BattleInterruptChoiceTurnResource {
-  return Match.value(choice.kind).pipe(
-    Match.when("releaseReadiedSpell", () => "reaction" as const),
-    Match.when("releaseReadiedMovement", () => "reaction" as const),
-    Match.when("castTriggeredReactionSpell", () => "reaction" as const),
-    Match.when("castAttackHitBonusActionSpell", () => "none" as const),
-    Match.when("opportunityAttack", () => "reaction" as const),
-    Match.when("retaliationAttack", () => "reaction" as const),
-    Match.when("reactionRollOrDamageReduction", () => "reaction" as const),
-    Match.exhaustive,
-  );
-}
-
-export function sameInterruptProcedureChoice(
-  choice: BattleInterruptProcedureChoice,
-  decisionChoice: BattleInterruptProcedureSelection,
-): boolean {
-  if (
-    choice.kind === "reactionRollOrDamageReduction" &&
-    decisionChoice.kind === "reactionRollOrDamageReduction"
-  ) {
-    return (
-      choice.choice.procedureRef === decisionChoice.procedureRef &&
-      choice.choice.kind === decisionChoice.modifierKind
-    );
-  }
-  if (
-    choice.kind === "releaseReadiedSpell" &&
-    decisionChoice.kind === "releaseReadiedSpell"
-  ) {
-    return (
-      choice.readiedSpellCasterId === decisionChoice.readiedSpellCasterId &&
-      choice.subject.tag === "runtimeCommand" &&
-      choice.subject.command === "releaseReadiedSpell" &&
-      choice.subject.procedureRef === decisionChoice.procedureRef
-    );
-  }
-  if (
-    choice.kind === "releaseReadiedMovement" &&
-    decisionChoice.kind === "releaseReadiedMovement"
-  ) {
-    return (
-      choice.readiedMovementActorId === decisionChoice.readiedMovementActorId
-    );
-  }
-  if (
-    choice.kind === "castTriggeredReactionSpell" &&
-    decisionChoice.kind === "castTriggeredReactionSpell"
-  ) {
-    return choice.subject.procedureRef === decisionChoice.procedureRef;
-  }
-  if (
-    choice.kind === "castAttackHitBonusActionSpell" &&
-    decisionChoice.kind === "castAttackHitBonusActionSpell"
-  ) {
-    return choice.subject.procedureRef === decisionChoice.procedureRef;
-  }
-  if (
-    choice.kind === "opportunityAttack" &&
-    decisionChoice.kind === "opportunityAttack"
-  ) {
-    return (
-      choice.reactorId === decisionChoice.reactorId &&
-      choice.subject.command === "opportunityAttack" &&
-      interruptAttackExecutionSelectionsEqual(
-        choice.subject,
-        decisionChoice.selection,
-      )
-    );
-  }
-  if (
-    choice.kind === "retaliationAttack" &&
-    decisionChoice.kind === "retaliationAttack"
-  ) {
-    return (
-      choice.reactorId === decisionChoice.reactorId &&
-      choice.subject.command === "retaliationAttack" &&
-      interruptAttackExecutionSelectionsEqual(
-        choice.subject,
-        decisionChoice.selection,
-      )
-    );
-  }
-  return false;
-}
-
-export function completeActiveInterruptProcedure(
-  state: BattleState,
-  executionRegistry: SpellProcedureExecutionRegistry,
-  attackResolvers: BattleAttackRouteResolvers,
-): BattleResolutionResult {
-  const frame = currentInterruptCheckpoint(state);
-  const activeInterrupt = frame?.activeInterrupt;
-  if (frame === null || activeInterrupt === undefined) {
-    return invalidResult(
-      state,
-      "staleSubject",
-      "No active interrupt procedure is pending completion.",
-    );
-  }
-  const { activeInterrupt: _completedInterrupt, ...inactiveFrame } = frame;
-  const completedFrame: BattleInterruptCheckpoint = {
-    ...inactiveFrame,
-    offeredResponders: [
-      ...frame.offeredResponders,
-      activeInterrupt.responderId,
-    ],
-  };
-  const remainingResponders = unofferedEligibleResponders(completedFrame);
-  const stackWithoutCurrent = state.interruptStack.slice(0, -1);
-  const closedState =
-    remainingResponders.length === 0
-      ? {
-          ...state,
-          interruptStack: interruptStackAfterInterruptCheckpointClosure(
-            stackWithoutCurrent,
-            completedFrame,
-          ),
-        }
-      : {
-          ...state,
-          interruptStack: [
-            ...stackWithoutCurrent,
-            interruptCheckpointFrame(completedFrame),
-          ],
-        };
-  const nextState =
-    remainingResponders.length === 0
-      ? recordHandledInterruptTriggerForActiveInterrupt(
-          closedState,
-          frame.trigger,
-        )
-      : closedState;
-
-  return remainingResponders.length === 0
-    ? completeResolvedActiveInterruptIfPending(
-        resumeInterruptedProcedureWithExecutionRegistry(
-          stateForContinuingInterruptCheckpoint(nextState, completedFrame),
-          completedFrame.continuation,
-          completedFrame.trigger,
-          executionRegistry,
-          attackResolvers,
-        ),
-        executionRegistry,
-        attackResolvers,
-      )
-    : {
-        tag: "resolved",
-        state: nextState,
-        snapshot: snapshotBattle(nextState),
-      };
-}
-
-export function recordHandledInterruptTriggerForActiveInterrupt(
-  state: BattleState,
-  handledInterruptTrigger: BattleInterruptTrigger,
-): BattleState {
-  const frame = currentInterruptCheckpoint(state);
-  if (frame?.activeInterrupt === undefined) {
-    return state;
-  }
-  return {
-    ...state,
-    interruptStack: [
-      ...state.interruptStack.slice(0, -1),
-      interruptCheckpointFrame({
-        ...frame,
-        activeInterrupt: {
-          ...frame.activeInterrupt,
-          handledInterruptTrigger,
-        },
-      }),
-    ],
-  };
 }
 
 export function resumeInterruptedProcedure(
@@ -5915,109 +5111,6 @@ export function endTurn(
   );
   const routeEvents = battleReducerRouteForResolution(admission.input, result);
   return routeEvents === undefined ? result : { ...result, routeEvents };
-}
-
-export function maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices(
-  state: BattleState,
-  frame: BattleInterruptCheckpointInput,
-  handledInterruptTrigger: BattleInterruptTrigger | undefined,
-): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
-  if (frame.trigger === handledInterruptTrigger) {
-    return null;
-  }
-  const checkpointState = stateForOpeningInterruptCheckpoint(state, frame);
-  return checkpointState === null
-    ? null
-    : openPreparedInterruptWindowWithOptionalChoices(
-        checkpointState,
-        frame,
-        triggeredReactionSpellChoices(checkpointState, frame),
-      );
-}
-
-function maybeOpenInterruptWindowWithChoices(
-  state: BattleState,
-  frame: BattleInterruptCheckpointInput,
-  handledInterruptTrigger: BattleInterruptTrigger | undefined,
-  choices: readonly BattleInterruptProcedureChoice[],
-): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
-  if (frame.trigger === handledInterruptTrigger) {
-    return null;
-  }
-  const checkpointState = stateForOpeningInterruptCheckpoint(state, frame);
-  if (checkpointState === null) {
-    return null;
-  }
-  return openPreparedInterruptWindowWithOptionalChoices(
-    checkpointState,
-    frame,
-    choices,
-  );
-}
-
-function openPreparedInterruptWindowWithOptionalChoices(
-  checkpointState: BattleState,
-  frame: BattleInterruptCheckpointInput,
-  choices: readonly BattleInterruptProcedureChoice[],
-): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
-  const nonEmptyChoices = nonEmptyInterruptChoices(choices);
-  if (nonEmptyChoices === null) {
-    return null;
-  }
-  return openPreparedInterruptWindowWithChoices(
-    checkpointState,
-    frame,
-    nonEmptyChoices,
-  );
-}
-
-function nonEmptyInterruptChoices(
-  choices: readonly BattleInterruptProcedureChoice[],
-):
-  | readonly [
-      BattleInterruptProcedureChoice,
-      ...BattleInterruptProcedureChoice[],
-    ]
-  | null {
-  const first = choices[0];
-  return first === undefined ? null : [first, ...choices.slice(1)];
-}
-
-function openPreparedInterruptWindowWithChoices(
-  checkpointState: BattleState,
-  frame: BattleInterruptCheckpointInput,
-  choices: readonly [
-    BattleInterruptProcedureChoice,
-    ...BattleInterruptProcedureChoice[],
-  ],
-): BattleOpenedInterruptWindowResult {
-  const eligibleResponders = [
-    ...new Set(choices.map((choice) => choice.reactorId)),
-  ];
-  const frameCommon = {
-    eligibleResponders,
-    offeredResponders: [],
-    choices,
-  } satisfies Pick<
-    BattleInterruptCheckpoint,
-    "eligibleResponders" | "offeredResponders" | "choices"
-  >;
-  const nextFrame: BattleInterruptCheckpoint = {
-    ...frame,
-    ...frameCommon,
-  };
-  const nextState = openBattleInterruptWindow({
-    state: checkpointState,
-    frame: nextFrame,
-  });
-  const decisionHole = interruptDecisionHole(nextFrame);
-  return {
-    tag: "needsHoles",
-    state: nextState,
-    subject: interruptedProcedureSubject(frame.continuation),
-    holes: [decisionHole],
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 export {

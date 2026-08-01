@@ -45,10 +45,10 @@ import type { BattleSubject } from "../../battle-subjects.ts";
 import { type CombatantId } from "../../identity.ts";
 import { afterHitSaveGatedConditionSavingThrowOutcomeHole } from "../after-hit-save-gated-condition-hole.ts";
 import {
-  maybeOpenPostCastReadySpellCastWindow,
   maybeOpenInterruptWindow,
+  maybeOpenPostCastReadySpellCastWindow,
   maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
-} from "../dispatcher.ts";
+} from "../interrupt-execution.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
