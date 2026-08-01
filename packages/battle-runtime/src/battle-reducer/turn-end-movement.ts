@@ -53,7 +53,6 @@ import type {
   BattleFill,
   BattleFlySpeedGrantEndFallCleanupFrame,
   BattleHideousLaughterRepeatSavingThrowOutcomeHole,
-  BattleHole,
   BattleHoleId,
   BattleResolutionInput,
   BattleResolutionResult,
@@ -162,63 +161,90 @@ import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.t
 import type { HideousLaughterEffect } from "./hideous-laughter-repeat-save.ts";
 import { hideousLaughterEffects } from "./hideous-laughter-repeat-save.ts";
 import { resetBattleTurnResources } from "./turn-resource-reset.ts";
-export function resolveEndTurn(
-  state: BattleState,
-  deathSavingThrowRoll?: DieRollResult,
-  statBlockRechargeRolls?: readonly BattleStatBlockRechargeRollResult[],
-  sleepRepeatSaves: readonly Extract<
+import {
+  collectTurnBoundaryHoleFills,
+  firstMissingEndTurnSaveHoleFrontier,
+  firstMissingTurnBoundaryDamageHoleFrontier,
+} from "./turn-boundary-hole-frontier.ts";
+type ResolvedTurnBoundaryFills = {
+  readonly state: BattleState;
+  readonly deathSavingThrowRoll: DieRollResult | undefined;
+  readonly statBlockRechargeRolls: readonly BattleStatBlockRechargeRollResult[];
+  readonly sleepRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
-  >[] = [],
-  hideousLaughterRepeatSaves: readonly Extract<
+  >[];
+  readonly hideousLaughterRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
-  >[] = [],
-  spellConditionEndTurnSaves: readonly Extract<
+  >[];
+  readonly spellConditionEndTurnSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
-  >[] = [],
-  spellConditionCountedEndTurnSaves: readonly Extract<
+  >[];
+  readonly spellConditionCountedEndTurnSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
-  >[] = [],
-  unitFeatureConditionEndTurnSaves: readonly Extract<
+  >[];
+  readonly unitFeatureConditionEndTurnSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
-  >[] = [],
-  slowActivePenaltiesEndTurnSaves: readonly Extract<
+  >[];
+  readonly slowActivePenaltiesEndTurnSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
-  >[] = [],
-  abilityD20TestRollModeEndTurnSaves: readonly Extract<
+  >[];
+  readonly abilityD20TestRollModeEndTurnSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
-  >[] = [],
-  spellTurnEndDamageRolls: readonly Extract<
+  >[];
+  readonly spellTurnEndDamageRolls: readonly Extract<
     BattleFill,
     { readonly kind: "rolledDice" }
-  >[] = [],
-  spellTurnStartDamageRolls: readonly Extract<
+  >[];
+  readonly spellTurnStartDamageRolls: readonly Extract<
     BattleFill,
     { readonly kind: "rolledDice" }
-  >[] = [],
-  spellTurnStartSaves: readonly Extract<
+  >[];
+  readonly spellTurnStartSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
-  >[] = [],
-  turnBoundaryHideousLaughterDamageRepeatSaves: readonly Extract<
+  >[];
+  readonly turnBoundaryHideousLaughterDamageRepeatSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
-  >[] = [],
-  concentrationSavingThrows: readonly Extract<
+  >[];
+  readonly concentrationSavingThrows: readonly Extract<
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
-  >[] = [],
-  damageDispositions: readonly Extract<
+  >[];
+  readonly damageDispositions: readonly Extract<
     BattleFill,
     { readonly kind: "attackDamageDisposition" }
-  >[] = [],
-): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  >[];
+};
+
+function resolveEndTurn({
+  state,
+  deathSavingThrowRoll,
+  statBlockRechargeRolls,
+  sleepRepeatSaves,
+  hideousLaughterRepeatSaves,
+  spellConditionEndTurnSaves,
+  spellConditionCountedEndTurnSaves,
+  unitFeatureConditionEndTurnSaves,
+  slowActivePenaltiesEndTurnSaves,
+  abilityD20TestRollModeEndTurnSaves,
+  spellTurnEndDamageRolls,
+  spellTurnStartDamageRolls,
+  spellTurnStartSaves,
+  turnBoundaryHideousLaughterDamageRepeatSaves,
+  concentrationSavingThrows,
+  damageDispositions,
+}: ResolvedTurnBoundaryFills): Extract<
+  BattleResolutionResult,
+  { readonly tag: "resolved" }
+> {
   const initiative = nextInitiative(state.initiative);
   const nextActorId = currentActing(initiative);
   const combatants = new Map<CombatantId, BattleCreatureState>();
@@ -414,14 +440,11 @@ export function resolveEndTurn(
   flySpeedGrantEndFallCleanupFrames.push(
     ...durationTick.flySpeedGrantEndFallCleanupFrames,
   );
-  const combatantsAfterRecharge =
-    statBlockRechargeRolls === undefined
-      ? combatantsAfterDurationTick
-      : processStatBlockRechargeRolls(
-          combatantsAfterDurationTick,
-          nextActorId,
-          statBlockRechargeRolls,
-        );
+  const combatantsAfterRecharge = processStatBlockRechargeRolls(
+    combatantsAfterDurationTick,
+    nextActorId,
+    statBlockRechargeRolls,
+  );
   const combatantsAfterDamageReductionReset =
     resetSpellDamageReductionsForNewTurn(combatantsAfterRecharge);
   const resetTurnResources = spellGrantedActionResourceTurnResources(
@@ -2524,40 +2547,6 @@ export function expireOngoingFeatures(
   );
 }
 
-function collectRequestedHoleFills<
-  Request extends { readonly hole: { readonly holeId: BattleHoleId } },
-  Fill,
->(
-  requests: readonly Request[],
-  fillForHole: (hole: Request["hole"]) => Fill | undefined,
-): {
-  readonly resolved: readonly {
-    readonly request: Request;
-    readonly fill: Fill;
-  }[];
-  readonly missingHoles: readonly Request["hole"][];
-} {
-  const resolved: { request: Request; fill: Fill }[] = [];
-  const missingHoles: Request["hole"][] = [];
-  for (const request of requests) {
-    const fill = fillForHole(request.hole);
-    if (fill === undefined) {
-      missingHoles.push(request.hole);
-    } else {
-      resolved.push({ request, fill });
-    }
-  }
-  return { resolved, missingHoles };
-}
-
-function firstMissingHoleFrontier(
-  ...frontiers: readonly (readonly BattleHole[])[]
-): readonly BattleHole[] {
-  // Argument order is replay-protocol priority: later turn-boundary holes stay
-  // hidden until the caller supplies every hole in the first missing frontier.
-  return frontiers.find((frontier) => frontier.length > 0) ?? [];
-}
-
 export function resolveEndTurnCommand(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
@@ -2807,48 +2796,50 @@ export function resolveEndTurnCommand(
     );
   }
   /* v8 ignore stop */
-  const sleepRepeatSaveCollection = collectRequestedHoleFills(
+  const sleepRepeatSaveCollection = collectTurnBoundaryHoleFills(
     sleepRepeatSaveRequests,
     (hole) => sleepRepeatSavingThrowOutcomeFor(savingThrowOutcomeFills, hole),
   );
   const sleepRepeatSaves = sleepRepeatSaveCollection.resolved.map(
     ({ fill }) => fill,
   );
-  const hideousLaughterRepeatSaveCollection = collectRequestedHoleFills(
+  const hideousLaughterRepeatSaveCollection = collectTurnBoundaryHoleFills(
     hideousLaughterRepeatSaveRequests,
     (hole) =>
       hideousLaughterRepeatSavingThrowOutcomeFor(savingThrowOutcomeFills, hole),
   );
   const hideousLaughterRepeatSaves =
     hideousLaughterRepeatSaveCollection.resolved.map(({ fill }) => fill);
-  const spellConditionEndTurnSaveCollection = collectRequestedHoleFills(
+  const spellConditionEndTurnSaveCollection = collectTurnBoundaryHoleFills(
     spellConditionEndTurnSaveRequests,
     (hole) =>
       spellConditionEndTurnSavingThrowOutcomeFor(savingThrowOutcomeFills, hole),
   );
   const spellConditionEndTurnSaves =
     spellConditionEndTurnSaveCollection.resolved.map(({ fill }) => fill);
-  const spellConditionCountedEndTurnSaveCollection = collectRequestedHoleFills(
-    spellConditionCountedEndTurnSaveRequests,
-    (hole) =>
-      spellConditionCountedEndTurnSavingThrowOutcomeFor(
-        savingThrowOutcomeFills,
-        hole,
-      ),
-  );
+  const spellConditionCountedEndTurnSaveCollection =
+    collectTurnBoundaryHoleFills(
+      spellConditionCountedEndTurnSaveRequests,
+      (hole) =>
+        spellConditionCountedEndTurnSavingThrowOutcomeFor(
+          savingThrowOutcomeFills,
+          hole,
+        ),
+    );
   const spellConditionCountedEndTurnSaves =
     spellConditionCountedEndTurnSaveCollection.resolved.map(({ fill }) => fill);
-  const unitFeatureConditionEndTurnSaveCollection = collectRequestedHoleFills(
-    unitFeatureConditionEndTurnSaveRequests,
-    (hole) =>
-      unitFeatureConditionEndTurnSavingThrowOutcomeFor(
-        savingThrowOutcomeFills,
-        hole,
-      ),
-  );
+  const unitFeatureConditionEndTurnSaveCollection =
+    collectTurnBoundaryHoleFills(
+      unitFeatureConditionEndTurnSaveRequests,
+      (hole) =>
+        unitFeatureConditionEndTurnSavingThrowOutcomeFor(
+          savingThrowOutcomeFills,
+          hole,
+        ),
+    );
   const unitFeatureConditionEndTurnSaves =
     unitFeatureConditionEndTurnSaveCollection.resolved.map(({ fill }) => fill);
-  const slowActivePenaltiesEndTurnSaveCollection = collectRequestedHoleFills(
+  const slowActivePenaltiesEndTurnSaveCollection = collectTurnBoundaryHoleFills(
     slowActivePenaltiesEndTurnSaveRequests,
     (hole) =>
       slowActivePenaltiesEndTurnSavingThrowOutcomeFor(
@@ -2858,7 +2849,7 @@ export function resolveEndTurnCommand(
   );
   const slowActivePenaltiesEndTurnSaves =
     slowActivePenaltiesEndTurnSaveCollection.resolved.map(({ fill }) => fill);
-  const abilityD20TestEndTurnSaveCollection = collectRequestedHoleFills(
+  const abilityD20TestEndTurnSaveCollection = collectTurnBoundaryHoleFills(
     abilityD20TestEndTurnSaveRequests,
     (hole) =>
       abilityD20TestRollModeEndTurnSavingThrowOutcomeFor(
@@ -2868,15 +2859,17 @@ export function resolveEndTurnCommand(
   );
   const abilityD20TestEndTurnSaves =
     abilityD20TestEndTurnSaveCollection.resolved.map(({ fill }) => fill);
-  const missingEndTurnSaveHoles = firstMissingHoleFrontier(
-    sleepRepeatSaveCollection.missingHoles,
-    hideousLaughterRepeatSaveCollection.missingHoles,
-    spellConditionEndTurnSaveCollection.missingHoles,
-    spellConditionCountedEndTurnSaveCollection.missingHoles,
-    unitFeatureConditionEndTurnSaveCollection.missingHoles,
-    slowActivePenaltiesEndTurnSaveCollection.missingHoles,
-    abilityD20TestEndTurnSaveCollection.missingHoles,
-  );
+  const missingEndTurnSaveHoles = firstMissingEndTurnSaveHoleFrontier({
+    sleepRepeat: sleepRepeatSaveCollection.missingHoles,
+    hideousLaughterRepeat: hideousLaughterRepeatSaveCollection.missingHoles,
+    spellCondition: spellConditionEndTurnSaveCollection.missingHoles,
+    countedSpellCondition:
+      spellConditionCountedEndTurnSaveCollection.missingHoles,
+    unitFeatureCondition:
+      unitFeatureConditionEndTurnSaveCollection.missingHoles,
+    slowActivePenalties: slowActivePenaltiesEndTurnSaveCollection.missingHoles,
+    abilityD20TestRollMode: abilityD20TestEndTurnSaveCollection.missingHoles,
+  });
   if (missingEndTurnSaveHoles.length > 0) {
     return needsHolesResult(
       input.state,
@@ -2884,7 +2877,7 @@ export function resolveEndTurnCommand(
       missingEndTurnSaveHoles,
     );
   }
-  const endTurnDamageRollCollection = collectRequestedHoleFills(
+  const endTurnDamageRollCollection = collectTurnBoundaryHoleFills(
     endTurnDamageRequests,
     (hole) => spellTurnEndDamageRollFor(input.fills, hole),
   );
@@ -2894,7 +2887,7 @@ export function resolveEndTurnCommand(
   const endTurnDamageRollRequests = endTurnDamageRollCollection.resolved.map(
     ({ request, fill: roll }) => ({ ...request, roll }),
   );
-  const startTurnDamageRollCollection = collectRequestedHoleFills(
+  const startTurnDamageRollCollection = collectTurnBoundaryHoleFills(
     startTurnDamageRequests,
     (hole) => spellTurnStartDamageRollFor(input.fills, hole),
   );
@@ -2906,10 +2899,11 @@ export function resolveEndTurnCommand(
       ...request,
       roll,
     }));
-  const missingTurnBoundaryDamageHoles = firstMissingHoleFrontier(
-    endTurnDamageRollCollection.missingHoles,
-    startTurnDamageRollCollection.missingHoles,
-  );
+  const missingTurnBoundaryDamageHoles =
+    firstMissingTurnBoundaryDamageHoleFrontier({
+      endTurn: endTurnDamageRollCollection.missingHoles,
+      startTurn: startTurnDamageRollCollection.missingHoles,
+    });
   if (missingTurnBoundaryDamageHoles.length > 0) {
     return needsHolesResult(
       input.state,
@@ -2947,7 +2941,7 @@ export function resolveEndTurnCommand(
     );
   }
   /* v8 ignore stop */
-  const startTurnSaveCollection = collectRequestedHoleFills(
+  const startTurnSaveCollection = collectTurnBoundaryHoleFills(
     startTurnSaveRequests,
     (hole) =>
       spellTurnStartSavingThrowOutcomeFor(savingThrowOutcomeFills, hole),
@@ -3484,26 +3478,27 @@ export function resolveEndTurnCommand(
       ? effectiveD20TestNaturalOneRerollDeathSavingThrow(deathSavingThrowFill)
       : undefined;
 
-  return resolveEndTurn(
-    input.state,
-    effectiveDeathSavingThrowFill?.value,
-    rechargeRollFill?.kind === "statBlockRechargeRoll"
-      ? rechargeRollFill.value
-      : undefined,
+  return resolveEndTurn({
+    state: input.state,
+    deathSavingThrowRoll: effectiveDeathSavingThrowFill?.value,
+    statBlockRechargeRolls:
+      rechargeRollFill?.kind === "statBlockRechargeRoll"
+        ? rechargeRollFill.value
+        : [],
     sleepRepeatSaves,
     hideousLaughterRepeatSaves,
     spellConditionEndTurnSaves,
     spellConditionCountedEndTurnSaves,
     unitFeatureConditionEndTurnSaves,
     slowActivePenaltiesEndTurnSaves,
-    abilityD20TestEndTurnSaves,
-    endTurnDamageRolls,
-    startTurnDamageRolls,
-    startTurnSaves,
+    abilityD20TestRollModeEndTurnSaves: abilityD20TestEndTurnSaves,
+    spellTurnEndDamageRolls: endTurnDamageRolls,
+    spellTurnStartDamageRolls: startTurnDamageRolls,
+    spellTurnStartSaves: startTurnSaves,
     turnBoundaryHideousLaughterDamageRepeatSaves,
-    concentrationSavingThrowFills,
-    damageDispositionFills,
-  );
+    concentrationSavingThrows: concentrationSavingThrowFills,
+    damageDispositions: damageDispositionFills,
+  });
 }
 
 const END_TURN_FILL_KINDS = [
