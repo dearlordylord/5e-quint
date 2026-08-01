@@ -6,6 +6,7 @@ import {
   characterSpellProcedure,
   type BattleSpellProcedureExecution,
 } from "../character-execution-queries.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 
 export function spellInvocationForRouteSubject(
@@ -27,4 +28,15 @@ export function spellInvocationForRouteSubject(
     subject.procedureRef,
     actor,
   );
+}
+
+export function spellInvocationForInterruptChoice(
+  state: BattleState,
+  reactorId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+): BattleSpellProcedureExecution | undefined {
+  const reactor = state.combatants.get(reactorId);
+  return isCharacterBattleCreatureState(reactor)
+    ? characterSpellProcedure(reactor.origin.execution, procedureRef, reactor)
+    : undefined;
 }

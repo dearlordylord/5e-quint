@@ -17,7 +17,7 @@ import type {
   BattleResolutionResult,
   BattleState,
 } from "../battle-state-execution.ts";
-import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import type { CombatantId } from "../identity.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
 import {
   battleHoleFamilyKind,
@@ -91,7 +91,11 @@ import {
   passiveProjectionRouteForDiscoveredAct,
   passiveProjectionRouteForResolution,
 } from "./passive-projection-routes.ts";
-import { spellInvocationForRouteSubject } from "./reducer-route-spell-query.ts";
+import { currentInterruptCheckpoint } from "./battle-snapshot.ts";
+import {
+  spellInvocationForInterruptChoice,
+  spellInvocationForRouteSubject,
+} from "./reducer-route-spell-query.ts";
 import {
   battleActiveEffects,
   battleCombatantHasActiveEffectKind,
@@ -115,6 +119,8 @@ import {
   movementRouteForDiscoveredAct,
   movementRouteForResolution,
 } from "./movement-routes.ts";
+import { reactionSpellRouteForInterrupt } from "./reaction-spell-routes.ts";
+import { interruptStackResumeDiscoveryRouteForResolution } from "./interrupt-stack-routes.ts";
 
 export function battleReducerStartRouteEvent(): BattleReducerRouteEvent {
   return startBattleRoute("battleActionEconomy");
@@ -132,21 +138,6 @@ type WeaponAttackResolutionSubject = Extract<
   BattleResolutionInput["subject"],
   { readonly tag: "action"; readonly action: "attack" }
 >;
-type TriggeredReactionSpellChoice = Extract<
-  BattleInterruptCheckpoint["choices"][number],
-  { readonly kind: "castTriggeredReactionSpell" }
->;
-type TriggeredReactionSpellSelection = Extract<
-  BattleInterruptProcedureSelection,
-  { readonly kind: "castTriggeredReactionSpell" }
->;
-type ReactionInterruptPayloadRouteSubject = Extract<
-  BattleReducerRouteSubjectFamily,
-  | "reactionArmorClassEffect"
-  | "reactionAfterDamageEffect"
-  | "reactionSpellInterruption"
->;
-
 export function activeFeatureSpellSaveDcRouteEvents(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
@@ -2099,267 +2090,6 @@ function afterHitDamageRiderResolveWithoutFillRoute(
   );
 }
 
-function reactionSpellRouteForInterrupt(input: {
-  readonly before: BattleState;
-  readonly fill: Extract<BattleFill, { readonly kind: "interruptDecision" }>;
-  readonly holes: readonly BattleReducerRouteHole[];
-  readonly result: BattleResolutionResult;
-}): BattleReducerRouteEvents | undefined {
-  if (input.fill.value.kind !== "resolve") {
-    return undefined;
-  }
-  if (input.fill.value.choice.kind !== "castTriggeredReactionSpell") {
-    return undefined;
-  }
-  const frame = currentInterruptCheckpoint(input.before);
-  if (frame === undefined || !isReactionSpellCastingTimeFrame(frame)) {
-    return undefined;
-  }
-  const selectedChoice = selectedTriggeredReactionSpellChoice({
-    frame,
-    responderId: input.fill.value.responderId,
-    selection: input.fill.value.choice,
-  });
-  if (selectedChoice !== undefined) {
-    const payloadSubject = reactionInterruptPayloadRouteSubjectForChoice(
-      input.before,
-      frame,
-      selectedChoice,
-    );
-    if (payloadSubject !== undefined) {
-      const payloadRoute = reactionInterruptPayloadRouteForInterrupt({
-        subject: payloadSubject,
-        choice: selectedChoice,
-        selection: input.fill.value.choice,
-        holes: input.holes,
-        result: input.result,
-      });
-      if (payloadRoute !== undefined) {
-        return payloadRoute;
-      }
-    }
-  }
-
-  const eventForOwner = (
-    subject: BattleReducerRouteSubjectFamily,
-    owner: BattleReducerRouteOwnerGroup,
-  ): BattleReducerRouteEvent =>
-    resolveBattleInterruptRoute(
-      subject,
-      "interruptDecision",
-      input.holes,
-      owner,
-    );
-  if (frame.trigger === "creatureFalls" && input.result.tag === "resolved") {
-    return [
-      eventForOwner("reactionSpell", "battleInterruptStack"),
-      eventForOwner("reactionSpell", "battleSpellSlotAndActionEconomy"),
-      eventForOwner(
-        "reactionFallMitigation",
-        "battleSpellSlotAndActionEconomy",
-      ),
-    ];
-  }
-  /* v8 ignore start -- Every currently admitted afterDamage triggered-reaction invocation narrows to saveGatedDamage and returns through reactionAfterDamageEffect above. Only a malformed cross-wired checkpoint reaches this fallback; a new admitted procedure must add an explicit payload route and test. */
-  if (frame.trigger === "afterDamage" && input.result.tag === "resolved") {
-    const route: BattleReducerRouteEvents = [
-      eventForOwner("reactionSpell", "battleInterruptStack"),
-      eventForOwner("reactionSpell", "battleSpellSlotAndActionEconomy"),
-    ];
-    return combatantHitPointsChanged(input.before, input.result.state)
-      ? [...route, eventForOwner("reactionSpell", "battleHitPoint")]
-      : route;
-  }
-  /* v8 ignore stop */
-  if (frame.trigger === "spellCast") {
-    return [
-      eventForOwner("reactionSpell", "battleInterruptStack"),
-      eventForOwner("reactionSpell", "battleSpellSlotAndActionEconomy"),
-    ];
-  }
-  return undefined;
-}
-
-function selectedTriggeredReactionSpellChoice(input: {
-  readonly frame: BattleInterruptCheckpoint;
-  readonly responderId: CombatantId;
-  readonly selection: TriggeredReactionSpellSelection;
-}): TriggeredReactionSpellChoice | undefined {
-  return input.frame.choices.find(
-    (choice): choice is TriggeredReactionSpellChoice =>
-      choice.kind === "castTriggeredReactionSpell" &&
-      choice.reactorId === input.responderId &&
-      choice.subject.procedureRef === input.selection.procedureRef,
-  );
-}
-
-function spellInvocationForInterruptChoice(
-  state: BattleState,
-  reactorId: CombatantId,
-  procedureRef: BattleProcedureExecutionRef,
-): BattleSpellProcedureExecution | undefined {
-  const reactor = state.combatants.get(reactorId);
-  return isCharacterBattleCreatureState(reactor)
-    ? characterSpellProcedure(reactor.origin.execution, procedureRef, reactor)
-    : undefined;
-}
-
-function reactionInterruptPayloadRouteSubjectForChoice(
-  state: BattleState,
-  frame: BattleInterruptCheckpoint,
-  choice: TriggeredReactionSpellChoice,
-): ReactionInterruptPayloadRouteSubject | undefined {
-  const invocation = spellInvocationForInterruptChoice(
-    state,
-    choice.reactorId,
-    choice.subject.procedureRef,
-  );
-  if (invocation?.procedure === "shieldReaction") {
-    return "reactionArmorClassEffect";
-  }
-  if (
-    frame.trigger === "afterDamage" &&
-    invocation?.procedure === "saveGatedDamage"
-  ) {
-    return "reactionAfterDamageEffect";
-  }
-  if (
-    frame.trigger === "spellCast" &&
-    invocation?.procedure === "counterspell"
-  ) {
-    return "reactionSpellInterruption";
-  }
-  return undefined;
-}
-
-function reactionInterruptPayloadRouteForInterrupt(input: {
-  readonly subject: ReactionInterruptPayloadRouteSubject;
-  readonly choice: TriggeredReactionSpellChoice;
-  readonly selection: TriggeredReactionSpellSelection;
-  readonly holes: readonly BattleReducerRouteHole[];
-  readonly result: BattleResolutionResult;
-}): BattleReducerRouteEvents | undefined {
-  const initialHoles = battleReducerRouteHoles(input.choice.initialHoles);
-  const interruptEvent = (
-    holes: readonly BattleReducerRouteHole[],
-    owner: BattleReducerRouteOwnerGroup,
-  ): BattleReducerRouteEvent =>
-    resolveBattleInterruptRoute(
-      input.subject,
-      "interruptDecision",
-      holes,
-      owner,
-    );
-  const subjectEvent = (
-    fill: BattleReducerRouteFill,
-    holes: readonly BattleReducerRouteHole[],
-    owner: BattleReducerRouteOwnerGroup,
-    subject: BattleReducerRouteSubjectFamily = input.subject,
-  ): BattleReducerRouteEvent =>
-    resolveBattleSubjectRoute(subject, fill, holes, owner);
-  const subjectWithoutFillEvent = (
-    owner: BattleReducerRouteOwnerGroup,
-  ): BattleReducerRouteEvent =>
-    resolveBattleSubjectWithoutFillRoute(input.subject, input.holes, owner);
-
-  if (
-    input.subject === "reactionArmorClassEffect" &&
-    input.result.tag === "resolved"
-  ) {
-    return [
-      interruptEvent(input.holes, "battleSpellSlotAndActionEconomy"),
-      interruptEvent(input.holes, "battleActiveEffect"),
-      subjectWithoutFillEvent("battleArmorClass"),
-      subjectWithoutFillEvent("battleInterruptStack"),
-    ];
-  }
-
-  if (
-    input.subject === "reactionAfterDamageEffect" &&
-    input.result.tag === "resolved"
-  ) {
-    return [
-      interruptEvent(initialHoles, "battleInterruptStack"),
-      ...reactionPayloadNestedFillRoute({
-        subjectEvent,
-        fills: input.selection.fills,
-        initialHoles,
-      }),
-      subjectWithoutFillEvent("battleSpellSlotAndActionEconomy"),
-    ];
-  }
-
-  if (input.subject === "reactionSpellInterruption") {
-    const nestedFillRoute = reactionPayloadNestedFillRoute({
-      subjectEvent,
-      fills: input.selection.fills,
-      initialHoles,
-      savingThrowOwner: "battleSpellSlotAndActionEconomy",
-      savingThrowRemainingHoles:
-        input.result.tag === "needsHoles"
-          ? battleReducerRouteHoles(input.result.holes)
-          : undefined,
-      rolledDiceSubject: "slotSpell",
-    });
-    return [
-      interruptEvent(initialHoles, "battleInterruptStack"),
-      ...(nestedFillRoute.length === 0
-        ? [interruptEvent(input.holes, "battleSpellSlotAndActionEconomy")]
-        : nestedFillRoute),
-      ...(input.result.tag === "resolved"
-        ? [subjectWithoutFillEvent("battleInterruptStack")]
-        : []),
-    ];
-  }
-
-  return undefined;
-}
-
-function reactionPayloadNestedFillRoute(input: {
-  readonly subjectEvent: (
-    fill: BattleReducerRouteFill,
-    holes: readonly BattleReducerRouteHole[],
-    owner: BattleReducerRouteOwnerGroup,
-    subject?: BattleReducerRouteSubjectFamily,
-  ) => BattleReducerRouteEvent;
-  readonly fills: readonly BattleFill[];
-  readonly initialHoles: readonly BattleReducerRouteHole[];
-  readonly savingThrowOwner?: BattleReducerRouteOwnerGroup | undefined;
-  readonly savingThrowRemainingHoles?:
-    | readonly BattleReducerRouteHole[]
-    | undefined;
-  readonly rolledDiceSubject?: BattleReducerRouteSubjectFamily | undefined;
-}): readonly BattleReducerRouteEvent[] {
-  const events: BattleReducerRouteEvent[] = [];
-  let remainingHoles = input.initialHoles;
-  for (const fill of input.fills) {
-    const routeFill = battleReducerRouteFill(fill);
-    if (routeFill === undefined) {
-      continue;
-    }
-    remainingHoles = remainingHoles.filter((hole) => hole !== routeFill);
-    if (routeFill === "savingThrowOutcome") {
-      events.push(
-        input.subjectEvent(
-          routeFill,
-          input.savingThrowRemainingHoles ?? remainingHoles,
-          input.savingThrowOwner ?? "battleSavingThrowOutcome",
-        ),
-      );
-    } else if (routeFill === "rolledDice") {
-      events.push(
-        input.subjectEvent(
-          routeFill,
-          remainingHoles,
-          "battleHitPoint",
-          input.rolledDiceSubject,
-        ),
-      );
-    }
-  }
-  return events;
-}
-
 function deathSavingThrowRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
@@ -3604,94 +3334,6 @@ function battleActiveEffectKindCounts(
   }
   return counts;
 }
-
-function interruptStackResumeDiscoveryRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): BattleReducerRouteEvent | undefined {
-  if (result.tag !== "needsHoles") {
-    return undefined;
-  }
-  const holes = battleReducerRouteHoles(result.holes);
-  const discoversInterruptDecision = holes.includes("interruptDecision");
-  const discoversReplayContinuationHole =
-    input.state.interruptStack.at(-1)?.kind === "replayContinuation" &&
-    holes.includes("rolledDice");
-  if (!discoversInterruptDecision && !discoversReplayContinuationHole) {
-    return undefined;
-  }
-
-  const frame = currentInterruptCheckpoint(result.state);
-  const subject =
-    discoversInterruptDecision &&
-    frame !== undefined &&
-    isReactionSpellCastingTimeFrame(frame)
-      ? (reactionInterruptPayloadRouteSubjectForFrame(result.state, frame) ??
-        "reactionSpell")
-      : "interruptStackResume";
-  return discoverBattleActsRoute(subject, holes, "battleInterruptStack");
-}
-
-function reactionInterruptPayloadRouteSubjectForFrame(
-  state: BattleState,
-  frame: BattleInterruptCheckpoint,
-): ReactionInterruptPayloadRouteSubject | undefined {
-  const subjects = new Set(
-    frame.choices.flatMap(
-      (choice): readonly ReactionInterruptPayloadRouteSubject[] => {
-        if (choice.kind !== "castTriggeredReactionSpell") {
-          return [];
-        }
-        const subject = reactionInterruptPayloadRouteSubjectForChoice(
-          state,
-          frame,
-          choice,
-        );
-        return subject === undefined ? [] : [subject];
-      },
-    ),
-  );
-  return subjects.size === 1 ? [...subjects][0] : undefined;
-}
-
-function currentInterruptCheckpoint(
-  state: BattleState,
-): BattleInterruptCheckpoint | undefined {
-  const frame = state.interruptStack.at(-1);
-  return frame?.kind === "interruptCheckpoint" ? frame.frame : undefined;
-}
-
-function isReactionSpellCastingTimeFrame(
-  frame: BattleInterruptCheckpoint,
-): frame is Extract<
-  BattleInterruptCheckpoint,
-  {
-    readonly trigger:
-      | "attackHit"
-      | "afterDamage"
-      | "creatureFalls"
-      | "spellCast";
-  }
-> {
-  return (
-    frame.trigger === "attackHit" ||
-    frame.trigger === "afterDamage" ||
-    frame.trigger === "creatureFalls" ||
-    frame.trigger === "spellCast"
-  );
-}
-
-/* v8 ignore start -- This HP comparison serves only the malformed-checkpoint fallback above; every admitted afterDamage triggered-reaction invocation uses the typed reactionAfterDamageEffect route. */
-function combatantHitPointsChanged(
-  before: BattleState,
-  after: BattleState,
-): boolean {
-  return [...after.combatants.values()].some(
-    (combatant) =>
-      combatant.hp !== before.combatants.get(combatant.combatantId)?.hp,
-  );
-}
-/* v8 ignore stop */
 
 function rollModifierRouteForDiscoveredAct(
   state: BattleState,
