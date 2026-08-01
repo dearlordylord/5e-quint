@@ -758,8 +758,21 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       [],
     );
     expect(characterSpellProcedure(unavailable, originalRef)).toBeUndefined();
+    expect(characterExecutionWithSpellInvocations(unavailable, [])).toBe(
+      unavailable,
+    );
 
-    const reappeared = characterExecutionWithSpellInvocations(unavailable, [
+    const staleSelected = characterExecutionWithSpellInvocations(unavailable, [
+      {
+        ...invocation,
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          "stale-selected-spell-procedure",
+        ),
+      },
+    ]);
+    expect(characterSpellProcedure(staleSelected, originalRef)).toBeUndefined();
+
+    const reappeared = characterExecutionWithSpellInvocations(staleSelected, [
       invocation,
     ]);
     const restoredRef = characterSpellProcedureRef(reappeared, invocation);
@@ -807,6 +820,20 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       ...secondInvocation,
       sourceProcedureRef: secondRef,
     };
+    const duplicateSelectedRef = characterExecutionWithSpellInvocations(
+      duplicated,
+      [selectedFirst, selectedFirst],
+    );
+    expect(duplicateSelectedRef.procedureBindings).toHaveLength(
+      duplicated.procedureBindings.length,
+    );
+    expect(
+      characterSpellProcedure(duplicateSelectedRef, firstRef),
+    ).toBeDefined();
+    expect(
+      characterSpellProcedure(duplicateSelectedRef, secondRef),
+    ).toBeUndefined();
+
     const oneRemaining = characterExecutionWithSpellInvocations(duplicated, [
       selectedSecond,
     ]);
@@ -4137,7 +4164,9 @@ function storedSpellInvocation(
       `Expected prepared spell-slot invocation for ${storedSpellId}.`,
     );
   }
-  return invocation;
+  const { sourceProcedureRef: _selectedProcedureRef, ...unselectedInvocation } =
+    invocation;
+  return unselectedInvocation;
 }
 
 function storedSpellProcedureRefInState(

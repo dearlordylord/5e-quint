@@ -47,7 +47,6 @@ import type {
   BattleProcedureExecutionCursor,
 } from "./identity.ts";
 import {
-  BattleProcedureExecutionRef as BattleProcedureExecutionRefSchema,
   battleCharacterExecutionScopeRef,
   battleProcedureExecutionCursor,
   battleProcedureExecutionRef,
@@ -62,7 +61,6 @@ import {
 import type {
   BattleSpellAdmissionSource,
   BattleSelectedSpellInvocation,
-  ClassFeatureFreeCastInvocationResource,
   SelectableSpellProcedureExecution,
   SupportedSpellInvocation,
 } from "./battle-state-execution.ts";
@@ -89,15 +87,30 @@ export type AuthoredSupportedSpellInvocation = SupportedSpellInvocation;
 export type AuthoredSelectedSpellInvocation<
   I extends AuthoredSupportedSpellInvocation = AuthoredSupportedSpellInvocation,
 > = I & { readonly sourceProcedureRef: BattleProcedureExecutionRef };
-import { Brand, Match, Schema } from "effect";
+import { Brand, Match } from "effect";
 import type { SpellRuleExecutionFacts } from "./procedure-execution/spell-rule-facts.ts";
-import type {
-  AfterHitDamageSpellProcedureExecution,
-  SpellProcedureExecution,
-} from "./procedure-execution/spell-procedure-execution.ts";
+import type { SpellProcedureExecution } from "./procedure-execution/spell-procedure-execution.ts";
 export type { SpellRuleExecutionFacts } from "./procedure-execution/spell-rule-facts.ts";
 export type { WeaponAttackOverrideSpellProcedureExecution } from "./procedure-execution/weapon-attack-override.ts";
 export type * from "./procedure-execution/spell-procedure-execution.ts";
+
+type RefreshableSpellInvocation =
+  AuthoredSupportedSpellInvocation extends infer Invocation
+    ? Invocation extends AuthoredSupportedSpellInvocation
+      ?
+          | (Invocation & { readonly sourceProcedureRef?: never })
+          | AuthoredSelectedSpellInvocation<Invocation>
+      : never
+    : never;
+
+type StoredSpellProcedureBinding = Extract<
+  CharacterProcedureBinding,
+  {
+    readonly procedure: {
+      readonly kind: "spellInvocation" | "unavailableSpellInvocation";
+    };
+  }
+>;
 
 export type CharacterUnitProcedureBinding = {
   readonly procedureRef: BattleProcedureExecutionRef;
@@ -469,7 +482,7 @@ function allocateCharacterProcedureOccurrences<Input>(
 
 export function characterExecutionWithSpellInvocations(
   execution: CharacterExecutionState,
-  invocations: readonly SupportedSpellInvocation[],
+  invocations: readonly RefreshableSpellInvocation[],
 ): CharacterExecutionState {
   let refreshed = false;
   const remainingInvocations = [...invocations];
@@ -477,25 +490,18 @@ export function characterExecutionWithSpellInvocations(
     BattleProcedureExecutionRef,
     SupportedSpellInvocation
   >();
-  const reservedSelectedInvocationIndexes = new Set<number>();
+  const selectedInvocationIndexes = new Set<number>();
   const selectedProcedureRef = (
-    invocation: SupportedSpellInvocation,
+    invocation: RefreshableSpellInvocation,
   ): BattleProcedureExecutionRef | undefined => {
     if (!("sourceProcedureRef" in invocation)) return undefined;
-    return Schema.is(BattleProcedureExecutionRefSchema)(
-      invocation.sourceProcedureRef,
-    )
-      ? invocation.sourceProcedureRef
-      : undefined;
+    return invocation.sourceProcedureRef;
   };
   remainingInvocations.forEach((invocation, invocationIndex) => {
     const procedureRef = selectedProcedureRef(invocation);
-    if (
-      procedureRef === undefined ||
-      invocationByProcedureRef.has(procedureRef)
-    ) {
-      return;
-    }
+    if (procedureRef === undefined) return;
+    selectedInvocationIndexes.add(invocationIndex);
+    if (invocationByProcedureRef.has(procedureRef)) return;
     const binding = execution.procedureBindings.find(
       (candidate) => candidate.procedureRef === procedureRef,
     );
@@ -507,20 +513,13 @@ export function characterExecutionWithSpellInvocations(
       return;
     }
     invocationByProcedureRef.set(procedureRef, invocation);
-    reservedSelectedInvocationIndexes.add(invocationIndex);
   });
   for (let index = remainingInvocations.length - 1; index >= 0; index -= 1) {
-    if (reservedSelectedInvocationIndexes.has(index)) {
+    if (selectedInvocationIndexes.has(index)) {
       remainingInvocations.splice(index, 1);
     }
   }
-  const reserveMatchingInvocation = (binding: CharacterProcedureBinding) => {
-    if (
-      binding.procedure.kind !== "spellInvocation" &&
-      binding.procedure.kind !== "unavailableSpellInvocation"
-    ) {
-      return;
-    }
+  const reserveMatchingInvocation = (binding: StoredSpellProcedureBinding) => {
     if (invocationByProcedureRef.has(binding.procedureRef)) return;
     const storedExecution = binding.procedure.execution;
     const currentInvocationIndex = remainingInvocations.findIndex(
@@ -528,22 +527,21 @@ export function characterExecutionWithSpellInvocations(
         spellInvocationMatchesExecution(invocation, storedExecution),
     );
     if (currentInvocationIndex < 0) return;
-    const [currentInvocation] = remainingInvocations.splice(
-      currentInvocationIndex,
-      1,
-    );
-    if (currentInvocation !== undefined) {
-      invocationByProcedureRef.set(binding.procedureRef, currentInvocation);
-    }
+    const currentInvocation = remainingInvocations[currentInvocationIndex];
+    invocationByProcedureRef.set(binding.procedureRef, currentInvocation);
+    remainingInvocations.splice(currentInvocationIndex, 1);
   };
   // Live occurrences retain their refs first. Only genuinely new occurrences
   // are then available to restore an unavailable binding.
-  execution.procedureBindings.forEach((binding) => {
+  const storedSpellBindings = execution.procedureBindings.filter(
+    isStoredSpellProcedureBinding,
+  );
+  storedSpellBindings.forEach((binding) => {
     if (binding.procedure.kind === "spellInvocation") {
       reserveMatchingInvocation(binding);
     }
   });
-  execution.procedureBindings.forEach((binding) => {
+  storedSpellBindings.forEach((binding) => {
     if (binding.procedure.kind === "unavailableSpellInvocation") {
       reserveMatchingInvocation(binding);
     }
@@ -574,17 +572,6 @@ export function characterExecutionWithSpellInvocations(
         };
       }
       const currentExecution = spellProcedureExecution(currentInvocation);
-      if (currentExecution === undefined) {
-        return binding.procedure.kind === "unavailableSpellInvocation"
-          ? binding
-          : {
-              ...binding,
-              procedure: {
-                kind: "unavailableSpellInvocation",
-                execution: binding.procedure.execution,
-              },
-            };
-      }
       if (
         binding.procedure.kind === "spellInvocation" &&
         sameSpellProcedureExecution(
@@ -608,19 +595,14 @@ export function characterExecutionWithSpellInvocations(
   const allocated = allocateCharacterProcedureBindings(
     execution.scopeRef,
     execution.nextProcedureOrdinal,
-    newInvocations.flatMap((invocation): CharacterProcedureWithoutRef[] => {
-      const spellExecution = spellProcedureExecution(invocation);
-      return spellExecution === undefined
-        ? []
-        : [
-            {
-              procedure: {
-                kind: "spellInvocation",
-                execution: spellExecution,
-              },
-            },
-          ];
-    }),
+    newInvocations.map(
+      (invocation): CharacterProcedureWithoutRef => ({
+        procedure: {
+          kind: "spellInvocation",
+          execution: spellProcedureExecution(invocation),
+        },
+      }),
+    ),
   );
   const spellBindings = allocated.procedureBindings;
   if (spellBindings.length === 0 && !refreshed) return execution;
@@ -629,6 +611,15 @@ export function characterExecutionWithSpellInvocations(
     nextProcedureOrdinal: allocated.nextProcedureOrdinal,
     procedureBindings: [...refreshedBindings, ...spellBindings],
   });
+}
+
+function isStoredSpellProcedureBinding(
+  binding: CharacterProcedureBinding,
+): binding is StoredSpellProcedureBinding {
+  return (
+    binding.procedure.kind === "spellInvocation" ||
+    binding.procedure.kind === "unavailableSpellInvocation"
+  );
 }
 
 function allocateCharacterProcedureBindings(
@@ -1648,7 +1639,6 @@ export function characterStoredSpellProcedureRef(
 ): BattleProcedureExecutionRef | undefined {
   const stored =
     "spell" in invocation ? spellProcedureExecution(invocation) : invocation;
-  if (stored === undefined) return undefined;
   return characterStoredExecutionProcedureRef(execution, stored);
 }
 
@@ -1658,24 +1648,15 @@ export function spellInvocationMatchesExecution(
 ): boolean {
   const projected =
     "spell" in invocation ? spellProcedureExecution(invocation) : invocation;
-  return (
-    projected !== undefined && sameSpellProcedureExecution(projected, execution)
-  );
+  return sameSpellProcedureExecution(projected, execution);
 }
 
 export function spellProcedureExecution<
   Invocation extends SupportedSpellInvocation,
->(
-  invocation: Invocation,
-): Extract<
-  Invocation["resource"],
-  ClassFeatureFreeCastInvocationResource
-> extends never
-  ? SpellProcedureExecution<Invocation>
-  : SpellProcedureExecution<Invocation> | undefined;
+>(invocation: Invocation): SpellProcedureExecution<Invocation>;
 export function spellProcedureExecution(
   invocation: SupportedSpellInvocation,
-): SpellProcedureExecution | undefined {
+): SpellProcedureExecution {
   const spellRuleFacts = spellRuleExecutionFacts(invocation.spell);
   return Match.value(invocation).pipe(
     Match.discriminatorsExhaustive("procedure")({
@@ -1693,22 +1674,15 @@ export function spellProcedureExecution(
         successEffect: value.successEffect,
         targeting: value.targeting,
       }),
-      afterHitDamage: (value) => {
-        const resource = classFeatureSpellInvocationResourceExecution(
-          value.resource,
-        );
-        return resource === undefined
-          ? undefined
-          : {
-              spellRuleFacts,
-              access: value.access,
-              actionCost: value.actionCost,
-              conditionalBonusDamage: value.conditionalBonusDamage,
-              damage: value.damage,
-              procedure: value.procedure,
-              resource,
-            };
-      },
+      afterHitDamage: (value) => ({
+        spellRuleFacts,
+        access: value.access,
+        actionCost: value.actionCost,
+        conditionalBonusDamage: value.conditionalBonusDamage,
+        damage: value.damage,
+        procedure: value.procedure,
+        resource: value.resource,
+      }),
       afterHitDamageAndIllumination: (value) => ({
         spellRuleFacts,
         access: value.access,
@@ -2157,25 +2131,20 @@ export function spellProcedureExecution(
       markedDamageRider: (value) =>
         Match.value(value).pipe(
           Match.when({ action: "cast" }, (cast) => {
-            const resource = classFeatureSpellInvocationResourceExecution(
-              cast.resource,
-            );
-            return resource === undefined
-              ? undefined
-              : {
-                  spellRuleFacts,
-                  abilityCheckBehavior: cast.abilityCheckBehavior,
-                  access: cast.access,
-                  action: cast.action,
-                  actionCost: cast.actionCost,
-                  damage: cast.damage,
-                  expiresAt: cast.expiresAt,
-                  procedure: cast.procedure,
-                  rangeFeet: cast.rangeFeet,
-                  resource,
-                  retargetTiming: cast.retargetTiming,
-                  targeting: cast.targeting,
-                };
+            return {
+              spellRuleFacts,
+              abilityCheckBehavior: cast.abilityCheckBehavior,
+              access: cast.access,
+              action: cast.action,
+              actionCost: cast.actionCost,
+              damage: cast.damage,
+              expiresAt: cast.expiresAt,
+              procedure: cast.procedure,
+              rangeFeet: cast.rangeFeet,
+              resource: cast.resource,
+              retargetTiming: cast.retargetTiming,
+              targeting: cast.targeting,
+            };
           }),
           Match.when({ action: "transfer" }, (transfer) => ({
             action: transfer.action,
@@ -2663,17 +2632,6 @@ export function spellProcedureExecution(
         resource: value.resource,
         targeting: value.targeting,
       }),
-    }),
-  );
-}
-
-function classFeatureSpellInvocationResourceExecution(
-  resource: AfterHitDamageSpellProcedureExecution["resource"],
-): AfterHitDamageSpellProcedureExecution["resource"] | undefined {
-  return Match.value(resource).pipe(
-    Match.discriminatorsExhaustive("tag")({
-      spellSlot: (value) => value,
-      classFeatureFreeCast: (value) => value,
     }),
   );
 }
