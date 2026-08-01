@@ -10,6 +10,7 @@ import {
   resolveBonusActionSpellAct,
   resolveSpellAct,
 } from "./battle-reducer/spells-resolve.ts";
+import { characterExecutionWithSpellInvocations } from "./character-execution-admission.ts";
 import type { BattleCreatureState } from "./index.ts";
 import type {
   BattleState,
@@ -157,6 +158,112 @@ describe("battle runtime: spellcasting actions and slots", () => {
       tag: "invalid",
       reason: "staleSubject",
       message: expect.stringContaining("required runtime spell resource"),
+    });
+  });
+
+  test("admitted spell subjects reject procedures made unavailable by an execution refresh", () => {
+    const actionSession = wizardVsSkeletonBattle();
+    const actionAct = discoverBattleActs(actionSession).find(
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(act)?.invocation.spellId === "magic_missile",
+    );
+    if (actionAct?.subject.tag !== "actionSpell") {
+      throw new Error("Expected Magic Missile Action spell act.");
+    }
+    const actionAdmission = admitBattleResolutionInput({
+      state: actionSession.state,
+      subject: actionAct.subject,
+      fills: [],
+    });
+    if (actionAdmission.tag !== "admitted") {
+      throw new Error("Expected admitted Magic Missile resolution input.");
+    }
+    const refreshedActionActor = characterWithUnavailableSpellExecution(
+      actionSession.state.combatants.get(actionAct.subject.actorId),
+    );
+
+    expect(
+      resolveSpellAct(
+        {
+          ...actionAdmission.input,
+          subject: actionAct.subject,
+          state: {
+            ...actionAdmission.input.state,
+            combatants: new Map(actionSession.state.combatants).set(
+              refreshedActionActor.combatantId,
+              refreshedActionActor,
+            ),
+          },
+        },
+        spellProcedureExecutionRegistry(),
+      ),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message:
+        "Action-time spell act requires a supported prepared spell or cantrip.",
+    });
+
+    const bonusActionSession = startBattleSessionRight({
+      battleId: battleId("battle-unavailable-bonus-action-spell-procedure"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Healer",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("healing_word")],
+          }),
+        }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          initiative: 10,
+          currentHp: 5,
+        }),
+      ],
+    });
+    const bonusActionAct = discoverBattleActs(bonusActionSession).find(
+      (act) =>
+        act.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(act)?.invocation.spellId === "healing_word",
+    );
+    if (bonusActionAct?.subject.tag !== "bonusActionSpell") {
+      throw new Error("Expected Healing Word Bonus Action spell act.");
+    }
+    const bonusActionAdmission = admitBattleResolutionInput({
+      state: bonusActionSession.state,
+      subject: bonusActionAct.subject,
+      fills: [],
+    });
+    if (bonusActionAdmission.tag !== "admitted") {
+      throw new Error("Expected admitted Healing Word resolution input.");
+    }
+    const refreshedBonusActionActor = characterWithUnavailableSpellExecution(
+      bonusActionSession.state.combatants.get(bonusActionAct.subject.actorId),
+    );
+
+    expect(
+      resolveBonusActionSpellAct(
+        {
+          ...bonusActionAdmission.input,
+          subject: bonusActionAct.subject,
+          state: {
+            ...bonusActionAdmission.input.state,
+            combatants: new Map(bonusActionSession.state.combatants).set(
+              refreshedBonusActionActor.combatantId,
+              refreshedBonusActionActor,
+            ),
+          },
+        },
+        spellProcedureExecutionRegistry(),
+      ),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message:
+        "Bonus Action spell act requires a supported Bonus Action spell.",
     });
   });
 
@@ -1475,6 +1582,24 @@ function characterWithDepletedSpellSlots(
           expended: slot.count,
         })),
       },
+    },
+  };
+}
+
+function characterWithUnavailableSpellExecution(
+  actor: BattleCreatureState | undefined,
+) {
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected character spell caster.");
+  }
+  return {
+    ...actor,
+    origin: {
+      ...actor.origin,
+      execution: characterExecutionWithSpellInvocations(
+        actor.origin.execution,
+        [],
+      ),
     },
   };
 }
