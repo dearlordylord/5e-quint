@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import * as Either from "effect/Either";
-import { CLASS_NAMES } from "@dnd/shared/game-facts";
+import { CLASS_NAMES, unitId } from "@dnd/shared/game-facts";
 import { NonNegativeInteger, classLevel } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
@@ -14,6 +14,8 @@ import {
 import {
   battleUnitSupportProfilesForUnit,
   parseSupportedUnitFeatureProfile,
+  type BattleUnitSupportProfile,
+  type SupportedUnitFeatureProfile,
 } from "./unit-feature-support.ts";
 import {
   battleCharacterExecutionScopeRef,
@@ -56,6 +58,56 @@ const procedureRefsByUnitId = new Map(
   units.map((unit) => [unit.id, procedureRef] as const),
 );
 const sourceFacts = { draconicAncestryDamageType: "acid" } as const;
+type SupportedUnitFeatureProfileKind = SupportedUnitFeatureProfile["kind"];
+type BattleUnitSupportProfileKind = BattleUnitSupportProfile extends infer P
+  ? P extends string
+    ? P
+    : P extends { readonly kind: infer K extends string }
+      ? K
+      : never
+  : never;
+type UnitFeatureProjectionFailure = {
+  readonly unitId: (typeof units)[number]["id"];
+  readonly kind: SupportedUnitFeatureProfileKind;
+};
+type UnitSupportProjectionFailure = {
+  readonly unitId: (typeof units)[number]["id"];
+  readonly kind: BattleUnitSupportProfileKind;
+};
+const SHARED_EMPTY_CONTEXT_PROJECTION_FAILURES = [
+  {
+    unitId: unitId("fighter_tactical_mind"),
+    kind: "failedAbilityCheckResourceBoost",
+  },
+  { unitId: unitId("fighter_indomitable"), kind: "failedSavingThrowReroll" },
+  { unitId: unitId("cleric_preserve_life"), kind: "magicActionHealingPool" },
+  {
+    unitId: unitId("druid_lands_aid"),
+    kind: "magicActionAreaSaveDamageHealing",
+  },
+  { unitId: unitId("monk_stunning_strike"), kind: "stunningStrike" },
+  { unitId: unitId("monk_open_hand_technique"), kind: "openHandTechnique" },
+  { unitId: unitId("rogue_cunning_strike"), kind: "cunningStrike" },
+  { unitId: unitId("rogue_supreme_sneak"), kind: "cunningStrikeOptionGrant" },
+  { unitId: unitId("paladin_sacred_weapon"), kind: "paladinSacredWeapon" },
+  {
+    unitId: unitId("paladin_abjure_foes"),
+    kind: "magicActionSaveGatedCondition",
+  },
+] as const satisfies ReadonlyArray<
+  UnitFeatureProjectionFailure & UnitSupportProjectionFailure
+>;
+const UNIT_FEATURE_EMPTY_CONTEXT_ADDITIONAL_FAILURES = [
+  { unitId: unitId("bard_bardic_inspiration"), kind: "bardicInspirationGrant" },
+  {
+    unitId: unitId("bard_cutting_words"),
+    kind: "reactionRollOrDamageReduction",
+  },
+  {
+    unitId: unitId("monk_deflect_attacks"),
+    kind: "reactionRollOrDamageReduction",
+  },
+] as const satisfies ReadonlyArray<UnitFeatureProjectionFailure>;
 
 describe("character execution profile projection", () => {
   test("projects every admitted SRD Unit feature into execution facts", () => {
@@ -119,4 +171,78 @@ describe("character execution profile projection", () => {
 
     expect(projectedKinds.size).toBeGreaterThan(20);
   });
+
+  test("fails closed when Unit feature execution resources are absent", () => {
+    const unavailableProfiles: UnitFeatureProjectionFailure[] = [];
+
+    for (const unit of units) {
+      const profile = parseSupportedUnitFeatureProfile(
+        unit,
+        classLevels,
+        sourceFacts,
+      );
+      if (profile === null) continue;
+
+      const execution = unitFeatureProcedureExecution(profile, {
+        resourcePoolRefsByUnitId: new Map(),
+      });
+      if (execution === undefined) {
+        unavailableProfiles.push({ unitId: unit.id, kind: profile.kind });
+      } else {
+        expect(execution.kind).toBe(profile.kind);
+      }
+    }
+
+    expect(unavailableProfiles.sort(compareProjectionFailures)).toEqual(
+      [
+        ...SHARED_EMPTY_CONTEXT_PROJECTION_FAILURES,
+        ...UNIT_FEATURE_EMPTY_CONTEXT_ADDITIONAL_FAILURES,
+      ].sort(compareProjectionFailures),
+    );
+  });
+
+  test("fails closed when Unit support execution dependencies are absent", () => {
+    const unavailableProfiles: UnitSupportProjectionFailure[] = [];
+
+    for (const unit of units) {
+      const profiles = battleUnitSupportProfilesForUnit({
+        unit,
+        classLevels,
+        sourceFacts,
+      });
+      if (Either.isLeft(profiles)) continue;
+
+      for (const profile of profiles.right) {
+        const execution = unitSupportProcedureExecution(profile, {
+          resourcePoolRefsByUnitId: new Map(),
+          unitFeatureProcedureRefsByUnitId: new Map(),
+          supportProcedureRefsByUnitId: new Map(),
+        });
+        const profileKind =
+          typeof profile === "string" ? profile : profile.kind;
+        if (execution === undefined) {
+          unavailableProfiles.push({
+            unitId: unit.id,
+            kind: profileKind,
+          });
+        }
+      }
+    }
+
+    expect(unavailableProfiles.sort(compareProjectionFailures)).toEqual(
+      [...SHARED_EMPTY_CONTEXT_PROJECTION_FAILURES].sort(
+        compareProjectionFailures,
+      ),
+    );
+  });
 });
+
+function compareProjectionFailures(
+  left: UnitFeatureProjectionFailure | UnitSupportProjectionFailure,
+  right: UnitFeatureProjectionFailure | UnitSupportProjectionFailure,
+): number {
+  return (
+    left.unitId.localeCompare(right.unitId) ||
+    left.kind.localeCompare(right.kind)
+  );
+}
