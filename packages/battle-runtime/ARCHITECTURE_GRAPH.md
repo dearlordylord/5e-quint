@@ -21,6 +21,20 @@ equality for continuation fills is owned by
 `battle-reducer/battle-fill-equality.ts`, so replay, reroll, and continuation
 callers share one comparison algorithm.
 
+Standard-action, familiar-attack, and held-weapon activation eligibility is
+projected exhaustively by `battle-reducer/action-eligibility.ts`. Escape
+Grapple discovery, stale-subject eligibility, and execution share the typed spend operation in
+`battle-reducer/action-resource-kinds.ts`, so an Extra Attack or Stat Block
+Multiattack resource cannot be mistaken for the creature's Action.
+
+`battle-reducer/reducer-route.ts` composes route candidates through the typed
+protocol in `battle-reducer/reducer-route-protocol.ts`; the composer alone owns
+first-applicable precedence. Movement, weapon-hosted spells, after-hit spells,
+metamagic, reaction spells, spell invocation, Wild Shape lifecycle, and passive
+projection routes live in their corresponding `*-routes.ts` owners. Route
+families return terminal or composable results explicitly rather than relying
+on callers to remember short-circuit rules.
+
 Interrupt windows are split by lifecycle responsibility. Opening and discovery
 belong to `battle-reducer/interrupt-execution.ts`; decision admission, Reaction
 resource spending, active interrupt re-entry, responder progression, checkpoint
@@ -35,7 +49,7 @@ Post-cast persistent spatial spell procedures are owned by
 boundary and the save, damage, cleanup, direction-change, reposition, and ram
 flows for Grease, Web, Sleet Storm, Insect Plague, Cloudkill, Gust of Wind,
 Flaming Sphere, and Moonbeam. The dispatcher delegates the family as one unit;
-turn-boundary orchestration remains in `turn-end-movement.ts`, while
+turn-boundary orchestration remains in `turn-boundary-lifecycle.ts`, while
 distance-triggered Spike Growth damage remains part of movement resolution.
 `battle-reducer/persistent-spatial-spell-discovery.ts` owns the active-effect
 vocabulary and hole/projection construction shared with `discoverBattleActs`;
@@ -52,7 +66,10 @@ spell-constrained movement is owned by `battle-reducer/movement-procedures.ts`;
 its single parser owns movement-mode selection and cost/witness validation,
 while Spike Growth remains inseparable from post-movement effects. Turn
 advancement and ordered start/end-turn effect processing remain in
-`battle-reducer/turn-end-movement.ts`.
+`battle-reducer/turn-boundary-lifecycle.ts`.
+`battle-reducer/turn-boundary-hole-frontier.ts` owns the named save-before-
+damage and end-before-start hole precedence used by that lifecycle; callers
+pass `ResolvedTurnBoundaryFills` by field rather than positional convention.
 
 Keep battle-runtime integration vocabulary such as `Actor`, `Combatant`,
 `BattleState`, `ActiveEffect`, `Hole`, and replay variants in battle-runtime QNT

@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard spell.invocation-jump-movement-replacement unit-feature.acrobatic-movement
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard spell.invocation-jump-movement-replacement unit-feature.acrobatic-movement unit-feature.creature-space-movement-permission
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";

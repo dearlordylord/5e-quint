@@ -76,7 +76,7 @@ import {
 } from "./moonbeam-movable-zone.ts";
 import { validateGustOfWindLineAreaPushFacts } from "./gust-of-wind-push-facts.ts";
 import { revertShapeShiftedCombatantToTrueForm } from "./shape-shifting.ts";
-import { resolveEndTurnCommand } from "./turn-end-movement.ts";
+import { resolveEndTurnCommand } from "./turn-boundary-lifecycle.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
   applyPreparedSlotSpellDamage,

@@ -25,7 +25,7 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import { activeEffectArmorClass } from "./battle-reducer/creature-state.ts";
-import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
   mbtSpecPath,
   spellBaseArmorClassEffectRouteProjection,

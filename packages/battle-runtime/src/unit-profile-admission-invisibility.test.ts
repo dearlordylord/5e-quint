@@ -67,7 +67,7 @@ import {
   type BattleState,
   type CombatantId,
 } from "./index.ts";
-import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 describe("L12G-SPELL-INVISIBILITY deterministic Invisibility admission", () => {

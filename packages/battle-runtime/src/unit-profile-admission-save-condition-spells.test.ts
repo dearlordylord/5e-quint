@@ -40,7 +40,7 @@ import {
   requireResultHole,
   statBlockWithCreatureType,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,

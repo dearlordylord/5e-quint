@@ -67,7 +67,7 @@ import {
   type BattleState,
   type BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
-import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 
 type LastResult =
   | "init"

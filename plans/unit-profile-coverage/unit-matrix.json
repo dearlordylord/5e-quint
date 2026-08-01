@@ -281,7 +281,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Sleet Storm spell shape, caller-supplied point-origin Cylinder area identity, caller-supplied first-entry and starts-turn-in-area save trigger subjects, and caller-supplied movement path facts for travel through active Sleet Storm Difficult Terrain. It owns Magic Action and level-3-or-higher Spell Slot spending, caster-owned Concentration, active Sleet Storm area effect state with radius, height, and one shared per-turn save ledger, failed-save Prone application, failed-save target Concentration loss through the shared Concentration teardown owner, noncumulative Difficult Terrain movement-cost validation for active Sleet Storm areas, Heavily Obscured Cylinder projection, and cleanup on Concentration or duration end. Automatic geometry, area membership, pathfinding, and exposed-flame object/environment dousing remain caller/table/environment facts rather than parallel runtime map or object state.",
@@ -328,7 +328,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-subjects.ts",
         "packages/shared-algebras/src/action-economy-algebra.ts"
       ],
@@ -1020,7 +1020,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "sourceBoundary": "Battle Unit admission consumes the Surface d20_test_natural_one_reroll species-trait shape and projects an optional natural-1 D20 Test reroll profile. The battle-runtime owner consumes selected character Unit refs and selected/effective roll, outcome, Death Saving Throw, and Concentration Saving Throw fill facts for Attack Rolls, Ability Checks, and Saving Throws; consumes optional raw two-d20 vectors on Advantage and Disadvantage fills with explicit roll mode and selected die facts; requires natural d20 face facts for supported rolled D20 Tests; treats no-roll Saving Throw failures without a natural d20 as non-triggering outcomes; requires an explicit reroll or decline decision after supported selected/effective natural-1 rolls or raw two-d20 rolls where either die is a natural 1; validates the natural die trigger, raw-dice legality, roll-mode-consistent selected die, explicit replacement die choice, and support profile; rejects unsupported actors, non-1 selected or raw-die rerolls, and d20 reroll stacking; and projects one executable d20 result before downstream reducers consume the D20 Test without storing a parallel Luck-owned roll result or dispatching on authored identity.",
       "taskRefs": [
@@ -1088,7 +1088,8 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
       ],
       "taskRefs": [
         "QCORE9",
@@ -1114,7 +1115,8 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
       ],
       "taskRefs": [
         "QCORE9",
@@ -1140,8 +1142,8 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
-        "packages/battle-runtime/src/battle-reducer/creature-space-table-route.ts"
+        "packages/battle-runtime/src/battle-reducer/creature-space-table-route.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-procedures.ts"
       ],
       "sourceBoundary": "Battle Unit admission consumes the authored Surface creature_space_movement_permission shape and projects a typed occupied creature-space traversal permission. Battle runtime consumes retained selected character Unit support refs, existing Movement budget, effective combatant sizes, and caller/table-supplied occupied-space and destination witnesses to validate traversal through larger occupied creature spaces and reject occupied destinations. The table-route derivation owner can derive that Movement witness from an already selected route plus explicit creature footprint, occupancy, and larger-than-mover size-relation facts without storing species-owned movement state, durable map-position state, or authored-identity dispatch.",
       "taskRefs": [
@@ -2069,7 +2071,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "sourceBoundary": "The runtime consumes typed table-supplied Grease ground-area identity and affected-target membership witnesses for appearance saves, table-triggered enter-area/end-turn save subjects for active hazards, and typed total-distance plus Grease-distance Movement facts for Difficult Terrain cost. Automatic area membership, pathfinding, path selection, and grid geometry derivation remain runtime-detached table adjudication/presentation outside this profile.",
       "taskRefs": [
@@ -2188,7 +2190,7 @@
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
       "sourceBoundary": "The runtime consumes a typed table-supplied 5-foot-diameter sphere area identity, table-triggered end-within-5-feet witnesses, and table-supplied positive movement-distance witnesses capped at 30 feet for non-damaging reposition and ram movement into a creature's space. Runtime owns Magic Action and level-2+ Spell Slot spending, caster-owned Concentration lifecycle, one-minute duration cleanup, Dexterity save-gated Fire damage with half damage on success, slot-scaled damage dice, and Bonus Action spending for reposition and ram commands. Automatic area membership, unoccupied-space validation, pathfinding, barrier/pit traversal, sphere stop-position tracking, object ignition, light rendering, and map geometry remain runtime-detached table adjudication or presentation outside this profile.",
@@ -2309,7 +2311,7 @@
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "sourceBoundary": "This profile supports Command's cast shell, slot-scaled creature target list, Wisdom save, and the Grovel and Halt options. Drop is represented by spell.invocation-command-drop-held-object; Approach is represented by spell.invocation-command-approach-route; Flee is represented by spell.invocation-command-flee-route.",
       "taskRefs": [
@@ -2338,7 +2340,7 @@
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "sourceBoundary": "This profile supports Command Drop by consuming canonical character loadout held-object facts when present or caller-supplied held-object facts otherwise, emitting dropped-object outcomes, and ending the target turn. It does not add general inventory simulation, object placement, or loadout mutation.",
       "taskRefs": [
@@ -2366,7 +2368,7 @@
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "sourceBoundary": "This profile supports Command Approach by consuming caller-supplied route/proximity facts on the existing Movement fill when movement is available, spending the target's movement through the normal movement reducer, and ending the target turn only when that supplied route reaches within 5 feet of the caster. If the target has no available movement, it clears the pending Approach effect without ending the turn. It does not add pathfinding or route storage.",
       "taskRefs": [
@@ -2394,7 +2396,7 @@
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "sourceBoundary": "This profile supports Command Flee by consuming caller-supplied fastest-available moving-away route facts on the existing Movement fill, requiring the selected remaining Movement budget to be spent when movement is available, clearing the pending effect, and ending the target turn. If the target has no available movement, it clears the pending Flee effect and ends the turn without a Movement fill. Opportunity Attack eligibility is derived from the Movement fill's actual provoked-threat facts, not from Command route metadata. It does not add pathfinding, route storage, or route-choice policy.",
       "taskRefs": [
@@ -2537,7 +2539,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, and the 10-foot Movement spend for a base maximum 30 feet of jump movement, with active turn-scoped jump-distance multipliers consumed when present. It consumes typed table-supplied jump distance and landing witnesses; legal-destination and Difficult Terrain landing Acrobatics outcomes arrive as landing witness variants, illegal landings are rejected, and failed Difficult Terrain landing applies Prone. Path, jump arc, collision, final-position, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation remain runtime-detached table adjudication outside this profile.",
       "taskRefs": [
@@ -4191,7 +4193,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Moonbeam spell, caller-supplied Cylinder area identity, movement trigger witnesses, saving throw and damage fills, and the shared shape-shift runtime state for supported class-feature and spell-effect shape-shift owners. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active movable area effect state, once-per-creature-per-turn save limiting across Moonbeam area triggers, slot-scaled Radiant damage with half damage on a successful Constitution save, Magic-action beam reposition, failed-save true-form reversion for supported shape-shift owners, Moonbeam-owned shape-shift suppression while the target remains in that Cylinder, explicit Cylinder-exit cleanup, and cleanup on Concentration or duration end. Automatic geometry, area membership, and Dim Light projection remain outside this profile subset.",
       "taskRefs": [
@@ -4229,7 +4231,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Heat Metal object-contact Surface shape plus caller-supplied visible manufactured-metal object identity, physical-contact creature witnesses, holding-or-wearing spell-object witnesses, later-turn object-within-range witnesses, Saving Throw outcomes, and typed object-drop resolution fills. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 minute, durable spell-object contact occurrence identity, immediate Fire damage to selected contact creatures, later-turn Bonus Action repeat damage, slot-scaled damage dice, damage lifecycle integration for Concentration saves and zero-HP dispositions, Constitution saves for damaged holding-or-wearing targets against the caster Spell Save DC, drop-if-possible outcomes without inventory simulation, fallback self Attack Roll and Ability Check Disadvantage until the start of the caster's next turn when the object is not dropped, same-occurrence fallback penalty replacement, and cleanup through Concentration, duration, and caster-turn-start mechanisms.",
       "taskRefs": [
@@ -4261,7 +4263,7 @@
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/active-effect/types.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
@@ -4327,7 +4329,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Web spell, caller-supplied point-origin Cube area identity, table-triggered enters-area and starts-turn-in-area save subjects, table-supplied no-longer-in-webs or area-removed cleanup subjects, and caller-supplied movement path facts for travel through active Web Difficult Terrain. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active Web area effect state with side length, once-per-creature-per-turn entry-save limiting, failed-save Restrained application, Strength (Athletics) escape cleanup, noncumulative Difficult Terrain movement-cost validation for active Web areas, Lightly Obscured Cube projection for sight/perception consumers, and cleanup on Concentration or duration end. Automatic geometry, area membership, pathfinding, anchoring/layering collapse, flat-surface depth presentation, and fire-exposed 5-foot Cube burn-away/damage derivation remain table/spatial/environment facts rather than parallel runtime map state.",
@@ -4367,7 +4369,7 @@
         "packages/battle-runtime/src/battle-reducer/readied-release.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
       "sourceBoundary": "The runtime consumes the authored Levitate creature branch plus caller-supplied visible target, target-within-range, willingness, initial-rise, fixed-object-or-surface movement, and ongoing caster-range witnesses. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 10 minutes, initial suspension up to 20 feet, Constitution save gating for unwilling creatures, active levitated creature state, Magic Action altitude changes up to 20 feet while the target remains within range, target self-movement altitude adjustment when a fixed object or surface within reach is supplied, and cleanup on Concentration or duration end. Loose objects, automatic elevation/pathfinding, horizontal dragging, and fixed-object or surface discovery remain outside this creature-profile subset.",
@@ -4530,7 +4532,7 @@
         "packages/battle-runtime/src/active-effect/types.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/grease-ground-hazard.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/gust-of-wind-line.ts"
       ],
@@ -4847,7 +4849,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
       "sourceBoundary": "The runtime consumes a caller-supplied point-origin 20-foot-radius Sphere area identity, caster-owned Concentration up to 10 minutes, active Difficult Terrain movement-cost facts derived from caller-supplied movement distance through the area, and 2d4 Piercing damage per 5 feet traveled into or within the area. It owns Magic Action and level-2-or-higher Spell Slot spending, the active hazard identity, movement-cost projection, movement-triggered damage scaling, and cleanup on Concentration or duration end. Automatic geometry and pathfinding remain table/spatial facts. Camouflaged-terrain recognition is an accepted runtime-detached Search/perception witness: the table owns visibility at cast time, the Search Action declaration before entry, skill/check result, and recognized-hazard witness; runtime does not store per-observer terrain knowledge.",
@@ -4917,7 +4919,7 @@
         "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
         "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "taskRefs": [
         "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE"
@@ -4964,7 +4966,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
       ],
       "sourceBoundary": "The runtime consumes Ray of Enfeeblement's failed-save active effect as one source-side 1d8 damage-roll penalty owned by the affected target. It requests a typed rolled-dice hole keyed to each positive source damage-roll hole, subtracts the roll from by-type damage before target-side Resistance, spell damage reductions, Concentration saves, zero-Hit-Point disposition, and damage application, and removes the paired penalty with the Ray lifecycle effect through repeat-save success or Concentration cleanup without storing duplicate damage state.",
       "taskRefs": [
@@ -5856,7 +5858,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-profiles-attack-damage.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
         "packages/battle-runtime/src/battle-reducer/codec-building-blocks.ts"
       ],
@@ -5974,7 +5976,7 @@
         "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
         "packages/battle-runtime/src/battle-reducer/cunning-strike.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/active-effect/lifecycle.ts"
       ],
       "sourceBoundary": "Battle Unit admission consumes the authored Surface cunning_strike shape for Sneak Attack damage exchange, retaining option ids only as selection keys while projecting executable equipment-gated condition save, size-gated condition save, and post-damage movement facts. Battle runtime consumes the retained profile only from eligible selected rogue_sneak_attack damage riders, subtracts the option die cost before validating the damage roll, and reuses existing Saving Throw, active condition/effect, end-turn lifecycle, movement, Opportunity Attack, and tool-possession witness owners for the post-damage option effects without duplicating Sneak Attack dice, condition, movement, or inventory state.",
@@ -6045,7 +6047,7 @@
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
         "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
         "packages/battle-runtime/src/active-effect/types.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
         "packages/shared-algebras/src/action-economy-algebra.ts",
         "packages/shared-algebras/src/speed-algebra.ts"
@@ -6890,7 +6892,7 @@
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+        "packages/battle-runtime/src/battle-reducer/movement-procedures.ts"
       ],
       "sourceBoundary": "Battle Unit admission consumes the authored acrobatic_movement shape and projects an unarmored, unshielded, on-your-turn movement permission for caller-supplied vertical-surface and liquid path witnesses. Movement resolution consumes those facts through the existing Movement fill owner and validates the no-falling-during-movement contract without storing map geometry, path search, surface derivation, or Monk-owned movement state.",
       "taskRefs": [
@@ -6946,7 +6948,7 @@
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/insect-plague-area-hazard.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
       "sourceBoundary": "Battle runtime admits the authored Insect Plague area-hazard shape, area choice, Concentration effect, Difficult Terrain and Lightly Obscured projections, Constitution Saving Throw outcomes, Piercing save-for-half damage, slot scaling, and once-per-turn save ledger using caller/table supplied area-membership trigger facts. The table/spatial layer remains the owner of automatic Sphere geometry, route derivation, area membership, and environmental swarm presentation.",
@@ -6973,7 +6975,7 @@
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/cloudkill-area-hazard.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
         "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
-        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
@@ -22294,7 +22296,8 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
-            "packages/battle-runtime/src/battle-state-execution.ts"
+            "packages/battle-runtime/src/battle-state-execution.ts",
+            "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
           ],
           "taskRefs": [
             "QCORE9",
@@ -24425,7 +24428,7 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+            "packages/battle-runtime/src/battle-reducer/movement-procedures.ts"
           ],
           "sourceBoundary": "Battle Unit admission consumes the authored acrobatic_movement shape and projects an unarmored, unshielded, on-your-turn movement permission for caller-supplied vertical-surface and liquid path witnesses. Movement resolution consumes those facts through the existing Movement fill owner and validates the no-falling-during-movement contract without storing map geometry, path search, surface derivation, or Monk-owned movement state.",
           "taskRefs": [
@@ -24539,7 +24542,8 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
-            "packages/battle-runtime/src/battle-state-execution.ts"
+            "packages/battle-runtime/src/battle-state-execution.ts",
+            "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
           ],
           "taskRefs": [
             "QCORE9",
@@ -26488,7 +26492,7 @@
             "packages/battle-runtime/src/battle-reducer/opportunity-attacks.ts",
             "packages/battle-runtime/src/battle-reducer/cunning-strike.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
             "packages/battle-runtime/src/active-effect/lifecycle.ts"
           ],
           "sourceBoundary": "Battle Unit admission consumes the authored Surface cunning_strike shape for Sneak Attack damage exchange, retaining option ids only as selection keys while projecting executable equipment-gated condition save, size-gated condition save, and post-damage movement facts. Battle runtime consumes the retained profile only from eligible selected rogue_sneak_attack damage riders, subtracts the option die cost before validating the damage roll, and reuses existing Saving Throw, active condition/effect, end-turn lifecycle, movement, Opportunity Attack, and tool-possession witness owners for the post-damage option effects without duplicating Sneak Attack dice, condition, movement, or inventory state.",
@@ -27255,7 +27259,7 @@
             "packages/battle-runtime/src/active-effect/types.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/grease-ground-hazard.ts",
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/gust-of-wind-line.ts"
           ],
@@ -30425,7 +30429,8 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
-            "packages/battle-runtime/src/battle-state-execution.ts"
+            "packages/battle-runtime/src/battle-state-execution.ts",
+            "packages/battle-runtime/src/battle-reducer/movement-speed.ts"
           ],
           "taskRefs": [
             "QCORE9",
@@ -31776,8 +31781,8 @@
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
-            "packages/battle-runtime/src/battle-reducer/creature-space-table-route.ts"
+            "packages/battle-runtime/src/battle-reducer/creature-space-table-route.ts",
+            "packages/battle-runtime/src/battle-reducer/movement-procedures.ts"
           ],
           "sourceBoundary": "Battle Unit admission consumes the authored Surface creature_space_movement_permission shape and projects a typed occupied creature-space traversal permission. Battle runtime consumes retained selected character Unit support refs, existing Movement budget, effective combatant sizes, and caller/table-supplied occupied-space and destination witnesses to validate traversal through larger occupied creature spaces and reject occupied destinations. The table-route derivation owner can derive that Movement witness from an already selected route plus explicit creature footprint, occupancy, and larger-than-mover size-relation facts without storing species-owned movement state, durable map-position state, or authored-identity dispatch.",
           "taskRefs": [
@@ -31886,7 +31891,7 @@
             "packages/battle-runtime/src/battle-reducer/spells-resolve-chained.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
           "sourceBoundary": "Battle Unit admission consumes the Surface d20_test_natural_one_reroll species-trait shape and projects an optional natural-1 D20 Test reroll profile. The battle-runtime owner consumes selected character Unit refs and selected/effective roll, outcome, Death Saving Throw, and Concentration Saving Throw fill facts for Attack Rolls, Ability Checks, and Saving Throws; consumes optional raw two-d20 vectors on Advantage and Disadvantage fills with explicit roll mode and selected die facts; requires natural d20 face facts for supported rolled D20 Tests; treats no-roll Saving Throw failures without a natural d20 as non-triggering outcomes; requires an explicit reroll or decline decision after supported selected/effective natural-1 rolls or raw two-d20 rolls where either die is a natural 1; validates the natural die trigger, raw-dice legality, roll-mode-consistent selected die, explicit replacement die choice, and support profile; rejects unsupported actors, non-1 selected or raw-die rerolls, and d20 reroll stacking; and projects one executable d20 result before downstream reducers consume the D20 Test without storing a parallel Luck-owned roll result or dispatching on authored identity.",
           "taskRefs": [
@@ -32461,7 +32466,7 @@
             "packages/battle-runtime/src/battle-reducer/spells-profiles-attack-damage.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
             "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
             "packages/battle-runtime/src/battle-reducer/codec-building-blocks.ts"
           ],
@@ -34311,7 +34316,7 @@
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/cloudkill-area-hazard.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
@@ -34452,7 +34457,7 @@
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
           "sourceBoundary": "This profile supports Command's cast shell, slot-scaled creature target list, Wisdom save, and the Grovel and Halt options. Drop is represented by spell.invocation-command-drop-held-object; Approach is represented by spell.invocation-command-approach-route; Flee is represented by spell.invocation-command-flee-route.",
           "taskRefs": [
@@ -34481,7 +34486,7 @@
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
           "sourceBoundary": "This profile supports Command Drop by consuming canonical character loadout held-object facts when present or caller-supplied held-object facts otherwise, emitting dropped-object outcomes, and ending the target turn. It does not add general inventory simulation, object placement, or loadout mutation.",
           "taskRefs": [
@@ -34509,7 +34514,7 @@
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
           "sourceBoundary": "This profile supports Command Approach by consuming caller-supplied route/proximity facts on the existing Movement fill when movement is available, spending the target's movement through the normal movement reducer, and ending the target turn only when that supplied route reaches within 5 feet of the caster. If the target has no available movement, it clears the pending Approach effect without ending the turn. It does not add pathfinding or route storage.",
           "taskRefs": [
@@ -34537,7 +34542,7 @@
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
           "sourceBoundary": "This profile supports Command Flee by consuming caller-supplied fastest-available moving-away route facts on the existing Movement fill, requiring the selected remaining Movement budget to be spent when movement is available, clearing the pending effect, and ending the target turn. If the target has no available movement, it clears the pending Flee effect and ends the turn without a Movement fill. Opportunity Attack eligibility is derived from the Movement fill's actual provoked-threat facts, not from Command route metadata. It does not add pathfinding, route storage, or route-choice policy.",
           "taskRefs": [
@@ -37697,7 +37702,7 @@
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
           "sourceBoundary": "The runtime consumes a typed table-supplied 5-foot-diameter sphere area identity, table-triggered end-within-5-feet witnesses, and table-supplied positive movement-distance witnesses capped at 30 feet for non-damaging reposition and ram movement into a creature's space. Runtime owns Magic Action and level-2+ Spell Slot spending, caster-owned Concentration lifecycle, one-minute duration cleanup, Dexterity save-gated Fire damage with half damage on success, slot-scaled damage dice, and Bonus Action spending for reposition and ram commands. Automatic area membership, unoccupied-space validation, pathfinding, barrier/pit traversal, sphere stop-position tracking, object ignition, light rendering, and map geometry remain runtime-detached table adjudication or presentation outside this profile.",
@@ -38020,7 +38025,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
           "sourceBoundary": "The runtime consumes typed table-supplied Grease ground-area identity and affected-target membership witnesses for appearance saves, table-triggered enter-area/end-turn save subjects for active hazards, and typed total-distance plus Grease-distance Movement facts for Difficult Terrain cost. Automatic area membership, pathfinding, path selection, and grid geometry derivation remain runtime-detached table adjudication/presentation outside this profile.",
           "taskRefs": [
@@ -38303,7 +38308,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
             "packages/battle-runtime/src/active-effect/types.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts"
@@ -38510,7 +38515,7 @@
             "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
             "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
             "packages/battle-runtime/src/active-effect/types.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
             "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
             "packages/shared-algebras/src/action-economy-algebra.ts",
             "packages/shared-algebras/src/speed-algebra.ts"
@@ -38601,7 +38606,7 @@
             "packages/battle-runtime/src/battle-reducer/spells-targeting.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-object-contact-damage.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Heat Metal object-contact Surface shape plus caller-supplied visible manufactured-metal object identity, physical-contact creature witnesses, holding-or-wearing spell-object witnesses, later-turn object-within-range witnesses, Saving Throw outcomes, and typed object-drop resolution fills. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 1 minute, durable spell-object contact occurrence identity, immediate Fire damage to selected contact creatures, later-turn Bonus Action repeat damage, slot-scaled damage dice, damage lifecycle integration for Concentration saves and zero-HP dispositions, Constitution saves for damaged holding-or-wearing targets against the caster Spell Save DC, drop-if-possible outcomes without inventory simulation, fallback self Attack Roll and Ability Check Disadvantage until the start of the caster's next turn when the object is not dropped, same-occurrence fallback penalty replacement, and cleanup through Concentration, duration, and caster-turn-start mechanisms.",
           "taskRefs": [
@@ -39118,7 +39123,7 @@
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/insect-plague-area-hazard.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
           "sourceBoundary": "Battle runtime admits the authored Insect Plague area-hazard shape, area choice, Concentration effect, Difficult Terrain and Lightly Obscured projections, Constitution Saving Throw outcomes, Piercing save-for-half damage, slot scaling, and once-per-turn save ledger using caller/table supplied area-membership trigger facts. The table/spatial layer remains the owner of automatic Sphere geometry, route derivation, area membership, and environmental swarm presentation.",
@@ -39258,7 +39263,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
           "sourceBoundary": "The runtime owns touched willing target admission, one-minute active effect duration, per-target-turn use reset, and the 10-foot Movement spend for a base maximum 30 feet of jump movement, with active turn-scoped jump-distance multipliers consumed when present. It consumes typed table-supplied jump distance and landing witnesses; legal-destination and Difficult Terrain landing Acrobatics outcomes arrive as landing witness variants, illegal landings are rejected, and failed Difficult Terrain landing applies Prone. Path, jump arc, collision, final-position, legal-destination derivation, and Difficult Terrain landing Dexterity (Acrobatics) check derivation remain runtime-detached table adjudication outside this profile.",
           "taskRefs": [
@@ -39479,7 +39484,7 @@
             "packages/battle-runtime/src/battle-reducer/readied-release.ts",
             "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Levitate creature branch plus caller-supplied visible target, target-within-range, willingness, initial-rise, fixed-object-or-surface movement, and ongoing caster-range witnesses. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration up to 10 minutes, initial suspension up to 20 feet, Constitution save gating for unwilling creatures, active levitated creature state, Magic Action altitude changes up to 20 feet while the target remains within range, target self-movement altitude adjustment when a fixed object or surface within reach is supplied, and cleanup on Concentration or duration end. Loose objects, automatic elevation/pathfinding, horizontal dragging, and fixed-object or surface discovery remain outside this creature-profile subset.",
@@ -41390,7 +41395,7 @@
             "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
             "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
             "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
           "taskRefs": [
             "L12G-FOLLOWUP-RAY-OF-ENFEEBLEMENT-D20-LIFECYCLE"
@@ -41437,7 +41442,7 @@
             "packages/battle-runtime/src/battle-reducer/spells-resolve-release.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
           "sourceBoundary": "The runtime consumes Ray of Enfeeblement's failed-save active effect as one source-side 1d8 damage-roll penalty owned by the affected target. It requests a typed rolled-dice hole keyed to each positive source damage-roll hole, subtracts the roll from by-type damage before target-side Resistance, spell damage reductions, Concentration saves, zero-Hit-Point disposition, and damage application, and removes the paired penalty with the Ray lifecycle effect through repeat-save success or Concentration cleanup without storing duplicate damage state.",
           "taskRefs": [
@@ -44291,7 +44296,7 @@
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts"
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Moonbeam spell, caller-supplied Cylinder area identity, movement trigger witnesses, saving throw and damage fills, and the shared shape-shift runtime state for supported class-feature and spell-effect shape-shift owners. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active movable area effect state, once-per-creature-per-turn save limiting across Moonbeam area triggers, slot-scaled Radiant damage with half damage on a successful Constitution save, Magic-action beam reposition, failed-save true-form reversion for supported shape-shift owners, Moonbeam-owned shape-shift suppression while the target remains in that Cylinder, explicit Cylinder-exit cleanup, and cleanup on Concentration or duration end. Automatic geometry, area membership, and Dim Light projection remain outside this profile subset.",
           "taskRefs": [
@@ -45101,7 +45106,7 @@
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
             "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Sleet Storm spell shape, caller-supplied point-origin Cylinder area identity, caller-supplied first-entry and starts-turn-in-area save trigger subjects, and caller-supplied movement path facts for travel through active Sleet Storm Difficult Terrain. It owns Magic Action and level-3-or-higher Spell Slot spending, caster-owned Concentration, active Sleet Storm area effect state with radius, height, and one shared per-turn save ledger, failed-save Prone application, failed-save target Concentration loss through the shared Concentration teardown owner, noncumulative Difficult Terrain movement-cost validation for active Sleet Storm areas, Heavily Obscured Cylinder projection, and cleanup on Concentration or duration end. Automatic geometry, area membership, pathfinding, and exposed-flame object/environment dousing remain caller/table/environment facts rather than parallel runtime map or object state.",
@@ -45216,7 +45221,7 @@
             "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-fill-set.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
             "packages/battle-runtime/src/battle-subjects.ts",
             "packages/shared-algebras/src/action-economy-algebra.ts"
           ],
@@ -45865,7 +45870,7 @@
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
             "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
           "sourceBoundary": "The runtime consumes a caller-supplied point-origin 20-foot-radius Sphere area identity, caster-owned Concentration up to 10 minutes, active Difficult Terrain movement-cost facts derived from caller-supplied movement distance through the area, and 2d4 Piercing damage per 5 feet traveled into or within the area. It owns Magic Action and level-2-or-higher Spell Slot spending, the active hazard identity, movement-cost projection, movement-triggered damage scaling, and cleanup on Concentration or duration end. Automatic geometry and pathfinding remain table/spatial facts. Camouflaged-terrain recognition is an accepted runtime-detached Search/perception witness: the table owns visibility at cast time, the Search Action declaration before entry, skill/check result, and recognized-hazard witness; runtime does not store per-observer terrain knowledge.",
@@ -46871,7 +46876,7 @@
             "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
             "packages/battle-runtime/src/battle-reducer/spells-profiles.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
-            "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+            "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
           "sourceBoundary": "The runtime consumes the authored Web spell, caller-supplied point-origin Cube area identity, table-triggered enters-area and starts-turn-in-area save subjects, table-supplied no-longer-in-webs or area-removed cleanup subjects, and caller-supplied movement path facts for travel through active Web Difficult Terrain. It owns Magic Action and level-2-or-higher Spell Slot spending, caster-owned Concentration, active Web area effect state with side length, once-per-creature-per-turn entry-save limiting, failed-save Restrained application, Strength (Athletics) escape cleanup, noncumulative Difficult Terrain movement-cost validation for active Web areas, Lightly Obscured Cube projection for sight/perception consumers, and cleanup on Concentration or duration end. Automatic geometry, area membership, pathfinding, anchoring/layering collapse, flat-surface depth presentation, and fire-exposed 5-foot Cube burn-away/damage derivation remain table/spatial/environment facts rather than parallel runtime map state.",

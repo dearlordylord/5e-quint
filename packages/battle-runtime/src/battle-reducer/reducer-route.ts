@@ -53,7 +53,7 @@ import {
   conditionSpellEndTurnRepeatSaveHoleIds,
   sleepRepeatSaveSavingThrowHoleIds,
   spellTurnStartSavingThrowOutcomeHoleId,
-} from "./turn-end-movement.ts";
+} from "./turn-boundary-lifecycle.ts";
 import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 import {
   ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,

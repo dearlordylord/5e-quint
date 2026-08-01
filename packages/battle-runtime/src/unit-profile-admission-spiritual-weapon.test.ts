@@ -61,7 +61,7 @@ import {
   spellTargetId,
   spiritualWeaponUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
-import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 
 describe("L12G deterministic Spiritual Weapon admission", () => {
   test("spiritual weapon casts as a Bonus Action attack proxy with slot scaling", () => {

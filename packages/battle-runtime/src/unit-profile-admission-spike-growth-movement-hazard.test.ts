@@ -4,7 +4,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
-import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
   attackDamageDispositionFill,
   damageRollFillWithGroups,

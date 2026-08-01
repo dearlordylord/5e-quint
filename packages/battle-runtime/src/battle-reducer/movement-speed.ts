@@ -564,3 +564,4 @@ export function grappleTargetExemptFromDragCost(
       grapplerFastWrestlerDragCostExempt(grapplerSize, targetSize))
   );
 }
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants

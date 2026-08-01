@@ -45,7 +45,7 @@ import {
   webAreaId,
   webUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
-import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import { discoverBattleActs, snapshotBattle } from "./index.ts";
 
 function castWeb(

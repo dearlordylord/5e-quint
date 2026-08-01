@@ -310,7 +310,7 @@ import {
   resolveMoveAfterMovement,
   resolveMovementProcedure,
 } from "./movement-procedures.ts";
-import { resolveEndTurnCommand } from "./turn-end-movement.ts";
+import { resolveEndTurnCommand } from "./turn-boundary-lifecycle.ts";
 import {
   isPersistentSpatialSpellProcedureSubject,
   resolvePersistentSpatialSpellProcedureCommand,

@@ -35,7 +35,7 @@ import {
   hasCondition,
   resolveBattleSubject,
 } from "./unit-profile-admission.test-support.ts";
-import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 
 const observerId = combatantId("unit-profile-see-invisibility-observer");
 

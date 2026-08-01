@@ -68,7 +68,7 @@ Promoted movement hazard branch:
   operation.
 - `packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts`,
   `packages/battle-runtime/src/battle-reducer/spells-active-effects.ts`, and
-  `packages/battle-runtime/src/battle-reducer/turn-end-movement.ts` own the
+  `packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts` own the
   active hazard identity, movement-cost projection, per-5-foot damage scaling,
   damage resolution, and cleanup on Concentration or duration end.
 - `plans/unit-profile-coverage/task-claims.jsonl` already records QNT proof and

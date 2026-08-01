@@ -11,7 +11,7 @@ import {
   calmEmotionsUnitId,
   protectionFromEvilAndGoodUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
-import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
   applyBattleHitPointDamage,
   applyCondition,

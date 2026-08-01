@@ -20,7 +20,7 @@ import {
   run,
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
-import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import type {
   BattleActiveEffect,
   BattleRuntimeSession,

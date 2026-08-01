@@ -31,7 +31,7 @@ import {
 import {
   isEndTurnFillKind,
   resolveEndTurnCommand,
-} from "./turn-end-movement.ts";
+} from "./turn-boundary-lifecycle.ts";
 import {
   battleMovementBudgetForActor,
   combatantCanMoveInState,

@@ -75,7 +75,7 @@ import {
 } from "./identity.ts";
 import { creatureNamedAttackRollIsSupported } from "./statblock-action-support.ts";
 import { supportedStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-support.ts";
-import { statBlockRechargeRollFillMatchesHole } from "./battle-reducer/turn-end-movement.ts";
+import { statBlockRechargeRollFillMatchesHole } from "./battle-reducer/turn-boundary-lifecycle.ts";
 
 function discoverStatBlockActs(state: BattleState) {
   return discoverBattleActs(

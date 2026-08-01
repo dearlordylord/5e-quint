@@ -125,7 +125,7 @@ import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
-import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import type { BattleInterruptAttackExecutionSelection } from "./battle-subjects.ts";
 import {

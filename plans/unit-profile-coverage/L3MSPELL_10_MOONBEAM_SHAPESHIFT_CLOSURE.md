@@ -77,7 +77,7 @@ Production reducer reachability:
   effect through that shared owner; it returns typed true-form, reverted, or
   missing-combatant results instead of dispatching on spell names, feature
   names, stat-block names, or provenance sections.
-- `packages/battle-runtime/src/battle-reducer/turn-end-movement.ts` applies the
+- `packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts` applies the
   Moonbeam rider from real Moonbeam save resolution: failed saves call the
   shared reversion operation, successful saves do not, and suppression is stored
   on the Moonbeam active effect until explicit Cylinder exit or spell cleanup.

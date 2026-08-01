@@ -1,4 +1,4 @@
-// Readied spell and movement release handling extracted from turn-end-movement.ts.
+// Readied release owns spell and movement continuation handling.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";

@@ -44,7 +44,7 @@ import {
   type DirectConditionLifecycleState,
 } from "./battle-reducer/direct-condition-lifecycle.test-support.ts";
 import { breakBattleConcentration } from "./battle-reducer/damage-apply.ts";
-import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
   invisibilityUnitId,
   spellCasterId,

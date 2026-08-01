@@ -24,7 +24,7 @@ import {
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
-import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
   combatantCanSee,
   discoverBattleActCandidates,

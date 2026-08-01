@@ -76,7 +76,7 @@ import {
 import { glyphDurableOccurrenceEffectFromCompletedInscription } from "./glyph-durable-occurrence-admission.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
-import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
+import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
   type BattleSpellCastReactionFact,
