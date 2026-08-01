@@ -2,26 +2,15 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { type BattleSubject } from "../battle-subjects.ts";
 import { type BattleObjectId, CombatantId } from "../identity.ts";
-import {
-  battleMovementBudgetForActor,
-  effectiveWalkSpeed,
-} from "./movement-speed.ts";
 import { characterEffectiveLoadoutFromOrigin } from "./battle-object-lifecycle.ts";
 import type {
   BattleActiveEffect,
-  BattleCreatureState,
   BattleHeldObjectFactsHole,
   BattleHoleId,
   BattleState,
 } from "../battle-state-execution.ts";
-
-export type HideousLaughterEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "hideousLaughter" }
->;
 
 export type CommandPendingEffect = Extract<
   BattleActiveEffect,
@@ -100,37 +89,4 @@ export function canonicalHeldObjectIdsForActor(
       : [loadout.offHandWeapon.itemId]),
     ...(loadout.shield === undefined ? [] : [loadout.shield.itemId]),
   ];
-}
-
-export function hideousLaughterEffects(
-  combatant: BattleCreatureState | undefined,
-): readonly HideousLaughterEffect[] {
-  return combatant === undefined
-    ? []
-    : combatant.activeEffects.filter(
-        (effect): effect is HideousLaughterEffect =>
-          effect.kind === "hideousLaughter",
-      );
-}
-
-export function standFromProneCostFeet(
-  state: BattleState,
-  actorId: CombatantId,
-): number | null {
-  const actor = state.combatants.get(actorId);
-  if (actor === undefined || !hasCondition(actor.conditions, "prone")) {
-    return null;
-  }
-  if (hideousLaughterEffects(actor).length > 0) {
-    return null;
-  }
-  const speed = effectiveWalkSpeed(
-    state,
-    actor,
-    state.grapples.some((grapple) => grapple.targetId === actorId),
-  );
-  const cost = Math.floor(Number(speed) / 2);
-  const remaining = battleMovementBudgetForActor(state, actorId).remainingFeet;
-  if (cost <= 0 || Number(remaining) < cost) return null;
-  return cost;
 }

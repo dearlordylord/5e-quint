@@ -126,8 +126,8 @@ import {
   canonicalHeldObjectIdsForActor,
   commandDropHeldObjectFactsHole,
   commandPendingEffectsForActor,
-  standFromProneCostFeet,
-} from "./turn-movement-discovery.ts";
+} from "./command-procedure-discovery.ts";
+import { standFromProneCostFeet } from "./movement-procedures.ts";
 import { readiedSpellInitialHoles } from "./readied-initial-holes.ts";
 import { movementHole } from "./movement-holes.ts";
 import {

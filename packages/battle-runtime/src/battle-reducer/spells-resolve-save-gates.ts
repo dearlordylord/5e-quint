@@ -108,7 +108,7 @@ import {
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
-import { parseBattleMovement } from "./turn-end-movement.ts";
+import { parseBattleMovement } from "./movement-procedures.ts";
 import {
   readiedMovementBudgetForActor,
   readiedMovementHole,
@@ -2522,6 +2522,7 @@ function resolveFailedSaveForcedReactionMovement(input: {
     targetId,
     input.movementFill,
     {
+      kind: "budgetedMovement",
       movementBudgetFeet: readiedMovementBudgetForActor(
         input.state,
         targetId,

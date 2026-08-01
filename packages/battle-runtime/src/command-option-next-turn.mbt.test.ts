@@ -62,6 +62,7 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 
 const commandOptionNextTurnReplayScenarios = [
   "failed-save-records-pending",
@@ -139,10 +140,13 @@ type RuntimeCommandSubject = Extract<
   BattleSubject,
   { readonly tag: "runtimeCommand" }
 >;
-type RuntimeCommandAct = ReturnType<
+type RuntimeCommandCandidate = ReturnType<
   typeof discoverBattleActCandidates
 >[number] & {
   readonly subject: RuntimeCommandSubject;
+};
+type RuntimeCommandAct = RuntimeCommandCandidate & {
+  readonly routeEvents: readonly ReducerRouteEvent[];
 };
 
 const initialProjection: CommandOptionNextTurnProjection = {
@@ -765,15 +769,22 @@ function requireRuntimeCommand(
   state: BattleState,
   command: RuntimeCommandSubject["command"],
 ): RuntimeCommandAct {
-  const act = discoverBattleActCandidates(state).find(
-    (candidate): candidate is RuntimeCommandAct =>
+  const candidate = discoverBattleActCandidates(state).find(
+    (candidate): candidate is RuntimeCommandCandidate =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === command,
   );
-  if (act === undefined) {
+  if (candidate === undefined) {
     throw new Error(`Expected runtime command ${command}.`);
   }
-  return act;
+  const routeEvents = battleReducerRouteEventsForDiscoveredAct(
+    state,
+    candidate,
+  );
+  if (routeEvents === undefined) {
+    throw new Error(`Expected reducer route for runtime command ${command}.`);
+  }
+  return { ...candidate, routeEvents };
 }
 
 function endTurnSubjectFor(

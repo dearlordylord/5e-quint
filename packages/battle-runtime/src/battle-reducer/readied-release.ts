@@ -11,7 +11,7 @@ import { opportunityAttackThreatsForMovement } from "./movement-speed.ts";
 import {
   parseBattleMovement,
   resolveMovementEffectsAfterMovement,
-} from "./turn-end-movement.ts";
+} from "./movement-procedures.ts";
 import {
   readiedMovementBudgetForActor,
   readiedMovementHole,
@@ -186,6 +186,7 @@ export function resolveReleaseReadiedMovementCommand(
     readiedMovementActorId,
     fill,
     {
+      kind: "budgetedMovement",
       movementBudgetFeet: readiedMovementBudgetForActor(
         input.state,
         readiedMovementActorId,

@@ -54,10 +54,10 @@ import {
 } from "../character-execution-queries.ts";
 import {
   conditionSpellEndTurnRepeatSaveHoleIds,
-  isCreatureSpaceTraversalMovementFactValidationMessage,
   sleepRepeatSaveSavingThrowHoleIds,
   spellTurnStartSavingThrowOutcomeHoleId,
 } from "./turn-end-movement.ts";
+import { isCreatureSpaceTraversalMovementFactValidationMessage } from "./movement-procedures.ts";
 import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import { activeDruidWildShapeEffect } from "./druid-wild-shape.ts";
 import { battleLightEmitters } from "./spells-active-effects.ts";

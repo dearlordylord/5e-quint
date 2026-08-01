@@ -66,7 +66,7 @@ import {
   savingThrowFlatBonusProjections,
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
-import { parseBattleMovement } from "./turn-end-movement.ts";
+import { parseBattleMovement } from "./movement-procedures.ts";
 
 const byCunningStrikeEffectKind = Match.discriminator("kind");
 
@@ -597,6 +597,7 @@ function resolveCunningStrikePostDamageMovement(
     context.attackerId,
     fills.movement,
     {
+      kind: "budgetedMovement",
       movementBudgetFeet: speedKindBudget.movementBudgetFeet,
       spendsTurnMovement: false,
     },

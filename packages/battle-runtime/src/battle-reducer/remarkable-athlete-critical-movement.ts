@@ -31,7 +31,7 @@ import {
 } from "./movement-speed.ts";
 import { applyBattleMovement } from "./battle-movement.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { parseBattleMovement } from "./turn-end-movement.ts";
+import { parseBattleMovement } from "./movement-procedures.ts";
 
 export type RemarkableAthleteCriticalHitMovementFills = {
   readonly remarkableAthleteCriticalHitMovementDecision:
@@ -172,6 +172,7 @@ export function resolveRemarkableAthleteCriticalHitMovement(input: {
     input.attackerId,
     movementFill,
     {
+      kind: "budgetedMovement",
       movementBudgetFeet: speedKindBudget.movementBudgetFeet,
       spendsTurnMovement: false,
     },

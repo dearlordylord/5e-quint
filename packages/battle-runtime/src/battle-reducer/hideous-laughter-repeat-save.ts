@@ -17,10 +17,21 @@ import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-b
 
 const DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY = "damage";
 
-type HideousLaughterEffect = Extract<
+export type HideousLaughterEffect = Extract<
   BattleCreatureState["activeEffects"][number],
   { readonly kind: "hideousLaughter" }
 >;
+
+export function hideousLaughterEffects(
+  combatant: BattleCreatureState | undefined,
+): readonly HideousLaughterEffect[] {
+  return combatant === undefined
+    ? []
+    : combatant.activeEffects.filter(
+        (effect): effect is HideousLaughterEffect =>
+          effect.kind === "hideousLaughter",
+      );
+}
 
 function repeatSaveKeyPart(value: string): string {
   return encodeURIComponent(value);

@@ -303,19 +303,19 @@ import {
 } from "./readied-release.ts";
 import { applyBattleMovement } from "./battle-movement.ts";
 import {
-  commandPendingEffectsForActor,
-  resolveCommandApproachAfterMovement,
-  resolveCommandApproachCommand,
-  resolveCommandDropCommand,
-  resolveCommandFleeAfterMovement,
-  resolveCommandFleeCommand,
-  resolveCommandGrovelCommand,
-  resolveEndTurnCommand,
-  resolveJumpMovementReplacementCommand,
+  isCommandFollowUpSubject,
+  isCommandMovementContinuation,
+  pendingCommandObligationIssue,
+  resolveCommandFollowUp,
+  resumeCommandMovementContinuation,
+} from "./command-procedures.ts";
+import { commandHaltSuppressionIssue } from "./command-halt.ts";
+import {
+  isMovementProcedureSubject,
   resolveMoveAfterMovement,
-  resolveMoveCommand,
-  resolveStandFromProneCommand,
-} from "./turn-end-movement.ts";
+  resolveMovementProcedure,
+} from "./movement-procedures.ts";
+import { resolveEndTurnCommand } from "./turn-end-movement.ts";
 import {
   isPersistentSpatialSpellProcedureSubject,
   resolvePersistentSpatialSpellProcedureCommand,
@@ -920,71 +920,21 @@ export function resolveBattleSubjectInternal(
     );
   }
   /* v8 ignore stop */
-  const commandPendingEffects = commandPendingEffectsForActor(
+  const commandObligationIssue = pendingCommandObligationIssue(
     input.state,
-    actorId,
-  ).filter(
-    (effect) =>
-      effect.option === "grovel" ||
-      effect.option === "drop" ||
-      effect.option === "approach" ||
-      effect.option === "flee",
+    input.subject,
   );
-  const commandGrovelSubject =
-    input.subject.tag === "runtimeCommand" &&
-    input.subject.command === "commandGrovel"
-      ? input.subject
-      : null;
-  const commandDropSubject =
-    input.subject.tag === "runtimeCommand" &&
-    input.subject.command === "commandDrop"
-      ? input.subject
-      : null;
-  const commandApproachSubject =
-    input.subject.tag === "runtimeCommand" &&
-    input.subject.command === "commandApproach"
-      ? input.subject
-      : null;
-  const commandFleeSubject =
-    input.subject.tag === "runtimeCommand" &&
-    input.subject.command === "commandFlee"
-      ? input.subject
-      : null;
-  const commandSubject =
-    commandGrovelSubject ??
-    commandDropSubject ??
-    commandApproachSubject ??
-    commandFleeSubject;
   /* v8 ignore start -- Defensive stale-subject rejection: rediscovery exposes the pending Command obligation instead of unrelated subjects. */
-  if (
-    commandPendingEffects.length > 0 &&
-    !commandPendingEffects.some(
-      (effect) =>
-        ((commandGrovelSubject !== null && effect.option === "grovel") ||
-          (commandDropSubject !== null && effect.option === "drop") ||
-          (commandApproachSubject !== null && effect.option === "approach") ||
-          (commandFleeSubject !== null && effect.option === "flee")) &&
-        commandSubject !== null &&
-        spellActiveEffectExecutionRef(effect) === commandSubject.effectRef,
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "A pending Command effect must be resolved before other battle subjects.",
-    );
+  if (commandObligationIssue !== null) {
+    return invalidResult(input.state, "staleSubject", commandObligationIssue);
   }
   /* v8 ignore stop */
-  if (
-    input.state.currentTurnResources.commandHalt !== null &&
-    actorId === currentActorId(input.state) &&
-    subjectSuppressedByCommandHalt(input.subject)
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Command Halt suppresses Movement, Actions, and Bonus Actions for this turn.",
-    );
+  const commandHaltIssue = commandHaltSuppressionIssue(
+    input.state,
+    input.subject,
+  );
+  if (commandHaltIssue !== null) {
+    return invalidResult(input.state, "staleSubject", commandHaltIssue);
   }
   if (
     currentActorHasOpenStatBlockMultiattackDispatch(input.state) &&
@@ -1472,32 +1422,11 @@ export function resolveBattleSubjectInternal(
     if (subject.tag === "runtimeCommand" && subject.command === "endTurn") {
       return resolveEndTurnCommand(input);
     }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "commandGrovel"
-    ) {
-      return resolveCommandGrovelCommand({ ...input, subject });
+    if (isCommandFollowUpSubject(subject)) {
+      return resolveCommandFollowUp({ ...input, subject });
     }
-    if (subject.tag === "runtimeCommand" && subject.command === "commandDrop") {
-      return resolveCommandDropCommand({ ...input, subject });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "commandApproach"
-    ) {
-      return resolveCommandApproachCommand({ ...input, subject });
-    }
-    if (subject.tag === "runtimeCommand" && subject.command === "commandFlee") {
-      return resolveCommandFleeCommand({ ...input, subject });
-    }
-    if (subject.tag === "runtimeCommand" && subject.command === "move") {
-      return resolveMoveCommand(input);
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "jumpMovementReplacement"
-    ) {
-      return resolveJumpMovementReplacementCommand({ ...input, subject });
+    if (isMovementProcedureSubject(subject)) {
+      return resolveMovementProcedure({ ...input, subject });
     }
     if (
       subject.tag === "runtimeCommand" &&
@@ -1565,12 +1494,6 @@ export function resolveBattleSubjectInternal(
       subject.command === "wardingBondSeparation"
     ) {
       return resolveWardingBondSeparationCommand({ ...input, subject });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "standFromProne"
-    ) {
-      return resolveStandFromProneCommand(input);
     }
     if (
       subject.tag === "runtimeCommand" &&
@@ -2310,36 +2233,6 @@ function resolveWardingBondSeparationCommand(
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
-}
-
-function subjectSuppressedByCommandHalt(subject: BattleSubject): boolean {
-  if (
-    subject.tag === "action" ||
-    subject.tag === "pactOfTheChainFamiliarAttack" ||
-    subject.tag === "actionSpell" ||
-    subject.tag === "bonusAction" ||
-    subject.tag === "bonusActionStandardAction" ||
-    subject.tag === "bonusActionSpell" ||
-    subject.tag === "bonusActionDashSpell" ||
-    subject.tag === "monkFocusOption" ||
-    subject.tag === "monkFocusFlurryOfBlowsStrike" ||
-    subject.tag === "unitFeature" ||
-    subject.tag === "unitFeatureHeldWeaponActivation" ||
-    subject.tag === "druidWildShape" ||
-    subject.tag === "companionLifecycle" ||
-    subject.tag === "findFamiliarSharedSenses" ||
-    subject.tag === "findFamiliarTouchSpell"
-  ) {
-    return true;
-  }
-  return (
-    subject.tag === "runtimeCommand" &&
-    (subject.command === "move" ||
-      subject.command === "standFromProne" ||
-      subject.command === "jumpMovementReplacement" ||
-      subject.command === "levitateAltitudeControl" ||
-      subject.command === "replaceSelfTransformationMode")
-  );
 }
 
 function resolveLevitateAltitudeControlCommand(
@@ -4336,7 +4229,7 @@ export function resumeInterruptedProcedure(
       state,
       subject: continuation.subject,
       movement: continuation.movement,
-      fills: [],
+      remainingFills: [],
     });
   }
   if (continuation.kind === "movementThenAfterDamageSequence") {
@@ -4353,22 +4246,8 @@ export function resumeInterruptedProcedure(
           : handledInterruptTrigger,
     });
   }
-  if (continuation.kind === "commandApproachMovement") {
-    return resolveCommandApproachAfterMovement({
-      state,
-      subject: continuation.subject,
-      movement: continuation.movement,
-      movedWithinFiveFeetOfCaster: continuation.movedWithinFiveFeetOfCaster,
-      endTurnFills: continuation.endTurnFills,
-    });
-  }
-  if (continuation.kind === "commandFleeMovement") {
-    return resolveCommandFleeAfterMovement({
-      state,
-      subject: continuation.subject,
-      movement: continuation.movement,
-      endTurnFills: continuation.endTurnFills,
-    });
+  if (isCommandMovementContinuation(continuation)) {
+    return resumeCommandMovementContinuation(state, continuation);
   }
   if (continuation.kind === "attackDamage") {
     const damageAmount = attackDamageContinuationAmount(state, continuation);
