@@ -160,6 +160,25 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       }),
     ]);
   });
+  test("Heightened Grease requires its selected target before save resolution", () => {
+    const { session, act, heightenedTarget } = heightenedGreaseCastSetup();
+
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "targetChoice",
+          holeId: heightenedTarget.holeId,
+        },
+      ],
+    });
+  });
   test("Heightened Grease stores the selected target on the ground hazard occurrence", () => {
     const cast = castHeightenedGreaseWithSelectedTarget();
 
@@ -560,7 +579,7 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
   });
 });
 
-function castHeightenedGreaseWithSelectedTarget(): BattleRuntimeSession {
+function heightenedGreaseCastSetup() {
   const spell = spellRecord(greaseUnitId);
   const session = startBattleSessionRight({
     battleId: battleId("heightened-grease-ground-hazard"),
@@ -613,8 +632,13 @@ function castHeightenedGreaseWithSelectedTarget(): BattleRuntimeSession {
   const state = session.state;
   const act = heightenedGreaseAct(state);
   const heightenedTarget = requireHole(act.initialHoles, "targetChoice");
+  return { session, act, heightenedTarget };
+}
+
+function castHeightenedGreaseWithSelectedTarget(): BattleRuntimeSession {
+  const { session, act, heightenedTarget } = heightenedGreaseCastSetup();
   const awaitingSave = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       {
@@ -634,7 +658,7 @@ function castHeightenedGreaseWithSelectedTarget(): BattleRuntimeSession {
   });
   const savingThrow = requireHole(awaitingSave.holes, "savingThrowOutcome");
   const resolved = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: act.subject,
     fills: [
       {
