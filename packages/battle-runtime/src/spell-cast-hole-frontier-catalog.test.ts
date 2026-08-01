@@ -8,6 +8,7 @@ import { classSpellListForClassName } from "@dnd/surface/surface/unit-catalog";
 import { describe, expect, test } from "vitest";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   attackRollFill,
   battleId,
   characterSeed,
@@ -310,6 +311,11 @@ function replayCatalogSpellAct(input: {
         message: result.message,
       };
     }
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: result.snapshot,
+      subject: input.act.subject,
+      holes: result.holes,
+    });
     frontiers.push(result.holes.map((hole) => hole.kind));
     const nextFills = catalogFrontierFills({
       acceptedFills,
@@ -610,5 +616,5 @@ describe("spell cast hole frontier catalog", () => {
         "webRestraintHazard: [spellAreaChoice] => [spellAreaChoice] -> resolved",
       ]
     `);
-  });
+  }, 10_000);
 });
