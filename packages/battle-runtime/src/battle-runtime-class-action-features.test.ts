@@ -96,6 +96,7 @@ import type {
 } from "./battle-runtime.test-support.ts";
 import type { BattleRuntimeSession } from "./index.ts";
 import { describe, expect, test } from "vitest";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
@@ -452,12 +453,20 @@ describe("battle runtime: class action features", () => {
     if (secondWindAct === undefined) {
       throw new Error("Expected Second Wind act.");
     }
+    const replay = resolveBattleSubject({
+      state: session.state,
+      subject: secondWindAct.subject,
+      fills: [],
+    });
+    expect(replay).toMatchObject({
+      tag: "needsHoles",
+      holes: [findHole(secondWindAct.initialHoles, "rolledDice")],
+    });
+    const healingHole = findHole(secondWindAct.initialHoles, "rolledDice");
     const result = resolveBattleSubject({
       state: session.state,
       subject: secondWindAct.subject,
-      fills: [
-        damageRollFill(findHole(secondWindAct.initialHoles, "rolledDice"), 8),
-      ],
+      fills: [damageRollFill(healingHole, 8)],
     });
 
     expect(result).toMatchObject({
@@ -493,6 +502,50 @@ describe("battle runtime: class action features", () => {
           battleActUnitPresentation(act)?.unitId === "fighter_second_wind",
       ),
     ).toBe(false);
+  });
+
+  test("Second Wind rejects an unrelated healing hole and an out-of-range d10 result", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-second-wind-invalid-healing-roll"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevel: 2,
+          currentHp: 4,
+          resources: [resource()],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const act = discoverBattleActs(session).find(
+      (candidate) =>
+        candidate.subject.tag === "unitFeature" &&
+        battleActUnitPresentation(candidate)?.unitId === "fighter_second_wind",
+    );
+    if (act === undefined) {
+      throw new Error("Expected Second Wind act.");
+    }
+    const healingHole = findHole(act.initialHoles, "rolledDice");
+
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          {
+            ...damageRollFill(healingHole, 8),
+            holeId: holeId("battle:test:unrelated-self-healing-roll"),
+          },
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [damageRollFill(healingHole, 11)],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
   });
 
   test("Second Wind is rejected without action capacity, resource uses, or the supported Unit shape", () => {

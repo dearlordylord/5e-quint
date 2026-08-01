@@ -6,6 +6,10 @@ import { describe, expect, test } from "vitest";
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import {
+  magicActionAreaSaveDamageHealingDamageRollHoleId,
+  magicActionAreaSaveDamageHealingHealingRollHoleId,
+} from "./battle-reducer/unit-feature-discovery.ts";
 
 import {
   type BattleFill,
@@ -194,6 +198,42 @@ describe("Druid Land's Aid area save damage and healing", () => {
         "targetChoice",
         "rolledDice",
       ]);
+    }
+  });
+
+  test("returns only the remaining holes after each partial fill", () => {
+    const state = landsAidBattle();
+    const act = landsAidAct(state);
+    const { savingThrow, healingTarget, damageRoll, healingRoll } =
+      landsAidHoles(act);
+    const fills = [
+      landsAidSavingThrowFill(
+        savingThrow,
+        landsAidProcedureRef(state),
+        [{ targetId: spellTargetId, succeeded: false }],
+        [spellTargetId, healingTargetId],
+      ),
+      rolledDiceFill(damageRoll, [4, 4]),
+      targetChoiceFill(healingTarget, healingTargetId),
+      rolledDiceFill(healingRoll, [3, 4]),
+    ] as const satisfies readonly BattleFill[];
+
+    for (const fill of fills) {
+      const result = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [fill],
+      });
+      if (result.tag !== "needsHoles") {
+        throw new Error(`Expected partial Land's Aid holes: ${result.tag}.`);
+      }
+      expect(new Set(result.holes.map((hole) => hole.holeId))).toEqual(
+        new Set(
+          act.initialHoles
+            .filter((hole) => hole.holeId !== fill.holeId)
+            .map((hole) => hole.holeId),
+        ),
+      );
     }
   });
 
@@ -427,17 +467,12 @@ function resolveLandsAid(
   },
 ): BattleResolutionResult {
   const act = landsAidAct(state);
-  const save = requireHole(act.initialHoles, "savingThrowOutcome");
-  const target = requireHole(act.initialHoles, "targetChoice");
-  const rolls = act.initialHoles.filter(
-    (hole): hole is Extract<BattleHole, { readonly kind: "rolledDice" }> =>
-      hole.kind === "rolledDice",
-  );
-  const damage = rolls.find((hole) => hole.label?.includes("damage"));
-  const healing = rolls.find((hole) => hole.label?.includes("healing"));
-  if (damage === undefined || healing === undefined) {
-    throw new Error("Expected Land's Aid damage and healing roll holes.");
-  }
+  const {
+    savingThrow: save,
+    healingTarget: target,
+    damageRoll: damage,
+    healingRoll: healing,
+  } = landsAidHoles(act);
   return resolveBattleSubject({
     state,
     subject: act.subject,
@@ -455,12 +490,41 @@ function resolveLandsAid(
   });
 }
 
+function landsAidHoles(act: ReturnType<typeof landsAidAct>) {
+  const procedureRef = act.subject.procedureRef;
+  const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+  const healingTarget = requireHole(act.initialHoles, "targetChoice");
+  const rolls = act.initialHoles.filter(
+    (hole): hole is Extract<BattleHole, { readonly kind: "rolledDice" }> =>
+      hole.kind === "rolledDice",
+  );
+  const damage = rolls.find(
+    (hole) =>
+      hole.holeId ===
+      magicActionAreaSaveDamageHealingDamageRollHoleId(procedureRef),
+  );
+  const healing = rolls.find(
+    (hole) =>
+      hole.holeId ===
+      magicActionAreaSaveDamageHealingHealingRollHoleId(procedureRef),
+  );
+  if (damage === undefined || healing === undefined) {
+    throw new Error("Expected Land's Aid damage and healing roll holes.");
+  }
+  return {
+    savingThrow,
+    healingTarget,
+    damageRoll: damage,
+    healingRoll: healing,
+  };
+}
+
 function landsAidAct(state: BattleState) {
   const act = landsAidActOrUndefined(state);
   if (act === undefined || act.subject.tag !== "unitFeature") {
     throw new Error("Expected Land's Aid act.");
   }
-  return act;
+  return { ...act, subject: act.subject };
 }
 
 function landsAidActOrUndefined(state: BattleState) {
