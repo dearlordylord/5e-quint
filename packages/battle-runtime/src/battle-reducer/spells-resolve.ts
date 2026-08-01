@@ -3698,20 +3698,6 @@ function spendSpellActResolutionResources(input: {
         "Spiritual Weapon repeat attack is only available on later turns.",
       );
     }
-    if (
-      ongoingSpellEffectSuppressedByAntimagicField(
-        input.state,
-        antimagicFieldOngoingSpellEffectRefForActiveEffect(
-          input.invocation.activeEffect,
-        ),
-      )
-    ) {
-      return invalidResult(
-        input.errorState,
-        "staleSubject",
-        "Spiritual Weapon repeat attack is suppressed by Antimagic Field.",
-      );
-    }
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       input.spiritualWeaponForcePosition === undefined ||

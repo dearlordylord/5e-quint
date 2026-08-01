@@ -456,25 +456,31 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
     const targetHole = requireHole(staleAct.initialHoles, "targetChoice");
     const movedForceId = "unit-profile-antimagic-stale-spiritual-weapon-moved";
 
+    const targetFills = [
+      spiritualWeaponForcePositionFill({
+        hole: forceHole,
+        positionId: movedForceId,
+      }),
+      spiritualWeaponTargetFill(
+        targetHole,
+        spiritualWeaponUnitId,
+        spellCasterId,
+        spellTargetId,
+        battleTablePositionId(movedForceId),
+      ),
+    ];
     const resolved = resolveBattleSubject({
       state: suppressed,
       subject: staleAct.subject,
-      fills: [
-        spiritualWeaponForcePositionFill({
-          hole: forceHole,
-          positionId: movedForceId,
-        }),
-        spiritualWeaponTargetFill(
-          targetHole,
-          spiritualWeaponUnitId,
-          spellCasterId,
-          spellTargetId,
-          battleTablePositionId(movedForceId),
-        ),
-      ],
+      fills: targetFills,
     });
 
-    expect(resolved).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    expect(resolved).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Spiritual Weapon repeat attack is suppressed by Antimagic Field.",
+    });
     expect(
       suppressed.combatants
         .get(spellCasterId)
