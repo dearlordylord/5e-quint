@@ -131,7 +131,7 @@ const routeByAction = {
   doAfterHitAttackDamageBridge: bridgeProjection({
     scenario: "afterHitAttackDamageRouteBridge",
     route: damageRoute(
-      "afterHitDamageRider",
+      "afterHitSpell",
       "battleHitPoint",
       noHoles,
       "battleHitPoint",
@@ -154,7 +154,7 @@ const routeByAction = {
   doAfterHitTimedDamageBridge: bridgeProjection({
     scenario: "afterHitTimedDamageRouteBridge",
     route: damageRoute(
-      "afterHitDamageRider",
+      "afterHitSpell",
       "battleActiveEffect",
       abilityCheckHole,
       "battleHitPoint",

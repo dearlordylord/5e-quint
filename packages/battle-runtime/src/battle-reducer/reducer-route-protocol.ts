@@ -53,7 +53,7 @@ export type BattleReducerRouteSubjectFamily =
   | "wardedTargetInterdiction"
   | "zeroHitPointSpellEffectTeardown"
   | "spellBaseArmorClassEffect"
-  | "afterHitDamageRider"
+  | "afterHitSpell"
   | "markedDamageRiderEffect"
   | "conditionImmunityTemporaryHitPointEffect"
   | "attackActionAreaSaveDamageReplacement"

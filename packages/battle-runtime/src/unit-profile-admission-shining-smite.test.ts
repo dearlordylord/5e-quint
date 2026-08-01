@@ -328,13 +328,13 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     expect(endConcentrationAct.routeEvents).toEqual([
       {
         kind: "discoverBattleActs",
-        subject: "afterHitDamageRider",
+        subject: "afterHitSpell",
         holes: [],
         owner: "battleConcentration",
       },
       {
         kind: "discoverBattleActs",
-        subject: "afterHitDamageRider",
+        subject: "afterHitSpell",
         holes: [],
         owner: "battleActiveEffect",
       },
@@ -362,13 +362,13 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       },
       {
         kind: "resolveBattleSubjectWithoutFill",
-        subject: "afterHitDamageRider",
+        subject: "afterHitSpell",
         holes: [],
         owner: "battleConcentration",
       },
       {
         kind: "resolveBattleSubjectWithoutFill",
-        subject: "afterHitDamageRider",
+        subject: "afterHitSpell",
         holes: [],
         owner: "battleActiveEffect",
       },

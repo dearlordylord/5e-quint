@@ -92,4 +92,37 @@ export function battleCombatantHasActiveEffectKind(
   );
 }
 
+export function targetDamagedByCasterOrAllySpellConditionRemoved(
+  before: BattleState,
+  after: BattleState,
+): boolean {
+  for (const beforeCombatant of before.combatants.values()) {
+    const afterCombatant = after.combatants.get(beforeCombatant.combatantId);
+    if (afterCombatant === undefined) {
+      continue;
+    }
+    const beforeCount = targetDamagedByCasterOrAllySpellConditionCount(
+      beforeCombatant.activeEffects,
+    );
+    const afterCount = targetDamagedByCasterOrAllySpellConditionCount(
+      afterCombatant.activeEffects,
+    );
+    if (afterCount < beforeCount) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function targetDamagedByCasterOrAllySpellConditionCount(
+  activeEffects: readonly BattleActiveEffect[],
+): number {
+  return activeEffects.filter(
+    (effect) =>
+      effect.kind === "spellCondition" &&
+      effect.condition === "charmed" &&
+      effect.escape?.kind === "targetDamagedByCasterOrAlly",
+  ).length;
+}
+
 import { conditionStatesEqual } from "@dnd/shared-algebras/conditions-algebra";

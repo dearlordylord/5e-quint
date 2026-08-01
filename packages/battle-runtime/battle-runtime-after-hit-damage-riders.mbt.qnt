@@ -2,7 +2,7 @@
 
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 
-module battleRuntimeAfterHitDamageRidersMbt {
+module battleRuntimeAfterHitSpellsMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   type AfterHitScenario =
@@ -37,7 +37,7 @@ module battleRuntimeAfterHitDamageRidersMbt {
     | TurnStartSaveOutcome
     | EscapeAbilityCheck
 
-  type AfterHitDamageRidersWitnessState = {
+  type AfterHitSpellsWitnessState = {
     qScenario: AfterHitScenario,
     qPhase: AfterHitPhase,
     qTargetHp: int,
@@ -52,7 +52,7 @@ module battleRuntimeAfterHitDamageRidersMbt {
     protocol: WitnessProtocol[AfterHitHole],
   }
 
-  var qState: AfterHitDamageRidersWitnessState
+  var qState: AfterHitSpellsWitnessState
 
   pure val targetInitialHp: int = 30
   pure val noHoles: Set[AfterHitHole] = Set()

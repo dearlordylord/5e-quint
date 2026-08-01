@@ -884,7 +884,7 @@ type ReducerRouteSubjectFamily =
   | "heldWeaponActiveEffect"
   | "weaponEnhancementItemTarget"
   | "weaponHostedSpellEffectCleanup"
-  | "afterHitDamageRider"
+  | "afterHitSpell"
   | "statBlockAction"
   | "creatureAttack"
   | "deathSavingThrow"
@@ -12270,7 +12270,7 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   HeldWeaponActiveEffectRouteSubject: "heldWeaponActiveEffect",
   WeaponEnhancementItemTargetRouteSubject: "weaponEnhancementItemTarget",
   WeaponHostedSpellEffectCleanupRouteSubject: "weaponHostedSpellEffectCleanup",
-  AfterHitDamageRiderRouteSubject: "afterHitDamageRider",
+  AfterHitSpellRouteSubject: "afterHitSpell",
   StatBlockActionRouteSubject: "statBlockAction",
   CreatureAttackRouteSubject: "creatureAttack",
   DeathSavingThrowRouteSubject: "deathSavingThrow",

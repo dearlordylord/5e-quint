@@ -21,7 +21,7 @@
 // - UBIQUITOUS_LANGUAGE.md: Rider, Attack Damage Rider, Spell Invocation,
 //   Spell Effect, Spend, Concentration, Condition, Hit Points, and Ability
 //   Check.
-module battleRuntimeAfterHitDamageRidersRouteMbt {
+module battleRuntimeAfterHitSpellsRouteMbt {
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
   import battleRuntimeReducerRoute.* from "./battle-runtime-reducer-route"
@@ -57,7 +57,7 @@ module battleRuntimeAfterHitDamageRidersRouteMbt {
     owner: ReducerRouteOwnerGroup,
   ): ReducerRouteEvent =
     routeDiscoverBattleActs(
-      AfterHitDamageRiderRouteSubject,
+      AfterHitSpellRouteSubject,
       holes,
       owner,
     )
@@ -68,7 +68,7 @@ module battleRuntimeAfterHitDamageRidersRouteMbt {
     owner: ReducerRouteOwnerGroup,
   ): ReducerRouteEvent =
     routeResolveBattleSubject(
-      AfterHitDamageRiderRouteSubject,
+      AfterHitSpellRouteSubject,
       fill,
       holes,
       owner,
@@ -79,7 +79,7 @@ module battleRuntimeAfterHitDamageRidersRouteMbt {
     owner: ReducerRouteOwnerGroup,
   ): ReducerRouteEvent =
     routeResolveBattleSubjectWithoutFill(
-      AfterHitDamageRiderRouteSubject,
+      AfterHitSpellRouteSubject,
       holes,
       owner,
     )

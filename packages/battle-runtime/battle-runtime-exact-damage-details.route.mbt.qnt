@@ -157,7 +157,7 @@ module battleRuntimeExactDamageDetailsRouteMbt {
       recordBridge(
         AfterHitAttackDamageRouteBridge,
         damageRoute(
-          AfterHitDamageRiderRouteSubject,
+          AfterHitSpellRouteSubject,
           BattleHitPointOwner,
           Set(),
           BattleHitPointOwner,
@@ -193,7 +193,7 @@ module battleRuntimeExactDamageDetailsRouteMbt {
       recordBridge(
         AfterHitTimedDamageRouteBridge,
         damageRoute(
-          AfterHitDamageRiderRouteSubject,
+          AfterHitSpellRouteSubject,
           BattleActiveEffectOwner,
           Set(AbilityCheckHoleKind),
           BattleHitPointOwner,

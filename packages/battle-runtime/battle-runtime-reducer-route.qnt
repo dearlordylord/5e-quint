@@ -25,7 +25,7 @@ module battleRuntimeReducerRoute {
     | HeldWeaponActiveEffectRouteSubject
     | WeaponEnhancementItemTargetRouteSubject
     | WeaponHostedSpellEffectCleanupRouteSubject
-    | AfterHitDamageRiderRouteSubject
+    | AfterHitSpellRouteSubject
     | StatBlockActionRouteSubject
     | CreatureAttackRouteSubject
     | DeathSavingThrowRouteSubject

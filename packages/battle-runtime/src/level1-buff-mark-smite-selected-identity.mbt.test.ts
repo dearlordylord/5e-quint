@@ -1,10 +1,10 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
+  characterSpellInvocationRefForProcedureRefForTest,
   characterSpellProcedureRefMatchesSpellForTest,
   type MembersOf,
 } from "./battle-runtime.test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-DIVINE-FAVOR divine_favor
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-DIVINE-SMITE divine_smite
@@ -66,6 +66,7 @@ import {
   battleReducerStartRouteEvent,
   characterId,
   combatantId,
+  discoverBattleActs,
   discoverBattleActCandidates,
   endTurn,
   initiativeScore,
@@ -427,9 +428,7 @@ type ShillelaghWeaponAttackOverrideProjection =
   | { readonly tag: "none" }
   | {
       readonly tag: "quarterstaffForceAttack";
-      readonly sourceProcedureRef: ReturnType<
-        typeof battleProcedureExecutionRefForTest
-      >;
+      readonly sourceSpellId: typeof shillelaghUnitId;
       readonly weaponUnitId: ShillelaghQuarterstaffUnitId;
       readonly spellcastingAbilityModifier: number;
       readonly effectAttackBonus: number;
@@ -446,9 +445,7 @@ type TrueStrikeSpellHostedWeaponAttackProjection =
   | { readonly tag: "none" }
   | {
       readonly tag: "materialDaggerRadiantAttack";
-      readonly sourceProcedureRef: ReturnType<
-        typeof battleProcedureExecutionRefForTest
-      >;
+      readonly sourceSpellId: typeof trueStrikeUnitId;
       readonly componentWeaponObjectId: TrueStrikeDaggerObjectId;
       readonly weaponUnitId: TrueStrikeDaggerUnitId;
       readonly attackName: Exclude<TrueStrikeDaggerAttackName, "none">;
@@ -481,7 +478,7 @@ type SelectedUnitIdentityReplay = {
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
-type BonusActionSpellAct = AvailableBattleAct & {
+type PublicBonusActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "bonusActionSpell" }
@@ -495,7 +492,7 @@ type MechanicalBonusActionSpellAct = ReturnType<
     { readonly tag: "bonusActionSpell" }
   >;
 };
-type ActionSpellAct = AvailableBattleAct & {
+type PublicActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 };
 type ScalarBuffTemporaryHitPointsRollHole = BattleSpellHealingRollHole;
@@ -803,9 +800,7 @@ const selectedUnitIdentityReplays = [
           level1SlotsRemaining: 2,
           shillelaghWeaponAttackOverride: {
             tag: "quarterstaffForceAttack",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(shillelaghUnitId),
-            ),
+            sourceSpellId: shillelaghUnitId,
             weaponUnitId: shillelaghQuarterstaffUnitId,
             spellcastingAbilityModifier: 3,
             effectAttackBonus: 5,
@@ -837,9 +832,7 @@ const selectedUnitIdentityReplays = [
           level1SlotsRemaining: 2,
           trueStrikeSpellHostedWeaponAttack: {
             tag: "materialDaggerRadiantAttack",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(trueStrikeUnitId),
-            ),
+            sourceSpellId: trueStrikeUnitId,
             componentWeaponObjectId: trueStrikeDaggerObjectId,
             weaponUnitId: trueStrikeDaggerUnitId,
             attackName: trueStrikeDaggerAttackName,
@@ -1301,13 +1294,14 @@ function castHuntersMarkForRoute(): {
   readonly state: BattleState;
   readonly routeEvents: readonly BattleReducerRouteEvent[];
 } {
-  const state = level1BuffMarkSmiteBattle({
+  const session = level1BuffMarkSmiteSession({
     preparedSpells: [spellRecord(huntersMarkUnitId)],
     sourceClassName: "ranger",
     targetKind: "statBlock",
     includeMarkedDamageTransferTarget: true,
   });
-  const act = bonusActionSpellAct(state, huntersMarkUnitId);
+  const state = session.state;
+  const act = publicBonusActionSpellAct(session, huntersMarkUnitId);
   const target = requireHole(act.initialHoles, "targetChoice");
   const cast = resolveBattleSubject({
     state,
@@ -1329,13 +1323,14 @@ function castHexForRoute(): {
   readonly state: BattleState;
   readonly routeEvents: readonly BattleReducerRouteEvent[];
 } {
-  const state = level1BuffMarkSmiteBattle({
+  const session = level1BuffMarkSmiteSession({
     preparedSpells: [spellRecord(hexUnitId)],
     sourceClassName: "warlock",
     targetKind: "statBlock",
     includeMarkedDamageTransferTarget: true,
   });
-  const act = bonusActionSpellAct(state, hexUnitId);
+  const state = session.state;
+  const act = publicBonusActionSpellAct(session, hexUnitId);
   const target = requireHole(act.initialHoles, "targetChoice");
   const targetFill = spellTargetFill(
     target,
@@ -1370,13 +1365,17 @@ function castHeroismForRoute(input: {
   readonly sources: readonly RouteEventSource[];
   readonly routeEvents: readonly BattleReducerRouteEvent[];
 } {
-  const initial = level1BuffMarkSmiteBattle({
+  const session = level1BuffMarkSmiteSession({
     preparedSpells: [spellRecord(heroismUnitId)],
   });
+  const initial = session.state;
   const state = input.frightenedBeforeCast
     ? withFrightenedCaster(initial)
     : initial;
-  const act = actionSpellAct(state, heroismUnitId);
+  const act = publicActionSpellAct(
+    battleRuntimeSessionForTest({ ...session, state }),
+    heroismUnitId,
+  );
   const target = requireHole(act.initialHoles, "targetChoice");
   const cast = resolveBattleSubject({
     state,
@@ -1544,7 +1543,7 @@ function attackDamageDispositionFill(
 }
 
 const publicConnectorRouteSubjects = [
-  "afterHitDamageRider",
+  "afterHitSpell",
   "scalarBuffEffect",
   "weaponDamageRider",
   "spellHostedWeaponAttack",
@@ -1723,7 +1722,10 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
     };
     resetProcedureProjections();
 
-    const act = actionSpellAct(state, heroismUnitId);
+    const act = publicActionSpellAct(
+      level1BuffMarkSmiteSessionAtState(state),
+      heroismUnitId,
+    );
     const target = requireHole(act.initialHoles, "targetChoice");
     const cast = resolveBattleSubject({
       state,
@@ -1781,7 +1783,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       state = session.state;
       resetProcedureProjections();
 
-      const act = bonusActionSpellAct(state, divineFavorUnitId);
+      const act = publicBonusActionSpellAct(session, divineFavorUnitId);
       const cast = resolveBattleSubject({
         state,
         subject: act.subject,
@@ -1972,7 +1974,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       state = session.state;
       resetProcedureProjections();
 
-      const act = actionSpellAct(state, falseLifeUnitId);
+      const act = publicActionSpellAct(session, falseLifeUnitId);
       const temporaryHitPointsRoll =
         requireScalarBuffTemporaryHitPointsRollHole(
           requireHole(act.initialHoles, "rolledDice"),
@@ -2015,7 +2017,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       state = session.state;
       resetProcedureProjections();
 
-      const castAct = bonusActionSpellAct(state, huntersMarkUnitId);
+      const castAct = publicBonusActionSpellAct(session, huntersMarkUnitId);
       const castTarget = requireHole(castAct.initialHoles, "targetChoice");
       const cast = resolveBattleSubject({
         state,
@@ -2106,7 +2108,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       state = session.state;
       resetProcedureProjections();
 
-      const castAct = bonusActionSpellAct(state, hexUnitId);
+      const castAct = publicBonusActionSpellAct(session, hexUnitId);
       const castTarget = requireHole(castAct.initialHoles, "targetChoice");
       const chosenAbility = requireHole(castAct.initialHoles, "abilityChoice");
       const cast = resolveBattleSubject({
@@ -2200,7 +2202,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       state = session.state;
       resetProcedureProjections();
 
-      const act = actionSpellAct(state, longstriderUnitId);
+      const act = publicActionSpellAct(session, longstriderUnitId);
       const target = requireHole(act.initialHoles, "targetChoice");
       const resolved = resolveBattleSubject({
         state,
@@ -2307,7 +2309,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       state = session.state;
       resetProcedureProjections();
 
-      const act = bonusActionSpellAct(state, shillelaghUnitId);
+      const act = publicBonusActionSpellAct(session, shillelaghUnitId);
       const cast = resolveBattleSubject({
         state,
         subject: act.subject,
@@ -2320,14 +2322,14 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
 
       const hit = resolveWeaponHitWithAttackRoll({
         state,
-        attackName: shillelaghQuarterstaffForceAttackName,
+        weaponUnitId: shillelaghQuarterstaffUnitId,
       });
       const damage = requireDamageRollHole(
         requireNeedsHoles(hit.afterAttackRoll),
       );
       shillelaghWeaponAttackOverride = shillelaghWeaponAttackOverrideProjection(
         {
-          state,
+          session: level1BuffMarkSmiteSessionAtState(state),
           attackRoll: hit.attackRoll,
           damage,
         },
@@ -2354,7 +2356,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       state = session.state;
       resetProcedureProjections();
 
-      const act = actionSpellAct(state, trueStrikeUnitId);
+      const act = publicActionSpellAct(session, trueStrikeUnitId);
       const damageType = requireHole(act.initialHoles, "damageTypeChoice");
       const target = requireHole(act.initialHoles, "targetChoice");
       const damageTypeFill = damageTypeChoiceFill(damageType, "radiant");
@@ -2384,6 +2386,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       const damage = requireDamageRollHole(requireNeedsHoles(awaitingDamage));
       trueStrikeSpellHostedWeaponAttack =
         trueStrikeSpellHostedWeaponAttackProjection({
+          session,
           state,
           act,
           attackRoll,
@@ -2625,12 +2628,6 @@ function level1BuffMarkSmiteSession(
   return result.right;
 }
 
-function level1BuffMarkSmiteBattle(
-  input: Level1BuffMarkSmiteBattleInput = {},
-): BattleState {
-  return level1BuffMarkSmiteSession(input).state;
-}
-
 function level1BuffMarkSmiteCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
@@ -2648,6 +2645,15 @@ function level1BuffMarkSmiteCreature(input: {
 }): BattleCreatureInit {
   const attack = input.attack ?? null;
   const className = input.className ?? "paladin";
+  const weaponUnit =
+    attack === null
+      ? null
+      : unitLibrary.requireUnit(attack.weapon.weaponUnitId);
+  if (weaponUnit !== null && weaponUnit.kind !== "weapon") {
+    throw new Error(
+      `Expected ${attack?.weapon.weaponUnitId ?? "missing"} Unit to be a weapon.`,
+    );
+  }
   return {
     combatantId: input.combatantId,
     displayName: input.displayName,
@@ -2655,7 +2661,8 @@ function level1BuffMarkSmiteCreature(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
-      characterUnitRefs: [],
+      characterUnitRefs:
+        weaponUnit === null ? [] : [{ unit: weaponUnit, supportProfiles: [] }],
       classLevels: [{ className, level: 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
@@ -2742,13 +2749,19 @@ function spellRecord(spellId: Level1BuffMarkSmiteSpellId): SpellRecord {
   return unit;
 }
 
-function bonusActionSpellAct(
-  state: BattleState,
+function publicBonusActionSpellAct(
+  session: BattleRuntimeSession,
   spellId: BonusActionCastSpellId,
-): BonusActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
-    (candidate): candidate is BonusActionSpellAct =>
-      candidate.subject.tag === "bonusActionSpell",
+): PublicBonusActionSpellAct {
+  const act = discoverBattleActs(session).find(
+    (candidate): candidate is PublicBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      characterSpellProcedureRefMatchesSpellForTest(
+        session,
+        candidate.subject.actorId,
+        candidate.subject.procedureRef,
+        spellId,
+      ),
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} Bonus Action Spell act.`);
@@ -2756,13 +2769,19 @@ function bonusActionSpellAct(
   return act;
 }
 
-function actionSpellAct(
-  state: BattleState,
+function publicActionSpellAct(
+  session: BattleRuntimeSession,
   spellId: ActionCastSpellId,
-): ActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
-    (candidate): candidate is ActionSpellAct =>
-      candidate.subject.tag === "actionSpell",
+): PublicActionSpellAct {
+  const act = discoverBattleActs(session).find(
+    (candidate): candidate is PublicActionSpellAct =>
+      candidate.subject.tag === "actionSpell" &&
+      characterSpellProcedureRefMatchesSpellForTest(
+        session,
+        candidate.subject.actorId,
+        candidate.subject.procedureRef,
+        spellId,
+      ),
   );
   if (act === undefined) {
     throw new Error(`Expected ${spellId} Action Spell act.`);
@@ -2807,18 +2826,18 @@ function resolveLongswordHitWithAttackRoll(input: {
 }): ReturnType<typeof resolveWeaponHitWithAttackRoll> {
   return resolveWeaponHitWithAttackRoll({
     state: input.state,
-    attackName: "Longsword",
+    weaponUnitId: "weapon_longsword",
   });
 }
 
-type Level1WeaponAttackName =
-  | "Longsword"
-  | typeof trueStrikeDaggerAttackName
-  | typeof shillelaghQuarterstaffForceAttackName;
+type Level1WeaponUnitId =
+  | "weapon_longsword"
+  | TrueStrikeDaggerUnitId
+  | ShillelaghQuarterstaffUnitId;
 
 function resolveWeaponHitWithAttackRoll(input: {
   readonly state: BattleState;
-  readonly attackName: Level1WeaponAttackName;
+  readonly weaponUnitId: Level1WeaponUnitId;
 }): {
   readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
   readonly targetFill: Extract<BattleFill, { readonly kind: "targetChoice" }>;
@@ -2827,7 +2846,7 @@ function resolveWeaponHitWithAttackRoll(input: {
   readonly afterAttackRoll: BattleResolutionResult;
   readonly routeEvents: readonly BattleReducerRouteEvent[];
 } {
-  const act = weaponAttackAct(input.state, input.attackName);
+  const act = weaponAttackAct(input.state, input.weaponUnitId);
   const subject = act.subject;
   const target = requireHole(act.initialHoles, "targetChoice");
   const targetFill = attackTargetFill(target);
@@ -2900,7 +2919,7 @@ function zeroAbilityWeaponAttack(
 
 function weaponAttackAct(
   state: BattleState,
-  attackName: Level1WeaponAttackName,
+  weaponUnitId: Level1WeaponUnitId,
 ): ReturnType<typeof discoverBattleActCandidates>[number] & {
   readonly subject: Extract<
     BattleSubject,
@@ -2916,7 +2935,7 @@ function weaponAttackAct(
     }
     const attack = attackActionOptionForSubject(state, candidate.subject);
     return (
-      attack !== undefined && attackActionOptionName(attack) === attackName
+      attack !== undefined && attackActionOptionName(attack) === weaponUnitId
     );
   });
   if (
@@ -2925,7 +2944,7 @@ function weaponAttackAct(
     act.subject.action !== "attack"
   ) {
     throw new Error(
-      `Expected discovered ${attackName} attack for ${casterId}.`,
+      `Expected discovered ${weaponUnitId} attack for ${casterId}.`,
     );
   }
   return { ...act, subject: act.subject };
@@ -3510,18 +3529,26 @@ function searingSmiteTurnStartSaveProjection(
 }
 
 function shillelaghWeaponAttackOverrideProjection(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly attackRoll: BattleAttackRollHole;
   readonly damage: BattleDamageRollHole;
 }): ShillelaghWeaponAttackOverrideProjection {
-  const effect = shillelaghWeaponAttackOverrideEffect(input.state);
+  const effect = shillelaghWeaponAttackOverrideEffect(input.session.state);
   if (effect === undefined) {
     throw new Error("Expected Shillelagh weapon attack override effect.");
   }
+  const sourceSpellId = characterSpellInvocationRefForProcedureRefForTest(
+    input.session,
+    casterId,
+    effect.sourceProcedureRef,
+  ).spellId;
+  if (sourceSpellId !== shillelaghUnitId) {
+    throw new Error(`Unexpected Shillelagh source spell ${sourceSpellId}.`);
+  }
   return {
     tag: "quarterstaffForceAttack",
-    sourceProcedureRef: effect.sourceProcedureRef,
-    weaponUnitId: shillelaghEffectWeaponUnitId(input.state, effect),
+    sourceSpellId: shillelaghUnitId,
+    weaponUnitId: shillelaghEffectWeaponUnitId(input.session.state, effect),
     spellcastingAbilityModifier: Number(effect.spellcastingAbilityModifier),
     effectAttackBonus: Number(effect.attackBonus),
     effectDamageDice: effect.damage.expr.dice,
@@ -3610,16 +3637,23 @@ function shillelaghForceAttackProjection(
 }
 
 function trueStrikeSpellHostedWeaponAttackProjection(input: {
+  readonly session: BattleRuntimeSession;
   readonly state: BattleState;
-  readonly act: ActionSpellAct;
+  readonly act: PublicActionSpellAct;
   readonly attackRoll: BattleAttackRollHole;
   readonly damage: BattleDamageRollHole;
 }): TrueStrikeSpellHostedWeaponAttackProjection {
+  const sourceSpellId = characterSpellInvocationRefForProcedureRefForTest(
+    input.session,
+    input.act.subject.actorId,
+    input.act.subject.procedureRef,
+  ).spellId;
+  if (sourceSpellId !== trueStrikeUnitId) {
+    throw new Error(`Unexpected True Strike source spell ${sourceSpellId}.`);
+  }
   return {
     tag: "materialDaggerRadiantAttack",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(trueStrikeRequiredSourceSpellId(input.act)),
-    ),
+    sourceSpellId: trueStrikeUnitId,
     componentWeaponObjectId: trueStrikeComponentWeaponObjectId(
       input.state,
       input.act,
@@ -3629,24 +3663,9 @@ function trueStrikeSpellHostedWeaponAttackProjection(input: {
   };
 }
 
-function trueStrikeRequiredSourceSpellId(
-  act: ActionSpellAct,
-): typeof trueStrikeUnitId {
-  if (
-    battleActSpellPresentation(act)?.invocation.spellId === trueStrikeUnitId &&
-    battleActSpellPresentation(act)?.invocation.procedure ===
-      "spellHostedWeaponAttack"
-  ) {
-    return trueStrikeUnitId;
-  }
-  throw new Error(
-    `Unexpected True Strike invocation ${battleActSpellPresentation(act)?.invocation.spellId}.`,
-  );
-}
-
 function trueStrikeComponentWeaponObjectId(
   state: BattleState,
-  act: ActionSpellAct,
+  act: PublicActionSpellAct,
 ): TrueStrikeDaggerObjectId {
   const actor = state.combatants.get(act.subject.actorId);
   const binding =
@@ -4980,9 +4999,7 @@ function shillelaghWeaponAttackOverrideFromQuint(
   }
   return {
     tag: "quarterstaffForceAttack",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(shillelaghRequiredSourceSpellIdFromQuint(source)),
-    ),
+    sourceSpellId: shillelaghRequiredSourceSpellIdFromQuint(source),
     weaponUnitId: shillelaghWeaponUnitIdFromQuint(
       state["qShillelaghOverrideWeaponUnitId"],
     ),
@@ -5099,9 +5116,7 @@ function trueStrikeSpellHostedWeaponAttackFromQuint(
   }
   return {
     tag: "materialDaggerRadiantAttack",
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(trueStrikeRequiredSourceSpellIdFromQuint(source)),
-    ),
+    sourceSpellId: trueStrikeRequiredSourceSpellIdFromQuint(source),
     componentWeaponObjectId: trueStrikeComponentWeaponObjectIdFromQuint(
       state["qTrueStrikeComponentWeaponItemId"],
     ),

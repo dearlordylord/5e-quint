@@ -314,7 +314,7 @@ describe("turn-boundary effect lifecycle MBT", () => {
       routeEventsOf(awaitingBoundary, "mixed death-save route discovery"),
     ).not.toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ subject: "afterHitDamageRider" }),
+        expect.objectContaining({ subject: "afterHitSpell" }),
       ]),
     );
   });

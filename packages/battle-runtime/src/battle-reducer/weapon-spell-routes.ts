@@ -1,6 +1,7 @@
 import type {
   AdmittedBattleResolutionInput,
   BattleActDiscoveryCandidate,
+  BattleDamageRollHole,
   BattleHole,
   BattleResolutionResult,
   BattleState,
@@ -26,14 +27,17 @@ import type {
 import { spellInvocationForRouteSubject } from "./reducer-route-spell-query.ts";
 import { battleActiveEffects } from "./reducer-route-state-query.ts";
 
-const WEAPON_SPELL_ROUTE_SUBJECTS = [
-  "spellHostedWeaponAttack",
-  "weaponDamageRider",
-  "heldWeaponActiveEffect",
-  "weaponEnhancementItemTarget",
-] as const satisfies ReadonlyArray<BattleReducerRouteSubjectFamily>;
+const WEAPON_SPELL_ROUTE_SUBJECT_BY_PROCEDURE = {
+  spellHostedWeaponAttack: "spellHostedWeaponAttack",
+  weaponDamageRider: "weaponDamageRider",
+  weaponAttackOverride: "heldWeaponActiveEffect",
+  magicWeaponEnhancement: "weaponEnhancementItemTarget",
+} as const satisfies Partial<
+  Record<SupportedSpellInvocation["procedure"], BattleReducerRouteSubjectFamily>
+>;
 
-type WeaponSpellRouteSubject = (typeof WEAPON_SPELL_ROUTE_SUBJECTS)[number];
+type WeaponSpellRouteSubject =
+  (typeof WEAPON_SPELL_ROUTE_SUBJECT_BY_PROCEDURE)[keyof typeof WEAPON_SPELL_ROUTE_SUBJECT_BY_PROCEDURE];
 
 export function weaponSpellRouteForDiscoveredAct(
   state: BattleState,
@@ -56,6 +60,25 @@ export function weaponSpellRouteForResolution(
     weaponSpellProcedureRouteForResolution(input, result) ??
     weaponSpellCleanupRouteForResolution(input, result)
   );
+}
+
+export function battleHasWeaponDamageRiderHole(
+  result: BattleResolutionResult,
+): boolean {
+  return battleDamageRollHoles(result).some(
+    (hole) => (hole.spellWeaponDamageRiders?.length ?? 0) > 0,
+  );
+}
+
+function battleDamageRollHoles(
+  result: BattleResolutionResult,
+): readonly BattleDamageRollHole[] {
+  return result.tag !== "needsHoles"
+    ? []
+    : result.holes.filter(
+        (hole): hole is BattleDamageRollHole =>
+          hole.kind === "rolledDice" && "attack" in hole,
+      );
 }
 
 function weaponSpellProcedureRouteForResolution(
@@ -130,15 +153,15 @@ function weaponSpellRouteSubject(
 function weaponSpellRouteSubjectForProcedure(
   procedure: SupportedSpellInvocation["procedure"],
 ): WeaponSpellRouteSubject | undefined {
-  if (procedure === "spellHostedWeaponAttack") {
-    return "spellHostedWeaponAttack";
-  }
-  if (procedure === "weaponDamageRider") return "weaponDamageRider";
-  if (procedure === "weaponAttackOverride") return "heldWeaponActiveEffect";
-  if (procedure === "magicWeaponEnhancement") {
-    return "weaponEnhancementItemTarget";
-  }
-  return undefined;
+  return isWeaponSpellRouteProcedure(procedure)
+    ? WEAPON_SPELL_ROUTE_SUBJECT_BY_PROCEDURE[procedure]
+    : undefined;
+}
+
+function isWeaponSpellRouteProcedure(
+  procedure: SupportedSpellInvocation["procedure"],
+): procedure is keyof typeof WEAPON_SPELL_ROUTE_SUBJECT_BY_PROCEDURE {
+  return procedure in WEAPON_SPELL_ROUTE_SUBJECT_BY_PROCEDURE;
 }
 
 function weaponSpellDiscoveryOwner(

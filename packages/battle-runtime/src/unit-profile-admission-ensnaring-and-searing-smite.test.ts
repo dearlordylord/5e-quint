@@ -1,5 +1,9 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+  requireCharacterSpellProcedureRefForTest,
+} from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31D ensnaring_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31E searing_smite
@@ -32,6 +36,7 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { savingThrowOutcomeFill } from "./unit-profile-admission-spell-fill.test-support.ts";
+import { afterHitSpellSavingThrowCompletionRoutes } from "./battle-reducer/after-hit-spell-routes.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   abilityModifier,
@@ -201,19 +206,19 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     expect(escapeAct.routeEvents).toEqual([
       {
         kind: "discoverBattleActs",
-        subject: "afterHitDamageRider",
+        subject: "afterHitSpell",
         holes: ["abilityCheck"],
         owner: "battleAbilityCheck",
       },
       {
         kind: "discoverBattleActs",
-        subject: "afterHitDamageRider",
+        subject: "afterHitSpell",
         holes: ["abilityCheck"],
         owner: "battleConditionLifecycle",
       },
       {
         kind: "discoverBattleActs",
-        subject: "afterHitDamageRider",
+        subject: "afterHitSpell",
         holes: ["abilityCheck"],
         owner: "battleConcentration",
       },
@@ -381,6 +386,33 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     if (afterSearing.tag !== "needsHoles") {
       throw new Error("Expected Searing Smite replay to need attack damage.");
     }
+    expect(
+      afterHitSpellSavingThrowCompletionRoutes({
+        state: state.state,
+        fills: ["rolledDice", "savingThrowOutcome"],
+      }),
+    ).toBeUndefined();
+    expect(
+      afterHitSpellSavingThrowCompletionRoutes({
+        state: afterSearing.state,
+        fills: ["rolledDice", "savingThrowOutcome"],
+      }),
+    ).toEqual([
+      {
+        kind: "resolveBattleSubject",
+        subject: "afterHitSpell",
+        fill: "rolledDice",
+        holes: ["savingThrowOutcome"],
+        owner: "battleHitPoint",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "afterHitSpell",
+        fill: "savingThrowOutcome",
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+    ]);
     const damage = requireHole(afterSearing.holes, "rolledDice");
     expect(damage).toEqual(
       expect.objectContaining({
@@ -409,6 +441,83 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     }
     expect(requireCombatant(afterWeaponDamage.state, spellTargetId).hp).toBe(
       Hp(20),
+    );
+
+    const damagedTarget = requireCombatant(
+      afterWeaponDamage.state,
+      spellTargetId,
+    );
+    const mixedEscapeState = {
+      ...afterWeaponDamage.state,
+      combatants: new Map(afterWeaponDamage.state.combatants).set(
+        spellTargetId,
+        {
+          ...damagedTarget,
+          activeEffects: [
+            ...damagedTarget.activeEffects,
+            {
+              kind: "spellCondition" as const,
+              sourceProcedureRef: battleProcedureExecutionRefForTest(
+                "unrelated-escapable-condition",
+              ),
+              sourceCombatantId: spellCasterId,
+              effectRef: battleActiveEffectExecutionRefForTest(
+                "unrelated-escapable-condition",
+              ),
+              condition: "restrained" as const,
+              conditionHadNonSpellSource: false,
+              escape: {
+                kind: "abilityCheck" as const,
+                ability: "str" as const,
+                skill: "athletics" as const,
+                allowedActor: "target" as const,
+                successEnds: "condition" as const,
+              },
+              turnStartDamage: null,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(600),
+              },
+            },
+          ],
+        },
+      ),
+    };
+    const mixedTurnStart = endTurn({
+      state: mixedEscapeState,
+      actorId: spellCasterId,
+    });
+    const mixedDamage = requireResultHole(mixedTurnStart, "rolledDice");
+    const mixedSave = requireResultHole(mixedTurnStart, "savingThrowOutcome");
+    const mixedResolved = endTurn({
+      state: mixedEscapeState,
+      actorId: spellCasterId,
+      fills: [
+        savingThrowOutcomeFill(mixedSave, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+        damageRollFillWithGroups(mixedDamage, [[1, 1, 1]]),
+      ],
+    });
+    if (mixedResolved.tag !== "resolved") {
+      throw new Error("Expected mixed Searing Smite turn start to resolve.");
+    }
+    expect(mixedResolved.routeEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: "afterHitSpell",
+          fill: "rolledDice",
+          holes: [],
+        }),
+      ]),
+    );
+    expect(mixedResolved.routeEvents).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: "afterHitSpell",
+          holes: ["abilityCheck"],
+        }),
+      ]),
     );
 
     const awaitingTurnStart = endTurn({

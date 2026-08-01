@@ -2,7 +2,6 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-after-hit-damage spell.invocation-after-hit-restraint-turn-start-damage spell.invocation-after-hit-timed-damage-save spell.invocation-after-hit-damage-illumination
 
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { describe, expect, it } from "vitest";
 
 import type { BattleActiveEffect } from "./battle-state-execution.ts";
@@ -79,7 +78,6 @@ import {
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleRuntimeSession,
-  type BattleProcedureExecutionRef,
   type BattleSelectedSpellInvocation,
   type BattleState,
   type BattleSubject,
@@ -119,7 +117,7 @@ const AFTER_HIT_HOLES = [
 ] as const;
 type AfterHitHole = (typeof AFTER_HIT_HOLES)[number];
 
-type AfterHitDamageRidersState = {
+type AfterHitSpellsState = {
   readonly scenario: AfterHitScenario;
   readonly phase: AfterHitPhase;
   readonly targetHp: number;
@@ -336,7 +334,7 @@ function routeHoles(
 }
 
 const AFTER_HIT_ROUTE_SUBJECT =
-  "afterHitDamageRider" satisfies ReducerRouteSubjectFamily;
+  "afterHitSpell" satisfies ReducerRouteSubjectFamily;
 
 function afterHitStartRoute(): ReducerRouteEvent {
   return reducerRouteStartBattle("battleActionEconomy");
@@ -695,7 +693,7 @@ function afterHitSearingAfterDamage(): AfterHitRuntimeState {
   return fillAttackDamage(
     chooseAfterHitDamageSpell(
       afterHitChoiceReady("searingSmiteHit"),
-      battleProcedureExecutionRefForTest(String(searingSmiteUnitId)),
+      searingSmiteUnitId,
       3,
     ),
     4,
@@ -707,7 +705,7 @@ function afterHitShiningAfterDamage(): AfterHitRuntimeState {
   return fillAttackDamage(
     chooseAfterHitDamageSpell(
       afterHitChoiceReady("shiningSmiteHit"),
-      battleProcedureExecutionRefForTest(String(shiningSmiteUnitId)),
+      shiningSmiteUnitId,
       3,
     ),
     4,
@@ -862,7 +860,7 @@ function observeAfterHitIlluminationEffectCleanupRoute(): AfterHitRuntimeState {
   return state;
 }
 
-function createAfterHitDamageRidersRouteDriver() {
+function createAfterHitSpellsRouteDriver() {
   return defineDriver(afterHitRouteDriverSchema, () => {
     let state = routeState("fresh", [afterHitStartRoute()]);
     const transition = (action: AfterHitRouteStepAction): void => {
@@ -1018,7 +1016,7 @@ const REQUIRED_AFTER_HIT_ACTIONS = [
   "doFinish",
 ] as const satisfies ReadonlyArray<AfterHitDriverAction>;
 
-function createAfterHitDamageRidersDriver(
+function createAfterHitSpellsDriver(
   options: { readonly actionLog?: string[] } = {},
 ) {
   return defineDriver(afterHitDriverSchema, () => {
@@ -1203,7 +1201,7 @@ describe("After-hit damage riders MBT parity", () => {
         ),
         init: "init",
         step: "step",
-        driver: createAfterHitDamageRidersDriver({ actionLog }),
+        driver: createAfterHitSpellsDriver({ actionLog }),
         backend: "typescript",
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(60),
@@ -1226,7 +1224,7 @@ describe("After-hit damage riders MBT parity", () => {
         ),
         init: "init",
         step: "step",
-        driver: createAfterHitDamageRidersRouteDriver(),
+        driver: createAfterHitSpellsRouteDriver(),
         backend: "typescript",
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(AFTER_HIT_ROUTE_STEP_ACTIONS.length),
@@ -1751,9 +1749,7 @@ function fillSearingStartTurnDamageAndSave(
   };
 }
 
-function afterHitProjection(
-  state: AfterHitRuntimeState,
-): AfterHitDamageRidersState {
+function afterHitProjection(state: AfterHitRuntimeState): AfterHitSpellsState {
   const target = requireCombatant(state.battle.state, spellTargetId);
   const caster = requireCombatant(state.battle.state, spellCasterId);
   return {
@@ -1770,15 +1766,17 @@ function afterHitProjection(
       ),
     concentrationActive: caster.concentration !== null,
     targetRestrained: target.conditions.restrained === true,
-    searingBurning: hasActiveEffect(
+    searingBurning: hasActiveEffectForSpell(
+      state.battle,
       target.activeEffects,
       "spellTurnStartDamageAndSave",
-      battleProcedureExecutionRefForTest(String(searingSmiteUnitId)),
+      searingSmiteUnitId,
     ),
-    shiningIlluminated: hasActiveEffect(
+    shiningIlluminated: hasActiveEffectForSpell(
+      state.battle,
       target.activeEffects,
       "shiningSmiteIllumination",
-      battleProcedureExecutionRefForTest(String(shiningSmiteUnitId)),
+      shiningSmiteUnitId,
     ),
     holes: battleHolesToAfterHitHoles(state.holes, state.pending),
     lastResult: state.lastResult,
@@ -1814,16 +1812,22 @@ function paladinsSmiteUsesRemaining(session: BattleRuntimeSession): number {
   return resource === undefined ? 0 : Number(resource.usesRemaining ?? 0);
 }
 
-function hasActiveEffect(
+function hasActiveEffectForSpell(
+  session: BattleRuntimeSession,
   effects: readonly BattleActiveEffect[],
   kind: BattleActiveEffect["kind"],
-  sourceProcedureRef: BattleProcedureExecutionRef,
+  spellId: string,
 ): boolean {
   return effects.some(
     (effect) =>
       effect.kind === kind &&
       "sourceProcedureRef" in effect &&
-      effect.sourceProcedureRef === sourceProcedureRef,
+      "sourceCombatantId" in effect &&
+      characterSpellInvocationRefForProcedureRefForTest(
+        session,
+        effect.sourceCombatantId,
+        effect.sourceProcedureRef,
+      ).spellId === spellId,
   );
 }
 
@@ -1889,7 +1893,7 @@ function compareAfterHitRouteStates(
   return true;
 }
 
-function normalizeAfterHitQuintState(raw: unknown): AfterHitDamageRidersState {
+function normalizeAfterHitQuintState(raw: unknown): AfterHitSpellsState {
   const state = quintRecordField(quintStateRecord(raw), "qState");
   const protocol = decodeWitnessProtocolState({
     state,
@@ -1937,8 +1941,8 @@ function normalizeAfterHitQuintState(raw: unknown): AfterHitDamageRidersState {
 }
 
 function compareAfterHitStates(
-  spec: AfterHitDamageRidersState,
-  impl: AfterHitDamageRidersState,
+  spec: AfterHitSpellsState,
+  impl: AfterHitSpellsState,
 ): boolean {
   try {
     expect(impl).toEqual(spec);
