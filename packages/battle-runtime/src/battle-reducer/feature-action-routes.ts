@@ -25,7 +25,7 @@ import type {
   BattleReducerRouteOwnerGroup,
 } from "./reducer-route-protocol.ts";
 
-export function isUnitFeatureBonusActionRouteSubject(
+function isUnitFeatureBonusActionRouteSubject(
   state: BattleState,
   subject:
     | BattleResolutionInput["subject"]
@@ -48,6 +48,21 @@ export function isUnitFeatureBonusActionRouteSubject(
     procedure.execution.kind === "ongoingFeature" &&
     procedure.execution.activationTrigger === "bonusAction"
   );
+}
+
+export function unitFeatureBonusActionRouteForDiscoveredAct(
+  state: BattleState,
+  act: BattleActDiscoveryCandidate,
+): BattleReducerRouteEvents | undefined {
+  return isUnitFeatureBonusActionRouteSubject(state, act.subject)
+    ? [
+        discoverBattleActsRoute(
+          "unitFeatureBonusAction",
+          [],
+          "battleFeatureResource",
+        ),
+      ]
+    : undefined;
 }
 
 export function activeFeatureBonusActionRouteForResolution(

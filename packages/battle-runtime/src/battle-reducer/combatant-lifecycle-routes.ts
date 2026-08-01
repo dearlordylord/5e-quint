@@ -36,7 +36,7 @@ import { spellInvocationForRouteSubject } from "./reducer-route-spell-query.ts";
 import { battleCombatantHasActiveEffectKind } from "./reducer-route-state-query.ts";
 import { isEndTurnSubject } from "./reducer-route-subject-query.ts";
 
-export function isZeroHitPointStabilizationSubject(
+function isZeroHitPointStabilizationSubject(
   state: BattleState,
   subject:
     | BattleResolutionInput["subject"]
@@ -46,6 +46,21 @@ export function isZeroHitPointStabilizationSubject(
     subject.tag === "actionSpell" &&
     spellInvocationForRouteSubject(state, subject)?.procedure === "makeStable"
   );
+}
+
+export function zeroHitPointStabilizationRouteForDiscoveredAct(
+  state: BattleState,
+  act: BattleActDiscoveryCandidate,
+): BattleReducerRouteEvents | undefined {
+  return isZeroHitPointStabilizationSubject(state, act.subject)
+    ? [
+        discoverBattleActsRoute(
+          "zeroHitPointStabilization",
+          battleReducerRouteHoles(act.initialHoles),
+          "battleActionEconomy",
+        ),
+      ]
+    : undefined;
 }
 
 export function zeroHitPointStabilizationRouteForResolution(
@@ -342,6 +357,24 @@ export function concentrationRouteForResolution(
   return undefined;
 }
 
+export function concentrationRouteForDiscoveredAct(
+  state: BattleState,
+  act: BattleActDiscoveryCandidate,
+): BattleReducerRouteEvents | undefined {
+  if (!isConcentrationTeardownDiscoverySubject(state, act.subject)) {
+    return undefined;
+  }
+  return [
+    discoverBattleActsRoute(
+      "concentrationTeardown",
+      battleReducerRouteHoles(act.initialHoles),
+      act.subject.tag === "actionSpell"
+        ? "battleSpellSlotAndActionEconomy"
+        : "battleConcentration",
+    ),
+  ];
+}
+
 export function hitPointRestorationRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
@@ -368,6 +401,21 @@ export function hitPointRestorationRouteForResolution(
     result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
     hitPointRestorationRouteOwner(routeFill, result),
   );
+}
+
+export function hitPointRestorationRouteForDiscoveredAct(
+  state: BattleState,
+  act: BattleActDiscoveryCandidate,
+): BattleReducerRouteEvents | undefined {
+  return isHitPointRestorationDiscoverySubject(state, act)
+    ? [
+        discoverBattleActsRoute(
+          "hitPointRestoration",
+          battleReducerRouteHoles(act.initialHoles),
+          hitPointRestorationDiscoveryOwner(act.subject),
+        ),
+      ]
+    : undefined;
 }
 
 function hitPointRestorationRouteOwner(
@@ -401,7 +449,7 @@ function isConcentrationTeardownSubject(
   );
 }
 
-export function isConcentrationTeardownDiscoverySubject(
+function isConcentrationTeardownDiscoverySubject(
   state: BattleState,
   subject: BattleResolutionInput["subject"],
 ): boolean {
@@ -442,7 +490,7 @@ function isHitPointRestorationResolution(
   );
 }
 
-export function isHitPointRestorationDiscoverySubject(
+function isHitPointRestorationDiscoverySubject(
   state: BattleState,
   act: BattleActDiscoveryCandidate,
 ): boolean {
@@ -461,7 +509,7 @@ export function isHitPointRestorationDiscoverySubject(
   );
 }
 
-export function hitPointRestorationDiscoveryOwner(
+function hitPointRestorationDiscoveryOwner(
   subject: BattleResolutionInput["subject"],
 ): BattleReducerRouteOwnerGroup {
   return subject.tag === "actionSpell" || subject.tag === "bonusActionSpell"

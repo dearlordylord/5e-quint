@@ -42,12 +42,12 @@ module battleRuntimeEldritchBlastRouteMbt {
     qState.qScenarioOutcome
 
   pure val noHoles: Set[BattleHoleFamilyKind] = Set()
-  pure val targetChoiceHoles: Set[BattleHoleFamilyKind] =
-    Set(TargetChoiceHoleKind)
-  pure val attackRollHoles: Set[BattleHoleFamilyKind] =
-    Set(AttackRollHoleKind)
+  pure val sequenceHoles: Set[BattleHoleFamilyKind] =
+    Set(TargetChoiceHoleKind, AttackRollHoleKind, RolledDiceHoleKind)
   pure val rolledDiceHoles: Set[BattleHoleFamilyKind] =
     Set(RolledDiceHoleKind)
+  pure val continuingSequenceHoles: Set[BattleHoleFamilyKind] =
+    Set(AttackRollHoleKind, RolledDiceHoleKind)
 
   pure def initialIndependentSpellAttackSequenceRoute:
     List[ReducerRouteEvent] =
@@ -55,13 +55,8 @@ module battleRuntimeEldritchBlastRouteMbt {
       routeStartBattle(BattleActionEconomyOwner),
       routeDiscoverBattleActs(
         SpellAttackProcedureRouteSubject,
-        targetChoiceHoles,
-        BattleActionEconomyOwner,
-      ),
-      routeDiscoverBattleActs(
-        SpellAttackProcedureRouteSubject,
-        noHoles,
-        BattleObjectTargetBoundaryOwner,
+        sequenceHoles,
+        BattleSpellAttackProcedureOwner,
       ),
     )
 
@@ -78,14 +73,6 @@ module battleRuntimeEldritchBlastRouteMbt {
           BattleTargetSelectionOwner,
         )
       )
-      .append(
-        routeResolveBattleSubject(
-          SpellAttackProcedureRouteSubject,
-          TargetChoiceFillKind,
-          holes,
-          BattleSpellAttackProcedureOwner,
-        )
-      )
 
   pure def appendAttackProcedureRoute(
     route: List[ReducerRouteEvent],
@@ -100,14 +87,6 @@ module battleRuntimeEldritchBlastRouteMbt {
           BattleAttackRollOwner,
         )
       )
-      .append(
-        routeResolveBattleSubject(
-          SpellAttackProcedureRouteSubject,
-          AttackRollFillKind,
-          holes,
-          BattleSpellAttackProcedureOwner,
-        )
-      )
 
   pure def appendDamageProcedureRoute(
     route: List[ReducerRouteEvent],
@@ -119,15 +98,10 @@ module battleRuntimeEldritchBlastRouteMbt {
           SpellAttackProcedureRouteSubject,
           RolledDiceFillKind,
           holes,
-          BattleHitPointOwner,
-        )
-      )
-      .append(
-        routeResolveBattleSubject(
-          SpellAttackProcedureRouteSubject,
-          RolledDiceFillKind,
-          holes,
-          BattleSpellAttackProcedureOwner,
+          if (holes.contains(AttackRollHoleKind))
+            BattleHoleFrontierOwner
+          else
+            BattleHitPointOwner,
         )
       )
 
@@ -150,7 +124,7 @@ module battleRuntimeEldritchBlastRouteMbt {
     qScenarioOutcome == AwaitingTargetChoices,
     recordIndependentSpellAttackSequenceRoute(
       AwaitingFirstAttack,
-      appendTargetProcedureRoute(qRoute, attackRollHoles),
+      appendTargetProcedureRoute(qRoute, continuingSequenceHoles),
     ),
   }
 
@@ -158,7 +132,7 @@ module battleRuntimeEldritchBlastRouteMbt {
     qScenarioOutcome == AwaitingFirstAttack,
     recordIndependentSpellAttackSequenceRoute(
       AwaitingSecondAttack,
-      appendAttackProcedureRoute(qRoute, attackRollHoles),
+      appendAttackProcedureRoute(qRoute, continuingSequenceHoles),
     ),
   }
 
@@ -174,7 +148,7 @@ module battleRuntimeEldritchBlastRouteMbt {
     qScenarioOutcome == AwaitingFirstDamage,
     recordIndependentSpellAttackSequenceRoute(
       AwaitingSecondAttack,
-      appendDamageProcedureRoute(qRoute, attackRollHoles),
+      appendDamageProcedureRoute(qRoute, continuingSequenceHoles),
     ),
   }
 

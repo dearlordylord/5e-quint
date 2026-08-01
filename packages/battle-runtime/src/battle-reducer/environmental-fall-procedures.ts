@@ -19,7 +19,7 @@ import { KnockedOutConditionState } from "./knocked-out-state.ts";
 import {
   battleReducerRouteForCreatureFallsInterruptWindow,
   battleReducerRouteForFeatherFallLanding,
-} from "./reducer-route.ts";
+} from "./interrupt-route-projection.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { featherFallLandingCleanupForCombatant } from "./spells-holes-fills.ts";
 

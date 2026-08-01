@@ -2,6 +2,7 @@
 
 import { battleFillKind } from "../battle-protocol-kinds.ts";
 import type {
+  BattleActDiscoveryCandidate,
   BattleFill,
   BattleResolutionInput,
   BattleResolutionResult,
@@ -9,16 +10,36 @@ import type {
 } from "../battle-state-execution.ts";
 import {
   battleReducerRouteHoles,
+  discoverBattleActsRoute,
   resolveBattleSubjectRoute,
   resolveBattleSubjectWithoutFillRoute,
 } from "./reducer-route-builders.ts";
 import type {
   BattleReducerRouteEvent,
+  BattleReducerRouteEvents,
   BattleReducerRouteFill,
   BattleReducerRouteHole,
   BattleReducerRouteOwnerGroup,
 } from "./reducer-route-protocol.ts";
 import { spellInvocationForRouteSubject } from "./reducer-route-spell-query.ts";
+
+export function commandRouteForDiscoveredAct(
+  state: BattleState,
+  act: BattleActDiscoveryCandidate,
+): BattleReducerRouteEvents | undefined {
+  if (!isCommandEffectDiscoverySubject(state, act.subject)) {
+    return undefined;
+  }
+  return [
+    discoverBattleActsRoute(
+      "commandEffect",
+      battleReducerRouteHoles(act.initialHoles),
+      act.subject.tag === "actionSpell"
+        ? "battleSpellSlotAndActionEconomy"
+        : "battleActiveEffect",
+    ),
+  ];
+}
 
 export function commandRouteForResolution(
   input: BattleResolutionInput,
@@ -164,7 +185,7 @@ function isCommandEffectSubject(
   );
 }
 
-export function isCommandEffectDiscoverySubject(
+function isCommandEffectDiscoverySubject(
   state: BattleState,
   subject: BattleResolutionInput["subject"],
 ): boolean {

@@ -30,12 +30,32 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { resolvedAnimalFriendshipState } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellCasterId } from "./unit-profile-admission-catalog.test-support.ts";
+import { resolveCreatureAttack } from "./battle-reducer/creature-attack-procedures.ts";
+import { creatureAttackRouteForDiscoveredAct } from "./battle-reducer/attack-routes.ts";
 
 const INITIAL_HP = 20;
 const ATTACKER_ID = combatantId("creature-attack-a");
 const TARGET_ID = combatantId("creature-attack-b");
 
 describe("creature attack public reducer", () => {
+  test("the focused procedure owner requests the discovered Attack Roll", () => {
+    const state = startCreatureAttackBattle();
+    const subject = creatureAttackSubject();
+    const discovered = discoverCreatureAttackAct(state, subject);
+
+    expect(resolveCreatureAttack({ state, subject, fills: [] })).toMatchObject({
+      tag: "needsHoles",
+      subject,
+      holes: discovered.initialHoles,
+    });
+    expect(creatureAttackRouteForDiscoveredAct(discovered)).toEqual([
+      expect.objectContaining({
+        subject: "creatureAttack",
+        owner: "battleAttackRoll",
+      }),
+    ]);
+  });
+
   test("requests the discovered Attack Roll before resolving", () => {
     const state = startCreatureAttackBattle();
     const subject = creatureAttackSubject();

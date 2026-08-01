@@ -1,5 +1,6 @@
 import {
   canSpendAction,
+  canSpendBonusAction,
   canSpendUnarmedStrikeActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import type { StandardActionKind } from "@dnd/shared/game-facts";
@@ -22,12 +23,26 @@ const ACTION_ELIGIBILITY_ISSUES = {
   familiarCannotAttack: "Find Familiar familiars can't attack.",
   heldWeaponActivationUnavailable:
     "Attack action feature is no longer available for the current actor.",
+  bonusActionUnavailable:
+    "Bonus Action is no longer available for the current actor.",
+  magicActionUnavailable:
+    "Magic action is no longer available for the current actor.",
+  bonusActionSpellUnavailable:
+    "Bonus Action spell is no longer available for the current actor.",
+  unitFeatureUnavailable:
+    "Unit feature is no longer available for the current actor.",
+  wildShapeUnavailable: "Druid Wild Shape Bonus Action is no longer available.",
 } as const;
 type BattleSubjectActionEligibilityIssue =
   (typeof ACTION_ELIGIBILITY_ISSUES)[keyof typeof ACTION_ELIGIBILITY_ISSUES];
 type ActionEligibilityFacts =
   | { readonly tag: "notApplicable" }
   | { readonly tag: "actorEligibilityOnly" }
+  | { readonly tag: "unitFeatureActor" }
+  | { readonly tag: "bonusAction" }
+  | { readonly tag: "bonusActionSpell" }
+  | { readonly tag: "wildShapeBonusAction" }
+  | { readonly tag: "magicAction" }
   | { readonly tag: "familiarForbiddenActorEligibilityOnly" }
   | { readonly tag: "standardAction"; readonly action: StandardActionKind }
   | { readonly tag: "familiarForbiddenAttackAction" }
@@ -47,7 +62,7 @@ export function battleSubjectActionEligibilityIssue(
   }
   const actorId = subject.actorId;
   if (!combatantCanTakeActions(state.combatants.get(actorId))) {
-    return ACTION_ELIGIBILITY_ISSUES.unavailable;
+    return actorUnavailableIssue(facts);
   }
   if (
     isPresentFindFamiliarCombatant(state, actorId) &&
@@ -83,24 +98,21 @@ function actionEligibilityFacts(
       "pactOfTheChainFamiliarAttack",
       () => ({ tag: "standardAction", action: "attack" }) as const,
     ),
-    byTag("actionSpell", () => ({ tag: "notApplicable" }) as const),
-    byTag("bonusAction", () => ({ tag: "notApplicable" }) as const),
-    byTag("bonusActionDashSpell", () => ({ tag: "notApplicable" }) as const),
-    byTag("bonusActionSpell", () => ({ tag: "notApplicable" }) as const),
-    byTag(
-      "bonusActionStandardAction",
-      () => ({ tag: "notApplicable" }) as const,
-    ),
+    byTag("actionSpell", () => ({ tag: "magicAction" }) as const),
+    byTag("bonusAction", () => ({ tag: "bonusAction" }) as const),
+    byTag("bonusActionDashSpell", () => ({ tag: "bonusActionSpell" }) as const),
+    byTag("bonusActionSpell", () => ({ tag: "bonusActionSpell" }) as const),
+    byTag("bonusActionStandardAction", () => ({ tag: "bonusAction" }) as const),
     byTag("companionLifecycle", () => ({ tag: "notApplicable" }) as const),
     byTag("creatureAttack", () => ({ tag: "notApplicable" }) as const),
-    byTag("druidWildShape", () => ({ tag: "notApplicable" }) as const),
+    byTag("druidWildShape", () => ({ tag: "wildShapeBonusAction" }) as const),
     byTag(
       "findFamiliarSharedSenses",
       () => ({ tag: "notApplicable" }) as const,
     ),
     byTag("findFamiliarTouchSpell", () => ({ tag: "notApplicable" }) as const),
     byTag("runtimeCommand", () => ({ tag: "notApplicable" }) as const),
-    byTag("unitFeature", () => ({ tag: "notApplicable" }) as const),
+    byTag("unitFeature", () => ({ tag: "unitFeatureActor" }) as const),
     Match.exhaustive,
   );
 }
@@ -112,6 +124,11 @@ function familiarCannotUseActionFacts(facts: ActionEligibilityFacts): boolean {
     byTag("familiarForbiddenUnarmedStrike", () => true),
     byTag("notApplicable", () => false),
     byTag("actorEligibilityOnly", () => false),
+    byTag("unitFeatureActor", () => false),
+    byTag("bonusAction", () => false),
+    byTag("bonusActionSpell", () => false),
+    byTag("wildShapeBonusAction", () => false),
+    byTag("magicAction", () => false),
     byTag("standardAction", () => false),
     byTag("escapeGrappleAction", () => false),
     byTag("heldWeaponActivation", () => false),
@@ -126,6 +143,27 @@ function actionResourceEligibilityIssue(
 ): BattleSubjectActionEligibilityIssue | null {
   return Match.value(facts).pipe(
     byTag("actorEligibilityOnly", () => null),
+    byTag("unitFeatureActor", () => null),
+    byTag("bonusAction", () =>
+      canSpendBonusAction(resources)
+        ? null
+        : ACTION_ELIGIBILITY_ISSUES.bonusActionUnavailable,
+    ),
+    byTag("bonusActionSpell", () =>
+      canSpendBonusAction(resources)
+        ? null
+        : ACTION_ELIGIBILITY_ISSUES.bonusActionSpellUnavailable,
+    ),
+    byTag("wildShapeBonusAction", () =>
+      canSpendBonusAction(resources)
+        ? null
+        : ACTION_ELIGIBILITY_ISSUES.wildShapeUnavailable,
+    ),
+    byTag("magicAction", () =>
+      canSpendAction(resources, "magic")
+        ? null
+        : ACTION_ELIGIBILITY_ISSUES.magicActionUnavailable,
+    ),
     byTag("familiarForbiddenActorEligibilityOnly", () => null),
     byTag("standardAction", ({ action }) =>
       canSpendAction(resources, action)
@@ -151,6 +189,53 @@ function actionResourceEligibilityIssue(
       canSpendAction(resources, "attack")
         ? null
         : ACTION_ELIGIBILITY_ISSUES.heldWeaponActivationUnavailable,
+    ),
+    Match.exhaustive,
+  );
+}
+
+function actorUnavailableIssue(
+  facts: Exclude<ActionEligibilityFacts, { readonly tag: "notApplicable" }>,
+): BattleSubjectActionEligibilityIssue {
+  return Match.value(facts).pipe(
+    byTag("actorEligibilityOnly", () => ACTION_ELIGIBILITY_ISSUES.unavailable),
+    byTag(
+      "unitFeatureActor",
+      () => ACTION_ELIGIBILITY_ISSUES.unitFeatureUnavailable,
+    ),
+    byTag(
+      "bonusAction",
+      () => ACTION_ELIGIBILITY_ISSUES.bonusActionUnavailable,
+    ),
+    byTag(
+      "bonusActionSpell",
+      () => ACTION_ELIGIBILITY_ISSUES.bonusActionSpellUnavailable,
+    ),
+    byTag(
+      "wildShapeBonusAction",
+      () => ACTION_ELIGIBILITY_ISSUES.wildShapeUnavailable,
+    ),
+    byTag(
+      "magicAction",
+      () => ACTION_ELIGIBILITY_ISSUES.magicActionUnavailable,
+    ),
+    byTag(
+      "familiarForbiddenActorEligibilityOnly",
+      () => ACTION_ELIGIBILITY_ISSUES.unavailable,
+    ),
+    byTag("standardAction", () => ACTION_ELIGIBILITY_ISSUES.unavailable),
+    byTag(
+      "familiarForbiddenAttackAction",
+      () => ACTION_ELIGIBILITY_ISSUES.unavailable,
+    ),
+    byTag(
+      "familiarForbiddenUnarmedStrike",
+      () => ACTION_ELIGIBILITY_ISSUES.unavailable,
+    ),
+    byTag("escapeGrappleAction", () => ACTION_ELIGIBILITY_ISSUES.unavailable),
+    byTag(
+      "heldWeaponActivation",
+      () => ACTION_ELIGIBILITY_ISSUES.heldWeaponActivationUnavailable,
     ),
     Match.exhaustive,
   );

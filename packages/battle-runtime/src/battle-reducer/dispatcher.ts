@@ -28,12 +28,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
-import {
-  canSpendAction,
-  canSpendBonusAction,
-  spendAction,
-} from "@dnd/shared-algebras/action-economy-algebra";
-import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { currentInterruptFrame, snapshotBattle } from "./battle-snapshot.ts";
 export {
   attackDamageContinuationConcentrationFrame,
@@ -66,7 +60,6 @@ export {
   snapshotBattle,
   unofferedEligibleResponders,
 } from "./battle-snapshot.ts";
-import * as Either from "effect/Either";
 import {
   type BattleSubject,
   type ActionHideSubject,
@@ -74,19 +67,9 @@ import {
 } from "../battle-subjects.ts";
 import { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
-import {
-  battleStateAfterCreatureAttackDamage,
-  creatureAttackDamageHole,
-  creatureAttackDamageTotal,
-  creatureAttackFillSequence,
-  creatureAttackHit,
-  creatureAttackPilotActor,
-  creatureAttackRollHole,
-  creatureAttackSubjectCombatants,
-} from "./creature-attack.ts";
+import { resolveCreatureAttack } from "./creature-attack-procedures.ts";
 import {
   battleSubjectActorId,
-  combatantCanTakeActions,
   isLegendaryAttackSubject,
   normalizeEarlyEndedOngoingFeatures,
   statBlockLegendaryActionWindowIsOpen,
@@ -98,12 +81,6 @@ import {
   resolveFindFamiliarSharedSensesSubject,
   resolveFindFamiliarTouchSpellSubject,
 } from "./find-familiar-procedures.ts";
-import { breakBattleConcentration } from "./damage-apply.ts";
-import {
-  damageRelationshipDecisionHole,
-  DamageRelationshipDecisionsByHole,
-} from "./damage-relationship-decisions.ts";
-import { needsHolesResult } from "./needs-holes-result.ts";
 import {
   type AdmittedReplayContinuationSubject,
   ReplayContinuationExecution,
@@ -137,10 +114,8 @@ import {
 import { resolveCastAttackHitBonusActionSpellCommand } from "./attack-hit-bonus-action-spell-procedures.ts";
 import { resolveD20TestNaturalOneRerollFills } from "./d20-test-natural-one-reroll-procedures.ts";
 import { invalidResult } from "./result-helpers.ts";
-import {
-  battleReducerRouteForInterrupt,
-  battleReducerRouteForResolution,
-} from "./reducer-route.ts";
+import { battleReducerRouteForInterrupt } from "./interrupt-route-projection.ts";
+import { battleReducerRouteForResolution } from "./reducer-route.ts";
 import {
   antimagicFieldInterdictionMessage,
   battleSubjectInterdictedByAntimagicField,
@@ -198,8 +173,10 @@ import {
 import { resolveEndTurnCommand } from "./turn-boundary-lifecycle.ts";
 import {
   isPersistentSpatialSpellProcedureSubject,
+  persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn,
   resolvePersistentSpatialSpellProcedureCommand,
 } from "./persistent-spatial-spell-procedures.ts";
+import { resolveEndConcentrationCommand } from "./concentration-procedures.ts";
 import {
   resolveDruidWildShapeUnitFeature,
   resolveUnitFeature,
@@ -308,7 +285,7 @@ function replayContinuationExecution(
   );
 }
 
-export function resolveBattleSubjectInternal(
+function resolveBattleSubjectInternal(
   input: AdmittedBattleResolutionInput,
   options: ResolveBattleSubjectInternalOptions,
 ): BattleResolutionResult {
@@ -400,8 +377,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     actorId !== currentActorId(input.state) &&
     !isLegendaryAttackSubject(input.state, input.subject) &&
     !isReleaseGrappleSubject(input.subject) &&
-    !isInsectPlagueAppearanceSaveSubject(input.subject) &&
-    !isCloudkillAppearanceSaveSubject(input.subject)
+    !persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn(input.subject)
   ) {
     return invalidResult(
       input.state,
@@ -475,108 +451,13 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
   if (actionEligibilityIssue !== null) {
     return invalidResult(input.state, "staleSubject", actionEligibilityIssue);
   }
-  if (
-    input.subject.tag === "bonusAction" &&
-    (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
-      !canSpendBonusAction(input.state.currentTurnResources))
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Bonus Action is no longer available for the current actor.",
-    );
-  }
-  if (
-    input.subject.tag === "bonusActionStandardAction" &&
-    (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
-      !canSpendBonusAction(input.state.currentTurnResources))
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Bonus Action is no longer available for the current actor.",
-    );
-  }
-  if (
-    input.subject.tag === "actionSpell" &&
-    (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
-      !canSpendAction(input.state.currentTurnResources, "magic"))
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Magic action is no longer available for the current actor.",
-    );
-  }
-  if (
-    (input.subject.tag === "bonusActionSpell" ||
-      input.subject.tag === "bonusActionDashSpell") &&
-    (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
-      !canSpendBonusAction(input.state.currentTurnResources))
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Bonus Action spell is no longer available for the current actor.",
-    );
-  }
-
-  /* v8 ignore start -- Defensive stale-subject rejection: rediscovery removes action-dependent Unit features once the actor cannot act. */
-  if (
-    input.subject.tag === "unitFeature" &&
-    !combatantCanTakeActions(input.state.combatants.get(actorId))
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Unit feature is no longer available for the current actor.",
-    );
-  }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Defensive stale-subject rejection: rediscovery removes Wild Shape after action eligibility or the Bonus Action is lost. */
-  if (
-    input.subject.tag === "druidWildShape" &&
-    (!combatantCanTakeActions(input.state.combatants.get(actorId)) ||
-      !canSpendBonusAction(input.state.currentTurnResources))
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Druid Wild Shape Bonus Action is no longer available.",
-    );
-  }
-  /* v8 ignore stop */
-
   const result = (() => {
     const subject = input.subject;
     if (
       subject.tag === "runtimeCommand" &&
       subject.command === "endConcentration"
     ) {
-      const actor = input.state.combatants.get(subject.actorId);
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (input.fills.length > 0) {
-        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-        return invalidResult(
-          input.state,
-          "invalidFill",
-          "End Concentration does not accept fills.",
-        );
-      }
-      /* v8 ignore stop */
-      if (actor === undefined || actor.concentration === null) {
-        return invalidResult(
-          input.state,
-          "staleSubject",
-          "End Concentration is no longer available.",
-        );
-      }
-      const nextState = breakBattleConcentration(input.state, subject.actorId);
-      return {
-        tag: "resolved" as const,
-        state: nextState,
-        snapshot: snapshotBattle(nextState),
-      };
+      return resolveEndConcentrationCommand({ ...input, subject });
     }
     if (subject.tag === "action" && subject.action === "attack") {
       return options.attackResolvers.resolveAttack({
@@ -595,150 +476,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       );
     }
     if (subject.tag === "creatureAttack") {
-      const combatants = creatureAttackSubjectCombatants({
-        state: input.state,
-        subject,
-      });
-      if (combatants.tag === "missing") {
-        return invalidResult(
-          input.state,
-          "missingCombatant",
-          `Creature Attack combatant is not in this battle: ${combatants.combatantId}`,
-        );
-      }
-      if (!creatureAttackPilotActor(combatants.actor)) {
-        return invalidResult(
-          input.state,
-          "unsupportedSubject",
-          "Creature Attack is available only for the narrow stat-block no-actions pilot.",
-        );
-      }
-      if (!combatantCanTakeActions(combatants.actor)) {
-        return invalidResult(
-          input.state,
-          "staleSubject",
-          "Creature Attack requires an actor that can take actions.",
-        );
-      }
-      const spentAttackResources = spendAction(
-        input.state.currentTurnResources,
-        "attack",
-      );
-      if (Either.isLeft(spentAttackResources)) {
-        return invalidResult(
-          input.state,
-          "staleSubject",
-          "Creature Attack requires an available Attack action.",
-        );
-      }
-      const fills = creatureAttackFillSequence({ ...input, subject });
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (fills.tag === "invalid") {
-        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-        return invalidResult(input.state, "invalidFill", fills.message);
-      }
-      /* v8 ignore stop */
-      if (fills.tag === "empty") {
-        return needsHolesResult(input.state, subject, [
-          creatureAttackRollHole(subject),
-        ]);
-      }
-      const hit = creatureAttackHit({
-        state: input.state,
-        target: combatants.target,
-        attackRoll: fills.attackRoll,
-      });
-      if (!hit) {
-        /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-        if (fills.tag === "damageRoll") {
-          /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-          return invalidResult(
-            input.state,
-            "invalidFill",
-            "Creature Attack damage cannot be supplied after a missed Attack Roll.",
-          );
-        }
-        /* v8 ignore stop */
-        const nextState = {
-          ...input.state,
-          currentTurnResources: spentAttackResources.right,
-        };
-        return {
-          tag: "resolved" as const,
-          state: nextState,
-          snapshot: snapshotBattle(nextState),
-        };
-      }
-      if (fills.tag === "attackRoll") {
-        return needsHolesResult(input.state, subject, [
-          creatureAttackDamageHole(subject),
-        ]);
-      }
-      const parsedRelationships = DamageRelationshipDecisionsByHole.parse({
-        fills: input.fills,
-        damageEventHoleIds: new Set([fills.damageRoll.holeId]),
-        owner: "an Attack",
-      });
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (parsedRelationships.tag === "invalid") {
-        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-        return invalidResult(
-          input.state,
-          "invalidFill",
-          parsedRelationships.message,
-        );
-      }
-      /* v8 ignore stop */
-      const relationshipCheck =
-        parsedRelationships.decisionsByRelationshipHole.check(
-          fills.damageRoll.holeId,
-          creatureAttackDamageTotal(fills.damageRoll) <= 0
-            ? null
-            : damageRelationshipDecisionHole({
-                state: input.state,
-                damageEventHoleId: fills.damageRoll.holeId,
-                damageSourceId: subject.actorId,
-                targets: [
-                  {
-                    targetId: subject.targetId,
-                    damageAmount: toDamageAmount(
-                      creatureAttackDamageTotal(fills.damageRoll),
-                    ),
-                  },
-                ],
-                spatialFacts: [],
-              }),
-        );
-      if (relationshipCheck.tag === "needsHoles") {
-        return needsHolesResult(input.state, subject, relationshipCheck.holes);
-      }
-      /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (relationshipCheck.tag === "invalid") {
-        /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-        return invalidResult(
-          input.state,
-          "invalidFill",
-          relationshipCheck.message,
-        );
-      }
-      /* v8 ignore stop */
-      const nextState = battleStateAfterCreatureAttackDamage({
-        state: {
-          ...input.state,
-          currentTurnResources: spentAttackResources.right,
-        },
-        actor: combatants.actor,
-        target: combatants.target,
-        damage: creatureAttackDamageTotal(fills.damageRoll),
-        ...(relationshipCheck.decisions === undefined
-          ? {}
-          : { relationshipDecisions: relationshipCheck.decisions }),
-      });
-      return {
-        tag: "resolved" as const,
-        state: nextState,
-        snapshot: snapshotBattle(nextState),
-      };
+      return resolveCreatureAttack({ ...input, subject });
     }
     if (subject.tag === "action" && subject.action === "dash") {
       return resolveDash(input);
@@ -1064,7 +802,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
   return consumeOrCloseLegendaryActionWindow(input.subject, result);
 }
 
-export function actionHideSubject(subject: {
+function actionHideSubject(subject: {
   readonly tag: "action";
   readonly actorId: CombatantId;
   readonly action: "hide";
@@ -1076,7 +814,7 @@ export function actionHideSubject(subject: {
   };
 }
 
-export function actionSearchSubject(subject: {
+function actionSearchSubject(subject: {
   readonly tag: "action";
   readonly actorId: CombatantId;
   readonly action: "search";
@@ -1088,7 +826,7 @@ export function actionSearchSubject(subject: {
   };
 }
 
-export function isReleaseGrappleSubject(
+function isReleaseGrappleSubject(
   subject: BattleSubject,
 ): subject is Extract<
   BattleSubject,
@@ -1096,38 +834,6 @@ export function isReleaseGrappleSubject(
 > {
   return (
     subject.tag === "runtimeCommand" && subject.command === "releaseGrapple"
-  );
-}
-
-function isInsectPlagueAppearanceSaveSubject(
-  subject: BattleSubject,
-): subject is Extract<
-  BattleSubject,
-  {
-    readonly tag: "runtimeCommand";
-    readonly command: "insectPlagueAreaHazardSave";
-  }
-> {
-  return (
-    subject.tag === "runtimeCommand" &&
-    subject.command === "insectPlagueAreaHazardSave" &&
-    subject.areaMembershipTrigger.kind === "appearsInArea"
-  );
-}
-
-function isCloudkillAppearanceSaveSubject(
-  subject: BattleSubject,
-): subject is Extract<
-  BattleSubject,
-  {
-    readonly tag: "runtimeCommand";
-    readonly command: "cloudkillAreaHazardSave";
-  }
-> {
-  return (
-    subject.tag === "runtimeCommand" &&
-    subject.command === "cloudkillAreaHazardSave" &&
-    subject.areaMembershipTrigger.kind === "appearsInArea"
   );
 }
 

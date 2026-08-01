@@ -153,21 +153,40 @@ module battleRuntimeInterruptStackResumeRouteMbt {
     qSurface == FreshRouteSurface,
     recordRoute(
       ActiveEffectMutationResumedRouteSurface,
-      pendingInterruptDecisionRoute
+      List(
+        startRoute,
+        routeDiscoverBattleActs(
+          ReactionArmorClassEffectRouteSubject,
+          interruptDecisionHoles,
+          BattleInterruptStackOwner,
+        ),
+      )
         .append(
-          resolveInterruptResumeDecision(
+          routeResolveBattleInterrupt(
+            ReactionArmorClassEffectRouteSubject,
+            InterruptDecisionFillKind,
             noHoles,
             BattleSpellSlotAndActionEconomyOwner,
           )
         )
         .append(
-          resolveInterruptResumeDecision(
+          routeResolveBattleInterrupt(
+            ReactionArmorClassEffectRouteSubject,
+            InterruptDecisionFillKind,
             noHoles,
             BattleActiveEffectOwner,
           )
         )
         .append(
-          resolveInterruptResumeDecision(
+          routeResolveBattleSubjectWithoutFill(
+            ReactionArmorClassEffectRouteSubject,
+            noHoles,
+            BattleArmorClassOwner,
+          )
+        )
+        .append(
+          routeResolveBattleSubjectWithoutFill(
+            ReactionArmorClassEffectRouteSubject,
             noHoles,
             BattleInterruptStackOwner,
           )

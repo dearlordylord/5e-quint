@@ -70,10 +70,6 @@ import {
   resolveCloudkillAreaSaveDamage,
   resolveInsectPlagueAreaSaveDamage,
 } from "./persistent-area-save-damage.ts";
-export {
-  cloudkillAreaHazardSavingThrowOutcomeHole,
-  insectPlagueAreaHazardSavingThrowOutcomeHole,
-} from "./persistent-area-save-damage.ts";
 import { validateGustOfWindLineAreaPushFacts } from "./gust-of-wind-push-facts.ts";
 import { revertShapeShiftedCombatantToTrueForm } from "./shape-shifting.ts";
 import { resolveEndTurnCommand } from "./turn-boundary-lifecycle.ts";
@@ -172,6 +168,17 @@ export function isPersistentSpatialSpellProcedureSubject(
     PERSISTENT_SPATIAL_SPELL_PROCEDURE_COMMANDS.some(
       (command) => command === subject.command,
     )
+  );
+}
+
+export function persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn(
+  subject: BattleSubject,
+): boolean {
+  return (
+    subject.tag === "runtimeCommand" &&
+    (subject.command === "insectPlagueAreaHazardSave" ||
+      subject.command === "cloudkillAreaHazardSave") &&
+    subject.areaMembershipTrigger.kind === "appearsInArea"
   );
 }
 

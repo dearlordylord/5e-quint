@@ -41,6 +41,7 @@ import {
   type CreatureAttackState,
 } from "./battle-reducer/creature-attack.test-support.ts";
 import { CREATURE_ATTACK_DAMAGE_HOLE_ID } from "./battle-reducer/creature-attack.ts";
+import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 import {
   resolveBattleSubject,
   battleId,
@@ -336,14 +337,7 @@ function compareCreatureAttackState(
   runtime: CreatureAttackState,
   quint: CreatureAttackState,
 ): boolean {
-  try {
-    expect(runtime).toEqual(quint);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-    throw error;
-  }
+  expect(runtime).toEqual(quint);
   return true;
 }
 
@@ -416,10 +410,24 @@ function creatureAttackStatBlockWithActions(id: string): StatBlockRecord {
     statBlock: {
       ...statBlock.statBlock,
       actions: {
-        specials: [
+        attacks: [
           {
-            name: "Synthetic Special Action",
-            description: "Synthetic non-pilot action fixture.",
+            attackAbility: "str",
+            attackType: "melee",
+            attackBonus: { kind: "literal", value: 2 },
+            reachFeet: 5,
+            onHit: [
+              {
+                kind: "damage",
+                damageType: "bludgeoning",
+                amount: {
+                  kind: "fixed",
+                  expr: { dice: 1, dieSize: 4 },
+                  static: 2,
+                },
+              },
+            ],
+            name: "Synthetic Strike",
           },
         ],
       },
@@ -542,7 +550,13 @@ function discoverCreatureAttackAct(
   if (discovered === undefined) {
     throw new Error("Expected public Creature Attack act discovery.");
   }
-  return discovered;
+  const routeEvents = battleReducerRouteEventsForDiscoveredAct(
+    state,
+    discovered,
+  );
+  return routeEvents === undefined
+    ? discovered
+    : { ...discovered, routeEvents };
 }
 
 function expectCreatureAttackRollHole(

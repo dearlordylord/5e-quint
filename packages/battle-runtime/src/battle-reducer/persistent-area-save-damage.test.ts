@@ -14,6 +14,7 @@ import {
   resolveCloudkillAreaSaveDamage,
   resolveInsectPlagueAreaSaveDamage,
 } from "./persistent-area-save-damage.ts";
+import { persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn } from "./persistent-spatial-spell-procedures.ts";
 
 function persistentAreaBattle() {
   return startBattleRight({
@@ -32,6 +33,33 @@ const unrelatedFill = {
 } satisfies BattleFill;
 
 describe("persistent-area save/damage protocol", () => {
+  test("admits only appearance-triggered persistent-area saves outside the current turn", () => {
+    const areaMembershipTrigger = {
+      kind: "appearsInArea",
+      areaId: battleAreaId("test-persistent-area-appearance"),
+    } as const;
+
+    expect(
+      persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn({
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "insectPlagueAreaHazardSave",
+        areaMembershipTrigger,
+      }),
+    ).toBe(true);
+    expect(
+      persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn({
+        tag: "runtimeCommand",
+        actorId: fighterId,
+        command: "cloudkillAreaHazardSave",
+        areaMembershipTrigger: {
+          ...areaMembershipTrigger,
+          kind: "turnEndInArea",
+        },
+      }),
+    ).toBe(false);
+  });
+
   test("rejects an unsupported Insect Plague fill before stale-effect parsing", () => {
     const result = resolveInsectPlagueAreaSaveDamage({
       state: persistentAreaBattle(),

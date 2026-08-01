@@ -2632,9 +2632,6 @@ export function createBattleRuntimeDriver() {
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
       doRejectRecursiveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject(
-          battleRuntimeSessionForTest({ state, context: session.context }),
-        );
         fills = [];
         recordResult(resolveBattleSubject({ state, subject, fills }));
       },
@@ -2858,9 +2855,6 @@ export function createBattleRuntimeRouteDriver() {
         resolveWithoutFill();
       },
       doRejectRecursiveSkeletonMultiattack: () => {
-        subject = skeletonMultiattackSubject(
-          battleRuntimeSessionForTest({ state, context: session.context }),
-        );
         fills = [];
         resolveWithoutFill();
       },
@@ -15229,10 +15223,7 @@ function projectConcentrationBreakTeardownState(
     saveDc: state.saveDc,
     saveRollTotal: state.saveRollTotal,
     concentrationSaveOffered: state.concentrationSaveOffered,
-    casterConcentrating:
-      // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
-      caster.concentration?.sourceProcedureRef === "blur" &&
-      caster.concentration.effectKind === "spellEffect",
+    casterConcentrating: caster.concentration?.effectKind === "spellEffect",
     blurredEffectCount: blurredEffectCount(state.battle.state),
     spellSlotExpended: casterSpellSlotExpended(state.battle.state),
     teardownBeforeNextCommand: state.teardownBeforeNextCommand,

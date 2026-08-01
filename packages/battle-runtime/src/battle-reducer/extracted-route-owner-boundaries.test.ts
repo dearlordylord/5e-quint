@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
+import { battleActSpellPresentation } from "../battle-act-composition.ts";
 import {
   battleId,
   characterSeed,
+  combatantId,
   discoverBattleActs,
   fighterAttackSubject,
   fighterVsGoblinBattle,
@@ -20,15 +22,22 @@ import {
 import { spellTargetListFillForTest } from "../spell-target-list.test-support.ts";
 import { weaponAttackRouteForResolution } from "./attack-routes.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
-import { hitPointRestorationDiscoveryOwner } from "./combatant-lifecycle-routes.ts";
-import { commandRouteForResolution } from "./command-routes.ts";
+import {
+  concentrationRouteForDiscoveredAct,
+  hitPointRestorationRouteForDiscoveredAct,
+  zeroHitPointStabilizationRouteForDiscoveredAct,
+} from "./combatant-lifecycle-routes.ts";
+import {
+  commandRouteForDiscoveredAct,
+  commandRouteForResolution,
+} from "./command-routes.ts";
 import {
   companionRouteForDiscoveredAct,
   findFamiliarCompanionLifecycleRouteEvents,
 } from "./companion-routes.ts";
 import { conditionImmunityTemporaryHitPointRouteForDiscoveredAct } from "./condition-immunity-temporary-hit-point-routes.ts";
 import { sleepRepeatSaveRouteForDiscoveredAct } from "./effect-lifecycle-routes.ts";
-import { isUnitFeatureBonusActionRouteSubject } from "./feature-action-routes.ts";
+import { unitFeatureBonusActionRouteForDiscoveredAct } from "./feature-action-routes.ts";
 import { markedDamageRiderRouteForDiscoveredAct } from "./marked-damage-routes.ts";
 import { protectionCharmRouteForDiscoveredAct } from "./protection-charm-routes.ts";
 import { spatialEffectCompositionRouteForDiscoveredAct } from "./spatial-effect-routes.ts";
@@ -46,9 +55,9 @@ describe("extracted route owner boundaries", () => {
     expect(
       conditionImmunityTemporaryHitPointRouteForDiscoveredAct(state, act),
     ).toBeUndefined();
-    expect(isUnitFeatureBonusActionRouteSubject(state, act.subject)).toBe(
-      false,
-    );
+    expect(
+      unitFeatureBonusActionRouteForDiscoveredAct(state, act),
+    ).toBeUndefined();
     expect(markedDamageRiderRouteForDiscoveredAct(state, act)).toBeUndefined();
     expect(protectionCharmRouteForDiscoveredAct(state, act)).toBeUndefined();
     expect(
@@ -114,13 +123,8 @@ describe("extracted route owner boundaries", () => {
     ).toMatchObject({ subject: "repeatSaveConditionEffect" });
   });
 
-  test("projects companion and combatant lifecycle owner outputs", () => {
+  test("projects companion owner outputs", () => {
     expect(findFamiliarCompanionLifecycleRouteEvents()).toHaveLength(2);
-    expect(
-      hitPointRestorationDiscoveryOwner(
-        fighterAttackSubject(fighterVsGoblinBattle()),
-      ),
-    ).toBe("battleActionEconomy");
   });
 
   test("projects marked damage, feature, Command, and attack route events", () => {
@@ -162,15 +166,20 @@ describe("extracted route owner boundaries", () => {
       ],
     });
     const featureAct = discoverBattleActs(featureSession).find((act) =>
-      isUnitFeatureBonusActionRouteSubject(featureSession.state, act.subject),
+      unitFeatureBonusActionRouteForDiscoveredAct(featureSession.state, act),
     );
     if (featureAct === undefined) throw new Error("Expected feature act.");
     expect(
-      isUnitFeatureBonusActionRouteSubject(
+      unitFeatureBonusActionRouteForDiscoveredAct(
         featureSession.state,
-        featureAct.subject,
+        featureAct,
       ),
-    ).toBe(true);
+    ).toEqual([
+      expect.objectContaining({
+        subject: "unitFeatureBonusAction",
+        owner: "battleFeatureResource",
+      }),
+    ]);
 
     const state = fighterVsGoblinBattle();
     const attackSubject = fighterAttackSubject(state);
@@ -209,6 +218,12 @@ describe("extracted route owner boundaries", () => {
       ],
     });
     const act = findAct(session, magicSubject("command"));
+    expect(commandRouteForDiscoveredAct(session.state, act)).toEqual([
+      expect.objectContaining({
+        subject: "commandEffect",
+        owner: "battleSpellSlotAndActionEconomy",
+      }),
+    ]);
     const targetHole = findHole(act.initialHoles, "spellTargetList");
     const fills = [
       spellTargetListFillForTest(targetHole, wizardId, skeletonId),
@@ -232,5 +247,113 @@ describe("extracted route owner boundaries", () => {
         owner: "battleHoleFrontier",
       }),
     );
+  });
+
+  test("projects hit-point restoration discovery through its owner", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-restoration-route-owner"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("cure_wounds")],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const act = findAct(session, magicSubject("cure_wounds"));
+
+    expect(
+      hitPointRestorationRouteForDiscoveredAct(session.state, act),
+    ).toEqual([
+      expect.objectContaining({
+        subject: "hitPointRestoration",
+        owner: "battleSpellSlotAndActionEconomy",
+      }),
+    ]);
+  });
+
+  test("projects Concentration and zero-Hit-Point discovery through lifecycle owners", () => {
+    const concentrationSession = startBattleSessionRight({
+      battleId: battleId("battle-concentration-discovery-route-owner"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("blur")],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const downedAllyId = combatantId("route-owner-downed-ally");
+    const stabilizationSession = startBattleSessionRight({
+      battleId: battleId("battle-stabilization-discovery-route-owner"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevels: [{ className: "cleric", level: 1 }],
+          spellcasting: {
+            ...wizardSpellcasting({
+              cantrips: [spellRecord("spare_the_dying")],
+            }),
+            sourceClassName: "cleric",
+          },
+        }),
+        characterSeed({
+          combatantId: downedAllyId,
+          displayName: "Downed Ally",
+          initiative: 10,
+          currentHp: 0,
+        }),
+      ],
+    });
+    const concentrationAct = findAct(
+      concentrationSession,
+      magicSubject("blur"),
+    );
+    const stabilizationAct = discoverBattleActs(stabilizationSession).find(
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(act)?.invocation.spellId ===
+          "spare_the_dying",
+    );
+    if (stabilizationAct === undefined) {
+      throw new Error("Expected a Spare the Dying act.");
+    }
+
+    expect(
+      concentrationRouteForDiscoveredAct(
+        concentrationSession.state,
+        concentrationAct,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        subject: "concentrationTeardown",
+        owner: "battleSpellSlotAndActionEconomy",
+      }),
+    ]);
+    expect(
+      zeroHitPointStabilizationRouteForDiscoveredAct(
+        stabilizationSession.state,
+        stabilizationAct,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        subject: "zeroHitPointStabilization",
+        owner: "battleActionEconomy",
+      }),
+    ]);
   });
 });

@@ -527,7 +527,7 @@ function combatantHasMoveActionBonusActionRestriction(
   );
 }
 
-export function resetSpellDamageReductionsForNewTurn(
+function resetSpellDamageReductionsForNewTurn(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   return new Map(
@@ -548,7 +548,7 @@ export function resetSpellDamageReductionsForNewTurn(
   );
 }
 
-export function expireStartOfTurnEffects(
+function expireStartOfTurnEffects(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
@@ -575,7 +575,7 @@ export function expireStartOfTurnEffects(
   );
 }
 
-export function applyStartOfTurnActiveEffects(
+function applyStartOfTurnActiveEffects(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
@@ -607,7 +607,7 @@ export function applyStartOfTurnActiveEffects(
   );
 }
 
-export function spellTurnStartDamageEffects(
+function spellTurnStartDamageEffects(
   combatant: BattleCreatureState | undefined,
 ): readonly SpellTurnStartDamageEffect[] {
   /* v8 ignore start -- Defensive inconsistent-state guard: end-turn routing derives the next actor from admitted initiative entries, whose combatants remain in the battle map. */
@@ -633,7 +633,7 @@ type SpellTurnStartDamageEffect =
       { readonly kind: "spellTurnStartDamageAndSave" }
     >;
 
-export function spellTurnEndDamageEffects(
+function spellTurnEndDamageEffects(
   combatant: BattleCreatureState | undefined,
   actorId: CombatantId,
   round: RoundType,
@@ -656,7 +656,7 @@ type SpellTurnEndDamageEffect = Extract<
   { readonly kind: "spellTurnEndDamage" }
 >;
 
-export function spellTurnEndDamageRollHole(
+function spellTurnEndDamageRollHole(
   targetId: CombatantId,
   effect: SpellTurnEndDamageEffect,
 ): BattleSpellTurnEndDamageRollHole {
@@ -721,7 +721,7 @@ function spellTurnStartDamageTrigger(
   };
 }
 
-export function spellTurnStartDamageRollHole(
+function spellTurnStartDamageRollHole(
   targetId: CombatantId,
   effect: SpellTurnStartDamageEffect,
 ): BattleSpellTurnStartDamageRollHole {
@@ -2157,7 +2157,7 @@ function startTurnDamageDispositionHoles(
   });
 }
 
-export function expireEndOfTurnEffects(
+function expireEndOfTurnEffects(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
   round: RoundType,
@@ -2474,7 +2474,7 @@ function activeEffectExpiresWithConcentrationSource(
   );
 }
 
-export function expireActiveEffects(
+function expireActiveEffects(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   shouldExpire: (effect: BattleActiveEffect) => boolean,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
@@ -2507,7 +2507,7 @@ export function expireActiveEffects(
   );
 }
 
-export function expireStartOfTurnOngoingFeatures(
+function expireStartOfTurnOngoingFeatures(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
@@ -2519,7 +2519,7 @@ export function expireStartOfTurnOngoingFeatures(
   );
 }
 
-export function expireEndOfTurnOngoingFeatures(
+function expireEndOfTurnOngoingFeatures(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
   round: RoundType,
@@ -2533,7 +2533,7 @@ export function expireEndOfTurnOngoingFeatures(
   );
 }
 
-export function expireOngoingFeatures(
+function expireOngoingFeatures(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   shouldExpire: (occurrence: ActiveOngoingFeatureOccurrence) => boolean,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
@@ -3545,7 +3545,7 @@ export function statBlockRechargeRollFillMatchesHole(
   return true;
 }
 
-export function resetStartOfTurnCombatant(
+function resetStartOfTurnCombatant(
   combatant: BattleCreatureState,
 ): BattleCreatureState {
   const resetCombatant = {
@@ -3573,7 +3573,7 @@ export function resetStartOfTurnCombatant(
   };
 }
 
-export function resetPerTurnCharacterResources(
+function resetPerTurnCharacterResources(
   combatant: BattleCreatureState,
 ): BattleCreatureState {
   if (combatant.origin.kind !== "character") {

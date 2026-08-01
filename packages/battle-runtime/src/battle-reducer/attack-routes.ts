@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 import type {
+  BattleActDiscoveryCandidate,
   BattleFill,
   BattleResolutionInput,
   BattleResolutionResult,
@@ -16,7 +17,10 @@ import {
   ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
 } from "./attack-ordering-messages.ts";
 import { creatureAttackHit } from "./creature-attack.ts";
-import { markedDamageRiderTransferRouteForResolution } from "./marked-damage-routes.ts";
+import {
+  markedDamageRiderTransferRouteForResolution,
+  markedDamageRiderWeaponAttackRouteForDiscoveredAct,
+} from "./marked-damage-routes.ts";
 import {
   charmSourceDamageBreakRouteForResolution,
   protectionCharmAttackRollModeRouteForResolution,
@@ -46,6 +50,53 @@ type WeaponAttackResolutionSubject = Extract<
   BattleResolutionInput["subject"],
   { readonly tag: "action"; readonly action: "attack" }
 >;
+
+export function statBlockActionRouteForDiscoveredAct(
+  state: BattleState,
+  act: BattleActDiscoveryCandidate,
+): BattleReducerRouteEvents | undefined {
+  return isStatBlockActionRouteSubject(state, act.subject)
+    ? [
+        discoverBattleActsRoute(
+          "statBlockAction",
+          battleReducerRouteHoles(act.initialHoles),
+          "battleStatBlockAction",
+        ),
+      ]
+    : undefined;
+}
+
+export function creatureAttackRouteForDiscoveredAct(
+  act: BattleActDiscoveryCandidate,
+): BattleReducerRouteEvents | undefined {
+  return act.subject.tag === "creatureAttack"
+    ? [
+        discoverBattleActsRoute(
+          "creatureAttack",
+          battleReducerRouteHoles(act.initialHoles),
+          "battleAttackRoll",
+        ),
+      ]
+    : undefined;
+}
+
+export function weaponAttackRouteForDiscoveredAct(
+  state: BattleState,
+  act: BattleActDiscoveryCandidate,
+): BattleReducerRouteEvents | undefined {
+  if (!isWeaponAttackSubject(act.subject)) return undefined;
+  const markedRoute = markedDamageRiderWeaponAttackRouteForDiscoveredAct(
+    state,
+    act,
+  );
+  const weaponRoute = discoverBattleActsRoute(
+    "weaponAttack",
+    battleReducerRouteHoles(act.initialHoles),
+    "battleActionEconomy",
+  );
+  return markedRoute === undefined ? [weaponRoute] : [markedRoute, weaponRoute];
+}
+
 export function creatureAttackRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
@@ -458,7 +509,7 @@ export function isWeaponAttackSubject(
   return subject.tag === "action" && subject.action === "attack";
 }
 
-export function isStatBlockActionRouteSubject(
+function isStatBlockActionRouteSubject(
   state: BattleState,
   subject: BattleResolutionInput["subject"],
 ): boolean {

@@ -530,10 +530,8 @@ export {
   battleSightObscurement,
   FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
 } from "./battle-reducer/spells-active-effects.ts";
-export {
-  activeFeatureSpellSaveDcRouteEvents,
-  battleReducerStartRouteEvent,
-} from "./battle-reducer/reducer-route.ts";
+export { activeFeatureSpellSaveDcRouteEvents } from "./battle-reducer/active-feature-spell-routes.ts";
+export { battleReducerStartRouteEvent } from "./battle-reducer/reducer-route.ts";
 export { passiveSavingThrowRollModeRouteEvents } from "./battle-reducer/passive-projection-routes.ts";
 export type {
   BattleReducerRouteEvent,

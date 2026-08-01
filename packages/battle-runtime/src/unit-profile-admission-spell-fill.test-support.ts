@@ -16,8 +16,8 @@ import {
 import {
   insectPlagueAreaHazardSavingThrowOutcomeHole,
   cloudkillAreaHazardSavingThrowOutcomeHole,
-  sleetStormAreaHazardSavingThrowOutcomeHole,
-} from "./battle-reducer/persistent-spatial-spell-procedures.ts";
+} from "./battle-reducer/persistent-area-save-damage.ts";
+import { sleetStormAreaHazardSavingThrowOutcomeHole } from "./battle-reducer/persistent-spatial-spell-procedures.ts";
 import {
   battleAreaId,
   battleActSpellPresentation,

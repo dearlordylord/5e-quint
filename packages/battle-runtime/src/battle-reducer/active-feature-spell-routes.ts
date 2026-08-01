@@ -17,7 +17,31 @@ import {
   resolveBattleSubjectRoute,
   resolveBattleSubjectWithoutFillRoute,
 } from "./reducer-route-builders.ts";
-import type { BattleReducerRouteEvent } from "./reducer-route-protocol.ts";
+import type {
+  BattleReducerRouteEvent,
+  BattleReducerRouteEvents,
+} from "./reducer-route-protocol.ts";
+
+export function activeFeatureSpellSaveDcRouteEvents(input: {
+  readonly state: BattleState;
+  readonly casterId: CombatantId;
+}): BattleReducerRouteEvents | undefined {
+  if (!hasActiveFeatureSpellSaveDcModifier(input.state, input.casterId)) {
+    return undefined;
+  }
+  return [
+    resolveBattleSubjectWithoutFillRoute(
+      "activeFeatureSpellSaveDc",
+      [],
+      "battleActiveEffect",
+    ),
+    resolveBattleSubjectWithoutFillRoute(
+      "activeFeatureSpellSaveDc",
+      [],
+      "battleSpellSlotAndActionEconomy",
+    ),
+  ];
+}
 
 export function activeFeatureSpellAttackRollModeDiscoveryRouteEvents(
   state: BattleState,
@@ -78,7 +102,7 @@ export function activeFeatureSpellAttackRollModeResolutionRouteEvents(
   ];
 }
 
-export function hasActiveFeatureSpellSaveDcModifier(
+function hasActiveFeatureSpellSaveDcModifier(
   state: BattleState,
   casterId: CombatantId,
 ): boolean {

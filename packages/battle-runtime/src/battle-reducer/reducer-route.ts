@@ -6,11 +6,7 @@ import type {
   BattleResolutionResult,
   BattleState,
 } from "../battle-state-execution.ts";
-import type { CombatantId } from "../identity.ts";
-import {
-  activeFeatureSpellAttackRollModeDiscoveryRouteEvents,
-  hasActiveFeatureSpellSaveDcModifier,
-} from "./active-feature-spell-routes.ts";
+import { activeFeatureSpellAttackRollModeDiscoveryRouteEvents } from "./active-feature-spell-routes.ts";
 import {
   afterHitSpellDiscoveryRoutesForDiscoveredAct,
   afterHitSpellDiscoveryRoutesForResolution,
@@ -19,24 +15,24 @@ import {
 } from "./after-hit-spell-routes.ts";
 import {
   battleActionRouteForResolution,
+  creatureAttackRouteForDiscoveredAct,
   creatureAttackRouteForResolution,
-  isStatBlockActionRouteSubject,
-  isWeaponAttackSubject,
+  statBlockActionRouteForDiscoveredAct,
+  weaponAttackRouteForDiscoveredAct,
   weaponAttackRouteForResolution,
 } from "./attack-routes.ts";
 import {
+  concentrationRouteForDiscoveredAct,
   concentrationRouteForResolution,
   deathSavingThrowRouteForResolution,
-  hitPointRestorationDiscoveryOwner,
+  hitPointRestorationRouteForDiscoveredAct,
   hitPointRestorationRouteForResolution,
-  isConcentrationTeardownDiscoverySubject,
-  isHitPointRestorationDiscoverySubject,
-  isZeroHitPointStabilizationSubject,
+  zeroHitPointStabilizationRouteForDiscoveredAct,
   zeroHitPointStabilizationRouteForResolution,
 } from "./combatant-lifecycle-routes.ts";
 import {
+  commandRouteForDiscoveredAct,
   commandRouteForResolution,
-  isCommandEffectDiscoverySubject,
 } from "./command-routes.ts";
 import {
   companionRouteForDiscoveredAct,
@@ -67,7 +63,7 @@ import {
   activeFeatureBonusActionRouteForResolution,
   attackActionAreaSaveDamageReplacementRouteForDiscoveredAct,
   attackActionAreaSaveDamageReplacementRouteForResolution,
-  isUnitFeatureBonusActionRouteSubject,
+  unitFeatureBonusActionRouteForDiscoveredAct,
 } from "./feature-action-routes.ts";
 import { interruptStackResumeDiscoveryRouteForResolution } from "./interrupt-stack-routes.ts";
 import {
@@ -75,7 +71,6 @@ import {
   markedDamageRiderRouteForDiscoveredAct,
   markedDamageRiderRouteForResolution,
   markedDamageRiderTurnBoundaryRouteForResolution,
-  markedDamageRiderWeaponAttackRouteForDiscoveredAct,
 } from "./marked-damage-routes.ts";
 import {
   metamagicCastingOptionRouteForDiscoveredAct,
@@ -101,8 +96,6 @@ import {
   protectionCharmRouteForResolution,
 } from "./protection-charm-routes.ts";
 import {
-  battleReducerRouteHoles,
-  discoverBattleActsRoute,
   nonEmptyRouteEvents,
   resolveBattleSubjectWithoutFillRoute,
   startBattleRoute,
@@ -148,35 +141,8 @@ import {
   wildShapeLifecycleTerminalRouteForResolution,
   wildShapeLifecycleTurnBoundaryRouteForResolution,
 } from "./wild-shape-lifecycle-routes.ts";
-export {
-  battleReducerRouteForCreatureFallsInterruptWindow,
-  battleReducerRouteForFeatherFallLanding,
-  battleReducerRouteForInterrupt,
-} from "./interrupt-route-projection.ts";
-
 export function battleReducerStartRouteEvent(): BattleReducerRouteEvent {
   return startBattleRoute("battleActionEconomy");
-}
-
-export function activeFeatureSpellSaveDcRouteEvents(input: {
-  readonly state: BattleState;
-  readonly casterId: CombatantId;
-}): BattleReducerRouteEvents | undefined {
-  if (!hasActiveFeatureSpellSaveDcModifier(input.state, input.casterId)) {
-    return undefined;
-  }
-  return [
-    resolveBattleSubjectWithoutFillRoute(
-      "activeFeatureSpellSaveDc",
-      [],
-      "battleActiveEffect",
-    ),
-    resolveBattleSubjectWithoutFillRoute(
-      "activeFeatureSpellSaveDc",
-      [],
-      "battleSpellSlotAndActionEconomy",
-    ),
-  ];
 }
 
 export function battleReducerRouteEventsForDiscoveredAct(
@@ -192,15 +158,7 @@ export function battleReducerRouteEventsForDiscoveredAct(
       passiveProjectionRouteForDiscoveredAct(state, act),
     ),
     terminalRouteCandidate(() =>
-      isUnitFeatureBonusActionRouteSubject(state, act.subject)
-        ? [
-            discoverBattleActsRoute(
-              "unitFeatureBonusAction",
-              [],
-              "battleFeatureResource",
-            ),
-          ]
-        : undefined,
+      unitFeatureBonusActionRouteForDiscoveredAct(state, act),
     ),
     terminalRouteCandidate(() =>
       eventRoute(companionRouteForDiscoveredAct(act)),
@@ -246,96 +204,26 @@ export function battleReducerRouteEventsForDiscoveredAct(
       eventRoute(wildShapeLifecycleRouteForDiscoveredAct(act)),
     ),
     terminalRouteCandidate(() =>
-      isStatBlockActionRouteSubject(state, act.subject)
-        ? [
-            discoverBattleActsRoute(
-              "statBlockAction",
-              battleReducerRouteHoles(act.initialHoles),
-              "battleStatBlockAction",
-            ),
-          ]
-        : undefined,
+      statBlockActionRouteForDiscoveredAct(state, act),
     ),
+    terminalRouteCandidate(() => creatureAttackRouteForDiscoveredAct(act)),
+    terminalRouteCandidate(() => weaponAttackRouteForDiscoveredAct(state, act)),
     terminalRouteCandidate(() =>
-      act.subject.tag === "creatureAttack"
-        ? [
-            discoverBattleActsRoute(
-              "creatureAttack",
-              battleReducerRouteHoles(act.initialHoles),
-              "battleAttackRoll",
-            ),
-          ]
-        : undefined,
-    ),
-    terminalRouteCandidate(() => {
-      if (!isWeaponAttackSubject(act.subject)) return undefined;
-      const markedRoute = markedDamageRiderWeaponAttackRouteForDiscoveredAct(
-        state,
-        act,
-      );
-      const weaponRoute = discoverBattleActsRoute(
-        "weaponAttack",
-        battleReducerRouteHoles(act.initialHoles),
-        "battleActionEconomy",
-      );
-      return markedRoute === undefined
-        ? [weaponRoute]
-        : [markedRoute, weaponRoute];
-    }),
-    terminalRouteCandidate(() =>
-      isConcentrationTeardownDiscoverySubject(state, act.subject)
-        ? [
-            discoverBattleActsRoute(
-              "concentrationTeardown",
-              battleReducerRouteHoles(act.initialHoles),
-              act.subject.tag === "actionSpell"
-                ? "battleSpellSlotAndActionEconomy"
-                : "battleConcentration",
-            ),
-          ]
-        : undefined,
+      concentrationRouteForDiscoveredAct(state, act),
     ),
     terminalRouteCandidate(() =>
       metamagicSpellDurationProjectionRouteForDiscoveredAct(state, act),
     ),
-    terminalRouteCandidate(() =>
-      isCommandEffectDiscoverySubject(state, act.subject)
-        ? [
-            discoverBattleActsRoute(
-              "commandEffect",
-              battleReducerRouteHoles(act.initialHoles),
-              act.subject.tag === "actionSpell"
-                ? "battleSpellSlotAndActionEconomy"
-                : "battleActiveEffect",
-            ),
-          ]
-        : undefined,
-    ),
+    terminalRouteCandidate(() => commandRouteForDiscoveredAct(state, act)),
     terminalRouteCandidate(() => movementRouteForDiscoveredAct(state, act)),
     terminalRouteCandidate(() =>
       metamagicCastingOptionRouteForDiscoveredAct(state, act),
     ),
     terminalRouteCandidate(() =>
-      isHitPointRestorationDiscoverySubject(state, act)
-        ? [
-            discoverBattleActsRoute(
-              "hitPointRestoration",
-              battleReducerRouteHoles(act.initialHoles),
-              hitPointRestorationDiscoveryOwner(act.subject),
-            ),
-          ]
-        : undefined,
+      hitPointRestorationRouteForDiscoveredAct(state, act),
     ),
     terminalRouteCandidate(() =>
-      isZeroHitPointStabilizationSubject(state, act.subject)
-        ? [
-            discoverBattleActsRoute(
-              "zeroHitPointStabilization",
-              battleReducerRouteHoles(act.initialHoles),
-              "battleActionEconomy",
-            ),
-          ]
-        : undefined,
+      zeroHitPointStabilizationRouteForDiscoveredAct(state, act),
     ),
     terminalRouteCandidate(() =>
       wardedTargetInterdictionRouteForDiscoveredAct(state, act),

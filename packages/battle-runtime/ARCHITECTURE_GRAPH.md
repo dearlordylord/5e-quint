@@ -38,11 +38,22 @@ Warding Bond cleanup commands live in
 save, condition, and possession procedures live in
 `battle-reducer/protection-charm-procedures.ts`.
 
-Standard-action, familiar-attack, and held-weapon activation eligibility is
-projected exhaustively by `battle-reducer/action-eligibility.ts`. Escape
+Standard-action, Magic Action, Bonus Action, unit-feature, Wild Shape,
+familiar-attack, and held-weapon activation eligibility is projected
+exhaustively by `battle-reducer/action-eligibility.ts`. Escape
 Grapple discovery, stale-subject eligibility, and execution share the typed spend operation in
 `battle-reducer/action-resource-kinds.ts`, so an Extra Attack or Stat Block
 Multiattack resource cannot be mistaken for the creature's Action.
+
+Creature Attack discovery facts, hole contracts, and pure damage transition
+live in the dependency-leaf `battle-reducer/creature-attack.ts`;
+`battle-reducer/creature-attack-procedures.ts` owns admission, action spending,
+fill progression, damage-relationship decisions, and the final resolution
+commit. This split keeps battle discovery independent of snapshot-backed
+reducer results. Voluntary Concentration ending is resolved by
+`battle-reducer/concentration-procedures.ts`. Persistent-area appearance-save
+turn admission is owned alongside those procedures in
+`battle-reducer/persistent-spatial-spell-procedures.ts`.
 
 `battle-reducer/reducer-route.ts` composes route candidates through the typed
 protocol in `battle-reducer/reducer-route-protocol.ts` and

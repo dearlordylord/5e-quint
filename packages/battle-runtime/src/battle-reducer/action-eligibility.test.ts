@@ -1,13 +1,22 @@
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { describe, expect, test } from "vitest";
+import { battleActSpellPresentation } from "../battle-act-composition.ts";
 import {
   battleId,
   characterSeed,
+  discoverBattleActs,
   fighterAttackSubject,
   fighterId,
+  findAct,
+  magicSubject,
+  skeletonCreatureInit,
+  spellRecord,
   startBattleRight,
+  startBattleSessionRight,
   statBlockCreatureInit,
   testBattleCreatureStateWithConditions,
+  wizardId,
+  wizardSpellcasting,
 } from "../battle-runtime.test-support.ts";
 import type { BattleState } from "../battle-state-execution.ts";
 import { battleSubjectActionEligibilityIssue } from "./action-eligibility.ts";
@@ -77,6 +86,78 @@ describe("battle subject action eligibility", () => {
         fighterAttackSubject(state, "Longsword"),
       ),
     ).toBe("The selected action is no longer available for the current actor.");
+  });
+
+  test("owns Magic and Bonus Action spell resource diagnostics", () => {
+    const actionSession = startBattleSessionRight({
+      battleId: battleId("battle-magic-action-eligibility"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("mage_armor")],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const bonusActionSession = startBattleSessionRight({
+      battleId: battleId("battle-bonus-action-spell-eligibility"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Warlock",
+          initiative: 20,
+          attack: null,
+          classLevels: [{ className: "warlock", level: 1 }],
+          spellcasting: {
+            ...wizardSpellcasting({
+              preparedSpells: [spellRecord("hex")],
+            }),
+            sourceClassName: "warlock",
+          },
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const withoutMagicAction = {
+      ...actionSession.state,
+      currentTurnResources: {
+        ...actionSession.state.currentTurnResources,
+        actionResources: [],
+      },
+    };
+    const withoutBonusAction = {
+      ...bonusActionSession.state,
+      currentTurnResources: {
+        ...bonusActionSession.state.currentTurnResources,
+        currentHasBonusAction: false,
+      },
+    };
+    const bonusActionSpell = discoverBattleActs(bonusActionSession).find(
+      (act) =>
+        act.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(act)?.invocation.spellId === "hex",
+    );
+    if (bonusActionSpell?.subject.tag !== "bonusActionSpell") {
+      throw new Error("Expected a Hex Bonus Action spell subject.");
+    }
+
+    expect(
+      battleSubjectActionEligibilityIssue(
+        withoutMagicAction,
+        findAct(actionSession, magicSubject("mage_armor")).subject,
+      ),
+    ).toBe("Magic action is no longer available for the current actor.");
+    expect(
+      battleSubjectActionEligibilityIssue(
+        withoutBonusAction,
+        bonusActionSpell.subject,
+      ),
+    ).toBe("Bonus Action spell is no longer available for the current actor.");
   });
 
   test("does not claim eligibility ownership for unrelated subjects", () => {

@@ -83,7 +83,7 @@ import { attackFillsForAttackHitReplay } from "./battle-reducer/attack-damage-ev
 import { FRENZY_DAMAGE_TYPE_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import { attackTargetHole } from "./battle-reducer/hole-helpers.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-queries.ts";
-import { activeFeatureSpellSaveDcRouteEvents } from "./battle-reducer/reducer-route.ts";
+import { activeFeatureSpellSaveDcRouteEvents } from "./battle-reducer/active-feature-spell-routes.ts";
 import {
   eligibleAttackDamageRiders,
   frenzyDamageTypeDecision,
