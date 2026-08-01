@@ -24,18 +24,15 @@ import {
   requiredAbilityCheckRollMode,
 } from "./hole-helpers.ts";
 import {
-  CAREFUL_METAMAGIC_EFFECT_KIND,
-  DISTANT_METAMAGIC_EFFECT_KIND,
-  EMPOWERED_METAMAGIC_EFFECT_KIND,
-  EXTENDED_METAMAGIC_EFFECT_KIND,
-  HEIGHTENED_METAMAGIC_EFFECT_KIND,
-  QUICKENED_METAMAGIC_EFFECT_KIND,
-  SEEKING_METAMAGIC_EFFECT_KIND,
-  SUBTLE_METAMAGIC_EFFECT_KIND,
-  TRANSMUTED_METAMAGIC_EFFECT_KIND,
-  TWINNED_METAMAGIC_EFFECT_KIND,
-} from "./metamagic-support.ts";
-import { isHeightenedSpellTargetChoiceHoleId } from "./spells-damage-fills.ts";
+  metamagicCastingOptionRouteForDiscoveredAct,
+  metamagicEffectiveSpellLevelRouteForDiscoveredAct,
+  metamagicEffectiveSpellLevelRouteForResolution,
+  metamagicCastingOptionRouteForResolution,
+  metamagicSpellComponentProjectionRouteForDiscoveredAct,
+  metamagicSpellComponentProjectionRouteForResolution,
+  metamagicSpellDurationProjectionRouteForDiscoveredAct,
+  metamagicSpellDurationProjectionRouteForResolution,
+} from "./metamagic-routes.ts";
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
 import {
   conditionApplicationPreventedByCreatureTypeProtection,
@@ -95,7 +92,15 @@ import {
   passiveProjectionRouteForResolution,
 } from "./passive-projection-routes.ts";
 import { spellInvocationForRouteSubject } from "./reducer-route-spell-query.ts";
-import { battleActiveEffects } from "./reducer-route-state-query.ts";
+import {
+  battleActiveEffects,
+  battleCombatantHasActiveEffectKind,
+  combatantConcentrationChanged,
+  combatantsConditionsChanged,
+  combatantsTemporaryHitPointsIncreased,
+  combatantsActiveEffectsChanged,
+  combatantsConcentrationChanged,
+} from "./reducer-route-state-query.ts";
 import {
   weaponSpellRouteForDiscoveredAct,
   weaponSpellRouteForResolution,
@@ -187,14 +192,10 @@ export function battleReducerRouteEventsForDiscoveredAct(
   if (companionRoute !== undefined) {
     return [companionRoute];
   }
-  if (isTwinnedEffectiveSpellLevelDiscoveryAct(state, act)) {
-    return [
-      discoverBattleActsRoute(
-        "metamagicEffectiveSpellLevel",
-        battleReducerRouteHoles(act.initialHoles),
-        "battleFeatureResource",
-      ),
-    ];
+  const metamagicEffectiveSpellLevelRoute =
+    metamagicEffectiveSpellLevelRouteForDiscoveredAct(state, act);
+  if (metamagicEffectiveSpellLevelRoute !== undefined) {
+    return metamagicEffectiveSpellLevelRoute;
   }
   const rollModifierRoute = rollModifierRouteForDiscoveredAct(state, act);
   if (rollModifierRoute !== undefined) {
@@ -217,14 +218,10 @@ export function battleReducerRouteEventsForDiscoveredAct(
   if (markedDamageAndConditionProtectionRoute !== undefined) {
     return [markedDamageAndConditionProtectionRoute];
   }
-  if (isSubtleSpellComponentProjectionSubject(act.subject)) {
-    return [
-      discoverBattleActsRoute(
-        "metamagicSpellComponentProjection",
-        [],
-        "battleFeatureResource",
-      ),
-    ];
+  const metamagicSpellComponentProjectionRoute =
+    metamagicSpellComponentProjectionRouteForDiscoveredAct(act);
+  if (metamagicSpellComponentProjectionRoute !== undefined) {
+    return metamagicSpellComponentProjectionRoute;
   }
   const protectionCharmRoute = protectionCharmRouteForDiscoveredAct(state, act);
   if (protectionCharmRoute !== undefined) {
@@ -288,14 +285,10 @@ export function battleReducerRouteEventsForDiscoveredAct(
       ),
     ];
   }
-  if (isExtendedSpellDurationProjectionSubject(state, act.subject)) {
-    return [
-      discoverBattleActsRoute(
-        "metamagicSpellDurationProjection",
-        [],
-        "battleFeatureResource",
-      ),
-    ];
+  const metamagicSpellDurationProjectionRoute =
+    metamagicSpellDurationProjectionRouteForDiscoveredAct(state, act);
+  if (metamagicSpellDurationProjectionRoute !== undefined) {
+    return metamagicSpellDurationProjectionRoute;
   }
   if (isCommandEffectDiscoverySubject(state, act.subject)) {
     return [
@@ -312,41 +305,10 @@ export function battleReducerRouteEventsForDiscoveredAct(
   if (movementRoute !== undefined) {
     return movementRoute;
   }
-  if (isQuickenedBonusActionCastingTimeSubject(act.subject)) {
-    return [
-      discoverBattleActsRoute(
-        "metamagicBonusActionCastingTime",
-        battleReducerRouteHoles(act.initialHoles),
-        "battleFeatureResource",
-      ),
-    ];
-  }
-  if (isCarefulSavingThrowProtectionSubject(act.subject)) {
-    return [
-      discoverBattleActsRoute(
-        "metamagicSavingThrowProtection",
-        battleReducerRouteHoles(act.initialHoles),
-        "battleFeatureResource",
-      ),
-    ];
-  }
-  if (isTransmutedDamageTypeSubstitutionSubject(state, act.subject)) {
-    return [
-      discoverBattleActsRoute(
-        "metamagicDamageTypeSubstitution",
-        ["damageTypeChoice"],
-        "battleFeatureResource",
-      ),
-    ];
-  }
-  if (isDistantSpellRangeProjectionSubject(state, act.subject)) {
-    return [
-      discoverBattleActsRoute(
-        "metamagicSpellRangeProjection",
-        battleReducerRouteHoles(act.initialHoles),
-        "battleFeatureResource",
-      ),
-    ];
+  const metamagicCastingOptionRoute =
+    metamagicCastingOptionRouteForDiscoveredAct(state, act);
+  if (metamagicCastingOptionRoute !== undefined) {
+    return metamagicCastingOptionRoute;
   }
   if (isHitPointRestorationDiscoverySubject(state, act)) {
     return [
@@ -619,7 +581,10 @@ export function battleReducerRouteForResolution(
       wildShapeLifecycleTerminalRoute,
     );
   }
-  const metamagicRoute = metamagicRouteForResolution(input, result);
+  const metamagicRoute = metamagicCastingOptionRouteForResolution(
+    input,
+    result,
+  );
   if (metamagicRoute !== undefined) {
     return composeWithWildShapeLifecycleTerminalRoute(
       metamagicRoute,
@@ -1926,7 +1891,7 @@ function afterHitDamageRiderRouteForInterrupt(input: {
   if (invocation.procedure === "afterHitSaveGatedCondition") {
     if (
       input.result.tag !== "invalid" &&
-      combatantConditionsChanged(input.before, input.result.state)
+      combatantsConditionsChanged(input.before, input.result.state)
     ) {
       route.push(
         afterHitDamageRiderDiscoverRoute(
@@ -2008,7 +1973,7 @@ function afterHitDamageRiderEscapeRouteForResolution(
   const route: BattleReducerRouteEvent[] = [
     afterHitDamageRiderResolveRoute(routeFill, holes, "battleAbilityCheck"),
   ];
-  if (combatantConditionsChanged(input.state, result.state)) {
+  if (combatantsConditionsChanged(input.state, result.state)) {
     route.push(
       afterHitDamageRiderResolveRoute(
         routeFill,
@@ -2131,15 +2096,6 @@ function afterHitDamageRiderResolveWithoutFillRoute(
     "afterHitDamageRider",
     holes,
     owner,
-  );
-}
-
-function combatantsConcentrationChanged(
-  before: BattleState,
-  after: BattleState,
-): boolean {
-  return [...after.combatants.values()].some((combatant) =>
-    combatantConcentrationChanged(before, after, combatant.combatantId),
   );
 }
 
@@ -2402,803 +2358,6 @@ function reactionPayloadNestedFillRoute(input: {
     }
   }
   return events;
-}
-
-function metamagicRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): BattleReducerRouteEvents | undefined {
-  const fill = input.fills.at(-1);
-  if (
-    fill === undefined &&
-    result.tag === "invalid" &&
-    isBonusActionSpellWithMetamagicSubject(input.subject)
-  ) {
-    return [metamagicGovernorInvalidRoute(input)];
-  }
-  if (!isQuickenedBonusActionCastingTimeSubject(input.subject)) {
-    return (
-      metamagicSpellRangeProjectionRouteForResolution(input, result, fill) ??
-      metamagicSavingThrowProtectionRouteForResolution(input, result, fill) ??
-      metamagicSavingThrowRollModeRouteForResolution(input, result, fill) ??
-      metamagicDamageTypeSubstitutionRouteForResolution(input, result, fill) ??
-      metamagicMissedSpellAttackRerollRouteForResolution(input, result, fill) ??
-      metamagicDamageDiceRerollRouteForResolution(input, result, fill)
-    );
-  }
-
-  if (fill === undefined) {
-    return undefined;
-  }
-
-  const routeFill = battleReducerRouteFill(fill);
-  if (routeFill === undefined) {
-    return undefined;
-  }
-  const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
-  if (routeFill === "targetChoice") {
-    return [
-      ...metamagicBonusActionTimingRoutes(["targetChoice"]),
-      resolveBattleSubjectRoute(
-        "metamagicBonusActionCastingTime",
-        routeFill,
-        holes,
-        "battleTargetSelection",
-      ),
-    ];
-  }
-  if (routeFill === "attackRoll") {
-    if (
-      spellInvocationForRouteSubject(input.state, input.subject)?.procedure ===
-        "spellAttackSequence" &&
-      result.tag === "resolved"
-    ) {
-      return [
-        resolveBattleSubjectWithoutFillRoute(
-          "metamagicBonusActionCastingTime",
-          [],
-          "battleTurnBoundary",
-        ),
-      ];
-    }
-    return [
-      resolveBattleSubjectRoute(
-        "metamagicBonusActionCastingTime",
-        routeFill,
-        holes,
-        "battleSpellAttackProcedure",
-      ),
-    ];
-  }
-  if (routeFill === "spellTargetList" && result.tag === "resolved") {
-    return [
-      ...metamagicBonusActionTimingRoutes(["spellTargetList"]),
-      resolveBattleSubjectRoute(
-        "metamagicBonusActionCastingTime",
-        routeFill,
-        holes,
-        "battleTargetSelection",
-      ),
-      resolveBattleSubjectWithoutFillRoute(
-        "metamagicBonusActionCastingTime",
-        [],
-        "battleActiveEffect",
-      ),
-    ];
-  }
-  if (
-    routeFill === "savingThrowOutcome" &&
-    spellInvocationForRouteSubject(input.state, input.subject)?.procedure ===
-      "saveGatedDamage" &&
-    result.tag !== "invalid"
-  ) {
-    return [
-      ...metamagicBonusActionTimingRoutes(["savingThrowOutcome"]),
-      resolveBattleSubjectRoute(
-        "metamagicBonusActionCastingTime",
-        routeFill,
-        holes,
-        "battleSavingThrowOutcome",
-      ),
-      ...(result.tag === "resolved"
-        ? [
-            resolveBattleSubjectWithoutFillRoute(
-              "metamagicBonusActionCastingTime" as const,
-              [],
-              metamagicSaveGatedFinalOwner(input.state, result.state),
-            ),
-          ]
-        : []),
-    ];
-  }
-  if (routeFill === "savingThrowOutcome" && result.tag === "resolved") {
-    return [
-      ...metamagicBonusActionTimingRoutes(["savingThrowOutcome"]),
-      resolveBattleSubjectRoute(
-        "metamagicBonusActionCastingTime",
-        routeFill,
-        holes,
-        "battleSavingThrowOutcome",
-      ),
-      resolveBattleSubjectWithoutFillRoute(
-        "metamagicBonusActionCastingTime",
-        [],
-        metamagicSaveGatedFinalOwner(input.state, result.state),
-      ),
-    ];
-  }
-  if (routeFill === "rolledDice" && result.tag === "resolved") {
-    if (
-      spellInvocationForRouteSubject(input.state, input.subject)?.procedure ===
-      "directHitPointRestoration"
-    ) {
-      return [
-        resolveBattleSubjectRoute(
-          "metamagicBonusActionCastingTime",
-          routeFill,
-          holes,
-          "battleHitPointAndZeroHpLifecycle",
-        ),
-        resolveBattleSubjectWithoutFillRoute(
-          "metamagicBonusActionCastingTime",
-          [],
-          "battleTurnBoundary",
-        ),
-      ];
-    }
-    if (
-      spellInvocationForRouteSubject(input.state, input.subject)?.procedure ===
-      "saveGatedDamage"
-    ) {
-      return [
-        resolveBattleSubjectRoute(
-          "metamagicBonusActionCastingTime",
-          routeFill,
-          holes,
-          "battleDamageRoll",
-        ),
-        resolveBattleSubjectWithoutFillRoute(
-          "metamagicBonusActionCastingTime",
-          [],
-          "battleTurnBoundary",
-        ),
-      ];
-    }
-    return [
-      resolveBattleSubjectWithoutFillRoute(
-        "metamagicBonusActionCastingTime",
-        [],
-        "battleTurnBoundary",
-      ),
-    ];
-  }
-  return undefined;
-}
-
-function metamagicSavingThrowProtectionRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-  fill: BattleFill | undefined,
-): BattleReducerRouteEvents | undefined {
-  if (!isCarefulSavingThrowProtectionSubject(input.subject)) {
-    return undefined;
-  }
-  if (fill === undefined) {
-    return undefined;
-  }
-  const routeFill = battleReducerRouteFill(fill);
-  if (routeFill === "spellTargetList") {
-    return [
-      resolveBattleSubjectRoute(
-        "metamagicSavingThrowProtection",
-        routeFill,
-        result.tag === "needsHoles"
-          ? battleReducerRouteHoles(result.holes)
-          : [],
-        "battleFeatureResource",
-      ),
-    ];
-  }
-  if (routeFill === "savingThrowOutcome") {
-    const holes =
-      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
-    return [
-      resolveBattleSubjectRoute(
-        "metamagicSavingThrowProtection",
-        routeFill,
-        holes,
-        "battleSavingThrowOutcome",
-      ),
-      resolveBattleSubjectWithoutFillRoute(
-        "metamagicSavingThrowProtection",
-        holes,
-        "battleDamageAdjustment",
-      ),
-      ...(result.tag === "resolved"
-        ? [
-            resolveBattleSubjectWithoutFillRoute(
-              "metamagicSavingThrowProtection",
-              [],
-              "battleFeatureResource",
-            ) satisfies BattleReducerRouteEvent,
-          ]
-        : []),
-    ];
-  }
-  if (routeFill === "rolledDice" && result.tag === "resolved") {
-    return [
-      resolveBattleSubjectWithoutFillRoute(
-        "metamagicSavingThrowProtection",
-        [],
-        "battleFeatureResource",
-      ),
-    ];
-  }
-  return undefined;
-}
-
-function metamagicDamageTypeSubstitutionRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-  fill: BattleFill | undefined,
-): BattleReducerRouteEvents | undefined {
-  if (
-    !isTransmutedDamageTypeSubstitutionSubject(input.state, input.subject) ||
-    fill === undefined ||
-    result.tag === "invalid"
-  ) {
-    return undefined;
-  }
-  const routeFill = battleReducerRouteFill(fill);
-  const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
-  if (
-    (routeFill === "savingThrowOutcome" || routeFill === "attackRoll") &&
-    holes.includes("rolledDice")
-  ) {
-    return [
-      resolveBattleSubjectRoute(
-        "metamagicDamageTypeSubstitution",
-        "damageTypeChoice",
-        holes,
-        "battleDamageType",
-      ),
-    ];
-  }
-  if (routeFill === "rolledDice" && result.tag === "resolved") {
-    return [
-      resolveBattleSubjectRoute(
-        "metamagicDamageTypeSubstitution",
-        routeFill,
-        [],
-        "battleDamageRoll",
-      ),
-      resolveBattleSubjectWithoutFillRoute(
-        "metamagicDamageTypeSubstitution",
-        [],
-        "battleHitPoint",
-      ),
-    ];
-  }
-  return undefined;
-}
-
-function metamagicSavingThrowRollModeRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-  fill: BattleFill | undefined,
-): BattleReducerRouteEvents | undefined {
-  if (!isHeightenedSavingThrowRollModeSubject(input.subject)) {
-    return undefined;
-  }
-  if (fill === undefined || result.tag === "invalid") {
-    return undefined;
-  }
-  const routeFill = battleReducerRouteFill(fill);
-  if (
-    routeFill === "targetChoice" &&
-    fill.kind === "targetChoice" &&
-    isHeightenedSpellTargetChoiceHoleId(fill.holeId) &&
-    result.tag === "needsHoles" &&
-    battleReducerRouteHoles(result.holes).includes("savingThrowOutcome")
-  ) {
-    const holes = battleReducerRouteHoles(result.holes);
-    return [
-      discoverBattleActsRoute(
-        "metamagicSavingThrowRollMode",
-        holes,
-        "battleFeatureResource",
-      ),
-      resolveBattleSubjectWithoutFillRoute(
-        "metamagicSavingThrowRollMode",
-        holes,
-        "battleSavingThrowRollMode",
-      ),
-    ];
-  }
-  if (routeFill === "savingThrowOutcome" && result.tag === "resolved") {
-    return [
-      resolveBattleSubjectRoute(
-        "metamagicSavingThrowRollMode",
-        routeFill,
-        [],
-        "battleSavingThrowOutcome",
-      ),
-      resolveBattleSubjectWithoutFillRoute(
-        "metamagicSavingThrowRollMode",
-        [],
-        "battleConditionLifecycle",
-      ),
-    ];
-  }
-  return undefined;
-}
-
-function metamagicEffectiveSpellLevelRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): BattleReducerRouteEvents | undefined {
-  if (
-    !isTwinnedEffectiveSpellLevelSubject(input.state, input.subject) ||
-    result.tag === "invalid"
-  ) {
-    return undefined;
-  }
-  const fill = input.fills.at(-1);
-  if (
-    fill === undefined ||
-    battleReducerRouteFill(fill) !== "spellTargetList"
-  ) {
-    return undefined;
-  }
-  const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
-  return [
-    resolveBattleSubjectWithoutFillRoute(
-      "metamagicEffectiveSpellLevel",
-      ["spellTargetList"],
-      "battleSpellSlotAndActionEconomy",
-    ),
-    resolveBattleSubjectRoute(
-      "metamagicEffectiveSpellLevel",
-      "spellTargetList",
-      holes,
-      "battleTargetSelection",
-    ),
-  ];
-}
-
-function metamagicSpellRangeProjectionRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-  fill: BattleFill | undefined,
-): BattleReducerRouteEvents | undefined {
-  if (!isDistantSpellRangeProjectionSubject(input.state, input.subject)) {
-    return undefined;
-  }
-  if (fill === undefined || result.tag === "invalid") {
-    return undefined;
-  }
-  const routeFill = battleReducerRouteFill(fill);
-  if (routeFill !== "targetChoice") {
-    return undefined;
-  }
-  const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
-  return [
-    resolveBattleSubjectWithoutFillRoute(
-      "metamagicSpellRangeProjection",
-      ["targetChoice"],
-      "battleObjectTargetBoundary",
-    ),
-    resolveBattleSubjectRoute(
-      "metamagicSpellRangeProjection",
-      routeFill,
-      holes,
-      "battleTargetSelection",
-    ),
-  ];
-}
-
-function metamagicSpellDurationProjectionRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): BattleReducerRouteEvents | undefined {
-  if (
-    result.tag !== "resolved" ||
-    !isExtendedSpellDurationProjectionSubject(input.state, input.subject) ||
-    !metamagicSpellDurationProjectionChangedState(input, result.state)
-  ) {
-    return undefined;
-  }
-  return [
-    resolveBattleSubjectWithoutFillRoute(
-      "metamagicSpellDurationProjection",
-      [],
-      "battleActiveEffect",
-    ),
-    resolveBattleSubjectWithoutFillRoute(
-      "metamagicSpellDurationProjection",
-      [],
-      "battleConcentration",
-    ),
-  ];
-}
-
-function metamagicSpellDurationProjectionChangedState(
-  input: BattleResolutionInput,
-  after: BattleState,
-): boolean {
-  return (
-    combatantsActiveEffectsChanged(input.state, after) ||
-    (input.subject.tag === "actionSpell" &&
-      combatantConcentrationChanged(input.state, after, input.subject.actorId))
-  );
-}
-
-function combatantsActiveEffectsChanged(
-  before: BattleState,
-  after: BattleState,
-): boolean {
-  return [...after.combatants.values()].some(
-    (combatant) =>
-      before.combatants.get(combatant.combatantId)?.activeEffects !==
-      combatant.activeEffects,
-  );
-}
-
-function metamagicSpellComponentProjectionRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): BattleReducerRouteEvents | undefined {
-  if (
-    result.tag !== "resolved" ||
-    !isSubtleSpellComponentProjectionSubject(input.subject)
-  ) {
-    return undefined;
-  }
-  return [
-    resolveBattleSubjectWithoutFillRoute(
-      "metamagicSpellComponentProjection",
-      [],
-      "battleSpellSlotAndActionEconomy",
-    ),
-  ];
-}
-
-function metamagicDamageDiceRerollRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-  fill: BattleFill | undefined,
-): BattleReducerRouteEvents | undefined {
-  if (!isSpellAttackDamageSubject(input.state, input.subject)) {
-    return undefined;
-  }
-  if (fill === undefined || result.tag === "invalid") {
-    return undefined;
-  }
-  const routeFill = battleReducerRouteFill(fill);
-  if (
-    routeFill === "attackRoll" &&
-    result.tag === "needsHoles" &&
-    hasEmpoweredSpellDamageRerollHole(result.holes)
-  ) {
-    return [
-      discoverBattleActsRoute(
-        "metamagicDamageDiceReroll",
-        battleReducerRouteHoles(result.holes),
-        "battleFeatureResource",
-      ),
-    ];
-  }
-  if (
-    routeFill !== "rolledDice" ||
-    fill.kind !== "rolledDice" ||
-    fill.spellDamageReroll?.effectKind !== EMPOWERED_METAMAGIC_EFFECT_KIND ||
-    result.tag !== "resolved"
-  ) {
-    return undefined;
-  }
-  return [
-    resolveBattleSubjectRoute(
-      "metamagicDamageDiceReroll",
-      routeFill,
-      ["rolledDice"],
-      "battleDamageRoll",
-    ),
-    resolveBattleSubjectRoute(
-      "metamagicDamageDiceReroll",
-      routeFill,
-      [],
-      "battleDamageRoll",
-    ),
-    resolveBattleSubjectWithoutFillRoute(
-      "metamagicDamageDiceReroll",
-      [],
-      "battleHitPoint",
-    ),
-  ];
-}
-
-function metamagicMissedSpellAttackRerollRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-  fill: BattleFill | undefined,
-): BattleReducerRouteEvents | undefined {
-  if (!isSpellAttackDamageSubject(input.state, input.subject)) {
-    return undefined;
-  }
-  if (fill === undefined || result.tag === "invalid") {
-    return undefined;
-  }
-  const routeFill = battleReducerRouteFill(fill);
-  if (routeFill !== "attackRoll") {
-    return metamagicMissedSpellAttackRerollCompletionRoute(input, result, fill);
-  }
-  const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
-  if (
-    result.tag === "needsHoles" &&
-    hasSeekingSpellAttackRerollHole(result.holes)
-  ) {
-    return [
-      discoverBattleActsRoute(
-        "metamagicMissedSpellAttackReroll",
-        holes,
-        "battleFeatureResource",
-      ),
-      resolveBattleSubjectRoute(
-        "metamagicMissedSpellAttackReroll",
-        routeFill,
-        holes,
-        "battleAttackRoll",
-      ),
-    ];
-  }
-  if (
-    fill.kind !== "attackRoll" ||
-    fill.value.spellAttackReroll?.effectKind !== SEEKING_METAMAGIC_EFFECT_KIND
-  ) {
-    return undefined;
-  }
-  return [
-    resolveBattleSubjectRoute(
-      "metamagicMissedSpellAttackReroll",
-      routeFill,
-      holes,
-      "battleAttackRoll",
-    ),
-  ];
-}
-
-function metamagicMissedSpellAttackRerollCompletionRoute(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-  fill: BattleFill,
-): BattleReducerRouteEvents | undefined {
-  if (
-    result.tag !== "resolved" ||
-    battleReducerRouteFill(fill) !== "rolledDice" ||
-    !input.fills.some(
-      (candidate) =>
-        candidate.kind === "attackRoll" &&
-        candidate.value.spellAttackReroll?.effectKind ===
-          SEEKING_METAMAGIC_EFFECT_KIND,
-    )
-  ) {
-    return undefined;
-  }
-  return [
-    resolveBattleSubjectWithoutFillRoute(
-      "metamagicMissedSpellAttackReroll",
-      [],
-      "battleFeatureResource",
-    ),
-  ];
-}
-
-function hasSeekingSpellAttackRerollHole(
-  holes: readonly BattleHole[],
-): boolean {
-  return holes.some(
-    (hole) =>
-      hole.kind === "attackRoll" &&
-      "spellAttackRerolls" in hole &&
-      hole.spellAttackRerolls?.some(
-        (option) => option.effectKind === SEEKING_METAMAGIC_EFFECT_KIND,
-      ) === true,
-  );
-}
-
-function hasEmpoweredSpellDamageRerollHole(
-  holes: readonly BattleHole[],
-): boolean {
-  return holes.some(
-    (hole) =>
-      hole.kind === "rolledDice" &&
-      "spellDamageRerolls" in hole &&
-      hole.spellDamageRerolls?.some(
-        (option) => option.effectKind === EMPOWERED_METAMAGIC_EFFECT_KIND,
-      ) === true,
-  );
-}
-
-function metamagicBonusActionTimingRoutes(
-  holes: readonly BattleReducerRouteHole[],
-): readonly [BattleReducerRouteEvent, BattleReducerRouteEvent] {
-  return [
-    resolveBattleSubjectWithoutFillRoute(
-      "metamagicBonusActionCastingTime",
-      holes,
-      "battleActionEconomy",
-    ),
-    resolveBattleSubjectWithoutFillRoute(
-      "metamagicBonusActionCastingTime",
-      holes,
-      "battleSpellSlotAndActionEconomy",
-    ),
-  ];
-}
-
-function metamagicSaveGatedFinalOwner(
-  before: BattleState,
-  after: BattleState,
-): BattleReducerRouteOwnerGroup {
-  return combatantsGainedActiveEffect(before, after)
-    ? "battleActiveEffect"
-    : "battleConditionLifecycle";
-}
-
-function combatantsGainedActiveEffect(
-  before: BattleState,
-  after: BattleState,
-): boolean {
-  return [...after.combatants.values()].some(
-    (combatant) =>
-      combatant.activeEffects.length >
-      (before.combatants.get(combatant.combatantId)?.activeEffects.length ?? 0),
-  );
-}
-
-function metamagicGovernorInvalidRoute(
-  input: BattleResolutionInput,
-): BattleReducerRouteEvent {
-  if (
-    isQuickenedBonusActionCastingTimeSubject(input.subject) &&
-    input.state.currentTurnResources.levelOnePlusSpellCastsThisTurn.includes(
-      input.subject.actorId,
-    )
-  ) {
-    return resolveBattleSubjectWithoutFillRoute(
-      "metamagicBonusActionCastingTime",
-      [],
-      "battleTurnBoundary",
-    );
-  }
-  return resolveBattleSubjectWithoutFillRoute(
-    "metamagicSpellGovernor",
-    [],
-    "battleFeatureResource",
-  );
-}
-
-function isTwinnedEffectiveSpellLevelDiscoveryAct(
-  state: BattleState,
-  act: BattleActDiscoveryCandidate,
-): boolean {
-  return (
-    isTwinnedEffectiveSpellLevelSubject(state, act.subject) &&
-    act.initialHoles.some((hole) => hole.kind === "spellTargetList")
-  );
-}
-
-function isCarefulSavingThrowProtectionSubject(
-  subject: BattleResolutionInput["subject"],
-): boolean {
-  return (
-    subject.tag === "actionSpell" &&
-    subject.metamagic?.some(
-      (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
-    ) === true
-  );
-}
-
-function isDistantSpellRangeProjectionSubject(
-  state: BattleState,
-  subject: BattleResolutionInput["subject"],
-): boolean {
-  return (
-    subject.tag === "actionSpell" &&
-    subject.mode.tag === "cast" &&
-    spellInvocationForRouteSubject(state, subject)?.procedure ===
-      "objectLight" &&
-    subject.metamagic?.some(
-      (selection) => selection.effectKind === DISTANT_METAMAGIC_EFFECT_KIND,
-    ) === true
-  );
-}
-
-function isHeightenedSavingThrowRollModeSubject(
-  subject: BattleResolutionInput["subject"],
-): boolean {
-  return (
-    subject.tag === "actionSpell" &&
-    subject.metamagic?.some(
-      (selection) => selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
-    ) === true
-  );
-}
-
-function isTransmutedDamageTypeSubstitutionSubject(
-  state: BattleState,
-  subject: BattleResolutionInput["subject"],
-): boolean {
-  return (
-    subject.tag === "actionSpell" &&
-    (spellInvocationForRouteSubject(state, subject)?.procedure ===
-      "saveGatedDamage" ||
-      spellInvocationForRouteSubject(state, subject)?.procedure ===
-        "spellAttackDamage") &&
-    subject.metamagic?.some(
-      (selection) => selection.effectKind === TRANSMUTED_METAMAGIC_EFFECT_KIND,
-    ) === true
-  );
-}
-
-function isTwinnedEffectiveSpellLevelSubject(
-  state: BattleState,
-  subject: BattleResolutionInput["subject"],
-): boolean {
-  return (
-    subject.tag === "actionSpell" &&
-    subject.mode.tag === "cast" &&
-    spellInvocationForRouteSubject(state, subject)?.procedure ===
-      "rollModifier" &&
-    subject.metamagic?.some(
-      (selection) => selection.effectKind === TWINNED_METAMAGIC_EFFECT_KIND,
-    ) === true
-  );
-}
-
-function isExtendedSpellDurationProjectionSubject(
-  state: BattleState,
-  subject: BattleResolutionInput["subject"],
-): boolean {
-  return (
-    subject.tag === "actionSpell" &&
-    subject.mode.tag === "cast" &&
-    (spellInvocationForRouteSubject(state, subject)?.procedure ===
-      "creatureSizeIncrease" ||
-      spellInvocationForRouteSubject(state, subject)?.procedure ===
-        "creatureSizeDecrease") &&
-    subject.metamagic?.some(
-      (selection) => selection.effectKind === EXTENDED_METAMAGIC_EFFECT_KIND,
-    ) === true
-  );
-}
-
-function isSubtleSpellComponentProjectionSubject(
-  subject: BattleResolutionInput["subject"],
-): boolean {
-  return (
-    (subject.tag === "actionSpell" || subject.tag === "bonusActionSpell") &&
-    subject.mode.tag === "cast" &&
-    subject.metamagic?.some(
-      (selection) => selection.effectKind === SUBTLE_METAMAGIC_EFFECT_KIND,
-    ) === true
-  );
-}
-
-function isSpellAttackDamageSubject(
-  state: BattleState,
-  subject: BattleResolutionInput["subject"],
-): boolean {
-  return (
-    subject.tag === "actionSpell" &&
-    spellInvocationForRouteSubject(state, subject)?.procedure ===
-      "spellAttackDamage"
-  );
 }
 
 function deathSavingThrowRouteForResolution(
@@ -5100,13 +4259,13 @@ function markedDamageAndConditionProtectionResolvedOwners(
   }
   if (
     subject === "conditionImmunityTemporaryHitPointEffect" &&
-    combatantTemporaryHitPointsIncreased(before, after)
+    combatantsTemporaryHitPointsIncreased(before, after)
   ) {
     owners.push("battleTemporaryHitPoint");
   }
   if (
     subject === "conditionImmunityTemporaryHitPointEffect" &&
-    combatantConditionsChanged(before, after)
+    combatantsConditionsChanged(before, after)
   ) {
     owners.push("battleConditionLifecycle", "battleActiveEffect");
   }
@@ -5254,7 +4413,7 @@ function conditionImmunityTemporaryHitPointsIncreased(
 ): boolean {
   return (
     battleHasActiveEffectKind(before, "turnStartTemporaryHitPoints") &&
-    combatantTemporaryHitPointsIncreased(before, after)
+    combatantsTemporaryHitPointsIncreased(before, after)
   );
 }
 
@@ -5587,7 +4746,7 @@ function sourceDamageBreakCharmedRouteForResolution(
   ];
   if (result.tag === "resolved") {
     if (
-      combatantConditionsChanged(input.state, result.state) ||
+      combatantsConditionsChanged(input.state, result.state) ||
       charmedConditionPreventedByCreatureTypeProtection(input)
     ) {
       route.push(
@@ -5787,7 +4946,7 @@ function scalarBuffResolveOwners(
   after: BattleState,
   actorId: CombatantId,
 ): readonly BattleReducerRouteOwnerGroup[] {
-  if (combatantTemporaryHitPointsIncreased(before, after)) {
+  if (combatantsTemporaryHitPointsIncreased(before, after)) {
     return ["battleTemporaryHitPoint"];
   }
 
@@ -5827,17 +4986,6 @@ function composeWithWildShapeLifecycleTerminalRoute(
   return [first, ...rest, ...wildShapeLifecycleTerminalRoute];
 }
 
-function combatantTemporaryHitPointsIncreased(
-  before: BattleState,
-  after: BattleState,
-): boolean {
-  return [...after.combatants.values()].some(
-    (combatant) =>
-      Number(combatant.tempHp) >
-      Number(before.combatants.get(combatant.combatantId)?.tempHp ?? 0),
-  );
-}
-
 function scalarBuffAddedActiveEffectKinds(
   before: BattleState,
   after: BattleState,
@@ -5865,17 +5013,6 @@ function activeEffectKindCounts(
     counts.set(effect.kind, (counts.get(effect.kind) ?? 0) + 1);
   }
   return counts;
-}
-
-function combatantConcentrationChanged(
-  before: BattleState,
-  after: BattleState,
-  combatantId: CombatantId,
-): boolean {
-  return (
-    before.combatants.get(combatantId)?.concentration !==
-    after.combatants.get(combatantId)?.concentration
-  );
 }
 
 function scalarBuffResolveWithoutFill(
@@ -6131,7 +5268,7 @@ function repeatSaveConditionEffectRouteForResolution(
     return undefined;
   }
   return nonEmptyRouteEvents([
-    ...(combatantConditionsChanged(input.state, result.state)
+    ...(combatantsConditionsChanged(input.state, result.state)
       ? [
           resolveBattleSubjectRoute(
             "repeatSaveConditionEffect" as const,
@@ -6278,7 +5415,7 @@ function sleepRepeatSaveResolvedRoutes(input: {
   readonly includeActiveEffectTransition: boolean;
   readonly sourceCombatantId: CombatantId | undefined;
 }): BattleReducerRouteEvents | undefined {
-  const conditionRoutes = combatantConditionsChanged(input.before, input.after)
+  const conditionRoutes = combatantsConditionsChanged(input.before, input.after)
     ? [
         resolveBattleSubjectRoute(
           "repeatSaveConditionEffect" as const,
@@ -6314,7 +5451,7 @@ function sleepRepeatSaveConditionCleanupRoutes(
   before: BattleState,
   after: BattleState,
 ): readonly BattleReducerRouteEvent[] {
-  return combatantConditionsChanged(before, after)
+  return combatantsConditionsChanged(before, after)
     ? [sleepRepeatSaveResolveWithoutFill([], "battleConditionLifecycle")]
     : [];
 }
@@ -6667,62 +5804,6 @@ function sleepRepeatSaveEffectCount(state: BattleState): number {
       ).length,
     0,
   );
-}
-
-function combatantConditionsChanged(
-  before: BattleState,
-  after: BattleState,
-): boolean {
-  return [...after.combatants.values()].some((combatant) => {
-    const beforeConditions = before.combatants.get(
-      combatant.combatantId,
-    )?.conditions;
-    return (
-      beforeConditions !== undefined &&
-      !sameBooleanRecord(beforeConditions, combatant.conditions)
-    );
-  });
-}
-
-type ComparableConditionState = {
-  readonly blinded: boolean;
-  readonly charmed: boolean;
-  readonly deafened: boolean;
-  readonly frightened: boolean;
-  readonly grappled: boolean;
-  readonly invisible: boolean;
-  readonly paralyzed: boolean;
-  readonly petrified: boolean;
-  readonly poisoned: boolean;
-  readonly prone: boolean;
-  readonly restrained: boolean;
-  readonly stunned: boolean;
-  readonly unconscious: boolean;
-  readonly directIncapacitated: boolean;
-};
-
-const CONDITION_STATE_KEYS = [
-  "blinded",
-  "charmed",
-  "deafened",
-  "frightened",
-  "grappled",
-  "invisible",
-  "paralyzed",
-  "petrified",
-  "poisoned",
-  "prone",
-  "restrained",
-  "stunned",
-  "unconscious",
-  "directIncapacitated",
-] as const satisfies ReadonlyArray<keyof ComparableConditionState>;
-
-function sameBooleanRecord(
-  left: ComparableConditionState,
-  right: ComparableConditionState,
-): boolean {
-  return CONDITION_STATE_KEYS.every((key) => left[key] === right[key]);
 }
 
 function hasConcentratingRollModifierEffect(
@@ -7270,18 +6351,6 @@ function isAfterHitAttackDamageAddition(
   );
 }
 
-function battleCombatantHasActiveEffectKind(
-  state: BattleState,
-  combatantId: CombatantId,
-  kind: BattleActiveEffect["kind"],
-): boolean {
-  return (
-    state.combatants
-      .get(combatantId)
-      ?.activeEffects.some((effect) => effect.kind === kind) ?? false
-  );
-}
-
 function battleHasWeaponDamageRiderHole(
   result: BattleResolutionResult,
 ): boolean {
@@ -7377,29 +6446,6 @@ function isSpellAttackProcedure(procedure: string): boolean {
     procedure === "spellAttackDamage" ||
     procedure === "spellAttackSequence"
   );
-}
-
-function isQuickenedBonusActionCastingTimeSubject(
-  subject: BattleResolutionInput["subject"],
-): subject is Extract<
-  BattleResolutionInput["subject"],
-  { readonly tag: "bonusActionSpell" }
-> {
-  return (
-    subject.tag === "bonusActionSpell" &&
-    subject.metamagic?.some(
-      (selection) => selection.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
-    ) === true
-  );
-}
-
-function isBonusActionSpellWithMetamagicSubject(
-  subject: BattleResolutionInput["subject"],
-): subject is Extract<
-  BattleResolutionInput["subject"],
-  { readonly tag: "bonusActionSpell" }
-> {
-  return subject.tag === "bonusActionSpell" && subject.metamagic !== undefined;
 }
 
 function isSlotSpellDiscoverySubject(

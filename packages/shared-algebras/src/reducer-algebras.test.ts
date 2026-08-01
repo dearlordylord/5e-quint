@@ -37,6 +37,7 @@ import {
 import {
   EMPTY_CONDITION_STATE,
   applyCondition,
+  conditionStatesEqual,
   hasCondition,
   isIncapacitated,
   removeCondition,
@@ -542,6 +543,20 @@ describe("conditions-algebra", () => {
       expect(hasCondition(removeCondition(applied, condition), condition)).toBe(
         condition === "prone" && applied.unconscious,
       );
+    }
+  });
+
+  it("compares every directly represented condition flag", () => {
+    expect(
+      conditionStatesEqual(EMPTY_CONDITION_STATE, EMPTY_CONDITION_STATE),
+    ).toBe(true);
+    for (const condition of CONDITIONS) {
+      expect(
+        conditionStatesEqual(
+          EMPTY_CONDITION_STATE,
+          applyCondition(EMPTY_CONDITION_STATE, condition),
+        ),
+      ).toBe(false);
     }
   });
 });

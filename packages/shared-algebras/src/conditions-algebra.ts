@@ -1,8 +1,12 @@
 import { Match } from "effect";
 
-import type { Condition } from "@dnd/shared/types";
+import { CONDITIONS, type Condition } from "@dnd/shared/types";
 
 export type ConditionFlag = Exclude<Condition, "incapacitated">;
+
+const CONDITION_FLAGS = CONDITIONS.filter(
+  (condition): condition is ConditionFlag => condition !== "incapacitated",
+);
 
 export type ConditionState = Readonly<Record<ConditionFlag, boolean>> & {
   readonly directIncapacitated: boolean;
@@ -31,6 +35,13 @@ export const isIncapacitated = (state: ConditionState): boolean =>
   state.petrified ||
   state.stunned ||
   state.unconscious;
+
+export const conditionStatesEqual = (
+  left: ConditionState,
+  right: ConditionState,
+): boolean =>
+  left.directIncapacitated === right.directIncapacitated &&
+  CONDITION_FLAGS.every((condition) => left[condition] === right[condition]);
 
 export const hasCondition = (
   state: ConditionState,
