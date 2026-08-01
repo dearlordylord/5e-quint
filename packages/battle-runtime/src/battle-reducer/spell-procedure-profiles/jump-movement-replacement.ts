@@ -96,6 +96,7 @@ function admitJumpMovementReplacement(
                 kind: "targetList",
                 minTargets: 1,
                 maxTargets,
+                requiredTargetDisposition: "willing",
               },
               ...projection,
             },
@@ -285,6 +286,7 @@ const JumpMovementReplacementInvocationSchema = spellProcedureExecutionSchema(
       kind: Schema.Literal("targetList"),
       minTargets: Schema.Literal(1),
       maxTargets: Schema.Number,
+      requiredTargetDisposition: Schema.Literal("willing"),
     }),
     activeEffect: Schema.Struct({
       kind: Schema.Literal("jumpMovementReplacement"),

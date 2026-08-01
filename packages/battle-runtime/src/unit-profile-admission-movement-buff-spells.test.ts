@@ -377,6 +377,7 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
     expect(targets).toMatchObject({
       minTargets: 1,
       maxTargets: 2,
+      requiresKnownWillingTargets: true,
       choices: expect.arrayContaining([spellCasterId, spellTargetId]),
     });
   });
@@ -550,6 +551,7 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
+      message: "Spell targets must be known willing combatants.",
     });
 
     const cast = resolveBattleSubject({

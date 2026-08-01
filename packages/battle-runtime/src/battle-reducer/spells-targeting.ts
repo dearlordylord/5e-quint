@@ -810,6 +810,28 @@ export function spellTargetIsLegal(
   facts: readonly BattleTargetSpatialFact[],
   options: SpellTargetLegalityOptions = {},
 ): boolean {
+  return (
+    spellTargetSatisfiesNonDispositionRequirements(
+      state,
+      actorId,
+      targetId,
+      invocation,
+      facts,
+      options,
+    ) &&
+    (!spellInvocationRequiresKnownWillingTarget(invocation) ||
+      spellTargetIsKnownWilling(actorId, targetId, invocation, facts))
+  );
+}
+
+function spellTargetSatisfiesNonDispositionRequirements(
+  state: BattleState,
+  actorId: CombatantId,
+  targetId: CombatantId,
+  invocation: BattleExecutableSpellInvocation,
+  facts: readonly BattleTargetSpatialFact[],
+  options: SpellTargetLegalityOptions = {},
+): boolean {
   if (
     !spellTargetHasNonSpatialPrerequisites(state, actorId, targetId, invocation)
   ) {
@@ -821,10 +843,7 @@ export function spellTargetIsLegal(
   if (!hasSpellTargetFact) {
     return false;
   }
-  return (
-    !spellInvocationRequiresKnownWillingTarget(invocation) ||
-    spellTargetIsKnownWilling(actorId, targetId, invocation, facts)
-  );
+  return true;
 }
 
 export function spellTargetSpatialFactMatches(
@@ -1173,21 +1192,21 @@ export function validateSpellTargetList(
     seen.add(targetId);
     if (
       invocation.targeting.kind !== "pointOriginSphereTargetList" &&
-      !spellTargetIsLegal(state, actorId, targetId, invocation, facts)
+      !spellTargetSatisfiesNonDispositionRequirements(
+        state,
+        actorId,
+        targetId,
+        invocation,
+        facts,
+      )
     ) {
       return "Spell targets must be combatants within the selected spell's supported range.";
     }
     if (
-      invocation.procedure === "jumpMovementReplacement" &&
-      !facts.some(
-        (fact) =>
-          fact.kind === "spellTargetKnownWilling" &&
-          fact.casterId === actorId &&
-          fact.targetId === targetId &&
-          fact.sourceProcedureRef === invocation.sourceProcedureRef,
-      )
+      spellInvocationRequiresKnownWillingTarget(invocation) &&
+      !spellTargetIsKnownWilling(actorId, targetId, invocation, facts)
     ) {
-      return "Jump targets must be known willing combatants.";
+      return "Spell targets must be known willing combatants.";
     }
   }
   if (

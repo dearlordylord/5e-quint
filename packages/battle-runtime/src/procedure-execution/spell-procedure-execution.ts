@@ -725,6 +725,7 @@ export type JumpMovementReplacementSpellProcedureExecution =
       readonly kind: "targetList";
       readonly minTargets: 1;
       readonly maxTargets: number;
+      readonly requiredTargetDisposition: "willing";
     };
   };
 

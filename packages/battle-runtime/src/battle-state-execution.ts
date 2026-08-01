@@ -2482,6 +2482,7 @@ export type JumpMovementReplacementSpellInvocation = {
     readonly kind: "targetList";
     readonly minTargets: 1;
     readonly maxTargets: number;
+    readonly requiredTargetDisposition: "willing";
   };
   readonly activeEffect: BattleSpellActiveEffectTemplate<
     Extract<BattleActiveEffect, { readonly kind: "jumpMovementReplacement" }>
