@@ -7,6 +7,7 @@ import {
   classRogueUnitId,
   fighterRemarkableAthleteUnitId,
   fighterSecondWindUnitId,
+  huntersPreyUnsupportedDamageDieUnit,
   monkOpenHandTechniqueUnitId,
   paladinSacredWeaponUnitId,
   produceFlameUnitId,
@@ -53,6 +54,7 @@ import {
   resolveBattleSubject,
   startBattle,
 } from "./unit-profile-admission.test-support.ts";
+import { battleUnitSupportProfilesForUnit } from "./unit-feature-support.ts";
 import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import {
@@ -1475,7 +1477,6 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       monkOpenHandTechniqueUnitId,
     );
     const sacredWeapon = unitLibrary.requireUnit(paladinSacredWeaponUnitId);
-    const huntersPrey = unitLibrary.requireUnit(rangerHuntersPreyUnitId);
     const steadyAim = unitLibrary.requireUnit(rogueSteadyAimUnitId);
     const potentCantrip = unitLibrary.requireUnit(wizardPotentCantripUnitId);
     if (
@@ -1485,8 +1486,6 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       openHandTechnique.mechanics.family !== "open_hand_technique" ||
       sacredWeapon.kind !== "class_feature" ||
       sacredWeapon.mechanics.family !== "sacred_weapon" ||
-      huntersPrey.kind !== "class_feature" ||
-      huntersPrey.mechanics.family !== "hunters_prey" ||
       steadyAim.kind !== "class_feature" ||
       steadyAim.mechanics.family !== "steady_aim" ||
       potentCantrip.kind !== "class_feature" ||
@@ -1589,29 +1588,18 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         }),
       ),
     ).toBe("unsupported");
+    const unsupportedHuntersPrey = huntersPreyUnsupportedDamageDieUnit();
+    expect(battleHuntersPreySupportForUnit(unsupportedHuntersPrey)).toBe(
+      "unsupported",
+    );
     expect(
-      battleHuntersPreySupportForUnit(
-        unitMechanicsVariant(huntersPrey, {
-          id: "ranger_hunters_prey_wrong_damage_die",
-          mechanics: {
-            ...huntersPrey.mechanics,
-            options: [
-              {
-                ...huntersPrey.mechanics.options[0],
-                damage: {
-                  ...huntersPrey.mechanics.options[0].damage,
-                  dice: {
-                    ...huntersPrey.mechanics.options[0].damage.dice,
-                    dieSize: 6,
-                  },
-                },
-              },
-              huntersPrey.mechanics.options[1],
-            ],
-          },
-        }),
-      ),
-    ).toBe("unsupported");
+      battleUnitSupportProfilesForUnit({ unit: unsupportedHuntersPrey }),
+    ).toEqual(
+      Either.left({
+        tag: "battleUnitSupportProfileIssue",
+        message: `Unsupported battle Hunter's Prey Unit hook: ${unsupportedHuntersPrey.id}.`,
+      }),
+    );
     expect(
       battleRogueSteadyAimSupportForUnit(
         unitMechanicsVariant(steadyAim, {

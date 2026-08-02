@@ -95,6 +95,8 @@ import {
   wizardSpellcasting,
   wizardVsSkeletonBattle,
 } from "./battle-runtime.test-support.ts";
+import { unitMechanicsVariant } from "./unit-profile-admission-catalog.test-support.ts";
+import { battleGrapplerSupportForUnit } from "./unit-feature-support.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
   battleProcedureExecutionRefForTest,
@@ -103,6 +105,22 @@ import {
 } from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: movement, Grapple, and Hide", () => {
+  test("Grappler support rejects a same-family near miss", () => {
+    const unit = unitLibrary.requireUnit("feat_grappler");
+    if (unit.kind !== "feat" || unit.mechanics.family !== "grappler") {
+      throw new Error("Expected Grappler mechanics.");
+    }
+    const nearMiss = unitMechanicsVariant(unit, {
+      id: "synthetic_grappler_wrong_advantage",
+      mechanics: {
+        ...unit.mechanics,
+        attackAdvantage: { ...unit.mechanics.attackAdvantage, mode: "normal" },
+      },
+    });
+
+    expect(battleGrapplerSupportForUnit(nearMiss)).toBe("unsupported");
+  });
+
   test("generic combat actions spend the Action and expose typed battle state", () => {
     const state = fighterVsGoblinBattle();
 

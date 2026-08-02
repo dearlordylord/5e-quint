@@ -1549,6 +1549,34 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     );
   });
 
+  test("monk_monks_focus rejects a wholly malformed authored execution set", () => {
+    const unit = unitLibrary.requireUnit(monkMonksFocusUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "resource_container"
+    ) {
+      throw new Error("Expected Monk's Focus resource container mechanics.");
+    }
+    const whollyMalformedUnit = unitMechanicsVariant(unit, {
+      id: "synthetic_monks_focus_malformed_executions",
+      mechanics: {
+        ...unit.mechanics,
+        optionSet: {
+          ...unit.mechanics.optionSet,
+          initialOptions: unit.mechanics.optionSet.initialOptions.map(
+            (option) => ({
+              ...option,
+              battleExecution: { kind: "unsupported_focus_execution" },
+            }),
+          ),
+        },
+      },
+    });
+    expect(
+      battleMonkFocusBattleOptionsSupportForUnit(whollyMalformedUnit),
+    ).toBe("unsupported");
+  });
+
   test("monk_stunning_strike admits attack-hit Focus rider executable facts", () => {
     const unit = unitLibrary.requireUnit(monkStunningStrikeUnitId);
     const supportProfile = {

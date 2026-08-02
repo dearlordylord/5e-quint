@@ -866,6 +866,23 @@ type HuntersPreyAdmittedMechanicsProfile = {
   readonly woundedTargetWeaponDamage: HuntersPreyWoundedTargetWeaponDamageProfile;
   readonly nearbyDifferentTargetSameWeaponAttack: HuntersPreyNearbyDifferentTargetSameWeaponAttackProfile;
 };
+
+type HuntersPreyAdmission =
+  | {
+      readonly tag: "notHuntersPrey";
+      readonly unit: BattleUnitSupportSource;
+    }
+  | { readonly tag: "unsupported"; readonly unit: BattleUnitSupportSource }
+  | {
+      readonly tag: "admitted";
+      readonly unit: BattleUnitSupportSource;
+      readonly profile: HuntersPreyAdmittedMechanicsProfile;
+    };
+
+type SupportedHuntersPreyAdmission = Exclude<
+  HuntersPreyAdmission,
+  { readonly tag: "unsupported" }
+>;
 export type RogueSteadyAimProfile = {
   readonly activationCost: { readonly kind: "bonusAction" };
   readonly precondition: "noMovementThisTurn";
@@ -1116,14 +1133,52 @@ function battleUnitSupportProfileIssue(
   return Either.left({ tag: "battleUnitSupportProfileIssue", message });
 }
 
-export function battleUnitSupportProfilesForUnit(input: {
+type BattleUnitSupportProfilesInput = {
   readonly unit: BattleUnitSupportSource;
   readonly classLevels?: readonly CharacterBattleClassLevel[];
   readonly sourceFacts?: BattleUnitSupportProfileSourceFacts;
-}): Either.Either<
+};
+
+type BattleUnitSupportProfilesInputWithHuntersPreyAdmission = Omit<
+  BattleUnitSupportProfilesInput,
+  "unit"
+> & {
+  readonly huntersPreyAdmission: HuntersPreyAdmission;
+};
+
+type AdmittedBattleUnitSupportProfiles = {
+  readonly supportProfiles: readonly BattleUnitSupportProfile[];
+  readonly huntersPreyAdmission: SupportedHuntersPreyAdmission;
+};
+
+export function battleUnitSupportProfilesForUnit(
+  input: BattleUnitSupportProfilesInput,
+): Either.Either<
   readonly BattleUnitSupportProfile[],
   BattleUnitSupportProfileIssue
 > {
+  const { unit, ...supportInput } = input;
+  const result = battleUnitSupportProfilesForInputWithHuntersPreyAdmission({
+    ...supportInput,
+    huntersPreyAdmission: huntersPreyAdmissionForUnit(unit),
+  });
+  return Either.isLeft(result)
+    ? Either.left(result.left)
+    : Either.right(result.right.supportProfiles);
+}
+
+function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
+  inputWithHuntersPreyAdmission: BattleUnitSupportProfilesInputWithHuntersPreyAdmission,
+): Either.Either<
+  AdmittedBattleUnitSupportProfiles,
+  BattleUnitSupportProfileIssue
+> {
+  const { huntersPreyAdmission, ...supportInput } =
+    inputWithHuntersPreyAdmission;
+  const input: BattleUnitSupportProfilesInput = {
+    ...supportInput,
+    unit: huntersPreyAdmission.unit,
+  };
   const supportProfiles: BattleUnitSupportProfile[] = [];
 
   const bonusActionStandardActionSupport =
@@ -1153,7 +1208,10 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
 
   if (isClassicNonSrdMechanicsUnit(input.unit)) {
-    return Either.right(supportProfiles);
+    return Either.right({
+      supportProfiles,
+      huntersPreyAdmission: { tag: "notHuntersPrey", unit: input.unit },
+    });
   }
 
   const criticalRangeSupport =
@@ -1703,15 +1761,11 @@ export function battleUnitSupportProfilesForUnit(input: {
     supportProfiles.push(paladinSacredWeaponSupport);
   }
 
-  const huntersPreySupportValidation =
-    battleHuntersPreySupportValidationForUnit(input.unit);
-  /* v8 ignore start -- The Hunter's Prey reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (huntersPreySupportValidation === "unsupported") {
+  if (huntersPreyAdmission.tag === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Hunter's Prey Unit hook: ${input.unit.id}.`,
     );
   }
-  /* v8 ignore stop */
 
   const rogueSteadyAimSupport = battleRogueSteadyAimSupportForUnit(input.unit);
   /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
@@ -1893,7 +1947,7 @@ export function battleUnitSupportProfilesForUnit(input: {
     supportProfiles.push(weaponMasterySlowSupport);
   }
 
-  return Either.right(supportProfiles);
+  return Either.right({ supportProfiles, huntersPreyAdmission });
 }
 
 export function battleUnitRefWithSupportProfiles(input: {
@@ -1910,31 +1964,27 @@ export function battleUnitRefWithSupportProfiles(input: {
       `Battle Unit ref ${input.unitRef.unitId} does not match Unit ${input.unit.id}.`,
     );
   }
-  const supportProfiles = battleUnitSupportProfilesForUnit({
-    unit: input.unit,
-    ...(input.classLevels === undefined
-      ? {}
-      : { classLevels: parseBattleUnitSupportClassLevels(input.classLevels) }),
-    ...optionalProperty("sourceFacts", input.sourceFacts),
-  });
-  if (Either.isLeft(supportProfiles)) return Either.left(supportProfiles.left);
-
-  const huntersPreySupport = battleHuntersPreySupportForUnit(
-    input.unit,
+  const huntersPreyAdmission = huntersPreyAdmissionForUnit(input.unit);
+  const admittedSupportProfiles =
+    battleUnitSupportProfilesForInputWithHuntersPreyAdmission({
+      huntersPreyAdmission,
+      ...(input.classLevels === undefined
+        ? {}
+        : {
+            classLevels: parseBattleUnitSupportClassLevels(input.classLevels),
+          }),
+      ...optionalProperty("sourceFacts", input.sourceFacts),
+    });
+  if (Either.isLeft(admittedSupportProfiles)) {
+    return Either.left(admittedSupportProfiles.left);
+  }
+  const admittedHuntersPrey =
+    admittedSupportProfiles.right.huntersPreyAdmission;
+  const huntersPreySupport = battleHuntersPreySupportForSupportedAdmission(
+    admittedHuntersPrey,
     input.unitRef.selectedOption,
   );
-  /* v8 ignore start -- Malformed authored support shape: the focused Hunter's Prey reader reports unsupported mechanics before a Unit ref can be admitted. */
-  if (huntersPreySupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Hunter's Prey Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
-  if (
-    !isClassicNonSrdMechanicsUnit(input.unit) &&
-    hasClassFeatureMechanicsFamily(input.unit, "hunters_prey") &&
-    huntersPreySupport === null
-  ) {
+  if (admittedHuntersPrey.tag === "admitted" && huntersPreySupport === null) {
     return battleUnitSupportProfileIssue(
       `Battle Unit ref ${input.unitRef.unitId} requires a retained Hunter's Prey selection before battle initialization.`,
     );
@@ -1951,8 +2001,11 @@ export function battleUnitRefWithSupportProfiles(input: {
     unit: input.unit,
     supportProfiles:
       huntersPreySupport === null
-        ? supportProfiles.right
-        : [...supportProfiles.right, huntersPreySupport],
+        ? admittedSupportProfiles.right.supportProfiles
+        : [
+            ...admittedSupportProfiles.right.supportProfiles,
+            huntersPreySupport,
+          ],
   });
 }
 
@@ -3788,20 +3841,31 @@ export function battleHuntersPreySupportForUnit(
   unit: BattleUnitSupportSource,
   selectedOption?: BattleUnitSupportProfileSelectedOption,
 ): BattleHuntersPreySupport {
-  if (
-    isClassicNonSrdMechanicsUnit(unit) ||
-    !hasClassFeatureMechanicsFamily(unit, "hunters_prey")
-  ) {
-    return null;
-  }
-  const admitted = huntersPreyAdmittedMechanicsProfileForUnit(unit);
-  /* v8 ignore next -- Malformed Hunter's Prey mechanics: the family gate identifies the feature, while null means the option records fail profile admission. */
-  if (admitted === null) {
-    return "unsupported";
-  }
+  return battleHuntersPreySupportForAdmission(
+    huntersPreyAdmissionForUnit(unit),
+    selectedOption,
+  );
+}
+
+function battleHuntersPreySupportForAdmission(
+  admission: HuntersPreyAdmission,
+  selectedOption?: BattleUnitSupportProfileSelectedOption,
+): BattleHuntersPreySupport {
+  if (admission.tag === "unsupported") return "unsupported";
+  return battleHuntersPreySupportForSupportedAdmission(
+    admission,
+    selectedOption,
+  );
+}
+
+function battleHuntersPreySupportForSupportedAdmission(
+  admission: SupportedHuntersPreyAdmission,
+  selectedOption?: BattleUnitSupportProfileSelectedOption,
+): BattleHuntersPreySupportProfile | null {
+  if (admission.tag === "notHuntersPrey") return null;
   return selectedOption === undefined
     ? null
-    : selectedHuntersPreySupportProfile(admitted, selectedOption);
+    : selectedHuntersPreySupportProfile(admission.profile, selectedOption);
 }
 
 function selectedHuntersPreySupportProfile(
@@ -3824,18 +3888,19 @@ function selectedHuntersPreySupportProfile(
   };
 }
 
-function battleHuntersPreySupportValidationForUnit(
+function huntersPreyAdmissionForUnit(
   unit: BattleUnitSupportSource,
-): "unsupported" | null {
+): HuntersPreyAdmission {
   if (
     isClassicNonSrdMechanicsUnit(unit) ||
     !hasClassFeatureMechanicsFamily(unit, "hunters_prey")
   ) {
-    return null;
+    return { tag: "notHuntersPrey", unit };
   }
-  return huntersPreyAdmittedMechanicsProfileForUnit(unit) === null
-    ? "unsupported"
-    : null;
+  const profile = huntersPreyAdmittedMechanicsProfileForUnit(unit);
+  return profile === null
+    ? { tag: "unsupported", unit }
+    : { tag: "admitted", unit, profile };
 }
 
 export function battleRogueSteadyAimSupportForUnit(

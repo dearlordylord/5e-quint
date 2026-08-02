@@ -551,3 +551,30 @@ export function unitMechanicsVariant(
     mechanics: overrides.mechanics,
   } as UnitRecord;
 }
+
+export function huntersPreyUnsupportedDamageDieUnit(): UnitRecord {
+  const unit = unitLibrary.requireUnit("ranger_hunters_prey");
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "hunters_prey"
+  ) {
+    throw new Error("Expected Hunter's Prey mechanics.");
+  }
+  return unitMechanicsVariant(unit, {
+    id: "synthetic_hunters_prey_wrong_damage_die",
+    mechanics: {
+      ...unit.mechanics,
+      options: unit.mechanics.options.map((option) =>
+        "damage" in option
+          ? {
+              ...option,
+              damage: {
+                ...option.damage,
+                dice: { ...option.damage.dice, dieSize: 6 },
+              },
+            }
+          : option,
+      ),
+    },
+  });
+}

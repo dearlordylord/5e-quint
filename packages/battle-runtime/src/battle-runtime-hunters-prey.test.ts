@@ -47,6 +47,7 @@ import {
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
+import { huntersPreyUnsupportedDamageDieUnit } from "./unit-profile-admission-catalog.test-support.ts";
 import type {
   BattleRuntimeSession,
   BattleState,
@@ -445,6 +446,20 @@ describe("battle runtime: Hunter's Prey", () => {
     if (Either.isRight(admitted)) return;
     expect(admitted.left.message).toBe(
       "Battle Unit ref ranger_hunters_prey requires a retained Hunter's Prey selection before battle initialization.",
+    );
+  });
+
+  test("Hunter's Prey battle admission rejects malformed same-family mechanics before selection", () => {
+    const malformedUnit = huntersPreyUnsupportedDamageDieUnit();
+    const admitted = battleUnitRefWithSupportProfiles({
+      unitRef: { unitId: malformedUnit.id },
+      unit: malformedUnit,
+    });
+
+    expect(Either.isLeft(admitted)).toBe(true);
+    if (Either.isRight(admitted)) return;
+    expect(admitted.left.message).toBe(
+      `Unsupported battle Hunter's Prey Unit hook: ${malformedUnit.id}.`,
     );
   });
 
