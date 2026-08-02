@@ -1625,7 +1625,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     );
   });
 
-  test("monk_stunning_strike rejects malformed attack-hit rider facts", () => {
+  test("Surface rejects malformed Stunning Strike attack-hit rider facts", () => {
     const unit = unitLibrary.requireUnit(monkStunningStrikeUnitId);
     if (
       unit.kind !== "class_feature" ||
@@ -1633,28 +1633,23 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     ) {
       throw new Error("Expected Stunning Strike mechanics.");
     }
-    const malformedUnit = unitMechanicsVariant(unit, {
-      id: "monk_stunning_strike_wrong_success_attack_roll_mode",
-      mechanics: {
-        ...unit.mechanics,
-        onSuccess: {
-          ...unit.mechanics.onSuccess,
-          attackRoll: {
-            ...unit.mechanics.onSuccess.attackRoll,
-            mode: "disadvantage",
+    const stunningStrikeMechanics = unit.mechanics;
+    expect(() =>
+      decodeUnitRecordSync({
+        ...unit,
+        id: "synthetic_stunning_strike_wrong_success_attack_roll_mode",
+        mechanics: {
+          ...stunningStrikeMechanics,
+          onSuccess: {
+            ...stunningStrikeMechanics.onSuccess,
+            attackRoll: {
+              ...stunningStrikeMechanics.onSuccess.attackRoll,
+              mode: "disadvantage",
+            },
           },
         },
-      },
-    });
-
-    expect(battleStunningStrikeSupportForUnit(malformedUnit)).toBe(
-      "unsupported",
-    );
-    expect(
-      parseSupportedUnitFeatureProfile(malformedUnit, [
-        { className: "monk", level: classLevel(5) },
-      ]),
-    ).toBeNull();
+      }),
+    ).toThrow();
   });
 
   test("monk_deflect_attacks projects zero-damage redirect executable facts", () => {

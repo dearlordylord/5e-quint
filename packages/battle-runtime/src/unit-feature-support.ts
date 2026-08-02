@@ -769,6 +769,11 @@ type CunningStrikeUnit = AuthoredUnitMechanicsFamilyMember<
   AuthoredUnitSource,
   "cunning_strike"
 >;
+type StunningStrikeUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "stunning_strike"
+>;
+type StunningStrikeMechanics = StunningStrikeUnit["mechanics"];
 type CunningStrikeOptionGrantUnit = AuthoredUnitMechanicsFamilyMember<
   AuthoredUnitSource,
   "cunning_strike_option_grant"
@@ -1745,13 +1750,6 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   }
 
   const stunningStrikeSupport = battleStunningStrikeSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (stunningStrikeSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Stunning Strike Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (stunningStrikeSupport !== null) {
     supportProfiles.push(stunningStrikeSupport);
   }
@@ -2616,9 +2614,7 @@ export type BattleOpenHandTechniqueSupport =
   | "unsupported"
   | null;
 export type BattleStunningStrikeSupport =
-  | BattleStunningStrikeSupportProfile
-  | "unsupported"
-  | null;
+  BattleStunningStrikeSupportProfile | null;
 export type BattleCunningStrikeSupport =
   BattleCunningStrikeSupportProfile | null;
 export type BattleCunningStrikeOptionGrantSupport =
@@ -3774,16 +3770,14 @@ export function battleOpenHandTechniqueSupportForUnit(
 export function battleStunningStrikeSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleStunningStrikeSupport {
-  if (!hasClassFeatureMechanicsFamily(unit, "stunning_strike")) {
+  if (!isStunningStrikeUnit(unit)) {
     return null;
   }
-  const profile = stunningStrikeProfileForUnit(unit);
-  return profile === null
-    ? "unsupported"
-    : {
-        kind: STUNNING_STRIKE_SUPPORT_PROFILE,
-        stunningStrike: profile.stunningStrike,
-      };
+  const profile = stunningStrikeProfileForAdmittedUnit(unit);
+  return {
+    kind: STUNNING_STRIKE_SUPPORT_PROFILE,
+    stunningStrike: profile.stunningStrike,
+  };
 }
 
 export function battleCunningStrikeSupportForUnit(
@@ -6234,71 +6228,101 @@ function openHandTechniqueProfileForUnit(
   };
 }
 
-function stunningStrikeProfileForUnit(
-  unit: AuthoredUnitSource,
-): Extract<
+const STUNNING_STRIKE_TRIGGER_KIND = {
+  hit_creature_with_monk_weapon_or_unarmed_strike:
+    "hitCreatureWithMonkWeaponOrUnarmedStrike",
+} as const satisfies Record<
+  StunningStrikeMechanics["trigger"]["kind"],
+  StunningStrikeProfile["trigger"]["kind"]
+>;
+const STUNNING_STRIKE_USAGE_LIMIT = {
+  once_per_turn: "oncePerTurn",
+} as const satisfies Record<
+  StunningStrikeMechanics["trigger"]["usageLimit"],
+  StunningStrikeProfile["trigger"]["usageLimit"]
+>;
+const STUNNING_STRIKE_CONDITION_EFFECT_KIND = {
+  apply_condition: "applyCondition",
+} as const satisfies Record<
+  StunningStrikeMechanics["onFail"]["kind"],
+  StunningStrikeProfile["onFail"]["kind"]
+>;
+const STUNNING_STRIKE_EXPIRATION = {
+  start_of_source_next_turn: "startOfSourceNextTurn",
+} as const satisfies Record<
+  | StunningStrikeMechanics["onFail"]["expires"]
+  | StunningStrikeMechanics["onSuccess"]["speed"]["expires"],
+  | StunningStrikeProfile["onFail"]["expires"]
+  | StunningStrikeProfile["onSuccess"]["speed"]["expires"]
+>;
+const STUNNING_STRIKE_ATTACK_ROLL_APPLICATION = {
+  next_attack_roll_against_target_before_expiration:
+    "nextAttackRollAgainstTargetBeforeExpiration",
+} as const satisfies Record<
+  StunningStrikeMechanics["onSuccess"]["attackRoll"]["appliesTo"],
+  StunningStrikeProfile["onSuccess"]["attackRoll"]["appliesTo"]
+>;
+
+type StunningStrikeSupportedUnitFeatureProfile = Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "stunningStrike" }
-> | null {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "monk" ||
-    unit.mechanics.family !== "stunning_strike"
-  ) {
-    return null;
-  }
+>;
+
+function isStunningStrikeUnit(
+  unit: AuthoredUnitSource,
+): unit is StunningStrikeUnit {
+  return (
+    unit.kind === "class_feature" && unit.mechanics.family === "stunning_strike"
+  );
+}
+
+function stunningStrikeProfileForAdmittedUnit(
+  unit: StunningStrikeUnit,
+): StunningStrikeSupportedUnitFeatureProfile {
   const mechanics = unit.mechanics;
-  if (
-    mechanics.trigger.kind !==
-      "hit_creature_with_monk_weapon_or_unarmed_strike" ||
-    mechanics.trigger.usageLimit !== "once_per_turn" ||
-    mechanics.optional !== true ||
-    // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
-    mechanics.spends.resourceUnitId !== MONK_FOCUS_RESOURCE_UNIT_ID ||
-    mechanics.spends.amount !== 1 ||
-    mechanics.savingThrow.ability !== "con" ||
-    mechanics.onFail.kind !== "apply_condition" ||
-    mechanics.onFail.condition !== "stunned" ||
-    mechanics.onFail.expires !== "start_of_source_next_turn" ||
-    mechanics.onSuccess.speed.kind !== "halve" ||
-    mechanics.onSuccess.speed.expires !== "start_of_source_next_turn" ||
-    mechanics.onSuccess.attackRoll.mode !== "advantage" ||
-    mechanics.onSuccess.attackRoll.appliesTo !==
-      "next_attack_roll_against_target_before_expiration"
-  ) {
-    return null;
-  }
   return {
     kind: "stunningStrike",
     unit,
     stunningStrike: {
       trigger: {
-        kind: "hitCreatureWithMonkWeaponOrUnarmedStrike",
-        usageLimit: "oncePerTurn",
+        kind: STUNNING_STRIKE_TRIGGER_KIND[mechanics.trigger.kind],
+        usageLimit: STUNNING_STRIKE_USAGE_LIMIT[mechanics.trigger.usageLimit],
       },
-      optional: true,
+      optional: mechanics.optional,
       spends: {
-        resourceUnitId: MONK_FOCUS_RESOURCE_UNIT_ID,
-        amount: 1,
+        resourceUnitId: mechanics.spends.resourceUnitId,
+        amount: mechanics.spends.amount,
       },
-      savingThrow: { ability: "con" },
+      savingThrow: { ability: mechanics.savingThrow.ability },
       onFail: {
-        kind: "applyCondition",
-        condition: "stunned",
-        expires: "startOfSourceNextTurn",
+        kind: STUNNING_STRIKE_CONDITION_EFFECT_KIND[mechanics.onFail.kind],
+        condition: mechanics.onFail.condition,
+        expires: STUNNING_STRIKE_EXPIRATION[mechanics.onFail.expires],
       },
       onSuccess: {
         speed: {
-          kind: "halve",
-          expires: "startOfSourceNextTurn",
+          kind: mechanics.onSuccess.speed.kind,
+          expires:
+            STUNNING_STRIKE_EXPIRATION[mechanics.onSuccess.speed.expires],
         },
         attackRoll: {
-          mode: "advantage",
-          appliesTo: "nextAttackRollAgainstTargetBeforeExpiration",
+          mode: mechanics.onSuccess.attackRoll.mode,
+          appliesTo:
+            STUNNING_STRIKE_ATTACK_ROLL_APPLICATION[
+              mechanics.onSuccess.attackRoll.appliesTo
+            ],
         },
       },
     },
   };
+}
+
+function stunningStrikeProfileForUnit(
+  unit: AuthoredUnitSource,
+): StunningStrikeSupportedUnitFeatureProfile | null {
+  return isStunningStrikeUnit(unit)
+    ? stunningStrikeProfileForAdmittedUnit(unit)
+    : null;
 }
 
 const CUNNING_STRIKE_COST_KIND = {
@@ -6586,14 +6610,12 @@ function cunningStrikeProfileForAdmittedUnit(
 
 function cunningStrikeProfileForUnit(
   unit: AuthoredUnitSource,
-  classLevels?: readonly CharacterBattleClassLevel[],
+  classLevels: readonly CharacterBattleClassLevel[],
 ): CunningStrikeSupportedUnitFeatureProfile | null {
   if (!isCunningStrikeUnit(unit)) {
     return null;
   }
-  return classLevels === undefined
-    ? cunningStrikeProfileForAdmittedUnit(unit)
-    : cunningStrikeProfileForAdmittedUnit(unit, classLevels);
+  return cunningStrikeProfileForAdmittedUnit(unit, classLevels);
 }
 
 type CunningStrikeOptionGrantSupportedUnitFeatureProfile = Extract<

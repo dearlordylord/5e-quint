@@ -427,7 +427,7 @@ function stateWithUnavailableSpellBindings(state: BattleState): BattleState {
 function stunningStrikeUnitRef() {
   const unit = unitLibrary.requireUnit("monk_stunning_strike");
   const support = battleStunningStrikeSupportForUnit(unit);
-  if (support === null || support === "unsupported") {
+  if (support === null) {
     throw new Error("Expected Stunning Strike support profile.");
   }
   return { unit, supportProfiles: [support] };

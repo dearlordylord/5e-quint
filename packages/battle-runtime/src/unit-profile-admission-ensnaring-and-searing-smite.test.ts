@@ -31,6 +31,7 @@ import {
   requireCombatant,
   requireHole,
   requireResultHole,
+  statBlockWithCreatureType,
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
@@ -68,6 +69,64 @@ function afterHitChoiceMatchesSpell(
 }
 
 describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", () => {
+  test("ensnaring_strike gives a Large target Advantage on its saving throw", () => {
+    const spell = spellRecord(ensnaringStrikeUnitId);
+    const targetStatBlock = statBlockWithCreatureType("humanoid");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      attack: zeroAbilityWeaponAttack("weapon_shortbow"),
+      targetStatBlock: {
+        ...targetStatBlock,
+        statBlock: { ...targetStatBlock.statBlock, size: "large" },
+      },
+    });
+    const subject = weaponAttackSubject(state, "Shortbow");
+    const target = requireResultHole(
+      resolveBattleSubject({ state: state.state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetFill = attackTargetFill(target, spellCasterId, spellTargetId);
+    const roll = requireResultHole(
+      resolveBattleSubject({
+        state: state.state,
+        subject,
+        fills: [targetFill],
+      }),
+      "attackRoll",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state: state.state,
+      subject,
+      fills: [targetFill, attackRollFill(roll, { total: 15, naturalD20: 10 })],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Ensnaring Strike attack-hit window.");
+    }
+    const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
+      (candidate) =>
+        afterHitChoiceMatchesSpell(
+          battleRuntimeSessionForTest({
+            ...state,
+            state: awaitingReaction.state,
+          }),
+          candidate,
+          ensnaringStrikeUnitId,
+        ),
+    );
+    if (
+      choice === undefined ||
+      choice.kind !== "castAttackHitBonusActionSpell"
+    ) {
+      throw new Error("Expected Ensnaring Strike after-hit choice.");
+    }
+
+    expect(
+      requireHole(choice.initialHoles, "savingThrowOutcome"),
+    ).toMatchObject({
+      targetRollModes: [{ targetId: spellTargetId, rollMode: "advantage" }],
+    });
+  });
+
   test("ensnaring_strike restrains after a weapon hit, damages at turn start, and can be escaped", () => {
     const spell = spellRecord(ensnaringStrikeUnitId);
     const state = spellBattle({
