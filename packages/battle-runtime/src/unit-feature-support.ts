@@ -776,6 +776,16 @@ type PaladinSacredWeaponUnit = AuthoredUnitMechanicsFamilyMember<
   "sacred_weapon"
 >;
 type PaladinSacredWeaponMechanics = PaladinSacredWeaponUnit["mechanics"];
+type RogueSteadyAimUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "steady_aim"
+>;
+type RogueSteadyAimMechanics = RogueSteadyAimUnit["mechanics"];
+type PotentCantripUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "potent_cantrip"
+>;
+type PotentCantripMechanics = PotentCantripUnit["mechanics"];
 type CunningStrikeOptionGrantUnit = AuthoredUnitMechanicsFamilyMember<
   AuthoredUnitSource,
   "cunning_strike_option_grant"
@@ -1781,25 +1791,11 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   }
 
   const rogueSteadyAimSupport = battleRogueSteadyAimSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (rogueSteadyAimSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Steady Aim Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (rogueSteadyAimSupport !== null) {
     supportProfiles.push(rogueSteadyAimSupport);
   }
 
   const potentCantripSupport = battlePotentCantripSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (potentCantripSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Potent Cantrip Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (potentCantripSupport !== null) {
     supportProfiles.push(potentCantripSupport);
   }
@@ -2625,13 +2621,9 @@ export type BattleHuntersPreySupport =
   | "unsupported"
   | null;
 export type BattleRogueSteadyAimSupport =
-  | BattleRogueSteadyAimSupportProfile
-  | "unsupported"
-  | null;
+  BattleRogueSteadyAimSupportProfile | null;
 export type BattlePotentCantripSupport =
-  | BattlePotentCantripSupportProfile
-  | "unsupported"
-  | null;
+  BattlePotentCantripSupportProfile | null;
 type MonkFocusBattleExecution =
   | {
       readonly kind: "bonus_action_unarmed_strike_sequence";
@@ -3881,31 +3873,27 @@ function huntersPreyAdmissionForUnit(
 export function battleRogueSteadyAimSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleRogueSteadyAimSupport {
-  if (!hasClassFeatureMechanicsFamily(unit, "steady_aim")) {
+  if (!isRogueSteadyAimUnit(unit)) {
     return null;
   }
-  const profile = rogueSteadyAimProfileForUnit(unit);
-  return profile === null
-    ? "unsupported"
-    : {
-        kind: ROGUE_STEADY_AIM_SUPPORT_PROFILE,
-        steadyAim: profile.steadyAim,
-      };
+  const profile = rogueSteadyAimProfileForAdmittedUnit(unit);
+  return {
+    kind: ROGUE_STEADY_AIM_SUPPORT_PROFILE,
+    steadyAim: profile.steadyAim,
+  };
 }
 
 export function battlePotentCantripSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattlePotentCantripSupport {
-  if (!hasClassFeatureMechanicsFamily(unit, "potent_cantrip")) {
+  if (!isPotentCantripUnit(unit)) {
     return null;
   }
-  const profile = potentCantripProfileForUnit(unit);
-  return profile === null
-    ? "unsupported"
-    : {
-        kind: POTENT_CANTRIP_SUPPORT_PROFILE,
-        potentCantrip: profile.potentCantrip,
-      };
+  const profile = potentCantripProfileForAdmittedUnit(unit);
+  return {
+    kind: POTENT_CANTRIP_SUPPORT_PROFILE,
+    potentCantrip: profile.potentCantrip,
+  };
 }
 
 function hasClassFeatureMechanicsFamily(
@@ -6830,81 +6818,149 @@ function huntersPreyAdmittedMechanicsProfileForUnit(
   };
 }
 
-function rogueSteadyAimProfileForUnit(
-  unit: AuthoredUnitSource,
-): Extract<
+const ROGUE_STEADY_AIM_ACTIVATION_COST_KIND = {
+  bonus_action: "bonusAction",
+} as const satisfies Record<
+  RogueSteadyAimMechanics["activationCost"]["kind"],
+  RogueSteadyAimProfile["activationCost"]["kind"]
+>;
+const ROGUE_STEADY_AIM_PRECONDITION_KIND = {
+  no_movement_this_turn: "noMovementThisTurn",
+} as const satisfies Record<
+  RogueSteadyAimMechanics["precondition"]["kind"],
+  RogueSteadyAimProfile["precondition"]
+>;
+const ROGUE_STEADY_AIM_ATTACK_ROLL_APPLICATION = {
+  next_attack_roll_current_turn: "nextAttackRollCurrentTurn",
+} as const satisfies Record<
+  RogueSteadyAimMechanics["attackRoll"]["appliesTo"],
+  RogueSteadyAimProfile["attackRoll"]["appliesTo"]
+>;
+const ROGUE_STEADY_AIM_SPEED_KIND = {
+  set_to_zero: "setToZero",
+} as const satisfies Record<
+  RogueSteadyAimMechanics["speed"]["kind"],
+  RogueSteadyAimProfile["speed"]["kind"]
+>;
+const ROGUE_STEADY_AIM_SPEED_DURATION = {
+  end_of_current_turn: "endOfCurrentTurn",
+} as const satisfies Record<
+  RogueSteadyAimMechanics["speed"]["until"],
+  RogueSteadyAimProfile["speed"]["until"]
+>;
+
+type RogueSteadyAimSupportedUnitFeatureProfile = Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "rogueSteadyAim" }
-> | null {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "rogue" ||
-    unit.mechanics.family !== "steady_aim"
-  ) {
-    return null;
-  }
+>;
+
+function isRogueSteadyAimUnit(
+  unit: AuthoredUnitSource,
+): unit is RogueSteadyAimUnit {
+  return (
+    unit.kind === "class_feature" && unit.mechanics.family === "steady_aim"
+  );
+}
+
+function rogueSteadyAimProfileForAdmittedUnit(
+  unit: RogueSteadyAimUnit,
+): RogueSteadyAimSupportedUnitFeatureProfile {
   const mechanics = unit.mechanics;
-  if (
-    mechanics.activationCost.kind !== "bonus_action" ||
-    mechanics.precondition.kind !== "no_movement_this_turn" ||
-    mechanics.attackRoll.mode !== "advantage" ||
-    mechanics.attackRoll.appliesTo !== "next_attack_roll_current_turn" ||
-    mechanics.speed.kind !== "set_to_zero" ||
-    mechanics.speed.until !== "end_of_current_turn"
-  ) {
-    return null;
-  }
   return {
     kind: "rogueSteadyAim",
     unit,
     steadyAim: {
-      activationCost: { kind: "bonusAction" },
-      precondition: "noMovementThisTurn",
-      attackRoll: {
-        mode: "advantage",
-        appliesTo: "nextAttackRollCurrentTurn",
+      activationCost: {
+        kind: ROGUE_STEADY_AIM_ACTIVATION_COST_KIND[
+          mechanics.activationCost.kind
+        ],
       },
-      speed: { kind: "setToZero", until: "endOfCurrentTurn" },
+      precondition:
+        ROGUE_STEADY_AIM_PRECONDITION_KIND[mechanics.precondition.kind],
+      attackRoll: {
+        mode: mechanics.attackRoll.mode,
+        appliesTo:
+          ROGUE_STEADY_AIM_ATTACK_ROLL_APPLICATION[
+            mechanics.attackRoll.appliesTo
+          ],
+      },
+      speed: {
+        kind: ROGUE_STEADY_AIM_SPEED_KIND[mechanics.speed.kind],
+        until: ROGUE_STEADY_AIM_SPEED_DURATION[mechanics.speed.until],
+      },
+    },
+  };
+}
+
+function rogueSteadyAimProfileForUnit(
+  unit: AuthoredUnitSource,
+): RogueSteadyAimSupportedUnitFeatureProfile | null {
+  return isRogueSteadyAimUnit(unit)
+    ? rogueSteadyAimProfileForAdmittedUnit(unit)
+    : null;
+}
+
+const POTENT_CANTRIP_TRIGGER_KIND = {
+  cast_cantrip_at_creature: "castCantripAtCreature",
+} as const satisfies Record<
+  PotentCantripMechanics["trigger"]["kind"],
+  PotentCantripProfile["trigger"]["kind"]
+>;
+const POTENT_CANTRIP_OUTCOME = {
+  miss_with_attack_roll: "missWithAttackRoll",
+  target_succeeds_saving_throw: "targetSucceedsSavingThrow",
+} as const satisfies Record<
+  PotentCantripMechanics["outcomes"][number],
+  PotentCantripProfile["outcomes"][number]
+>;
+const POTENT_CANTRIP_DAMAGE_KIND = {
+  half_cantrip_damage_if_any: "halfCantripDamageIfAny",
+} as const satisfies Record<
+  PotentCantripMechanics["damage"]["kind"],
+  PotentCantripProfile["damage"]
+>;
+
+type PotentCantripSupportedUnitFeatureProfile = Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "potentCantrip" }
+>;
+
+function isPotentCantripUnit(
+  unit: AuthoredUnitSource,
+): unit is PotentCantripUnit {
+  return (
+    unit.kind === "class_feature" && unit.mechanics.family === "potent_cantrip"
+  );
+}
+
+function potentCantripProfileForAdmittedUnit(
+  unit: PotentCantripUnit,
+): PotentCantripSupportedUnitFeatureProfile {
+  const mechanics = unit.mechanics;
+  return {
+    kind: "potentCantrip",
+    unit,
+    potentCantrip: {
+      trigger: {
+        kind: POTENT_CANTRIP_TRIGGER_KIND[mechanics.trigger.kind],
+        cantripKind: mechanics.trigger.cantripKind,
+      },
+      outcomes: [
+        POTENT_CANTRIP_OUTCOME[mechanics.outcomes[0]],
+        POTENT_CANTRIP_OUTCOME[mechanics.outcomes[1]],
+      ],
+      damage: POTENT_CANTRIP_DAMAGE_KIND[mechanics.damage.kind],
+      additionalEffect: mechanics.additionalEffect,
     },
   };
 }
 
 function potentCantripProfileForUnit(
   unit: AuthoredUnitSource,
-): Extract<
-  SupportedUnitFeatureProfile,
-  { readonly kind: "potentCantrip" }
-> | null {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "wizard" ||
-    unit.mechanics.family !== "potent_cantrip"
-  ) {
-    return null;
-  }
-  const mechanics = unit.mechanics;
-  if (
-    mechanics.trigger.kind !== "cast_cantrip_at_creature" ||
-    mechanics.trigger.cantripKind !== "damaging" ||
-    !sameStringSet(mechanics.outcomes, [
-      "miss_with_attack_roll",
-      "target_succeeds_saving_throw",
-    ]) ||
-    mechanics.damage.kind !== "half_cantrip_damage_if_any" ||
-    mechanics.additionalEffect !== "none"
-  ) {
-    return null;
-  }
-  return {
-    kind: "potentCantrip",
-    unit,
-    potentCantrip: {
-      trigger: { kind: "castCantripAtCreature", cantripKind: "damaging" },
-      outcomes: ["missWithAttackRoll", "targetSucceedsSavingThrow"],
-      damage: "halfCantripDamageIfAny",
-      additionalEffect: "none",
-    },
-  };
+): PotentCantripSupportedUnitFeatureProfile | null {
+  return isPotentCantripUnit(unit)
+    ? potentCantripProfileForAdmittedUnit(unit)
+    : null;
 }
 
 function grapplerProfileForUnit(

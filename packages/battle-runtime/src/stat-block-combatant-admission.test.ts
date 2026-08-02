@@ -356,4 +356,38 @@ describe("Stat Block combatant admission capability", () => {
       initiativeEntries(added.right.initiative).map((entry) => entry.creature),
     ).toEqual([fighterId, admittedCombatantId]);
   });
+
+  test("inserts an Initiative tie before existing lower scores", () => {
+    const destinationBattleId = battleId(
+      "admitted-initiative-tie-before-lower",
+    );
+    const state = destinationState(destinationBattleId);
+    const lowerAdmission = admittedFor(
+      destinationBattleId,
+      otherCombatantId,
+    ).admission;
+    const withLowerInitiative = addBattleStatBlockCombatant({
+      state,
+      combatant: combatantFor(lowerAdmission, {
+        initiative: initiativeScore(10),
+      }),
+    });
+    if (Either.isLeft(withLowerInitiative)) {
+      throw new Error(battleStateInitIssueMessage(withLowerInitiative.left));
+    }
+    const admission = admittedFor(destinationBattleId).admission;
+    const added = addBattleStatBlockCombatant({
+      state: withLowerInitiative.right,
+      combatant: combatantFor(admission, {
+        initiative: initiativeScore(20),
+      }),
+    });
+    if (Either.isLeft(added)) {
+      throw new Error(battleStateInitIssueMessage(added.left));
+    }
+
+    expect(
+      initiativeEntries(added.right.initiative).map((entry) => entry.creature),
+    ).toEqual([fighterId, admittedCombatantId, otherCombatantId]);
+  });
 });

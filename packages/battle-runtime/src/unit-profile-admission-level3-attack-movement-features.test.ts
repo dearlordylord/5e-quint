@@ -1495,6 +1495,8 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       throw new Error("Expected Task 18 level-3 feature mechanics.");
     }
     const sacredWeaponMechanics = sacredWeapon.mechanics;
+    const steadyAimMechanics = steadyAim.mechanics;
+    const potentCantripMechanics = potentCantrip.mechanics;
     const openHandDenyOpportunityAttacks =
       openHandTechnique.mechanics.choices.find(
         (choice) =>
@@ -1601,34 +1603,32 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         message: `Unsupported battle Hunter's Prey Unit hook: ${unsupportedHuntersPrey.id}.`,
       }),
     );
-    expect(
-      battleRogueSteadyAimSupportForUnit(
-        unitMechanicsVariant(steadyAim, {
-          id: "rogue_steady_aim_wrong_speed_duration",
-          mechanics: {
-            ...steadyAim.mechanics,
-            speed: {
-              ...steadyAim.mechanics.speed,
-              until: "start_of_next_turn",
-            },
+    expect(() =>
+      decodeUnitRecordSync({
+        ...steadyAim,
+        id: "synthetic_rogue_steady_aim_wrong_speed_duration",
+        mechanics: {
+          ...steadyAimMechanics,
+          speed: {
+            ...steadyAimMechanics.speed,
+            until: "start_of_next_turn",
           },
-        }),
-      ),
-    ).toBe("unsupported");
-    expect(
-      battlePotentCantripSupportForUnit(
-        unitMechanicsVariant(potentCantrip, {
-          id: "wizard_potent_cantrip_wrong_target",
-          mechanics: {
-            ...potentCantrip.mechanics,
-            trigger: {
-              ...potentCantrip.mechanics.trigger,
-              cantripKind: "any",
-            },
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      decodeUnitRecordSync({
+        ...potentCantrip,
+        id: "synthetic_wizard_potent_cantrip_wrong_target",
+        mechanics: {
+          ...potentCantripMechanics,
+          trigger: {
+            ...potentCantripMechanics.trigger,
+            cantripKind: "any",
           },
-        }),
-      ),
-    ).toBe("unsupported");
+        },
+      }),
+    ).toThrow();
 
     const unrelatedUnit = unitLibrary.requireUnit(fighterSecondWindUnitId);
     for (const { supportForUnit } of admissionCases) {
