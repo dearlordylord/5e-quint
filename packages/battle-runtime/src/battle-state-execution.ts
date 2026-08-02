@@ -6673,16 +6673,11 @@ type WithAdmittedSubject<
   TInput extends BattleResolutionInput,
   TTag extends BattleSubject["tag"],
 > = TInput extends BattleResolutionInput
-  ? Omit<TInput, "subject"> &
-      AdmittedBattleResolutionBrand &
-      (TTag extends "druidWildShape"
-        ? DruidWildShapeAdmissionFacts & {
-            readonly subject: DruidWildShapeSubject;
-          }
-        : {
-            readonly admissionKind: "general";
-            readonly subject: Extract<BattleSubject, { readonly tag: TTag }>;
-          })
+  ? AdmittedBattleResolutionInputFor<
+      Omit<TInput, "subject"> & {
+        readonly subject: Extract<BattleSubject, { readonly tag: TTag }>;
+      }
+    >
   : never;
 
 export type AdmittedActionSpellBattleResolutionInput = WithAdmittedSubject<
