@@ -786,6 +786,11 @@ type PotentCantripUnit = AuthoredUnitMechanicsFamilyMember<
   "potent_cantrip"
 >;
 type PotentCantripMechanics = PotentCantripUnit["mechanics"];
+type GrapplerUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "grappler"
+>;
+type GrapplerMechanics = GrapplerUnit["mechanics"];
 type CunningStrikeOptionGrantUnit = AuthoredUnitMechanicsFamilyMember<
   AuthoredUnitSource,
   "cunning_strike_option_grant"
@@ -985,6 +990,7 @@ export type BattleGrapplerSupportProfile = {
   readonly kind: typeof GRAPPLER_SUPPORT_PROFILE;
   readonly grappler: GrapplerProfile;
 };
+export type BattleGrapplerSupport = BattleGrapplerSupportProfile | null;
 export type BrutalStrikeOptionId = (typeof BRUTAL_STRIKE_OPTION_IDS)[number];
 export type BrutalStrikeProfile = {
   readonly trigger: {
@@ -1801,13 +1807,6 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   }
 
   const grapplerSupport = battleGrapplerSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (grapplerSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Grappler Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (grapplerSupport !== null) {
     supportProfiles.push(grapplerSupport);
   }
@@ -6963,57 +6962,111 @@ function potentCantripProfileForUnit(
     : null;
 }
 
-function grapplerProfileForUnit(
-  unit: AuthoredUnitSource,
-): Extract<SupportedUnitFeatureProfile, { readonly kind: "grappler" }> | null {
-  if (unit.kind !== "feat" || unit.mechanics.family !== "grappler") {
-    return null;
-  }
+const GRAPPLER_PUNCH_AND_GRAB_TRIGGER = {
+  attack_action_unarmed_strike_hit_on_turn:
+    "attackActionUnarmedStrikeHitOnTurn",
+} as const satisfies Record<
+  GrapplerMechanics["punchAndGrab"]["trigger"],
+  GrapplerProfile["punchAndGrab"]["trigger"]
+>;
+const GRAPPLER_PUNCH_AND_GRAB_OPTION = {
+  damage: "damage",
+  grapple: "grapple",
+} as const satisfies Record<
+  GrapplerMechanics["punchAndGrab"]["options"][number],
+  GrapplerProfile["punchAndGrab"]["options"][number]
+>;
+const GRAPPLER_PUNCH_AND_GRAB_USAGE_LIMIT = {
+  once_per_turn: "oncePerTurn",
+} as const satisfies Record<
+  GrapplerMechanics["punchAndGrab"]["usageLimit"]["kind"],
+  GrapplerProfile["punchAndGrab"]["usageLimit"]
+>;
+const GRAPPLER_ATTACK_ADVANTAGE_TARGET = {
+  creature_grappled_by_you: "creatureGrappledByYou",
+} as const satisfies Record<
+  GrapplerMechanics["attackAdvantage"]["target"],
+  GrapplerProfile["attackAdvantage"]["target"]
+>;
+const GRAPPLER_FAST_WRESTLER_MOVEMENT_COST = {
+  no_extra_grapple_drag_cost: "noExtraGrappleDragCost",
+} as const satisfies Record<
+  GrapplerMechanics["fastWrestler"]["movementCost"],
+  GrapplerProfile["fastWrestler"]["movementCost"]
+>;
+const GRAPPLER_FAST_WRESTLER_TARGET_SIZE = {
+  your_size_or_smaller: "yourSizeOrSmaller",
+} as const satisfies Record<
+  GrapplerMechanics["fastWrestler"]["targetSize"],
+  GrapplerProfile["fastWrestler"]["targetSize"]
+>;
+
+function grapplerPunchAndGrabOptions(
+  options: GrapplerMechanics["punchAndGrab"]["options"],
+): GrapplerProfile["punchAndGrab"]["options"] {
+  return [
+    GRAPPLER_PUNCH_AND_GRAB_OPTION[options[0]],
+    GRAPPLER_PUNCH_AND_GRAB_OPTION[options[1]],
+  ];
+}
+
+type GrapplerSupportedUnitFeatureProfile = Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "grappler" }
+>;
+
+function isGrapplerUnit(unit: AuthoredUnitSource): unit is GrapplerUnit {
+  return unit.kind === "feat" && unit.mechanics.family === "grappler";
+}
+
+function grapplerProfileForAdmittedUnit(
+  unit: GrapplerUnit,
+): GrapplerSupportedUnitFeatureProfile {
   const mechanics = unit.mechanics;
-  if (
-    mechanics.punchAndGrab.trigger !==
-      "attack_action_unarmed_strike_hit_on_turn" ||
-    !sameStringSet(mechanics.punchAndGrab.options, ["damage", "grapple"]) ||
-    mechanics.punchAndGrab.usageLimit.kind !== "once_per_turn" ||
-    mechanics.attackAdvantage.mode !== "advantage" ||
-    !sameStringSet(mechanics.attackAdvantage.on, ["attack_roll"]) ||
-    mechanics.attackAdvantage.target !== "creature_grappled_by_you" ||
-    mechanics.fastWrestler.movementCost !== "no_extra_grapple_drag_cost" ||
-    mechanics.fastWrestler.targetSize !== "your_size_or_smaller"
-  ) {
-    return null;
-  }
   return {
     kind: GRAPPLER_SUPPORT_PROFILE,
     unit,
     grappler: {
       punchAndGrab: {
-        trigger: "attackActionUnarmedStrikeHitOnTurn",
-        options: ["damage", "grapple"],
-        usageLimit: "oncePerTurn",
+        trigger:
+          GRAPPLER_PUNCH_AND_GRAB_TRIGGER[mechanics.punchAndGrab.trigger],
+        options: grapplerPunchAndGrabOptions(mechanics.punchAndGrab.options),
+        usageLimit:
+          GRAPPLER_PUNCH_AND_GRAB_USAGE_LIMIT[
+            mechanics.punchAndGrab.usageLimit.kind
+          ],
       },
       attackAdvantage: {
-        mode: "advantage",
-        target: "creatureGrappledByYou",
+        mode: mechanics.attackAdvantage.mode,
+        target:
+          GRAPPLER_ATTACK_ADVANTAGE_TARGET[mechanics.attackAdvantage.target],
       },
       fastWrestler: {
-        movementCost: "noExtraGrappleDragCost",
-        targetSize: "yourSizeOrSmaller",
+        movementCost:
+          GRAPPLER_FAST_WRESTLER_MOVEMENT_COST[
+            mechanics.fastWrestler.movementCost
+          ],
+        targetSize:
+          GRAPPLER_FAST_WRESTLER_TARGET_SIZE[mechanics.fastWrestler.targetSize],
       },
     },
   };
 }
 
+function grapplerProfileForUnit(
+  unit: AuthoredUnitSource,
+): GrapplerSupportedUnitFeatureProfile | null {
+  return isGrapplerUnit(unit) ? grapplerProfileForAdmittedUnit(unit) : null;
+}
+
 export function battleGrapplerSupportForUnit(
   unit: AuthoredUnitSource,
-): BattleGrapplerSupportProfile | "unsupported" | null {
-  const profile = grapplerProfileForUnit(unit);
-  if (profile !== null) {
-    return { kind: GRAPPLER_SUPPORT_PROFILE, grappler: profile.grappler };
+): BattleGrapplerSupport {
+  if (!isGrapplerUnit(unit)) {
+    return null;
   }
-  return unit.kind === "feat" && unit.mechanics.family === "grappler"
-    ? "unsupported"
-    : null;
+  const profile = grapplerProfileForAdmittedUnit(unit);
+  return { kind: GRAPPLER_SUPPORT_PROFILE, grappler: profile.grappler };
 }
 
 export function battleBrutalStrikeSupportForUnit(

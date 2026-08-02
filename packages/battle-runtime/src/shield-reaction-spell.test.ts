@@ -13,6 +13,7 @@ import {
   Hp,
   movementFeet,
   proficiencyBonus,
+  spellSlotLevel,
 } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
@@ -40,6 +41,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { completeReactionSpellSlotCast } from "./battle-reducer/reaction-spell-resolution.ts";
 import {
   resolveBattleSubject,
   characterSpellInvocationRefForProcedureRefForTest,
@@ -484,7 +486,7 @@ describe("Shield Reaction spell", () => {
     });
   });
 
-  test("is not offered to spend a second Spell Slot during the current actor's Magic Missile", () => {
+  test("does not offer or finalize a second Spell Slot during the current actor's Magic Missile", () => {
     const shield = srdSpellRecord(shieldUnitId);
     const magicMissile = srdSpellRecord(magicMissileUnitId);
     const session = spellBattle({ preparedSpells: [magicMissile, shield] });
@@ -551,6 +553,35 @@ describe("Shield Reaction spell", () => {
         }),
       ]),
     );
+
+    const defensiveFinalization = completeReactionSpellSlotCast({
+      effectedState: resolved.state,
+      errorState: resolved.state,
+      casterId: spellCasterId,
+      slotLevel: spellSlotLevel(1),
+    });
+    expect(defensiveFinalization).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "This turn has already expended a Spell Slot.",
+      snapshot: {
+        turn: {
+          spellSlotUsesThisTurn: [
+            { kind: "committed", combatantId: spellCasterId },
+          ],
+        },
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            origin: expect.objectContaining({
+              spellcasting: expect.objectContaining({
+                spellSlots: [{ spellLevel: 1, count: 2, expended: 1 }],
+              }),
+            }),
+          }),
+        ]),
+      },
+    });
   });
 });
 
