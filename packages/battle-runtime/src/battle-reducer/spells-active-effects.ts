@@ -303,9 +303,11 @@ export function applySpellActiveEffects(
     return state;
   }
   const target = state.combatants.get(targetId);
+  /* v8 ignore start -- Defensive internal guard: the admitted spell-attack target is resolved from the combatant map and remains present through post-damage active-effect application. */
   if (target == null) {
     return state;
   }
+  /* v8 ignore stop */
   const laterDamageEffect =
     invocation.laterDamage === null
       ? []
@@ -1257,9 +1259,11 @@ export function applyDancingLightsSpellEffect(
   >,
 ): BattleState {
   const caster = state.combatants.get(actorId);
+  /* v8 ignore start -- Defensive internal guard: action-spell admission preserves the character caster through Dancing Lights cast application. */
   if (caster === undefined) {
     return state;
   }
+  /* v8 ignore stop */
   const dancingLights = dancingLightsForCastPlacement(
     actorId,
     invocation,
@@ -1272,7 +1276,9 @@ export function applyDancingLightsSpellEffect(
     owner: caster,
   });
   const owner = allocation.owner;
+  /* v8 ignore start -- Defensive internal guard: the Dancing Lights invocation is admitted only for a character spellcaster, and active-effect allocation preserves origin kind. */
   if (owner.origin.kind !== "character") return state;
+  /* v8 ignore stop */
   const activeEffect: Extract<
     BattleActiveEffect,
     { readonly kind: "dancingLights" }
@@ -1335,9 +1341,11 @@ export function repositionDancingLightsSpellEffect(
   >,
 ): BattleState {
   const caster = state.combatants.get(actorId);
+  /* v8 ignore start -- Defensive internal guard: the admitted Dancing Lights reposition subject retains its caster while the active effect is replayed. */
   if (caster === undefined) {
     return state;
   }
+  /* v8 ignore stop */
   return {
     ...state,
     combatants: new Map(state.combatants).set(actorId, {
@@ -1585,9 +1593,11 @@ export function applySelfTransformationModeEffect(input: {
   readonly effectRef: BattleActiveEffectExecutionRef;
 }): BattleState {
   const actor = input.state.combatants.get(input.actorId);
+  /* v8 ignore start -- Defensive internal guard: the selected self-transformation target is admitted from the combatant map and retained through effect application. */
   if (actor === undefined) {
     return input.state;
   }
+  /* v8 ignore stop */
   const activeEffects = [
     ...actor.activeEffects.filter(
       (effect) =>
@@ -1638,9 +1648,11 @@ export function applyFailedSaveSpellActiveEffects(
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
+    /* v8 ignore start -- Defensive internal guard: validated failed-save target ids are selected from the current combatant map before post-damage riders are applied. */
     if (target === undefined) {
       continue;
     }
+    /* v8 ignore stop */
     const activeEffects = activeEffectRiders.reduce(
       (effects, rider): readonly BattleActiveEffect[] => [
         ...effects.filter(
@@ -1692,9 +1704,11 @@ export function applyFailedSaveSpellConditionEffects(
   let nextState = state;
   for (const targetId of targetIds) {
     const target = nextState.combatants.get(targetId);
+    /* v8 ignore start -- Defensive internal guard: validated failed-save target ids are selected from the current combatant map before condition effects are applied. */
     if (target === undefined) {
       continue;
     }
+    /* v8 ignore stop */
     if (
       conditionApplicationPreventedByCreatureTypeProtection(
         state,
@@ -2682,9 +2696,11 @@ export function markMoonbeamSavedThisTurn(
   effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
 ): BattleState {
   const caster = state.combatants.get(effect.sourceCombatantId);
+  /* v8 ignore start -- Defensive internal guard: Moonbeam trigger resolution receives the active effect from its still-present concentration owner. */
   if (caster === undefined) {
     return state;
   }
+  /* v8 ignore stop */
   if (effect.savedThisTurn.includes(targetId)) {
     return state;
   }
@@ -2722,9 +2738,11 @@ export function addMoonbeamShapeShiftSuppression(
   effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
 ): BattleState {
   const caster = state.combatants.get(effect.sourceCombatantId);
+  /* v8 ignore start -- Defensive internal guard: Moonbeam shape-shift suppression is applied from an active effect owned by the still-present concentration caster. */
   if (caster === undefined) {
     return state;
   }
+  /* v8 ignore stop */
   const activeEffects = caster.activeEffects.map((current) =>
     moonbeamEffectMatches(current, effect)
       ? current.shapeShiftSuppressed.includes(targetId)
@@ -2749,9 +2767,11 @@ export function removeMoonbeamShapeShiftSuppression(
   effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
 ): BattleState {
   const caster = state.combatants.get(effect.sourceCombatantId);
+  /* v8 ignore start -- Defensive internal guard: Moonbeam shape-shift restoration is applied from an active effect owned by the still-present concentration caster. */
   if (caster === undefined) {
     return state;
   }
+  /* v8 ignore stop */
   const activeEffects = caster.activeEffects.map((current) =>
     moonbeamEffectMatches(current, effect)
       ? {
@@ -2781,7 +2801,12 @@ export function markWebSavedThisTurn(
     trigger === "entersArea"
       ? effect.entrySavedThisTurn.includes(targetId)
       : effect.startTurnSavedThisTurn.includes(targetId);
-  if (caster === undefined || alreadySaved) {
+  /* v8 ignore start -- Defensive internal guard: Web save tracking receives the active hazard from its still-present concentration owner. */
+  if (caster === undefined) {
+    return state;
+  }
+  /* v8 ignore stop */
+  if (alreadySaved) {
     return state;
   }
   const activeEffects = caster.activeEffects.map((current) =>
@@ -2815,7 +2840,12 @@ function markSingleSaveAreaHazardSavedThisTurn(
   effect: SingleSaveAreaHazardActiveEffect,
 ): BattleState {
   const caster = state.combatants.get(effect.sourceCombatantId);
-  if (caster === undefined || effect.savedThisTurn.includes(targetId)) {
+  /* v8 ignore start -- Defensive internal guard: single-save area tracking receives the active hazard from its still-present concentration owner. */
+  if (caster === undefined) {
+    return state;
+  }
+  /* v8 ignore stop */
+  if (effect.savedThisTurn.includes(targetId)) {
     return state;
   }
   const activeEffects = caster.activeEffects.map((current) =>
@@ -2871,9 +2901,11 @@ export function applyWebRestrainedCondition(
   effect: Extract<BattleActiveEffect, { readonly kind: "webRestraintHazard" }>,
 ): BattleState {
   const target = state.combatants.get(targetId);
+  /* v8 ignore start -- Defensive internal guard: Web failed-save outcomes are validated against the current combatant map before restraint is applied. */
   if (target === undefined) {
     return state;
   }
+  /* v8 ignore stop */
   const replacing = target.activeEffects.filter(
     (candidate) =>
       candidate.kind === "spellCondition" &&
@@ -2982,9 +3014,11 @@ export function applyCommandPendingEffects(
   let nextState = state;
   for (const targetId of targetIds) {
     const target = nextState.combatants.get(targetId);
+    /* v8 ignore start -- Defensive internal guard: Command failed-save target ids are validated against the current combatant map before pending effects are applied. */
     if (target === undefined) {
       continue;
     }
+    /* v8 ignore stop */
     const allocation = allocateBattleActiveEffectRefForCreature({
       owner: target,
     });
@@ -3026,9 +3060,11 @@ export function applyCommandGrovelProneToTarget(
   effect: Extract<BattleActiveEffect, { readonly kind: "commandPending" }>,
 ): BattleState {
   const target = state.combatants.get(targetId);
+  /* v8 ignore start -- Defensive internal guard: Grovel resolution receives the current target and its pending Command effect from the admitted turn-start command. */
   if (target === undefined) {
     return state;
   }
+  /* v8 ignore stop */
   return {
     ...state,
     combatants: new Map(state.combatants).set(
@@ -3052,9 +3088,11 @@ function applyProneToCombatants(
 ): Map<CombatantId, BattleCreatureState> {
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
+    /* v8 ignore start -- Defensive internal guard: prone target ids come from validated spell or feature saving-throw outcomes over the current combatant map. */
     if (target === undefined) {
       continue;
     }
+    /* v8 ignore stop */
     combatants.set(
       targetId,
       battleCreatureStateWithKnockOutPreservedConditions(
@@ -3076,9 +3114,11 @@ export function applyFailedSaveAttackRollAdvantageEffects(
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
+    /* v8 ignore start -- Defensive internal guard: Faerie Fire failed-save target ids are validated against the current combatant map before outlines are applied. */
     if (target === undefined) {
       continue;
     }
+    /* v8 ignore stop */
     const nextEffect = {
       ...invocation.effect,
       sourceProcedureRef: invocation.sourceProcedureRef,
@@ -3124,9 +3164,11 @@ export function applySaveGatedConditionImmunityEffects(
 ): BattleState {
   return targetIds.reduce((nextState, targetId) => {
     const target = nextState.combatants.get(targetId);
+    /* v8 ignore start -- Defensive internal guard: protection-spell failed-save target ids are validated against the current combatant map before immunities are applied. */
     if (target === undefined) {
       return nextState;
     }
+    /* v8 ignore stop */
     const nextEffects = invocation.activeEffects.map((effect) => ({
       ...effect,
       sourceProcedureRef: invocation.sourceProcedureRef,
@@ -3383,9 +3425,11 @@ export function endHeldLightSpellEffect(
   >,
 ): BattleState {
   const caster = state.combatants.get(actorId);
+  /* v8 ignore start -- Defensive internal guard: the admitted held-light hurl subject retains its caster through effect teardown. */
   if (caster === undefined) {
     return state;
   }
+  /* v8 ignore stop */
   return {
     ...state,
     combatants: new Map(state.combatants).set(actorId, {
@@ -3415,9 +3459,11 @@ export function applyDragonsBreathInitialSpellEffect(
   procedureRef: BattleProcedureExecutionRef,
 ): BattleState {
   const target = state.combatants.get(targetId);
+  /* v8 ignore start -- Defensive internal guard: Dragon's Breath initial targeting is validated against the current combatant map before its granted effect is applied. */
   if (target === undefined) {
     return state;
   }
+  /* v8 ignore stop */
   const allocation = allocateBattleActiveEffectRefForCreature({
     owner: target,
   });
@@ -3459,9 +3505,11 @@ export function applyShieldReactionSpellActiveEffect(
   >,
 ): BattleState {
   const reactor = state.combatants.get(reactorId);
+  /* v8 ignore start -- Defensive internal guard: the admitted Shield interrupt retains its reactor through active-effect application. */
   if (reactor === undefined) {
     return state;
   }
+  /* v8 ignore stop */
 
   return {
     ...state,
