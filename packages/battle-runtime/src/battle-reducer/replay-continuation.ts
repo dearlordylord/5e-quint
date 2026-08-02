@@ -4,6 +4,7 @@ import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleFill,
+  BattleInterruptCheckpoint,
   BattleInterruptRouteOptions,
   BattleInterruptedProcedure,
   BattleReplayContinuationFrame,
@@ -240,10 +241,10 @@ export function resolveReplayContinuationFromState(
   ) {
     return result;
   }
-  const activeInterrupt = currentInterruptCheckpoint(
-    result.state,
-  )?.activeInterrupt;
+  const interruptCheckpoint = currentInterruptCheckpoint(result.state);
+  const activeInterrupt = interruptCheckpoint?.activeInterrupt;
   if (
+    interruptCheckpoint !== null &&
     activeInterrupt !== undefined &&
     sameBattleSubject(activeInterrupt.subject, input.continuation.subject)
   ) {
@@ -251,6 +252,7 @@ export function resolveReplayContinuationFromState(
       activeInterruptWithReplayContinuationAttackDamageChanges(
         result.state,
         input.continuation,
+        { ...interruptCheckpoint, activeInterrupt },
       );
     return {
       ...result,
@@ -393,21 +395,24 @@ function resolveGlyphStoredSpellReplayContinuationFromState(
   );
 }
 
+type ActiveInterruptCheckpoint = BattleInterruptCheckpoint & {
+  readonly activeInterrupt: NonNullable<
+    BattleInterruptCheckpoint["activeInterrupt"]
+  >;
+};
+
 function activeInterruptWithReplayContinuationAttackDamageChanges(
   state: BattleState,
   continuation: Extract<
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >,
+  frame: ActiveInterruptCheckpoint,
 ): BattleState {
   if (
     continuation.attackDamageReductions === undefined &&
     continuation.attackDamageAdditions === undefined
   ) {
-    return state;
-  }
-  const frame = currentInterruptCheckpoint(state);
-  if (frame?.activeInterrupt === undefined) {
     return state;
   }
   return {
