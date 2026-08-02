@@ -5007,9 +5007,7 @@ export const BattleFillSchema: Schema.Schema<
           { exact: true },
         ),
         additionalSpeedSegments: Schema.optionalWith(
-          Schema.Array(
-            Schema.Struct(BattleMovementFillValueCommonSchemaFields),
-          ),
+          Schema.Array(BattleMovementFillValueCommonSchema),
           { exact: true },
         ),
         jumpMovementReplacement: Schema.optionalWith(

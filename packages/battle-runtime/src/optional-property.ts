@@ -4,10 +4,12 @@
  * Callers use this instead of repeating conditional object-spread branches.
  * The value is omitted when absent; it is never stored as `undefined`.
  */
+type NoProperties = Readonly<Record<PropertyKey, never>>;
+
 type OptionalPropertyResult<Key extends PropertyKey, Value> = [Value] extends [
   undefined,
 ]
-  ? {}
+  ? NoProperties
   : undefined extends Value
     ? { readonly [Property in Key]?: Exclude<Value, undefined> }
     : { readonly [Property in Key]: Value };
@@ -31,7 +33,7 @@ export function optionalProperty<const Key extends PropertyKey, Value>(
 export function nonEmptyArrayProperty<const Key extends PropertyKey>(
   key: Key,
   value: readonly [],
-): {};
+): NoProperties;
 export function nonEmptyArrayProperty<
   const Key extends PropertyKey,
   const Element,
@@ -48,7 +50,9 @@ export function nonEmptyArrayProperty<const Key extends PropertyKey, Element>(
 export function nonEmptyArrayProperty<const Key extends PropertyKey, Element>(
   key: Key,
   value: readonly Element[],
-): {} | { readonly [Property in Key]: readonly [Element, ...Element[]] } {
+):
+  | NoProperties
+  | { readonly [Property in Key]: readonly [Element, ...Element[]] } {
   return value.length === 0
     ? {}
     : // Cast justification: the length guard narrows the runtime array to the
