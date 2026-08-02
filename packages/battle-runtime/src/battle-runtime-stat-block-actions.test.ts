@@ -73,7 +73,10 @@ import {
   type BattleResourcePoolExecutionRef,
   type CombatantId,
 } from "./identity.ts";
-import { creatureNamedAttackRollIsSupported } from "./statblock-action-support.ts";
+import {
+  creatureActionSectionIsSupported,
+  creatureNamedAttackRollIsSupported,
+} from "./statblock-action-support.ts";
 import { supportedStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-support.ts";
 import { statBlockRechargeRollFillMatchesHole } from "./battle-reducer/turn-boundary-lifecycle.ts";
 
@@ -85,6 +88,10 @@ function discoverStatBlockActs(state: BattleState) {
     }),
   );
 }
+
+test("an empty Stat Block action section is executable", () => {
+  expect(creatureActionSectionIsSupported({})).toBe(true);
+});
 
 function discoveredMultiattackSubject(state: BattleState): BattleSubject {
   const act = discoverStatBlockActs(state).find(

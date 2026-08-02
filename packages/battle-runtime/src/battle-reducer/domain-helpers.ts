@@ -69,10 +69,9 @@ export function weaponLoadoutMismatchIssue(
 
 export function battleCreatureType(
   combatant: BattleCreatureState,
-): CreatureType | null {
+): CreatureType {
   if (combatant.origin.kind !== "statBlock") {
     return "humanoid";
   }
-  const creatureType = combatant.origin.mechanics.creatureType;
-  return typeof creatureType === "string" ? creatureType : null;
+  return combatant.origin.mechanics.creatureType;
 }

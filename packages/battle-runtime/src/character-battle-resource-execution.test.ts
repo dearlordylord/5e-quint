@@ -106,6 +106,7 @@ describe("character battle resource execution", () => {
   test("spends limited uses while preserving explicitly unlimited resources", () => {
     expect(characterBattleResourceUsage(limitedResource)).toBe("limited");
     expect(characterBattleResourceUsage(unlimitedResource)).toBe("unlimited");
+    expect(characterBattleResourceUsage(pointPoolResource)).toBe("pointPool");
     expect(spendCharacterResourceUse(limitedResource)).toEqual({
       ...limitedResource,
       usesRemaining: resourceCount(0),

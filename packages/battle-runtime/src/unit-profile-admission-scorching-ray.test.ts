@@ -36,8 +36,16 @@ import type {
   BattleHole,
   SpellRecord,
 } from "./unit-profile-admission.test-support.ts";
+import { scorchingRayRayCount } from "./battle-reducer/domain-constants.ts";
 
 describe("L12G-SPELL-SCORCHING-RAY deterministic Scorching Ray admission", () => {
+  test("admits only the slot-scaled ray-count range", () => {
+    expect(scorchingRayRayCount(2)).toBeNull();
+    expect(scorchingRayRayCount(3)).toBe(3);
+    expect(scorchingRayRayCount(10)).toBe(10);
+    expect(scorchingRayRayCount(11)).toBeNull();
+  });
+
   test("scorching_ray is admitted as slot-scaled creature-or-object spell attack rays", () => {
     const spell = spellRecord(scorchingRayUnitId);
     const session = spellBattle({
