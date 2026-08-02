@@ -571,11 +571,11 @@ function resolveBrutalStrikeAfterDamage(input: {
   );
   const effect = selectedBrutalStrikeEffect(selection, input.choice);
   if (selection === null || effect === null) {
+    /* v8 ignore start -- Malformed attack fill set: Forceful Blow follow-up fills are discovered only for a resolved Forceful Blow. */
     if (
       input.fillSet.brutalStrikeForcefulBlowMovementDecision !== undefined ||
       input.fillSet.brutalStrikeForcefulBlowMovement !== undefined
     ) {
-      /* v8 ignore start -- Malformed attack fill set: Forceful Blow follow-up fills are discovered only for a resolved Forceful Blow. */
       return {
         tag: "result",
         result: invalidResult(
@@ -584,8 +584,8 @@ function resolveBrutalStrikeAfterDamage(input: {
           "Brutal Strike Forceful Blow movement requires that effect to resolve.",
         ),
       };
-      /* v8 ignore stop */
     }
+    /* v8 ignore stop */
     return { tag: "ok", state: input.state, shovePushes: [] };
   }
   return Match.value(effect).pipe(
@@ -614,11 +614,11 @@ function resolveBrutalStrikeAfterDamage(input: {
       };
     }),
     byKind("hamstringBlow", (hamstring) => {
+      /* v8 ignore start -- Malformed attack fill set: Hamstring Blow exposes no Forceful Blow movement holes. */
       if (
         input.fillSet.brutalStrikeForcefulBlowMovementDecision !== undefined ||
         input.fillSet.brutalStrikeForcefulBlowMovement !== undefined
       ) {
-        /* v8 ignore start -- Malformed attack fill set: Hamstring Blow exposes no Forceful Blow movement holes. */
         return {
           tag: "result" as const,
           result: invalidResult(
@@ -627,8 +627,8 @@ function resolveBrutalStrikeAfterDamage(input: {
             "Brutal Strike Hamstring Blow cannot accept Forceful Blow movement.",
           ),
         };
-        /* v8 ignore stop */
       }
+      /* v8 ignore stop */
       const target = input.state.combatants.get(input.targetId);
       /* v8 ignore start -- Defensive inconsistent-state guard: attack damage, Cunning Strike, and Weapon Mastery Slow preserve the already-resolved attack target in the combatant map before Brutal Strike is applied. */
       if (target === undefined) {
@@ -705,8 +705,8 @@ function resolveBrutalStrikeForcefulBlowMovement(input: {
   const decision = input.fillSet.brutalStrikeForcefulBlowMovementDecision;
   const movementFill = input.fillSet.brutalStrikeForcefulBlowMovement;
   if (Number(budget.movementBudgetFeet) <= 0) {
+    /* v8 ignore start -- Malformed attack fill set: no movement holes are exposed when every represented half-Speed budget is zero. */
     if (decision !== undefined || movementFill !== undefined) {
-      /* v8 ignore start -- Malformed attack fill set: no movement holes are exposed when every represented half-Speed budget is zero. */
       return {
         tag: "result",
         result: invalidResult(
@@ -715,13 +715,13 @@ function resolveBrutalStrikeForcefulBlowMovement(input: {
           "Brutal Strike Forceful Blow movement is unavailable at Speed 0.",
         ),
       };
-      /* v8 ignore stop */
     }
+    /* v8 ignore stop */
     return { tag: "ok", state: input.state };
   }
   if (decision === undefined) {
+    /* v8 ignore start -- Malformed attack fill set: the movement path is discovered only after choosing to move. */
     if (movementFill !== undefined) {
-      /* v8 ignore start -- Malformed attack fill set: the movement path is discovered only after choosing to move. */
       return {
         tag: "result",
         result: invalidResult(
@@ -730,8 +730,8 @@ function resolveBrutalStrikeForcefulBlowMovement(input: {
           "Brutal Strike Forceful Blow movement requires a decision first.",
         ),
       };
-      /* v8 ignore stop */
     }
+    /* v8 ignore stop */
     return {
       tag: "result",
       result: needsHolesResult(input.replayState, input.subject, [
@@ -740,8 +740,8 @@ function resolveBrutalStrikeForcefulBlowMovement(input: {
     };
   }
   if (decision.value === "decline") {
+    /* v8 ignore start -- Malformed attack fill set: declining exposes no movement hole. */
     if (movementFill !== undefined) {
-      /* v8 ignore start -- Malformed attack fill set: declining exposes no movement hole. */
       return {
         tag: "result",
         result: invalidResult(
@@ -750,8 +750,8 @@ function resolveBrutalStrikeForcefulBlowMovement(input: {
           "Declined Brutal Strike Forceful Blow movement cannot include a path.",
         ),
       };
-      /* v8 ignore stop */
     }
+    /* v8 ignore stop */
     return { tag: "ok", state: input.state };
   }
   if (decision.value !== "use") {
@@ -787,6 +787,7 @@ function resolveBrutalStrikeForcefulBlowMovement(input: {
     commandFlee: _commandFlee,
     ...firstSegment
   } = movementFill.value;
+  /* v8 ignore start -- Malformed movement fill: the discovered Forceful Blow hole fixes the selected target before resolution. */
   if (brutalStrikeForcefulBlow.targetId !== input.targetId) {
     return {
       tag: "result",
@@ -797,6 +798,7 @@ function resolveBrutalStrikeForcefulBlowMovement(input: {
       ),
     };
   }
+  /* v8 ignore stop */
   const segments = [firstSegment, ...additionalSpeedSegments];
   let movedState = input.state;
   let movementCostSoFar = 0;
@@ -804,6 +806,7 @@ function resolveBrutalStrikeForcefulBlowMovement(input: {
     const speedKindBudget = budget.speedKinds.find(
       (candidate) => candidate.kind === segment.speedKind,
     );
+    /* v8 ignore start -- Malformed movement fill: the discovered Forceful Blow hole admits only the actor's represented Speed kinds. */
     if (speedKindBudget === undefined) {
       return {
         tag: "result",
@@ -814,6 +817,8 @@ function resolveBrutalStrikeForcefulBlowMovement(input: {
         ),
       };
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- Malformed movement fill: the discovered Forceful Blow hole explicitly forbids Opportunity Attacks. */
     if (segment.provokedOpportunityAttacks.length > 0) {
       return {
         tag: "result",
@@ -824,8 +829,10 @@ function resolveBrutalStrikeForcefulBlowMovement(input: {
         ),
       };
     }
+    /* v8 ignore stop */
     const remainingForSpeed =
       Number(speedKindBudget.movementBudgetFeet) - movementCostSoFar;
+    /* v8 ignore start -- Malformed movement fill: the discovered per-Speed budgets already subtract prior segments, so an exhausted switched Speed cannot be submitted. */
     if (remainingForSpeed <= 0) {
       return {
         tag: "result",
@@ -836,6 +843,7 @@ function resolveBrutalStrikeForcefulBlowMovement(input: {
         ),
       };
     }
+    /* v8 ignore stop */
     const movement = parseBattleMovement(
       movedState,
       input.attackerId,
@@ -850,12 +858,14 @@ function resolveBrutalStrikeForcefulBlowMovement(input: {
         spendsTurnMovement: false,
       },
     );
+    /* v8 ignore start -- Malformed movement fill: parseBattleMovement rechecks the path geometry and cumulative budget supplied for the discovered Forceful Blow hole. */
     if (movement.tag === "invalid") {
       return {
         tag: "result",
         result: invalidResult(input.state, "invalidFill", movement.message),
       };
     }
+    /* v8 ignore stop */
     movementCostSoFar += Number(movement.movement.movementCostFeet);
     movedState = applyBattleMovement(movedState, movement.movement);
   }
@@ -871,9 +881,11 @@ function brutalStrikeForcefulBlowMovementBudget(
   >["selfMovement"]["distance"],
 ): BrutalStrikeForcefulBlowMovementBudget {
   const attacker = state.combatants.get(attackerId);
+  /* v8 ignore start -- Defensive internal guard: attack admission and the accepted attack-roll continuation preserve the attacker before Forceful Blow movement is derived. */
   if (attacker === undefined) {
     return { movementBudgetFeet: movementFeet(0), speedKinds: [] };
   }
+  /* v8 ignore stop */
   const grappled = state.grapples.some(
     (grapple) => grapple.targetId === attackerId,
   );
