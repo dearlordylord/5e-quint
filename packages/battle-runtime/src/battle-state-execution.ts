@@ -6669,52 +6669,27 @@ export type DruidWildShapeBattleResolutionInput =
     Extract<BattleSubject, { readonly tag: "druidWildShape" }>
   >;
 
-type WithAdmittedSubject<
-  TInput extends BattleResolutionInput,
-  TTag extends BattleSubject["tag"],
-> = TInput extends BattleResolutionInput
-  ? AdmittedBattleResolutionInputFor<
-      Omit<TInput, "subject"> & {
-        readonly subject: Extract<BattleSubject, { readonly tag: TTag }>;
-      }
-    >
-  : never;
+type WithAdmittedSubject<TInput extends BattleResolutionInput> =
+  TInput extends BattleResolutionInput
+    ? AdmittedBattleResolutionInputFor<TInput>
+    : never;
 
-export type AdmittedActionSpellBattleResolutionInput = WithAdmittedSubject<
-  ActionSpellBattleResolutionInput,
-  "actionSpell"
->;
-export type AdmittedBonusActionSpellBattleResolutionInput = WithAdmittedSubject<
-  BonusActionSpellBattleResolutionInput,
-  "bonusActionSpell"
->;
+export type AdmittedActionSpellBattleResolutionInput =
+  WithAdmittedSubject<ActionSpellBattleResolutionInput>;
+export type AdmittedBonusActionSpellBattleResolutionInput =
+  WithAdmittedSubject<BonusActionSpellBattleResolutionInput>;
 export type AdmittedBonusActionDashSpellBattleResolutionInput =
-  WithAdmittedSubject<
-    BonusActionDashSpellBattleResolutionInput,
-    "bonusActionDashSpell"
-  >;
-export type AdmittedUnitFeatureBattleResolutionInput = WithAdmittedSubject<
-  UnitFeatureBattleResolutionInput,
-  "unitFeature"
->;
+  WithAdmittedSubject<BonusActionDashSpellBattleResolutionInput>;
+export type AdmittedUnitFeatureBattleResolutionInput =
+  WithAdmittedSubject<UnitFeatureBattleResolutionInput>;
 export type AdmittedUnitFeatureHeldWeaponActivationBattleResolutionInput =
-  WithAdmittedSubject<
-    UnitFeatureHeldWeaponActivationBattleResolutionInput,
-    "unitFeatureHeldWeaponActivation"
-  >;
-export type AdmittedMonkFocusOptionBattleResolutionInput = WithAdmittedSubject<
-  MonkFocusOptionBattleResolutionInput,
-  "monkFocusOption"
->;
+  WithAdmittedSubject<UnitFeatureHeldWeaponActivationBattleResolutionInput>;
+export type AdmittedMonkFocusOptionBattleResolutionInput =
+  WithAdmittedSubject<MonkFocusOptionBattleResolutionInput>;
 export type AdmittedMonkFocusFlurryOfBlowsStrikeBattleResolutionInput =
-  WithAdmittedSubject<
-    MonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
-    "monkFocusFlurryOfBlowsStrike"
-  >;
-export type AdmittedDruidWildShapeBattleResolutionInput = WithAdmittedSubject<
-  DruidWildShapeBattleResolutionInput,
-  "druidWildShape"
->;
+  WithAdmittedSubject<MonkFocusFlurryOfBlowsStrikeBattleResolutionInput>;
+export type AdmittedDruidWildShapeBattleResolutionInput =
+  WithAdmittedSubject<DruidWildShapeBattleResolutionInput>;
 
 export const BATTLE_INVALID_REASON_CODES = [
   "staleSubject",
