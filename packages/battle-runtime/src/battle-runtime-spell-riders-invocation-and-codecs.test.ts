@@ -984,19 +984,23 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
         fill,
       );
     }
-    expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleFillSchema)({
-          ...fill,
-          value: {
-            speedKind: "walk",
-            movementCostFeet: 10,
-            provokedOpportunityAttacks: [],
-            additionalSpeedSegments: [],
-          },
-        }),
-      ),
-    ).toBe(true);
+    const ordinaryMovementWithSegments = Schema.decodeUnknownEither(
+      BattleFillSchema,
+    )({
+      ...fill,
+      value: {
+        speedKind: "walk",
+        movementCostFeet: 10,
+        provokedOpportunityAttacks: [],
+        additionalSpeedSegments: [],
+      },
+    });
+    expect(Either.isLeft(ordinaryMovementWithSegments)).toBe(true);
+    if (Either.isLeft(ordinaryMovementWithSegments)) {
+      expect(String(ordinaryMovementWithSegments.left)).toContain(
+        "Forceful Blow movement cannot carry a jump, levitation, or command movement protocol.",
+      );
+    }
     expect(
       Either.isLeft(
         Schema.decodeUnknownEither(BattleFillSchema)({
