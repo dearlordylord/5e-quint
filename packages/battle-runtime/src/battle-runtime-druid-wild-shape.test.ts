@@ -270,6 +270,24 @@ test("rejects Wild Shape subjects when their form lifecycle becomes stale", () =
   });
 
   const initialDruid = requireCharacter(initial, druidId);
+  const missingResourceState = {
+    ...initial,
+    combatants: new Map(initial.combatants).set(druidId, {
+      ...initialDruid,
+      origin: {
+        ...initialDruid.origin,
+        resources: [],
+      },
+    }),
+  };
+  expect(
+    resolveDruidWildShape(missingResourceState, assumeSubject),
+  ).toMatchObject({
+    tag: "invalid",
+    reason: "staleSubject",
+    message: "Druid Wild Shape is no longer available for the current actor.",
+  });
+
   const unavailableFormState = {
     ...initial,
     combatants: new Map(initial.combatants).set(druidId, {
@@ -1673,6 +1691,8 @@ test("held-weapon pickup reports boundary failures and preserves other fallen ob
   if (placed.tag !== "applied") {
     throw new Error(placed.message);
   }
+  const placedDruid = requireCharacter(placed.state, druidId);
+  expect(characterEffectiveLoadout(placed.state, placedDruid)).toEqual({});
   const pickup = (
     actorId: typeof druidId,
     objectId: typeof mainWeaponItemId,
@@ -2239,10 +2259,16 @@ test("rejects omitted Wild Shape available-form subset for a direct battle init"
 });
 
 test("rejects ineligible known Beast forms before battle initialization", () => {
-  const profile = parseSupportedUnitFeatureProfile(
-    unitLibrary.requireUnit("druid_wild_shape"),
-    [{ className: "druid", level: ClassLevel.make(2) }],
-  );
+  const wildShapeUnit = unitLibrary.requireUnit("druid_wild_shape");
+  expect(parseSupportedUnitFeatureProfile(wildShapeUnit, [])).toBeNull();
+  expect(
+    parseSupportedUnitFeatureProfile(wildShapeUnit, [
+      { className: "druid", level: ClassLevel.make(1) },
+    ]),
+  ).toBeNull();
+  const profile = parseSupportedUnitFeatureProfile(wildShapeUnit, [
+    { className: "druid", level: ClassLevel.make(2) },
+  ]);
   if (profile?.kind !== "druidWildShapeKnownForm") {
     throw new Error("Expected Druid Wild Shape support profile.");
   }

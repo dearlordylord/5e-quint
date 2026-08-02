@@ -291,10 +291,20 @@ function resolveBattleSubjectInternal(
 ): BattleResolutionResult {
   const normalizedInputState = normalizeEarlyEndedOngoingFeatures(input.state);
   if (normalizedInputState !== input.state) {
-    return resolveBattleSubjectInternal(
-      { ...input, state: normalizedInputState },
-      options,
-    );
+    const normalizedAdmission = admitBattleResolutionInput({
+      ...input,
+      state: normalizedInputState,
+    });
+    /* v8 ignore start -- Normalization changes only active-effect lifecycle state and preserves every admitted procedure binding. */
+    if (normalizedAdmission.tag === "staleCharacterProcedure") {
+      return invalidResult(
+        normalizedInputState,
+        "staleSubject",
+        "The selected character procedure reference is no longer bound to this actor.",
+      );
+    }
+    /* v8 ignore stop */
+    return resolveBattleSubjectInternal(normalizedAdmission.input, options);
   }
   const d20TestNaturalOneRerollResult = resolveD20TestNaturalOneRerollFills({
     resolutionInput: input,
@@ -452,6 +462,12 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     return invalidResult(input.state, "staleSubject", actionEligibilityIssue);
   }
   const result = (() => {
+    if (input.admissionKind === "unitFeature") {
+      return resolveUnitFeature(input);
+    }
+    if (input.admissionKind === "druidWildShape") {
+      return resolveDruidWildShapeUnitFeature(input);
+    }
     const subject = input.subject;
     if (
       subject.tag === "runtimeCommand" &&
@@ -616,14 +632,8 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         options.executionRegistry,
       );
     }
-    if (subject.tag === "unitFeature") {
-      return resolveUnitFeature({ ...input, subject });
-    }
     if (subject.tag === "unitFeatureHeldWeaponActivation") {
       return resolveUnitFeatureHeldWeaponActivation({ ...input, subject });
-    }
-    if (subject.tag === "druidWildShape") {
-      return resolveDruidWildShapeUnitFeature({ ...input, subject });
     }
     if (subject.tag === "runtimeCommand" && subject.command === "endTurn") {
       return resolveEndTurnCommand(input);

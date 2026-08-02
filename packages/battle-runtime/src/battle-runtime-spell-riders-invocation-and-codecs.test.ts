@@ -933,6 +933,102 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
     ).toBe(true);
   });
 
+  test("movement codec preserves Forceful Blow straight-toward-target facts", () => {
+    const hole = {
+      kind: "movement",
+      holeId: "battle:test:forceful-blow-movement",
+      holeInstanceKey: "battle:test:forceful-blow-movement",
+      label: "Forceful Blow movement straight toward target",
+      actorId: fighterId,
+      movementBudgetFeet: 15,
+      speedKinds: [{ kind: "walk", movementBudgetFeet: 15 }],
+      brutalStrikeForcefulBlow: {
+        kind: "brutalStrikeForcefulBlowStraightTowardTarget",
+        targetId: goblinId,
+      },
+    };
+    const decodedHole = Schema.decodeUnknownEither(BattleHoleSchema)(hole);
+    expect(Either.isRight(decodedHole)).toBe(true);
+    if (Either.isRight(decodedHole)) {
+      expect(decodedHole.right).toMatchObject({
+        brutalStrikeForcefulBlow: {
+          kind: "brutalStrikeForcefulBlowStraightTowardTarget",
+          targetId: goblinId,
+        },
+      });
+    }
+    const fill = {
+      kind: "movement",
+      holeId: "battle:test:forceful-blow-movement",
+      value: {
+        speedKind: "walk",
+        movementCostFeet: 10,
+        provokedOpportunityAttacks: [],
+        additionalSpeedSegments: [
+          {
+            speedKind: "fly",
+            movementCostFeet: 5,
+            provokedOpportunityAttacks: [],
+          },
+        ],
+        brutalStrikeForcefulBlow: {
+          kind: "brutalStrikeForcefulBlowStraightTowardTarget",
+          targetId: goblinId,
+        },
+      },
+    };
+    const decodedFill = Schema.decodeUnknownEither(BattleFillSchema)(fill);
+    expect(Either.isRight(decodedFill)).toBe(true);
+    if (Either.isRight(decodedFill)) {
+      expect(Schema.encodeSync(BattleFillSchema)(decodedFill.right)).toEqual(
+        fill,
+      );
+    }
+    const ordinaryMovementWithSegments = Schema.decodeUnknownEither(
+      BattleFillSchema,
+    )({
+      ...fill,
+      value: {
+        speedKind: "walk",
+        movementCostFeet: 10,
+        provokedOpportunityAttacks: [],
+        additionalSpeedSegments: [],
+      },
+    });
+    expect(Either.isLeft(ordinaryMovementWithSegments)).toBe(true);
+    if (Either.isLeft(ordinaryMovementWithSegments)) {
+      expect(String(ordinaryMovementWithSegments.left)).toContain(
+        "Additional speed segments require Forceful Blow movement, which cannot carry a jump, levitation, or command movement protocol.",
+      );
+    }
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleFillSchema)({
+          ...fill,
+          value: {
+            ...fill.value,
+            brutalStrikeForcefulBlow: {
+              kind: "brutalStrikeForcefulBlowStraightTowardTarget",
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleFillSchema)({
+          ...fill,
+          value: {
+            ...fill.value,
+            commandFlee: {
+              kind: "commandFleeFastestAvailableRouteAwayFromCaster",
+            },
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
+
   test("spell saving throw outcome codec rejects incomplete Grease area facts", () => {
     const invalidGreaseArea = {
       originAnchorId: wizardId,

@@ -41,6 +41,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { counterspellCapableReactors } from "./battle-reducer/counterspell-reaction-discovery.ts";
 import {
   cantripSpellInvocationRef,
   spellSlotInvocationRef,
@@ -71,6 +72,14 @@ const counterspellerId = combatantId("counterspell-reactor");
 const secondCounterspellerId = combatantId("counterspell-second-reactor");
 
 describe("Counterspell Reaction spell", () => {
+  test("does not admit a Counterspell reactor without an available spell slot", () => {
+    const session = battleWithCounterspell({
+      counterspellerSlots: [{ spellLevel: 3, count: 0 }],
+    });
+
+    expect(counterspellCapableReactors(session.state)).toEqual([]);
+  });
+
   test("an inherited attack trigger does not suppress the distinct spell-cast window", () => {
     const session = battleWithCounterspell();
 

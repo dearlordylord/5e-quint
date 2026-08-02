@@ -9,15 +9,22 @@ import {
 import type { CharacterProcedureBattleSubject } from "../battle-subjects.ts";
 import type {
   AdmittedBattleResolutionInput,
+  AdmittedBattleResolutionInputFor,
+  AdmittedDruidWildShapeBattleResolutionInput,
+  AdmittedUnitFeatureBattleResolutionInput,
   BattleResolutionInput,
+  CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
+import type { CharacterUnitProcedureExecution } from "../character-execution-vocabulary.ts";
 import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 import { Match } from "effect";
 
-export type BattleResolutionAdmission =
+export type BattleResolutionAdmission<
+  TInput extends BattleResolutionInput = BattleResolutionInput,
+> =
   | {
       readonly tag: "admitted";
-      readonly input: AdmittedBattleResolutionInput;
+      readonly input: AdmittedBattleResolutionInputFor<TInput>;
     }
   | { readonly tag: "staleCharacterProcedure" };
 
@@ -26,6 +33,9 @@ export type BattleResolutionAdmission =
  * Initial execution and interrupted replay share this operation so their
  * subject-specific procedure queries cannot drift.
  */
+export function admitBattleResolutionInput<
+  TInput extends BattleResolutionInput,
+>(input: TInput): BattleResolutionAdmission<TInput>;
 export function admitBattleResolutionInput(
   input: BattleResolutionInput,
 ): BattleResolutionAdmission {
@@ -113,9 +123,79 @@ function admitUnitSubject(
       ? { tag: "admitted", input: asAdmitted(input) }
       : { tag: "staleCharacterProcedure" };
   }
+  if (subject.tag === "druidWildShape") {
+    return unitProcedure?.kind === "unitFeature" &&
+      unitProcedure.execution.kind === "druidWildShapeKnownForm" &&
+      unitProcedure.source.kind === "resourcePool"
+      ? {
+          tag: "admitted",
+          input: asAdmittedDruidWildShape(input, actor, {
+            ...unitProcedure,
+            execution: unitProcedure.execution,
+            source: unitProcedure.source,
+          }),
+        }
+      : { tag: "staleCharacterProcedure" };
+  }
+  if (subject.tag === "unitFeature") {
+    return unitProcedure?.kind === "unitFeature"
+      ? {
+          tag: "admitted",
+          input: asAdmittedUnitFeature(input, actor, unitProcedure),
+        }
+      : { tag: "staleCharacterProcedure" };
+  }
   return unitProcedure === undefined
     ? { tag: "staleCharacterProcedure" }
     : { tag: "admitted", input: asAdmitted(input) };
+}
+
+function asAdmittedUnitFeature(
+  input: BattleResolutionInput,
+  actor: CharacterBattleCreatureState,
+  procedure: Extract<
+    CharacterUnitProcedureExecution,
+    { readonly kind: "unitFeature" }
+  >,
+): AdmittedUnitFeatureBattleResolutionInput {
+  return {
+    ...input,
+    admissionKind: "unitFeature",
+    unitFeatureAdmission: { actor, procedure },
+    // This private boundary is the sole brand minter. The immediately
+    // preceding subject-specific query proves the actor and Unit-feature
+    // procedure stored in this payload.
+  } as AdmittedUnitFeatureBattleResolutionInput;
+}
+
+function asAdmittedDruidWildShape(
+  input: BattleResolutionInput,
+  actor: CharacterBattleCreatureState,
+  procedure: Extract<
+    CharacterUnitProcedureExecution,
+    { readonly kind: "unitFeature" }
+  > & {
+    readonly execution: Extract<
+      Extract<
+        CharacterUnitProcedureExecution,
+        { readonly kind: "unitFeature" }
+      >["execution"],
+      { readonly kind: "druidWildShapeKnownForm" }
+    >;
+    readonly source: Extract<
+      CharacterUnitProcedureExecution["source"],
+      { readonly kind: "resourcePool" }
+    >;
+  },
+): AdmittedDruidWildShapeBattleResolutionInput {
+  return {
+    ...input,
+    admissionKind: "druidWildShape",
+    wildShapeAdmission: { actor, procedure },
+    // This private boundary is the sole brand minter. The immediately
+    // preceding guards prove the actor, subject-specific procedure query,
+    // and exact Wild Shape execution profile stored in this payload.
+  } as AdmittedDruidWildShapeBattleResolutionInput;
 }
 
 function asAdmitted(
@@ -125,5 +205,8 @@ function asAdmitted(
   // private cast is required to mint it. The exhaustive tag policy above
   // proves either that this subject needs no character binding or that its
   // subject-specific binding check succeeded before this helper is reached.
-  return input as AdmittedBattleResolutionInput;
+  return {
+    ...input,
+    admissionKind: "general",
+  } as AdmittedBattleResolutionInput;
 }

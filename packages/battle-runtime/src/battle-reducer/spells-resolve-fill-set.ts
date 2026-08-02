@@ -2069,11 +2069,12 @@ export function spellFillSet(
           damageRoll = fill;
           continue;
         }
-        /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
+        /* v8 ignore start -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
         return {
           tag: "invalid",
           message: "Ice Knife damage must use an Ice Knife damage hole.",
         };
+        /* v8 ignore stop */
       }
       /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
       if (damageRoll !== undefined) {
@@ -2168,11 +2169,12 @@ export function spellFillSet(
       continue;
     }
 
-    /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
+    /* v8 ignore start -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the spell replay holes.`,
     };
+    /* v8 ignore stop */
   }
 
   const relationshipDecisions = DamageRelationshipDecisionsByHole.parse({

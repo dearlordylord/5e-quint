@@ -265,6 +265,11 @@ describe("L13UG-A16 level-3 heal and damage feature admission", () => {
     expect(parseSupportedUnitFeatureProfile(unit, [])).toBeNull();
     expect(
       parseSupportedUnitFeatureProfile(unit, [
+        { className: "druid", level: classLevel(2) },
+      ]),
+    ).toBeNull();
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
         { className: "druid", level: classLevel(10) },
       ]),
     ).toEqual(

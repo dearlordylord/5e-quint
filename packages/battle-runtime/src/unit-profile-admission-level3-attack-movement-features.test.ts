@@ -1,6 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A18 fighter_remarkable_athlete monk_open_hand_technique paladin_sacred_weapon ranger_hunters_prey rogue_steady_aim wizard_potent_cantrip
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.remarkable-athlete unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.hunters-prey unit-feature.rogue-steady-aim unit-feature.potent-cantrip
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import { describe, expect, test } from "vitest";
 import {
   chromaticOrbUnitId,
@@ -1493,6 +1494,9 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     ) {
       throw new Error("Expected Task 18 level-3 feature mechanics.");
     }
+    const sacredWeaponMechanics = sacredWeapon.mechanics;
+    const steadyAimMechanics = steadyAim.mechanics;
+    const potentCantripMechanics = potentCantrip.mechanics;
     const openHandDenyOpportunityAttacks =
       openHandTechnique.mechanics.choices.find(
         (choice) =>
@@ -1574,20 +1578,19 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         }),
       ),
     ).toBe("unsupported");
-    expect(
-      battlePaladinSacredWeaponSupportForUnit(
-        unitMechanicsVariant(sacredWeapon, {
-          id: "paladin_sacred_weapon_wrong_resource",
-          mechanics: {
-            ...sacredWeapon.mechanics,
-            spends: {
-              ...sacredWeapon.mechanics.spends,
-              resourceUnitId: sacredWeapon.id,
-            },
+    expect(() =>
+      decodeUnitRecordSync({
+        ...sacredWeapon,
+        id: "synthetic_paladin_sacred_weapon_wrong_resource",
+        mechanics: {
+          ...sacredWeaponMechanics,
+          spends: {
+            ...sacredWeaponMechanics.spends,
+            resourceUnitId: sacredWeapon.id,
           },
-        }),
-      ),
-    ).toBe("unsupported");
+        },
+      }),
+    ).toThrow();
     const unsupportedHuntersPrey = huntersPreyUnsupportedDamageDieUnit();
     expect(battleHuntersPreySupportForUnit(unsupportedHuntersPrey)).toBe(
       "unsupported",
@@ -1600,34 +1603,32 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         message: `Unsupported battle Hunter's Prey Unit hook: ${unsupportedHuntersPrey.id}.`,
       }),
     );
-    expect(
-      battleRogueSteadyAimSupportForUnit(
-        unitMechanicsVariant(steadyAim, {
-          id: "rogue_steady_aim_wrong_speed_duration",
-          mechanics: {
-            ...steadyAim.mechanics,
-            speed: {
-              ...steadyAim.mechanics.speed,
-              until: "start_of_next_turn",
-            },
+    expect(() =>
+      decodeUnitRecordSync({
+        ...steadyAim,
+        id: "synthetic_rogue_steady_aim_wrong_speed_duration",
+        mechanics: {
+          ...steadyAimMechanics,
+          speed: {
+            ...steadyAimMechanics.speed,
+            until: "start_of_next_turn",
           },
-        }),
-      ),
-    ).toBe("unsupported");
-    expect(
-      battlePotentCantripSupportForUnit(
-        unitMechanicsVariant(potentCantrip, {
-          id: "wizard_potent_cantrip_wrong_target",
-          mechanics: {
-            ...potentCantrip.mechanics,
-            trigger: {
-              ...potentCantrip.mechanics.trigger,
-              cantripKind: "any",
-            },
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      decodeUnitRecordSync({
+        ...potentCantrip,
+        id: "synthetic_wizard_potent_cantrip_wrong_target",
+        mechanics: {
+          ...potentCantripMechanics,
+          trigger: {
+            ...potentCantripMechanics.trigger,
+            cantripKind: "any",
           },
-        }),
-      ),
-    ).toBe("unsupported");
+        },
+      }),
+    ).toThrow();
 
     const unrelatedUnit = unitLibrary.requireUnit(fighterSecondWindUnitId);
     for (const { supportForUnit } of admissionCases) {

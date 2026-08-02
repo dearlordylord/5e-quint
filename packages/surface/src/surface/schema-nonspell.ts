@@ -1,6 +1,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.fighter-heroic-warrior character-sheet.cleric-divine-intervention-session-invocation
 import { Schema } from "effect";
-import { UnitId, type ClassName } from "@dnd/shared/game-facts";
+import {
+  UnitId,
+  type ClassName,
+  type UnitId as UnitIdType,
+} from "@dnd/shared/game-facts";
 import { AbilityScore } from "@dnd/shared/types";
 
 import {
@@ -107,6 +111,30 @@ const surfaceDependency = <A, I, R>(
     relation,
     targetKind: "unit",
   });
+
+const surfaceExactDependency = <const Value extends string>(
+  value: Value,
+  relation: SurfaceUnitDependencyRelation,
+): Schema.Schema<Value & UnitIdType, Value> => {
+  const exactUnitId = UnitId.make(value);
+  const schema = surfaceSchemaRole(
+    Schema.transform(
+      Schema.Literal(value).pipe(Schema.compose(UnitId)),
+      Schema.Literal(value).pipe(Schema.brand("UnitId")),
+      {
+        strict: true,
+        decode: () => value,
+        encode: () => exactUnitId,
+      },
+    ),
+    {
+      category: "dependency",
+      relation,
+      targetKind: "unit",
+    },
+  );
+  return schema;
+};
 
 const surfaceProse = <A, I, R>(schema: Schema.Schema<A & string, I, R>) =>
   surfaceSchemaRole(schema, { category: "prose", evidence: "summary" });
@@ -1362,10 +1390,7 @@ export const StunningStrikeMechanicsSchema = strictStruct({
   }),
   optional: Schema.Literal(true),
   spends: strictStruct({
-    resourceUnitId: surfaceDependency(
-      Schema.Literal("monk_monks_focus"),
-      "resource-link",
-    ),
+    resourceUnitId: surfaceExactDependency("monk_monks_focus", "resource-link"),
     amount: Schema.Literal(1),
   }),
   savingThrow: strictStruct({
@@ -1410,8 +1435,8 @@ export const CunningStrikeMechanicsSchema = strictStruct({
   family: Schema.Literal("cunning_strike"),
   trigger: strictStruct({
     kind: Schema.Literal("deal_sneak_attack_damage"),
-    sourceUnitId: surfaceDependency(
-      Schema.Literal("rogue_sneak_attack"),
+    sourceUnitId: surfaceExactDependency(
+      "rogue_sneak_attack",
       "unit-reference",
     ),
   }),
@@ -1651,8 +1676,8 @@ export const AcrobaticMovementMechanicsSchema = strictStruct({
 
 export const SupremeSneakMechanicsSchema = strictStruct({
   family: Schema.Literal("cunning_strike_option_grant"),
-  sourceUnitId: surfaceDependency(
-    Schema.Literal("rogue_cunning_strike"),
+  sourceUnitId: surfaceExactDependency(
+    "rogue_cunning_strike",
     "unit-reference",
   ),
   option: strictStruct({
@@ -1682,7 +1707,13 @@ export const SacredWeaponMechanicsSchema = strictStruct({
     kind: Schema.Literal("standard_action"),
     action: Schema.Literal("attack"),
   }),
-  spends: ReferencedResourceSpendSchema,
+  spends: strictStruct({
+    resourceUnitId: surfaceExactDependency(
+      "paladin_channel_divinity",
+      "resource-link",
+    ),
+    amount: Schema.Literal(1),
+  }),
   target: strictStruct({
     kind: Schema.Literal("held_melee_weapon"),
   }),

@@ -591,19 +591,24 @@ export const BrutalStrikeProcedureExecutionSchema = Schema.Struct({
     }),
     options: Schema.Tuple(
       Schema.Struct({
-        id: Schema.Literal("forceful_blow"),
-        pushFeet: MovementFeet,
-        selfMovement: Schema.Struct({
-          kind: Schema.Literal("moveTowardTarget"),
-          distance: Schema.Literal("halfSpeed"),
-          opportunityAttacks: Schema.Literal("doesNotProvoke"),
+        selectionId: Schema.Literal("forceful_blow"),
+        effect: Schema.Struct({
+          kind: Schema.Literal("forcefulBlow"),
+          pushFeet: MovementFeet,
+          selfMovement: Schema.Struct({
+            kind: Schema.Literal("moveTowardTargetWithoutOpportunityAttacks"),
+            distance: Schema.Literal("halfSpeed"),
+          }),
         }),
       }),
       Schema.Struct({
-        id: Schema.Literal("hamstring_blow"),
-        deltaFeet: MovementDeltaFeet,
-        stacking: Schema.Literal("mostRecentOnly"),
-        expires: Schema.Literal("startOfYourNextTurn"),
+        selectionId: Schema.Literal("hamstring_blow"),
+        effect: Schema.Struct({
+          kind: Schema.Literal("hamstringBlow"),
+          deltaFeet: MovementDeltaFeet,
+          stacking: Schema.Literal("mostRecentOnly"),
+          expires: Schema.Literal("startOfYourNextTurn"),
+        }),
       }),
     ),
   }),

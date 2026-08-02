@@ -10,7 +10,6 @@
 
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-  DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   characterUnitProcedure,
 } from "../character-execution-queries.ts";
 import {
@@ -180,110 +179,90 @@ export {
 export function resolveUnitFeature(
   input: AdmittedUnitFeatureBattleResolutionInput,
 ): BattleResolutionResult {
-  const subject = input.subject;
-  const actor = input.state.combatants.get(subject.actorId);
-  if (isCharacterBattleCreatureState(actor)) {
-    const procedure = characterUnitProcedure(
-      actor.origin.execution,
-      subject.procedureRef,
-      CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-    );
-    if (procedure?.kind !== "unitFeature") {
-      return invalidResult(
-        input.state,
-        "staleSubject",
-        "Unit feature procedure reference is no longer bound to this actor.",
-      );
-    }
-    const source = procedure.source;
-    const resource =
-      source.kind === "resourcePool"
-        ? actor.origin.resources.find((candidate) => {
-            return candidate.resourcePoolRef === source.resourcePoolRef;
-          })
-        : undefined;
+  const { actor, procedure } = input.unitFeatureAdmission;
+  const source = procedure.source;
+  const resource =
+    source.kind === "resourcePool"
+      ? actor.origin.resources.find((candidate) => {
+          return candidate.resourcePoolRef === source.resourcePoolRef;
+        })
+      : undefined;
 
-    const unitFeature = procedure.execution;
-    if (resource !== undefined) {
-      if (unitFeature.kind === "extraActionGrant") {
-        return resolveExtraActionGrantUnitFeature(
-          input,
-          actor,
-          resource,
-          unitFeature,
-        );
-      }
-      if (unitFeature.kind === "selfBonusActionHealing") {
-        return resolveSelfBonusActionHealingUnitFeature(
-          input,
-          actor,
-          resource,
-          unitFeature,
-        );
-      }
-      if (unitFeature.kind === "ongoingFeature") {
-        return resolveOngoingFeatureUnitFeature(
-          input,
-          actor,
-          resource,
-          unitFeature,
-        );
-      }
-      if (unitFeature.kind === "bardicInspirationGrant") {
-        return resolveBardicInspirationGrantUnitFeature(
-          input,
-          actor,
-          resource,
-          unitFeature,
-        );
-      }
-    }
-
-    if (unitFeature.kind === "paladinSacredWeapon") {
-      return resolvePaladinSacredWeaponDismissUnitFeature(input, actor);
-    }
-    if (unitFeature.kind === "rogueSteadyAim") {
-      return resolveRogueSteadyAimUnitFeature(input, actor, unitFeature);
-    }
-
-    const attackActionAreaSaveDamageReplacementResource = resource;
-    if (
-      attackActionAreaSaveDamageReplacementResource !== undefined &&
-      unitFeature.kind === "attackActionAreaSaveDamageReplacement"
-    ) {
-      return resolveAttackActionAreaSaveDamageReplacementUnitFeature(
+  const unitFeature = procedure.execution;
+  if (resource !== undefined) {
+    if (unitFeature.kind === "extraActionGrant") {
+      return resolveExtraActionGrantUnitFeature(
         input,
         actor,
-        attackActionAreaSaveDamageReplacementResource,
+        resource,
         unitFeature,
       );
     }
-
-    if (unitFeature.kind === "magicActionHealingPool") {
-      return resolveMagicActionHealingPoolUnitFeature(
+    if (unitFeature.kind === "selfBonusActionHealing") {
+      return resolveSelfBonusActionHealingUnitFeature(
         input,
         actor,
+        resource,
         unitFeature,
       );
     }
-
-    if (unitFeature.kind === "magicActionAreaSaveDamageHealing") {
-      return resolveMagicActionAreaSaveDamageHealingUnitFeature(
+    if (unitFeature.kind === "ongoingFeature") {
+      return resolveOngoingFeatureUnitFeature(
         input,
         actor,
+        resource,
         unitFeature,
       );
     }
-
-    if (unitFeature.kind === "magicActionSaveGatedCondition") {
-      return resolveMagicActionSaveGatedConditionUnitFeature(
+    if (unitFeature.kind === "bardicInspirationGrant") {
+      return resolveBardicInspirationGrantUnitFeature(
         input,
         actor,
+        resource,
         unitFeature,
       );
     }
   }
 
+  if (unitFeature.kind === "paladinSacredWeapon") {
+    return resolvePaladinSacredWeaponDismissUnitFeature(input, actor);
+  }
+  if (unitFeature.kind === "rogueSteadyAim") {
+    return resolveRogueSteadyAimUnitFeature(input, actor, unitFeature);
+  }
+
+  const attackActionAreaSaveDamageReplacementResource = resource;
+  if (
+    attackActionAreaSaveDamageReplacementResource !== undefined &&
+    unitFeature.kind === "attackActionAreaSaveDamageReplacement"
+  ) {
+    return resolveAttackActionAreaSaveDamageReplacementUnitFeature(
+      input,
+      actor,
+      attackActionAreaSaveDamageReplacementResource,
+      unitFeature,
+    );
+  }
+
+  if (unitFeature.kind === "magicActionHealingPool") {
+    return resolveMagicActionHealingPoolUnitFeature(input, actor, unitFeature);
+  }
+
+  if (unitFeature.kind === "magicActionAreaSaveDamageHealing") {
+    return resolveMagicActionAreaSaveDamageHealingUnitFeature(
+      input,
+      actor,
+      unitFeature,
+    );
+  }
+
+  if (unitFeature.kind === "magicActionSaveGatedCondition") {
+    return resolveMagicActionSaveGatedConditionUnitFeature(
+      input,
+      actor,
+      unitFeature,
+    );
+  }
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -790,9 +769,11 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
   const stateAfterDamage = validation.damageTargetIds.reduce<BattleState>(
     (state, targetId) => {
       const target = state.combatants.get(targetId);
+      /* v8 ignore start -- Internal invariant guard: validation proves every damage target exists, and spending the feature resource preserves combatant-map membership. */
       if (target === undefined) {
         return state;
       }
+      /* v8 ignore stop */
       const outcome = validation.outcomesByTargetId.get(targetId);
       const damageBeforeTargetAdjustments =
         outcome?.succeeded === true
@@ -824,19 +805,25 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
   const healingTarget = stateAfterDamage.combatants.get(
     validation.healingTargetId,
   );
-  const stateAfterHealing =
-    healingTarget === undefined
-      ? stateAfterDamage
-      : {
-          ...stateAfterDamage,
-          combatants: new Map(stateAfterDamage.combatants).set(
-            validation.healingTargetId,
-            applyHpHealing(
-              healingTarget,
-              rolledDiceTotal(fills.value.healingRoll.value),
-            ),
-          ),
-        };
+  /* v8 ignore start -- Internal invariant guard: validation proves the healing target exists, and damage application preserves combatant-map membership. */
+  if (healingTarget === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Magic Action healing target is no longer in the battle.",
+    );
+  }
+  /* v8 ignore stop */
+  const stateAfterHealing = {
+    ...stateAfterDamage,
+    combatants: new Map(stateAfterDamage.combatants).set(
+      validation.healingTargetId,
+      applyHpHealing(
+        healingTarget,
+        rolledDiceTotal(fills.value.healingRoll.value),
+      ),
+    ),
+  };
   return {
     tag: "resolved",
     state: stateAfterHealing,
@@ -981,39 +968,19 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
 export function resolveDruidWildShapeUnitFeature(
   input: AdmittedDruidWildShapeBattleResolutionInput,
 ): BattleResolutionResult {
-  const actor = input.state.combatants.get(input.subject.actorId);
-  if (!isCharacterBattleCreatureState(actor)) {
+  const { actor, procedure } = input.wildShapeAdmission;
+  const source = procedure.source;
+  const resource = actor.origin.resources.find((candidate) => {
+    return candidate.resourcePoolRef === source.resourcePoolRef;
+  });
+  if (resource === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
       "Druid Wild Shape is no longer available for the current actor.",
     );
   }
-  const procedure = characterUnitProcedure(
-    actor.origin.execution,
-    input.subject.procedureRef,
-    DRUID_WILD_SHAPE_PROCEDURE_QUERY,
-  );
-  const source =
-    procedure?.kind === "unitFeature" ? procedure.source : undefined;
-  const resource =
-    source?.kind === "resourcePool"
-      ? actor.origin.resources.find((candidate) => {
-          return candidate.resourcePoolRef === source.resourcePoolRef;
-        })
-      : undefined;
-  const unitFeature =
-    procedure?.kind === "unitFeature" ? procedure.execution : undefined;
-  if (
-    resource === undefined ||
-    unitFeature?.kind !== "druidWildShapeKnownForm"
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Druid Wild Shape is no longer available for the current actor.",
-    );
-  }
+  const unitFeature = procedure.execution;
 
   if (input.subject.action === "dismiss") {
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -1036,6 +1003,7 @@ export function resolveDruidWildShapeUnitFeature(
     const spent = spendActivationResource(input.state.currentTurnResources, {
       kind: "bonusAction",
     });
+    /* v8 ignore start -- Defensive internal guard: dispatcher Wild Shape eligibility calls canSpendBonusAction on these unchanged turn resources before routing. */
     if (Either.isLeft(spent)) {
       return invalidResult(
         input.state,
@@ -1043,6 +1011,7 @@ export function resolveDruidWildShapeUnitFeature(
         "Druid Wild Shape Bonus Action is no longer available.",
       );
     }
+    /* v8 ignore stop */
     const nextState = dismissDruidWildShapeForm({
       state: { ...input.state, currentTurnResources: spent.right },
       actorId: actor.combatantId,
@@ -1099,35 +1068,39 @@ export function resolveDruidWildShapeUnitFeature(
       };
     }
     if (input.fills.length !== 1) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid" as const,
         message: "Druid Wild Shape equipment disposition must be filled once.",
       };
+      /* v8 ignore stop */
     }
     const fill = input.fills[0];
     if (
       fill?.kind !== "wildShapeEquipmentDisposition" ||
       fill.holeId !== expectedEquipmentDispositionHole.holeId
     ) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid" as const,
         message:
           "Druid Wild Shape equipment disposition fill must match the equipment disposition hole.",
       };
+      /* v8 ignore stop */
     }
     const validation = validateWildShapeEquipmentDispositionFill({
       candidates: equipmentCandidates,
       value: fill.value,
     });
-    return validation.tag === "valid"
-      ? {
-          tag: "valid" as const,
-          formLimbs: fill.value.formLimbs,
-          dispositions: validation.dispositions,
-        }
-      : validation;
+    if (validation.tag === "valid") {
+      return {
+        tag: "valid" as const,
+        formLimbs: fill.value.formLimbs,
+        dispositions: validation.dispositions,
+      };
+    }
+    /* v8 ignore next -- Malformed Unit-feature fill set: the equipment parser already classified this replay fill as contradictory. */
+    return validation;
   })();
   if (equipmentDisposition.tag === "needsHoles") {
     return {
@@ -1151,6 +1124,7 @@ export function resolveDruidWildShapeUnitFeature(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
+  /* v8 ignore start -- Defensive internal guard: dispatcher Wild Shape eligibility calls canSpendBonusAction on these unchanged turn resources before routing. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1158,6 +1132,7 @@ export function resolveDruidWildShapeUnitFeature(
       "Druid Wild Shape Bonus Action is no longer available.",
     );
   }
+  /* v8 ignore stop */
   const nextActor: CharacterBattleCreatureState = {
     ...actor,
     origin: {
@@ -1363,12 +1338,21 @@ export function resolveBardicInspirationGrantUnitFeature(
   /* v8 ignore stop */
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    !bardicInspirationTargetCanSeeOrHear(
-      input.state,
-      input.subject.actorId,
-      target,
-      targetFill.value.spatialFacts ?? [],
-      input.subject.procedureRef,
+    !(
+      (!hasCondition(target.conditions, "blinded") &&
+        combatantCanSee(
+          input.state,
+          target.combatantId,
+          input.subject.actorId,
+        )) ||
+      (!hasCondition(target.conditions, "deafened") &&
+        (targetFill.value.spatialFacts ?? []).some(
+          (fact) =>
+            fact.kind === "bardicInspirationTargetCanHear" &&
+            fact.bardId === input.subject.actorId &&
+            fact.targetId === target.combatantId &&
+            fact.sourceProcedureRef === input.subject.procedureRef,
+        ))
     )
   ) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -1612,11 +1596,12 @@ function bardicInspirationGrantTargetFill(
       target = fill;
       continue;
     }
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Bardic Inspiration replay holes.`,
     };
+    /* v8 ignore stop */
   }
   return { tag: "ok", value: target };
 }
@@ -1670,11 +1655,12 @@ function magicActionHealingPoolDistributionFill(
       distribution = fill;
       continue;
     }
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Magic Action healing replay holes.`,
     };
+    /* v8 ignore stop */
   }
   return { tag: "ok", value: distribution };
 }
@@ -1981,9 +1967,11 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
   const stateAfterDamage = validation.damageTargetIds.reduce<BattleState>(
     (state, targetId) => {
       const target = state.combatants.get(targetId);
+      /* v8 ignore start -- Internal invariant guard: validation proves every affected target exists, and spending the Attack action and feature resource preserves combatant-map membership. */
       if (target === undefined) {
         return state;
       }
+      /* v8 ignore stop */
       const outcome = validation.outcomesByTargetId.get(targetId);
       const damageBeforeTargetAdjustments =
         outcome?.succeeded === true
@@ -2080,11 +2068,12 @@ function attackActionAreaSaveDamageReplacementFills(
       damageRoll = fill;
       continue;
     }
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the area damage replacement replay holes.`,
     };
+    /* v8 ignore stop */
   }
   return { tag: "ok", value: { savingThrows, damageRoll } };
 }
@@ -2202,17 +2191,20 @@ function validateAttackActionAreaSaveDamageReplacementSavingThrows(input: {
     /* v8 ignore stop */
     outcomesByTargetId.set(outcome.targetId, outcome);
   }
-  return outcomesByTargetId.size === affectedTargetIds.size
-    ? {
-        tag: "ok",
-        damageTargetIds: [...affectedTargetIds],
-        outcomesByTargetId,
-      }
-    : {
-        tag: "invalid",
-        message:
-          "Area damage replacement Saving Throw outcomes must cover every table-supplied affected target.",
-      };
+  if (outcomesByTargetId.size === affectedTargetIds.size) {
+    return {
+      tag: "ok",
+      damageTargetIds: [...affectedTargetIds],
+      outcomesByTargetId,
+    };
+  }
+  /* v8 ignore start -- Malformed Unit-feature fill set: admitted replay fills cover every table-supplied affected target. */
+  return {
+    tag: "invalid",
+    message:
+      "Area damage replacement Saving Throw outcomes must cover every table-supplied affected target.",
+  };
+  /* v8 ignore stop */
 }
 
 function attackActionAreaSaveDamageReplacementDamageRollHole(
@@ -2339,11 +2331,12 @@ function magicActionSaveGatedConditionFills(
       savingThrows = fill;
       continue;
     }
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Magic Action condition replay holes.`,
     };
+    /* v8 ignore stop */
   }
   return { tag: "ok", value: { savingThrows } };
 }
@@ -2653,11 +2646,12 @@ function magicActionAreaSaveDamageHealingFills(
       healingRoll = fill;
       continue;
     }
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Magic Action damage and healing replay holes.`,
     };
+    /* v8 ignore stop */
   }
   return {
     tag: "ok",
@@ -2840,30 +2834,6 @@ function magicActionAreaSaveDamageHealingAreaFact(
       fact.originWithinRangeFeet ===
         unitFeature.damageHealing.area.origin.rangeFeet &&
       fact.radiusFeet === unitFeature.damageHealing.area.shape.radiusFeet,
-  );
-}
-
-function bardicInspirationTargetCanSeeOrHear(
-  state: BattleState,
-  bardId: CombatantId,
-  target: BattleCreatureState,
-  facts: readonly BattleTargetSpatialFact[],
-  sourceProcedureRef: BattleProcedureExecutionRef,
-): boolean {
-  if (!bardicInspirationTargetCanPerceiveSurroundings(target)) {
-    return false;
-  }
-  return (
-    (!hasCondition(target.conditions, "blinded") &&
-      combatantCanSee(state, target.combatantId, bardId)) ||
-    (!hasCondition(target.conditions, "deafened") &&
-      facts.some(
-        (fact) =>
-          fact.kind === "bardicInspirationTargetCanHear" &&
-          fact.bardId === bardId &&
-          fact.targetId === target.combatantId &&
-          fact.sourceProcedureRef === sourceProcedureRef,
-      ))
   );
 }
 
@@ -3379,11 +3349,12 @@ export function selfBonusActionHealingRollFill(
       continue;
     }
 
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the self-healing replay holes.`,
     };
+    /* v8 ignore stop */
   }
 
   if (healingRoll === undefined) {

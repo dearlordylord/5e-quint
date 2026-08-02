@@ -23,7 +23,6 @@ import {
   type Condition,
   type DamageType,
   type DamageDieSize,
-  type MovementDeltaFeet,
   type MovementFeet,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
@@ -37,8 +36,6 @@ import type {
   DiceExpr,
   EffectAtom,
   EquipmentPredicate,
-  CunningStrikeMechanics,
-  SupremeSneakMechanics,
   DragonbornSpeciesSource,
   StandardActionKind,
   AuthoredUnitSource,
@@ -55,6 +52,13 @@ import type {
   CharacterBattleClassLevel,
   CharacterBattleClassLevelInit,
 } from "./character-class-level.ts";
+import { type BrutalStrikeProfile } from "./procedure-execution/brutal-strike.ts";
+export type {
+  BrutalStrikeEffect,
+  BrutalStrikeHamstringEffect,
+  BrutalStrikeOptionId,
+  BrutalStrikeProfile,
+} from "./procedure-execution/brutal-strike.ts";
 
 export const WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE =
   "weaponOrUnarmedCriticalRange19";
@@ -96,7 +100,6 @@ import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   BATTLE_ATTACK_ACTION_ADDITIONAL_ATTACKS,
-  BRUTAL_STRIKE_OPTION_IDS,
   BRUTAL_STRIKE_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
@@ -187,9 +190,6 @@ const BARDIC_INSPIRATION_RANGE_FEET = 60;
 const BARDIC_INSPIRATION_BASE_DIE_SIZE = 6;
 const CLERIC_CHANNEL_DIVINITY_RESOURCE_UNIT_ID = unitId(
   "cleric_channel_divinity",
-);
-export const PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID = unitId(
-  "paladin_channel_divinity",
 );
 const DRUID_WILD_SHAPE_RESOURCE_UNIT_ID = unitId("druid_wild_shape");
 const MONK_FOCUS_RESOURCE_UNIT_ID = unitId("monk_monks_focus");
@@ -753,10 +753,75 @@ export type CunningStrikeDieCost = {
   readonly dice: 1;
   readonly dieSize: 6;
 };
+type MechanicsFamilyMember<
+  Mechanics,
+  Family extends string,
+> = Mechanics extends { readonly family: Family } ? Mechanics : never;
+type AuthoredUnitMechanicsFamilyMember<
+  Unit,
+  Family extends string,
+> = Unit extends { readonly mechanics: infer Mechanics }
+  ? MechanicsFamilyMember<Mechanics, Family> extends infer FamilyMechanics
+    ? [FamilyMechanics] extends [never]
+      ? never
+      : Omit<Unit, "mechanics"> & { readonly mechanics: FamilyMechanics }
+    : never
+  : never;
+type CunningStrikeUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "cunning_strike"
+>;
+type StunningStrikeUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "stunning_strike"
+>;
+type StunningStrikeMechanics = StunningStrikeUnit["mechanics"];
+type PaladinSacredWeaponUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "sacred_weapon"
+>;
+type PaladinSacredWeaponMechanics = PaladinSacredWeaponUnit["mechanics"];
+type RogueSteadyAimUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "steady_aim"
+>;
+type RogueSteadyAimMechanics = RogueSteadyAimUnit["mechanics"];
+type PotentCantripUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "potent_cantrip"
+>;
+type PotentCantripMechanics = PotentCantripUnit["mechanics"];
+type GrapplerUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "grappler"
+>;
+type GrapplerMechanics = GrapplerUnit["mechanics"];
+type BrutalStrikeUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "brutal_strike"
+>;
+type BrutalStrikeMechanics = BrutalStrikeUnit["mechanics"];
+type CunningStrikeOptionGrantUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "cunning_strike_option_grant"
+>;
+type CunningStrikeMechanics = CunningStrikeUnit["mechanics"];
 export type CunningStrikeSurfaceOption =
   CunningStrikeMechanics["options"][number];
 export type CunningStrikeOptionGrantSurfaceOption =
-  SupremeSneakMechanics["option"];
+  CunningStrikeOptionGrantUnit["mechanics"]["option"];
+type CunningStrikePoisonSurfaceOption = Extract<
+  CunningStrikeSurfaceOption,
+  { readonly requires: unknown }
+>;
+type CunningStrikeTripSurfaceOption = Extract<
+  CunningStrikeSurfaceOption,
+  { readonly target: unknown }
+>;
+type CunningStrikeWithdrawSurfaceOption = Extract<
+  CunningStrikeSurfaceOption,
+  { readonly movement: unknown }
+>;
 export const CUNNING_STRIKE_END_TURN_COVER_DEGREES = [
   "none",
   "half",
@@ -798,7 +863,7 @@ export type PaladinSacredWeaponProfile = {
     readonly action: "attack";
   };
   readonly spends: {
-    readonly resourceUnitId: typeof PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID;
+    readonly resourceUnitId: PaladinSacredWeaponMechanics["spends"]["resourceUnitId"];
     readonly amount: 1;
   };
   readonly target: "heldMeleeWeapon";
@@ -935,40 +1000,12 @@ export type BattleGrapplerSupportProfile = {
   readonly kind: typeof GRAPPLER_SUPPORT_PROFILE;
   readonly grappler: GrapplerProfile;
 };
-export type BrutalStrikeOptionId = (typeof BRUTAL_STRIKE_OPTION_IDS)[number];
-export type BrutalStrikeProfile = {
-  readonly trigger: {
-    readonly kind: "recklessAttackStrengthAttackHit";
-    readonly advantageForgone: true;
-    readonly attackMustNotHaveDisadvantage: true;
-  };
-  readonly damage: {
-    readonly dice: 1;
-    readonly dieSize: 10;
-    readonly damageType: "sameAsAttack";
-  };
-  readonly options: readonly [
-    {
-      readonly id: "forceful_blow";
-      readonly pushFeet: MovementFeet;
-      readonly selfMovement: {
-        readonly kind: "moveTowardTarget";
-        readonly distance: "halfSpeed";
-        readonly opportunityAttacks: "doesNotProvoke";
-      };
-    },
-    {
-      readonly id: "hamstring_blow";
-      readonly deltaFeet: MovementDeltaFeet;
-      readonly stacking: "mostRecentOnly";
-      readonly expires: "startOfYourNextTurn";
-    },
-  ];
-};
+export type BattleGrapplerSupport = BattleGrapplerSupportProfile | null;
 export type BattleBrutalStrikeSupportProfile = {
   readonly kind: typeof BRUTAL_STRIKE_SUPPORT_PROFILE;
   readonly brutalStrike: BrutalStrikeProfile;
 };
+export type BattleBrutalStrikeSupport = BattleBrutalStrikeSupportProfile | null;
 export type RetaliationReactionAttackProfile = {
   readonly trigger: {
     readonly kind: "takesDamageFromCreatureWithinFiveFeet";
@@ -1712,38 +1749,17 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   }
 
   const stunningStrikeSupport = battleStunningStrikeSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (stunningStrikeSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Stunning Strike Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (stunningStrikeSupport !== null) {
     supportProfiles.push(stunningStrikeSupport);
   }
 
   const cunningStrikeSupport = battleCunningStrikeSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (cunningStrikeSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Cunning Strike Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (cunningStrikeSupport !== null) {
     supportProfiles.push(cunningStrikeSupport);
   }
 
   const cunningStrikeOptionGrantSupport =
     battleCunningStrikeOptionGrantSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (cunningStrikeOptionGrantSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Cunning Strike option-grant Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (cunningStrikeOptionGrantSupport !== null) {
     supportProfiles.push(cunningStrikeOptionGrantSupport);
   }
@@ -1751,13 +1767,6 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   const paladinSacredWeaponSupport = battlePaladinSacredWeaponSupportForUnit(
     input.unit,
   );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (paladinSacredWeaponSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Sacred Weapon Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (paladinSacredWeaponSupport !== null) {
     supportProfiles.push(paladinSacredWeaponSupport);
   }
@@ -1769,49 +1778,21 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   }
 
   const rogueSteadyAimSupport = battleRogueSteadyAimSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (rogueSteadyAimSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Steady Aim Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (rogueSteadyAimSupport !== null) {
     supportProfiles.push(rogueSteadyAimSupport);
   }
 
   const potentCantripSupport = battlePotentCantripSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (potentCantripSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Potent Cantrip Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (potentCantripSupport !== null) {
     supportProfiles.push(potentCantripSupport);
   }
 
   const grapplerSupport = battleGrapplerSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (grapplerSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Grappler Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (grapplerSupport !== null) {
     supportProfiles.push(grapplerSupport);
   }
 
   const brutalStrikeSupport = battleBrutalStrikeSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (brutalStrikeSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Brutal Strike Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (brutalStrikeSupport !== null) {
     supportProfiles.push(brutalStrikeSupport);
   }
@@ -2597,37 +2578,25 @@ export type BattleOpenHandTechniqueSupport =
   | "unsupported"
   | null;
 export type BattleStunningStrikeSupport =
-  | BattleStunningStrikeSupportProfile
-  | "unsupported"
-  | null;
+  BattleStunningStrikeSupportProfile | null;
 export type BattleCunningStrikeSupport =
-  | BattleCunningStrikeSupportProfile
-  | "unsupported"
-  | null;
+  BattleCunningStrikeSupportProfile | null;
 export type BattleCunningStrikeOptionGrantSupport =
-  | BattleCunningStrikeOptionGrantSupportProfile
-  | "unsupported"
-  | null;
+  BattleCunningStrikeOptionGrantSupportProfile | null;
 export type BattleRetaliationReactionAttackSupport =
   | BattleRetaliationReactionAttackSupportProfile
   | "unsupported"
   | null;
 export type BattlePaladinSacredWeaponSupport =
-  | BattlePaladinSacredWeaponSupportProfile
-  | "unsupported"
-  | null;
+  BattlePaladinSacredWeaponSupportProfile | null;
 export type BattleHuntersPreySupport =
   | BattleHuntersPreySupportProfile
   | "unsupported"
   | null;
 export type BattleRogueSteadyAimSupport =
-  | BattleRogueSteadyAimSupportProfile
-  | "unsupported"
-  | null;
+  BattleRogueSteadyAimSupportProfile | null;
 export type BattlePotentCantripSupport =
-  | BattlePotentCantripSupportProfile
-  | "unsupported"
-  | null;
+  BattlePotentCantripSupportProfile | null;
 type MonkFocusBattleExecution =
   | {
       readonly kind: "bonus_action_unarmed_strike_sequence";
@@ -3759,61 +3728,53 @@ export function battleOpenHandTechniqueSupportForUnit(
 export function battleStunningStrikeSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleStunningStrikeSupport {
-  if (!hasClassFeatureMechanicsFamily(unit, "stunning_strike")) {
+  if (!isStunningStrikeUnit(unit)) {
     return null;
   }
-  const profile = stunningStrikeProfileForUnit(unit);
-  return profile === null
-    ? "unsupported"
-    : {
-        kind: STUNNING_STRIKE_SUPPORT_PROFILE,
-        stunningStrike: profile.stunningStrike,
-      };
+  const profile = stunningStrikeProfileForAdmittedUnit(unit);
+  return {
+    kind: STUNNING_STRIKE_SUPPORT_PROFILE,
+    stunningStrike: profile.stunningStrike,
+  };
 }
 
 export function battleCunningStrikeSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleCunningStrikeSupport {
-  if (!hasClassFeatureMechanicsFamily(unit, "cunning_strike")) {
+  if (!isCunningStrikeUnit(unit)) {
     return null;
   }
-  const profile = cunningStrikeProfileForUnit(unit);
-  return profile === null
-    ? "unsupported"
-    : {
-        kind: CUNNING_STRIKE_SUPPORT_PROFILE,
-        cunningStrike: profile.cunningStrike,
-      };
+  const profile = cunningStrikeProfileForAdmittedUnit(unit);
+  return {
+    kind: CUNNING_STRIKE_SUPPORT_PROFILE,
+    cunningStrike: profile.cunningStrike,
+  };
 }
 
 export function battleCunningStrikeOptionGrantSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleCunningStrikeOptionGrantSupport {
-  if (!hasClassFeatureMechanicsFamily(unit, "cunning_strike_option_grant")) {
+  if (!isCunningStrikeOptionGrantUnit(unit)) {
     return null;
   }
-  const profile = cunningStrikeOptionGrantProfileForUnit(unit);
-  return profile === null
-    ? "unsupported"
-    : {
-        kind: CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
-        optionGrant: profile.optionGrant,
-      };
+  const profile = cunningStrikeOptionGrantProfileForAdmittedUnit(unit);
+  return {
+    kind: CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
+    optionGrant: profile.optionGrant,
+  };
 }
 
 export function battlePaladinSacredWeaponSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattlePaladinSacredWeaponSupport {
-  if (!hasClassFeatureMechanicsFamily(unit, "sacred_weapon")) {
+  if (!isPaladinSacredWeaponUnit(unit)) {
     return null;
   }
-  const profile = paladinSacredWeaponProfileForUnit(unit);
-  return profile === null
-    ? "unsupported"
-    : {
-        kind: PALADIN_SACRED_WEAPON_SUPPORT_PROFILE,
-        sacredWeapon: profile.sacredWeapon,
-      };
+  const profile = paladinSacredWeaponProfileForAdmittedUnit(unit);
+  return {
+    kind: PALADIN_SACRED_WEAPON_SUPPORT_PROFILE,
+    sacredWeapon: profile.sacredWeapon,
+  };
 }
 
 export function battleHuntersPreySupportForUnit(
@@ -3885,31 +3846,27 @@ function huntersPreyAdmissionForUnit(
 export function battleRogueSteadyAimSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleRogueSteadyAimSupport {
-  if (!hasClassFeatureMechanicsFamily(unit, "steady_aim")) {
+  if (!isRogueSteadyAimUnit(unit)) {
     return null;
   }
-  const profile = rogueSteadyAimProfileForUnit(unit);
-  return profile === null
-    ? "unsupported"
-    : {
-        kind: ROGUE_STEADY_AIM_SUPPORT_PROFILE,
-        steadyAim: profile.steadyAim,
-      };
+  const profile = rogueSteadyAimProfileForAdmittedUnit(unit);
+  return {
+    kind: ROGUE_STEADY_AIM_SUPPORT_PROFILE,
+    steadyAim: profile.steadyAim,
+  };
 }
 
 export function battlePotentCantripSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattlePotentCantripSupport {
-  if (!hasClassFeatureMechanicsFamily(unit, "potent_cantrip")) {
+  if (!isPotentCantripUnit(unit)) {
     return null;
   }
-  const profile = potentCantripProfileForUnit(unit);
-  return profile === null
-    ? "unsupported"
-    : {
-        kind: POTENT_CANTRIP_SUPPORT_PROFILE,
-        potentCantrip: profile.potentCantrip,
-      };
+  const profile = potentCantripProfileForAdmittedUnit(unit);
+  return {
+    kind: POTENT_CANTRIP_SUPPORT_PROFILE,
+    potentCantrip: profile.potentCantrip,
+  };
 }
 
 function hasClassFeatureMechanicsFamily(
@@ -6223,214 +6180,305 @@ function openHandTechniqueProfileForUnit(
   };
 }
 
-function stunningStrikeProfileForUnit(
-  unit: AuthoredUnitSource,
-): Extract<
+const STUNNING_STRIKE_TRIGGER_KIND = {
+  hit_creature_with_monk_weapon_or_unarmed_strike:
+    "hitCreatureWithMonkWeaponOrUnarmedStrike",
+} as const satisfies Record<
+  StunningStrikeMechanics["trigger"]["kind"],
+  StunningStrikeProfile["trigger"]["kind"]
+>;
+const STUNNING_STRIKE_USAGE_LIMIT = {
+  once_per_turn: "oncePerTurn",
+} as const satisfies Record<
+  StunningStrikeMechanics["trigger"]["usageLimit"],
+  StunningStrikeProfile["trigger"]["usageLimit"]
+>;
+const STUNNING_STRIKE_CONDITION_EFFECT_KIND = {
+  apply_condition: "applyCondition",
+} as const satisfies Record<
+  StunningStrikeMechanics["onFail"]["kind"],
+  StunningStrikeProfile["onFail"]["kind"]
+>;
+const STUNNING_STRIKE_EXPIRATION = {
+  start_of_source_next_turn: "startOfSourceNextTurn",
+} as const satisfies Record<
+  | StunningStrikeMechanics["onFail"]["expires"]
+  | StunningStrikeMechanics["onSuccess"]["speed"]["expires"],
+  | StunningStrikeProfile["onFail"]["expires"]
+  | StunningStrikeProfile["onSuccess"]["speed"]["expires"]
+>;
+const STUNNING_STRIKE_ATTACK_ROLL_APPLICATION = {
+  next_attack_roll_against_target_before_expiration:
+    "nextAttackRollAgainstTargetBeforeExpiration",
+} as const satisfies Record<
+  StunningStrikeMechanics["onSuccess"]["attackRoll"]["appliesTo"],
+  StunningStrikeProfile["onSuccess"]["attackRoll"]["appliesTo"]
+>;
+
+type StunningStrikeSupportedUnitFeatureProfile = Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "stunningStrike" }
-> | null {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "monk" ||
-    unit.mechanics.family !== "stunning_strike"
-  ) {
-    return null;
-  }
+>;
+
+function isStunningStrikeUnit(
+  unit: AuthoredUnitSource,
+): unit is StunningStrikeUnit {
+  return (
+    unit.kind === "class_feature" && unit.mechanics.family === "stunning_strike"
+  );
+}
+
+function stunningStrikeProfileForAdmittedUnit(
+  unit: StunningStrikeUnit,
+): StunningStrikeSupportedUnitFeatureProfile {
   const mechanics = unit.mechanics;
-  if (
-    mechanics.trigger.kind !==
-      "hit_creature_with_monk_weapon_or_unarmed_strike" ||
-    mechanics.trigger.usageLimit !== "once_per_turn" ||
-    mechanics.optional !== true ||
-    // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
-    mechanics.spends.resourceUnitId !== MONK_FOCUS_RESOURCE_UNIT_ID ||
-    mechanics.spends.amount !== 1 ||
-    mechanics.savingThrow.ability !== "con" ||
-    mechanics.onFail.kind !== "apply_condition" ||
-    mechanics.onFail.condition !== "stunned" ||
-    mechanics.onFail.expires !== "start_of_source_next_turn" ||
-    mechanics.onSuccess.speed.kind !== "halve" ||
-    mechanics.onSuccess.speed.expires !== "start_of_source_next_turn" ||
-    mechanics.onSuccess.attackRoll.mode !== "advantage" ||
-    mechanics.onSuccess.attackRoll.appliesTo !==
-      "next_attack_roll_against_target_before_expiration"
-  ) {
-    return null;
-  }
   return {
     kind: "stunningStrike",
     unit,
     stunningStrike: {
       trigger: {
-        kind: "hitCreatureWithMonkWeaponOrUnarmedStrike",
-        usageLimit: "oncePerTurn",
+        kind: STUNNING_STRIKE_TRIGGER_KIND[mechanics.trigger.kind],
+        usageLimit: STUNNING_STRIKE_USAGE_LIMIT[mechanics.trigger.usageLimit],
       },
-      optional: true,
+      optional: mechanics.optional,
       spends: {
-        resourceUnitId: MONK_FOCUS_RESOURCE_UNIT_ID,
-        amount: 1,
+        resourceUnitId: mechanics.spends.resourceUnitId,
+        amount: mechanics.spends.amount,
       },
-      savingThrow: { ability: "con" },
+      savingThrow: { ability: mechanics.savingThrow.ability },
       onFail: {
-        kind: "applyCondition",
-        condition: "stunned",
-        expires: "startOfSourceNextTurn",
+        kind: STUNNING_STRIKE_CONDITION_EFFECT_KIND[mechanics.onFail.kind],
+        condition: mechanics.onFail.condition,
+        expires: STUNNING_STRIKE_EXPIRATION[mechanics.onFail.expires],
       },
       onSuccess: {
         speed: {
-          kind: "halve",
-          expires: "startOfSourceNextTurn",
+          kind: mechanics.onSuccess.speed.kind,
+          expires:
+            STUNNING_STRIKE_EXPIRATION[mechanics.onSuccess.speed.expires],
         },
         attackRoll: {
-          mode: "advantage",
-          appliesTo: "nextAttackRollAgainstTargetBeforeExpiration",
+          mode: mechanics.onSuccess.attackRoll.mode,
+          appliesTo:
+            STUNNING_STRIKE_ATTACK_ROLL_APPLICATION[
+              mechanics.onSuccess.attackRoll.appliesTo
+            ],
         },
       },
     },
   };
 }
 
+function stunningStrikeProfileForUnit(
+  unit: AuthoredUnitSource,
+): StunningStrikeSupportedUnitFeatureProfile | null {
+  return isStunningStrikeUnit(unit)
+    ? stunningStrikeProfileForAdmittedUnit(unit)
+    : null;
+}
+
+const CUNNING_STRIKE_COST_KIND = {
+  sneak_attack_damage_dice: "sneakAttackDamageDice",
+} as const satisfies Record<
+  CunningStrikeSurfaceOption["cost"]["kind"],
+  CunningStrikeDieCost["kind"]
+>;
+const CUNNING_STRIKE_REQUIREMENT_KIND = {
+  equipment_on_person: "equipmentOnPerson",
+} as const satisfies Record<
+  CunningStrikePoisonSurfaceOption["requires"]["kind"],
+  CunningStrikeEquipmentGatedConditionSaveEffect["requires"]["kind"]
+>;
+const CUNNING_STRIKE_CONDITION_EFFECT_KIND = {
+  apply_condition: "applyCondition",
+} as const satisfies Record<
+  | CunningStrikePoisonSurfaceOption["onFail"]["kind"]
+  | CunningStrikeTripSurfaceOption["onFail"]["kind"],
+  | CunningStrikeEquipmentGatedConditionSaveEffect["onFail"]["kind"]
+  | CunningStrikeSizeGatedConditionSaveEffect["onFail"]["kind"]
+>;
+const CUNNING_STRIKE_REPEAT_SAVE_CADENCE = {
+  end_of_target_turn: "endOfTargetTurn",
+} as const satisfies Record<
+  CunningStrikePoisonSurfaceOption["onFail"]["repeatSave"]["cadence"],
+  CunningStrikeEquipmentGatedConditionSaveEffect["onFail"]["repeatSave"]["cadence"]
+>;
+const CUNNING_STRIKE_REPEAT_SAVE_SUCCESS = {
+  end_condition: "endCondition",
+} as const satisfies Record<
+  CunningStrikePoisonSurfaceOption["onFail"]["repeatSave"]["onSuccess"],
+  CunningStrikeEquipmentGatedConditionSaveEffect["onFail"]["repeatSave"]["onSuccess"]
+>;
+const CUNNING_STRIKE_MOVEMENT_TIMING = {
+  immediately_after_attack: "immediatelyAfterAttack",
+} as const satisfies Record<
+  CunningStrikeWithdrawSurfaceOption["movement"]["timing"],
+  CunningStrikePostDamageMovementEffect["movement"]["timing"]
+>;
+const CUNNING_STRIKE_MOVEMENT_DISTANCE_KIND = {
+  half_speed: "halfSpeed",
+} as const satisfies Record<
+  CunningStrikeWithdrawSurfaceOption["movement"]["distance"]["kind"],
+  CunningStrikePostDamageMovementEffect["movement"]["distance"]["kind"]
+>;
+const CUNNING_STRIKE_OPPORTUNITY_ATTACKS = {
+  does_not_provoke: "doesNotProvoke",
+} as const satisfies Record<
+  CunningStrikeWithdrawSurfaceOption["movement"]["opportunityAttacks"],
+  CunningStrikePostDamageMovementEffect["movement"]["opportunityAttacks"]
+>;
+const CUNNING_STRIKE_COVER_DEGREE = {
+  three_quarters: "threeQuarters",
+  total: "total",
+} as const satisfies Record<
+  CunningStrikeOptionGrantSurfaceOption["effect"]["ifTurnEndsBehindCover"][number],
+  CunningStrikeHideInvisibleEndSuppressionEffect["ifTurnEndsBehindCover"][number]
+>;
+const CUNNING_STRIKE_OPTION_GRANT_PREREQUISITE_KIND = {
+  hide_action_invisible_condition: "hideActionInvisibleCondition",
+} as const satisfies Record<
+  CunningStrikeOptionGrantSurfaceOption["prerequisite"]["kind"],
+  CunningStrikeHideInvisibleEndSuppressionEffect["prerequisite"]["kind"]
+>;
+const CUNNING_STRIKE_OPTION_GRANT_CONDITION_SOURCE = {
+  hide_action: "hideAction",
+} as const satisfies Record<
+  CunningStrikeOptionGrantSurfaceOption["effect"]["conditionSource"],
+  CunningStrikeHideInvisibleEndSuppressionEffect["conditionSource"]
+>;
+const CUNNING_STRIKE_OPTION_GRANT_EFFECT_KIND = {
+  suppress_attack_end_of_invisible_condition: "hideInvisibleEndSuppression",
+} as const satisfies Record<
+  CunningStrikeOptionGrantSurfaceOption["effect"]["kind"],
+  CunningStrikeHideInvisibleEndSuppressionEffect["kind"]
+>;
+const CUNNING_STRIKE_TRIGGER_KIND = {
+  deal_sneak_attack_damage: "dealSneakAttackDamage",
+} as const satisfies Record<
+  CunningStrikeMechanics["trigger"]["kind"],
+  CunningStrikeProfile["trigger"]["kind"]
+>;
+const CUNNING_STRIKE_CHOICE_KIND = {
+  choose_one: "chooseOne",
+} as const satisfies Record<
+  CunningStrikeMechanics["choice"]["kind"],
+  CunningStrikeProfile["choice"]["kind"]
+>;
+const CUNNING_STRIKE_SAVE_DC_KIND = {
+  class_feature_ability_save_dc: "classFeatureAbilitySaveDc",
+} as const satisfies Record<
+  CunningStrikeMechanics["effectSaveDc"]["kind"],
+  CunningStrikeProfile["effectSaveDc"]["kind"]
+>;
+
 function cunningStrikeCostForSurfaceOption(option: {
   readonly cost: CunningStrikeSurfaceOption["cost"];
-}): CunningStrikeDieCost | null {
-  /* v8 ignore start -- Unsupported structured input: Cunning Strike options spend exactly one d6 of Sneak Attack damage; other cost atoms are rejected before projection. */
-  if (
-    option.cost.kind !== "sneak_attack_damage_dice" ||
-    option.cost.dice !== 1 ||
-    option.cost.dieSize !== 6
-  ) {
-    return null;
-  }
-  /* v8 ignore stop */
-  return { kind: "sneakAttackDamageDice", dice: 1, dieSize: 6 };
+}): CunningStrikeDieCost {
+  return {
+    kind: CUNNING_STRIKE_COST_KIND[option.cost.kind],
+    dice: option.cost.dice,
+    dieSize: option.cost.dieSize,
+  };
+}
+
+function cunningStrikePoisonDurationTicks(duration: {
+  readonly amount: 1;
+  readonly unit: "minute";
+}): ElapsedTimeTicks {
+  return Either.getOrThrow(elapsedTimeTicksFromTimeSpanDuration(duration));
 }
 
 function cunningStrikeEffectForSurfaceOption(
   option: CunningStrikeSurfaceOption,
-): CunningStrikeOptionEffect | null {
+): CunningStrikeOptionEffect {
   if ("requires" in option) {
-    /* v8 ignore start -- Unsupported structured input: the equipment-gated option owns the Poisoner's Kit, Constitution save, Poisoned condition, and end-turn repeat-save shape. */
-    if (
-      option.requires.kind !== "equipment_on_person" ||
-      option.requires.equipment.kind !== "tool" ||
-      // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
-      option.requires.equipment.toolId !== "poisoners_kit" ||
-      option.save.ability !== "con" ||
-      option.onFail.kind !== "apply_condition" ||
-      option.onFail.condition !== "poisoned" ||
-      option.onFail.repeatSave.cadence !== "end_of_target_turn" ||
-      option.onFail.repeatSave.onSuccess !== "end_condition"
-    ) {
-      return null;
-    }
-    /* v8 ignore stop */
-    const duration = elapsedTimeTicksFromTimeSpanDuration(
+    const durationTicks = cunningStrikePoisonDurationTicks(
       option.onFail.duration,
     );
-    /* v8 ignore start -- Unsupported structured input: the equipment-gated condition duration must parse into elapsed-time ticks. */
-    if (Either.isLeft(duration)) {
-      return null;
-    }
-    /* v8 ignore stop */
     return {
       kind: "equipmentGatedConditionSave",
       requires: {
-        kind: "equipmentOnPerson",
-        equipment: { kind: "tool", toolId: "poisoners_kit" },
+        kind: CUNNING_STRIKE_REQUIREMENT_KIND[option.requires.kind],
+        equipment: {
+          kind: option.requires.equipment.kind,
+          toolId: option.requires.equipment.toolId,
+        },
       },
       save: { ability: option.save.ability },
       onFail: {
-        kind: "applyCondition",
+        kind: CUNNING_STRIKE_CONDITION_EFFECT_KIND[option.onFail.kind],
         condition: option.onFail.condition,
-        durationTicks: duration.right,
+        durationTicks,
         repeatSave: {
-          cadence: "endOfTargetTurn",
-          onSuccess: "endCondition",
+          cadence:
+            CUNNING_STRIKE_REPEAT_SAVE_CADENCE[
+              option.onFail.repeatSave.cadence
+            ],
+          onSuccess:
+            CUNNING_STRIKE_REPEAT_SAVE_SUCCESS[
+              option.onFail.repeatSave.onSuccess
+            ],
         },
       },
     };
   }
   if ("target" in option) {
-    /* v8 ignore start -- Unsupported structured input: the size-gated option owns a Large-or-smaller Dexterity save that applies Prone on failure. */
-    if (
-      option.target.maxSize !== "large" ||
-      option.save.ability !== "dex" ||
-      option.onFail.kind !== "apply_condition" ||
-      option.onFail.condition !== "prone"
-    ) {
-      return null;
-    }
-    /* v8 ignore stop */
     return {
       kind: "sizeGatedConditionSave",
       target: { maxSize: option.target.maxSize },
       save: { ability: option.save.ability },
       onFail: {
-        kind: "applyCondition",
+        kind: CUNNING_STRIKE_CONDITION_EFFECT_KIND[option.onFail.kind],
         condition: option.onFail.condition,
       },
     };
   }
   if ("movement" in option) {
-    /* v8 ignore start -- Unsupported structured input: the movement option owns immediate half-Speed movement that does not provoke Opportunity Attacks. */
-    if (
-      option.movement.timing !== "immediately_after_attack" ||
-      option.movement.distance.kind !== "half_speed" ||
-      option.movement.opportunityAttacks !== "does_not_provoke"
-    ) {
-      return null;
-    }
-    /* v8 ignore stop */
     return {
       kind: "postDamageMovement",
       movement: {
-        timing: "immediatelyAfterAttack",
-        distance: { kind: "halfSpeed" },
-        opportunityAttacks: "doesNotProvoke",
+        timing: CUNNING_STRIKE_MOVEMENT_TIMING[option.movement.timing],
+        distance: {
+          kind: CUNNING_STRIKE_MOVEMENT_DISTANCE_KIND[
+            option.movement.distance.kind
+          ],
+        },
+        opportunityAttacks:
+          CUNNING_STRIKE_OPPORTUNITY_ATTACKS[
+            option.movement.opportunityAttacks
+          ],
       },
     };
   }
-  /* v8 ignore next -- Unsupported structured input: every Cunning Strike option shape owned by this profile is handled above. */
-  return null;
+  return option;
 }
 
 function cunningStrikeEffectForOptionGrantSurfaceOption(
   option: CunningStrikeOptionGrantSurfaceOption,
-): CunningStrikeOptionEffect | null {
-  /* v8 ignore start -- Unsupported structured input: this option grant owns the Hide-created Invisible suppression with three-quarters or total cover retention. */
-  if (
-    option.prerequisite.kind !== "hide_action_invisible_condition" ||
-    option.effect.kind !== "suppress_attack_end_of_invisible_condition" ||
-    option.effect.conditionSource !== "hide_action" ||
-    option.effect.ifTurnEndsBehindCover[0] !== "three_quarters" ||
-    option.effect.ifTurnEndsBehindCover[1] !== "total"
-  ) {
-    return null;
-  }
-  /* v8 ignore stop */
+): CunningStrikeOptionEffect {
   return {
-    kind: "hideInvisibleEndSuppression",
-    prerequisite: { kind: "hideActionInvisibleCondition" },
-    conditionSource: "hideAction",
-    ifTurnEndsBehindCover: ["threeQuarters", "total"],
+    kind: CUNNING_STRIKE_OPTION_GRANT_EFFECT_KIND[option.effect.kind],
+    prerequisite: {
+      kind: CUNNING_STRIKE_OPTION_GRANT_PREREQUISITE_KIND[
+        option.prerequisite.kind
+      ],
+    },
+    conditionSource:
+      CUNNING_STRIKE_OPTION_GRANT_CONDITION_SOURCE[
+        option.effect.conditionSource
+      ],
+    ifTurnEndsBehindCover: [
+      CUNNING_STRIKE_COVER_DEGREE[option.effect.ifTurnEndsBehindCover[0]],
+      CUNNING_STRIKE_COVER_DEGREE[option.effect.ifTurnEndsBehindCover[1]],
+    ],
   };
 }
 
 function cunningStrikeOptionForSurfaceOption(
   option: CunningStrikeSurfaceOption,
-): CunningStrikeOption | null {
+): CunningStrikeOption {
   const cost = cunningStrikeCostForSurfaceOption(option);
-  /* v8 ignore start -- Unsupported structured input: the option cost failed the one-d6 Cunning Strike admission gate. */
-  if (cost === null) {
-    return null;
-  }
-  /* v8 ignore stop */
   const effect = cunningStrikeEffectForSurfaceOption(option);
-  /* v8 ignore start -- Unsupported structured input: the option effect failed its typed Cunning Strike admission gate. */
-  if (effect === null) {
-    return null;
-  }
-  /* v8 ignore stop */
   return {
     selectionId: option.id,
     cost,
@@ -6440,19 +6488,9 @@ function cunningStrikeOptionForSurfaceOption(
 
 function cunningStrikeOptionForOptionGrantSurfaceOption(
   option: CunningStrikeOptionGrantSurfaceOption,
-): CunningStrikeOption | null {
+): CunningStrikeOption {
   const cost = cunningStrikeCostForSurfaceOption(option);
-  /* v8 ignore start -- Unsupported structured input: the granted option cost failed the one-d6 Cunning Strike admission gate. */
-  if (cost === null) {
-    return null;
-  }
-  /* v8 ignore stop */
   const effect = cunningStrikeEffectForOptionGrantSurfaceOption(option);
-  /* v8 ignore start -- Unsupported structured input: the granted option effect failed its typed admission gate. */
-  if (effect === null) {
-    return null;
-  }
-  /* v8 ignore stop */
   return {
     selectionId: option.id,
     cost,
@@ -6462,36 +6500,34 @@ function cunningStrikeOptionForOptionGrantSurfaceOption(
 
 function cunningStrikeOptionsForMechanics(
   mechanics: CunningStrikeMechanics,
-): readonly CunningStrikeOption[] | null {
-  const options: CunningStrikeOption[] = [];
-  for (const option of mechanics.options) {
-    const projected = cunningStrikeOptionForSurfaceOption(option);
-    /* v8 ignore start -- Unsupported structured input: one malformed option rejects the complete Cunning Strike collection so partial support is unrepresentable. */
-    if (projected === null) {
-      return null;
-    }
-    /* v8 ignore stop */
-    options.push(projected);
-  }
-  return options;
+): readonly CunningStrikeOption[] {
+  return mechanics.options.map(cunningStrikeOptionForSurfaceOption);
 }
 
-function cunningStrikeProfileForUnit(
-  unit: AuthoredUnitSource,
-  classLevels?: readonly CharacterBattleClassLevel[],
-): Extract<
+type CunningStrikeSupportedUnitFeatureProfile = Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "cunningStrike" }
-> | null {
-  /* v8 ignore start -- Unsupported structured input: Cunning Strike execution is admitted only from the Rogue class-feature mechanics family. */
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "rogue" ||
-    unit.mechanics.family !== "cunning_strike"
-  ) {
-    return null;
-  }
-  /* v8 ignore stop */
+>;
+
+function isCunningStrikeUnit(
+  unit: AuthoredUnitSource,
+): unit is CunningStrikeUnit {
+  return (
+    unit.kind === "class_feature" && unit.mechanics.family === "cunning_strike"
+  );
+}
+
+function cunningStrikeProfileForAdmittedUnit(
+  unit: CunningStrikeUnit,
+): CunningStrikeSupportedUnitFeatureProfile;
+function cunningStrikeProfileForAdmittedUnit(
+  unit: CunningStrikeUnit,
+  classLevels: readonly CharacterBattleClassLevel[],
+): CunningStrikeSupportedUnitFeatureProfile | null;
+function cunningStrikeProfileForAdmittedUnit(
+  unit: CunningStrikeUnit,
+  classLevels?: readonly CharacterBattleClassLevel[],
+): CunningStrikeSupportedUnitFeatureProfile | null {
   if (classLevels !== undefined) {
     const classLevel = findCharacterClassLevel(classLevels, unit.className);
     /* v8 ignore start -- Unsupported character/profile pairing: admission requires the Rogue level at or above acquisition. */
@@ -6501,65 +6537,59 @@ function cunningStrikeProfileForUnit(
     /* v8 ignore stop */
   }
   const mechanics = unit.mechanics;
-  /* v8 ignore start -- Unsupported structured input: this profile owns the Sneak Attack trigger, choose-one cardinality, and Dexterity class-feature save-DC shape. */
-  if (
-    mechanics.trigger.kind !== "deal_sneak_attack_damage" ||
-    mechanics.choice.kind !== "choose_one" ||
-    mechanics.choice.maxOptions !== 1 ||
-    mechanics.effectSaveDc.kind !== "class_feature_ability_save_dc" ||
-    mechanics.effectSaveDc.base !== 8 ||
-    mechanics.effectSaveDc.ability !== "dex"
-  ) {
-    return null;
-  }
-  /* v8 ignore stop */
   const options = cunningStrikeOptionsForMechanics(mechanics);
-  /* v8 ignore start -- Unsupported structured input: at least one option failed projection, so the collection is rejected instead of admitting partial support. */
-  if (options === null) {
-    return null;
-  }
-  /* v8 ignore stop */
   return {
     kind: CUNNING_STRIKE_SUPPORT_PROFILE,
     unit,
     cunningStrike: {
       trigger: {
-        kind: "dealSneakAttackDamage",
+        kind: CUNNING_STRIKE_TRIGGER_KIND[mechanics.trigger.kind],
         sourceUnitId: mechanics.trigger.sourceUnitId,
       },
-      choice: { kind: "chooseOne", maxOptions: 1 },
+      choice: {
+        kind: CUNNING_STRIKE_CHOICE_KIND[mechanics.choice.kind],
+        maxOptions: mechanics.choice.maxOptions,
+      },
       effectSaveDc: {
-        kind: "classFeatureAbilitySaveDc",
-        base: 8,
-        ability: "dex",
+        kind: CUNNING_STRIKE_SAVE_DC_KIND[mechanics.effectSaveDc.kind],
+        base: mechanics.effectSaveDc.base,
+        ability: mechanics.effectSaveDc.ability,
       },
       options,
     },
   };
 }
 
-function cunningStrikeOptionGrantProfileForUnit(
+function cunningStrikeProfileForUnit(
   unit: AuthoredUnitSource,
-): Extract<
-  SupportedUnitFeatureProfile,
-  { readonly kind: "cunningStrikeOptionGrant" }
-> | null {
-  /* v8 ignore start -- Unsupported structured input: a Cunning Strike option grant requires its dedicated class-feature mechanics family. */
-  if (
-    unit.kind !== "class_feature" ||
-    unit.mechanics.family !== "cunning_strike_option_grant"
-  ) {
+  classLevels: readonly CharacterBattleClassLevel[],
+): CunningStrikeSupportedUnitFeatureProfile | null {
+  if (!isCunningStrikeUnit(unit)) {
     return null;
   }
-  /* v8 ignore stop */
+  return cunningStrikeProfileForAdmittedUnit(unit, classLevels);
+}
+
+type CunningStrikeOptionGrantSupportedUnitFeatureProfile = Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "cunningStrikeOptionGrant" }
+>;
+
+function isCunningStrikeOptionGrantUnit(
+  unit: AuthoredUnitSource,
+): unit is CunningStrikeOptionGrantUnit {
+  return (
+    unit.kind === "class_feature" &&
+    unit.mechanics.family === "cunning_strike_option_grant"
+  );
+}
+
+function cunningStrikeOptionGrantProfileForAdmittedUnit(
+  unit: CunningStrikeOptionGrantUnit,
+): CunningStrikeOptionGrantSupportedUnitFeatureProfile {
   const option = cunningStrikeOptionForOptionGrantSurfaceOption(
     unit.mechanics.option,
   );
-  /* v8 ignore start -- Unsupported structured input: the granted option failed its cost or effect admission gate. */
-  if (option === null) {
-    return null;
-  }
-  /* v8 ignore stop */
   return {
     kind: CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
     unit,
@@ -6570,73 +6600,121 @@ function cunningStrikeOptionGrantProfileForUnit(
   };
 }
 
-function paladinSacredWeaponProfileForUnit(
+function cunningStrikeOptionGrantProfileForUnit(
   unit: AuthoredUnitSource,
-): Extract<
+): CunningStrikeOptionGrantSupportedUnitFeatureProfile | null {
+  if (!isCunningStrikeOptionGrantUnit(unit)) {
+    return null;
+  }
+  return cunningStrikeOptionGrantProfileForAdmittedUnit(unit);
+}
+
+const PALADIN_SACRED_WEAPON_ACTIVATION_COST_KIND = {
+  standard_action: "standardAction",
+} as const satisfies Record<
+  PaladinSacredWeaponMechanics["activationCost"]["kind"],
+  PaladinSacredWeaponProfile["activationCost"]["kind"]
+>;
+const PALADIN_SACRED_WEAPON_TARGET_KIND = {
+  held_melee_weapon: "heldMeleeWeapon",
+} as const satisfies Record<
+  PaladinSacredWeaponMechanics["target"]["kind"],
+  PaladinSacredWeaponProfile["target"]
+>;
+const PALADIN_SACRED_WEAPON_DURATION_END = {
+  use_feature_again: "useFeatureAgain",
+  dismiss_no_action: "dismissNoAction",
+  not_carrying_weapon: "notCarryingWeapon",
+} as const satisfies Record<
+  PaladinSacredWeaponMechanics["duration"]["endsOn"][number],
+  PaladinSacredWeaponProfile["duration"]["endsOn"][number]
+>;
+const PALADIN_SACRED_WEAPON_ATTACK_ROLL_BONUS_KIND = {
+  ability_modifier: "abilityModifier",
+} as const satisfies Record<
+  PaladinSacredWeaponMechanics["attackRollBonus"]["kind"],
+  PaladinSacredWeaponProfile["attackRollBonus"]["kind"]
+>;
+const PALADIN_SACRED_WEAPON_ATTACK_ROLL_APPLICATION = {
+  imbued_weapon_attack_rolls: "imbuedWeaponAttackRolls",
+} as const satisfies Record<
+  PaladinSacredWeaponMechanics["attackRollBonus"]["appliesTo"],
+  PaladinSacredWeaponProfile["attackRollBonus"]["appliesTo"]
+>;
+
+function paladinSacredWeaponDurationEnds(
+  endsOn: PaladinSacredWeaponMechanics["duration"]["endsOn"],
+): PaladinSacredWeaponProfile["duration"]["endsOn"] {
+  return [
+    PALADIN_SACRED_WEAPON_DURATION_END[endsOn[0]],
+    PALADIN_SACRED_WEAPON_DURATION_END[endsOn[1]],
+    PALADIN_SACRED_WEAPON_DURATION_END[endsOn[2]],
+  ];
+}
+
+type PaladinSacredWeaponSupportedUnitFeatureProfile = Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "paladinSacredWeapon" }
-> | null {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "paladin" ||
-    unit.mechanics.family !== "sacred_weapon"
-  ) {
-    return null;
-  }
+>;
+
+function isPaladinSacredWeaponUnit(
+  unit: AuthoredUnitSource,
+): unit is PaladinSacredWeaponUnit {
+  return (
+    unit.kind === "class_feature" && unit.mechanics.family === "sacred_weapon"
+  );
+}
+
+function paladinSacredWeaponProfileForAdmittedUnit(
+  unit: PaladinSacredWeaponUnit,
+): PaladinSacredWeaponSupportedUnitFeatureProfile {
   const mechanics = unit.mechanics;
-  if (
-    mechanics.activationCost.kind !== "standard_action" ||
-    mechanics.activationCost.action !== "attack" ||
-    // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
-    mechanics.spends.resourceUnitId !==
-      PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID ||
-    mechanics.spends.amount !== 1 ||
-    mechanics.target.kind !== "held_melee_weapon" ||
-    mechanics.duration.unit !== "minute" ||
-    mechanics.duration.amount !== 10 ||
-    !sameStringSet(mechanics.duration.endsOn, [
-      "use_feature_again",
-      "dismiss_no_action",
-      "not_carrying_weapon",
-    ]) ||
-    mechanics.attackRollBonus.kind !== "ability_modifier" ||
-    mechanics.attackRollBonus.ability !== "cha" ||
-    mechanics.attackRollBonus.minimum !== 1 ||
-    mechanics.attackRollBonus.appliesTo !== "imbued_weapon_attack_rolls" ||
-    !sameStringSet(mechanics.hitDamageType.choice, ["normal", "radiant"]) ||
-    mechanics.light.brightRadiusFeet !== 20 ||
-    mechanics.light.dimAdditionalFeet !== 20
-  ) {
-    return null;
-  }
   return {
     kind: "paladinSacredWeapon",
     unit,
     sacredWeapon: {
-      activationCost: { kind: "standardAction", action: "attack" },
-      spends: {
-        resourceUnitId: PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID,
-        amount: 1,
+      activationCost: {
+        kind: PALADIN_SACRED_WEAPON_ACTIVATION_COST_KIND[
+          mechanics.activationCost.kind
+        ],
+        action: mechanics.activationCost.action,
       },
-      target: "heldMeleeWeapon",
+      spends: {
+        resourceUnitId: mechanics.spends.resourceUnitId,
+        amount: mechanics.spends.amount,
+      },
+      target: PALADIN_SACRED_WEAPON_TARGET_KIND[mechanics.target.kind],
       duration: {
-        unit: "minute",
-        amount: 10,
-        endsOn: ["useFeatureAgain", "dismissNoAction", "notCarryingWeapon"],
+        unit: mechanics.duration.unit,
+        amount: mechanics.duration.amount,
+        endsOn: paladinSacredWeaponDurationEnds(mechanics.duration.endsOn),
       },
       attackRollBonus: {
-        kind: "abilityModifier",
-        ability: "cha",
-        minimum: 1,
-        appliesTo: "imbuedWeaponAttackRolls",
+        kind: PALADIN_SACRED_WEAPON_ATTACK_ROLL_BONUS_KIND[
+          mechanics.attackRollBonus.kind
+        ],
+        ability: mechanics.attackRollBonus.ability,
+        minimum: mechanics.attackRollBonus.minimum,
+        appliesTo:
+          PALADIN_SACRED_WEAPON_ATTACK_ROLL_APPLICATION[
+            mechanics.attackRollBonus.appliesTo
+          ],
       },
-      hitDamageTypeChoice: ["normal", "radiant"],
+      hitDamageTypeChoice: mechanics.hitDamageType.choice,
       light: {
-        brightRadiusFeet: movementFeet(20),
-        dimAdditionalFeet: movementFeet(20),
+        brightRadiusFeet: movementFeet(mechanics.light.brightRadiusFeet),
+        dimAdditionalFeet: movementFeet(mechanics.light.dimAdditionalFeet),
       },
     },
   };
+}
+
+function paladinSacredWeaponProfileForUnit(
+  unit: AuthoredUnitSource,
+): PaladinSacredWeaponSupportedUnitFeatureProfile | null {
+  return isPaladinSacredWeaponUnit(unit)
+    ? paladinSacredWeaponProfileForAdmittedUnit(unit)
+    : null;
 }
 
 function huntersPreyAdmittedMechanicsProfileForUnit(
@@ -6713,211 +6791,376 @@ function huntersPreyAdmittedMechanicsProfileForUnit(
   };
 }
 
-function rogueSteadyAimProfileForUnit(
-  unit: AuthoredUnitSource,
-): Extract<
+const ROGUE_STEADY_AIM_ACTIVATION_COST_KIND = {
+  bonus_action: "bonusAction",
+} as const satisfies Record<
+  RogueSteadyAimMechanics["activationCost"]["kind"],
+  RogueSteadyAimProfile["activationCost"]["kind"]
+>;
+const ROGUE_STEADY_AIM_PRECONDITION_KIND = {
+  no_movement_this_turn: "noMovementThisTurn",
+} as const satisfies Record<
+  RogueSteadyAimMechanics["precondition"]["kind"],
+  RogueSteadyAimProfile["precondition"]
+>;
+const ROGUE_STEADY_AIM_ATTACK_ROLL_APPLICATION = {
+  next_attack_roll_current_turn: "nextAttackRollCurrentTurn",
+} as const satisfies Record<
+  RogueSteadyAimMechanics["attackRoll"]["appliesTo"],
+  RogueSteadyAimProfile["attackRoll"]["appliesTo"]
+>;
+const ROGUE_STEADY_AIM_SPEED_KIND = {
+  set_to_zero: "setToZero",
+} as const satisfies Record<
+  RogueSteadyAimMechanics["speed"]["kind"],
+  RogueSteadyAimProfile["speed"]["kind"]
+>;
+const ROGUE_STEADY_AIM_SPEED_DURATION = {
+  end_of_current_turn: "endOfCurrentTurn",
+} as const satisfies Record<
+  RogueSteadyAimMechanics["speed"]["until"],
+  RogueSteadyAimProfile["speed"]["until"]
+>;
+
+type RogueSteadyAimSupportedUnitFeatureProfile = Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "rogueSteadyAim" }
-> | null {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "rogue" ||
-    unit.mechanics.family !== "steady_aim"
-  ) {
-    return null;
-  }
+>;
+
+function isRogueSteadyAimUnit(
+  unit: AuthoredUnitSource,
+): unit is RogueSteadyAimUnit {
+  return (
+    unit.kind === "class_feature" && unit.mechanics.family === "steady_aim"
+  );
+}
+
+function rogueSteadyAimProfileForAdmittedUnit(
+  unit: RogueSteadyAimUnit,
+): RogueSteadyAimSupportedUnitFeatureProfile {
   const mechanics = unit.mechanics;
-  if (
-    mechanics.activationCost.kind !== "bonus_action" ||
-    mechanics.precondition.kind !== "no_movement_this_turn" ||
-    mechanics.attackRoll.mode !== "advantage" ||
-    mechanics.attackRoll.appliesTo !== "next_attack_roll_current_turn" ||
-    mechanics.speed.kind !== "set_to_zero" ||
-    mechanics.speed.until !== "end_of_current_turn"
-  ) {
-    return null;
-  }
   return {
     kind: "rogueSteadyAim",
     unit,
     steadyAim: {
-      activationCost: { kind: "bonusAction" },
-      precondition: "noMovementThisTurn",
-      attackRoll: {
-        mode: "advantage",
-        appliesTo: "nextAttackRollCurrentTurn",
+      activationCost: {
+        kind: ROGUE_STEADY_AIM_ACTIVATION_COST_KIND[
+          mechanics.activationCost.kind
+        ],
       },
-      speed: { kind: "setToZero", until: "endOfCurrentTurn" },
+      precondition:
+        ROGUE_STEADY_AIM_PRECONDITION_KIND[mechanics.precondition.kind],
+      attackRoll: {
+        mode: mechanics.attackRoll.mode,
+        appliesTo:
+          ROGUE_STEADY_AIM_ATTACK_ROLL_APPLICATION[
+            mechanics.attackRoll.appliesTo
+          ],
+      },
+      speed: {
+        kind: ROGUE_STEADY_AIM_SPEED_KIND[mechanics.speed.kind],
+        until: ROGUE_STEADY_AIM_SPEED_DURATION[mechanics.speed.until],
+      },
+    },
+  };
+}
+
+function rogueSteadyAimProfileForUnit(
+  unit: AuthoredUnitSource,
+): RogueSteadyAimSupportedUnitFeatureProfile | null {
+  return isRogueSteadyAimUnit(unit)
+    ? rogueSteadyAimProfileForAdmittedUnit(unit)
+    : null;
+}
+
+const POTENT_CANTRIP_TRIGGER_KIND = {
+  cast_cantrip_at_creature: "castCantripAtCreature",
+} as const satisfies Record<
+  PotentCantripMechanics["trigger"]["kind"],
+  PotentCantripProfile["trigger"]["kind"]
+>;
+const POTENT_CANTRIP_OUTCOME = {
+  miss_with_attack_roll: "missWithAttackRoll",
+  target_succeeds_saving_throw: "targetSucceedsSavingThrow",
+} as const satisfies Record<
+  PotentCantripMechanics["outcomes"][number],
+  PotentCantripProfile["outcomes"][number]
+>;
+const POTENT_CANTRIP_DAMAGE_KIND = {
+  half_cantrip_damage_if_any: "halfCantripDamageIfAny",
+} as const satisfies Record<
+  PotentCantripMechanics["damage"]["kind"],
+  PotentCantripProfile["damage"]
+>;
+
+type PotentCantripSupportedUnitFeatureProfile = Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "potentCantrip" }
+>;
+
+function isPotentCantripUnit(
+  unit: AuthoredUnitSource,
+): unit is PotentCantripUnit {
+  return (
+    unit.kind === "class_feature" && unit.mechanics.family === "potent_cantrip"
+  );
+}
+
+function potentCantripProfileForAdmittedUnit(
+  unit: PotentCantripUnit,
+): PotentCantripSupportedUnitFeatureProfile {
+  const mechanics = unit.mechanics;
+  return {
+    kind: "potentCantrip",
+    unit,
+    potentCantrip: {
+      trigger: {
+        kind: POTENT_CANTRIP_TRIGGER_KIND[mechanics.trigger.kind],
+        cantripKind: mechanics.trigger.cantripKind,
+      },
+      outcomes: [
+        POTENT_CANTRIP_OUTCOME[mechanics.outcomes[0]],
+        POTENT_CANTRIP_OUTCOME[mechanics.outcomes[1]],
+      ],
+      damage: POTENT_CANTRIP_DAMAGE_KIND[mechanics.damage.kind],
+      additionalEffect: mechanics.additionalEffect,
     },
   };
 }
 
 function potentCantripProfileForUnit(
   unit: AuthoredUnitSource,
-): Extract<
+): PotentCantripSupportedUnitFeatureProfile | null {
+  return isPotentCantripUnit(unit)
+    ? potentCantripProfileForAdmittedUnit(unit)
+    : null;
+}
+
+const GRAPPLER_PUNCH_AND_GRAB_TRIGGER = {
+  attack_action_unarmed_strike_hit_on_turn:
+    "attackActionUnarmedStrikeHitOnTurn",
+} as const satisfies Record<
+  GrapplerMechanics["punchAndGrab"]["trigger"],
+  GrapplerProfile["punchAndGrab"]["trigger"]
+>;
+const GRAPPLER_PUNCH_AND_GRAB_OPTION = {
+  damage: "damage",
+  grapple: "grapple",
+} as const satisfies Record<
+  GrapplerMechanics["punchAndGrab"]["options"][number],
+  GrapplerProfile["punchAndGrab"]["options"][number]
+>;
+const GRAPPLER_PUNCH_AND_GRAB_USAGE_LIMIT = {
+  once_per_turn: "oncePerTurn",
+} as const satisfies Record<
+  GrapplerMechanics["punchAndGrab"]["usageLimit"]["kind"],
+  GrapplerProfile["punchAndGrab"]["usageLimit"]
+>;
+const GRAPPLER_ATTACK_ADVANTAGE_TARGET = {
+  creature_grappled_by_you: "creatureGrappledByYou",
+} as const satisfies Record<
+  GrapplerMechanics["attackAdvantage"]["target"],
+  GrapplerProfile["attackAdvantage"]["target"]
+>;
+const GRAPPLER_FAST_WRESTLER_MOVEMENT_COST = {
+  no_extra_grapple_drag_cost: "noExtraGrappleDragCost",
+} as const satisfies Record<
+  GrapplerMechanics["fastWrestler"]["movementCost"],
+  GrapplerProfile["fastWrestler"]["movementCost"]
+>;
+const GRAPPLER_FAST_WRESTLER_TARGET_SIZE = {
+  your_size_or_smaller: "yourSizeOrSmaller",
+} as const satisfies Record<
+  GrapplerMechanics["fastWrestler"]["targetSize"],
+  GrapplerProfile["fastWrestler"]["targetSize"]
+>;
+
+function grapplerPunchAndGrabOptions(
+  options: GrapplerMechanics["punchAndGrab"]["options"],
+): GrapplerProfile["punchAndGrab"]["options"] {
+  return [
+    GRAPPLER_PUNCH_AND_GRAB_OPTION[options[0]],
+    GRAPPLER_PUNCH_AND_GRAB_OPTION[options[1]],
+  ];
+}
+
+type GrapplerSupportedUnitFeatureProfile = Extract<
   SupportedUnitFeatureProfile,
-  { readonly kind: "potentCantrip" }
-> | null {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "wizard" ||
-    unit.mechanics.family !== "potent_cantrip"
-  ) {
-    return null;
-  }
+  { readonly kind: "grappler" }
+>;
+
+function isGrapplerUnit(unit: AuthoredUnitSource): unit is GrapplerUnit {
+  return unit.kind === "feat" && unit.mechanics.family === "grappler";
+}
+
+function grapplerProfileForAdmittedUnit(
+  unit: GrapplerUnit,
+): GrapplerSupportedUnitFeatureProfile {
   const mechanics = unit.mechanics;
-  if (
-    mechanics.trigger.kind !== "cast_cantrip_at_creature" ||
-    mechanics.trigger.cantripKind !== "damaging" ||
-    !sameStringSet(mechanics.outcomes, [
-      "miss_with_attack_roll",
-      "target_succeeds_saving_throw",
-    ]) ||
-    mechanics.damage.kind !== "half_cantrip_damage_if_any" ||
-    mechanics.additionalEffect !== "none"
-  ) {
-    return null;
-  }
   return {
-    kind: "potentCantrip",
+    kind: GRAPPLER_SUPPORT_PROFILE,
     unit,
-    potentCantrip: {
-      trigger: { kind: "castCantripAtCreature", cantripKind: "damaging" },
-      outcomes: ["missWithAttackRoll", "targetSucceedsSavingThrow"],
-      damage: "halfCantripDamageIfAny",
-      additionalEffect: "none",
+    grappler: {
+      punchAndGrab: {
+        trigger:
+          GRAPPLER_PUNCH_AND_GRAB_TRIGGER[mechanics.punchAndGrab.trigger],
+        options: grapplerPunchAndGrabOptions(mechanics.punchAndGrab.options),
+        usageLimit:
+          GRAPPLER_PUNCH_AND_GRAB_USAGE_LIMIT[
+            mechanics.punchAndGrab.usageLimit.kind
+          ],
+      },
+      attackAdvantage: {
+        mode: mechanics.attackAdvantage.mode,
+        target:
+          GRAPPLER_ATTACK_ADVANTAGE_TARGET[mechanics.attackAdvantage.target],
+      },
+      fastWrestler: {
+        movementCost:
+          GRAPPLER_FAST_WRESTLER_MOVEMENT_COST[
+            mechanics.fastWrestler.movementCost
+          ],
+        targetSize:
+          GRAPPLER_FAST_WRESTLER_TARGET_SIZE[mechanics.fastWrestler.targetSize],
+      },
     },
   };
 }
 
 function grapplerProfileForUnit(
   unit: AuthoredUnitSource,
-): Extract<SupportedUnitFeatureProfile, { readonly kind: "grappler" }> | null {
-  if (unit.kind !== "feat" || unit.mechanics.family !== "grappler") {
-    return null;
-  }
-  const mechanics = unit.mechanics;
-  if (
-    mechanics.punchAndGrab.trigger !==
-      "attack_action_unarmed_strike_hit_on_turn" ||
-    !sameStringSet(mechanics.punchAndGrab.options, ["damage", "grapple"]) ||
-    mechanics.punchAndGrab.usageLimit.kind !== "once_per_turn" ||
-    mechanics.attackAdvantage.mode !== "advantage" ||
-    !sameStringSet(mechanics.attackAdvantage.on, ["attack_roll"]) ||
-    mechanics.attackAdvantage.target !== "creature_grappled_by_you" ||
-    mechanics.fastWrestler.movementCost !== "no_extra_grapple_drag_cost" ||
-    mechanics.fastWrestler.targetSize !== "your_size_or_smaller"
-  ) {
-    return null;
-  }
-  return {
-    kind: GRAPPLER_SUPPORT_PROFILE,
-    unit,
-    grappler: {
-      punchAndGrab: {
-        trigger: "attackActionUnarmedStrikeHitOnTurn",
-        options: ["damage", "grapple"],
-        usageLimit: "oncePerTurn",
-      },
-      attackAdvantage: {
-        mode: "advantage",
-        target: "creatureGrappledByYou",
-      },
-      fastWrestler: {
-        movementCost: "noExtraGrappleDragCost",
-        targetSize: "yourSizeOrSmaller",
-      },
-    },
-  };
+): GrapplerSupportedUnitFeatureProfile | null {
+  return isGrapplerUnit(unit) ? grapplerProfileForAdmittedUnit(unit) : null;
 }
 
 export function battleGrapplerSupportForUnit(
   unit: AuthoredUnitSource,
-): BattleGrapplerSupportProfile | "unsupported" | null {
-  const profile = grapplerProfileForUnit(unit);
-  if (profile !== null) {
-    return { kind: GRAPPLER_SUPPORT_PROFILE, grappler: profile.grappler };
+): BattleGrapplerSupport {
+  if (!isGrapplerUnit(unit)) {
+    return null;
   }
-  return unit.kind === "feat" && unit.mechanics.family === "grappler"
-    ? "unsupported"
-    : null;
+  const profile = grapplerProfileForAdmittedUnit(unit);
+  return { kind: GRAPPLER_SUPPORT_PROFILE, grappler: profile.grappler };
 }
 
 export function battleBrutalStrikeSupportForUnit(
   unit: AuthoredUnitSource,
-): BattleBrutalStrikeSupportProfile | "unsupported" | null {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.mechanics.family !== "brutal_strike"
-  ) {
+): BattleBrutalStrikeSupport {
+  if (!isBrutalStrikeUnit(unit)) {
     return null;
   }
+  return battleBrutalStrikeSupportForAdmittedUnit(unit);
+}
+
+const BRUTAL_STRIKE_TRIGGER_KIND = {
+  reckless_attack_strength_attack_hit: "recklessAttackStrengthAttackHit",
+} as const satisfies Record<
+  BrutalStrikeMechanics["trigger"]["kind"],
+  BrutalStrikeProfile["trigger"]["kind"]
+>;
+const BRUTAL_STRIKE_DAMAGE_TYPE = {
+  same_as_attack: "sameAsAttack",
+} as const satisfies Record<
+  BrutalStrikeMechanics["damage"]["damageType"],
+  BrutalStrikeProfile["damage"]["damageType"]
+>;
+type BrutalStrikeSelfMovementKey =
+  `${BrutalStrikeMechanics["options"][0]["selfMovement"]["kind"]}:${BrutalStrikeMechanics["options"][0]["selfMovement"]["opportunityAttacks"]}`;
+const BRUTAL_STRIKE_SELF_MOVEMENT_KIND = {
+  "move_toward_target:does_not_provoke":
+    "moveTowardTargetWithoutOpportunityAttacks",
+} as const satisfies Record<
+  BrutalStrikeSelfMovementKey,
+  BrutalStrikeProfile["options"][0]["effect"]["selfMovement"]["kind"]
+>;
+const BRUTAL_STRIKE_SELF_MOVEMENT_DISTANCE = {
+  half_speed: "halfSpeed",
+} as const satisfies Record<
+  BrutalStrikeMechanics["options"][0]["selfMovement"]["distance"]["kind"],
+  BrutalStrikeProfile["options"][0]["effect"]["selfMovement"]["distance"]
+>;
+const BRUTAL_STRIKE_HAMSTRING_STACKING = {
+  most_recent_only: "mostRecentOnly",
+} as const satisfies Record<
+  BrutalStrikeMechanics["options"][1]["speedPenalty"]["stacking"],
+  BrutalStrikeProfile["options"][1]["effect"]["stacking"]
+>;
+const BRUTAL_STRIKE_HAMSTRING_EXPIRATION = {
+  start_of_your_next_turn: "startOfYourNextTurn",
+} as const satisfies Record<
+  BrutalStrikeMechanics["options"][1]["speedPenalty"]["until"],
+  BrutalStrikeProfile["options"][1]["effect"]["expires"]
+>;
+
+function brutalStrikeSelfMovementKind(
+  selfMovement: BrutalStrikeMechanics["options"][0]["selfMovement"],
+): BrutalStrikeProfile["options"][0]["effect"]["selfMovement"]["kind"] {
+  return BRUTAL_STRIKE_SELF_MOVEMENT_KIND[
+    `${selfMovement.kind}:${selfMovement.opportunityAttacks}`
+  ];
+}
+
+function brutalStrikeOptions(
+  options: BrutalStrikeMechanics["options"],
+): BrutalStrikeProfile["options"] {
+  const forceful = options[0];
+  const hamstring = options[1];
+  return [
+    {
+      selectionId: forceful.id,
+      effect: {
+        kind: "forcefulBlow",
+        pushFeet: movementFeet(forceful.forcedMovement.feet),
+        selfMovement: {
+          kind: brutalStrikeSelfMovementKind(forceful.selfMovement),
+          distance:
+            BRUTAL_STRIKE_SELF_MOVEMENT_DISTANCE[
+              forceful.selfMovement.distance.kind
+            ],
+        },
+      },
+    },
+    {
+      selectionId: hamstring.id,
+      effect: {
+        kind: "hamstringBlow",
+        deltaFeet: movementDeltaFeet(-hamstring.speedPenalty.feet),
+        stacking:
+          BRUTAL_STRIKE_HAMSTRING_STACKING[hamstring.speedPenalty.stacking],
+        expires:
+          BRUTAL_STRIKE_HAMSTRING_EXPIRATION[hamstring.speedPenalty.until],
+      },
+    },
+  ];
+}
+
+function isBrutalStrikeUnit(
+  unit: AuthoredUnitSource,
+): unit is BrutalStrikeUnit {
+  return (
+    unit.kind === "class_feature" && unit.mechanics.family === "brutal_strike"
+  );
+}
+
+function battleBrutalStrikeSupportForAdmittedUnit(
+  unit: BrutalStrikeUnit,
+): BattleBrutalStrikeSupportProfile {
   const mechanics = unit.mechanics;
-  const forceful = mechanics.options.find(
-    (option): option is (typeof mechanics.options)[0] =>
-      "forcedMovement" in option && "selfMovement" in option,
-  );
-  const hamstring = mechanics.options.find(
-    (option): option is (typeof mechanics.options)[1] =>
-      "speedPenalty" in option,
-  );
-  /* v8 ignore start -- Malformed Brutal Strike Surface mechanics are rejected at profile admission; canonical Forceful Blow and Hamstring projection is covered. */
-  if (
-    mechanics.trigger.kind !== "reckless_attack_strength_attack_hit" ||
-    mechanics.trigger.advantageForgone !== true ||
-    mechanics.trigger.attackMustNotHaveDisadvantage !== true ||
-    mechanics.damage.kind !== "add_attack_damage_dice" ||
-    mechanics.damage.damageType !== "same_as_attack" ||
-    mechanics.damage.dice.dice !== 1 ||
-    mechanics.damage.dice.dieSize !== 10 ||
-    mechanics.optionChoice.kind !== "choose_one" ||
-    mechanics.optionChoice.maxOptions !== 1 ||
-    mechanics.options.length !== 2 ||
-    forceful === undefined ||
-    hamstring === undefined ||
-    forceful.forcedMovement?.kind !== "push" ||
-    forceful.forcedMovement.feet !== 15 ||
-    forceful.forcedMovement.direction !== "straight_away_from_you" ||
-    forceful.selfMovement?.kind !== "move_toward_target" ||
-    forceful.selfMovement.distance.kind !== "half_speed" ||
-    forceful.selfMovement.opportunityAttacks !== "does_not_provoke" ||
-    hamstring.speedPenalty?.feet !== 15 ||
-    hamstring.speedPenalty.stacking !== "most_recent_only" ||
-    hamstring.speedPenalty.until !== "start_of_your_next_turn"
-  ) {
-    return "unsupported";
-  }
-  /* v8 ignore stop */
   return {
     kind: BRUTAL_STRIKE_SUPPORT_PROFILE,
     brutalStrike: {
       trigger: {
-        kind: "recklessAttackStrengthAttackHit",
-        advantageForgone: true,
-        attackMustNotHaveDisadvantage: true,
+        kind: BRUTAL_STRIKE_TRIGGER_KIND[mechanics.trigger.kind],
+        advantageForgone: mechanics.trigger.advantageForgone,
+        attackMustNotHaveDisadvantage:
+          mechanics.trigger.attackMustNotHaveDisadvantage,
       },
       damage: {
-        dice: 1,
-        dieSize: 10,
-        damageType: "sameAsAttack",
+        dice: mechanics.damage.dice.dice,
+        dieSize: mechanics.damage.dice.dieSize,
+        damageType: BRUTAL_STRIKE_DAMAGE_TYPE[mechanics.damage.damageType],
       },
-      options: [
-        {
-          id: forceful.id,
-          pushFeet: movementFeet(forceful.forcedMovement.feet),
-          selfMovement: {
-            kind: "moveTowardTarget",
-            distance: "halfSpeed",
-            opportunityAttacks: "doesNotProvoke",
-          },
-        },
-        {
-          id: hamstring.id,
-          deltaFeet: movementDeltaFeet(-hamstring.speedPenalty.feet),
-          stacking: "mostRecentOnly",
-          expires: "startOfYourNextTurn",
-        },
-      ],
+      options: brutalStrikeOptions(mechanics.options),
     },
   };
 }

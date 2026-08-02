@@ -9,6 +9,7 @@ import {
   type BattleFill,
   type BattleRolledDiceFill,
   type BattleAttackRollRelationshipFact,
+  type BattleBrutalStrikeForcefulBlowMovementFill,
   type BattleState,
   type BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
@@ -36,6 +37,9 @@ import {
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID,
   WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID,
   BRUTAL_STRIKE_DECISION_HOLE_ID,
+  BRUTAL_STRIKE_EFFECT_DECISION_HOLE_ID,
+  BRUTAL_STRIKE_FORCEFUL_BLOW_MOVEMENT_DECISION_HOLE_ID,
+  BRUTAL_STRIKE_FORCEFUL_BLOW_MOVEMENT_HOLE_ID,
   TACTICAL_MASTER_REPLACEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
@@ -63,6 +67,12 @@ import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat
 import { isMirrorImageDuplicateRollFill } from "./mirror-image-hit-interception.ts";
 import { DamageRelationshipDecisionsByHole } from "./damage-relationship-decisions.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
+
+function isBrutalStrikeForcefulBlowMovementFill(
+  fill: Extract<BattleFill, { readonly kind: "movement" }>,
+): fill is BattleBrutalStrikeForcefulBlowMovementFill {
+  return fill.value.brutalStrikeForcefulBlow !== undefined;
+}
 
 export function attackFillSet(
   fills: readonly BattleFill[],
@@ -124,6 +134,15 @@ export function attackFillSet(
     | undefined;
   let brutalStrikeDecision:
     | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
+  let brutalStrikeEffectDecision:
+    | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
+  let brutalStrikeForcefulBlowMovementDecision:
+    | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
+  let brutalStrikeForcefulBlowMovement:
+    | BattleBrutalStrikeForcefulBlowMovementFill
     | undefined;
   let openHandTechniqueDecision:
     | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
@@ -192,6 +211,59 @@ export function attackFillSet(
       continue;
     }
     if (fill.kind === "sanctuaryInterdictionOutcome") {
+      continue;
+    }
+
+    if (
+      fill.kind === "unitFeatureDecision" &&
+      fill.holeId === BRUTAL_STRIKE_EFFECT_DECISION_HOLE_ID
+    ) {
+      if (brutalStrikeEffectDecision !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Brutal Strike effect decision was filled twice.",
+        };
+      }
+      brutalStrikeEffectDecision = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "unitFeatureDecision" &&
+      fill.holeId === BRUTAL_STRIKE_FORCEFUL_BLOW_MOVEMENT_DECISION_HOLE_ID
+    ) {
+      /* v8 ignore start -- Malformed attack fill set: discovery permits one Forceful Blow movement decision. */
+      if (brutalStrikeForcefulBlowMovementDecision !== undefined) {
+        return {
+          tag: "invalid",
+          message:
+            "Brutal Strike Forceful Blow movement decision was filled twice.",
+        };
+      }
+      /* v8 ignore stop */
+      brutalStrikeForcefulBlowMovementDecision = fill;
+      continue;
+    }
+    if (
+      fill.kind === "movement" &&
+      fill.holeId === BRUTAL_STRIKE_FORCEFUL_BLOW_MOVEMENT_HOLE_ID
+    ) {
+      /* v8 ignore start -- Malformed attack fill set: discovery permits one Forceful Blow movement fill. */
+      if (brutalStrikeForcefulBlowMovement !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Brutal Strike Forceful Blow movement was filled twice.",
+        };
+      }
+      /* v8 ignore stop */
+      if (!isBrutalStrikeForcefulBlowMovementFill(fill)) {
+        return {
+          tag: "invalid",
+          message:
+            "Brutal Strike Forceful Blow movement requires the straight-toward-target fact.",
+        };
+      }
+      brutalStrikeForcefulBlowMovement = fill;
       continue;
     }
 
@@ -1039,6 +1111,9 @@ export function attackFillSet(
     weaponMasteryToppleSavingThrow,
     tacticalMasterReplacementDecision,
     brutalStrikeDecision,
+    brutalStrikeEffectDecision,
+    brutalStrikeForcefulBlowMovementDecision,
+    brutalStrikeForcefulBlowMovement,
     openHandTechniqueDecision,
     openHandTechniqueSavingThrow,
     stunningStrikeDecision,

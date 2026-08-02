@@ -72,6 +72,14 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
       battleMagicActionSaveGatedConditionSupportForUnit(abjureFoesUnit, []),
     ).toBe("unsupported");
     expect(
+      battleMagicActionSaveGatedConditionSupportForUnit(abjureFoesUnit, [
+        {
+          className: "paladin",
+          level: classLevel(8),
+        },
+      ]),
+    ).toBe("unsupported");
+    expect(
       battleMagicActionSaveGatedConditionSupportForUnit(channelDivinityUnit),
     ).toBeNull();
   });

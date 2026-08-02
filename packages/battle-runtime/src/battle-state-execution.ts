@@ -245,6 +245,7 @@ import {
 } from "./character-battle-resource-execution.ts";
 import type {
   CharacterUnitProcedureSource,
+  CharacterUnitProcedureExecution,
   CharacterExecutionState,
   CharacterProcedureBindingSnapshot,
   UnitFeatureProcedureExecution,
@@ -337,8 +338,8 @@ import {
   type BattleAntimagicFieldOngoingSpellEffectSourceKind,
 } from "./battle-reducer/domain-constants.ts";
 import {
-  BRUTAL_STRIKE_DECISION_CHOICES,
-  type BrutalStrikeDecisionChoice,
+  BRUTAL_STRIKE_EFFECT_DECISION_CHOICES,
+  type BrutalStrikeEffectDecisionChoice,
 } from "./unit-feature-execution-constants.ts";
 import type {
   KnockedOutConditionState,
@@ -1308,7 +1309,7 @@ export type BattleHidePrerequisite =
       readonly kind: "obscuredOnlyByCreatureOutOfEnemyLineOfSight";
       readonly obscuringCreatureId: CombatantId;
     };
-export type BattleMovementFillValue = {
+export type BattleMovementFillValueCommon = {
   readonly speedKind: BattleMovementSpeedKind;
   readonly movementCostFeet: MovementFeet;
   readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
@@ -1317,11 +1318,30 @@ export type BattleMovementFillValue = {
   readonly gustOfWindLineMovement?: BattleGustOfWindLineMovementFact;
   readonly grappleDrag?: BattleGrappleDragMovementFact;
   readonly creatureSpaceTraversal?: BattleCreatureSpaceTraversalMovementFact;
+};
+export type BattleOrdinaryMovementFillValue = BattleMovementFillValueCommon & {
   readonly jumpMovementReplacement?: BattleJumpMovementReplacementFact;
   readonly levitatedMovement?: BattleLevitatedMovementFact;
   readonly commandApproach?: BattleCommandApproachMovementFact;
   readonly commandFlee?: BattleCommandFleeMovementFact;
+  readonly brutalStrikeForcefulBlow?: never;
+  readonly additionalSpeedSegments?: never;
 };
+export type BattleBrutalStrikeForcefulBlowMovementFillValue =
+  BattleMovementFillValueCommon & {
+    readonly jumpMovementReplacement?: never;
+    readonly levitatedMovement?: never;
+    readonly commandApproach?: never;
+    readonly commandFlee?: never;
+    // The first segment is represented by the common fields above. Later
+    // segments make RAW switching between represented Speeds explicit without
+    // duplicating the first segment or a derived total distance.
+    readonly additionalSpeedSegments: readonly BattleMovementFillValueCommon[];
+    readonly brutalStrikeForcefulBlow: BattleBrutalStrikeForcefulBlowMovementFact;
+  };
+export type BattleMovementFillValue =
+  | BattleOrdinaryMovementFillValue
+  | BattleBrutalStrikeForcefulBlowMovementFillValue;
 export type BattleAcrobaticMovementPath =
   | "alongVerticalSurface"
   | "acrossLiquid";
@@ -1411,6 +1431,10 @@ export type BattleCommandApproachMovementFact = {
 };
 export type BattleCommandFleeMovementFact = {
   readonly kind: "commandFleeFastestAvailableRouteAwayFromCaster";
+};
+export type BattleBrutalStrikeForcefulBlowMovementFact = {
+  readonly kind: "brutalStrikeForcefulBlowStraightTowardTarget";
+  readonly targetId: CombatantId;
 };
 export type BattleJumpMovementReplacementFact = {
   readonly kind: "jumpMovementReplacement";
@@ -3737,6 +3761,14 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly levelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly attackRollMadeThisTurn: boolean;
+  readonly brutalStrike:
+    | { readonly kind: "available" }
+    | {
+        readonly kind: "pending";
+        readonly subject: BattleAttackHostSubject;
+        readonly targetId: CombatantId;
+      }
+    | { readonly kind: "spent" };
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly stunningStrikesUsedThisTurn: readonly StunningStrikeUsage[];
   readonly recklessAttackWhileRagingUsedThisTurn: readonly RecklessAttackWhileRagingUsage[];
@@ -5670,7 +5702,7 @@ export type BattleUnitFeatureDecisionHole = {
     | readonly ["use", "decline"]
     | readonly ["attempt", "decline"]
     | typeof OPEN_HAND_TECHNIQUE_DECISION_CHOICES
-    | typeof BRUTAL_STRIKE_DECISION_CHOICES
+    | typeof BRUTAL_STRIKE_EFFECT_DECISION_CHOICES
     | typeof TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES;
 };
 export type BattleHitPointHealingPoolAllocation = {
@@ -5732,7 +5764,7 @@ export type BattleInterruptDecisionHole = {
   readonly trigger: BattleInterruptTrigger;
   readonly eligibleResponders: readonly CombatantId[];
 };
-export type BattleMovementHole = {
+type BattleMovementHoleCommon = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "movement";
@@ -5744,6 +5776,13 @@ export type BattleMovementHole = {
     readonly movementBudgetFeet: MovementFeet;
   }[];
 };
+export type BattleMovementHole = BattleMovementHoleCommon &
+  (
+    | { readonly brutalStrikeForcefulBlow?: never }
+    | {
+        readonly brutalStrikeForcefulBlow: BattleBrutalStrikeForcefulBlowMovementFact;
+      }
+  );
 export type BattleLevitateAltitudeChangeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6102,6 +6141,16 @@ export type SourceDamageRollPenaltyRoll = Omit<
     readonly dieSize: 8;
   };
 };
+export type BattleMovementFill = {
+  readonly kind: "movement";
+  readonly holeId: BattleHoleId;
+  readonly value: BattleMovementFillValue;
+};
+export type BattleBrutalStrikeForcefulBlowMovementFill = {
+  readonly kind: "movement";
+  readonly holeId: BattleHoleId;
+  readonly value: BattleBrutalStrikeForcefulBlowMovementFillValue;
+};
 export type BattleFill =
   | {
       readonly kind: "helpAttackAllyDecision";
@@ -6193,7 +6242,7 @@ export type BattleFill =
         | "use"
         | "attempt"
         | OpenHandTechniqueDecisionChoice
-        | BrutalStrikeDecisionChoice
+        | BrutalStrikeEffectDecisionChoice
         | TacticalMasterReplacementDecision;
     }
   | {
@@ -6391,11 +6440,7 @@ export type BattleFill =
       readonly holeId: BattleHoleId;
       readonly value: BattleInterruptDecision;
     }
-  | {
-      readonly kind: "movement";
-      readonly holeId: BattleHoleId;
-      readonly value: BattleMovementFillValue;
-    }
+  | BattleMovementFill
   | {
       readonly kind: "levitateAltitudeChange";
       readonly holeId: BattleHoleId;
@@ -6444,14 +6489,84 @@ export type BattleResolutionCandidateInput = {
   readonly fills: readonly BattleFill[];
 };
 export type BattleResolutionInput = BattleResolutionCandidateInput;
-declare const admittedBattleResolutionInput: unique symbol;
-export type AdmittedBattleResolutionInput = BattleResolutionInput & {
-  readonly [admittedBattleResolutionInput]: true;
-};
 export type BattleResolutionInputForSubject<TSubject extends BattleSubject> =
   Omit<BattleResolutionCandidateInput, "subject"> & {
     readonly subject: TSubject;
   };
+declare const admittedBattleResolutionInput: unique symbol;
+type AdmittedBattleResolutionBrand = {
+  readonly [admittedBattleResolutionInput]: true;
+};
+type DruidWildShapeSubject = Extract<
+  BattleSubject,
+  { readonly tag: "druidWildShape" }
+>;
+type UnitFeatureSubject = Extract<
+  BattleSubject,
+  { readonly tag: "unitFeature" }
+>;
+type UnitFeatureAdmissionFacts = {
+  readonly admissionKind: "unitFeature";
+  readonly unitFeatureAdmission: {
+    readonly actor: CharacterBattleCreatureState;
+    readonly procedure: Extract<
+      CharacterUnitProcedureExecution,
+      { readonly kind: "unitFeature" }
+    >;
+  };
+};
+type DruidWildShapeAdmissionFacts = {
+  readonly admissionKind: "druidWildShape";
+  readonly wildShapeAdmission: {
+    readonly actor: CharacterBattleCreatureState;
+    readonly procedure: {
+      readonly kind: "unitFeature";
+      readonly source: Extract<
+        CharacterUnitProcedureSource,
+        { readonly kind: "resourcePool" }
+      >;
+      readonly execution: Extract<
+        UnitFeatureProcedureExecution,
+        { readonly kind: "druidWildShapeKnownForm" }
+      >;
+    };
+  };
+};
+export type AdmittedBattleResolutionInputFor<
+  TInput extends BattleResolutionInput,
+> = TInput extends BattleResolutionInput
+  ? AdmittedBattleResolutionInputMember<TInput>
+  : never;
+
+type AdmittedBattleResolutionInputMember<TInput extends BattleResolutionInput> =
+  | ([
+      Exclude<TInput["subject"], DruidWildShapeSubject | UnitFeatureSubject>,
+    ] extends [never]
+      ? never
+      : Omit<TInput, "subject"> &
+          AdmittedBattleResolutionBrand & {
+            readonly admissionKind: "general";
+            readonly subject: Exclude<
+              TInput["subject"],
+              DruidWildShapeSubject | UnitFeatureSubject
+            >;
+          })
+  | ([Extract<TInput["subject"], UnitFeatureSubject>] extends [never]
+      ? never
+      : Omit<TInput, "subject"> &
+          AdmittedBattleResolutionBrand &
+          UnitFeatureAdmissionFacts & {
+            readonly subject: Extract<TInput["subject"], UnitFeatureSubject>;
+          })
+  | ([Extract<TInput["subject"], DruidWildShapeSubject>] extends [never]
+      ? never
+      : Omit<TInput, "subject"> &
+          AdmittedBattleResolutionBrand &
+          DruidWildShapeAdmissionFacts & {
+            readonly subject: Extract<TInput["subject"], DruidWildShapeSubject>;
+          });
+export type AdmittedBattleResolutionInput =
+  AdmittedBattleResolutionInputFor<BattleResolutionInput>;
 export type BattleInterruptRouteOptions =
   | {
       readonly replayingInterruptedProcedure?: never;
@@ -6588,51 +6703,25 @@ export type DruidWildShapeBattleResolutionInput =
     Extract<BattleSubject, { readonly tag: "druidWildShape" }>
   >;
 
-type WithAdmittedSubject<
-  TInput extends BattleResolutionInput,
-  TTag extends BattleSubject["tag"],
-> = TInput extends BattleResolutionInput
-  ? Omit<TInput, "subject"> &
-      AdmittedBattleResolutionInput & {
-        readonly subject: Extract<BattleSubject, { readonly tag: TTag }>;
-      }
-  : never;
+type WithAdmittedSubject<TInput extends BattleResolutionInput> =
+  AdmittedBattleResolutionInputFor<TInput>;
 
-export type AdmittedActionSpellBattleResolutionInput = WithAdmittedSubject<
-  ActionSpellBattleResolutionInput,
-  "actionSpell"
->;
-export type AdmittedBonusActionSpellBattleResolutionInput = WithAdmittedSubject<
-  BonusActionSpellBattleResolutionInput,
-  "bonusActionSpell"
->;
+export type AdmittedActionSpellBattleResolutionInput =
+  WithAdmittedSubject<ActionSpellBattleResolutionInput>;
+export type AdmittedBonusActionSpellBattleResolutionInput =
+  WithAdmittedSubject<BonusActionSpellBattleResolutionInput>;
 export type AdmittedBonusActionDashSpellBattleResolutionInput =
-  WithAdmittedSubject<
-    BonusActionDashSpellBattleResolutionInput,
-    "bonusActionDashSpell"
-  >;
-export type AdmittedUnitFeatureBattleResolutionInput = WithAdmittedSubject<
-  UnitFeatureBattleResolutionInput,
-  "unitFeature"
->;
+  WithAdmittedSubject<BonusActionDashSpellBattleResolutionInput>;
+export type AdmittedUnitFeatureBattleResolutionInput =
+  WithAdmittedSubject<UnitFeatureBattleResolutionInput>;
 export type AdmittedUnitFeatureHeldWeaponActivationBattleResolutionInput =
-  WithAdmittedSubject<
-    UnitFeatureHeldWeaponActivationBattleResolutionInput,
-    "unitFeatureHeldWeaponActivation"
-  >;
-export type AdmittedMonkFocusOptionBattleResolutionInput = WithAdmittedSubject<
-  MonkFocusOptionBattleResolutionInput,
-  "monkFocusOption"
->;
+  WithAdmittedSubject<UnitFeatureHeldWeaponActivationBattleResolutionInput>;
+export type AdmittedMonkFocusOptionBattleResolutionInput =
+  WithAdmittedSubject<MonkFocusOptionBattleResolutionInput>;
 export type AdmittedMonkFocusFlurryOfBlowsStrikeBattleResolutionInput =
-  WithAdmittedSubject<
-    MonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
-    "monkFocusFlurryOfBlowsStrike"
-  >;
-export type AdmittedDruidWildShapeBattleResolutionInput = WithAdmittedSubject<
-  DruidWildShapeBattleResolutionInput,
-  "druidWildShape"
->;
+  WithAdmittedSubject<MonkFocusFlurryOfBlowsStrikeBattleResolutionInput>;
+export type AdmittedDruidWildShapeBattleResolutionInput =
+  WithAdmittedSubject<DruidWildShapeBattleResolutionInput>;
 
 export const BATTLE_INVALID_REASON_CODES = [
   "staleSubject",
@@ -6832,6 +6921,7 @@ export type BattleTurnSnapshot = {
   readonly levelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly attackRollMadeThisTurn: boolean;
+  readonly brutalStrikeChosenThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly stunningStrikesUsedThisTurn: readonly StunningStrikeUsage[];
   readonly recklessAttackWhileRagingUsedThisTurn: readonly RecklessAttackWhileRagingUsage[];

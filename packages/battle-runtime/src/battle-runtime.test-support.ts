@@ -60,7 +60,11 @@ import {
   resourceCount,
   type Condition,
 } from "@dnd/shared/types";
-import { statBlockId, unitId as parseUnitId } from "@dnd/shared/game-facts";
+import {
+  statBlockId,
+  type UnitId,
+  unitId as parseUnitId,
+} from "@dnd/shared/game-facts";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import {
   buildStatBlockCatalog,
@@ -1111,7 +1115,7 @@ export function cunningStrikeUnitRefs(): Extract<
 >["characterUnitRefs"] {
   const unit = rogueCunningStrikeUnit();
   const support = battleCunningStrikeSupportForUnit(unit);
-  if (support === null || support === "unsupported") {
+  if (support === null) {
     throw new Error("Expected Cunning Strike support profile.");
   }
   return [
@@ -4912,7 +4916,7 @@ function rogueCunningStrikeUnit(input?: {
       family: "cunning_strike",
       trigger: {
         kind: "deal_sneak_attack_damage",
-        sourceUnitId: parseUnitId("rogue_sneak_attack"),
+        sourceUnitId: parseExactUnitIdForTest("rogue_sneak_attack"),
       },
       choice: { kind: "choose_one", maxOptions: 1 },
       effectSaveDc: {
@@ -4958,6 +4962,14 @@ function rogueCunningStrikeUnit(input?: {
       ],
     },
   };
+}
+
+function parseExactUnitIdForTest<const Value extends string>(
+  value: Value,
+): Value & UnitId {
+  // SAFETY: parseUnitId establishes UnitId; the assertion restores the literal
+  // type erased by that parser's intentionally non-generic return type.
+  return parseUnitId(value) as Value & UnitId;
 }
 
 function rogueEvasionUnit(input?: {

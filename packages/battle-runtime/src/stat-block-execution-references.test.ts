@@ -28,6 +28,7 @@ import {
   statBlockCatalog,
   startBattleRight,
   statBlockCreatureInit,
+  statBlockRecord,
   unitLibrary,
   wizardId,
   wizardSpellcasting,
@@ -96,6 +97,62 @@ function executionReferenceView(
 }
 
 describe("Stat Block execution references", () => {
+  test("offers only rolled damage when structured attack damage omits a static value", () => {
+    const base = statBlockRecord();
+    const attacks = base.statBlock.actions?.attacks;
+    if (attacks === undefined) {
+      throw new Error("Expected Stat Block attacks.");
+    }
+    const [firstAttack, ...remainingAttacks] = attacks;
+    const withoutStaticDamage = (
+      attack: (typeof attacks)[number],
+    ): (typeof attacks)[number] => {
+      const [firstEffect, ...remainingEffects] = attack.onHit;
+      const withoutStaticAmount = (
+        effect: (typeof attack.onHit)[number],
+      ): (typeof attack.onHit)[number] => {
+        if (
+          effect.kind !== "damage" ||
+          effect.amount.kind !== "fixed" ||
+          !("static" in effect.amount)
+        ) {
+          return effect;
+        }
+        const { static: _static, ...amount } = effect.amount;
+        return { ...effect, amount };
+      };
+      return {
+        ...attack,
+        onHit: [
+          withoutStaticAmount(firstEffect),
+          ...remainingEffects.map(withoutStaticAmount),
+        ],
+      };
+    };
+    const rolledOnly = {
+      ...base,
+      statBlock: {
+        ...base.statBlock,
+        actions: {
+          ...base.statBlock.actions,
+          attacks: [
+            withoutStaticDamage(firstAttack),
+            ...remainingAttacks.map(withoutStaticDamage),
+          ],
+        },
+      },
+    } satisfies StatBlockRecord;
+    const [admission] = isolatedStatBlockAdmissions(
+      combatantId("rolled-only-stat-block"),
+      [rolledOnly],
+    );
+    expect(
+      statBlockAttackActionOptions(admission.execution).map(
+        ({ damageNotation }) => damageNotation,
+      ),
+    ).toEqual(attacks.map(() => "rolled"));
+  });
+
   test("rejects noncanonical replay occurrence references", () => {
     const activeEffectRef = battleActiveEffectExecutionRef(
       JSON.stringify({

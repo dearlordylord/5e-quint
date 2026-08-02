@@ -1,7 +1,10 @@
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 
-import { emptyBattleRuntimeContext } from "./battle-runtime-context.ts";
+import {
+  characterWeaponPresentationSource,
+  emptyBattleRuntimeContext,
+} from "./battle-runtime-context.ts";
 import { battleRuntimeContextForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleId,
@@ -152,6 +155,7 @@ describe("battle presentation joins", () => {
     if (actor?.origin.kind !== "character" || actor.origin.attack === null) {
       throw new Error("Expected Fighter weapon attack.");
     }
+    const attack = actor.origin.attack;
     const source = session.context.characters.get(fighterId);
     if (source === undefined) {
       throw new Error("Expected Fighter presentation source.");
@@ -166,12 +170,33 @@ describe("battle presentation joins", () => {
         session.state,
         contextWithoutWeapon,
         fighterId,
-        actor.origin.attack,
+        attack,
       ),
     ).toEqual(
       Either.left({
         tag: "attackPresentationJoinIssue",
         reason: "weaponPresentationMissing",
+      }),
+    );
+    const weaponSource = source.unitPresentationSources.find(
+      ({ unit }) => unit.id === attack.weapon.weaponUnitId,
+    );
+    if (weaponSource === undefined) {
+      throw new Error("Expected Fighter weapon presentation source.");
+    }
+    expect(
+      characterWeaponPresentationSource(
+        {
+          ...source,
+          unitPresentationSources: [weaponSource, weaponSource],
+        },
+        attack.weapon.weaponUnitId,
+      ),
+    ).toEqual(
+      Either.left({
+        tag: "characterWeaponPresentationSourceIssue",
+        reason: "ambiguous",
+        weaponUnitId: attack.weapon.weaponUnitId,
       }),
     );
     expect(fighterAttackSubject(session.state)).toBeDefined();

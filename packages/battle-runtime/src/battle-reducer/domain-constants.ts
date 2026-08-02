@@ -139,6 +139,24 @@ export const BRUTAL_STRIKE_DECISION_HOLE_ID = holeId(
 export const BRUTAL_STRIKE_DECISION_HOLE_INSTANCE = holeInstanceKey(
   "battle:unit-feature:brutal-strike:decision",
 );
+export const BRUTAL_STRIKE_EFFECT_DECISION_HOLE_ID = holeId(
+  "battle:unit-feature:brutal-strike:effect-decision",
+);
+export const BRUTAL_STRIKE_EFFECT_DECISION_HOLE_INSTANCE = holeInstanceKey(
+  "battle:unit-feature:brutal-strike:effect-decision",
+);
+export const BRUTAL_STRIKE_FORCEFUL_BLOW_MOVEMENT_DECISION_HOLE_ID = holeId(
+  "battle:unit-feature:brutal-strike:forceful-blow-movement:decision",
+);
+export const BRUTAL_STRIKE_FORCEFUL_BLOW_MOVEMENT_DECISION_HOLE_INSTANCE =
+  holeInstanceKey(
+    "battle:unit-feature:brutal-strike:forceful-blow-movement:decision",
+  );
+export const BRUTAL_STRIKE_FORCEFUL_BLOW_MOVEMENT_HOLE_ID = holeId(
+  "battle:unit-feature:brutal-strike:forceful-blow-movement",
+);
+export const BRUTAL_STRIKE_FORCEFUL_BLOW_MOVEMENT_HOLE_INSTANCE =
+  holeInstanceKey("battle:unit-feature:brutal-strike:forceful-blow-movement");
 export const OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID = holeId(
   "battle:unit-feature:open-hand-technique:save",
 );
