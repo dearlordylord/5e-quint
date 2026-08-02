@@ -970,12 +970,9 @@ export function resolveDruidWildShapeUnitFeature(
 ): BattleResolutionResult {
   const { actor, procedure } = input.wildShapeAdmission;
   const source = procedure.source;
-  const resource =
-    source?.kind === "resourcePool"
-      ? actor.origin.resources.find((candidate) => {
-          return candidate.resourcePoolRef === source.resourcePoolRef;
-        })
-      : undefined;
+  const resource = actor.origin.resources.find((candidate) => {
+    return candidate.resourcePoolRef === source.resourcePoolRef;
+  });
   if (resource === undefined) {
     return invalidResult(
       input.state,

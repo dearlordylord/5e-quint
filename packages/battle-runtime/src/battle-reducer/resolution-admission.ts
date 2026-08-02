@@ -125,12 +125,14 @@ function admitUnitSubject(
   }
   if (subject.tag === "druidWildShape") {
     return unitProcedure?.kind === "unitFeature" &&
-      unitProcedure.execution.kind === "druidWildShapeKnownForm"
+      unitProcedure.execution.kind === "druidWildShapeKnownForm" &&
+      unitProcedure.source.kind === "resourcePool"
       ? {
           tag: "admitted",
           input: asAdmittedDruidWildShape(input, actor, {
             ...unitProcedure,
             execution: unitProcedure.execution,
+            source: unitProcedure.source,
           }),
         }
       : { tag: "staleCharacterProcedure" };
@@ -179,6 +181,10 @@ function asAdmittedDruidWildShape(
         { readonly kind: "unitFeature" }
       >["execution"],
       { readonly kind: "druidWildShapeKnownForm" }
+    >;
+    readonly source: Extract<
+      CharacterUnitProcedureExecution["source"],
+      { readonly kind: "resourcePool" }
     >;
   },
 ): AdmittedDruidWildShapeBattleResolutionInput {

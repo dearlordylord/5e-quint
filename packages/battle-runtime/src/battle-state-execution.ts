@@ -6521,7 +6521,10 @@ type DruidWildShapeAdmissionFacts = {
     readonly actor: CharacterBattleCreatureState;
     readonly procedure: {
       readonly kind: "unitFeature";
-      readonly source: CharacterUnitProcedureSource;
+      readonly source: Extract<
+        CharacterUnitProcedureSource,
+        { readonly kind: "resourcePool" }
+      >;
       readonly execution: Extract<
         UnitFeatureProcedureExecution,
         { readonly kind: "druidWildShapeKnownForm" }
