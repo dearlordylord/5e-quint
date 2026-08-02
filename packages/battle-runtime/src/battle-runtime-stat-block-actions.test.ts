@@ -498,6 +498,7 @@ function resolveBiteAgainst(input: {
   readonly targetId: CombatantId;
   readonly target: Parameters<typeof startBattleRight>[0]["combatants"][number];
   readonly stateTransform?: (state: BattleState) => BattleState;
+  readonly attackRollMode?: "advantage";
 }): BattleState {
   const initialState = startBattleRight({
     battleId: battleId(input.battleIdValue),
@@ -534,7 +535,13 @@ function resolveBiteAgainst(input: {
       subject,
       fills: [
         targetChoice,
-        attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
+        attackRollFill(rollHole, {
+          total: 20,
+          naturalD20: 12,
+          ...(input.attackRollMode === undefined
+            ? {}
+            : { rollMode: input.attackRollMode }),
+        }),
       ],
     }),
     "rolledDice",
@@ -545,7 +552,13 @@ function resolveBiteAgainst(input: {
       subject,
       fills: [
         targetChoice,
-        attackRollFill(rollHole, { total: 20, naturalD20: 12 }),
+        attackRollFill(rollHole, {
+          total: 20,
+          naturalD20: 12,
+          ...(input.attackRollMode === undefined
+            ? {}
+            : { rollMode: input.attackRollMode }),
+        }),
         damageRollFill(damageHole, 1),
       ],
     }),
@@ -760,6 +773,29 @@ describe("battle runtime: Stat Block actions", () => {
     );
   });
 
+  test("Stat Block condition-rider support rejects duplicate and nonterminal riders", () => {
+    const statBlock = sizeGatedConditionRiderStatBlock();
+    const attack = statBlock.statBlock.actions?.attacks?.[0];
+    const damage = attack?.onHit[0];
+    const rider = attack?.onHit[1];
+    if (attack === undefined || damage === undefined || rider === undefined) {
+      throw new Error("Expected synthetic Bite damage and condition rider.");
+    }
+
+    expect(
+      supportedStatBlockAttackHitConditionRiders({
+        ...attack,
+        onHit: [damage, rider, rider],
+      }),
+    ).toBeNull();
+    expect(
+      supportedStatBlockAttackHitConditionRiders({
+        ...attack,
+        onHit: [rider, damage],
+      }),
+    ).toBeNull();
+  });
+
   test("Stat Block attack-hit target-size condition rider applies inside the size gate", () => {
     const resolved = resolveBiteAgainst({
       battleIdValue: "battle-monster-size-gated-condition-medium-target",
@@ -773,6 +809,54 @@ describe("battle runtime: Stat Block actions", () => {
 
     expect(target.hp).toBe(9);
     expect(hasCondition(target.conditions, "prone")).toBe(true);
+  });
+
+  test("Stat Block condition riders do not restore consumed one-shot target effects", () => {
+    const oneShotProcedureRef = battleProcedureExecutionRefForTest(
+      "synthetic-next-attack-against-target",
+    );
+    const resolved = resolveBiteAgainst({
+      battleIdValue:
+        "battle-monster-size-gated-condition-consumed-target-effect",
+      targetId: fighterId,
+      target: characterSeed({ initiative: 10 }),
+      attackRollMode: "advantage",
+      stateTransform: (state) => {
+        const target = state.combatants.get(fighterId);
+        if (target === undefined) {
+          throw new Error("Expected Bite target.");
+        }
+        return {
+          ...state,
+          combatants: new Map(state.combatants).set(fighterId, {
+            ...target,
+            activeEffects: [
+              ...target.activeEffects,
+              {
+                kind: "nextAttackRollAgainstSelf",
+                sourceProcedureRef: oneShotProcedureRef,
+                sourceCombatantId: goblinId,
+                mode: "advantage",
+                expiresAt: { kind: "startOfTurn", combatantId: goblinId },
+              },
+            ],
+          }),
+        };
+      },
+    });
+    const target = resolved.combatants.get(fighterId);
+    if (target === undefined) {
+      throw new Error("Expected Bite target.");
+    }
+
+    expect(hasCondition(target.conditions, "prone")).toBe(true);
+    expect(
+      target.activeEffects.some(
+        (effect) =>
+          effect.kind === "nextAttackRollAgainstSelf" &&
+          effect.sourceProcedureRef === oneShotProcedureRef,
+      ),
+    ).toBe(false);
   });
 
   test("Stat Block attack-hit target-size condition rider does not apply outside the size gate", () => {

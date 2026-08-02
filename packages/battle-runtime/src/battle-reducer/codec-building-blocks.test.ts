@@ -36,6 +36,28 @@ describe("battle action option codecs", () => {
     ).toBe(true);
   });
 
+  test("rejects a damage-type choice with fewer than two choices", () => {
+    const greataxe = testGreataxeAttack();
+    const decoded = Schema.decodeUnknownEither(
+      CharacterWeaponAttackActionOptionSchema,
+    )({
+      ...greataxe,
+      weaponObjectId: battleObjectId("main:synthetic_single_damage_choice"),
+      weapon: {
+        ...greataxe.weapon,
+        weaponUnitId: unitId("synthetic_single_damage_choice"),
+      },
+      damageTypeChoices: ["slashing"],
+    });
+
+    expect(Either.isLeft(decoded)).toBe(true);
+    if (Either.isLeft(decoded)) {
+      expect(String(decoded.left)).toContain(
+        "Weapon attack damage type choices must contain at least two choices.",
+      );
+    }
+  });
+
   test("accepts the admitted Stat Block attack options exposed by the runtime", () => {
     const state = goblinTurnBattle();
     const attacks = attackActionOptionsForActor(state, goblinId);

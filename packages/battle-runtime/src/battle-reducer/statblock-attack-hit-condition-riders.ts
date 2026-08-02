@@ -6,8 +6,7 @@ import type {
   BattleCreatureState,
   BattleState,
 } from "../battle-state-execution.ts";
-import type { SupportedAttackActionOption } from "../battle-action-options.ts";
-import type { CombatantId } from "../identity.ts";
+import type { StatBlockAttackActionOption } from "../battle-action-options.ts";
 import {
   creatureSizeIsAtMost,
   supportedStatBlockAttackHitConditionRiders,
@@ -18,16 +17,9 @@ import { conditionApplicationPreventedByConditionImmunity } from "./spell-condit
 
 export function applyStatBlockAttackHitConditionRiders(input: {
   readonly state: BattleState;
-  readonly targetId: CombatantId;
-  readonly attack: SupportedAttackActionOption;
+  readonly target: BattleCreatureState;
+  readonly attack: StatBlockAttackActionOption;
 }): BattleState {
-  if (input.attack.kind !== "statBlockAttack") {
-    return input.state;
-  }
-  const target = input.state.combatants.get(input.targetId);
-  if (target === undefined) {
-    return input.state;
-  }
   const riders = supportedStatBlockAttackHitConditionRiders(
     input.attack.attack,
   );
@@ -36,14 +28,14 @@ export function applyStatBlockAttackHitConditionRiders(input: {
   }
   const nextTarget = riders.reduce(
     applyStatBlockAttackHitConditionRider,
-    target,
+    input.target,
   );
-  return nextTarget === target
+  return nextTarget === input.target
     ? input.state
     : {
         ...input.state,
         combatants: new Map(input.state.combatants).set(
-          input.targetId,
+          input.target.combatantId,
           nextTarget,
         ),
       };

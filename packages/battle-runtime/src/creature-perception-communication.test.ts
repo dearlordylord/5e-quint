@@ -79,6 +79,15 @@ test("projects absent Stat Block languages distinctly from authored entries", ()
     kind: "statBlockCommunicationText",
     languages: { kind: "absentStatBlockLanguages" },
   });
+  expect(
+    combatantPerceptionCommunicationProjection(
+      combatant,
+      emptyBattleRuntimeContext(),
+    ).communication,
+  ).toEqual({
+    kind: "statBlockCommunicationText",
+    languages: { kind: "absentStatBlockLanguages" },
+  });
 });
 
 test("projects character languages and speech while not Incapacitated", () => {
@@ -167,6 +176,30 @@ test("projects Wild Shape form senses while retaining character communication", 
       },
     },
   });
+});
+
+test("projects no special senses when the active Wild Shape form has none", () => {
+  const form = statBlockCatalog.requireStatBlock("stat_block_riding_horse");
+  const initial = wildShapeBattle({
+    knownLanguages: ["Common", "Druidic", "Goblin"],
+    knownForms: [
+      statBlockCatalog.requireStatBlock("stat_block_rat"),
+      form,
+      statBlockCatalog.requireStatBlock("stat_block_lizard"),
+      statBlockCatalog.requireStatBlock("stat_block_cat"),
+    ],
+  });
+  const assumed = requireResolved(
+    resolveWildShapeAssumeFormWithMergedEquipment(initial, form.id),
+  );
+  const combatant = requireCombatant(assumed.state, characterCombatantId);
+
+  expect(
+    combatantPerceptionCommunicationProjection(
+      combatant,
+      emptyBattleRuntimeContext(),
+    ).specialSenses,
+  ).toEqual([]);
 });
 
 function statBlockSession(statBlock: StatBlockRecord): BattleRuntimeSession {

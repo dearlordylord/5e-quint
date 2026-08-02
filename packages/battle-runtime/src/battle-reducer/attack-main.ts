@@ -1634,13 +1634,14 @@ export function resolveSelectedAttackProcedure(
         attack,
       )
     : toppleApplied.state;
-  const hitAppliedState = hit
-    ? applyStatBlockAttackHitConditionRiders({
-        state: weaponHitAppliedState,
-        targetId: target.combatantId,
-        attack,
-      })
-    : weaponHitAppliedState;
+  const hitAppliedState =
+    hit && attack.kind === "statBlockAttack"
+      ? applyStatBlockAttackHitConditionRiders({
+          state: weaponHitAppliedState,
+          target: requireCurrentAttackTarget(weaponHitAppliedState, target),
+          attack,
+        })
+      : weaponHitAppliedState;
   const damageTarget =
     hitAppliedState.combatants.get(target.combatantId) ?? target;
   if (
@@ -2526,6 +2527,21 @@ export function resolveSelectedAttackProcedure(
     }),
     shovePushes,
   );
+}
+
+function requireCurrentAttackTarget(
+  state: BattleState,
+  resolvedTarget: BattleCreatureState,
+): BattleCreatureState {
+  const currentTarget = state.combatants.get(resolvedTarget.combatantId);
+  /* v8 ignore start -- Internal invariant: attack-roll effect/resource transitions preserve the already-resolved target combatant while possibly replacing its state value. */
+  if (currentTarget === undefined) {
+    throw new Error(
+      "Attack-roll transitions must preserve the resolved target.",
+    );
+  }
+  /* v8 ignore stop */
+  return currentTarget;
 }
 
 function withOpenHandTechniqueShovePushes(

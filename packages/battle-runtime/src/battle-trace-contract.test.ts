@@ -10,6 +10,7 @@ import {
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { invalidResult } from "./battle-reducer/result-helpers.ts";
 
 import {
   battleActTraceCheckpoint,
@@ -121,6 +122,16 @@ describe("battle trace contract", () => {
       { tag: "needsHoles", holeKinds: ["attackRoll"] },
       { tag: "resolved" },
     ]);
+  });
+
+  test("projects an invalid resolution with its precise reason", () => {
+    const state = startBattleRight().state;
+
+    expect(
+      battleResolutionTraceCheckpoint(
+        invalidResult(state, "invalidFill", "Synthetic invalid fill."),
+      ),
+    ).toEqual({ tag: "invalid", reason: "invalidFill" });
   });
 });
 
