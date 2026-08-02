@@ -23,6 +23,7 @@ import type {
   BattleActiveEffect,
   BattleAreaDifficultTerrainMovementFact,
   BattleAreaDifficultTerrainSource,
+  BattleBrutalStrikeForcefulBlowMovementFact,
   BattleCommandApproachMovementFact,
   BattleCommandFleeMovementFact,
   BattleCreatureSpaceTraversalMovementFact,
@@ -460,7 +461,12 @@ type BattleMovementParseMode =
       readonly effect: JumpMovementReplacementEffect;
     }
   | { readonly kind: "commandApproach" }
-  | { readonly kind: "commandFlee" };
+  | { readonly kind: "commandFlee" }
+  | {
+      readonly kind: "brutalStrikeForcefulBlow";
+      readonly targetId: CombatantId;
+      readonly movementBudgetFeet: MovementFeet;
+    };
 
 export function parseBattleMovement(
   state: BattleState,
@@ -471,7 +477,7 @@ export function parseBattleMovement(
   | { readonly tag: "ok"; readonly movement: BattleResolvedMovement }
   | { readonly tag: "invalid"; readonly message: string } {
   const movementBudgetFeet =
-    mode.kind === "budgetedMovement"
+    mode.kind === "budgetedMovement" || mode.kind === "brutalStrikeForcefulBlow"
       ? mode.movementBudgetFeet
       : battleMovementBudgetForActor(state, moverId, fill.value.speedKind)
           .remainingFeet;
@@ -599,6 +605,19 @@ export function parseBattleMovement(
     };
   }
   /* v8 ignore stop */
+  const brutalStrikeForcefulBlowValidation =
+    validateBrutalStrikeForcefulBlowMovementFact(
+      fill.value.brutalStrikeForcefulBlow,
+      mode.kind === "brutalStrikeForcefulBlow" ? mode.targetId : undefined,
+    );
+  /* v8 ignore start -- Malformed Brutal Strike fill: the table-owned straight-toward-target fact must match the selected attack target. */
+  if (brutalStrikeForcefulBlowValidation !== null) {
+    return {
+      tag: "invalid",
+      message: brutalStrikeForcefulBlowValidation,
+    };
+  }
+  /* v8 ignore stop */
   const movementCost = ordinaryMovementCost(
     movementFeet(fill.value.movementCostFeet),
     fill.value.speedKind,
@@ -675,7 +694,11 @@ export function parseBattleMovement(
       movementCostFeet: movementCost.costFeet,
       provokedOpportunityAttacks,
       spendsTurnMovement:
-        mode.kind === "budgetedMovement" ? mode.spendsTurnMovement : true,
+        mode.kind === "budgetedMovement"
+          ? mode.spendsTurnMovement
+          : mode.kind === "brutalStrikeForcefulBlow"
+            ? false
+            : true,
       ...optionalProperty("acrobaticMovement", fill.value.acrobaticMovement),
       ...optionalProperty(
         "areaDifficultTerrain",
@@ -1852,6 +1875,28 @@ function validateCommandFleeMovementFact(
   /* v8 ignore start -- Malformed Command fill: discovery requests the table-owned Flee route whenever that command movement is pending. */
   if (fact === undefined) {
     return "Command Flee requires caller-supplied route facts.";
+  }
+  /* v8 ignore stop */
+  return null;
+}
+
+function validateBrutalStrikeForcefulBlowMovementFact(
+  fact: BattleBrutalStrikeForcefulBlowMovementFact | undefined,
+  requiredTargetId: CombatantId | undefined,
+): string | null {
+  if (requiredTargetId === undefined) {
+    /* v8 ignore start -- Malformed Brutal Strike fill: discovery requests this spatial fact only for Forceful Blow follow-up movement. */
+    return fact === undefined
+      ? null
+      : "Brutal Strike Forceful Blow spatial facts cannot be supplied for ordinary Movement.";
+    /* v8 ignore stop */
+  }
+  /* v8 ignore start -- Malformed Brutal Strike fill: the table adapter must attest that the path runs straight toward the pushed target. */
+  if (fact === undefined) {
+    return "Brutal Strike Forceful Blow requires caller-supplied straight-toward-target facts.";
+  }
+  if (fact.targetId !== requiredTargetId) {
+    return "Brutal Strike Forceful Blow movement must be straight toward the attack target.";
   }
   /* v8 ignore stop */
   return null;

@@ -11,6 +11,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-02-BRUTAL-STRIKE-FORCEFUL-BLOW barbarian_brutal_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-03-BRUTAL-STRIKE-HAMSTRING barbarian_brutal_strike
 import { classLevel } from "@dnd/shared/types";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { CreatureNamedAttackRoll } from "@dnd/surface/surface/types";
 import {
   battleActUnitPresentation,
@@ -21,6 +22,7 @@ import {
   testBattleCreatureStateWithConditions,
   requireResolved,
   fighterAttackSubject,
+  grapplerUnitRefs,
   attackExecutionSelectionForSubjectForTest,
   goblinAttackSubject,
   attackInitialTargetHole,
@@ -68,6 +70,7 @@ import {
   discoverBattleActCandidates,
   discoverBattleActs,
   endTurn,
+  movementFill,
   movementFeet,
   movementDeltaFeet,
   resolveBattleInterrupt,
@@ -82,9 +85,11 @@ import { BRUTAL_STRIKE_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import { activeRageDamageBonusForFrenzy } from "./battle-reducer/barbarian-frenzy.ts";
 import { ongoingFeatureDamageModifier } from "./battle-reducer/damage-helpers.ts";
 import { resolveSelectedAttackProcedure } from "./battle-reducer/attack-main.ts";
+import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { attackFillsForAttackHitReplay } from "./battle-reducer/attack-damage-events.ts";
 import { FRENZY_DAMAGE_TYPE_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import { attackTargetHole } from "./battle-reducer/hole-helpers.ts";
+import { resetBattleTurnResources } from "./battle-reducer/turn-resource-reset.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-queries.ts";
 import { activeFeatureSpellSaveDcRouteEvents } from "./battle-reducer/active-feature-spell-routes.ts";
 import {
@@ -186,6 +191,7 @@ describe("battle runtime: class action features", () => {
         levelOnePlusSpellCastsThisTurn: [],
         quickenedLevelOnePlusSpellCastsThisTurn: [],
         attackRollMadeThisTurn: false,
+        brutalStrike: { kind: "available" },
         attackDamageRidersUsedThisTurn: [],
         stunningStrikesUsedThisTurn: [],
         recklessAttackWhileRagingUsedThisTurn: [],
@@ -338,6 +344,7 @@ describe("battle runtime: class action features", () => {
         levelOnePlusSpellCastsThisTurn: [],
         quickenedLevelOnePlusSpellCastsThisTurn: [],
         attackRollMadeThisTurn: false,
+        brutalStrike: { kind: "available" },
         attackDamageRidersUsedThisTurn: [],
         stunningStrikesUsedThisTurn: [],
         recklessAttackWhileRagingUsedThisTurn: [],
@@ -394,6 +401,7 @@ describe("battle runtime: class action features", () => {
         levelOnePlusSpellCastsThisTurn: [],
         quickenedLevelOnePlusSpellCastsThisTurn: [],
         attackRollMadeThisTurn: false,
+        brutalStrike: { kind: "available" },
         attackDamageRidersUsedThisTurn: [],
         stunningStrikesUsedThisTurn: [],
         recklessAttackWhileRagingUsedThisTurn: [],
@@ -576,6 +584,7 @@ describe("battle runtime: class action features", () => {
         levelOnePlusSpellCastsThisTurn: [],
         quickenedLevelOnePlusSpellCastsThisTurn: [],
         attackRollMadeThisTurn: false,
+        brutalStrike: { kind: "available" },
         attackDamageRidersUsedThisTurn: [],
         stunningStrikesUsedThisTurn: [],
         recklessAttackWhileRagingUsedThisTurn: [],
@@ -3022,6 +3031,37 @@ describe("battle runtime: class action features", () => {
     ]);
   });
 
+  test("Surface rejects malformed same-family Brutal Strike mechanics", () => {
+    const unit = unitLibrary.requireUnit("barbarian_brutal_strike");
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "brutal_strike"
+    ) {
+      throw new Error("Expected Brutal Strike mechanics.");
+    }
+    const mechanics = unit.mechanics;
+
+    expect(() =>
+      decodeUnitRecordSync({
+        ...unit,
+        id: "synthetic_brutal_strike_wrong_push_distance",
+        mechanics: {
+          ...mechanics,
+          options: [
+            {
+              ...mechanics.options[0],
+              forcedMovement: {
+                ...mechanics.options[0].forcedMovement,
+                feet: 10,
+              },
+            },
+            mechanics.options[1],
+          ],
+        },
+      }),
+    ).toThrow();
+  });
+
   test("Brutal Strike forgoes Reckless Advantage and adds same-type damage on a Strength hit", () => {
     const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
     const session = startBattleSessionRight({
@@ -3050,7 +3090,7 @@ describe("battle runtime: class action features", () => {
     );
     expect(decision).toMatchObject({
       label: "Use Brutal Strike",
-      choices: ["forceful_blow", "hamstring_blow", "decline"],
+      choices: ["use", "decline"],
     });
     const roll = requireHole(
       resolveBattleSubject({
@@ -3058,7 +3098,7 @@ describe("battle runtime: class action features", () => {
         subject: attackSubject,
         fills: [
           targetFill(target, goblinId),
-          unitFeatureDecisionFill(decision, "hamstring_blow"),
+          unitFeatureDecisionFill(decision, "use"),
         ],
       }),
       "attackRoll",
@@ -3077,7 +3117,7 @@ describe("battle runtime: class action features", () => {
       subject: attackSubject,
       fills: [
         targetFill(target, goblinId),
-        unitFeatureDecisionFill(decision, "hamstring_blow"),
+        unitFeatureDecisionFill(decision, "use"),
         attackRollFill(roll, {
           total: 15,
           naturalD20: 10,
@@ -3087,9 +3127,34 @@ describe("battle runtime: class action features", () => {
       ],
     });
     if (afterRoll.tag !== "needsHoles") {
-      throw new Error("Expected Brutal Strike hit to need damage.");
+      throw new Error("Expected Brutal Strike hit to need an effect choice.");
     }
-    const damage = findHole(afterRoll.holes, "rolledDice");
+    const effectDecision = findHole(afterRoll.holes, "unitFeatureDecision");
+    expect(effectDecision).toMatchObject({
+      label: "Choose a Brutal Strike effect",
+      choices: ["forceful_blow", "hamstring_blow", "decline"],
+    });
+    const afterEffect = resolveBattleSubject({
+      state: afterRoll.state,
+      subject: attackSubject,
+      fills: [
+        targetFill(target, goblinId),
+        unitFeatureDecisionFill(decision, "use"),
+        attackRollFill(roll, {
+          total: 15,
+          naturalD20: 10,
+          activatedOngoingFeatureProcedureRef:
+            requireRecklessAttackProcedureRef(state),
+        }),
+        unitFeatureDecisionFill(effectDecision, "decline"),
+      ],
+    });
+    if (afterEffect.tag !== "needsHoles") {
+      throw new Error(
+        `Expected Brutal Strike hit to need damage; got ${afterEffect.tag}${afterEffect.tag === "invalid" ? `: ${afterEffect.message}` : ""}.`,
+      );
+    }
+    const damage = findHole(afterEffect.holes, "rolledDice");
     expect(damage).toMatchObject({
       attackDamageRiders: [
         {
@@ -3102,6 +3167,35 @@ describe("battle runtime: class action features", () => {
           damage: { dice: 1, dieSize: 10, damageType: "slashing" },
         },
       ],
+    });
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: afterEffect.state,
+        subject: attackSubject,
+        fills: [
+          targetFill(target, goblinId),
+          unitFeatureDecisionFill(decision, "use"),
+          attackRollFill(roll, {
+            total: 15,
+            naturalD20: 10,
+            activatedOngoingFeatureProcedureRef:
+              requireRecklessAttackProcedureRef(state),
+          }),
+          unitFeatureDecisionFill(effectDecision, "decline"),
+          damageRollFillWithGroups(damage, [[1], [1]]),
+        ],
+      }),
+    );
+    expect(resolved.shovePushes ?? []).toEqual([]);
+    expect(
+      resolved.state.combatants
+        .get(goblinId)
+        ?.activeEffects.some(
+          (effect) => effect.kind === "brutalStrikeHamstring",
+        ),
+    ).toBe(false);
+    expect(resolved.state.currentTurnResources.brutalStrike).toEqual({
+      kind: "spent",
     });
   });
 
@@ -3139,7 +3233,7 @@ describe("battle runtime: class action features", () => {
         subject,
         fills: [
           targetFill(target, goblinId),
-          unitFeatureDecisionFill(decision, "hamstring_blow"),
+          unitFeatureDecisionFill(decision, "use"),
         ],
       }),
       "attackRoll",
@@ -3150,7 +3244,7 @@ describe("battle runtime: class action features", () => {
       subject,
       fills: [
         targetFill(target, goblinId),
-        unitFeatureDecisionFill(decision, "hamstring_blow"),
+        unitFeatureDecisionFill(decision, "use"),
         attackRollFill(roll, {
           total: 15,
           naturalD20: 10,
@@ -3160,10 +3254,29 @@ describe("battle runtime: class action features", () => {
       ],
     });
     if (afterRoll.tag !== "needsHoles") {
+      throw new Error("Expected Unarmed Brutal Strike hit to need an effect.");
+    }
+    const effectDecision = findHole(afterRoll.holes, "unitFeatureDecision");
+    const afterEffect = resolveBattleSubject({
+      state: afterRoll.state,
+      subject,
+      fills: [
+        targetFill(target, goblinId),
+        unitFeatureDecisionFill(decision, "use"),
+        attackRollFill(roll, {
+          total: 15,
+          naturalD20: 10,
+          activatedOngoingFeatureProcedureRef:
+            requireRecklessAttackProcedureRef(state),
+        }),
+        unitFeatureDecisionFill(effectDecision, "decline"),
+      ],
+    });
+    if (afterEffect.tag !== "needsHoles") {
       throw new Error("Expected Unarmed Brutal Strike hit to need damage.");
     }
 
-    expect(findHole(afterRoll.holes, "rolledDice")).toMatchObject({
+    expect(findHole(afterEffect.holes, "rolledDice")).toMatchObject({
       attackDamageRiders: [
         {
           procedureRef: requireCharacterUnitProcedureRefForTest(
@@ -3255,7 +3368,7 @@ describe("battle runtime: class action features", () => {
         subject: attackSubject,
         fills: [
           targetFill(secondTarget, goblinId),
-          unitFeatureDecisionFill(secondDecision, "hamstring_blow"),
+          unitFeatureDecisionFill(secondDecision, "use"),
         ],
       }),
       "attackRoll",
@@ -3268,16 +3381,33 @@ describe("battle runtime: class action features", () => {
       subject: attackSubject,
       fills: [
         targetFill(secondTarget, goblinId),
-        unitFeatureDecisionFill(secondDecision, "hamstring_blow"),
+        unitFeatureDecisionFill(secondDecision, "use"),
         attackRollFill(secondRoll, { total: 15, naturalD20: 10 }),
       ],
     });
     if (afterSecondRoll.tag !== "needsHoles") {
       throw new Error(
-        "Expected active-Reckless Brutal Strike hit to need damage.",
+        "Expected active-Reckless Brutal Strike hit to need an effect choice.",
       );
     }
-    const damage = findHole(afterSecondRoll.holes, "rolledDice");
+    const effectDecision = findHole(
+      afterSecondRoll.holes,
+      "unitFeatureDecision",
+    );
+    const afterEffect = resolveBattleSubject({
+      state: afterSecondRoll.state,
+      subject: attackSubject,
+      fills: [
+        targetFill(secondTarget, goblinId),
+        unitFeatureDecisionFill(secondDecision, "use"),
+        attackRollFill(secondRoll, { total: 15, naturalD20: 10 }),
+        unitFeatureDecisionFill(effectDecision, "hamstring_blow"),
+      ],
+    });
+    if (afterEffect.tag !== "needsHoles") {
+      throw new Error("Expected Hamstring Blow to need damage.");
+    }
+    const damage = findHole(afterEffect.holes, "rolledDice");
     expect(damage).toMatchObject({
       attackDamageRiders: [
         {
@@ -3296,21 +3426,141 @@ describe("battle runtime: class action features", () => {
     });
   });
 
-  test("Brutal Strike Forceful Blow pushes and moves the Barbarian up to half Speed", () => {
+  test("Brutal Strike chosen on a miss remains spent until the next turn", () => {
     const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
+    const extraAttackUnit = unitLibrary.requireUnit("barbarian_extra_attack");
     const state = startBattleRight({
+      battleId: battleId("battle-barbarian-brutal-strike-miss-quota"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "barbarian", level: 9 }],
+          unitFeatures: [recklessAttackFeature()],
+          characterUnitRefs: [
+            supportedBattleUnitRef(brutalStrikeUnit),
+            supportedBattleUnitRef(extraAttackUnit),
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const attackSubject = fighterAttackSubject(state);
+    const firstTarget = attackInitialTargetHole(state, attackSubject);
+    const firstDecision = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [targetFill(firstTarget, goblinId)],
+      }),
+      "unitFeatureDecision",
+    );
+    const firstRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(firstTarget, goblinId),
+          unitFeatureDecisionFill(firstDecision, "use"),
+        ],
+      }),
+      "attackRoll",
+    );
+    const afterMiss = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(firstTarget, goblinId),
+          unitFeatureDecisionFill(firstDecision, "use"),
+          attackRollFill(firstRoll, {
+            total: 1,
+            naturalD20: 1,
+            activatedOngoingFeatureProcedureRef:
+              requireRecklessAttackProcedureRef(state),
+          }),
+        ],
+      }),
+    ).state;
+    expect(afterMiss.currentTurnResources.brutalStrike).toEqual({
+      kind: "spent",
+    });
+
+    const secondTarget = attackInitialTargetHole(afterMiss, attackSubject);
+    const secondDiscovery = resolveBattleSubject({
+      state: afterMiss,
+      subject: attackSubject,
+      fills: [targetFill(secondTarget, goblinId)],
+    });
+    if (secondDiscovery.tag !== "needsHoles") {
+      throw new Error("Expected the second attack to need its attack roll.");
+    }
+    expect(
+      secondDiscovery.holes.some(
+        (hole) =>
+          hole.kind === "unitFeatureDecision" &&
+          hole.label === "Use Brutal Strike",
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state: afterMiss,
+        subject: attackSubject,
+        fills: [
+          targetFill(secondTarget, goblinId),
+          unitFeatureDecisionFill(firstDecision, "use"),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+    expect(
+      resetBattleTurnResources(afterMiss.currentTurnResources).brutalStrike,
+    ).toEqual({ kind: "available" });
+  });
+
+  test("Brutal Strike Forceful Blow pushes, moves, and replays combined Punch and Grab once", () => {
+    const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
+    const baseState = startBattleRight({
       battleId: battleId("battle-barbarian-brutal-strike-forceful-blow"),
       combatants: [
         characterSeed({
           initiative: 20,
           classLevels: [{ className: "barbarian", level: 9 }],
           unitFeatures: [recklessAttackFeature()],
-          characterUnitRefs: [supportedBattleUnitRef(brutalStrikeUnit)],
+          characterUnitRefs: [
+            supportedBattleUnitRef(brutalStrikeUnit),
+            ...grapplerUnitRefs(),
+          ],
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const attackSubject = fighterAttackSubject(state);
+    const actor = baseState.combatants.get(fighterId);
+    if (actor === undefined) {
+      throw new Error("Expected the Forceful Blow actor.");
+    }
+    const state = {
+      ...baseState,
+      combatants: new Map(baseState.combatants).set(fighterId, {
+        ...actor,
+        activeEffects: [
+          ...actor.activeEffects,
+          {
+            kind: "specialSpeedGrant",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              "synthetic-forceful-blow-fly-speed",
+            ),
+            sourceCombatantId: fighterId,
+            speedKind: "fly",
+            speed: { kind: "fixed", speedFeet: movementFeet(40) },
+            hover: true,
+            expiresAt: { kind: "untilDispelled" },
+          } as const,
+        ],
+      }),
+    } satisfies BattleState;
+    const attackSubject = fighterAttackSubject(state, "Unarmed Strike");
     const target = attackInitialTargetHole(state, attackSubject);
     const decision = requireHole(
       resolveBattleSubject({
@@ -3326,7 +3576,7 @@ describe("battle runtime: class action features", () => {
         subject: attackSubject,
         fills: [
           targetFill(target, goblinId),
-          unitFeatureDecisionFill(decision, "forceful_blow"),
+          unitFeatureDecisionFill(decision, "use"),
         ],
       }),
       "attackRoll",
@@ -3336,7 +3586,7 @@ describe("battle runtime: class action features", () => {
       subject: attackSubject,
       fills: [
         targetFill(target, goblinId),
-        unitFeatureDecisionFill(decision, "forceful_blow"),
+        unitFeatureDecisionFill(decision, "use"),
         attackRollFill(roll, {
           total: 15,
           naturalD20: 10,
@@ -3346,23 +3596,222 @@ describe("battle runtime: class action features", () => {
       ],
     });
     if (afterRoll.tag !== "needsHoles") {
+      throw new Error("Expected Brutal Strike hit to need an effect choice.");
+    }
+    expect(afterRoll.state.currentTurnResources.brutalStrike).toEqual({
+      kind: "pending",
+      subject: attackSubject,
+      targetId: goblinId,
+    });
+    const effectDecision = findHole(afterRoll.holes, "unitFeatureDecision");
+    const afterEffect = resolveBattleSubject({
+      state: afterRoll.state,
+      subject: attackSubject,
+      fills: [
+        targetFill(target, goblinId),
+        unitFeatureDecisionFill(decision, "use"),
+        attackRollFill(roll, {
+          total: 15,
+          naturalD20: 10,
+          activatedOngoingFeatureProcedureRef:
+            requireRecklessAttackProcedureRef(state),
+        }),
+        unitFeatureDecisionFill(effectDecision, "forceful_blow"),
+      ],
+    });
+    if (afterEffect.tag !== "needsHoles") {
       throw new Error("Expected Forceful Blow hit to need damage.");
     }
-    const damage = findHole(afterRoll.holes, "rolledDice");
-    const resolved = requireResolved(
+    const damage = findHole(afterEffect.holes, "rolledDice");
+    const attackFills = [
+      targetFill(target, goblinId),
+      unitFeatureDecisionFill(decision, "use"),
+      attackRollFill(roll, {
+        total: 15,
+        naturalD20: 10,
+        activatedOngoingFeatureProcedureRef:
+          requireRecklessAttackProcedureRef(state),
+      }),
+      unitFeatureDecisionFill(effectDecision, "forceful_blow"),
+      damageRollFillWithGroups(damage, [[1]]),
+    ] as const;
+    const afterDamage = resolveBattleSubject({
+      state: afterEffect.state,
+      subject: attackSubject,
+      fills: attackFills,
+    });
+    if (afterDamage.tag !== "needsHoles") {
+      throw new Error(
+        `Expected the combined hit to need Punch and Grab; got ${afterDamage.tag}${afterDamage.tag === "invalid" ? `: ${afterDamage.message}` : ""}.`,
+      );
+    }
+    const punchAndGrabDecision = findHole(
+      afterDamage.holes,
+      "unitFeatureDecision",
+    );
+    expect(punchAndGrabDecision.label).toBe("Use Punch and Grab");
+    const fillsThroughPunchAndGrabDecision = [
+      ...attackFills,
+      unitFeatureDecisionFill(punchAndGrabDecision, "use"),
+    ] as const;
+    const afterPunchAndGrabDecision = resolveBattleSubject({
+      state: afterDamage.state,
+      subject: attackSubject,
+      fills: fillsThroughPunchAndGrabDecision,
+    });
+    if (afterPunchAndGrabDecision.tag !== "needsHoles") {
+      throw new Error("Expected Punch and Grab to need its grapple outcome.");
+    }
+    const punchAndGrabOutcome = findHole(
+      afterPunchAndGrabDecision.holes,
+      "grappleOutcome",
+    );
+    const fillsThroughPunchAndGrab = [
+      ...fillsThroughPunchAndGrabDecision,
+      grappleOutcomeFill(punchAndGrabOutcome, false),
+    ] as const;
+    const afterPunchAndGrab = resolveBattleSubject({
+      state: afterPunchAndGrabDecision.state,
+      subject: attackSubject,
+      fills: fillsThroughPunchAndGrab,
+    });
+    if (afterPunchAndGrab.tag !== "needsHoles") {
+      throw new Error(
+        "Expected Forceful Blow to offer its optional follow-up movement.",
+      );
+    }
+    const movementDecision = findHole(
+      afterPunchAndGrab.holes,
+      "unitFeatureDecision",
+    );
+    expect(movementDecision.choices).toEqual(["use", "decline"]);
+
+    const declined = requireResolved(
       resolveBattleSubject({
-        state: afterRoll.state,
+        state: afterPunchAndGrab.state,
         subject: attackSubject,
         fills: [
-          targetFill(target, goblinId),
-          unitFeatureDecisionFill(decision, "forceful_blow"),
-          attackRollFill(roll, {
-            total: 15,
-            naturalD20: 10,
-            activatedOngoingFeatureProcedureRef:
-              requireRecklessAttackProcedureRef(state),
-          }),
-          damageRollFillWithGroups(damage, [[1], [1]]),
+          ...fillsThroughPunchAndGrab,
+          unitFeatureDecisionFill(movementDecision, "decline"),
+        ],
+      }),
+    );
+    expect(declined.state.combatants.get(fighterId)?.movementSpentFeet).toBe(
+      movementFeet(0),
+    );
+
+    const afterMovementAccepted = resolveBattleSubject({
+      state: afterPunchAndGrab.state,
+      subject: attackSubject,
+      fills: [
+        ...fillsThroughPunchAndGrab,
+        unitFeatureDecisionFill(movementDecision, "use"),
+      ],
+    });
+    if (afterMovementAccepted.tag !== "needsHoles") {
+      throw new Error(
+        "Expected accepted Forceful Blow movement to need a path.",
+      );
+    }
+    const movement = findHole(afterMovementAccepted.holes, "movement");
+    expect(movement).toMatchObject({
+      actorId: fighterId,
+      movementBudgetFeet: movementFeet(20),
+      speedKinds: [
+        { kind: "walk", movementBudgetFeet: movementFeet(15) },
+        { kind: "fly", movementBudgetFeet: movementFeet(20) },
+      ],
+      brutalStrikeForcefulBlow: {
+        kind: "brutalStrikeForcefulBlowStraightTowardTarget",
+        targetId: goblinId,
+      },
+    });
+    if (movement.brutalStrikeForcefulBlow === undefined) {
+      throw new Error("Expected the Forceful Blow movement contract.");
+    }
+    const forcefulTargetId = movement.brutalStrikeForcefulBlow.targetId;
+    const forcefulMovementFill = (
+      movementCostFeet: number,
+      additionalSpeedSegments: readonly {
+        readonly speedKind: "walk" | "fly";
+        readonly movementCostFeet: ReturnType<typeof movementFeet>;
+        readonly provokedOpportunityAttacks: readonly [];
+      }[] = [],
+    ) => {
+      const fill = movementFill(movement, {
+        movementCostFeet,
+        provokedOpportunityAttacks: [],
+      });
+      const {
+        jumpMovementReplacement: _jumpMovementReplacement,
+        levitatedMovement: _levitatedMovement,
+        commandApproach: _commandApproach,
+        commandFlee: _commandFlee,
+        brutalStrikeForcefulBlow: _brutalStrikeForcefulBlow,
+        ...movementValue
+      } = fill.value;
+      return {
+        ...fill,
+        value: {
+          ...movementValue,
+          additionalSpeedSegments,
+          brutalStrikeForcefulBlow: {
+            kind: "brutalStrikeForcefulBlowStraightTowardTarget" as const,
+            targetId: forcefulTargetId,
+          },
+        },
+      };
+    };
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: afterMovementAccepted.state,
+        subject: attackSubject,
+        fills: [
+          ...fillsThroughPunchAndGrab,
+          unitFeatureDecisionFill(movementDecision, "use"),
+          forcefulMovementFill(10),
+        ],
+      }),
+    );
+    expect(
+      resolveBattleSubject({
+        state: afterMovementAccepted.state,
+        subject: attackSubject,
+        fills: [
+          ...fillsThroughPunchAndGrab,
+          unitFeatureDecisionFill(movementDecision, "use"),
+          forcefulMovementFill(15),
+        ],
+      }).tag,
+    ).toBe("resolved");
+    expect(
+      resolveBattleSubject({
+        state: afterMovementAccepted.state,
+        subject: attackSubject,
+        fills: [
+          ...fillsThroughPunchAndGrab,
+          unitFeatureDecisionFill(movementDecision, "use"),
+          forcefulMovementFill(16),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+    const switchedSpeed = requireResolved(
+      resolveBattleSubject({
+        state: afterMovementAccepted.state,
+        subject: attackSubject,
+        fills: [
+          ...fillsThroughPunchAndGrab,
+          unitFeatureDecisionFill(movementDecision, "use"),
+          forcefulMovementFill(10, [
+            {
+              speedKind: "fly",
+              movementCostFeet: movementFeet(10),
+              provokedOpportunityAttacks: [],
+            },
+          ]),
         ],
       }),
     );
@@ -3378,7 +3827,19 @@ describe("battle runtime: class action features", () => {
       },
     ]);
     expect(resolved.state.combatants.get(fighterId)?.movementSpentFeet).toBe(
-      movementFeet(15),
+      movementFeet(0),
+    );
+    expect(resolved.state.combatants.get(goblinId)?.hp).toBe(
+      declined.state.combatants.get(goblinId)?.hp,
+    );
+    expect(resolved.state.grapples).toEqual([
+      expect.objectContaining({
+        grapplerId: fighterId,
+        targetId: goblinId,
+      }),
+    ]);
+    expect(switchedSpeed.state.combatants.get(goblinId)?.hp).toBe(
+      resolved.state.combatants.get(goblinId)?.hp,
     );
   });
 
@@ -3393,10 +3854,43 @@ describe("battle runtime: class action features", () => {
           unitFeatures: [recklessAttackFeature()],
           characterUnitRefs: [supportedBattleUnitRef(brutalStrikeUnit)],
         }),
+        characterSeed({
+          combatantId: wizardId,
+          initiative: 15,
+          classLevels: [{ className: "barbarian", level: 9 }],
+          unitFeatures: [recklessAttackFeature()],
+          characterUnitRefs: [supportedBattleUnitRef(brutalStrikeUnit)],
+        }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const state = session.state;
+    const targetCombatant = session.state.combatants.get(goblinId);
+    if (targetCombatant === undefined) {
+      throw new Error("Expected the Hamstring target.");
+    }
+    const priorHamstring = {
+      kind: "brutalStrikeHamstring" as const,
+      sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
+        session,
+        wizardId,
+        brutalStrikeUnit.id,
+      ),
+      sourceCombatantId: wizardId,
+      effect: {
+        kind: "hamstringBlow" as const,
+        deltaFeet: movementDeltaFeet(-15),
+        stacking: "mostRecentOnly" as const,
+        expires: "startOfYourNextTurn" as const,
+      },
+      expiresAt: { kind: "startOfSourceTurn" as const },
+    };
+    const state = {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(goblinId, {
+        ...targetCombatant,
+        activeEffects: [...targetCombatant.activeEffects, priorHamstring],
+      }),
+    };
     const attackSubject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(state, attackSubject);
     const decision = requireHole(
@@ -3413,7 +3907,7 @@ describe("battle runtime: class action features", () => {
         subject: attackSubject,
         fills: [
           targetFill(target, goblinId),
-          unitFeatureDecisionFill(decision, "hamstring_blow"),
+          unitFeatureDecisionFill(decision, "use"),
         ],
       }),
       "attackRoll",
@@ -3423,7 +3917,7 @@ describe("battle runtime: class action features", () => {
       subject: attackSubject,
       fills: [
         targetFill(target, goblinId),
-        unitFeatureDecisionFill(decision, "hamstring_blow"),
+        unitFeatureDecisionFill(decision, "use"),
         attackRollFill(roll, {
           total: 15,
           naturalD20: 10,
@@ -3433,40 +3927,95 @@ describe("battle runtime: class action features", () => {
       ],
     });
     if (afterRoll.tag !== "needsHoles") {
+      throw new Error("Expected Brutal Strike hit to need an effect choice.");
+    }
+    const effectDecision = findHole(afterRoll.holes, "unitFeatureDecision");
+    const afterEffect = resolveBattleSubject({
+      state: afterRoll.state,
+      subject: attackSubject,
+      fills: [
+        targetFill(target, goblinId),
+        unitFeatureDecisionFill(decision, "use"),
+        attackRollFill(roll, {
+          total: 15,
+          naturalD20: 10,
+          activatedOngoingFeatureProcedureRef:
+            requireRecklessAttackProcedureRef(state),
+        }),
+        unitFeatureDecisionFill(effectDecision, "hamstring_blow"),
+      ],
+    });
+    if (afterEffect.tag !== "needsHoles") {
       throw new Error("Expected Hamstring Blow hit to need damage.");
     }
-    const damage = findHole(afterRoll.holes, "rolledDice");
+    const damage = findHole(afterEffect.holes, "rolledDice");
     const resolved = requireResolved(
       resolveBattleSubject({
-        state: afterRoll.state,
+        state: afterEffect.state,
         subject: attackSubject,
         fills: [
           targetFill(target, goblinId),
-          unitFeatureDecisionFill(decision, "hamstring_blow"),
+          unitFeatureDecisionFill(decision, "use"),
           attackRollFill(roll, {
             total: 15,
             naturalD20: 10,
             activatedOngoingFeatureProcedureRef:
               requireRecklessAttackProcedureRef(state),
           }),
+          unitFeatureDecisionFill(effectDecision, "hamstring_blow"),
           damageRollFillWithGroups(damage, [[1], [1]]),
         ],
       }),
     );
 
+    const hamstrings =
+      resolved.state.combatants
+        .get(goblinId)
+        ?.activeEffects.filter(
+          (effect) => effect.kind === "brutalStrikeHamstring",
+        ) ?? [];
+    expect(hamstrings).toEqual([
+      {
+        kind: "brutalStrikeHamstring",
+        sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
+          session,
+          fighterId,
+          "barbarian_brutal_strike",
+        ),
+        sourceCombatantId: fighterId,
+        effect: {
+          kind: "hamstringBlow",
+          deltaFeet: movementDeltaFeet(-15),
+          stacking: "mostRecentOnly",
+          expires: "startOfYourNextTurn",
+        },
+        expiresAt: { kind: "startOfSourceTurn" },
+      },
+    ]);
+    const hamstrungTarget = resolved.state.combatants.get(goblinId);
+    if (hamstrungTarget === undefined) {
+      throw new Error("Expected the resolved Hamstring target.");
+    }
+    expect(effectiveWalkSpeed(resolved.state, hamstrungTarget)).toBe(
+      movementFeet(15),
+    );
+
+    const wizardTurn = requireResolved(
+      endTurn({ state: resolved.state, actorId: fighterId }),
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state: wizardTurn.state, actorId: wizardId }),
+    );
+    const fighterTurn = requireResolved(
+      endTurn({ state: goblinTurn.state, actorId: goblinId }),
+    );
     expect(
-      resolved.state.combatants.get(goblinId)?.activeEffects,
-    ).toContainEqual({
-      kind: "unitFeatureSpeedDelta",
-      sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
-        session,
-        fighterId,
-        "barbarian_brutal_strike",
-      ),
-      sourceCombatantId: fighterId,
-      deltaFeet: movementDeltaFeet(-15),
-      expiresAt: { kind: "startOfTurn", combatantId: fighterId },
-    });
+      fighterTurn.state.combatants
+        .get(goblinId)
+        ?.activeEffects.some(
+          (effect) => effect.kind === "brutalStrikeHamstring",
+        ),
+    ).toBe(false);
   });
 
   test("Reckless Attack cannot be declared before the first attack roll", () => {
@@ -3574,14 +4123,16 @@ describe("battle runtime: class action features", () => {
     ).toMatchObject({ tag: "resolved" });
   });
 
-  test("Reckless Attack replay stays valid after an attack-hit Reaction window", () => {
+  test("Brutal Strike waits until after an attack-hit Reaction window to choose its effect", () => {
+    const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
     const baseState = startBattleRight({
       battleId: battleId("battle-reckless-reaction-replay"),
       combatants: [
         characterSeed({
           initiative: 20,
-          classLevels: [{ className: "barbarian", level: 2 }],
+          classLevels: [{ className: "barbarian", level: 9 }],
           unitFeatures: [recklessAttackFeature()],
+          characterUnitRefs: [supportedBattleUnitRef(brutalStrikeUnit)],
         }),
         characterSeed({
           combatantId: wizardId,
@@ -3606,16 +4157,34 @@ describe("battle runtime: class action features", () => {
     } satisfies BattleState;
     const attackSubject = fighterAttackSubject(state);
     const target = attackInitialTargetHole(state, attackSubject);
-    const roll = attackRollHoleAfterTarget(state, target, attackSubject);
+    const brutalStrikeDecision = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "unitFeatureDecision",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(target, goblinId),
+          unitFeatureDecisionFill(brutalStrikeDecision, "use"),
+        ],
+      }),
+      "attackRoll",
+    );
     const awaitingReaction = resolveBattleSubject({
       state,
       subject: attackSubject,
       fills: [
         targetFill(target, goblinId),
+        unitFeatureDecisionFill(brutalStrikeDecision, "use"),
         attackRollFill(roll, {
           total: 15,
           naturalD20: 10,
-          rollMode: "advantage",
           activatedOngoingFeatureProcedureRef:
             requireRecklessAttackProcedureRef(state),
         }),
@@ -3624,6 +4193,13 @@ describe("battle runtime: class action features", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected attack-hit Reaction window.");
     }
+    expect(
+      awaitingReaction.holes.some(
+        (hole) =>
+          hole.kind === "unitFeatureDecision" &&
+          hole.label === "Choose a Brutal Strike effect",
+      ),
+    ).toBe(false);
 
     const decision = findHole(awaitingReaction.holes, "interruptDecision");
     const resumed = resolveBattleInterrupt({
@@ -3634,10 +4210,12 @@ describe("battle runtime: class action features", () => {
       }),
     });
 
-    expect(resumed).toMatchObject({ tag: "needsHoles" });
     if (resumed.tag !== "needsHoles") {
-      throw new Error("Expected resumed Reckless attack to need damage.");
+      throw new Error("Expected resumed Brutal Strike to need an effect.");
     }
-    expect(findHole(resumed.holes, "rolledDice")).toBeDefined();
+    expect(findHole(resumed.holes, "unitFeatureDecision")).toMatchObject({
+      label: "Choose a Brutal Strike effect",
+      choices: ["forceful_blow", "hamstring_blow", "decline"],
+    });
   });
 });

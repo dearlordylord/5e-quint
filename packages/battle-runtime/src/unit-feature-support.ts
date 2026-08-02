@@ -23,7 +23,6 @@ import {
   type Condition,
   type DamageType,
   type DamageDieSize,
-  type MovementDeltaFeet,
   type MovementFeet,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
@@ -53,6 +52,13 @@ import type {
   CharacterBattleClassLevel,
   CharacterBattleClassLevelInit,
 } from "./character-class-level.ts";
+import { type BrutalStrikeProfile } from "./procedure-execution/brutal-strike.ts";
+export type {
+  BrutalStrikeEffect,
+  BrutalStrikeHamstringEffect,
+  BrutalStrikeOptionId,
+  BrutalStrikeProfile,
+} from "./procedure-execution/brutal-strike.ts";
 
 export const WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE =
   "weaponOrUnarmedCriticalRange19";
@@ -94,7 +100,6 @@ import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE,
   BATTLE_ATTACK_ACTION_ADDITIONAL_ATTACKS,
-  BRUTAL_STRIKE_OPTION_IDS,
   BRUTAL_STRIKE_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
@@ -791,6 +796,11 @@ type GrapplerUnit = AuthoredUnitMechanicsFamilyMember<
   "grappler"
 >;
 type GrapplerMechanics = GrapplerUnit["mechanics"];
+type BrutalStrikeUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "brutal_strike"
+>;
+type BrutalStrikeMechanics = BrutalStrikeUnit["mechanics"];
 type CunningStrikeOptionGrantUnit = AuthoredUnitMechanicsFamilyMember<
   AuthoredUnitSource,
   "cunning_strike_option_grant"
@@ -991,40 +1001,11 @@ export type BattleGrapplerSupportProfile = {
   readonly grappler: GrapplerProfile;
 };
 export type BattleGrapplerSupport = BattleGrapplerSupportProfile | null;
-export type BrutalStrikeOptionId = (typeof BRUTAL_STRIKE_OPTION_IDS)[number];
-export type BrutalStrikeProfile = {
-  readonly trigger: {
-    readonly kind: "recklessAttackStrengthAttackHit";
-    readonly advantageForgone: true;
-    readonly attackMustNotHaveDisadvantage: true;
-  };
-  readonly damage: {
-    readonly dice: 1;
-    readonly dieSize: 10;
-    readonly damageType: "sameAsAttack";
-  };
-  readonly options: readonly [
-    {
-      readonly id: "forceful_blow";
-      readonly pushFeet: MovementFeet;
-      readonly selfMovement: {
-        readonly kind: "moveTowardTarget";
-        readonly distance: "halfSpeed";
-        readonly opportunityAttacks: "doesNotProvoke";
-      };
-    },
-    {
-      readonly id: "hamstring_blow";
-      readonly deltaFeet: MovementDeltaFeet;
-      readonly stacking: "mostRecentOnly";
-      readonly expires: "startOfYourNextTurn";
-    },
-  ];
-};
 export type BattleBrutalStrikeSupportProfile = {
   readonly kind: typeof BRUTAL_STRIKE_SUPPORT_PROFILE;
   readonly brutalStrike: BrutalStrikeProfile;
 };
+export type BattleBrutalStrikeSupport = BattleBrutalStrikeSupportProfile | null;
 export type RetaliationReactionAttackProfile = {
   readonly trigger: {
     readonly kind: "takesDamageFromCreatureWithinFiveFeet";
@@ -1812,13 +1793,6 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   }
 
   const brutalStrikeSupport = battleBrutalStrikeSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (brutalStrikeSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Brutal Strike Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (brutalStrikeSupport !== null) {
     supportProfiles.push(brutalStrikeSupport);
   }
@@ -7071,79 +7045,122 @@ export function battleGrapplerSupportForUnit(
 
 export function battleBrutalStrikeSupportForUnit(
   unit: AuthoredUnitSource,
-): BattleBrutalStrikeSupportProfile | "unsupported" | null {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.mechanics.family !== "brutal_strike"
-  ) {
+): BattleBrutalStrikeSupport {
+  if (!isBrutalStrikeUnit(unit)) {
     return null;
   }
+  return battleBrutalStrikeSupportForAdmittedUnit(unit);
+}
+
+const BRUTAL_STRIKE_TRIGGER_KIND = {
+  reckless_attack_strength_attack_hit: "recklessAttackStrengthAttackHit",
+} as const satisfies Record<
+  BrutalStrikeMechanics["trigger"]["kind"],
+  BrutalStrikeProfile["trigger"]["kind"]
+>;
+const BRUTAL_STRIKE_DAMAGE_TYPE = {
+  same_as_attack: "sameAsAttack",
+} as const satisfies Record<
+  BrutalStrikeMechanics["damage"]["damageType"],
+  BrutalStrikeProfile["damage"]["damageType"]
+>;
+type BrutalStrikeSelfMovementKey =
+  `${BrutalStrikeMechanics["options"][0]["selfMovement"]["kind"]}:${BrutalStrikeMechanics["options"][0]["selfMovement"]["opportunityAttacks"]}`;
+const BRUTAL_STRIKE_SELF_MOVEMENT_KIND = {
+  "move_toward_target:does_not_provoke":
+    "moveTowardTargetWithoutOpportunityAttacks",
+} as const satisfies Record<
+  BrutalStrikeSelfMovementKey,
+  BrutalStrikeProfile["options"][0]["effect"]["selfMovement"]["kind"]
+>;
+const BRUTAL_STRIKE_SELF_MOVEMENT_DISTANCE = {
+  half_speed: "halfSpeed",
+} as const satisfies Record<
+  BrutalStrikeMechanics["options"][0]["selfMovement"]["distance"]["kind"],
+  BrutalStrikeProfile["options"][0]["effect"]["selfMovement"]["distance"]
+>;
+const BRUTAL_STRIKE_HAMSTRING_STACKING = {
+  most_recent_only: "mostRecentOnly",
+} as const satisfies Record<
+  BrutalStrikeMechanics["options"][1]["speedPenalty"]["stacking"],
+  BrutalStrikeProfile["options"][1]["effect"]["stacking"]
+>;
+const BRUTAL_STRIKE_HAMSTRING_EXPIRATION = {
+  start_of_your_next_turn: "startOfYourNextTurn",
+} as const satisfies Record<
+  BrutalStrikeMechanics["options"][1]["speedPenalty"]["until"],
+  BrutalStrikeProfile["options"][1]["effect"]["expires"]
+>;
+
+function brutalStrikeSelfMovementKind(
+  selfMovement: BrutalStrikeMechanics["options"][0]["selfMovement"],
+): BrutalStrikeProfile["options"][0]["effect"]["selfMovement"]["kind"] {
+  return BRUTAL_STRIKE_SELF_MOVEMENT_KIND[
+    `${selfMovement.kind}:${selfMovement.opportunityAttacks}`
+  ];
+}
+
+function brutalStrikeOptions(
+  options: BrutalStrikeMechanics["options"],
+): BrutalStrikeProfile["options"] {
+  const forceful = options[0];
+  const hamstring = options[1];
+  return [
+    {
+      selectionId: forceful.id,
+      effect: {
+        kind: "forcefulBlow",
+        pushFeet: movementFeet(forceful.forcedMovement.feet),
+        selfMovement: {
+          kind: brutalStrikeSelfMovementKind(forceful.selfMovement),
+          distance:
+            BRUTAL_STRIKE_SELF_MOVEMENT_DISTANCE[
+              forceful.selfMovement.distance.kind
+            ],
+        },
+      },
+    },
+    {
+      selectionId: hamstring.id,
+      effect: {
+        kind: "hamstringBlow",
+        deltaFeet: movementDeltaFeet(-hamstring.speedPenalty.feet),
+        stacking:
+          BRUTAL_STRIKE_HAMSTRING_STACKING[hamstring.speedPenalty.stacking],
+        expires:
+          BRUTAL_STRIKE_HAMSTRING_EXPIRATION[hamstring.speedPenalty.until],
+      },
+    },
+  ];
+}
+
+function isBrutalStrikeUnit(
+  unit: AuthoredUnitSource,
+): unit is BrutalStrikeUnit {
+  return (
+    unit.kind === "class_feature" && unit.mechanics.family === "brutal_strike"
+  );
+}
+
+function battleBrutalStrikeSupportForAdmittedUnit(
+  unit: BrutalStrikeUnit,
+): BattleBrutalStrikeSupportProfile {
   const mechanics = unit.mechanics;
-  const forceful = mechanics.options.find(
-    (option): option is (typeof mechanics.options)[0] =>
-      "forcedMovement" in option && "selfMovement" in option,
-  );
-  const hamstring = mechanics.options.find(
-    (option): option is (typeof mechanics.options)[1] =>
-      "speedPenalty" in option,
-  );
-  /* v8 ignore start -- Malformed Brutal Strike Surface mechanics are rejected at profile admission; canonical Forceful Blow and Hamstring projection is covered. */
-  if (
-    mechanics.trigger.kind !== "reckless_attack_strength_attack_hit" ||
-    mechanics.trigger.advantageForgone !== true ||
-    mechanics.trigger.attackMustNotHaveDisadvantage !== true ||
-    mechanics.damage.kind !== "add_attack_damage_dice" ||
-    mechanics.damage.damageType !== "same_as_attack" ||
-    mechanics.damage.dice.dice !== 1 ||
-    mechanics.damage.dice.dieSize !== 10 ||
-    mechanics.optionChoice.kind !== "choose_one" ||
-    mechanics.optionChoice.maxOptions !== 1 ||
-    mechanics.options.length !== 2 ||
-    forceful === undefined ||
-    hamstring === undefined ||
-    forceful.forcedMovement?.kind !== "push" ||
-    forceful.forcedMovement.feet !== 15 ||
-    forceful.forcedMovement.direction !== "straight_away_from_you" ||
-    forceful.selfMovement?.kind !== "move_toward_target" ||
-    forceful.selfMovement.distance.kind !== "half_speed" ||
-    forceful.selfMovement.opportunityAttacks !== "does_not_provoke" ||
-    hamstring.speedPenalty?.feet !== 15 ||
-    hamstring.speedPenalty.stacking !== "most_recent_only" ||
-    hamstring.speedPenalty.until !== "start_of_your_next_turn"
-  ) {
-    return "unsupported";
-  }
-  /* v8 ignore stop */
   return {
     kind: BRUTAL_STRIKE_SUPPORT_PROFILE,
     brutalStrike: {
       trigger: {
-        kind: "recklessAttackStrengthAttackHit",
-        advantageForgone: true,
-        attackMustNotHaveDisadvantage: true,
+        kind: BRUTAL_STRIKE_TRIGGER_KIND[mechanics.trigger.kind],
+        advantageForgone: mechanics.trigger.advantageForgone,
+        attackMustNotHaveDisadvantage:
+          mechanics.trigger.attackMustNotHaveDisadvantage,
       },
       damage: {
-        dice: 1,
-        dieSize: 10,
-        damageType: "sameAsAttack",
+        dice: mechanics.damage.dice.dice,
+        dieSize: mechanics.damage.dice.dieSize,
+        damageType: BRUTAL_STRIKE_DAMAGE_TYPE[mechanics.damage.damageType],
       },
-      options: [
-        {
-          id: forceful.id,
-          pushFeet: movementFeet(forceful.forcedMovement.feet),
-          selfMovement: {
-            kind: "moveTowardTarget",
-            distance: "halfSpeed",
-            opportunityAttacks: "doesNotProvoke",
-          },
-        },
-        {
-          id: hamstring.id,
-          deltaFeet: movementDeltaFeet(-hamstring.speedPenalty.feet),
-          stacking: "mostRecentOnly",
-          expires: "startOfYourNextTurn",
-        },
-      ],
+      options: brutalStrikeOptions(mechanics.options),
     },
   };
 }

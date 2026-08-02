@@ -26,6 +26,7 @@ import type {
   BattleAttackDamageDisposition,
   BattleAttackRollRelationshipFact,
   BattleAttackRollResult,
+  BattleBrutalStrikeForcefulBlowMovementFill,
   BattleFill,
   BattleRolledDiceFill,
   BattleTargetSpatialFact,
@@ -46,6 +47,7 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   levelOnePlusSpellCastsThisTurn: [],
   quickenedLevelOnePlusSpellCastsThisTurn: [],
   attackRollMadeThisTurn: false,
+  brutalStrike: { kind: "available" } as const,
   attackDamageRidersUsedThisTurn: [],
   stunningStrikesUsedThisTurn: [],
   recklessAttackWhileRagingUsedThisTurn: [],
@@ -256,6 +258,15 @@ export type AttackFillSet =
         | undefined;
       readonly brutalStrikeDecision:
         | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
+      readonly brutalStrikeEffectDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
+      readonly brutalStrikeForcefulBlowMovementDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
+      readonly brutalStrikeForcefulBlowMovement:
+        | BattleBrutalStrikeForcefulBlowMovementFill
         | undefined;
       readonly openHandTechniqueDecision:
         | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>

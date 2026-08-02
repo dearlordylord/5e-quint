@@ -553,9 +553,11 @@ function expireStartOfTurnEffects(
   actorId: CombatantId,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const shouldExpire = (effect: BattleActiveEffect) =>
-    "expiresAt" in effect &&
-    effect.expiresAt.kind === "startOfTurn" &&
-    effect.expiresAt.combatantId === actorId;
+    effect.kind === "brutalStrikeHamstring"
+      ? effect.sourceCombatantId === actorId
+      : "expiresAt" in effect &&
+        effect.expiresAt.kind === "startOfTurn" &&
+        effect.expiresAt.combatantId === actorId;
   const expiringSpellSources = [...combatants.values()].flatMap((combatant) =>
     combatant.activeEffects.filter(
       (

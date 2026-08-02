@@ -90,6 +90,7 @@ export type {
   TurnAnchoredBattleActiveEffectExpiration,
 } from "./expiration.ts";
 import type { BattleActiveEffectSource } from "./source.ts";
+import type { BrutalStrikeHamstringEffect } from "../procedure-execution/brutal-strike.ts";
 
 export type AreaSpellEffectHeightenedRepeatSaveRider = null | {
   readonly kind: "heightenedSpellTargetDisadvantage";
@@ -110,6 +111,9 @@ export type BattleConcentrationBrokenEarlyEnd = Extract<
   { readonly kind: "concentrationBroken" }
 >;
 export type BattleSpellEffectBase = BattleActiveEffectSource;
+export type BattleSourceTurnActiveEffectExpiration = {
+  readonly kind: "startOfSourceTurn";
+};
 export type MarkedDamageRiderFindingAdvantage = {
   readonly kind: "findingAdvantage";
   readonly ability: "wis";
@@ -425,6 +429,11 @@ export type BattleActiveEffect =
       readonly kind: "unitFeatureSpeedDelta";
       readonly deltaFeet: MovementDeltaFeet;
       readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleUnitFeatureEffectBase & {
+      readonly kind: "brutalStrikeHamstring";
+      readonly effect: BrutalStrikeHamstringEffect;
+      readonly expiresAt: BattleSourceTurnActiveEffectExpiration;
     })
   | (BattleUnitFeatureEffectBase & {
       readonly kind: "speedHalved";

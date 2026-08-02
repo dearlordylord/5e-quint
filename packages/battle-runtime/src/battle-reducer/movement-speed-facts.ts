@@ -127,10 +127,15 @@ export function battleSpeedChanges(
         effect.kind === "speedDelta" || effect.kind === "unitFeatureSpeedDelta",
     )
     .reduce((total, effect) => total + effect.deltaFeet, 0);
+  const brutalStrikeHamstringDelta = combatant.activeEffects
+    .filter((effect) => effect.kind === "brutalStrikeHamstring")
+    .reduce((total, effect) => total + effect.effect.deltaFeet, 0);
   return [
     {
       kind: "delta",
-      deltaFeet: movementDeltaFeet(passiveFeatureDelta + activeEffectDelta),
+      deltaFeet: movementDeltaFeet(
+        passiveFeatureDelta + activeEffectDelta + brutalStrikeHamstringDelta,
+      ),
     },
     ...combatant.activeEffects
       .filter((effect) => effect.kind === "speedRatio")

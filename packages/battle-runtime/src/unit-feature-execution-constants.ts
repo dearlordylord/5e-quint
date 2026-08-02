@@ -58,6 +58,8 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { CUNNING_STRIKE_OPTION_SELECTION_IDS as BASE_CUNNING_STRIKE_OPTION_SELECTION_IDS } from "@dnd/surface/surface/schema";
+import { BRUTAL_STRIKE_OPTION_IDS } from "./procedure-execution/brutal-strike.ts";
+export { BRUTAL_STRIKE_OPTION_IDS } from "./procedure-execution/brutal-strike.ts";
 
 export const MARTIAL_ARTS_BASE_DIE_SIZE = 6;
 export const MARTIAL_ARTS_DIE_TIERS = [
@@ -191,16 +193,15 @@ export type PassiveSavingThrowRollModeProfile =
       };
     };
 export const BRUTAL_STRIKE_SUPPORT_PROFILE = "brutalStrike";
-export const BRUTAL_STRIKE_OPTION_IDS = [
-  "forceful_blow",
-  "hamstring_blow",
-] as const;
-export const BRUTAL_STRIKE_DECISION_CHOICES = [
+export const BRUTAL_STRIKE_ROLL_DECISION_CHOICES = ["use", "decline"] as const;
+export type BrutalStrikeRollDecisionChoice =
+  (typeof BRUTAL_STRIKE_ROLL_DECISION_CHOICES)[number];
+export const BRUTAL_STRIKE_EFFECT_DECISION_CHOICES = [
   ...BRUTAL_STRIKE_OPTION_IDS,
   "decline",
 ] as const;
-export type BrutalStrikeDecisionChoice =
-  (typeof BRUTAL_STRIKE_DECISION_CHOICES)[number];
+export type BrutalStrikeEffectDecisionChoice =
+  (typeof BRUTAL_STRIKE_EFFECT_DECISION_CHOICES)[number];
 export const ATTACK_DAMAGE_DIE_FLOOR_MINIMUM_RESULT = 3;
 export const ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE = "attackDamageDieFloor";
 export const ATTACK_ROLL_MISS_TO_HIT_REPLACEMENT_SUPPORT_PROFILE =

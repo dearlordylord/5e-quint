@@ -337,8 +337,8 @@ import {
   type BattleAntimagicFieldOngoingSpellEffectSourceKind,
 } from "./battle-reducer/domain-constants.ts";
 import {
-  BRUTAL_STRIKE_DECISION_CHOICES,
-  type BrutalStrikeDecisionChoice,
+  BRUTAL_STRIKE_EFFECT_DECISION_CHOICES,
+  type BrutalStrikeEffectDecisionChoice,
 } from "./unit-feature-execution-constants.ts";
 import type {
   KnockedOutConditionState,
@@ -1308,7 +1308,7 @@ export type BattleHidePrerequisite =
       readonly kind: "obscuredOnlyByCreatureOutOfEnemyLineOfSight";
       readonly obscuringCreatureId: CombatantId;
     };
-export type BattleMovementFillValue = {
+export type BattleMovementFillValueCommon = {
   readonly speedKind: BattleMovementSpeedKind;
   readonly movementCostFeet: MovementFeet;
   readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
@@ -1317,11 +1317,30 @@ export type BattleMovementFillValue = {
   readonly gustOfWindLineMovement?: BattleGustOfWindLineMovementFact;
   readonly grappleDrag?: BattleGrappleDragMovementFact;
   readonly creatureSpaceTraversal?: BattleCreatureSpaceTraversalMovementFact;
+};
+export type BattleOrdinaryMovementFillValue = BattleMovementFillValueCommon & {
   readonly jumpMovementReplacement?: BattleJumpMovementReplacementFact;
   readonly levitatedMovement?: BattleLevitatedMovementFact;
   readonly commandApproach?: BattleCommandApproachMovementFact;
   readonly commandFlee?: BattleCommandFleeMovementFact;
+  readonly brutalStrikeForcefulBlow?: never;
+  readonly additionalSpeedSegments?: never;
 };
+export type BattleBrutalStrikeForcefulBlowMovementFillValue =
+  BattleMovementFillValueCommon & {
+    readonly jumpMovementReplacement?: never;
+    readonly levitatedMovement?: never;
+    readonly commandApproach?: never;
+    readonly commandFlee?: never;
+    // The first segment is represented by the common fields above. Later
+    // segments make RAW switching between represented Speeds explicit without
+    // duplicating the first segment or a derived total distance.
+    readonly additionalSpeedSegments: readonly BattleMovementFillValueCommon[];
+    readonly brutalStrikeForcefulBlow: BattleBrutalStrikeForcefulBlowMovementFact;
+  };
+export type BattleMovementFillValue =
+  | BattleOrdinaryMovementFillValue
+  | BattleBrutalStrikeForcefulBlowMovementFillValue;
 export type BattleAcrobaticMovementPath =
   | "alongVerticalSurface"
   | "acrossLiquid";
@@ -1411,6 +1430,10 @@ export type BattleCommandApproachMovementFact = {
 };
 export type BattleCommandFleeMovementFact = {
   readonly kind: "commandFleeFastestAvailableRouteAwayFromCaster";
+};
+export type BattleBrutalStrikeForcefulBlowMovementFact = {
+  readonly kind: "brutalStrikeForcefulBlowStraightTowardTarget";
+  readonly targetId: CombatantId;
 };
 export type BattleJumpMovementReplacementFact = {
   readonly kind: "jumpMovementReplacement";
@@ -3737,6 +3760,14 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly levelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly attackRollMadeThisTurn: boolean;
+  readonly brutalStrike:
+    | { readonly kind: "available" }
+    | {
+        readonly kind: "pending";
+        readonly subject: BattleAttackHostSubject;
+        readonly targetId: CombatantId;
+      }
+    | { readonly kind: "spent" };
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly stunningStrikesUsedThisTurn: readonly StunningStrikeUsage[];
   readonly recklessAttackWhileRagingUsedThisTurn: readonly RecklessAttackWhileRagingUsage[];
@@ -5670,7 +5701,7 @@ export type BattleUnitFeatureDecisionHole = {
     | readonly ["use", "decline"]
     | readonly ["attempt", "decline"]
     | typeof OPEN_HAND_TECHNIQUE_DECISION_CHOICES
-    | typeof BRUTAL_STRIKE_DECISION_CHOICES
+    | typeof BRUTAL_STRIKE_EFFECT_DECISION_CHOICES
     | typeof TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES;
 };
 export type BattleHitPointHealingPoolAllocation = {
@@ -5732,7 +5763,7 @@ export type BattleInterruptDecisionHole = {
   readonly trigger: BattleInterruptTrigger;
   readonly eligibleResponders: readonly CombatantId[];
 };
-export type BattleMovementHole = {
+type BattleMovementHoleCommon = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "movement";
@@ -5744,6 +5775,13 @@ export type BattleMovementHole = {
     readonly movementBudgetFeet: MovementFeet;
   }[];
 };
+export type BattleMovementHole = BattleMovementHoleCommon &
+  (
+    | { readonly brutalStrikeForcefulBlow?: never }
+    | {
+        readonly brutalStrikeForcefulBlow: BattleBrutalStrikeForcefulBlowMovementFact;
+      }
+  );
 export type BattleLevitateAltitudeChangeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6102,6 +6140,16 @@ export type SourceDamageRollPenaltyRoll = Omit<
     readonly dieSize: 8;
   };
 };
+export type BattleMovementFill = {
+  readonly kind: "movement";
+  readonly holeId: BattleHoleId;
+  readonly value: BattleMovementFillValue;
+};
+export type BattleBrutalStrikeForcefulBlowMovementFill = {
+  readonly kind: "movement";
+  readonly holeId: BattleHoleId;
+  readonly value: BattleBrutalStrikeForcefulBlowMovementFillValue;
+};
 export type BattleFill =
   | {
       readonly kind: "helpAttackAllyDecision";
@@ -6193,7 +6241,7 @@ export type BattleFill =
         | "use"
         | "attempt"
         | OpenHandTechniqueDecisionChoice
-        | BrutalStrikeDecisionChoice
+        | BrutalStrikeEffectDecisionChoice
         | TacticalMasterReplacementDecision;
     }
   | {
@@ -6391,11 +6439,7 @@ export type BattleFill =
       readonly holeId: BattleHoleId;
       readonly value: BattleInterruptDecision;
     }
-  | {
-      readonly kind: "movement";
-      readonly holeId: BattleHoleId;
-      readonly value: BattleMovementFillValue;
-    }
+  | BattleMovementFill
   | {
       readonly kind: "levitateAltitudeChange";
       readonly holeId: BattleHoleId;
@@ -6832,6 +6876,7 @@ export type BattleTurnSnapshot = {
   readonly levelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly attackRollMadeThisTurn: boolean;
+  readonly brutalStrikeChosenThisTurn: boolean;
   readonly attackDamageRidersUsedThisTurn: readonly AttackDamageRiderUsage[];
   readonly stunningStrikesUsedThisTurn: readonly StunningStrikeUsage[];
   readonly recklessAttackWhileRagingUsedThisTurn: readonly RecklessAttackWhileRagingUsage[];

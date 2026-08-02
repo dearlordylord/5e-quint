@@ -72,7 +72,6 @@ import {
   BattleAttackExecutionSelectionSchema,
   BattleInterruptAttackExecutionSelectionSchema,
   SpellInvocationRefSchema,
-  type BattleMovementSpeedKind,
 } from "../battle-subjects.ts";
 import {
   BattleAreaId,
@@ -144,13 +143,14 @@ import {
 } from "./codec-building-blocks.ts";
 import { BattleSpellEffectLevel } from "./spells-effective-level.ts";
 import {
-  BRUTAL_STRIKE_DECISION_CHOICES,
+  BRUTAL_STRIKE_EFFECT_DECISION_CHOICES,
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
 } from "../unit-feature-support.ts";
 import {
   ATTACK_PRESENTATION_JOIN_ISSUE_REASONS,
   type BattleFill,
   type BattleHole,
+  type BattleMovementFillValue,
 } from "../battle-state-execution.ts";
 const BattleCompanionResolvedStatBlockIdSchema = Schema.NonEmptyTrimmedString;
 const BattleCompanionDurableIdSchema = Schema.NonEmptyTrimmedString;
@@ -283,6 +283,25 @@ const BattleHoleBaseSchema = {
   label: Schema.String,
   spell: Schema.optionalWith(Schema.Never, { exact: true }),
   unit: Schema.optionalWith(Schema.Never, { exact: true }),
+} as const;
+
+const BattleBrutalStrikeForcefulBlowMovementFactSchema = Schema.Struct({
+  kind: Schema.Literal("brutalStrikeForcefulBlowStraightTowardTarget"),
+  targetId: CombatantId,
+});
+
+const BattleMovementHoleCommonSchema = {
+  ...BattleHoleBaseSchema,
+  kind: Schema.Literal("movement"),
+  label: Schema.String,
+  actorId: CombatantId,
+  movementBudgetFeet: MovementFeet,
+  speedKinds: Schema.Array(
+    Schema.Struct({
+      kind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+      movementBudgetFeet: MovementFeet,
+    }),
+  ),
 } as const;
 
 const D20TestNaturalOneRerollHoleOptionsSchema = {
@@ -2454,9 +2473,9 @@ const BattleHolePayloadUnionSchema = Schema.Union(
       Schema.Tuple(Schema.Literal("use"), Schema.Literal("decline")),
       Schema.Tuple(Schema.Literal("attempt"), Schema.Literal("decline")),
       Schema.Tuple(
-        Schema.Literal(BRUTAL_STRIKE_DECISION_CHOICES[0]),
-        Schema.Literal(BRUTAL_STRIKE_DECISION_CHOICES[1]),
-        Schema.Literal(BRUTAL_STRIKE_DECISION_CHOICES[2]),
+        Schema.Literal(BRUTAL_STRIKE_EFFECT_DECISION_CHOICES[0]),
+        Schema.Literal(BRUTAL_STRIKE_EFFECT_DECISION_CHOICES[1]),
+        Schema.Literal(BRUTAL_STRIKE_EFFECT_DECISION_CHOICES[2]),
       ),
       Schema.Tuple(
         Schema.Literal(TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES[0]),
@@ -2507,17 +2526,14 @@ const BattleHolePayloadUnionSchema = Schema.Union(
     eligibleResponders: Schema.Array(CombatantId),
   }),
   Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("movement"),
-    label: Schema.String,
-    actorId: CombatantId,
-    movementBudgetFeet: MovementFeet,
-    speedKinds: Schema.Array(
-      Schema.Struct({
-        kind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
-        movementBudgetFeet: MovementFeet,
-      }),
-    ),
+    ...BattleMovementHoleCommonSchema,
+    brutalStrikeForcefulBlow: Schema.optionalWith(Schema.Never, {
+      exact: true,
+    }),
+  }),
+  Schema.Struct({
+    ...BattleMovementHoleCommonSchema,
+    brutalStrikeForcefulBlow: BattleBrutalStrikeForcefulBlowMovementFactSchema,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -3117,6 +3133,10 @@ type BattleSpellTargetListRelationshipFactsEncoded =
       { readonly kind: "spellTargetIsHostileToCaster" }
     >
   >;
+
+type BattleMovementFillValueCommonEncoded = Schema.Schema.Encoded<
+  typeof BattleMovementFillValueCommonSchema
+>;
 
 type BattleFillEncoded =
   | {
@@ -3744,7 +3764,7 @@ type BattleFillEncoded =
       readonly value:
         | "use"
         | "attempt"
-        | (typeof BRUTAL_STRIKE_DECISION_CHOICES)[number]
+        | (typeof BRUTAL_STRIKE_EFFECT_DECISION_CHOICES)[number]
         | (typeof OPEN_HAND_TECHNIQUE_DECISION_CHOICES)[number]
         | (typeof TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES)[number];
     }
@@ -3983,104 +4003,7 @@ type BattleFillEncoded =
   | {
       readonly kind: "movement";
       readonly holeId: string;
-      readonly value: {
-        readonly speedKind: BattleMovementSpeedKind;
-        readonly movementCostFeet: number;
-        readonly provokedOpportunityAttacks: readonly ({
-          readonly reactorId: string;
-        } & BattleInterruptAttackExecutionSelectionEncoded)[];
-        readonly acrobaticMovement?: {
-          readonly kind: "acrobaticMovement";
-          readonly paths: readonly [
-            "alongVerticalSurface" | "acrossLiquid",
-            ...("alongVerticalSurface" | "acrossLiquid")[],
-          ];
-          readonly withoutFallingDuringMovement: true;
-        };
-        readonly areaDifficultTerrain?: {
-          readonly kind: "areaDifficultTerrain";
-          readonly sources: readonly (
-            | {
-                readonly kind: "greaseGroundHazard";
-                readonly sourceCombatantId: string;
-                readonly sourceProcedureRef: string;
-                readonly areaId: string;
-              }
-            | {
-                readonly kind: "webAreaHazard";
-                readonly sourceCombatantId: string;
-                readonly sourceProcedureRef: string;
-                readonly areaId: string;
-              }
-            | {
-                readonly kind: "sleetStormHazard";
-                readonly sourceCombatantId: string;
-                readonly sourceProcedureRef: string;
-                readonly areaId: string;
-              }
-            | {
-                readonly kind: "insectPlagueHazard";
-                readonly sourceCombatantId: string;
-                readonly sourceProcedureRef: string;
-                readonly areaId: string;
-              }
-            | {
-                readonly kind: "spikeGrowthHazard";
-                readonly sourceCombatantId: string;
-                readonly sourceProcedureRef: string;
-                readonly areaId: string;
-                readonly damageDistanceFeet: number;
-              }
-          )[];
-          readonly totalDistanceFeet: number;
-          readonly difficultTerrainDistanceFeet: number;
-        };
-        readonly gustOfWindLineMovement?: {
-          readonly kind: "gustOfWindLineMovement";
-          readonly sourceCombatantId: string;
-          readonly sourceProcedureRef: string;
-          readonly areaId: string;
-          readonly directionId: string;
-          readonly totalDistanceFeet: number;
-          readonly closerDistanceFeet: number;
-        };
-        readonly grappleDrag?: {
-          readonly kind: "grappleDrag";
-          readonly totalDistanceFeet: number;
-          readonly targets: readonly [
-            {
-              readonly targetId: string;
-              readonly distanceFeet: number;
-            },
-            ...{
-              readonly targetId: string;
-              readonly distanceFeet: number;
-            }[],
-          ];
-        };
-        readonly creatureSpaceTraversal?: {
-          readonly kind: "occupiedCreatureSpaceTraversal";
-          readonly occupiedSpaces: readonly [
-            {
-              readonly occupantId: string;
-              readonly positionId: string;
-            },
-            ...{
-              readonly occupantId: string;
-              readonly positionId: string;
-            }[],
-          ];
-          readonly destination:
-            | {
-                readonly kind: "unoccupiedSpace";
-                readonly positionId: string;
-              }
-            | {
-                readonly kind: "occupiedCreatureSpace";
-                readonly occupantId: string;
-                readonly positionId: string;
-              };
-        };
+      readonly value: BattleMovementFillValueCommonEncoded & {
         readonly commandApproach?: {
           readonly kind: "commandApproachShortestDirectRouteTowardCaster";
           readonly movedWithinFiveFeetOfCaster: boolean;
@@ -4088,6 +4011,11 @@ type BattleFillEncoded =
         readonly commandFlee?: {
           readonly kind: "commandFleeFastestAvailableRouteAwayFromCaster";
         };
+        readonly brutalStrikeForcefulBlow?: {
+          readonly kind: "brutalStrikeForcefulBlowStraightTowardTarget";
+          readonly targetId: string;
+        };
+        readonly additionalSpeedSegments?: readonly BattleMovementFillValueCommonEncoded[];
         readonly jumpMovementReplacement?: {
           readonly kind: "jumpMovementReplacement";
           readonly distanceFeet: number;
@@ -4184,6 +4112,121 @@ type BattleFillEncoded =
           };
       readonly relationshipFacts?: BattleSavingThrowRelationshipFactsEncoded;
     };
+
+const BattleMovementFillValueCommonSchemaFields = {
+  speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+  movementCostFeet: MovementFeet,
+  provokedOpportunityAttacks: Schema.Array(
+    Schema.extend(
+      Schema.Struct({ reactorId: CombatantId }),
+      BattleInterruptAttackExecutionSelectionSchema,
+    ),
+  ),
+  acrobaticMovement: Schema.optionalWith(
+    Schema.Struct({
+      kind: Schema.Literal("acrobaticMovement"),
+      paths: Schema.NonEmptyArray(
+        Schema.Literal("alongVerticalSurface", "acrossLiquid"),
+      ),
+      withoutFallingDuringMovement: Schema.Literal(true),
+    }),
+    { exact: true },
+  ),
+  areaDifficultTerrain: Schema.optionalWith(
+    Schema.Struct({
+      kind: Schema.Literal("areaDifficultTerrain"),
+      sources: Schema.Array(
+        Schema.Union(
+          Schema.Struct({
+            kind: Schema.Literal("greaseGroundHazard"),
+            sourceCombatantId: CombatantId,
+            sourceProcedureRef: BattleProcedureExecutionRef,
+            areaId: BattleAreaId,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("webAreaHazard"),
+            sourceCombatantId: CombatantId,
+            sourceProcedureRef: BattleProcedureExecutionRef,
+            areaId: BattleAreaId,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("sleetStormHazard"),
+            sourceCombatantId: CombatantId,
+            sourceProcedureRef: BattleProcedureExecutionRef,
+            areaId: BattleAreaId,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("insectPlagueHazard"),
+            sourceCombatantId: CombatantId,
+            sourceProcedureRef: BattleProcedureExecutionRef,
+            areaId: BattleAreaId,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("spikeGrowthHazard"),
+            sourceCombatantId: CombatantId,
+            sourceProcedureRef: BattleProcedureExecutionRef,
+            areaId: BattleAreaId,
+            damageDistanceFeet: MovementFeet,
+          }),
+        ),
+      ),
+      totalDistanceFeet: MovementFeet,
+      difficultTerrainDistanceFeet: MovementFeet,
+    }),
+    { exact: true },
+  ),
+  gustOfWindLineMovement: Schema.optionalWith(
+    Schema.Struct({
+      kind: Schema.Literal("gustOfWindLineMovement"),
+      sourceCombatantId: CombatantId,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      areaId: BattleAreaId,
+      directionId: BattleLineDirectionId,
+      totalDistanceFeet: MovementFeet,
+      closerDistanceFeet: MovementFeet,
+    }),
+    { exact: true },
+  ),
+  grappleDrag: Schema.optionalWith(
+    Schema.Struct({
+      kind: Schema.Literal("grappleDrag"),
+      totalDistanceFeet: MovementFeet,
+      targets: Schema.NonEmptyArray(
+        Schema.Struct({
+          targetId: CombatantId,
+          distanceFeet: MovementFeet,
+        }),
+      ),
+    }),
+    { exact: true },
+  ),
+  creatureSpaceTraversal: Schema.optionalWith(
+    Schema.Struct({
+      kind: Schema.Literal("occupiedCreatureSpaceTraversal"),
+      occupiedSpaces: Schema.NonEmptyArray(
+        Schema.Struct({
+          occupantId: CombatantId,
+          positionId: BattleTablePositionId,
+        }),
+      ),
+      destination: Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("unoccupiedSpace"),
+          positionId: BattleTablePositionId,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("occupiedCreatureSpace"),
+          occupantId: CombatantId,
+          positionId: BattleTablePositionId,
+        }),
+      ),
+    }),
+    { exact: true },
+  ),
+} as const;
+const BattleMovementFillValueCommonSchema = Schema.Struct(
+  BattleMovementFillValueCommonSchemaFields,
+);
 
 export const BattleFillSchema: Schema.Schema<
   BattleFill,
@@ -4728,7 +4771,7 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Literal(
         "use",
         "attempt",
-        ...BRUTAL_STRIKE_DECISION_CHOICES,
+        ...BRUTAL_STRIKE_EFFECT_DECISION_CHOICES,
         ...OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
         ...TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
       ),
@@ -4941,115 +4984,7 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("movement"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
-        speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
-        movementCostFeet: MovementFeet,
-        provokedOpportunityAttacks: Schema.Array(
-          Schema.extend(
-            Schema.Struct({ reactorId: CombatantId }),
-            BattleInterruptAttackExecutionSelectionSchema,
-          ),
-        ),
-        acrobaticMovement: Schema.optionalWith(
-          Schema.Struct({
-            kind: Schema.Literal("acrobaticMovement"),
-            paths: Schema.NonEmptyArray(
-              Schema.Literal("alongVerticalSurface", "acrossLiquid"),
-            ),
-            withoutFallingDuringMovement: Schema.Literal(true),
-          }),
-          { exact: true },
-        ),
-        areaDifficultTerrain: Schema.optionalWith(
-          Schema.Struct({
-            kind: Schema.Literal("areaDifficultTerrain"),
-            sources: Schema.Array(
-              Schema.Union(
-                Schema.Struct({
-                  kind: Schema.Literal("greaseGroundHazard"),
-                  sourceCombatantId: CombatantId,
-                  sourceProcedureRef: BattleProcedureExecutionRef,
-                  areaId: BattleAreaId,
-                }),
-                Schema.Struct({
-                  kind: Schema.Literal("webAreaHazard"),
-                  sourceCombatantId: CombatantId,
-                  sourceProcedureRef: BattleProcedureExecutionRef,
-                  areaId: BattleAreaId,
-                }),
-                Schema.Struct({
-                  kind: Schema.Literal("sleetStormHazard"),
-                  sourceCombatantId: CombatantId,
-                  sourceProcedureRef: BattleProcedureExecutionRef,
-                  areaId: BattleAreaId,
-                }),
-                Schema.Struct({
-                  kind: Schema.Literal("insectPlagueHazard"),
-                  sourceCombatantId: CombatantId,
-                  sourceProcedureRef: BattleProcedureExecutionRef,
-                  areaId: BattleAreaId,
-                }),
-                Schema.Struct({
-                  kind: Schema.Literal("spikeGrowthHazard"),
-                  sourceCombatantId: CombatantId,
-                  sourceProcedureRef: BattleProcedureExecutionRef,
-                  areaId: BattleAreaId,
-                  damageDistanceFeet: MovementFeet,
-                }),
-              ),
-            ),
-            totalDistanceFeet: MovementFeet,
-            difficultTerrainDistanceFeet: MovementFeet,
-          }),
-          { exact: true },
-        ),
-        gustOfWindLineMovement: Schema.optionalWith(
-          Schema.Struct({
-            kind: Schema.Literal("gustOfWindLineMovement"),
-            sourceCombatantId: CombatantId,
-            sourceProcedureRef: BattleProcedureExecutionRef,
-            areaId: BattleAreaId,
-            directionId: BattleLineDirectionId,
-            totalDistanceFeet: MovementFeet,
-            closerDistanceFeet: MovementFeet,
-          }),
-          { exact: true },
-        ),
-        grappleDrag: Schema.optionalWith(
-          Schema.Struct({
-            kind: Schema.Literal("grappleDrag"),
-            totalDistanceFeet: MovementFeet,
-            targets: Schema.NonEmptyArray(
-              Schema.Struct({
-                targetId: CombatantId,
-                distanceFeet: MovementFeet,
-              }),
-            ),
-          }),
-          { exact: true },
-        ),
-        creatureSpaceTraversal: Schema.optionalWith(
-          Schema.Struct({
-            kind: Schema.Literal("occupiedCreatureSpaceTraversal"),
-            occupiedSpaces: Schema.NonEmptyArray(
-              Schema.Struct({
-                occupantId: CombatantId,
-                positionId: BattleTablePositionId,
-              }),
-            ),
-            destination: Schema.Union(
-              Schema.Struct({
-                kind: Schema.Literal("unoccupiedSpace"),
-                positionId: BattleTablePositionId,
-              }),
-              Schema.Struct({
-                kind: Schema.Literal("occupiedCreatureSpace"),
-                occupantId: CombatantId,
-                positionId: BattleTablePositionId,
-              }),
-            ),
-          }),
-          { exact: true },
-        ),
+        ...BattleMovementFillValueCommonSchemaFields,
         commandApproach: Schema.optionalWith(
           Schema.Struct({
             kind: Schema.Literal(
@@ -5065,6 +5000,16 @@ export const BattleFillSchema: Schema.Schema<
               "commandFleeFastestAvailableRouteAwayFromCaster",
             ),
           }),
+          { exact: true },
+        ),
+        brutalStrikeForcefulBlow: Schema.optionalWith(
+          BattleBrutalStrikeForcefulBlowMovementFactSchema,
+          { exact: true },
+        ),
+        additionalSpeedSegments: Schema.optionalWith(
+          Schema.Array(
+            Schema.Struct(BattleMovementFillValueCommonSchemaFields),
+          ),
           { exact: true },
         ),
         jumpMovementReplacement: Schema.optionalWith(
@@ -5104,7 +5049,22 @@ export const BattleFillSchema: Schema.Schema<
           }),
           { exact: true },
         ),
-      }),
+      }).pipe(
+        Schema.filter(
+          (value): value is BattleMovementFillValue =>
+            value.brutalStrikeForcefulBlow === undefined
+              ? value.additionalSpeedSegments === undefined
+              : value.additionalSpeedSegments !== undefined &&
+                value.jumpMovementReplacement === undefined &&
+                value.levitatedMovement === undefined &&
+                value.commandApproach === undefined &&
+                value.commandFlee === undefined,
+          {
+            message: () =>
+              "Forceful Blow movement cannot carry a jump, levitation, or command movement protocol.",
+          },
+        ),
+      ),
     }),
     Schema.Struct({
       kind: Schema.Literal("levitateAltitudeChange"),
@@ -5335,6 +5295,7 @@ const BattleTurnSnapshotSchema = Schema.Struct({
   levelOnePlusSpellCastsThisTurn: Schema.Array(CombatantId),
   quickenedLevelOnePlusSpellCastsThisTurn: Schema.Array(CombatantId),
   attackRollMadeThisTurn: Schema.Boolean,
+  brutalStrikeChosenThisTurn: Schema.Boolean,
   attackDamageRidersUsedThisTurn: Schema.Array(
     Schema.Struct({
       attackerId: CombatantId,
