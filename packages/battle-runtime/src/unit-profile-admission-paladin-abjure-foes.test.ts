@@ -67,6 +67,15 @@ const channelDivinityUnit = unitLibrary.requireUnit(
 const secondTargetId = combatantId("abjure-foes-second-target");
 
 describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
+  test("rejects admission without the required Paladin class level and returns null for a different mechanics family", () => {
+    expect(
+      battleMagicActionSaveGatedConditionSupportForUnit(abjureFoesUnit, []),
+    ).toBe("unsupported");
+    expect(
+      battleMagicActionSaveGatedConditionSupportForUnit(channelDivinityUnit),
+    ).toBeNull();
+  });
+
   test("admits the SRD Surface record and resolves failed Wisdom saves into runnable Frightened restrictions", () => {
     const session = abjureFoesBattle();
     const act = abjureFoesAct(session);
