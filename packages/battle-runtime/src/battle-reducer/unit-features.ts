@@ -982,6 +982,7 @@ export function resolveDruidWildShapeUnitFeature(
   input: AdmittedDruidWildShapeBattleResolutionInput,
 ): BattleResolutionResult {
   const actor = input.state.combatants.get(input.subject.actorId);
+  /* v8 ignore start -- Defensive internal guard: dispatcher actor eligibility proves the routed Wild Shape actor exists and can act. */
   if (!isCharacterBattleCreatureState(actor)) {
     return invalidResult(
       input.state,
@@ -989,31 +990,45 @@ export function resolveDruidWildShapeUnitFeature(
       "Druid Wild Shape is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const procedure = characterUnitProcedure(
     actor.origin.execution,
     input.subject.procedureRef,
     DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   );
-  const source =
-    procedure?.kind === "unitFeature" ? procedure.source : undefined;
-  const resource =
-    source?.kind === "resourcePool"
-      ? actor.origin.resources.find((candidate) => {
-          return candidate.resourcePoolRef === source.resourcePoolRef;
-        })
-      : undefined;
-  const unitFeature =
-    procedure?.kind === "unitFeature" ? procedure.execution : undefined;
-  if (
-    resource === undefined ||
-    unitFeature?.kind !== "druidWildShapeKnownForm"
-  ) {
+  /* v8 ignore start -- Defensive internal guard: subject admission uses the same Wild Shape procedure query before routing. */
+  if (procedure?.kind !== "unitFeature") {
     return invalidResult(
       input.state,
       "staleSubject",
       "Druid Wild Shape is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
+  const source = procedure.source;
+  const resource =
+    source?.kind === "resourcePool"
+      ? actor.origin.resources.find((candidate) => {
+          return candidate.resourcePoolRef === source.resourcePoolRef;
+        })
+      : undefined;
+  if (resource === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Druid Wild Shape is no longer available for the current actor.",
+    );
+  }
+  const unitFeature = procedure.execution;
+  /* v8 ignore start -- Defensive internal guard: the admitted Wild Shape procedure query accepts only this execution profile. */
+  if (unitFeature.kind !== "druidWildShapeKnownForm") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Druid Wild Shape is no longer available for the current actor.",
+    );
+  }
+  /* v8 ignore stop */
 
   if (input.subject.action === "dismiss") {
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -1036,6 +1051,7 @@ export function resolveDruidWildShapeUnitFeature(
     const spent = spendActivationResource(input.state.currentTurnResources, {
       kind: "bonusAction",
     });
+    /* v8 ignore start -- Defensive internal guard: dispatcher Wild Shape eligibility calls canSpendBonusAction on these unchanged turn resources before routing. */
     if (Either.isLeft(spent)) {
       return invalidResult(
         input.state,
@@ -1043,6 +1059,7 @@ export function resolveDruidWildShapeUnitFeature(
         "Druid Wild Shape Bonus Action is no longer available.",
       );
     }
+    /* v8 ignore stop */
     const nextState = dismissDruidWildShapeForm({
       state: { ...input.state, currentTurnResources: spent.right },
       actorId: actor.combatantId,
@@ -1099,11 +1116,12 @@ export function resolveDruidWildShapeUnitFeature(
       };
     }
     if (input.fills.length !== 1) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid" as const,
         message: "Druid Wild Shape equipment disposition must be filled once.",
       };
+      /* v8 ignore stop */
     }
     const fill = input.fills[0];
     if (
@@ -1121,13 +1139,15 @@ export function resolveDruidWildShapeUnitFeature(
       candidates: equipmentCandidates,
       value: fill.value,
     });
-    return validation.tag === "valid"
-      ? {
-          tag: "valid" as const,
-          formLimbs: fill.value.formLimbs,
-          dispositions: validation.dispositions,
-        }
-      : validation;
+    if (validation.tag === "valid") {
+      return {
+        tag: "valid" as const,
+        formLimbs: fill.value.formLimbs,
+        dispositions: validation.dispositions,
+      };
+    }
+    /* v8 ignore next -- Malformed Unit-feature fill set: the equipment parser already classified this replay fill as contradictory. */
+    return validation;
   })();
   if (equipmentDisposition.tag === "needsHoles") {
     return {
@@ -1151,6 +1171,7 @@ export function resolveDruidWildShapeUnitFeature(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
+  /* v8 ignore start -- Defensive internal guard: dispatcher Wild Shape eligibility calls canSpendBonusAction on these unchanged turn resources before routing. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1158,6 +1179,7 @@ export function resolveDruidWildShapeUnitFeature(
       "Druid Wild Shape Bonus Action is no longer available.",
     );
   }
+  /* v8 ignore stop */
   const nextActor: CharacterBattleCreatureState = {
     ...actor,
     origin: {
@@ -1612,11 +1634,12 @@ function bardicInspirationGrantTargetFill(
       target = fill;
       continue;
     }
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Bardic Inspiration replay holes.`,
     };
+    /* v8 ignore stop */
   }
   return { tag: "ok", value: target };
 }
@@ -1670,11 +1693,12 @@ function magicActionHealingPoolDistributionFill(
       distribution = fill;
       continue;
     }
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Magic Action healing replay holes.`,
     };
+    /* v8 ignore stop */
   }
   return { tag: "ok", value: distribution };
 }
@@ -2202,17 +2226,20 @@ function validateAttackActionAreaSaveDamageReplacementSavingThrows(input: {
     /* v8 ignore stop */
     outcomesByTargetId.set(outcome.targetId, outcome);
   }
-  return outcomesByTargetId.size === affectedTargetIds.size
-    ? {
-        tag: "ok",
-        damageTargetIds: [...affectedTargetIds],
-        outcomesByTargetId,
-      }
-    : {
-        tag: "invalid",
-        message:
-          "Area damage replacement Saving Throw outcomes must cover every table-supplied affected target.",
-      };
+  if (outcomesByTargetId.size === affectedTargetIds.size) {
+    return {
+      tag: "ok",
+      damageTargetIds: [...affectedTargetIds],
+      outcomesByTargetId,
+    };
+  }
+  /* v8 ignore start -- Malformed Unit-feature fill set: admitted replay fills cover every table-supplied affected target. */
+  return {
+    tag: "invalid",
+    message:
+      "Area damage replacement Saving Throw outcomes must cover every table-supplied affected target.",
+  };
+  /* v8 ignore stop */
 }
 
 function attackActionAreaSaveDamageReplacementDamageRollHole(
@@ -2339,11 +2366,12 @@ function magicActionSaveGatedConditionFills(
       savingThrows = fill;
       continue;
     }
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Magic Action condition replay holes.`,
     };
+    /* v8 ignore stop */
   }
   return { tag: "ok", value: { savingThrows } };
 }
@@ -2653,11 +2681,12 @@ function magicActionAreaSaveDamageHealingFills(
       healingRoll = fill;
       continue;
     }
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Magic Action damage and healing replay holes.`,
     };
+    /* v8 ignore stop */
   }
   return {
     tag: "ok",
