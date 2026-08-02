@@ -114,9 +114,10 @@ export function isMovementProcedureSubject(
 }
 
 export function resolveMovementProcedure(
-  input: AdmittedBattleResolutionInput & {
-    readonly subject: MovementProcedureSubject;
-  },
+  input: Extract<
+    AdmittedBattleResolutionInput,
+    { readonly admissionKind: "general" }
+  > & { readonly subject: MovementProcedureSubject },
 ): BattleResolutionResult {
   return Match.value(input.subject).pipe(
     Match.when({ command: "move" }, (subject) =>

@@ -191,10 +191,7 @@ import type {
   BattleResolutionResult,
   BattleState,
 } from "../battle-state-execution.ts";
-import {
-  admitBattleResolutionInput,
-  admittedDruidWildShapeInput,
-} from "./resolution-admission.ts";
+import { admitBattleResolutionInput } from "./resolution-admission.ts";
 import { battleSubjectActionEligibilityIssue } from "./action-eligibility.ts";
 
 type ResolveBattleSubjectInternalOptions = {
@@ -465,6 +462,9 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     return invalidResult(input.state, "staleSubject", actionEligibilityIssue);
   }
   const result = (() => {
+    if (input.admissionKind === "druidWildShape") {
+      return resolveDruidWildShapeUnitFeature(input);
+    }
     const subject = input.subject;
     if (
       subject.tag === "runtimeCommand" &&
@@ -634,11 +634,6 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     }
     if (subject.tag === "unitFeatureHeldWeaponActivation") {
       return resolveUnitFeatureHeldWeaponActivation({ ...input, subject });
-    }
-    if (subject.tag === "druidWildShape") {
-      return resolveDruidWildShapeUnitFeature(
-        admittedDruidWildShapeInput({ ...input, subject }),
-      );
     }
     if (subject.tag === "runtimeCommand" && subject.command === "endTurn") {
       return resolveEndTurnCommand(input);

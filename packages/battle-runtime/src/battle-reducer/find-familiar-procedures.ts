@@ -344,6 +344,15 @@ export function deliverTouchSpellThroughFindFamiliar(
       "The familiar-delivered spell procedure is no longer bound to its caster.",
     );
   }
+  /* v8 ignore start -- The touch-spell candidate subject union excludes Wild Shape, so admission can only produce the general variant. */
+  if (admission.input.admissionKind !== "general") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "The familiar-delivered spell procedure is no longer bound to its caster.",
+    );
+  }
+  /* v8 ignore stop */
   const admittedSpell = admittedFindFamiliarSpell(
     admission.input,
     input.subject,
@@ -401,7 +410,10 @@ export function deliverTouchSpellThroughFindFamiliar(
 }
 
 function admittedFindFamiliarSpell(
-  input: AdmittedBattleResolutionInput,
+  input: Extract<
+    AdmittedBattleResolutionInput,
+    { readonly admissionKind: "general" }
+  >,
   subject: Extract<
     BattleSubject,
     { readonly tag: "actionSpell" | "bonusActionSpell" }

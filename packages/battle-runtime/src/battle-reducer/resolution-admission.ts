@@ -9,6 +9,7 @@ import {
 import type { CharacterProcedureBattleSubject } from "../battle-subjects.ts";
 import type {
   AdmittedBattleResolutionInput,
+  AdmittedBattleResolutionInputFor,
   AdmittedDruidWildShapeBattleResolutionInput,
   BattleResolutionInput,
   CharacterBattleCreatureState,
@@ -17,10 +18,12 @@ import type { CharacterUnitProcedureExecution } from "../character-execution-voc
 import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 import { Match } from "effect";
 
-export type BattleResolutionAdmission =
+export type BattleResolutionAdmission<
+  TInput extends BattleResolutionInput = BattleResolutionInput,
+> =
   | {
       readonly tag: "admitted";
-      readonly input: AdmittedBattleResolutionInput;
+      readonly input: AdmittedBattleResolutionInputFor<TInput>;
     }
   | { readonly tag: "staleCharacterProcedure" };
 
@@ -29,6 +32,9 @@ export type BattleResolutionAdmission =
  * Initial execution and interrupted replay share this operation so their
  * subject-specific procedure queries cannot drift.
  */
+export function admitBattleResolutionInput<
+  TInput extends BattleResolutionInput,
+>(input: TInput): BattleResolutionAdmission<TInput>;
 export function admitBattleResolutionInput(
   input: BattleResolutionInput,
 ): BattleResolutionAdmission {
@@ -151,21 +157,12 @@ function asAdmittedDruidWildShape(
 ): AdmittedDruidWildShapeBattleResolutionInput {
   return {
     ...input,
+    admissionKind: "druidWildShape",
     wildShapeAdmission: { actor, procedure },
+    // This private boundary is the sole brand minter. The immediately
+    // preceding guards prove the actor, subject-specific procedure query,
+    // and exact Wild Shape execution profile stored in this payload.
   } as AdmittedDruidWildShapeBattleResolutionInput;
-}
-
-export function admittedDruidWildShapeInput(
-  input: AdmittedBattleResolutionInput & {
-    readonly subject: Extract<
-      UnitProcedureSubject,
-      { readonly tag: "druidWildShape" }
-    >;
-  },
-): AdmittedDruidWildShapeBattleResolutionInput {
-  // The only constructor for an admitted Wild Shape subject attaches this
-  // subject-specific proof before the general dispatcher receives it.
-  return input as AdmittedDruidWildShapeBattleResolutionInput;
 }
 
 function asAdmitted(
@@ -175,5 +172,8 @@ function asAdmitted(
   // private cast is required to mint it. The exhaustive tag policy above
   // proves either that this subject needs no character binding or that its
   // subject-specific binding check succeeded before this helper is reached.
-  return input as AdmittedBattleResolutionInput;
+  return {
+    ...input,
+    admissionKind: "general",
+  } as AdmittedBattleResolutionInput;
 }

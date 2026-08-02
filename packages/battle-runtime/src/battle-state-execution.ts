@@ -6493,9 +6493,46 @@ export type BattleResolutionInputForSubject<TSubject extends BattleSubject> =
     readonly subject: TSubject;
   };
 declare const admittedBattleResolutionInput: unique symbol;
-export type AdmittedBattleResolutionInput = BattleResolutionInput & {
+type AdmittedBattleResolutionBrand = {
   readonly [admittedBattleResolutionInput]: true;
 };
+type DruidWildShapeSubject = Extract<
+  BattleSubject,
+  { readonly tag: "druidWildShape" }
+>;
+type DruidWildShapeAdmissionFacts = {
+  readonly admissionKind: "druidWildShape";
+  readonly wildShapeAdmission: {
+    readonly actor: CharacterBattleCreatureState;
+    readonly procedure: {
+      readonly kind: "unitFeature";
+      readonly source: CharacterUnitProcedureSource;
+      readonly execution: Extract<
+        UnitFeatureProcedureExecution,
+        { readonly kind: "druidWildShapeKnownForm" }
+      >;
+    };
+  };
+};
+export type AdmittedBattleResolutionInputFor<
+  TInput extends BattleResolutionInput,
+> =
+  | ([Exclude<TInput["subject"], DruidWildShapeSubject>] extends [never]
+      ? never
+      : Omit<TInput, "subject"> &
+          AdmittedBattleResolutionBrand & {
+            readonly admissionKind: "general";
+            readonly subject: Exclude<TInput["subject"], DruidWildShapeSubject>;
+          })
+  | ([Extract<TInput["subject"], DruidWildShapeSubject>] extends [never]
+      ? never
+      : Omit<TInput, "subject"> &
+          AdmittedBattleResolutionBrand &
+          DruidWildShapeAdmissionFacts & {
+            readonly subject: Extract<TInput["subject"], DruidWildShapeSubject>;
+          });
+export type AdmittedBattleResolutionInput =
+  AdmittedBattleResolutionInputFor<BattleResolutionInput>;
 export type BattleInterruptRouteOptions =
   | {
       readonly replayingInterruptedProcedure?: never;
@@ -6637,9 +6674,15 @@ type WithAdmittedSubject<
   TTag extends BattleSubject["tag"],
 > = TInput extends BattleResolutionInput
   ? Omit<TInput, "subject"> &
-      AdmittedBattleResolutionInput & {
-        readonly subject: Extract<BattleSubject, { readonly tag: TTag }>;
-      }
+      AdmittedBattleResolutionBrand &
+      (TTag extends "druidWildShape"
+        ? DruidWildShapeAdmissionFacts & {
+            readonly subject: DruidWildShapeSubject;
+          }
+        : {
+            readonly admissionKind: "general";
+            readonly subject: Extract<BattleSubject, { readonly tag: TTag }>;
+          })
   : never;
 
 export type AdmittedActionSpellBattleResolutionInput = WithAdmittedSubject<
@@ -6676,19 +6719,7 @@ export type AdmittedMonkFocusFlurryOfBlowsStrikeBattleResolutionInput =
 export type AdmittedDruidWildShapeBattleResolutionInput = WithAdmittedSubject<
   DruidWildShapeBattleResolutionInput,
   "druidWildShape"
-> & {
-  readonly wildShapeAdmission: {
-    readonly actor: CharacterBattleCreatureState;
-    readonly procedure: {
-      readonly kind: "unitFeature";
-      readonly source: CharacterUnitProcedureSource;
-      readonly execution: Extract<
-        UnitFeatureProcedureExecution,
-        { readonly kind: "druidWildShapeKnownForm" }
-      >;
-    };
-  };
-};
+>;
 
 export const BATTLE_INVALID_REASON_CODES = [
   "staleSubject",
