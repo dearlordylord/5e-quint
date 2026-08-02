@@ -15,6 +15,7 @@ import {
   statBlockRecord,
 } from "./battle-runtime.test-support.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import { attackExecutionDamageType } from "./battle-action-options.ts";
 import {
   attackActionOptionPresentationName,
   battleCreaturePresentationDisplayName,
@@ -106,6 +107,7 @@ describe("battle presentation joins", () => {
     if (attack === undefined) {
       throw new Error("Expected Goblin attack execution.");
     }
+    expect(attackExecutionDamageType(attack)).toBeUndefined();
 
     expect(
       attackActionOptionPresentationName(

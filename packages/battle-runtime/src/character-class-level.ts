@@ -5,6 +5,7 @@ import {
 } from "@dnd/shared/types";
 import type { ClassName } from "@dnd/surface/surface/types";
 import { Brand, Either } from "effect";
+import { isNonEmptyReadonlyArray } from "effect/Array";
 
 export type CharacterBattleClassLevelInit = {
   readonly className: ClassName;
@@ -34,7 +35,6 @@ export function parseCharacterBattleClassLevels(
 ): Either.Either<CharacterBattleClassLevels, CharacterBattleClassLevelsIssue> {
   const messages: string[] = [];
   const seenClassNames = new Set<ClassName>();
-  const parsed: CharacterBattleClassLevel[] = [];
   for (const classLevel of classLevels) {
     const duplicateClass = seenClassNames.has(classLevel.className);
     seenClassNames.add(classLevel.className);
@@ -51,37 +51,31 @@ export function parseCharacterBattleClassLevels(
       messages.push(
         `${classLevel.className} class level must be an integer from 1 to 20.`,
       );
-      continue;
     }
-    if (duplicateClass) continue;
-    parsed.push({
-      className: classLevel.className,
-      level: ClassLevel.make(classLevel.level),
-    });
   }
   if (
     messages.length === 0 &&
-    parsed.reduce((total, classLevel) => total + Number(classLevel.level), 0) >
-      20
+    classLevels.reduce((total, classLevel) => total + classLevel.level, 0) > 20
   ) {
     messages.push("Total character level must not exceed 20.");
   }
-  const [firstParsedClassLevel, ...remainingParsedClassLevels] = parsed;
-  if (messages.length > 0 || firstParsedClassLevel === undefined) {
-    const nonemptyMessages: ReadonlyNonEmptyArray<string> = [
-      messages[0] ??
-        "Character battle class levels require at least one entry.",
-      ...messages.slice(1),
-    ];
+  if (isNonEmptyReadonlyArray(messages)) {
     return Either.left({
       tag: "characterBattleClassLevelsIssue",
-      messages: nonemptyMessages,
+      messages,
     });
   }
+  const [firstClassLevel, ...remainingClassLevels] = classLevels;
   return Either.right(
     CharacterBattleClassLevels([
-      firstParsedClassLevel,
-      ...remainingParsedClassLevels,
+      {
+        className: firstClassLevel.className,
+        level: ClassLevel.make(firstClassLevel.level),
+      },
+      ...remainingClassLevels.map((classLevel) => ({
+        className: classLevel.className,
+        level: ClassLevel.make(classLevel.level),
+      })),
     ]),
   );
 }

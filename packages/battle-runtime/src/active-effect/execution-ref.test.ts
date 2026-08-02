@@ -48,6 +48,18 @@ function syntheticEffect(
 }
 
 describe("spell active-effect execution references", () => {
+  test("reports an absent owner without allocating an occurrence", () => {
+    const initial = fighterVsGoblinBattle();
+    const missingOwnerId = combatantId("missing-effect-owner");
+
+    expect(
+      allocateBattleActiveEffectRef({
+        state: initial,
+        ownerId: missingOwnerId,
+      }),
+    ).toEqual({ tag: "ownerNotFound", ownerId: missingOwnerId });
+  });
+
   test("allocates repeated refs from canonical owner state without replacing other combatants", () => {
     const initial = fighterVsGoblinBattle();
     const goblin = initial.combatants.get(goblinId);

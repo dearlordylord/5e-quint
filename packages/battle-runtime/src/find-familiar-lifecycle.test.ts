@@ -1222,6 +1222,9 @@ describe("Find Familiar lifecycle", () => {
 
   test("casts a familiar as owner-linked companion combatant state", () => {
     const initial = startFixtureBattle();
+    expect(
+      findFamiliarCreatureTypeOverrideForOwner(initial, casterId),
+    ).toBeNull();
     const result = castCatFamiliar(initial);
 
     expect(result.tag).toBe("resolved");
