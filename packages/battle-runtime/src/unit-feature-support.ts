@@ -186,9 +186,6 @@ const BARDIC_INSPIRATION_BASE_DIE_SIZE = 6;
 const CLERIC_CHANNEL_DIVINITY_RESOURCE_UNIT_ID = unitId(
   "cleric_channel_divinity",
 );
-export const PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID = unitId(
-  "paladin_channel_divinity",
-);
 const DRUID_WILD_SHAPE_RESOURCE_UNIT_ID = unitId("druid_wild_shape");
 const MONK_FOCUS_RESOURCE_UNIT_ID = unitId("monk_monks_focus");
 const MONK_FLURRY_OF_BLOWS_OPTION_ID = "flurry_of_blows" as const;
@@ -774,6 +771,11 @@ type StunningStrikeUnit = AuthoredUnitMechanicsFamilyMember<
   "stunning_strike"
 >;
 type StunningStrikeMechanics = StunningStrikeUnit["mechanics"];
+type PaladinSacredWeaponUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "sacred_weapon"
+>;
+type PaladinSacredWeaponMechanics = PaladinSacredWeaponUnit["mechanics"];
 type CunningStrikeOptionGrantUnit = AuthoredUnitMechanicsFamilyMember<
   AuthoredUnitSource,
   "cunning_strike_option_grant"
@@ -836,7 +838,7 @@ export type PaladinSacredWeaponProfile = {
     readonly action: "attack";
   };
   readonly spends: {
-    readonly resourceUnitId: typeof PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID;
+    readonly resourceUnitId: PaladinSacredWeaponMechanics["spends"]["resourceUnitId"];
     readonly amount: 1;
   };
   readonly target: "heldMeleeWeapon";
@@ -1768,13 +1770,6 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   const paladinSacredWeaponSupport = battlePaladinSacredWeaponSupportForUnit(
     input.unit,
   );
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (paladinSacredWeaponSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Sacred Weapon Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (paladinSacredWeaponSupport !== null) {
     supportProfiles.push(paladinSacredWeaponSupport);
   }
@@ -2624,9 +2619,7 @@ export type BattleRetaliationReactionAttackSupport =
   | "unsupported"
   | null;
 export type BattlePaladinSacredWeaponSupport =
-  | BattlePaladinSacredWeaponSupportProfile
-  | "unsupported"
-  | null;
+  BattlePaladinSacredWeaponSupportProfile | null;
 export type BattleHuntersPreySupport =
   | BattleHuntersPreySupportProfile
   | "unsupported"
@@ -3809,16 +3802,14 @@ export function battleCunningStrikeOptionGrantSupportForUnit(
 export function battlePaladinSacredWeaponSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattlePaladinSacredWeaponSupport {
-  if (!hasClassFeatureMechanicsFamily(unit, "sacred_weapon")) {
+  if (!isPaladinSacredWeaponUnit(unit)) {
     return null;
   }
-  const profile = paladinSacredWeaponProfileForUnit(unit);
-  return profile === null
-    ? "unsupported"
-    : {
-        kind: PALADIN_SACRED_WEAPON_SUPPORT_PROFILE,
-        sacredWeapon: profile.sacredWeapon,
-      };
+  const profile = paladinSacredWeaponProfileForAdmittedUnit(unit);
+  return {
+    kind: PALADIN_SACRED_WEAPON_SUPPORT_PROFILE,
+    sacredWeapon: profile.sacredWeapon,
+  };
 }
 
 export function battleHuntersPreySupportForUnit(
@@ -6657,73 +6648,112 @@ function cunningStrikeOptionGrantProfileForUnit(
   return cunningStrikeOptionGrantProfileForAdmittedUnit(unit);
 }
 
-function paladinSacredWeaponProfileForUnit(
-  unit: AuthoredUnitSource,
-): Extract<
+const PALADIN_SACRED_WEAPON_ACTIVATION_COST_KIND = {
+  standard_action: "standardAction",
+} as const satisfies Record<
+  PaladinSacredWeaponMechanics["activationCost"]["kind"],
+  PaladinSacredWeaponProfile["activationCost"]["kind"]
+>;
+const PALADIN_SACRED_WEAPON_TARGET_KIND = {
+  held_melee_weapon: "heldMeleeWeapon",
+} as const satisfies Record<
+  PaladinSacredWeaponMechanics["target"]["kind"],
+  PaladinSacredWeaponProfile["target"]
+>;
+const PALADIN_SACRED_WEAPON_DURATION_END = {
+  use_feature_again: "useFeatureAgain",
+  dismiss_no_action: "dismissNoAction",
+  not_carrying_weapon: "notCarryingWeapon",
+} as const satisfies Record<
+  PaladinSacredWeaponMechanics["duration"]["endsOn"][number],
+  PaladinSacredWeaponProfile["duration"]["endsOn"][number]
+>;
+const PALADIN_SACRED_WEAPON_ATTACK_ROLL_BONUS_KIND = {
+  ability_modifier: "abilityModifier",
+} as const satisfies Record<
+  PaladinSacredWeaponMechanics["attackRollBonus"]["kind"],
+  PaladinSacredWeaponProfile["attackRollBonus"]["kind"]
+>;
+const PALADIN_SACRED_WEAPON_ATTACK_ROLL_APPLICATION = {
+  imbued_weapon_attack_rolls: "imbuedWeaponAttackRolls",
+} as const satisfies Record<
+  PaladinSacredWeaponMechanics["attackRollBonus"]["appliesTo"],
+  PaladinSacredWeaponProfile["attackRollBonus"]["appliesTo"]
+>;
+
+function paladinSacredWeaponDurationEnds(
+  endsOn: PaladinSacredWeaponMechanics["duration"]["endsOn"],
+): PaladinSacredWeaponProfile["duration"]["endsOn"] {
+  return [
+    PALADIN_SACRED_WEAPON_DURATION_END[endsOn[0]],
+    PALADIN_SACRED_WEAPON_DURATION_END[endsOn[1]],
+    PALADIN_SACRED_WEAPON_DURATION_END[endsOn[2]],
+  ];
+}
+
+type PaladinSacredWeaponSupportedUnitFeatureProfile = Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "paladinSacredWeapon" }
-> | null {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "paladin" ||
-    unit.mechanics.family !== "sacred_weapon"
-  ) {
-    return null;
-  }
+>;
+
+function isPaladinSacredWeaponUnit(
+  unit: AuthoredUnitSource,
+): unit is PaladinSacredWeaponUnit {
+  return (
+    unit.kind === "class_feature" && unit.mechanics.family === "sacred_weapon"
+  );
+}
+
+function paladinSacredWeaponProfileForAdmittedUnit(
+  unit: PaladinSacredWeaponUnit,
+): PaladinSacredWeaponSupportedUnitFeatureProfile {
   const mechanics = unit.mechanics;
-  if (
-    mechanics.activationCost.kind !== "standard_action" ||
-    mechanics.activationCost.action !== "attack" ||
-    // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
-    mechanics.spends.resourceUnitId !==
-      PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID ||
-    mechanics.spends.amount !== 1 ||
-    mechanics.target.kind !== "held_melee_weapon" ||
-    mechanics.duration.unit !== "minute" ||
-    mechanics.duration.amount !== 10 ||
-    !sameStringSet(mechanics.duration.endsOn, [
-      "use_feature_again",
-      "dismiss_no_action",
-      "not_carrying_weapon",
-    ]) ||
-    mechanics.attackRollBonus.kind !== "ability_modifier" ||
-    mechanics.attackRollBonus.ability !== "cha" ||
-    mechanics.attackRollBonus.minimum !== 1 ||
-    mechanics.attackRollBonus.appliesTo !== "imbued_weapon_attack_rolls" ||
-    !sameStringSet(mechanics.hitDamageType.choice, ["normal", "radiant"]) ||
-    mechanics.light.brightRadiusFeet !== 20 ||
-    mechanics.light.dimAdditionalFeet !== 20
-  ) {
-    return null;
-  }
   return {
     kind: "paladinSacredWeapon",
     unit,
     sacredWeapon: {
-      activationCost: { kind: "standardAction", action: "attack" },
-      spends: {
-        resourceUnitId: PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID,
-        amount: 1,
+      activationCost: {
+        kind: PALADIN_SACRED_WEAPON_ACTIVATION_COST_KIND[
+          mechanics.activationCost.kind
+        ],
+        action: mechanics.activationCost.action,
       },
-      target: "heldMeleeWeapon",
+      spends: {
+        resourceUnitId: mechanics.spends.resourceUnitId,
+        amount: mechanics.spends.amount,
+      },
+      target: PALADIN_SACRED_WEAPON_TARGET_KIND[mechanics.target.kind],
       duration: {
-        unit: "minute",
-        amount: 10,
-        endsOn: ["useFeatureAgain", "dismissNoAction", "notCarryingWeapon"],
+        unit: mechanics.duration.unit,
+        amount: mechanics.duration.amount,
+        endsOn: paladinSacredWeaponDurationEnds(mechanics.duration.endsOn),
       },
       attackRollBonus: {
-        kind: "abilityModifier",
-        ability: "cha",
-        minimum: 1,
-        appliesTo: "imbuedWeaponAttackRolls",
+        kind: PALADIN_SACRED_WEAPON_ATTACK_ROLL_BONUS_KIND[
+          mechanics.attackRollBonus.kind
+        ],
+        ability: mechanics.attackRollBonus.ability,
+        minimum: mechanics.attackRollBonus.minimum,
+        appliesTo:
+          PALADIN_SACRED_WEAPON_ATTACK_ROLL_APPLICATION[
+            mechanics.attackRollBonus.appliesTo
+          ],
       },
-      hitDamageTypeChoice: ["normal", "radiant"],
+      hitDamageTypeChoice: mechanics.hitDamageType.choice,
       light: {
-        brightRadiusFeet: movementFeet(20),
-        dimAdditionalFeet: movementFeet(20),
+        brightRadiusFeet: movementFeet(mechanics.light.brightRadiusFeet),
+        dimAdditionalFeet: movementFeet(mechanics.light.dimAdditionalFeet),
       },
     },
   };
+}
+
+function paladinSacredWeaponProfileForUnit(
+  unit: AuthoredUnitSource,
+): PaladinSacredWeaponSupportedUnitFeatureProfile | null {
+  return isPaladinSacredWeaponUnit(unit)
+    ? paladinSacredWeaponProfileForAdmittedUnit(unit)
+    : null;
 }
 
 function huntersPreyAdmittedMechanicsProfileForUnit(

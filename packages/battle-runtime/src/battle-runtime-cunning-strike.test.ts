@@ -92,7 +92,22 @@ describe("battle runtime: Cunning Strike", () => {
         },
       }),
     ).toThrow();
+    expect(() =>
+      decodeUnitRecordSync({
+        ...cunningStrike,
+        id: "synthetic_cunning_strike_wrong_sneak_attack_source",
+        mechanics: {
+          ...cunningStrikeMechanics,
+          trigger: {
+            ...cunningStrikeMechanics.trigger,
+            sourceUnitId: cunningStrike.id,
+          },
+        },
+      }),
+    ).toThrow();
+  });
 
+  test("Surface rejects malformed same-family Cunning Strike option grants", () => {
     const supremeSneak = unitLibrary.requireUnit("rogue_supreme_sneak");
     if (
       supremeSneak.kind !== "class_feature" ||
@@ -111,6 +126,16 @@ describe("battle runtime: Cunning Strike", () => {
             ...supremeSneakMechanics.option,
             cost: { kind: "sneak_attack_damage_dice", dice: 2, dieSize: 6 },
           },
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      decodeUnitRecordSync({
+        ...supremeSneak,
+        id: "synthetic_supreme_sneak_wrong_cunning_strike_source",
+        mechanics: {
+          ...supremeSneakMechanics,
+          sourceUnitId: supremeSneak.id,
         },
       }),
     ).toThrow();

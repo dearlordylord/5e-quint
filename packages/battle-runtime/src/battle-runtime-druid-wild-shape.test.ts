@@ -1673,6 +1673,8 @@ test("held-weapon pickup reports boundary failures and preserves other fallen ob
   if (placed.tag !== "applied") {
     throw new Error(placed.message);
   }
+  const placedDruid = requireCharacter(placed.state, druidId);
+  expect(characterEffectiveLoadout(placed.state, placedDruid)).toEqual({});
   const pickup = (
     actorId: typeof druidId,
     objectId: typeof mainWeaponItemId,

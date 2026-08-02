@@ -77,9 +77,6 @@ function admitFogCloudObscurement(
 
   return ctx.actor.origin.spellcasting.spellSlots.flatMap(
     (slot): readonly FogCloudObscurementSpellInvocation[] => {
-      if (Number(slot.spellLevel) < FOG_CLOUD_LEVEL) {
-        return [];
-      }
       const radiusFeet =
         fogCloud.radius.base +
         Math.max(0, Number(slot.spellLevel) - fogCloud.radius.startingAtLevel) *

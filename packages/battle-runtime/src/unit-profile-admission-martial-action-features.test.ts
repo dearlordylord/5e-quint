@@ -1650,6 +1650,19 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
         },
       }),
     ).toThrow();
+    expect(() =>
+      decodeUnitRecordSync({
+        ...unit,
+        id: "synthetic_stunning_strike_wrong_focus_resource",
+        mechanics: {
+          ...stunningStrikeMechanics,
+          spends: {
+            ...stunningStrikeMechanics.spends,
+            resourceUnitId: unit.id,
+          },
+        },
+      }),
+    ).toThrow();
   });
 
   test("monk_deflect_attacks projects zero-damage redirect executable facts", () => {

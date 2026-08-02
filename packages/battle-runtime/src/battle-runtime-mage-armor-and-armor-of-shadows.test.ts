@@ -883,6 +883,46 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     expect(admitPersistentArmorEffectSpell(invalidBaseArmorClass)).toBeNull();
   });
 
+  test("persistent armor admission ignores other spell mechanic families", () => {
+    expect(
+      admitPersistentArmorEffectSpell(spellRecord("fire_bolt")),
+    ).toBeNull();
+  });
+
+  test("persistent armor admission rejects a different Surface-valid Armor Class formula", () => {
+    const mageArmor = spellRecord("mage_armor");
+    const operation =
+      mageArmor.mechanics.family === "ongoing_effect"
+        ? mageArmor.mechanics.operations[0]
+        : undefined;
+    if (
+      operation?.effect.kind !== "modify_ac_set_base" ||
+      operation.effect.formula.kind !== "base_plus_dex"
+    ) {
+      throw new Error("Expected the Mage Armor persistent-armor fixture.");
+    }
+    const constitutionArmor = {
+      ...mageArmor,
+      mechanics: {
+        ...mageArmor.mechanics,
+        operations: [
+          {
+            ...operation,
+            effect: {
+              ...operation.effect,
+              formula: {
+                kind: "base_plus_dex_con" as const,
+                base: operation.effect.formula.base,
+              },
+            },
+          },
+        ] as const,
+      },
+    };
+
+    expect(admitPersistentArmorEffectSpell(constitutionArmor)).toBeNull();
+  });
+
   test("Armor of Shadows retains the admitted persistent-armor projection", () => {
     const mageArmor = spellRecord("mage_armor");
 
