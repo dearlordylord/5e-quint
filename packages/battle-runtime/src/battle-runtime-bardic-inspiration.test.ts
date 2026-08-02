@@ -169,12 +169,9 @@ describe("battle runtime: Bardic Inspiration", () => {
     ]);
   });
 
-  test.each([
-    { lostFact: "resource uses", removeResourceUses: true },
-    { lostFact: "Bonus Action", removeResourceUses: false },
-  ])(
-    "Bardic Inspiration rejects a selected subject after the actor loses $lostFact",
-    ({ removeResourceUses }) => {
+  test.each(["resource uses", "Bonus Action"] as const)(
+    "Bardic Inspiration rejects a selected subject after the actor loses %s",
+    (lostFact) => {
       const session = bardicInspirationBattle({ charismaModifier: 3 });
       const subject = bardicInspirationSubject(bardicInspirationUnit().id);
       const selectedAct = findAct(session, subject);
@@ -192,14 +189,15 @@ describe("battle runtime: Bardic Inspiration", () => {
           ...session.state,
           currentTurnResources: {
             ...session.state.currentTurnResources,
-            currentHasBonusAction: removeResourceUses,
+            currentHasBonusAction: lostFact === "resource uses",
           },
           combatants: new Map(session.state.combatants).set(fighterId, {
             ...actor,
             origin: {
               ...actor.origin,
               resources: actor.origin.resources.map((resource) =>
-                removeResourceUses && resource.usesRemaining !== undefined
+                lostFact === "resource uses" &&
+                resource.usesRemaining !== undefined
                   ? { ...resource, usesRemaining: resourceCount(0) }
                   : resource,
               ),
