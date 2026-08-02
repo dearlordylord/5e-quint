@@ -863,6 +863,7 @@ export function resolveShakeAwakeFromSleep(
   }
   /* v8 ignore stop */
   const spent = spendTurnAction(input.state.currentTurnResources);
+  /* v8 ignore start -- Defensive internal guard: dispatcher action-resource admission rejects an exhausted Action before routing Sleep shake-awake here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -870,6 +871,7 @@ export function resolveShakeAwakeFromSleep(
       "Sleep shake-awake is no longer available.",
     );
   }
+  /* v8 ignore stop */
   const nextState = removeSleepEffectsFromTarget(
     { ...input.state, currentTurnResources: spent.right },
     targetId,
@@ -934,6 +936,7 @@ export function resolveShakeAwakeFromHypnoticPattern(
   }
   /* v8 ignore stop */
   const spent = spendTurnAction(input.state.currentTurnResources);
+  /* v8 ignore start -- Defensive internal guard: dispatcher action-resource admission rejects an exhausted Action before routing Hypnotic Pattern shake-awake here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -941,6 +944,7 @@ export function resolveShakeAwakeFromHypnoticPattern(
       "Hypnotic Pattern shake-awake is no longer available.",
     );
   }
+  /* v8 ignore stop */
   const nextState = removeHypnoticPatternControlEffectsFromTarget(
     { ...input.state, currentTurnResources: spent.right },
     targetId,
@@ -1060,6 +1064,7 @@ export function resolveMultiattack(
   }
   /* v8 ignore stop */
   const actor = input.state.combatants.get(input.subject.actorId);
+  /* v8 ignore start -- Defensive internal guard: dispatcher current-actor and action-eligibility admission rejects a missing, non-Stat-Block, or incapacitated Multiattack actor before routing here. */
   if (
     !isStatBlockBattleCreatureState(actor) ||
     !combatantCanTakeActions(actor)
@@ -1070,6 +1075,7 @@ export function resolveMultiattack(
       "Multiattack requires an admitted Stat Block Multiattack.",
     );
   }
+  /* v8 ignore stop */
   const origin = actor.origin;
   const multiattackBinding = statBlockProcedureBinding(
     origin.execution,
@@ -1094,6 +1100,7 @@ export function resolveMultiattack(
     );
   }
   const spent = spendTurnAction(input.state.currentTurnResources);
+  /* v8 ignore start -- Defensive internal guard: dispatcher action-resource admission rejects an exhausted Action before routing Multiattack here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1101,6 +1108,7 @@ export function resolveMultiattack(
       "Attack is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const [consumedDispatch, ...pendingDispatches] =
     multiattackBinding.procedure.dispatchProcedureRefs;
   const grantedPendingDispatches = combatantHasSlowActivePenalties(actor)
@@ -1125,14 +1133,11 @@ export function resolveMultiattack(
       ],
     },
   };
-  const nextState =
-    consumedDispatch === undefined
-      ? nextStateWithPendingDispatches
-      : updateStatBlockActorResources(
-          nextStateWithPendingDispatches,
-          actor,
-          consumedDispatch,
-        );
+  const nextState = updateStatBlockActorResources(
+    nextStateWithPendingDispatches,
+    actor,
+    consumedDispatch,
+  );
   return {
     tag: "resolved",
     state: nextState,
@@ -1236,6 +1241,7 @@ export function resolveStatBlockBonusActionOption(
   input: StatBlockBonusActionOptionBattleResolutionInput,
 ): BattleResolutionResult {
   const actor = input.state.combatants.get(input.subject.actorId);
+  /* v8 ignore start -- Defensive internal guard: dispatcher current-actor and action-eligibility admission rejects a missing, non-Stat-Block, or incapacitated Bonus Action actor before routing here. */
   if (
     !isStatBlockBattleCreatureState(actor) ||
     !combatantCanTakeActions(actor)
@@ -1246,6 +1252,7 @@ export function resolveStatBlockBonusActionOption(
       "Stat Block Bonus Action requires an admitted Stat Block action option.",
     );
   }
+  /* v8 ignore stop */
   const statBlockActor = actor;
   const origin = statBlockActor.origin;
   const optionBinding = statBlockProcedureBinding(
