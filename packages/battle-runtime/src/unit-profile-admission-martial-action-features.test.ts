@@ -1252,6 +1252,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     expect(battleMartialArtsAttackProjectionSupportForUnit(unit)).toBe(
       MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
     );
+    expect(parseSupportedUnitFeatureProfile(unit, [])).toBeNull();
     expect(
       parseSupportedUnitFeatureProfile(unit, [
         { className: "monk", level: classLevel(1) },

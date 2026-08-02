@@ -1111,7 +1111,7 @@ export function cunningStrikeUnitRefs(): Extract<
 >["characterUnitRefs"] {
   const unit = rogueCunningStrikeUnit();
   const support = battleCunningStrikeSupportForUnit(unit);
-  if (support === null || support === "unsupported") {
+  if (support === null) {
     throw new Error("Expected Cunning Strike support profile.");
   }
   return [

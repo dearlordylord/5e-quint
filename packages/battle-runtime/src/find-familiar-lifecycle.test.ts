@@ -67,6 +67,7 @@ import {
   initiativeScore,
   permanentlyDismissFindFamiliar,
   reappearTemporarilyDismissedFindFamiliar,
+  retainedStoredFormForPresentCompanion,
   resolveBattleRuntimeSubject,
   resolveBattleInterrupt,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
@@ -1240,6 +1241,16 @@ describe("Find Familiar lifecycle", () => {
       placement: { kind: "unoccupiedSpaceWithinSpellRange" },
     });
     expect(familiar).not.toHaveProperty("resolvedForm");
+    if (familiar?.status !== "present") {
+      throw new Error("Expected present familiar companion state.");
+    }
+    expect(
+      retainedStoredFormForPresentCompanion({
+        state: initial,
+        companionId: familiar.combatantId,
+        companion: familiar,
+      }),
+    ).toBe("Present companion Stat Block combatant is missing.");
     expect(result.state.combatants.get(familiarId)).toMatchObject({
       combatantId: familiarId,
       initiative: initiativeScore(18),

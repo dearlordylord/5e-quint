@@ -37,8 +37,6 @@ import type {
   DiceExpr,
   EffectAtom,
   EquipmentPredicate,
-  CunningStrikeMechanics,
-  SupremeSneakMechanics,
   DragonbornSpeciesSource,
   StandardActionKind,
   AuthoredUnitSource,
@@ -753,10 +751,45 @@ export type CunningStrikeDieCost = {
   readonly dice: 1;
   readonly dieSize: 6;
 };
+type MechanicsFamilyMember<
+  Mechanics,
+  Family extends string,
+> = Mechanics extends { readonly family: Family } ? Mechanics : never;
+type AuthoredUnitMechanicsFamilyMember<
+  Unit,
+  Family extends string,
+> = Unit extends { readonly mechanics: infer Mechanics }
+  ? MechanicsFamilyMember<Mechanics, Family> extends infer FamilyMechanics
+    ? [FamilyMechanics] extends [never]
+      ? never
+      : Omit<Unit, "mechanics"> & { readonly mechanics: FamilyMechanics }
+    : never
+  : never;
+type CunningStrikeUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "cunning_strike"
+>;
+type CunningStrikeOptionGrantUnit = AuthoredUnitMechanicsFamilyMember<
+  AuthoredUnitSource,
+  "cunning_strike_option_grant"
+>;
+type CunningStrikeMechanics = CunningStrikeUnit["mechanics"];
 export type CunningStrikeSurfaceOption =
   CunningStrikeMechanics["options"][number];
 export type CunningStrikeOptionGrantSurfaceOption =
-  SupremeSneakMechanics["option"];
+  CunningStrikeOptionGrantUnit["mechanics"]["option"];
+type CunningStrikePoisonSurfaceOption = Extract<
+  CunningStrikeSurfaceOption,
+  { readonly requires: unknown }
+>;
+type CunningStrikeTripSurfaceOption = Extract<
+  CunningStrikeSurfaceOption,
+  { readonly target: unknown }
+>;
+type CunningStrikeWithdrawSurfaceOption = Extract<
+  CunningStrikeSurfaceOption,
+  { readonly movement: unknown }
+>;
 export const CUNNING_STRIKE_END_TURN_COVER_DEGREES = [
   "none",
   "half",
@@ -1724,26 +1757,12 @@ function battleUnitSupportProfilesForInputWithHuntersPreyAdmission(
   }
 
   const cunningStrikeSupport = battleCunningStrikeSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (cunningStrikeSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Cunning Strike Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (cunningStrikeSupport !== null) {
     supportProfiles.push(cunningStrikeSupport);
   }
 
   const cunningStrikeOptionGrantSupport =
     battleCunningStrikeOptionGrantSupportForUnit(input.unit);
-  /* v8 ignore start -- Each focused hook reader owns malformed-shape conformance; this branch only translates its unsupported sentinel into the aggregate typed issue. */
-  if (cunningStrikeOptionGrantSupport === "unsupported") {
-    return battleUnitSupportProfileIssue(
-      `Unsupported battle Cunning Strike option-grant Unit hook: ${input.unit.id}.`,
-    );
-  }
-  /* v8 ignore stop */
   if (cunningStrikeOptionGrantSupport !== null) {
     supportProfiles.push(cunningStrikeOptionGrantSupport);
   }
@@ -2601,13 +2620,9 @@ export type BattleStunningStrikeSupport =
   | "unsupported"
   | null;
 export type BattleCunningStrikeSupport =
-  | BattleCunningStrikeSupportProfile
-  | "unsupported"
-  | null;
+  BattleCunningStrikeSupportProfile | null;
 export type BattleCunningStrikeOptionGrantSupport =
-  | BattleCunningStrikeOptionGrantSupportProfile
-  | "unsupported"
-  | null;
+  BattleCunningStrikeOptionGrantSupportProfile | null;
 export type BattleRetaliationReactionAttackSupport =
   | BattleRetaliationReactionAttackSupportProfile
   | "unsupported"
@@ -3774,31 +3789,27 @@ export function battleStunningStrikeSupportForUnit(
 export function battleCunningStrikeSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleCunningStrikeSupport {
-  if (!hasClassFeatureMechanicsFamily(unit, "cunning_strike")) {
+  if (!isCunningStrikeUnit(unit)) {
     return null;
   }
-  const profile = cunningStrikeProfileForUnit(unit);
-  return profile === null
-    ? "unsupported"
-    : {
-        kind: CUNNING_STRIKE_SUPPORT_PROFILE,
-        cunningStrike: profile.cunningStrike,
-      };
+  const profile = cunningStrikeProfileForAdmittedUnit(unit);
+  return {
+    kind: CUNNING_STRIKE_SUPPORT_PROFILE,
+    cunningStrike: profile.cunningStrike,
+  };
 }
 
 export function battleCunningStrikeOptionGrantSupportForUnit(
   unit: AuthoredUnitSource,
 ): BattleCunningStrikeOptionGrantSupport {
-  if (!hasClassFeatureMechanicsFamily(unit, "cunning_strike_option_grant")) {
+  if (!isCunningStrikeOptionGrantUnit(unit)) {
     return null;
   }
-  const profile = cunningStrikeOptionGrantProfileForUnit(unit);
-  return profile === null
-    ? "unsupported"
-    : {
-        kind: CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
-        optionGrant: profile.optionGrant,
-      };
+  const profile = cunningStrikeOptionGrantProfileForAdmittedUnit(unit);
+  return {
+    kind: CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
+    optionGrant: profile.optionGrant,
+  };
 }
 
 export function battlePaladinSacredWeaponSupportForUnit(
@@ -6290,147 +6301,208 @@ function stunningStrikeProfileForUnit(
   };
 }
 
+const CUNNING_STRIKE_COST_KIND = {
+  sneak_attack_damage_dice: "sneakAttackDamageDice",
+} as const satisfies Record<
+  CunningStrikeSurfaceOption["cost"]["kind"],
+  CunningStrikeDieCost["kind"]
+>;
+const CUNNING_STRIKE_REQUIREMENT_KIND = {
+  equipment_on_person: "equipmentOnPerson",
+} as const satisfies Record<
+  CunningStrikePoisonSurfaceOption["requires"]["kind"],
+  CunningStrikeEquipmentGatedConditionSaveEffect["requires"]["kind"]
+>;
+const CUNNING_STRIKE_CONDITION_EFFECT_KIND = {
+  apply_condition: "applyCondition",
+} as const satisfies Record<
+  | CunningStrikePoisonSurfaceOption["onFail"]["kind"]
+  | CunningStrikeTripSurfaceOption["onFail"]["kind"],
+  | CunningStrikeEquipmentGatedConditionSaveEffect["onFail"]["kind"]
+  | CunningStrikeSizeGatedConditionSaveEffect["onFail"]["kind"]
+>;
+const CUNNING_STRIKE_REPEAT_SAVE_CADENCE = {
+  end_of_target_turn: "endOfTargetTurn",
+} as const satisfies Record<
+  CunningStrikePoisonSurfaceOption["onFail"]["repeatSave"]["cadence"],
+  CunningStrikeEquipmentGatedConditionSaveEffect["onFail"]["repeatSave"]["cadence"]
+>;
+const CUNNING_STRIKE_REPEAT_SAVE_SUCCESS = {
+  end_condition: "endCondition",
+} as const satisfies Record<
+  CunningStrikePoisonSurfaceOption["onFail"]["repeatSave"]["onSuccess"],
+  CunningStrikeEquipmentGatedConditionSaveEffect["onFail"]["repeatSave"]["onSuccess"]
+>;
+const CUNNING_STRIKE_MOVEMENT_TIMING = {
+  immediately_after_attack: "immediatelyAfterAttack",
+} as const satisfies Record<
+  CunningStrikeWithdrawSurfaceOption["movement"]["timing"],
+  CunningStrikePostDamageMovementEffect["movement"]["timing"]
+>;
+const CUNNING_STRIKE_MOVEMENT_DISTANCE_KIND = {
+  half_speed: "halfSpeed",
+} as const satisfies Record<
+  CunningStrikeWithdrawSurfaceOption["movement"]["distance"]["kind"],
+  CunningStrikePostDamageMovementEffect["movement"]["distance"]["kind"]
+>;
+const CUNNING_STRIKE_OPPORTUNITY_ATTACKS = {
+  does_not_provoke: "doesNotProvoke",
+} as const satisfies Record<
+  CunningStrikeWithdrawSurfaceOption["movement"]["opportunityAttacks"],
+  CunningStrikePostDamageMovementEffect["movement"]["opportunityAttacks"]
+>;
+const CUNNING_STRIKE_COVER_DEGREE = {
+  three_quarters: "threeQuarters",
+  total: "total",
+} as const satisfies Record<
+  CunningStrikeOptionGrantSurfaceOption["effect"]["ifTurnEndsBehindCover"][number],
+  CunningStrikeHideInvisibleEndSuppressionEffect["ifTurnEndsBehindCover"][number]
+>;
+const CUNNING_STRIKE_OPTION_GRANT_PREREQUISITE_KIND = {
+  hide_action_invisible_condition: "hideActionInvisibleCondition",
+} as const satisfies Record<
+  CunningStrikeOptionGrantSurfaceOption["prerequisite"]["kind"],
+  CunningStrikeHideInvisibleEndSuppressionEffect["prerequisite"]["kind"]
+>;
+const CUNNING_STRIKE_OPTION_GRANT_CONDITION_SOURCE = {
+  hide_action: "hideAction",
+} as const satisfies Record<
+  CunningStrikeOptionGrantSurfaceOption["effect"]["conditionSource"],
+  CunningStrikeHideInvisibleEndSuppressionEffect["conditionSource"]
+>;
+const CUNNING_STRIKE_OPTION_GRANT_EFFECT_KIND = {
+  suppress_attack_end_of_invisible_condition: "hideInvisibleEndSuppression",
+} as const satisfies Record<
+  CunningStrikeOptionGrantSurfaceOption["effect"]["kind"],
+  CunningStrikeHideInvisibleEndSuppressionEffect["kind"]
+>;
+const CUNNING_STRIKE_TRIGGER_KIND = {
+  deal_sneak_attack_damage: "dealSneakAttackDamage",
+} as const satisfies Record<
+  CunningStrikeMechanics["trigger"]["kind"],
+  CunningStrikeProfile["trigger"]["kind"]
+>;
+const CUNNING_STRIKE_CHOICE_KIND = {
+  choose_one: "chooseOne",
+} as const satisfies Record<
+  CunningStrikeMechanics["choice"]["kind"],
+  CunningStrikeProfile["choice"]["kind"]
+>;
+const CUNNING_STRIKE_SAVE_DC_KIND = {
+  class_feature_ability_save_dc: "classFeatureAbilitySaveDc",
+} as const satisfies Record<
+  CunningStrikeMechanics["effectSaveDc"]["kind"],
+  CunningStrikeProfile["effectSaveDc"]["kind"]
+>;
+
 function cunningStrikeCostForSurfaceOption(option: {
   readonly cost: CunningStrikeSurfaceOption["cost"];
-}): CunningStrikeDieCost | null {
-  /* v8 ignore start -- Unsupported structured input: Cunning Strike options spend exactly one d6 of Sneak Attack damage; other cost atoms are rejected before projection. */
-  if (
-    option.cost.kind !== "sneak_attack_damage_dice" ||
-    option.cost.dice !== 1 ||
-    option.cost.dieSize !== 6
-  ) {
-    return null;
-  }
-  /* v8 ignore stop */
-  return { kind: "sneakAttackDamageDice", dice: 1, dieSize: 6 };
+}): CunningStrikeDieCost {
+  return {
+    kind: CUNNING_STRIKE_COST_KIND[option.cost.kind],
+    dice: option.cost.dice,
+    dieSize: option.cost.dieSize,
+  };
+}
+
+function cunningStrikePoisonDurationTicks(duration: {
+  readonly amount: 1;
+  readonly unit: "minute";
+}): ElapsedTimeTicks {
+  return Either.getOrThrow(elapsedTimeTicksFromTimeSpanDuration(duration));
 }
 
 function cunningStrikeEffectForSurfaceOption(
   option: CunningStrikeSurfaceOption,
-): CunningStrikeOptionEffect | null {
+): CunningStrikeOptionEffect {
   if ("requires" in option) {
-    /* v8 ignore start -- Unsupported structured input: the equipment-gated option owns the Poisoner's Kit, Constitution save, Poisoned condition, and end-turn repeat-save shape. */
-    if (
-      option.requires.kind !== "equipment_on_person" ||
-      option.requires.equipment.kind !== "tool" ||
-      // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
-      option.requires.equipment.toolId !== "poisoners_kit" ||
-      option.save.ability !== "con" ||
-      option.onFail.kind !== "apply_condition" ||
-      option.onFail.condition !== "poisoned" ||
-      option.onFail.repeatSave.cadence !== "end_of_target_turn" ||
-      option.onFail.repeatSave.onSuccess !== "end_condition"
-    ) {
-      return null;
-    }
-    /* v8 ignore stop */
-    const duration = elapsedTimeTicksFromTimeSpanDuration(
+    const durationTicks = cunningStrikePoisonDurationTicks(
       option.onFail.duration,
     );
-    /* v8 ignore start -- Unsupported structured input: the equipment-gated condition duration must parse into elapsed-time ticks. */
-    if (Either.isLeft(duration)) {
-      return null;
-    }
-    /* v8 ignore stop */
     return {
       kind: "equipmentGatedConditionSave",
       requires: {
-        kind: "equipmentOnPerson",
-        equipment: { kind: "tool", toolId: "poisoners_kit" },
+        kind: CUNNING_STRIKE_REQUIREMENT_KIND[option.requires.kind],
+        equipment: {
+          kind: option.requires.equipment.kind,
+          toolId: option.requires.equipment.toolId,
+        },
       },
       save: { ability: option.save.ability },
       onFail: {
-        kind: "applyCondition",
+        kind: CUNNING_STRIKE_CONDITION_EFFECT_KIND[option.onFail.kind],
         condition: option.onFail.condition,
-        durationTicks: duration.right,
+        durationTicks,
         repeatSave: {
-          cadence: "endOfTargetTurn",
-          onSuccess: "endCondition",
+          cadence:
+            CUNNING_STRIKE_REPEAT_SAVE_CADENCE[
+              option.onFail.repeatSave.cadence
+            ],
+          onSuccess:
+            CUNNING_STRIKE_REPEAT_SAVE_SUCCESS[
+              option.onFail.repeatSave.onSuccess
+            ],
         },
       },
     };
   }
   if ("target" in option) {
-    /* v8 ignore start -- Unsupported structured input: the size-gated option owns a Large-or-smaller Dexterity save that applies Prone on failure. */
-    if (
-      option.target.maxSize !== "large" ||
-      option.save.ability !== "dex" ||
-      option.onFail.kind !== "apply_condition" ||
-      option.onFail.condition !== "prone"
-    ) {
-      return null;
-    }
-    /* v8 ignore stop */
     return {
       kind: "sizeGatedConditionSave",
       target: { maxSize: option.target.maxSize },
       save: { ability: option.save.ability },
       onFail: {
-        kind: "applyCondition",
+        kind: CUNNING_STRIKE_CONDITION_EFFECT_KIND[option.onFail.kind],
         condition: option.onFail.condition,
       },
     };
   }
   if ("movement" in option) {
-    /* v8 ignore start -- Unsupported structured input: the movement option owns immediate half-Speed movement that does not provoke Opportunity Attacks. */
-    if (
-      option.movement.timing !== "immediately_after_attack" ||
-      option.movement.distance.kind !== "half_speed" ||
-      option.movement.opportunityAttacks !== "does_not_provoke"
-    ) {
-      return null;
-    }
-    /* v8 ignore stop */
     return {
       kind: "postDamageMovement",
       movement: {
-        timing: "immediatelyAfterAttack",
-        distance: { kind: "halfSpeed" },
-        opportunityAttacks: "doesNotProvoke",
+        timing: CUNNING_STRIKE_MOVEMENT_TIMING[option.movement.timing],
+        distance: {
+          kind: CUNNING_STRIKE_MOVEMENT_DISTANCE_KIND[
+            option.movement.distance.kind
+          ],
+        },
+        opportunityAttacks:
+          CUNNING_STRIKE_OPPORTUNITY_ATTACKS[
+            option.movement.opportunityAttacks
+          ],
       },
     };
   }
-  /* v8 ignore next -- Unsupported structured input: every Cunning Strike option shape owned by this profile is handled above. */
-  return null;
+  return option;
 }
 
 function cunningStrikeEffectForOptionGrantSurfaceOption(
   option: CunningStrikeOptionGrantSurfaceOption,
-): CunningStrikeOptionEffect | null {
-  /* v8 ignore start -- Unsupported structured input: this option grant owns the Hide-created Invisible suppression with three-quarters or total cover retention. */
-  if (
-    option.prerequisite.kind !== "hide_action_invisible_condition" ||
-    option.effect.kind !== "suppress_attack_end_of_invisible_condition" ||
-    option.effect.conditionSource !== "hide_action" ||
-    option.effect.ifTurnEndsBehindCover[0] !== "three_quarters" ||
-    option.effect.ifTurnEndsBehindCover[1] !== "total"
-  ) {
-    return null;
-  }
-  /* v8 ignore stop */
+): CunningStrikeOptionEffect {
   return {
-    kind: "hideInvisibleEndSuppression",
-    prerequisite: { kind: "hideActionInvisibleCondition" },
-    conditionSource: "hideAction",
-    ifTurnEndsBehindCover: ["threeQuarters", "total"],
+    kind: CUNNING_STRIKE_OPTION_GRANT_EFFECT_KIND[option.effect.kind],
+    prerequisite: {
+      kind: CUNNING_STRIKE_OPTION_GRANT_PREREQUISITE_KIND[
+        option.prerequisite.kind
+      ],
+    },
+    conditionSource:
+      CUNNING_STRIKE_OPTION_GRANT_CONDITION_SOURCE[
+        option.effect.conditionSource
+      ],
+    ifTurnEndsBehindCover: [
+      CUNNING_STRIKE_COVER_DEGREE[option.effect.ifTurnEndsBehindCover[0]],
+      CUNNING_STRIKE_COVER_DEGREE[option.effect.ifTurnEndsBehindCover[1]],
+    ],
   };
 }
 
 function cunningStrikeOptionForSurfaceOption(
   option: CunningStrikeSurfaceOption,
-): CunningStrikeOption | null {
+): CunningStrikeOption {
   const cost = cunningStrikeCostForSurfaceOption(option);
-  /* v8 ignore start -- Unsupported structured input: the option cost failed the one-d6 Cunning Strike admission gate. */
-  if (cost === null) {
-    return null;
-  }
-  /* v8 ignore stop */
   const effect = cunningStrikeEffectForSurfaceOption(option);
-  /* v8 ignore start -- Unsupported structured input: the option effect failed its typed Cunning Strike admission gate. */
-  if (effect === null) {
-    return null;
-  }
-  /* v8 ignore stop */
   return {
     selectionId: option.id,
     cost,
@@ -6440,19 +6512,9 @@ function cunningStrikeOptionForSurfaceOption(
 
 function cunningStrikeOptionForOptionGrantSurfaceOption(
   option: CunningStrikeOptionGrantSurfaceOption,
-): CunningStrikeOption | null {
+): CunningStrikeOption {
   const cost = cunningStrikeCostForSurfaceOption(option);
-  /* v8 ignore start -- Unsupported structured input: the granted option cost failed the one-d6 Cunning Strike admission gate. */
-  if (cost === null) {
-    return null;
-  }
-  /* v8 ignore stop */
   const effect = cunningStrikeEffectForOptionGrantSurfaceOption(option);
-  /* v8 ignore start -- Unsupported structured input: the granted option effect failed its typed admission gate. */
-  if (effect === null) {
-    return null;
-  }
-  /* v8 ignore stop */
   return {
     selectionId: option.id,
     cost,
@@ -6462,36 +6524,34 @@ function cunningStrikeOptionForOptionGrantSurfaceOption(
 
 function cunningStrikeOptionsForMechanics(
   mechanics: CunningStrikeMechanics,
-): readonly CunningStrikeOption[] | null {
-  const options: CunningStrikeOption[] = [];
-  for (const option of mechanics.options) {
-    const projected = cunningStrikeOptionForSurfaceOption(option);
-    /* v8 ignore start -- Unsupported structured input: one malformed option rejects the complete Cunning Strike collection so partial support is unrepresentable. */
-    if (projected === null) {
-      return null;
-    }
-    /* v8 ignore stop */
-    options.push(projected);
-  }
-  return options;
+): readonly CunningStrikeOption[] {
+  return mechanics.options.map(cunningStrikeOptionForSurfaceOption);
 }
 
-function cunningStrikeProfileForUnit(
-  unit: AuthoredUnitSource,
-  classLevels?: readonly CharacterBattleClassLevel[],
-): Extract<
+type CunningStrikeSupportedUnitFeatureProfile = Extract<
   SupportedUnitFeatureProfile,
   { readonly kind: "cunningStrike" }
-> | null {
-  /* v8 ignore start -- Unsupported structured input: Cunning Strike execution is admitted only from the Rogue class-feature mechanics family. */
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "rogue" ||
-    unit.mechanics.family !== "cunning_strike"
-  ) {
-    return null;
-  }
-  /* v8 ignore stop */
+>;
+
+function isCunningStrikeUnit(
+  unit: AuthoredUnitSource,
+): unit is CunningStrikeUnit {
+  return (
+    unit.kind === "class_feature" && unit.mechanics.family === "cunning_strike"
+  );
+}
+
+function cunningStrikeProfileForAdmittedUnit(
+  unit: CunningStrikeUnit,
+): CunningStrikeSupportedUnitFeatureProfile;
+function cunningStrikeProfileForAdmittedUnit(
+  unit: CunningStrikeUnit,
+  classLevels: readonly CharacterBattleClassLevel[],
+): CunningStrikeSupportedUnitFeatureProfile | null;
+function cunningStrikeProfileForAdmittedUnit(
+  unit: CunningStrikeUnit,
+  classLevels?: readonly CharacterBattleClassLevel[],
+): CunningStrikeSupportedUnitFeatureProfile | null {
   if (classLevels !== undefined) {
     const classLevel = findCharacterClassLevel(classLevels, unit.className);
     /* v8 ignore start -- Unsupported character/profile pairing: admission requires the Rogue level at or above acquisition. */
@@ -6501,65 +6561,61 @@ function cunningStrikeProfileForUnit(
     /* v8 ignore stop */
   }
   const mechanics = unit.mechanics;
-  /* v8 ignore start -- Unsupported structured input: this profile owns the Sneak Attack trigger, choose-one cardinality, and Dexterity class-feature save-DC shape. */
-  if (
-    mechanics.trigger.kind !== "deal_sneak_attack_damage" ||
-    mechanics.choice.kind !== "choose_one" ||
-    mechanics.choice.maxOptions !== 1 ||
-    mechanics.effectSaveDc.kind !== "class_feature_ability_save_dc" ||
-    mechanics.effectSaveDc.base !== 8 ||
-    mechanics.effectSaveDc.ability !== "dex"
-  ) {
-    return null;
-  }
-  /* v8 ignore stop */
   const options = cunningStrikeOptionsForMechanics(mechanics);
-  /* v8 ignore start -- Unsupported structured input: at least one option failed projection, so the collection is rejected instead of admitting partial support. */
-  if (options === null) {
-    return null;
-  }
-  /* v8 ignore stop */
   return {
     kind: CUNNING_STRIKE_SUPPORT_PROFILE,
     unit,
     cunningStrike: {
       trigger: {
-        kind: "dealSneakAttackDamage",
+        kind: CUNNING_STRIKE_TRIGGER_KIND[mechanics.trigger.kind],
         sourceUnitId: mechanics.trigger.sourceUnitId,
       },
-      choice: { kind: "chooseOne", maxOptions: 1 },
+      choice: {
+        kind: CUNNING_STRIKE_CHOICE_KIND[mechanics.choice.kind],
+        maxOptions: mechanics.choice.maxOptions,
+      },
       effectSaveDc: {
-        kind: "classFeatureAbilitySaveDc",
-        base: 8,
-        ability: "dex",
+        kind: CUNNING_STRIKE_SAVE_DC_KIND[mechanics.effectSaveDc.kind],
+        base: mechanics.effectSaveDc.base,
+        ability: mechanics.effectSaveDc.ability,
       },
       options,
     },
   };
 }
 
-function cunningStrikeOptionGrantProfileForUnit(
+function cunningStrikeProfileForUnit(
   unit: AuthoredUnitSource,
-): Extract<
-  SupportedUnitFeatureProfile,
-  { readonly kind: "cunningStrikeOptionGrant" }
-> | null {
-  /* v8 ignore start -- Unsupported structured input: a Cunning Strike option grant requires its dedicated class-feature mechanics family. */
-  if (
-    unit.kind !== "class_feature" ||
-    unit.mechanics.family !== "cunning_strike_option_grant"
-  ) {
+  classLevels?: readonly CharacterBattleClassLevel[],
+): CunningStrikeSupportedUnitFeatureProfile | null {
+  if (!isCunningStrikeUnit(unit)) {
     return null;
   }
-  /* v8 ignore stop */
+  return classLevels === undefined
+    ? cunningStrikeProfileForAdmittedUnit(unit)
+    : cunningStrikeProfileForAdmittedUnit(unit, classLevels);
+}
+
+type CunningStrikeOptionGrantSupportedUnitFeatureProfile = Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "cunningStrikeOptionGrant" }
+>;
+
+function isCunningStrikeOptionGrantUnit(
+  unit: AuthoredUnitSource,
+): unit is CunningStrikeOptionGrantUnit {
+  return (
+    unit.kind === "class_feature" &&
+    unit.mechanics.family === "cunning_strike_option_grant"
+  );
+}
+
+function cunningStrikeOptionGrantProfileForAdmittedUnit(
+  unit: CunningStrikeOptionGrantUnit,
+): CunningStrikeOptionGrantSupportedUnitFeatureProfile {
   const option = cunningStrikeOptionForOptionGrantSurfaceOption(
     unit.mechanics.option,
   );
-  /* v8 ignore start -- Unsupported structured input: the granted option failed its cost or effect admission gate. */
-  if (option === null) {
-    return null;
-  }
-  /* v8 ignore stop */
   return {
     kind: CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
     unit,
@@ -6568,6 +6624,15 @@ function cunningStrikeOptionGrantProfileForUnit(
       option,
     },
   };
+}
+
+function cunningStrikeOptionGrantProfileForUnit(
+  unit: AuthoredUnitSource,
+): CunningStrikeOptionGrantSupportedUnitFeatureProfile | null {
+  if (!isCunningStrikeOptionGrantUnit(unit)) {
+    return null;
+  }
+  return cunningStrikeOptionGrantProfileForAdmittedUnit(unit);
 }
 
 function paladinSacredWeaponProfileForUnit(

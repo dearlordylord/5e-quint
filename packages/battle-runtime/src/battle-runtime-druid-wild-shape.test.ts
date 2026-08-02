@@ -2239,10 +2239,16 @@ test("rejects omitted Wild Shape available-form subset for a direct battle init"
 });
 
 test("rejects ineligible known Beast forms before battle initialization", () => {
-  const profile = parseSupportedUnitFeatureProfile(
-    unitLibrary.requireUnit("druid_wild_shape"),
-    [{ className: "druid", level: ClassLevel.make(2) }],
-  );
+  const wildShapeUnit = unitLibrary.requireUnit("druid_wild_shape");
+  expect(parseSupportedUnitFeatureProfile(wildShapeUnit, [])).toBeNull();
+  expect(
+    parseSupportedUnitFeatureProfile(wildShapeUnit, [
+      { className: "druid", level: ClassLevel.make(1) },
+    ]),
+  ).toBeNull();
+  const profile = parseSupportedUnitFeatureProfile(wildShapeUnit, [
+    { className: "druid", level: ClassLevel.make(2) },
+  ]);
   if (profile?.kind !== "druidWildShapeKnownForm") {
     throw new Error("Expected Druid Wild Shape support profile.");
   }

@@ -1,4 +1,5 @@
 import { battleObjectId } from "./identity.ts";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import {
   statBlockId as parseSharedStatBlockId,
   unitId,
@@ -69,14 +70,10 @@ import {
   testShortswordAttack,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
-import {
-  battleCunningStrikeOptionGrantSupportForUnit,
-  battleCunningStrikeSupportForUnit,
-} from "./unit-feature-support.ts";
-import { unitMechanicsVariant } from "./unit-profile-admission-catalog.test-support.ts";
+import { battleCunningStrikeOptionGrantSupportForUnit } from "./unit-feature-support.ts";
 
 describe("battle runtime: Cunning Strike", () => {
-  test("Cunning Strike support rejects same-family near misses", () => {
+  test("Surface rejects malformed same-family Cunning Strike records", () => {
     const cunningStrike = unitLibrary.requireUnit("rogue_cunning_strike");
     if (
       cunningStrike.kind !== "class_feature" ||
@@ -84,16 +81,17 @@ describe("battle runtime: Cunning Strike", () => {
     ) {
       throw new Error("Expected Cunning Strike mechanics.");
     }
-    const malformedCunningStrike = unitMechanicsVariant(cunningStrike, {
-      id: "synthetic_cunning_strike_choose_two",
-      mechanics: {
-        ...cunningStrike.mechanics,
-        choice: { ...cunningStrike.mechanics.choice, maxOptions: 2 },
-      },
-    });
-    expect(battleCunningStrikeSupportForUnit(malformedCunningStrike)).toBe(
-      "unsupported",
-    );
+    const cunningStrikeMechanics = cunningStrike.mechanics;
+    expect(() =>
+      decodeUnitRecordSync({
+        ...cunningStrike,
+        id: "synthetic_cunning_strike_choose_two",
+        mechanics: {
+          ...cunningStrikeMechanics,
+          choice: { ...cunningStrikeMechanics.choice, maxOptions: 2 },
+        },
+      }),
+    ).toThrow();
 
     const supremeSneak = unitLibrary.requireUnit("rogue_supreme_sneak");
     if (
@@ -102,19 +100,20 @@ describe("battle runtime: Cunning Strike", () => {
     ) {
       throw new Error("Expected Supreme Sneak mechanics.");
     }
-    const malformedSupremeSneak = unitMechanicsVariant(supremeSneak, {
-      id: "synthetic_supreme_sneak_unsupported_cost",
-      mechanics: {
-        ...supremeSneak.mechanics,
-        option: {
-          ...supremeSneak.mechanics.option,
-          cost: { kind: "sneak_attack_damage_dice", dice: 2, dieSize: 6 },
+    const supremeSneakMechanics = supremeSneak.mechanics;
+    expect(() =>
+      decodeUnitRecordSync({
+        ...supremeSneak,
+        id: "synthetic_supreme_sneak_unsupported_cost",
+        mechanics: {
+          ...supremeSneakMechanics,
+          option: {
+            ...supremeSneakMechanics.option,
+            cost: { kind: "sneak_attack_damage_dice", dice: 2, dieSize: 6 },
+          },
         },
-      },
-    });
-    expect(
-      battleCunningStrikeOptionGrantSupportForUnit(malformedSupremeSneak),
-    ).toBe("unsupported");
+      }),
+    ).toThrow();
   });
 
   test("exposes typed Cunning Strike options from an eligible Sneak Attack damage rider", () => {
@@ -675,7 +674,7 @@ function supremeSneakFeature(): NonNullable<
 function supremeSneakUnitRefs(): ReturnType<typeof cunningStrikeUnitRefs> {
   const unit = unitLibrary.requireUnit("rogue_supreme_sneak");
   const support = battleCunningStrikeOptionGrantSupportForUnit(unit);
-  if (support === null || support === "unsupported") {
+  if (support === null) {
     throw new Error("Expected Supreme Sneak option-grant support profile.");
   }
   return [
