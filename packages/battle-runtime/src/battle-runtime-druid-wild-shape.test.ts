@@ -270,6 +270,24 @@ test("rejects Wild Shape subjects when their form lifecycle becomes stale", () =
   });
 
   const initialDruid = requireCharacter(initial, druidId);
+  const missingResourceState = {
+    ...initial,
+    combatants: new Map(initial.combatants).set(druidId, {
+      ...initialDruid,
+      origin: {
+        ...initialDruid.origin,
+        resources: [],
+      },
+    }),
+  };
+  expect(
+    resolveDruidWildShape(missingResourceState, assumeSubject),
+  ).toMatchObject({
+    tag: "invalid",
+    reason: "staleSubject",
+    message: "Druid Wild Shape is no longer available for the current actor.",
+  });
+
   const unavailableFormState = {
     ...initial,
     combatants: new Map(initial.combatants).set(druidId, {
