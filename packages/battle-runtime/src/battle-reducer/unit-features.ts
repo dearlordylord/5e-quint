@@ -1361,12 +1361,21 @@ export function resolveBardicInspirationGrantUnitFeature(
   /* v8 ignore stop */
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
-    !bardicInspirationTargetCanSeeOrHear(
-      input.state,
-      input.subject.actorId,
-      target,
-      targetFill.value.spatialFacts ?? [],
-      input.subject.procedureRef,
+    !(
+      (!hasCondition(target.conditions, "blinded") &&
+        combatantCanSee(
+          input.state,
+          target.combatantId,
+          input.subject.actorId,
+        )) ||
+      (!hasCondition(target.conditions, "deafened") &&
+        (targetFill.value.spatialFacts ?? []).some(
+          (fact) =>
+            fact.kind === "bardicInspirationTargetCanHear" &&
+            fact.bardId === input.subject.actorId &&
+            fact.targetId === target.combatantId &&
+            fact.sourceProcedureRef === input.subject.procedureRef,
+        ))
     )
   ) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -2848,30 +2857,6 @@ function magicActionAreaSaveDamageHealingAreaFact(
       fact.originWithinRangeFeet ===
         unitFeature.damageHealing.area.origin.rangeFeet &&
       fact.radiusFeet === unitFeature.damageHealing.area.shape.radiusFeet,
-  );
-}
-
-function bardicInspirationTargetCanSeeOrHear(
-  state: BattleState,
-  bardId: CombatantId,
-  target: BattleCreatureState,
-  facts: readonly BattleTargetSpatialFact[],
-  sourceProcedureRef: BattleProcedureExecutionRef,
-): boolean {
-  if (!bardicInspirationTargetCanPerceiveSurroundings(target)) {
-    return false;
-  }
-  return (
-    (!hasCondition(target.conditions, "blinded") &&
-      combatantCanSee(state, target.combatantId, bardId)) ||
-    (!hasCondition(target.conditions, "deafened") &&
-      facts.some(
-        (fact) =>
-          fact.kind === "bardicInspirationTargetCanHear" &&
-          fact.bardId === bardId &&
-          fact.targetId === target.combatantId &&
-          fact.sourceProcedureRef === sourceProcedureRef,
-      ))
   );
 }
 
