@@ -169,6 +169,65 @@ describe("battle runtime: Bardic Inspiration", () => {
     ]);
   });
 
+  test.each([
+    { lostFact: "resource uses", removeResourceUses: true },
+    { lostFact: "Bonus Action", removeResourceUses: false },
+  ])(
+    "Bardic Inspiration rejects a selected subject after the actor loses $lostFact",
+    ({ removeResourceUses }) => {
+      const session = bardicInspirationBattle({ charismaModifier: 3 });
+      const subject = bardicInspirationSubject(bardicInspirationUnit().id);
+      const selectedAct = findAct(session, subject);
+      if (selectedAct.subject.tag !== "unitFeature") {
+        throw new Error("Expected a selected Bardic Inspiration subject.");
+      }
+      const target = findHole(selectedAct.initialHoles, "targetChoice");
+      const actor = session.state.combatants.get(fighterId);
+      if (actor?.origin.kind !== "character") {
+        throw new Error("Expected the Bard fixture to be a character.");
+      }
+      const staleSession = battleRuntimeSessionForTest({
+        ...session,
+        state: {
+          ...session.state,
+          currentTurnResources: {
+            ...session.state.currentTurnResources,
+            currentHasBonusAction: removeResourceUses,
+          },
+          combatants: new Map(session.state.combatants).set(fighterId, {
+            ...actor,
+            origin: {
+              ...actor.origin,
+              resources: actor.origin.resources.map((resource) =>
+                removeResourceUses && resource.usesRemaining !== undefined
+                  ? { ...resource, usesRemaining: resourceCount(0) }
+                  : resource,
+              ),
+            },
+          }),
+        },
+      });
+
+      expect(
+        resolveBattleSubjectUncheckedForTest({
+          state: staleSession.state,
+          subject: selectedAct.subject,
+          fills: [
+            bardicInspirationTargetFill(
+              target,
+              requireBardicInspirationProcedureRef(session),
+              goblinId,
+            ),
+          ],
+        }),
+      ).toMatchObject({
+        tag: "invalid",
+        reason: "staleSubject",
+        message: expect.stringContaining("no longer available"),
+      });
+    },
+  );
+
   test("ability-modifier battle resources require a supported battle profile", () => {
     expect(
       characterBattleResourceSupportedForUnit(bardicInspirationUnit()),

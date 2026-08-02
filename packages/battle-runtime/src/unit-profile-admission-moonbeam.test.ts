@@ -653,6 +653,27 @@ describe("L12G deterministic Moonbeam admission", () => {
     expect(combatantShapeShiftingSuppressed(failed, spellTargetId)).toBe(true);
   });
 
+  test("Moonbeam suppression rejects a Wild Shape subject selected before the failed save", () => {
+    const scenario = moonbeamCastOverWildShapedTargetScenario();
+    const suppressed = resolveMoonbeamSaveForShapeShiftedTarget({
+      state: scenario.state,
+      trigger: "appearsInArea",
+      succeeded: false,
+    });
+
+    expect(
+      resolveBattleSubject({
+        state: suppressed,
+        subject: scenario.preselectedWildShapeSubject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: expect.stringContaining("suppressed"),
+    });
+  });
+
   test("duplicate same-turn save does not repeat shape-shift rider effects", () => {
     const cast = moonbeamCastOverWildShapedTarget();
     const saveSubject = moonbeamSaveSubject("entersArea");
@@ -886,6 +907,16 @@ const syntheticDruidWildShapeEffect: Extract<
 };
 
 function moonbeamCastOverWildShapedTarget(): BattleState {
+  return moonbeamCastOverWildShapedTargetScenario().state;
+}
+
+function moonbeamCastOverWildShapedTargetScenario(): {
+  readonly state: BattleState;
+  readonly preselectedWildShapeSubject: Extract<
+    BattleSubject,
+    { readonly tag: "druidWildShape" }
+  >;
+} {
   const spell = spellRecord(moonbeamUnitId);
   const initial = startBattleSessionRight({
     battleId: battleId("battle-moonbeam-shape-shift-rider"),
@@ -986,7 +1017,10 @@ function moonbeamCastOverWildShapedTarget(): BattleState {
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected caster End Turn to resolve.");
   }
-  return targetTurn.state;
+  return {
+    state: targetTurn.state,
+    preselectedWildShapeSubject: wildShape,
+  };
 }
 
 function moonbeamCastOverSpellShapeShiftedTarget(

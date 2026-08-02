@@ -789,9 +789,11 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
   const stateAfterDamage = validation.damageTargetIds.reduce<BattleState>(
     (state, targetId) => {
       const target = state.combatants.get(targetId);
+      /* v8 ignore start -- Internal invariant guard: validation proves every damage target exists, and spending the feature resource preserves combatant-map membership. */
       if (target === undefined) {
         return state;
       }
+      /* v8 ignore stop */
       const outcome = validation.outcomesByTargetId.get(targetId);
       const damageBeforeTargetAdjustments =
         outcome?.succeeded === true
@@ -823,19 +825,25 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
   const healingTarget = stateAfterDamage.combatants.get(
     validation.healingTargetId,
   );
-  const stateAfterHealing =
-    healingTarget === undefined
-      ? stateAfterDamage
-      : {
-          ...stateAfterDamage,
-          combatants: new Map(stateAfterDamage.combatants).set(
-            validation.healingTargetId,
-            applyHpHealing(
-              healingTarget,
-              rolledDiceTotal(fills.value.healingRoll.value),
-            ),
-          ),
-        };
+  /* v8 ignore start -- Internal invariant guard: validation proves the healing target exists, and damage application preserves combatant-map membership. */
+  if (healingTarget === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Magic Action healing target is no longer in the battle.",
+    );
+  }
+  /* v8 ignore stop */
+  const stateAfterHealing = {
+    ...stateAfterDamage,
+    combatants: new Map(stateAfterDamage.combatants).set(
+      validation.healingTargetId,
+      applyHpHealing(
+        healingTarget,
+        rolledDiceTotal(fills.value.healingRoll.value),
+      ),
+    ),
+  };
   return {
     tag: "resolved",
     state: stateAfterHealing,
@@ -1973,9 +1981,11 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
   const stateAfterDamage = validation.damageTargetIds.reduce<BattleState>(
     (state, targetId) => {
       const target = state.combatants.get(targetId);
+      /* v8 ignore start -- Internal invariant guard: validation proves every affected target exists, and spending the Attack action and feature resource preserves combatant-map membership. */
       if (target === undefined) {
         return state;
       }
+      /* v8 ignore stop */
       const outcome = validation.outcomesByTargetId.get(targetId);
       const damageBeforeTargetAdjustments =
         outcome?.succeeded === true

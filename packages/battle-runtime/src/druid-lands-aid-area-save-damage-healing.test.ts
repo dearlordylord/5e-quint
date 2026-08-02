@@ -269,6 +269,32 @@ describe("Druid Land's Aid area save damage and healing", () => {
     });
   });
 
+  test("rejects a selected Land's Aid subject after its spell save DC becomes unavailable", () => {
+    const state = landsAidBattle();
+    const subject = landsAidSubject(state);
+    const actor = state.combatants.get(spellCasterId);
+    if (actor?.origin.kind !== "character") {
+      throw new Error("Expected Land Druid actor.");
+    }
+    const { spellcasting: _removedSpellcasting, ...originWithoutSpellcasting } =
+      actor.origin;
+    const staleState: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(spellCasterId, {
+        ...actor,
+        origin: originWithoutSpellcasting,
+      }),
+    };
+
+    expect(
+      resolveBattleSubject({ state: staleState, subject, fills: [] }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: expect.stringContaining("spell save DC"),
+    });
+  });
+
   test("rejects missing area membership", () => {
     const state = landsAidBattle();
     const result = resolveLandsAid(state, {
