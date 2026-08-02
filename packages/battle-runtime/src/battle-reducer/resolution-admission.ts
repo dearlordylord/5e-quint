@@ -11,6 +11,7 @@ import type {
   AdmittedBattleResolutionInput,
   AdmittedBattleResolutionInputFor,
   AdmittedDruidWildShapeBattleResolutionInput,
+  AdmittedUnitFeatureBattleResolutionInput,
   BattleResolutionInput,
   CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
@@ -134,9 +135,35 @@ function admitUnitSubject(
         }
       : { tag: "staleCharacterProcedure" };
   }
+  if (subject.tag === "unitFeature") {
+    return unitProcedure?.kind === "unitFeature"
+      ? {
+          tag: "admitted",
+          input: asAdmittedUnitFeature(input, actor, unitProcedure),
+        }
+      : { tag: "staleCharacterProcedure" };
+  }
   return unitProcedure === undefined
     ? { tag: "staleCharacterProcedure" }
     : { tag: "admitted", input: asAdmitted(input) };
+}
+
+function asAdmittedUnitFeature(
+  input: BattleResolutionInput,
+  actor: CharacterBattleCreatureState,
+  procedure: Extract<
+    CharacterUnitProcedureExecution,
+    { readonly kind: "unitFeature" }
+  >,
+): AdmittedUnitFeatureBattleResolutionInput {
+  return {
+    ...input,
+    admissionKind: "unitFeature",
+    unitFeatureAdmission: { actor, procedure },
+    // This private boundary is the sole brand minter. The immediately
+    // preceding subject-specific query proves the actor and Unit-feature
+    // procedure stored in this payload.
+  } as AdmittedUnitFeatureBattleResolutionInput;
 }
 
 function asAdmittedDruidWildShape(

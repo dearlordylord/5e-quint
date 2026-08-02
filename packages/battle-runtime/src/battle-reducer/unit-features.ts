@@ -179,110 +179,90 @@ export {
 export function resolveUnitFeature(
   input: AdmittedUnitFeatureBattleResolutionInput,
 ): BattleResolutionResult {
-  const subject = input.subject;
-  const actor = input.state.combatants.get(subject.actorId);
-  if (isCharacterBattleCreatureState(actor)) {
-    const procedure = characterUnitProcedure(
-      actor.origin.execution,
-      subject.procedureRef,
-      CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-    );
-    if (procedure?.kind !== "unitFeature") {
-      return invalidResult(
-        input.state,
-        "staleSubject",
-        "Unit feature procedure reference is no longer bound to this actor.",
-      );
-    }
-    const source = procedure.source;
-    const resource =
-      source.kind === "resourcePool"
-        ? actor.origin.resources.find((candidate) => {
-            return candidate.resourcePoolRef === source.resourcePoolRef;
-          })
-        : undefined;
+  const { actor, procedure } = input.unitFeatureAdmission;
+  const source = procedure.source;
+  const resource =
+    source.kind === "resourcePool"
+      ? actor.origin.resources.find((candidate) => {
+          return candidate.resourcePoolRef === source.resourcePoolRef;
+        })
+      : undefined;
 
-    const unitFeature = procedure.execution;
-    if (resource !== undefined) {
-      if (unitFeature.kind === "extraActionGrant") {
-        return resolveExtraActionGrantUnitFeature(
-          input,
-          actor,
-          resource,
-          unitFeature,
-        );
-      }
-      if (unitFeature.kind === "selfBonusActionHealing") {
-        return resolveSelfBonusActionHealingUnitFeature(
-          input,
-          actor,
-          resource,
-          unitFeature,
-        );
-      }
-      if (unitFeature.kind === "ongoingFeature") {
-        return resolveOngoingFeatureUnitFeature(
-          input,
-          actor,
-          resource,
-          unitFeature,
-        );
-      }
-      if (unitFeature.kind === "bardicInspirationGrant") {
-        return resolveBardicInspirationGrantUnitFeature(
-          input,
-          actor,
-          resource,
-          unitFeature,
-        );
-      }
-    }
-
-    if (unitFeature.kind === "paladinSacredWeapon") {
-      return resolvePaladinSacredWeaponDismissUnitFeature(input, actor);
-    }
-    if (unitFeature.kind === "rogueSteadyAim") {
-      return resolveRogueSteadyAimUnitFeature(input, actor, unitFeature);
-    }
-
-    const attackActionAreaSaveDamageReplacementResource = resource;
-    if (
-      attackActionAreaSaveDamageReplacementResource !== undefined &&
-      unitFeature.kind === "attackActionAreaSaveDamageReplacement"
-    ) {
-      return resolveAttackActionAreaSaveDamageReplacementUnitFeature(
+  const unitFeature = procedure.execution;
+  if (resource !== undefined) {
+    if (unitFeature.kind === "extraActionGrant") {
+      return resolveExtraActionGrantUnitFeature(
         input,
         actor,
-        attackActionAreaSaveDamageReplacementResource,
+        resource,
         unitFeature,
       );
     }
-
-    if (unitFeature.kind === "magicActionHealingPool") {
-      return resolveMagicActionHealingPoolUnitFeature(
+    if (unitFeature.kind === "selfBonusActionHealing") {
+      return resolveSelfBonusActionHealingUnitFeature(
         input,
         actor,
+        resource,
         unitFeature,
       );
     }
-
-    if (unitFeature.kind === "magicActionAreaSaveDamageHealing") {
-      return resolveMagicActionAreaSaveDamageHealingUnitFeature(
+    if (unitFeature.kind === "ongoingFeature") {
+      return resolveOngoingFeatureUnitFeature(
         input,
         actor,
+        resource,
         unitFeature,
       );
     }
-
-    if (unitFeature.kind === "magicActionSaveGatedCondition") {
-      return resolveMagicActionSaveGatedConditionUnitFeature(
+    if (unitFeature.kind === "bardicInspirationGrant") {
+      return resolveBardicInspirationGrantUnitFeature(
         input,
         actor,
+        resource,
         unitFeature,
       );
     }
   }
 
+  if (unitFeature.kind === "paladinSacredWeapon") {
+    return resolvePaladinSacredWeaponDismissUnitFeature(input, actor);
+  }
+  if (unitFeature.kind === "rogueSteadyAim") {
+    return resolveRogueSteadyAimUnitFeature(input, actor, unitFeature);
+  }
+
+  const attackActionAreaSaveDamageReplacementResource = resource;
+  if (
+    attackActionAreaSaveDamageReplacementResource !== undefined &&
+    unitFeature.kind === "attackActionAreaSaveDamageReplacement"
+  ) {
+    return resolveAttackActionAreaSaveDamageReplacementUnitFeature(
+      input,
+      actor,
+      attackActionAreaSaveDamageReplacementResource,
+      unitFeature,
+    );
+  }
+
+  if (unitFeature.kind === "magicActionHealingPool") {
+    return resolveMagicActionHealingPoolUnitFeature(input, actor, unitFeature);
+  }
+
+  if (unitFeature.kind === "magicActionAreaSaveDamageHealing") {
+    return resolveMagicActionAreaSaveDamageHealingUnitFeature(
+      input,
+      actor,
+      unitFeature,
+    );
+  }
+
+  if (unitFeature.kind === "magicActionSaveGatedCondition") {
+    return resolveMagicActionSaveGatedConditionUnitFeature(
+      input,
+      actor,
+      unitFeature,
+    );
+  }
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */

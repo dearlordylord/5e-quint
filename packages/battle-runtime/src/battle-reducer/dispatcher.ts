@@ -462,6 +462,9 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     return invalidResult(input.state, "staleSubject", actionEligibilityIssue);
   }
   const result = (() => {
+    if (input.admissionKind === "unitFeature") {
+      return resolveUnitFeature(input);
+    }
     if (input.admissionKind === "druidWildShape") {
       return resolveDruidWildShapeUnitFeature(input);
     }
@@ -628,9 +631,6 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         },
         options.executionRegistry,
       );
-    }
-    if (subject.tag === "unitFeature") {
-      return resolveUnitFeature({ ...input, subject });
     }
     if (subject.tag === "unitFeatureHeldWeaponActivation") {
       return resolveUnitFeatureHeldWeaponActivation({ ...input, subject });

@@ -245,6 +245,7 @@ import {
 } from "./character-battle-resource-execution.ts";
 import type {
   CharacterUnitProcedureSource,
+  CharacterUnitProcedureExecution,
   CharacterExecutionState,
   CharacterProcedureBindingSnapshot,
   UnitFeatureProcedureExecution,
@@ -6500,6 +6501,20 @@ type DruidWildShapeSubject = Extract<
   BattleSubject,
   { readonly tag: "druidWildShape" }
 >;
+type UnitFeatureSubject = Extract<
+  BattleSubject,
+  { readonly tag: "unitFeature" }
+>;
+type UnitFeatureAdmissionFacts = {
+  readonly admissionKind: "unitFeature";
+  readonly unitFeatureAdmission: {
+    readonly actor: CharacterBattleCreatureState;
+    readonly procedure: Extract<
+      CharacterUnitProcedureExecution,
+      { readonly kind: "unitFeature" }
+    >;
+  };
+};
 type DruidWildShapeAdmissionFacts = {
   readonly admissionKind: "druidWildShape";
   readonly wildShapeAdmission: {
@@ -6517,12 +6532,24 @@ type DruidWildShapeAdmissionFacts = {
 export type AdmittedBattleResolutionInputFor<
   TInput extends BattleResolutionInput,
 > =
-  | ([Exclude<TInput["subject"], DruidWildShapeSubject>] extends [never]
+  | ([
+      Exclude<TInput["subject"], DruidWildShapeSubject | UnitFeatureSubject>,
+    ] extends [never]
       ? never
       : Omit<TInput, "subject"> &
           AdmittedBattleResolutionBrand & {
             readonly admissionKind: "general";
-            readonly subject: Exclude<TInput["subject"], DruidWildShapeSubject>;
+            readonly subject: Exclude<
+              TInput["subject"],
+              DruidWildShapeSubject | UnitFeatureSubject
+            >;
+          })
+  | ([Extract<TInput["subject"], UnitFeatureSubject>] extends [never]
+      ? never
+      : Omit<TInput, "subject"> &
+          AdmittedBattleResolutionBrand &
+          UnitFeatureAdmissionFacts & {
+            readonly subject: Extract<TInput["subject"], UnitFeatureSubject>;
           })
   | ([Extract<TInput["subject"], DruidWildShapeSubject>] extends [never]
       ? never
