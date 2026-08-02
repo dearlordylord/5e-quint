@@ -9,6 +9,7 @@ import type {
   BattleReplayContinuationFrame,
   BattleResolutionResult,
   BattleState,
+  GlyphStoredSpellReleaseReplayContext,
 } from "../battle-state-execution.ts";
 import { battleContinuationFillEquals } from "./battle-fill-equality.ts";
 import {
@@ -204,8 +205,13 @@ function isReplayContinuationSemanticFill(
 export function resolveReplayContinuationFromState(
   input: ReplayContinuationResolutionInput,
 ): BattleResolutionResult {
-  if (input.continuation.glyphStoredSpellReleaseReplay !== undefined) {
-    return resolveGlyphStoredSpellReplayContinuationFromState(input);
+  const glyphStoredSpellReleaseReplay =
+    input.continuation.glyphStoredSpellReleaseReplay;
+  if (glyphStoredSpellReleaseReplay !== undefined) {
+    return resolveGlyphStoredSpellReplayContinuationFromState(
+      input,
+      glyphStoredSpellReleaseReplay,
+    );
   }
   const admission = admitBattleResolutionInput({
     state: input.state,
@@ -319,15 +325,8 @@ function replayInterruptRouteOptions(
 
 function resolveGlyphStoredSpellReplayContinuationFromState(
   input: ReplayContinuationResolutionInput,
+  replay: GlyphStoredSpellReleaseReplayContext,
 ): BattleResolutionResult {
-  const replay = input.continuation.glyphStoredSpellReleaseReplay;
-  if (replay === undefined) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Glyph stored spell replay context is missing.",
-    );
-  }
   const result = input.execution.releaseStoredGlyph({
     state: input.state,
     profile: replay.profile,
