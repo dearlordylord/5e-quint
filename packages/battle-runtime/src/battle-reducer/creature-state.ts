@@ -98,7 +98,6 @@ import {
   battleStateInitIssueMessage,
   weaponLoadoutMismatchIssue,
 } from "./domain-helpers.ts";
-import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 export {
   activeConditions,
   activeEffectArmorClass,
@@ -133,12 +132,6 @@ import {
   statBlockLanguagePresentation,
   statBlockProcedurePresentations,
 } from "../stat-block-presentation.ts";
-
-function isStatBlockBattleCreatureState(
-  actor: BattleCreatureState,
-): actor is StatBlockBattleCreatureState {
-  return actor.origin.kind === "statBlock";
-}
 
 function characterInitWeaponAttackExecutionRefs(
   slot: "main-hand" | "off-hand",
@@ -467,11 +460,6 @@ export function battleCreatureStateAdmissionFromInit(
             }),
       },
     });
-    if (!isCharacterBattleCreatureState(admittedCreature)) {
-      throw new Error(
-        "Character initialization constructed a non-character battle creature.",
-      );
-    }
     return {
       tag: "admitted",
       creature: admittedCreature,
@@ -512,11 +500,6 @@ export function battleCreatureStateAdmissionFromInit(
       ...admission.right.origin,
     },
   });
-  if (!isStatBlockBattleCreatureState(admittedCreature)) {
-    throw new Error(
-      "Stat Block initialization constructed a non-Stat-Block battle creature.",
-    );
-  }
   return {
     tag: "admitted",
     creature: admittedCreature,

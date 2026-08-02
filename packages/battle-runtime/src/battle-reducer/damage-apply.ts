@@ -1382,14 +1382,20 @@ function hitPointRegainPrevented(combatant: BattleCreatureState): boolean {
   );
 }
 
-export function applyInitialZeroHpLifecycle(
-  combatant: BattleCreatureState,
-): BattleCreatureState {
+type BattleCreatureStateWithOrigin<
+  Origin extends BattleCreatureState["origin"],
+> = BattleCreatureState & { readonly origin: Origin };
+
+export function applyInitialZeroHpLifecycle<
+  Origin extends BattleCreatureState["origin"],
+>(
+  combatant: BattleCreatureStateWithOrigin<Origin>,
+): BattleCreatureStateWithOrigin<Origin> {
   if (Number(combatant.hp) > 0) {
     return combatant;
   }
 
-  return Match.value(combatant.zeroHpLifecycle).pipe(
+  const lifecycleState = Match.value(combatant.zeroHpLifecycle).pipe(
     Match.when({ policy: "diesAtZeroHp" }, () =>
       withoutConcentration(combatant),
     ),
@@ -1401,6 +1407,7 @@ export function applyInitialZeroHpLifecycle(
     })),
     Match.exhaustive,
   );
+  return { ...lifecycleState, origin: combatant.origin };
 }
 
 function applyDropToZeroHpLifecycle(

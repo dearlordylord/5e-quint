@@ -9,10 +9,16 @@ import {
 import { characterBattleCreatureInitWeaponAttack } from "../battle-init.ts";
 import {
   characterSeed,
+  startBattleSessionRight,
+  statBlockCreatureInit,
   testCharacterWeaponAttackForUnit,
 } from "../battle-runtime.test-support.ts";
+import { initiativeScore } from "../index.ts";
 import { weaponLoadoutMismatchMessage } from "./domain-helpers.ts";
-import { battleCreatureStateAdmissionFromInit } from "./creature-state.ts";
+import {
+  battleCreatureStateAdmissionFromInit,
+  combatantInitiativeInsertionIndex,
+} from "./creature-state.ts";
 
 describe("battleCreatureStateAdmissionFromInit", () => {
   const baseInit = characterSeed({ initiative: 10 });
@@ -147,5 +153,31 @@ describe("battleCreatureStateAdmissionFromInit", () => {
     expect(weaponLoadoutMismatchMessage("off-hand")).toBe(
       "Character battle init off-hand weapon attack must match the selected loadout weapon.",
     );
+  });
+
+  it("inserts Initiative entries before lower rolls and within bounded ties", () => {
+    const state = startBattleSessionRight({
+      battleId: battleId("initiative-insertion-index"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    }).state;
+
+    expect(combatantInitiativeInsertionIndex(state, initiativeScore(15))).toBe(
+      1,
+    );
+    expect(combatantInitiativeInsertionIndex(state, initiativeScore(5))).toBe(
+      2,
+    );
+    expect(combatantInitiativeInsertionIndex(state, initiativeScore(20))).toBe(
+      1,
+    );
+    expect(
+      combatantInitiativeInsertionIndex(state, initiativeScore(20), 0),
+    ).toBe(0);
+    expect(
+      combatantInitiativeInsertionIndex(state, initiativeScore(20), 99),
+    ).toBe(1);
   });
 });
