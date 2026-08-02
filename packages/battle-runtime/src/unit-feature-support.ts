@@ -29,6 +29,7 @@ import {
 } from "@dnd/shared/types";
 import type {
   Ability,
+  ActivatedAbilityMechanics,
   ActionRestriction,
   AreaShapeSpec,
   ClassName,
@@ -7744,14 +7745,7 @@ function parseOngoingFeatureUnitFeatureProfile(
     return null;
   }
   /* v8 ignore stop */
-  const actionRestrictions = parseOngoingFeatureActionRestrictions(
-    support.actionRestrictions ?? [],
-  );
-  /* v8 ignore start -- Unsupported structured input: this profile admits only its typed spellcasting action restriction. */
-  if (actionRestrictions === null) {
-    return null;
-  }
-  /* v8 ignore stop */
+  const actionRestrictions = support.actionRestrictions ?? [];
   return {
     kind: "ongoingFeature",
     unit,
@@ -8129,37 +8123,13 @@ function classLevelForClass(
   );
 }
 
+type OngoingFeatureActivationMechanics = Extract<
+  ActivatedAbilityMechanics,
+  { readonly ongoingFeature: { readonly activationTiming: string } }
+>;
+
 type OngoingFeatureLifecycleSupport =
-  | {
-      readonly kind: "turn_boundary";
-      readonly initialExpiration: "start_of_next_turn";
-      readonly earlyEndConditions?: readonly string[];
-      readonly earlyEndArmorCategories?: readonly string[];
-    }
-  | {
-      readonly kind: "round_extended";
-      readonly initialExpiration: "end_of_next_turn";
-      readonly maximumDuration: {
-        readonly unit: "round" | "minute" | "hour" | "day";
-        readonly amount: number;
-      };
-      readonly earlyEndConditions?: readonly string[];
-      readonly earlyEndArmorCategories?: readonly string[];
-      readonly extensionTriggers: readonly (
-        | "attack_roll_against_enemy"
-        | "bonus_action"
-        | "enemy_saving_throw"
-      )[];
-    }
-  | {
-      readonly kind: "fixed_duration";
-      readonly duration: {
-        readonly unit: "round" | "minute" | "hour" | "day";
-        readonly amount: number;
-      };
-      readonly earlyEndConditions?: readonly string[];
-      readonly earlyEndArmorCategories?: readonly string[];
-    };
+  OngoingFeatureActivationMechanics["ongoingFeature"]["lifecycle"];
 
 function parseOngoingFeatureLifecycle(
   lifecycle: OngoingFeatureLifecycleSupport,
@@ -8185,13 +8155,8 @@ function parseOngoingFeatureLifecycle(
           };
     }),
     Match.when({ kind: "round_extended" }, (roundExtended) => {
-      const extensionTriggers = roundExtended.extensionTriggers.map(
-        parseOngoingFeatureExtensionTrigger,
-      );
-      const [firstTrigger, ...remainingTriggers] = extensionTriggers;
-      if (firstTrigger === undefined) {
-        return null;
-      }
+      const [firstTrigger, ...remainingTriggers] =
+        roundExtended.extensionTriggers;
       const maximumDurationRounds = durationToRounds(
         roundExtended.maximumDuration,
       );
@@ -8209,8 +8174,8 @@ function parseOngoingFeatureLifecycle(
         return null;
       }
       const supportedExtensionTriggers = [
-        firstTrigger,
-        ...remainingTriggers,
+        parseOngoingFeatureExtensionTrigger(firstTrigger),
+        ...remainingTriggers.map(parseOngoingFeatureExtensionTrigger),
       ] as const satisfies readonly [
         OngoingFeatureExtensionTrigger,
         ...OngoingFeatureExtensionTrigger[],
@@ -8248,20 +8213,6 @@ function parseOngoingFeatureLifecycle(
   );
 }
 
-function parseOngoingFeatureActionRestrictions(
-  restrictions: readonly string[],
-): readonly "spellcasting"[] | null {
-  const parsed: "spellcasting"[] = [];
-  for (const restriction of restrictions) {
-    /* v8 ignore next -- Unsupported structured input: this ongoing-feature profile admits only the spellcasting restriction enumerated by its Surface shape. */
-    if (restriction !== "spellcasting") {
-      return null;
-    }
-    parsed.push(restriction);
-  }
-  return parsed;
-}
-
 function parseOngoingFeatureInitialExpiration(
   expiration: "start_of_next_turn" | "end_of_next_turn",
 ): "startOfNextTurn" | "endOfNextTurn" {
@@ -8285,7 +8236,6 @@ function parseOngoingFeatureEarlyEndConditions(
     const parsedCondition = ALL_CONDITIONS.find(
       (candidate) => candidate === condition,
     );
-    /* v8 ignore next -- Unsupported structured input: admitted early-end conditions are members of the canonical Condition vocabulary. */
     if (parsedCondition === undefined) {
       return null;
     }
@@ -8298,7 +8248,6 @@ function parseOngoingFeatureArmorCategories(
   categories: readonly string[],
 ): readonly ["heavy"] | readonly [] | null {
   if (categories.length === 0) return [];
-  /* v8 ignore next -- Unsupported structured input: the profile admits either no armor restriction or the single canonical heavy-armor restriction. */
   if (categories.length === 1 && categories[0] === "heavy") return ["heavy"];
   return null;
 }

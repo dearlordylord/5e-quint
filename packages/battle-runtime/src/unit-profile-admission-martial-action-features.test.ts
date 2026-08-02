@@ -1975,6 +1975,56 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
     );
   });
 
+  test("barbarian_rage rejects Surface-valid lifecycle facts outside the battle profile", () => {
+    const unit = unitLibrary.requireUnit(barbarianRageUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "activation" ||
+      unit.mechanics.ongoingFeature === undefined ||
+      unit.mechanics.ongoingFeature.lifecycle.kind !== "round_extended"
+    ) {
+      throw new Error("Expected Rage round-extended activation mechanics.");
+    }
+    const support = unit.mechanics.ongoingFeature;
+    const lifecycle = support.lifecycle;
+    const unsupportedLifecycles = [
+      {
+        id: "barbarian_rage_exhaustion_early_end",
+        lifecycle: {
+          ...lifecycle,
+          earlyEndConditions: ["exhaustion"],
+        },
+      },
+      {
+        id: "barbarian_rage_light_armor_early_end",
+        lifecycle: {
+          ...lifecycle,
+          earlyEndArmorCategories: ["light"],
+        },
+      },
+    ] as const;
+
+    for (const {
+      id,
+      lifecycle: unsupportedLifecycle,
+    } of unsupportedLifecycles) {
+      const unsupportedUnit = decodeUnitRecordSync({
+        ...unit,
+        id,
+        mechanics: {
+          ...unit.mechanics,
+          ongoingFeature: { ...support, lifecycle: unsupportedLifecycle },
+        },
+      });
+
+      expect(
+        parseSupportedUnitFeatureProfile(unsupportedUnit, [
+          { className: "barbarian", level: classLevel(1) },
+        ]),
+      ).toBeNull();
+    }
+  });
+
   test("rogue_cunning_action is admitted through production feature support", () => {
     const unit = unitLibrary.requireUnit(rogueCunningActionUnitId);
 
