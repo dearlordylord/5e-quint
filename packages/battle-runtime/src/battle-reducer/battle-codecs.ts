@@ -5061,7 +5061,7 @@ export const BattleFillSchema: Schema.Schema<
                 value.commandFlee === undefined,
           {
             message: () =>
-              "Forceful Blow movement cannot carry a jump, levitation, or command movement protocol.",
+              "Additional speed segments require Forceful Blow movement, which cannot carry a jump, levitation, or command movement protocol.",
           },
         ),
       ),
