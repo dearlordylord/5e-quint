@@ -81,6 +81,7 @@ import {
   type BattleRuntimeSession,
   type PactOfTheChainFamiliarAttackSubject,
 } from "./index.ts";
+import { battleStatBlockProcedureExecutionRef } from "./identity.ts";
 import {
   deliverTouchSpellThroughFindFamiliar as deliverTouchSpellThroughFindFamiliarWithExecution,
   FindFamiliarProcedureExecution,
@@ -105,6 +106,7 @@ import {
   DieRollResult,
   Hp,
   movementFeet,
+  NonNegativeInteger,
   proficiencyBonus,
   spellSlotLevel,
 } from "@dnd/shared/types";
@@ -3778,6 +3780,41 @@ describe("Find Familiar lifecycle", () => {
       holes: [{ kind: "rolledDice" }],
     });
     expect(resolveHit(staticSubject).tag).toBe("resolved");
+  });
+
+  test("Pact familiar attack rejects an unbound procedure ref", () => {
+    const cast = castCatFamiliarAfterCasterTurn(
+      startPactWarlockFixtureBattle(),
+    );
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+
+    const familiar = cast.state.combatants.get(familiarId);
+    if (familiar?.origin.kind !== "statBlock") {
+      throw new Error("Expected the committed familiar Stat Block admission.");
+    }
+    const unboundProcedureRef = battleStatBlockProcedureExecutionRef(
+      familiar.origin.execution.scopeRef,
+      NonNegativeInteger(999),
+    );
+    expect(
+      familiar.origin.execution.procedureBindings.some(
+        (binding) => binding.procedureRef === unboundProcedureRef,
+      ),
+    ).toBe(false);
+    const blocked = resolveBattleSubject({
+      state: cast.state,
+      subject: {
+        ...pactScratchSubject(cast.state),
+        procedureRef: unboundProcedureRef,
+      },
+      fills: [],
+    });
+
+    expect(blocked).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+    });
   });
 
   test("Pact of the Chain familiar attack rejects and hides familiars that cannot take Reactions", () => {

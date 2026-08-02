@@ -9,10 +9,7 @@ import type {
   BattleResolutionInputForSubject,
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
-import type {
-  StatBlockAttackActionOption,
-  SupportedAttackActionOption,
-} from "./battle-action-options.ts";
+import type { StatBlockAttackActionOption } from "./battle-action-options.ts";
 import { combatantCanTakeReactions } from "./battle-reducer/creature-state-execution.ts";
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 import { spendReaction } from "./battle-reducer/interrupt-execution.ts";
@@ -126,15 +123,8 @@ function spendPactOfTheChainFamiliarReactionAttack(input: {
   readonly state: BattleState;
   readonly ownerId: CombatantId;
   readonly familiarId: CombatantId;
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: StatBlockAttackActionOption;
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
-  if (input.attack.kind !== "statBlockAttack") {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Pact of the Chain familiar attack requires a Stat Block attack.",
-    );
-  }
   const familiar = input.state.combatants.get(input.familiarId);
   if (!combatantCanTakeReactions(familiar)) {
     return invalidResult(

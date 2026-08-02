@@ -257,10 +257,12 @@ type AttackProcedureResolutionInput = Omit<
   readonly subject: BattleAttackHostSubject;
 };
 
-type SpendAttackProcedure = (
+type SpendAttackProcedure<
+  Attack extends SupportedAttackActionOption = SupportedAttackActionOption,
+> = (
   state: Parameters<typeof spendAttackAction>[0],
   actorId: Parameters<typeof spendAttackAction>[1],
-  attack: SupportedAttackActionOption,
+  attack: Attack,
 ) => ReturnType<typeof spendAttackAction>;
 
 export {
@@ -726,10 +728,12 @@ function grapplerPunchAndGrabFillIsAbsent(
   );
 }
 
-export function resolveSelectedAttackProcedure(
+export function resolveSelectedAttackProcedure<
+  Attack extends BoundSupportedAttackActionOption,
+>(
   input: AttackProcedureResolutionInput,
-  selectedAttack: BoundSupportedAttackActionOption,
-  spendAttackProcedure: SpendAttackProcedure,
+  selectedAttack: Attack,
+  spendAttackProcedure: SpendAttackProcedure<Attack>,
 ): BattleResolutionResult {
   let attack = selectedAttack;
   const pendingAttackDamageReductions =
