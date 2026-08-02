@@ -29,7 +29,7 @@ import { spellCastCandidate } from "../spell-cast-candidate.ts";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { attackBonus, movementFeet } from "@dnd/shared/types";
 import { Either } from "effect";
-import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
 
 import type { CombatantId } from "../../identity.ts";
 import {
@@ -220,11 +220,9 @@ function applyHeldLightEffect(
   if (caster === undefined) {
     return state;
   }
-  const allocation = allocateBattleActiveEffectRef({
-    state,
-    ownerId: actorId,
+  const allocation = allocateBattleActiveEffectRefForCreature({
+    owner: caster,
   });
-  if (allocation.tag === "ownerNotFound") return state;
   const hurlExecution = {
     spellRuleFacts: invocation.spellRuleFacts,
     access: invocation.access,
@@ -241,8 +239,8 @@ function applyHeldLightEffect(
   const owner = allocation.owner;
   if (owner.origin.kind !== "character") return state;
   return {
-    ...allocation.state,
-    combatants: new Map(allocation.state.combatants).set(actorId, {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
       ...owner,
       activeEffects: [
         ...caster.activeEffects.filter(

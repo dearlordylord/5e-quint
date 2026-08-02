@@ -36,7 +36,7 @@ import {
 import { snapshotBattle } from "../interrupt-execution.ts";
 import { type SelfTransformationModeKind } from "../domain-constants.ts";
 import { CombatantId } from "../../identity.ts";
-import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { SELF_TRANSFORMATION_MODE_KINDS } from "../domain-constants.ts";
 
@@ -382,19 +382,18 @@ function resolveSelfTransformationMode(
       "Self-transformation effect owner is no longer in the battle.",
     );
   }
-  const allocation = allocateBattleActiveEffectRef({
-    state: concentrationBase,
-    ownerId: input.actorId,
+  const allocation = allocateBattleActiveEffectRefForCreature({
+    owner: effectOwner,
   });
-  if (allocation.tag === "ownerNotFound") {
-    return invalidResult(
-      concentrationBase,
-      "staleSubject",
-      "Self-transformation effect owner is no longer in the battle.",
-    );
-  }
+  const allocatedState = {
+    ...concentrationBase,
+    combatants: new Map(concentrationBase.combatants).set(
+      input.actorId,
+      allocation.owner,
+    ),
+  };
   const effected = applySelfTransformationModeEffect({
-    state: allocation.state,
+    state: allocatedState,
     actorId: input.actorId,
     sourceCombatantId: input.actorId,
     sourceProcedureRef: input.input.subject.procedureRef,
@@ -462,19 +461,18 @@ export function resolveStoredGlyphSelfTransformationModeSpellRelease(input: {
       "Self-transformation effect owner is no longer in the battle.",
     );
   }
-  const allocation = allocateBattleActiveEffectRef({
-    state: input.state,
-    ownerId: input.targetId,
+  const allocation = allocateBattleActiveEffectRefForCreature({
+    owner: effectOwner,
   });
-  if (allocation.tag === "ownerNotFound") {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Self-transformation effect owner is no longer in the battle.",
-    );
-  }
+  const allocatedState = {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(
+      input.targetId,
+      allocation.owner,
+    ),
+  };
   const effected = applySelfTransformationModeEffect({
-    state: allocation.state,
+    state: allocatedState,
     actorId: input.targetId,
     sourceCombatantId: input.sourceCombatantId,
     sourceProcedureRef: input.subject.procedureRef,

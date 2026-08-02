@@ -40,7 +40,7 @@ import {
 } from "@dnd/surface/surface/types";
 import { Either, Match } from "effect";
 import { characterBattleResourcePoolRefHasUsesRemaining } from "../../character-battle-resource-execution.ts";
-import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
   characterExecutionWithMarkedDamageRiderTransfer,
@@ -725,18 +725,10 @@ function applyMarkedDamageRiderSpellEffect(
   const occurrence =
     invocation.action === "transfer"
       ? {
-          tag: "allocated" as const,
-          state,
           effectRef: invocation.activeEffect.effectRef,
           owner: caster,
         }
-      : allocateBattleActiveEffectRef({
-          state,
-          ownerId: actorId,
-        });
-  /* v8 ignore start -- Allocation invariant: the caster lookup above proves that the requested effect owner exists in this state. */
-  if (occurrence.tag === "ownerNotFound") return state;
-  /* v8 ignore stop */
+      : allocateBattleActiveEffectRefForCreature({ owner: caster });
   const transfer: MarkedDamageRiderTransferState = {
     kind: "awaitingTargetDrop",
     retargetTiming:
@@ -791,8 +783,8 @@ function applyMarkedDamageRiderSpellEffect(
     activeEffectSourceProcedureRef: activeEffect.sourceProcedureRef,
   } satisfies MarkedDamageRiderTransferSpellProcedureExecution;
   return {
-    ...occurrence.state,
-    combatants: new Map(occurrence.state.combatants).set(actorId, {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
       ...owner,
       activeEffects,
       origin: {

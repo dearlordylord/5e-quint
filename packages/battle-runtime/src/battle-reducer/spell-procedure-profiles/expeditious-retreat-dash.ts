@@ -29,7 +29,7 @@ import {
 import { activeOngoingFeaturesPreventSpellInvocation } from "../spells-invocation-guards.ts";
 import { snapshotBattle } from "../interrupt-execution.ts";
 import { CombatantId } from "../../identity.ts";
-import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
 import { applyDashToActor } from "../mobility-actions.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { revealHidden } from "../hole-helpers.ts";
@@ -296,19 +296,9 @@ function resolveExpeditiousRetreatDash(
     );
   }
   /* v8 ignore stop */
-  const allocation = allocateBattleActiveEffectRef({
-    state: slotted,
-    ownerId: subject.actorId,
+  const allocation = allocateBattleActiveEffectRefForCreature({
+    owner: effectHost,
   });
-  /* v8 ignore start -- Internal roster invariant: effectHost immediately proved the same allocation state contains this effect owner. */
-  if (allocation.tag === "ownerNotFound") {
-    return invalidResult(
-      input.input.state,
-      "missingCombatant",
-      "Expeditious Retreat caster is not in this battle.",
-    );
-  }
-  /* v8 ignore stop */
   const effectedActor = {
     ...allocation.owner,
     concentration: {
@@ -325,12 +315,9 @@ function resolveExpeditiousRetreatDash(
     ],
   };
   const effected = {
-    ...allocation.state,
+    ...slotted,
     currentTurnResources: slotTurnResources.right,
-    combatants: new Map(allocation.state.combatants).set(
-      subject.actorId,
-      effectedActor,
-    ),
+    combatants: new Map(slotted.combatants).set(subject.actorId, effectedActor),
   };
   const dashed = applyDashToActor(
     effected,

@@ -36,7 +36,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { CombatantId } from "../../identity.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
-import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
 
 import { needsHolesResult } from "../needs-holes-result.ts";
 import {
@@ -325,12 +325,14 @@ function applyLevitatedCreatureSpellEffect(
     if (target === undefined) {
       return nextState;
     }
-    const allocation = allocateBattleActiveEffectRef({
-      state: nextState,
-      ownerId: targetId,
+    const allocation = allocateBattleActiveEffectRefForCreature({
+      owner: target,
     });
-    if (allocation.tag === "ownerNotFound") return nextState;
     const allocatedTarget = allocation.owner;
+    const allocatedState = {
+      ...nextState,
+      combatants: new Map(nextState.combatants).set(targetId, allocatedTarget),
+    };
     const nextEffect = {
       ...invocation.activeEffect,
       sourceProcedureRef: procedureRef,
@@ -348,7 +350,7 @@ function applyLevitatedCreatureSpellEffect(
       nextEffect,
     ];
     return replaceTargetActiveEffectsEndingDisplacedConcentrations(
-      allocation.state,
+      allocatedState,
       targetId,
       activeEffects,
       displacedEffects,

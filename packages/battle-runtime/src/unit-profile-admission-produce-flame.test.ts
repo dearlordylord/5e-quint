@@ -38,6 +38,7 @@ import {
   combatantId,
   damageAmount,
   elapsedTimeTicks,
+  endTurn,
   Hp,
   movementFeet,
   resolveBattleInterrupt,
@@ -47,11 +48,7 @@ import type {
   BattleRuntimeSession,
   BattleState,
 } from "./unit-profile-admission.test-support.ts";
-import {
-  battleActiveEffectExecutionRefForTest,
-  battleProcedureExecutionRefForSpellHoleForTest,
-  requireCharacterSpellProcedureRefForTest,
-} from "./battle-runtime.test-support.ts";
+import { battleProcedureExecutionRefForSpellHoleForTest } from "./battle-runtime.test-support.ts";
 import { characterSpellProcedureExecution } from "./character-execution-admission.ts";
 
 describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
@@ -154,59 +151,65 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
   test("produce_flame recast replaces the caster's prior held flame", () => {
     const spell = spellRecord(produceFlameUnitId);
     const state = spellBattle({ cantrips: [spell] });
-    const caster = state.state.combatants.get(spellCasterId);
-    if (caster === undefined) {
+    const initialCaster = state.state.combatants.get(spellCasterId);
+    if (initialCaster === undefined) {
       throw new Error("Expected Produce Flame caster.");
     }
-    const stateWithPriorCasting: BattleRuntimeSession =
-      battleRuntimeSessionForTest({
-        ...state,
-        state: {
-          ...state.state,
-          combatants: new Map(state.state.combatants).set(spellCasterId, {
-            ...caster,
-            activeEffects: [
-              ...caster.activeEffects,
-              {
-                kind: "heldLight",
-                effectRef: battleActiveEffectExecutionRefForTest(
-                  "synthetic-prior-produce-flame-held-light",
-                ),
-                sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
-                  state,
-                  spellCasterId,
-                  cantripSpellInvocationRef(produceFlameUnitId, "heldLight"),
-                ),
-                sourceCombatantId: spellCasterId,
-                brightRadiusFeet: movementFeet(20),
-                dimAdditionalFeet: movementFeet(20),
-                expiresAt: {
-                  kind: "duration",
-                  durationTicks: elapsedTimeTicks(1),
-                },
-              },
-            ],
-          }),
-        },
-      });
     const act = bonusSpellAct({
-      session: stateWithPriorCasting,
+      session: state,
       spellId: produceFlameUnitId,
     });
-
-    const resolved = resolveBattleSubject({
-      state: stateWithPriorCasting.state,
+    const firstCast = resolveBattleSubject({
+      state: state.state,
       subject: act.subject,
       fills: [],
     });
-
-    if (resolved.tag !== "resolved") {
+    if (firstCast.tag !== "resolved") {
+      throw new Error("Expected initial Produce Flame cast to resolve.");
+    }
+    const firstCaster = firstCast.state.combatants.get(spellCasterId);
+    const firstHeldLight = firstCaster?.activeEffects.find(
+      (effect) => effect.kind === "heldLight",
+    );
+    if (firstCaster === undefined || firstHeldLight === undefined) {
+      throw new Error("Expected initial Produce Flame held-light effect.");
+    }
+    const targetTurn = endTurn({
+      state: firstCast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Produce Flame caster turn to end.");
+    }
+    const nextCasterTurn = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+    });
+    if (nextCasterTurn.tag !== "resolved") {
+      throw new Error("Expected Produce Flame caster's next turn to begin.");
+    }
+    const recastAct = bonusSpellAct({
+      session: battleRuntimeSessionForTest({
+        ...state,
+        state: nextCasterTurn.state,
+      }),
+      spellId: produceFlameUnitId,
+    });
+    const recast = resolveBattleSubject({
+      state: nextCasterTurn.state,
+      subject: recastAct.subject,
+      fills: [],
+    });
+    if (recast.tag !== "resolved") {
       throw new Error("Expected Produce Flame recast to resolve.");
     }
-    const heldLightEffects =
-      resolved.state.combatants
-        .get(spellCasterId)
-        ?.activeEffects.filter((effect) => effect.kind === "heldLight") ?? [];
+    const recastCaster = recast.state.combatants.get(spellCasterId);
+    if (recastCaster === undefined) {
+      throw new Error("Expected Produce Flame caster after recast.");
+    }
+    const heldLightEffects = recastCaster.activeEffects.filter(
+      (effect) => effect.kind === "heldLight",
+    );
     expect(heldLightEffects).toHaveLength(1);
     expect(heldLightEffects[0]).toEqual(
       expect.objectContaining({
@@ -217,11 +220,15 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
         }),
       }),
     );
-    expect(resolved.snapshot.lightEmitters).toHaveLength(1);
-    expect(resolved.snapshot.lightEmitters[0]).toEqual(
+    expect(heldLightEffects[0]?.effectRef).not.toBe(firstHeldLight.effectRef);
+    expect(Number(recastCaster.nextActiveEffectOrdinal)).toBe(
+      Number(initialCaster.nextActiveEffectOrdinal) + 2,
+    );
+    expect(recast.snapshot.lightEmitters).toHaveLength(1);
+    expect(recast.snapshot.lightEmitters[0]).toEqual(
       expect.objectContaining({
         kind: "spellLightEmitter",
-        sourceProcedureRef: act.subject.procedureRef,
+        sourceProcedureRef: recastAct.subject.procedureRef,
         sourceCombatantId: spellCasterId,
         attachment: { kind: "combatant", combatantId: spellCasterId },
         emission: {
