@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 // Focused runtime bridge: keep Brutal Strike out of the broad feature bridge's
 // transitive closure so unrelated proof modules do not pay its import cost.
+// KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 
 module battleRuntimeBrutalStrikeBridge {
   import unitFeatureBrutalStrikeCore.* from "../shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core"

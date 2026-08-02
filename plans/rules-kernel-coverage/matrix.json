@@ -407,7 +407,9 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt",
-        "packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt"
+        "packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt",
+        "packages/battle-runtime/battle-runtime-brutal-strike-bridge.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2742,7 +2744,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -10114,6 +10117,33 @@
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt carries shared Level 9 Brutal Strike selection, turn-quota, damage, Forceful Blow, and Hamstring Blow semantics without importing authored Unit catalog rows or battle-runtime reducers.",
+      "obligationIds": [
+        "BATTLE.DAMAGE.ATTACK_BRANCHES",
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core-examples.qnt is proof/example evidence for the shared Level 9 Brutal Strike rule-core facts.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused battle-runtime projection bridge from portable Level 9 Brutal Strike semantics into the battle runtime shape without expanding the broad feature bridge closure.",
+      "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-brutal-strike-bridge.qnt",
+      "role": "bridge"
+    },
+    {
+      "evidence": "Focused run-block proof owner for the battle-runtime Level 9 Brutal Strike projection bridge.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-brutal-strike-bridge-examples.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -10166,6 +10196,16 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-blur-attack-roll-defense.qnt",
       "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-brutal-strike-bridge-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-brutal-strike-bridge.qnt",
+      "role": "bridge"
     },
     {
       "classification": "qnt-owner-role",
@@ -11446,6 +11486,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core-examples.qnt",
       "role": "proof-only"
     },
@@ -12632,7 +12682,9 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core-examples.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core-examples.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core-examples.qnt",
+        "packages/battle-runtime/battle-runtime-brutal-strike-bridge-examples.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
@@ -12664,7 +12716,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt",
-        "packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt"
+        "packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14549,7 +14602,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core-examples.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core-examples.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core-examples.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/attack-damage-composition.qnt",
@@ -14558,7 +14612,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt"
       ],
       "status": "generation-subset-clean"
     },
