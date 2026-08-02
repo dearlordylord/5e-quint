@@ -6531,7 +6531,11 @@ type DruidWildShapeAdmissionFacts = {
 };
 export type AdmittedBattleResolutionInputFor<
   TInput extends BattleResolutionInput,
-> =
+> = TInput extends BattleResolutionInput
+  ? AdmittedBattleResolutionInputMember<TInput>
+  : never;
+
+type AdmittedBattleResolutionInputMember<TInput extends BattleResolutionInput> =
   | ([
       Exclude<TInput["subject"], DruidWildShapeSubject | UnitFeatureSubject>,
     ] extends [never]
@@ -6697,9 +6701,7 @@ export type DruidWildShapeBattleResolutionInput =
   >;
 
 type WithAdmittedSubject<TInput extends BattleResolutionInput> =
-  TInput extends BattleResolutionInput
-    ? AdmittedBattleResolutionInputFor<TInput>
-    : never;
+  AdmittedBattleResolutionInputFor<TInput>;
 
 export type AdmittedActionSpellBattleResolutionInput =
   WithAdmittedSubject<ActionSpellBattleResolutionInput>;
