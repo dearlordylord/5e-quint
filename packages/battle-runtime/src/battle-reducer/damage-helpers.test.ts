@@ -7,7 +7,10 @@ import {
   spellCasterId,
   spellTargetId,
 } from "../unit-profile-admission-catalog.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "../battle-runtime.test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  testLongswordAttack,
+} from "../battle-runtime.test-support.ts";
 import {
   damageRollFillWithGroups,
   requireCombatant,
@@ -18,9 +21,11 @@ import { withResistanceEffect } from "../unit-profile-admission-spell-fill.test-
 import { combatantId } from "../identity.ts";
 import type { BattleActiveEffect } from "../battle-state-execution.ts";
 import {
+  activeSpellWeaponDamageRiders,
   applyAvailableSpellDamageReduction,
   applyAvailableSourceDamageRollPenalty,
   entriesAfterProportionalDamageReduction,
+  ongoingFeatureDamageModifierApplies,
   type DamageAmountByTypeEntry,
 } from "./damage-helpers.ts";
 
@@ -226,6 +231,50 @@ describe("source damage roll penalty helper boundaries", () => {
         damageRollFillWithGroups(hole, [[9]]),
       ),
     ).toEqual({ tag: "invalid" });
+  });
+});
+
+describe("attack damage modifier applicability", () => {
+  test("distinguishes absent actors, ability filters, and weapon usage filters", () => {
+    const caster = requireCombatant(
+      spellBattle({ spellSlots: [], attack: testLongswordAttack() }).state,
+      spellCasterId,
+    );
+    if (caster.origin.kind !== "character" || caster.origin.attack === null) {
+      throw new Error("Expected the spellcaster's default weapon attack.");
+    }
+    const weaponAttack = caster.origin.attack;
+    const unarmedStrike = caster.origin.unarmedStrike;
+
+    expect(activeSpellWeaponDamageRiders(undefined, weaponAttack)).toEqual([]);
+    expect(
+      ongoingFeatureDamageModifierApplies(
+        { amount: 2, abilityFilter: ["dex"] },
+        weaponAttack,
+      ),
+    ).toBe(false);
+    expect(
+      ongoingFeatureDamageModifierApplies(
+        { amount: 2, weaponUsageFilter: weaponAttack.weapon.usage },
+        weaponAttack,
+      ),
+    ).toBe(true);
+    expect(
+      ongoingFeatureDamageModifierApplies(
+        {
+          amount: 2,
+          weaponUsageFilter:
+            weaponAttack.weapon.usage === "melee" ? "ranged" : "melee",
+        },
+        weaponAttack,
+      ),
+    ).toBe(false);
+    expect(
+      ongoingFeatureDamageModifierApplies(
+        { amount: 2, weaponUsageFilter: weaponAttack.weapon.usage },
+        unarmedStrike,
+      ),
+    ).toBe(false);
   });
 });
 

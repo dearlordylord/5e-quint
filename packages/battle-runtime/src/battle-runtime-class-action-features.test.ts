@@ -47,6 +47,7 @@ import {
   rageResource,
   innateSorceryResource,
   recklessAttackFeature,
+  testDaggerAttack,
   testUnarmedStrikeDamageAttack,
   testUnarmedStrikeDieAttack,
   actionSurgeWithAdditionalDirectEffect,
@@ -79,6 +80,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { BRUTAL_STRIKE_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import { activeRageDamageBonusForFrenzy } from "./battle-reducer/barbarian-frenzy.ts";
+import { ongoingFeatureDamageModifier } from "./battle-reducer/damage-helpers.ts";
 import { resolveSelectedAttackProcedure } from "./battle-reducer/attack-main.ts";
 import { attackFillsForAttackHitReplay } from "./battle-reducer/attack-damage-events.ts";
 import { FRENZY_DAMAGE_TYPE_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
@@ -1303,6 +1305,51 @@ describe("battle runtime: class action features", () => {
         expect.objectContaining({ combatantId: goblinId, hp: 0 }),
       ]),
     );
+  });
+
+  test("Rage Damage excludes an admitted Dexterity finesse attack", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-rage-dexterity-damage"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          attack: { ...testDaggerAttack(), ability: "dex" },
+          classLevels: [{ className: "barbarian", level: 9 }],
+          resources: [rageResource()],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const raging = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: {
+          tag: "unitFeature",
+          actorId: fighterId,
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            session,
+            fighterId,
+            "barbarian_rage",
+          ),
+        },
+        fills: [],
+      }),
+    );
+    const attacker = raging.state.combatants.get(fighterId);
+    if (
+      attacker?.origin.kind !== "character" ||
+      attacker.origin.attack === null
+    ) {
+      throw new Error("Expected the admitted Dexterity Dagger attack.");
+    }
+
+    expect(
+      ongoingFeatureDamageModifier(
+        raging.state,
+        attacker,
+        attacker.origin.attack,
+      ),
+    ).toBe(0);
   });
 
   test("Tactical Mind spends Second Wind only when a failed ability check becomes successful", () => {
