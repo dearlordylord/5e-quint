@@ -11,6 +11,7 @@
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
+import { optionalProperty } from "../optional-property.ts";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   damageAmount as toDamageAmount,
@@ -693,9 +694,10 @@ export function resolveGreaseGroundHazardSpellAct(input: {
           actorId: input.actorId,
           invocation: input.invocation,
           errorState: input.input.state,
-          ...(input.metamagicApplications === undefined
-            ? {}
-            : { metamagicApplications: input.metamagicApplications }),
+          ...optionalProperty(
+            "metamagicApplications",
+            input.metamagicApplications,
+          ),
         });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -947,9 +949,7 @@ export function resolveHideousLaughterSpellAct(input: {
     invocation: input.invocation,
     errorState: input.input.state,
     startConcentration: failedTargets.length > 0,
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -1266,12 +1266,11 @@ export function resolveSaveGateDamageSpellAct(input: {
         invocation: input.invocation,
         errorState: input.input.state,
         startConcentration: false,
-        ...(input.actionCostOverride === undefined
-          ? {}
-          : { actionCostOverride: input.actionCostOverride }),
-        ...(input.metamagicApplications === undefined
-          ? {}
-          : { metamagicApplications: input.metamagicApplications }),
+        ...optionalProperty("actionCostOverride", input.actionCostOverride),
+        ...optionalProperty(
+          "metamagicApplications",
+          input.metamagicApplications,
+        ),
       });
     }
     if (sanctuaryCheck.tag === "newTarget") {
@@ -1584,12 +1583,11 @@ export function resolveSaveGateDamageSpellAct(input: {
         invocation: input.invocation,
         errorState: input.input.state,
         startConcentration: startFailedSaveConcentration,
-        ...(input.actionCostOverride === undefined
-          ? {}
-          : { actionCostOverride: input.actionCostOverride }),
-        ...(input.metamagicApplications === undefined
-          ? {}
-          : { metamagicApplications: input.metamagicApplications }),
+        ...optionalProperty("actionCostOverride", input.actionCostOverride),
+        ...optionalProperty(
+          "metamagicApplications",
+          input.metamagicApplications,
+        ),
       }),
       input.actorId,
       failedSaveConcentrationDuration,
@@ -2136,9 +2134,10 @@ export function resolveSaveGateDamageSpellAct(input: {
         damageDisposition: damageDispositionByTargetId.get(targetId),
         damageSourceId: input.actorId,
         spatialFacts: input.fillSet.targetSpatialFacts,
-        ...(relationshipCheck.decisions === undefined
-          ? {}
-          : { relationshipDecisions: relationshipCheck.decisions }),
+        ...optionalProperty(
+          "relationshipDecisions",
+          relationshipCheck.decisions,
+        ),
       },
     );
   }, stateAfterCastConcentrationBreak);
@@ -2169,12 +2168,8 @@ export function resolveSaveGateDamageSpellAct(input: {
       invocation: input.invocation,
       errorState: input.input.state,
       startConcentration: startFailedSaveConcentration,
-      ...(input.actionCostOverride === undefined
-        ? {}
-        : { actionCostOverride: input.actionCostOverride }),
-      ...(input.metamagicApplications === undefined
-        ? {}
-        : { metamagicApplications: input.metamagicApplications }),
+      ...optionalProperty("actionCostOverride", input.actionCostOverride),
+      ...optionalProperty("metamagicApplications", input.metamagicApplications),
     }),
     input.actorId,
     failedSaveConcentrationDuration,
@@ -2203,9 +2198,10 @@ export function resolveSaveGateDamageSpellAct(input: {
     afterDamageEvents,
     objectDamages,
     objectIgnitions,
-    ...(input.input.handledInterruptTrigger === undefined
-      ? {}
-      : { handledInterruptTrigger: input.input.handledInterruptTrigger }),
+    ...optionalProperty(
+      "handledInterruptTrigger",
+      input.input.handledInterruptTrigger,
+    ),
   });
   if (forcedMovement !== null) {
     return forcedMovement;
@@ -2778,12 +2774,11 @@ export function resolveSaveGateConditionSpellAct(input: {
           actorId: input.actorId,
           invocation: input.invocation,
           errorState: input.input.state,
-          ...(input.actionCostOverride === undefined
-            ? {}
-            : { actionCostOverride: input.actionCostOverride }),
-          ...(input.metamagicApplications === undefined
-            ? {}
-            : { metamagicApplications: input.metamagicApplications }),
+          ...optionalProperty("actionCostOverride", input.actionCostOverride),
+          ...optionalProperty(
+            "metamagicApplications",
+            input.metamagicApplications,
+          ),
         });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -2944,12 +2939,8 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("actionCostOverride", input.actionCostOverride),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -3139,9 +3130,7 @@ export function resolveCommandSpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -3279,9 +3268,7 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
   if (resourced.tag === "invalid") {
     return resourced;

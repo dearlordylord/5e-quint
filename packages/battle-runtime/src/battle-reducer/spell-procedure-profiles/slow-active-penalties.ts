@@ -1,3 +1,4 @@
+import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties unit-feature.metamagic-heightened-save-disadvantage unit-feature.metamagic-careful-save-protection
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
@@ -374,9 +375,7 @@ function resolveSlowActivePenalties(
     invocation: input.invocation,
     errorState: input.input.state,
     startConcentration: false,
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
   if (resourced.tag === "invalid") {
     return resourced;

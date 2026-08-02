@@ -4,6 +4,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 
+import {
+  nonEmptyArrayProperty,
+  optionalProperty,
+} from "../optional-property.ts";
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   holeId,
@@ -254,9 +258,10 @@ export function resolveObjectContactDamageSpellAct(input: {
       subject: input.input.subject,
       events: damageResolution.events,
       droppedObjects: damageResolution.droppedObjects,
-      ...(input.input.handledInterruptTrigger === undefined
-        ? {}
-        : { handledInterruptTrigger: input.input.handledInterruptTrigger }),
+      ...optionalProperty(
+        "handledInterruptTrigger",
+        input.input.handledInterruptTrigger,
+      ),
     });
   }
 
@@ -295,9 +300,10 @@ export function resolveObjectContactDamageSpellAct(input: {
     subject: input.input.subject,
     events: damageResolution.events,
     droppedObjects: damageResolution.droppedObjects,
-    ...(input.input.handledInterruptTrigger === undefined
-      ? {}
-      : { handledInterruptTrigger: input.input.handledInterruptTrigger }),
+    ...optionalProperty(
+      "handledInterruptTrigger",
+      input.input.handledInterruptTrigger,
+    ),
   });
 }
 
@@ -389,9 +395,10 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
     subject: input.input.subject,
     events: damageResolution.events,
     droppedObjects: damageResolution.droppedObjects,
-    ...(input.input.handledInterruptTrigger === undefined
-      ? {}
-      : { handledInterruptTrigger: input.input.handledInterruptTrigger }),
+    ...optionalProperty(
+      "handledInterruptTrigger",
+      input.input.handledInterruptTrigger,
+    ),
   });
 }
 
@@ -1130,9 +1137,7 @@ function resolveObjectContactDamage(input: {
       hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
       damageSourceId: input.actorId,
       spatialFacts: input.fillSet.targetSpatialFacts,
-      ...(relationshipCheck.decisions === undefined
-        ? {}
-        : { relationshipDecisions: relationshipCheck.decisions }),
+      ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
     });
   }, input.state);
   const penalized = applyObjectContactPenalties({
@@ -1521,9 +1526,7 @@ function finishObjectContactDamageResolution(input: {
     tag: "resolved",
     state: input.state,
     snapshot: snapshotBattle(input.state),
-    ...(input.droppedObjects.length === 0
-      ? {}
-      : { droppedObjects: input.droppedObjects }),
+    ...nonEmptyArrayProperty("droppedObjects", input.droppedObjects),
   };
 }
 

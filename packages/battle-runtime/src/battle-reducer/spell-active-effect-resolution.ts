@@ -1,3 +1,4 @@
+import { optionalProperty } from "../optional-property.ts";
 import type {
   BattleResolutionResult,
   BattleSpellCastingTimeResource,
@@ -57,15 +58,12 @@ export function spendConfiguredSpellCastResources(input: {
     actorId: resolution.actorId,
     invocation: resolution.invocation,
     errorState: resolution.input.state,
-    ...(input.startConcentration === undefined
-      ? {}
-      : { startConcentration: input.startConcentration }),
-    ...(resolution.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: resolution.actionCostOverride }),
-    ...(resolution.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: resolution.metamagicApplications }),
+    ...optionalProperty("startConcentration", input.startConcentration),
+    ...optionalProperty("actionCostOverride", resolution.actionCostOverride),
+    ...optionalProperty(
+      "metamagicApplications",
+      resolution.metamagicApplications,
+    ),
   });
 }
 
@@ -127,12 +125,8 @@ export function completeSpellActiveEffectCast(input: {
     actorId: resolution.actorId,
     invocation: resolution.invocation,
     errorState: resolution.input.state,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("actionCostOverride", input.actionCostOverride),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
   return resourced.tag === "invalid"
     ? resourced

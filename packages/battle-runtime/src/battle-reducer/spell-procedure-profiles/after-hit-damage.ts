@@ -1,3 +1,4 @@
+import { optionalProperty } from "../../optional-property.ts";
 import {
   completeAfterHitSpellDamageCast,
   maybeOpenAfterHitSpellCastInterrupt,
@@ -290,9 +291,10 @@ function resolveAfterHitDamage(
     invocation: input.invocation,
     targetId: input.input.target.combatantId,
     damageAddition,
-    ...(input.input.handledInterruptTrigger === undefined
-      ? {}
-      : { handledInterruptTrigger: input.input.handledInterruptTrigger }),
+    ...optionalProperty(
+      "handledInterruptTrigger",
+      input.input.handledInterruptTrigger,
+    ),
   });
 }
 

@@ -17,6 +17,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
 
+import { optionalProperty } from "../optional-property.ts";
 import {
   applyCondition,
   hasCondition,
@@ -436,9 +437,7 @@ export function applyBattleHitPointDamage(input: {
 }): BattleState {
   const damaged = applyHpDamage(input.target, input.damageAmount, {
     deathFailuresAtZeroHp: input.deathFailuresAtZeroHp,
-    ...(input.damageDisposition === undefined
-      ? {}
-      : { damageDisposition: input.damageDisposition }),
+    ...optionalProperty("damageDisposition", input.damageDisposition),
   });
   const targetId = input.target.combatantId;
   const nextState = {
@@ -985,9 +984,7 @@ export function applyAttackDamageAmount(input: {
     hideousLaughterDamageRepeatSaves:
       input.hideousLaughterDamageRepeatSaves ?? [],
     spatialFacts: input.spatialFacts ?? [],
-    ...(input.relationshipDecisions === undefined
-      ? {}
-      : { relationshipDecisions: input.relationshipDecisions }),
+    ...optionalProperty("relationshipDecisions", input.relationshipDecisions),
   });
   return normalizeBattleGrapples(
     recordAttackDamageUnitsUsed(

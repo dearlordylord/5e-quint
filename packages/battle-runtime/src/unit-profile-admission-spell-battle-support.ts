@@ -1,3 +1,4 @@
+import { optionalProperty } from "./optional-property.ts";
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { proficiencyBonus, type ProficiencyBonus } from "@dnd/shared/types";
 import type {
@@ -153,32 +154,19 @@ export function spellBattle(input: {
           invocationSpellAccesses: [],
           spellSlots: input.spellSlots ?? [{ spellLevel: 1, count: 2 }],
         },
-        ...(input.attack === undefined ? {} : { attack: input.attack }),
-        ...(input.offHandAttack === undefined
-          ? {}
-          : { offHandAttack: input.offHandAttack }),
-        ...(input.selectedLoadout === undefined
-          ? {}
-          : { selectedLoadout: input.selectedLoadout }),
+        ...optionalProperty("attack", input.attack),
+        ...optionalProperty("offHandAttack", input.offHandAttack),
+        ...optionalProperty("selectedLoadout", input.selectedLoadout),
         classLevels: casterClassLevels,
-        ...(input.casterD20Statistics === undefined
-          ? {}
-          : { d20Statistics: input.casterD20Statistics }),
-        ...(input.casterWeaponProficiencies === undefined
-          ? {}
-          : { weaponProficiencies: input.casterWeaponProficiencies }),
-        ...(input.casterUnitRefs === undefined
-          ? {}
-          : { characterUnitRefs: input.casterUnitRefs }),
-        ...(input.casterUnitFeatures === undefined
-          ? {}
-          : { unitFeatures: input.casterUnitFeatures }),
-        ...(input.casterResources === undefined
-          ? {}
-          : { resources: input.casterResources }),
-        ...(input.casterMetamagic === undefined
-          ? {}
-          : { metamagic: input.casterMetamagic }),
+        ...optionalProperty("d20Statistics", input.casterD20Statistics),
+        ...optionalProperty(
+          "weaponProficiencies",
+          input.casterWeaponProficiencies,
+        ),
+        ...optionalProperty("characterUnitRefs", input.casterUnitRefs),
+        ...optionalProperty("unitFeatures", input.casterUnitFeatures),
+        ...optionalProperty("resources", input.casterResources),
+        ...optionalProperty("metamagic", input.casterMetamagic),
       }),
       ...(input.targetStatBlock === undefined
         ? [
@@ -186,30 +174,14 @@ export function spellBattle(input: {
               combatantId: spellTargetId,
               displayName: "Target",
               initiative: 10,
-              ...(input.targetAttack === undefined
-                ? {}
-                : { attack: input.targetAttack }),
-              ...(input.targetArmorClass === undefined
-                ? {}
-                : { armorClass: input.targetArmorClass }),
-              ...(input.targetHp === undefined
-                ? {}
-                : { currentHp: input.targetHp }),
-              ...(input.targetMaxHp === undefined
-                ? {}
-                : { maxHp: input.targetMaxHp }),
-              ...(input.targetResources === undefined
-                ? {}
-                : { resources: input.targetResources }),
-              ...(input.targetUnitRefs === undefined
-                ? {}
-                : { characterUnitRefs: input.targetUnitRefs }),
-              ...(input.targetUnitFeatures === undefined
-                ? {}
-                : { unitFeatures: input.targetUnitFeatures }),
-              ...(input.targetClassLevels === undefined
-                ? {}
-                : { classLevels: input.targetClassLevels }),
+              ...optionalProperty("attack", input.targetAttack),
+              ...optionalProperty("armorClass", input.targetArmorClass),
+              ...optionalProperty("currentHp", input.targetHp),
+              ...optionalProperty("maxHp", input.targetMaxHp),
+              ...optionalProperty("resources", input.targetResources),
+              ...optionalProperty("characterUnitRefs", input.targetUnitRefs),
+              ...optionalProperty("unitFeatures", input.targetUnitFeatures),
+              ...optionalProperty("classLevels", input.targetClassLevels),
               ...(input.targetSpellcasting === undefined &&
               input.targetPreparedSpells === undefined
                 ? {}
@@ -241,12 +213,8 @@ export function spellBattle(input: {
           combatantId,
           displayName: `Target ${index + 2}`,
           initiative: 9 - index,
-          ...(input.extraTargetHp === undefined
-            ? {}
-            : { currentHp: input.extraTargetHp }),
-          ...(input.extraTargetMaxHp === undefined
-            ? {}
-            : { maxHp: input.extraTargetMaxHp }),
+          ...optionalProperty("currentHp", input.extraTargetHp),
+          ...optionalProperty("maxHp", input.extraTargetMaxHp),
         }),
       ),
       ...(input.statBlockTargets ?? []).map((target) =>

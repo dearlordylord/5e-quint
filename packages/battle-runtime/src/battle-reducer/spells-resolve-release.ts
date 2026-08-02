@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 
+import { optionalProperty } from "../optional-property.ts";
 import {
   spendAction,
   spendActivationResource,
@@ -748,9 +749,10 @@ export function resolveSpellRelease(
       actorId: input.subject.actorId,
       invocation,
       fillSet,
-      ...(options.selfOriginAreaAnchorId === undefined
-        ? {}
-        : { selfOriginAreaAnchorId: options.selfOriginAreaAnchorId }),
+      ...optionalProperty(
+        "selfOriginAreaAnchorId",
+        options.selfOriginAreaAnchorId,
+      ),
       ...(options.opensSpellCastReactionWindow === undefined
         ? {}
         : {
@@ -1281,9 +1283,7 @@ export function resolveSpellRelease(
       hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
       damageSourceId: input.subject.actorId,
       spatialFacts: fillSet.targetSpatialFacts,
-      ...(relationshipCheck.decisions === undefined
-        ? {}
-        : { relationshipDecisions: relationshipCheck.decisions }),
+      ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
     },
   );
   const effected = applySpellActiveEffects(

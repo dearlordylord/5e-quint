@@ -1,3 +1,4 @@
+import { optionalProperty } from "../../optional-property.ts";
 import { maybeOpenSpellCastReactionWindow } from "../spell-cast-reaction-window.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.hit-point-restoration unit-feature.spell-slot-healing-modifier
@@ -372,12 +373,8 @@ function resolveDirectHitPointRestoration(
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("actionCostOverride", input.actionCostOverride),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
 }
 

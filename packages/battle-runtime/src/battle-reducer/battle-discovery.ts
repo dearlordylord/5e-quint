@@ -16,6 +16,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING CHARACTER.LIFECYCLE.LAYER_PROJECTION BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
+import { optionalProperty } from "../optional-property.ts";
 import type { ActionEconomyState } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   canSpendAction,
@@ -749,9 +750,7 @@ function findFamiliarTouchSpellActs(input: {
             spellAction:
               subject.tag === "actionSpell" ? "action" : "bonusAction",
             mode: subject.mode,
-            ...(subject.metamagic === undefined
-              ? {}
-              : { metamagic: subject.metamagic }),
+            ...optionalProperty("metamagic", subject.metamagic),
           },
           initialHoles: [
             findFamiliarConnectionHole({

@@ -17,6 +17,7 @@
 //   - UBIQUITOUS_LANGUAGE.md: Spell Effect, Ability Check, Saving Throw,
 //     Damage Type, Area of Effect, Concentration, and table-owned spatial facts.
 
+import { optionalProperty } from "../optional-property.ts";
 import {
   holeId,
   holeInstanceKey,
@@ -1005,9 +1006,10 @@ export function releaseGlyphStoredSpell(input: {
     effect: ref.effect,
     witness: input.witness,
     executionRegistry: input.executionRegistry,
-    ...(input.handledInterruptTrigger === undefined
-      ? {}
-      : { handledInterruptTrigger: input.handledInterruptTrigger }),
+    ...optionalProperty(
+      "handledInterruptTrigger",
+      input.handledInterruptTrigger,
+    ),
   });
   if (resolved.tag === "needsHoles") {
     return {
@@ -1858,9 +1860,10 @@ function resolveStoredSpellGlyphRelease(input: {
       state: input.state,
       subject,
       fills,
-      ...(input.handledInterruptTrigger === undefined
-        ? {}
-        : { handledInterruptTrigger: input.handledInterruptTrigger }),
+      ...optionalProperty(
+        "handledInterruptTrigger",
+        input.handledInterruptTrigger,
+      ),
     },
     actorId: input.effect.sourceCombatantId,
     fillSet,

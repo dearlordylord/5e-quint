@@ -1,3 +1,4 @@
+import { optionalProperty } from "./optional-property.ts";
 import {
   NonNegativeInteger,
   PositiveInteger,
@@ -175,8 +176,8 @@ function admitStatBlock(
         source: attack,
         section,
         attack: attackMechanics,
-        ...(traitAttackRollModes === undefined ? {} : { traitAttackRollModes }),
-        ...(limitedUse === undefined ? {} : { limitedUse }),
+        ...optionalProperty("traitAttackRollModes", traitAttackRollModes),
+        ...optionalProperty("limitedUse", limitedUse),
       };
       attacks.push(occurrence);
     }
@@ -220,9 +221,7 @@ function admitStatBlock(
       kind: "bonusActionOption",
       source: option,
       standardActions: admittedStandardActions,
-      ...(option.limitedUse === undefined
-        ? {}
-        : { limitedUse: option.limitedUse }),
+      ...optionalProperty("limitedUse", option.limitedUse),
     };
     bonusActions.push(occurrence);
   }
@@ -331,9 +330,10 @@ function allocateStatBlockExecution(
         kind: "attack",
         section: occurrence.section,
         attack: occurrence.attack,
-        ...(occurrence.traitAttackRollModes === undefined
-          ? {}
-          : { traitAttackRollModes: occurrence.traitAttackRollModes }),
+        ...optionalProperty(
+          "traitAttackRollModes",
+          occurrence.traitAttackRollModes,
+        ),
       },
       resourcePoolRefs: [
         ...(limitedUsePool === null ? [] : [limitedUsePool.resourcePoolRef]),

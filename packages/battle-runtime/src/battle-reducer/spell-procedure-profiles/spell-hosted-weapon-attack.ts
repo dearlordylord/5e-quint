@@ -1,3 +1,4 @@
+import { optionalProperty } from "../../optional-property.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-hosted-weapon-attack
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -329,9 +330,10 @@ function resolveSpellHostedWeaponAttack(
           replayingInterruptedProcedure:
             input.input.replayingInterruptedProcedure,
         }),
-    ...(input.input.handledInterruptTrigger === undefined
-      ? {}
-      : { handledInterruptTrigger: input.input.handledInterruptTrigger }),
+    ...optionalProperty(
+      "handledInterruptTrigger",
+      input.input.handledInterruptTrigger,
+    ),
     ...(input.input.pendingAttackDamageReductions === undefined
       ? {}
       : {
@@ -345,9 +347,10 @@ function resolveSpellHostedWeaponAttack(
       ...replayOptions,
       subject: baseInput.subject,
       fills: attackFills,
-      ...(pendingAttackDamageAdditions === undefined
-        ? {}
-        : { pendingAttackDamageAdditions }),
+      ...optionalProperty(
+        "pendingAttackDamageAdditions",
+        pendingAttackDamageAdditions,
+      ),
     },
     attack,
     (state, actorId) =>

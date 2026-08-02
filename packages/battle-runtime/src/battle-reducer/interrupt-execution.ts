@@ -1,3 +1,4 @@
+import { nonEmptyArrayProperty } from "../optional-property.ts";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Match } from "effect";
 import * as Either from "effect/Either";
@@ -181,15 +182,9 @@ export function openAfterDamageSequenceInterruptWindow(input: {
       tag: "resolved",
       state: input.state,
       snapshot: snapshotBattle(input.state),
-      ...(input.objectDamages.length === 0
-        ? {}
-        : { objectDamages: input.objectDamages }),
-      ...(input.objectIgnitions.length === 0
-        ? {}
-        : { objectIgnitions: input.objectIgnitions }),
-      ...(input.droppedObjects.length === 0
-        ? {}
-        : { droppedObjects: input.droppedObjects }),
+      ...nonEmptyArrayProperty("objectDamages", input.objectDamages),
+      ...nonEmptyArrayProperty("objectIgnitions", input.objectIgnitions),
+      ...nonEmptyArrayProperty("droppedObjects", input.droppedObjects),
     };
   }
   const reactionWindow = maybeOpenInterruptWindow(

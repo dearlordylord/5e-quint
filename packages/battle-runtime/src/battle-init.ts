@@ -1,4 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey
+import { optionalProperty } from "./optional-property.ts";
 import type { ArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import type {
   AbilityModifier,
@@ -89,27 +90,20 @@ export function characterBattleCreatureInitWeaponAttack(
     weapon: fields.weapon,
     ability: fields.ability,
     abilityModifier: fields.abilityModifier,
-    ...(fields.attackBonus === undefined
-      ? {}
-      : { attackBonus: fields.attackBonus }),
-    ...(fields.damageAbilityModifier === undefined
-      ? {}
-      : { damageAbilityModifier: fields.damageAbilityModifier }),
+    ...optionalProperty("attackBonus", fields.attackBonus),
+    ...optionalProperty("damageAbilityModifier", fields.damageAbilityModifier),
     ...(fields.attackDamageAbilityModifierChoice === undefined
       ? {}
       : {
           attackDamageAbilityModifierChoice:
             fields.attackDamageAbilityModifierChoice,
         }),
-    ...(fields.damageBonus === undefined
-      ? {}
-      : { damageBonus: fields.damageBonus }),
-    ...(fields.damageTypeChoices === undefined
-      ? {}
-      : { damageTypeChoices: fields.damageTypeChoices }),
-    ...(fields.alternateAbilityChoices === undefined
-      ? {}
-      : { alternateAbilityChoices: fields.alternateAbilityChoices }),
+    ...optionalProperty("damageBonus", fields.damageBonus),
+    ...optionalProperty("damageTypeChoices", fields.damageTypeChoices),
+    ...optionalProperty(
+      "alternateAbilityChoices",
+      fields.alternateAbilityChoices,
+    ),
   };
 }
 

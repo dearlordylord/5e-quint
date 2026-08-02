@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 
+import { optionalProperty } from "../optional-property.ts";
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
@@ -349,10 +350,8 @@ export function effectiveD20TestNaturalOneRerollAttackRoll(
       ...attackRoll,
       total: decision.replacement.result.total,
       naturalD20: decision.replacement.result.naturalD20,
-      ...(decision.replacement.result.rollMode === undefined
-        ? {}
-        : { rollMode: decision.replacement.result.rollMode }),
-      ...(rolledD20s === undefined ? {} : { rolledD20s }),
+      ...optionalProperty("rollMode", decision.replacement.result.rollMode),
+      ...optionalProperty("rolledD20s", rolledD20s),
     };
   }
   if (decision?.kind !== "reroll") {
@@ -362,9 +361,7 @@ export function effectiveD20TestNaturalOneRerollAttackRoll(
     ...attackRoll,
     total: decision.replacement.total,
     naturalD20: decision.replacement.naturalD20,
-    ...(decision.replacement.rollMode === undefined
-      ? {}
-      : { rollMode: decision.replacement.rollMode }),
+    ...optionalProperty("rollMode", decision.replacement.rollMode),
   };
 }
 
@@ -389,7 +386,7 @@ export function effectiveD20TestNaturalOneRerollAbilityCheckValue<
       ...value,
       total: decision.replacement.result.total,
       naturalD20: decision.replacement.result.naturalD20,
-      ...(rolledD20s === undefined ? {} : { rolledD20s }),
+      ...optionalProperty("rolledD20s", rolledD20s),
     };
   }
   if (decision?.kind !== "reroll") {
@@ -436,7 +433,7 @@ export function effectiveD20TestNaturalOneRerollConcentrationSavingThrow<
         ...value,
         succeeded: decision.replacement.result.succeeded,
         naturalD20: decision.replacement.result.naturalD20,
-        ...(rolledD20s === undefined ? {} : { rolledD20s }),
+        ...optionalProperty("rolledD20s", rolledD20s),
       },
     };
   }
@@ -477,7 +474,7 @@ export function effectiveD20TestNaturalOneRerollSavingThrowOutcome(
       ...rolledOutcome,
       succeeded: decision.replacement.result.succeeded,
       naturalD20: decision.replacement.result.naturalD20,
-      ...(rolledD20s === undefined ? {} : { rolledD20s }),
+      ...optionalProperty("rolledD20s", rolledD20s),
     };
   }
   if (decision?.kind !== "reroll") {

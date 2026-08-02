@@ -1,3 +1,4 @@
+import { optionalProperty } from "../optional-property.ts";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
   holeId,
@@ -460,9 +461,7 @@ function resolveParsedPersistentAreaSaveDamage(
     adjustedDamage,
     {
       damageSourceId: effect.sourceCombatantId,
-      ...(concentrationFill === undefined
-        ? {}
-        : { concentrationSavingThrow: concentrationFill }),
+      ...optionalProperty("concentrationSavingThrow", concentrationFill),
       spatialFacts: [],
     },
   );

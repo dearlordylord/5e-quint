@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SELF_TRANSFORMATION_MODE BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS
 
+import { nonEmptyArrayProperty } from "../optional-property.ts";
 import {
   abilityModifier,
   attackBonus,
@@ -138,17 +139,20 @@ export function attackDamageHole(
     label: `${name} damage (${expression})`,
     attack,
     critical,
-    ...(attackDamageRiders.length === 0 ? {} : { attackDamageRiders }),
-    ...(spellWeaponDamageRiders.length === 0
-      ? {}
-      : { spellWeaponDamageRiders }),
-    ...(spellMarkedDamageRiders.length === 0
-      ? {}
-      : { spellMarkedDamageRiders }),
-    ...(cunningStrikeOptions.length === 0 ? {} : { cunningStrikeOptions }),
-    ...(weaponDamageDiceRollChoiceProcedureRefs.length === 0
-      ? {}
-      : { weaponDamageDiceRollChoiceProcedureRefs }),
+    ...nonEmptyArrayProperty("attackDamageRiders", attackDamageRiders),
+    ...nonEmptyArrayProperty(
+      "spellWeaponDamageRiders",
+      spellWeaponDamageRiders,
+    ),
+    ...nonEmptyArrayProperty(
+      "spellMarkedDamageRiders",
+      spellMarkedDamageRiders,
+    ),
+    ...nonEmptyArrayProperty("cunningStrikeOptions", cunningStrikeOptions),
+    ...nonEmptyArrayProperty(
+      "weaponDamageDiceRollChoiceProcedureRefs",
+      weaponDamageDiceRollChoiceProcedureRefs,
+    ),
     ...(damageDieFloorProcedureRefs === null
       ? {}
       : {

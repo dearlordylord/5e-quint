@@ -1,6 +1,7 @@
 // Prepared-slot repeated-damage-allocation spell resolution extracted from spells-resolve.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 
+import { optionalProperty } from "../optional-property.ts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { spendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
@@ -684,9 +685,10 @@ export function resolvePreparedSlotSpellAct(input: {
           hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
           damageSourceId: input.actorId,
           spatialFacts: input.fillSet.targetSpatialFacts,
-          ...(relationshipCheck.decisions === undefined
-            ? {}
-            : { relationshipDecisions: relationshipCheck.decisions }),
+          ...optionalProperty(
+            "relationshipDecisions",
+            relationshipCheck.decisions,
+          ),
         },
       );
     },

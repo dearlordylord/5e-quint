@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
+import { optionalProperty } from "./optional-property.ts";
 import {
   ordinaryFamiliarLikeProtocol,
   ownerLongRestExpiringFamiliarLikeProtocol,
@@ -606,8 +607,8 @@ function withAdmittedFindFamiliarCombatant(
     familiar: input.familiar,
     initiative: input.initiative,
     combatantAdmission: combatantAdmission.right,
-    ...(input.currentHp === undefined ? {} : { currentHp: input.currentHp }),
-    ...(input.tempHp === undefined ? {} : { tempHp: input.tempHp }),
+    ...optionalProperty("currentHp", input.currentHp),
+    ...optionalProperty("tempHp", input.tempHp),
   });
 }
 

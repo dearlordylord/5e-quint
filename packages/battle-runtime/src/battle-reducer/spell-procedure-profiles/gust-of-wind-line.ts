@@ -1,3 +1,4 @@
+import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
@@ -252,9 +253,7 @@ function resolveGustOfWindLine(
     actorId: input.actorId,
     invocation: input.invocation,
     fillSet: input.fillSet,
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
 }
 

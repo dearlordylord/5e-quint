@@ -1,3 +1,4 @@
+import { optionalProperty } from "./optional-property.ts";
 import type {
   BattleActDiscoveryCandidate,
   AdmittedBattleResolutionInput,
@@ -144,9 +145,7 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
     companionId: input.fact.familiarId,
     spellAction: input.subject.tag === "actionSpell" ? "action" : "bonusAction",
     mode: input.subject.mode,
-    ...(input.subject.metamagic === undefined
-      ? {}
-      : { metamagic: input.subject.metamagic }),
+    ...optionalProperty("metamagic", input.subject.metamagic),
   };
   const connectionHole = findFamiliarConnectionHole({
     ownerId: input.fact.ownerId,

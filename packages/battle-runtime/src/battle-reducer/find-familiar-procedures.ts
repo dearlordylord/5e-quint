@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 
+import { optionalProperty } from "../optional-property.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
   AdmittedActionSpellBattleResolutionInput,
@@ -493,9 +494,7 @@ function findFamiliarTouchSpellSubject(
     actorId: subject.actorId,
     procedureRef: subject.procedureRef,
     mode: subject.mode,
-    ...(subject.metamagic === undefined
-      ? {}
-      : { metamagic: subject.metamagic }),
+    ...optionalProperty("metamagic", subject.metamagic),
   };
   return subject.spellAction === "action"
     ? { tag: "actionSpell", ...base }

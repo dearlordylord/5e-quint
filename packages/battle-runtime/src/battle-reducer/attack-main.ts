@@ -12,6 +12,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 
+import { optionalProperty } from "../optional-property.ts";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
@@ -1823,9 +1824,10 @@ export function resolveSelectedAttackProcedure(
             concentrationSavingThrows: primaryConcentrationSavingThrows,
             damageDisposition: primaryAttackDamageDisposition(fillSet),
             attackDamageRiders: [],
-            ...(relationshipCheck.decisions === undefined
-              ? {}
-              : { relationshipDecisions: relationshipCheck.decisions }),
+            ...optionalProperty(
+              "relationshipDecisions",
+              relationshipCheck.decisions,
+            ),
           },
         }),
       },
@@ -1881,9 +1883,10 @@ export function resolveSelectedAttackProcedure(
               concentrationSavingThrows: primaryConcentrationSavingThrows,
               damageDisposition: primaryAttackDamageDisposition(fillSet),
               attackDamageRiders: [],
-              ...(relationshipCheck.decisions === undefined
-                ? {}
-                : { relationshipDecisions: relationshipCheck.decisions }),
+              ...optionalProperty(
+                "relationshipDecisions",
+                relationshipCheck.decisions,
+              ),
             },
           }),
           concentrationSave: pendingConcentrationSave,
@@ -2301,15 +2304,17 @@ export function resolveSelectedAttackProcedure(
             concentrationSavingThrows: primaryConcentrationSavingThrows,
             damageDisposition: primaryAttackDamageDisposition(fillSet),
             attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
-            ...(relationshipCheck.decisions === undefined
-              ? {}
-              : { relationshipDecisions: relationshipCheck.decisions }),
+            ...optionalProperty(
+              "relationshipDecisions",
+              relationshipCheck.decisions,
+            ),
             ...(selectedDamageDiceChoice === null
               ? {}
               : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
-            ...(selectedCunningStrikeContinuation === undefined
-              ? {}
-              : { cunningStrike: selectedCunningStrikeContinuation }),
+            ...optionalProperty(
+              "cunningStrike",
+              selectedCunningStrikeContinuation,
+            ),
           },
         }),
       },
@@ -2365,15 +2370,17 @@ export function resolveSelectedAttackProcedure(
               concentrationSavingThrows: primaryConcentrationSavingThrows,
               damageDisposition: primaryAttackDamageDisposition(fillSet),
               attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
-              ...(relationshipCheck.decisions === undefined
-                ? {}
-                : { relationshipDecisions: relationshipCheck.decisions }),
+              ...optionalProperty(
+                "relationshipDecisions",
+                relationshipCheck.decisions,
+              ),
               ...(selectedDamageDiceChoice === null
                 ? {}
                 : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
-              ...(selectedCunningStrikeContinuation === undefined
-                ? {}
-                : { cunningStrike: selectedCunningStrikeContinuation }),
+              ...optionalProperty(
+                "cunningStrike",
+                selectedCunningStrikeContinuation,
+              ),
             },
           }),
           concentrationSave: pendingConcentrationSave,
@@ -3299,9 +3306,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
       damageDisposition: input.fillSet.weaponMasteryCleaveDamageDisposition,
       attackDamageRiders: [],
-      ...(relationshipCheck.decisions === undefined
-        ? {}
-        : { relationshipDecisions: relationshipCheck.decisions }),
+      ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
     },
   });
   const attackDamageReactionWindow = maybeOpenInterruptWindow(
@@ -4100,9 +4105,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
       damageDisposition: input.fillSet.huntersPreyHordeBreakerDamageDisposition,
       attackDamageRiders: hordeBreakerSelectedDamageRiders,
-      ...(relationshipCheck.decisions === undefined
-        ? {}
-        : { relationshipDecisions: relationshipCheck.decisions }),
+      ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
     },
   });
   const attackDamageReactionWindow = maybeOpenInterruptWindow(

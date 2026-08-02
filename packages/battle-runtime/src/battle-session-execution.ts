@@ -1,3 +1,4 @@
+import { optionalProperty } from "./optional-property.ts";
 import { Match } from "effect";
 import * as Either from "effect/Either";
 import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route-protocol.ts";
@@ -204,7 +205,7 @@ export function endBattleRuntimeTurn(input: {
     endTurn({
       state: input.session.state,
       actorId: input.actorId,
-      ...(input.fills === undefined ? {} : { fills: input.fills }),
+      ...optionalProperty("fills", input.fills),
     }),
   );
 }

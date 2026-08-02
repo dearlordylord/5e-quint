@@ -1,3 +1,4 @@
+import { optionalProperty } from "../../optional-property.ts";
 import { discoverTargetSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-careful-save-protection
@@ -243,9 +244,7 @@ function resolveCommand(input: CommandResolveInput): BattleResolutionResult {
     actorId: input.actorId,
     invocation: input.invocation,
     fillSet: input.fillSet,
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
 }
 

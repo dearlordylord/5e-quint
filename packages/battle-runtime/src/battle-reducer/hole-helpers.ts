@@ -8,6 +8,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.passive-ability-check-roll-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hide-action-obscurement-permission
+import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -324,7 +325,7 @@ export function hideAbilityCheckHole(
     ability: "dex",
     skill: "stealth",
     dc: HIDE_DC,
-    ...(rollMode === undefined ? {} : { rollMode }),
+    ...optionalProperty("rollMode", rollMode),
   };
 }
 
@@ -339,7 +340,7 @@ export function searchAbilityCheckHole(
       ? undefined
       : requiredAbilityCheckRollMode(state, actorId, "wis", {
           skill: "perception",
-          ...(targetId === undefined ? {} : { targetId }),
+          ...optionalProperty("targetId", targetId),
         });
   return {
     holeInstanceKey: SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
@@ -349,7 +350,7 @@ export function searchAbilityCheckHole(
     ability: "wis",
     skill: "perception",
     dc,
-    ...(rollMode === undefined ? {} : { rollMode }),
+    ...optionalProperty("rollMode", rollMode),
   };
 }
 
@@ -368,7 +369,7 @@ export function escapeSpellRestraintAbilityCheckHole(
     ability: "str",
     skill: "athletics",
     dc: dc ?? difficultyClass(1),
-    ...(rollMode === undefined ? {} : { rollMode }),
+    ...optionalProperty("rollMode", rollMode),
     ...(input.actorId === input.targetId
       ? {}
       : { requiresTableSpatialFact: true }),
@@ -392,7 +393,7 @@ export function thaumaturgyBoomingVoiceInfluenceAbilityCheckHole(
     ability: "cha",
     skill: THAUMATURGY_BOOMING_VOICE_INTIMIDATION_SKILL,
     dc,
-    ...(rollMode === undefined ? {} : { rollMode }),
+    ...optionalProperty("rollMode", rollMode),
   };
 }
 
@@ -845,7 +846,7 @@ export function escapeGrappleOutcomeHole(
     targetId: link.grapplerId,
     dc: link.escapeDc,
     mode: "escapeCheck",
-    ...(rollMode === undefined ? {} : { rollMode }),
+    ...optionalProperty("rollMode", rollMode),
   };
 }
 

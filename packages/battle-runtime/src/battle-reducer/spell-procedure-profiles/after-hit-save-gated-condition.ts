@@ -1,3 +1,4 @@
+import { optionalProperty } from "../../optional-property.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-after-hit-restraint-turn-start-damage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
@@ -314,9 +315,10 @@ function resolveAfterHitSaveGatedCondition(
     sourceProcedureRef: input.invocation.sourceProcedureRef,
     spellProcedure: input.invocation.procedure,
     targetIds: [input.input.target.combatantId],
-    ...(input.input.handledInterruptTrigger === undefined
-      ? {}
-      : { handledInterruptTrigger: input.input.handledInterruptTrigger }),
+    ...optionalProperty(
+      "handledInterruptTrigger",
+      input.input.handledInterruptTrigger,
+    ),
   });
   if (readiedSpellCastReactionWindow !== null) {
     return readiedSpellCastReactionWindow;

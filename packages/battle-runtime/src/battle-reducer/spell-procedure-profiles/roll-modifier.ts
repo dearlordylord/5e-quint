@@ -1,3 +1,4 @@
+import { optionalProperty } from "../../optional-property.ts";
 import {
   completeSpellActiveEffectCast,
   maybeOpenConfiguredSpellCastReactionWindow,
@@ -378,12 +379,8 @@ function resolveRollModifier(
   const affectedTargetIds = new Set(affectedTargets.targetIds);
   return completeSpellActiveEffectCast({
     resolution: input,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("actionCostOverride", input.actionCostOverride),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
     applyEffect: (state) =>
       effectSelection.selection.kind === "sameForTargets"
         ? applyRollModifierEffect(

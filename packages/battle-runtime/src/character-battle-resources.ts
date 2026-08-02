@@ -1,3 +1,4 @@
+import { optionalProperty } from "./optional-property.ts";
 import {
   AbilityModifier,
   NonNegativeInteger,
@@ -550,9 +551,7 @@ export function characterResourceState(
   const defaultUsesRemaining = characterBattleResourceMaxUses({
     unit: input.unit,
     classLevels,
-    ...(input.capAbilityModifier === undefined
-      ? {}
-      : { capAbilityModifier: input.capAbilityModifier }),
+    ...optionalProperty("capAbilityModifier", input.capAbilityModifier),
   });
   if (defaultUsesRemaining === undefined) {
     throw new Error("Limited character battle resource requires a finite cap.");

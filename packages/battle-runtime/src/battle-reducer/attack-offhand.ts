@@ -7,6 +7,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 
+import { optionalProperty } from "../optional-property.ts";
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -836,15 +837,17 @@ function resolveBonusActionAttack(
             concentrationSavingThrows: fillSet.concentrationSavingThrows,
             damageDisposition: fillSet.damageDisposition,
             attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
-            ...(relationshipCheck.decisions === undefined
-              ? {}
-              : { relationshipDecisions: relationshipCheck.decisions }),
+            ...optionalProperty(
+              "relationshipDecisions",
+              relationshipCheck.decisions,
+            ),
             ...(selectedDamageDiceChoice === null
               ? {}
               : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
-            ...(selectedCunningStrikeContinuation === undefined
-              ? {}
-              : { cunningStrike: selectedCunningStrikeContinuation }),
+            ...optionalProperty(
+              "cunningStrike",
+              selectedCunningStrikeContinuation,
+            ),
           },
         }),
       },

@@ -14,6 +14,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
+import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
 import { bindStoredSpellProcedureExecutionFacts } from "../character-execution-queries.ts";
 import type { SpellProcedureExecution } from "../character-execution.ts";
@@ -145,9 +146,10 @@ function areaOngoingSpellReleaseResourceState(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.errorState,
-    ...(input.resource.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.resource.metamagicApplications }),
+    ...optionalProperty(
+      "metamagicApplications",
+      input.resource.metamagicApplications,
+    ),
   });
 }
 

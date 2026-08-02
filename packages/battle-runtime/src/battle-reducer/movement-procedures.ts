@@ -1,6 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard spell.invocation-jump-movement-replacement unit-feature.acrobatic-movement unit-feature.creature-space-movement-permission
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 
+import { optionalProperty } from "../optional-property.ts";
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
 import {
   canSpendMovement,
@@ -675,24 +676,21 @@ export function parseBattleMovement(
       provokedOpportunityAttacks,
       spendsTurnMovement:
         mode.kind === "budgetedMovement" ? mode.spendsTurnMovement : true,
-      ...(fill.value.acrobaticMovement === undefined
-        ? {}
-        : { acrobaticMovement: fill.value.acrobaticMovement }),
-      ...(fill.value.areaDifficultTerrain === undefined
-        ? {}
-        : { areaDifficultTerrain: fill.value.areaDifficultTerrain }),
-      ...(fill.value.grappleDrag === undefined
-        ? {}
-        : { grappleDrag: fill.value.grappleDrag }),
-      ...(fill.value.creatureSpaceTraversal === undefined
-        ? {}
-        : { creatureSpaceTraversal: fill.value.creatureSpaceTraversal }),
-      ...(fill.value.jumpMovementReplacement === undefined
-        ? {}
-        : { jumpMovementReplacement: fill.value.jumpMovementReplacement }),
-      ...(fill.value.levitatedMovement === undefined
-        ? {}
-        : { levitatedMovement: fill.value.levitatedMovement }),
+      ...optionalProperty("acrobaticMovement", fill.value.acrobaticMovement),
+      ...optionalProperty(
+        "areaDifficultTerrain",
+        fill.value.areaDifficultTerrain,
+      ),
+      ...optionalProperty("grappleDrag", fill.value.grappleDrag),
+      ...optionalProperty(
+        "creatureSpaceTraversal",
+        fill.value.creatureSpaceTraversal,
+      ),
+      ...optionalProperty(
+        "jumpMovementReplacement",
+        fill.value.jumpMovementReplacement,
+      ),
+      ...optionalProperty("levitatedMovement", fill.value.levitatedMovement),
     },
   };
 }

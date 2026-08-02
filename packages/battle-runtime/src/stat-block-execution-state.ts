@@ -1,3 +1,4 @@
+import { optionalProperty } from "./optional-property.ts";
 import {
   resourceCount,
   type DieRollResult,
@@ -139,9 +140,10 @@ export function statBlockAttackActionOptions(
       kind: "statBlockAttack" as const,
       procedureRef: binding.procedureRef,
       attack,
-      ...(binding.procedure.traitAttackRollModes === undefined
-        ? {}
-        : { traitAttackRollModes: binding.procedure.traitAttackRollModes }),
+      ...optionalProperty(
+        "traitAttackRollModes",
+        binding.procedure.traitAttackRollModes,
+      ),
     };
     return [
       { ...base, damageNotation: "rolled" as const },

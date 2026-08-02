@@ -68,7 +68,7 @@ export function supportedDamageAmountExpr(input: {
     return {
       dice: amount.base.dice + (amount.perLevel?.dice ?? 0) * slotDelta,
       dieSize: amount.base.dieSize,
-      ...(amount.base.flat === undefined ? {} : { flat: amount.base.flat }),
+      ...optionalProperty("flat", amount.base.flat),
     };
   }
   return null;
@@ -109,6 +109,7 @@ export function diceExprWithDelta(
       : { flat: delta.flat ?? base.flat }),
   };
 }
+import { optionalProperty } from "../optional-property.ts";
 import {
   movementFeet,
   type MovementFeet,

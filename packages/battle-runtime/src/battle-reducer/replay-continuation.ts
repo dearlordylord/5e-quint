@@ -1,3 +1,4 @@
+import { optionalProperty } from "../optional-property.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import type {
@@ -305,12 +306,14 @@ function replayInterruptRouteOptions(
   return {
     replayingInterruptedProcedure: true,
     handledInterruptTrigger,
-    ...(continuation.attackDamageReductions === undefined
-      ? {}
-      : { pendingAttackDamageReductions: continuation.attackDamageReductions }),
-    ...(continuation.attackDamageAdditions === undefined
-      ? {}
-      : { pendingAttackDamageAdditions: continuation.attackDamageAdditions }),
+    ...optionalProperty(
+      "pendingAttackDamageReductions",
+      continuation.attackDamageReductions,
+    ),
+    ...optionalProperty(
+      "pendingAttackDamageAdditions",
+      continuation.attackDamageAdditions,
+    ),
   };
 }
 

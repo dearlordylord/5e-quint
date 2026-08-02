@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 
+import { optionalProperty } from "../optional-property.ts";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 import {
@@ -667,9 +668,10 @@ export function resolveOpportunityAttackCommand(
             concentrationSavingThrows: fillSet.concentrationSavingThrows,
             damageDisposition: fillSet.damageDisposition,
             attackDamageRiders: [],
-            ...(relationshipCheck.decisions === undefined
-              ? {}
-              : { relationshipDecisions: relationshipCheck.decisions }),
+            ...optionalProperty(
+              "relationshipDecisions",
+              relationshipCheck.decisions,
+            ),
           },
         }),
       },
@@ -1013,15 +1015,17 @@ export function resolveOpportunityAttackCommand(
           concentrationSavingThrows: fillSet.concentrationSavingThrows,
           damageDisposition: fillSet.damageDisposition,
           attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
-          ...(relationshipCheck.decisions === undefined
-            ? {}
-            : { relationshipDecisions: relationshipCheck.decisions }),
+          ...optionalProperty(
+            "relationshipDecisions",
+            relationshipCheck.decisions,
+          ),
           ...(selectedDamageDiceChoice === null
             ? {}
             : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
-          ...(selectedCunningStrikeContinuation === undefined
-            ? {}
-            : { cunningStrike: selectedCunningStrikeContinuation }),
+          ...optionalProperty(
+            "cunningStrike",
+            selectedCunningStrikeContinuation,
+          ),
         },
       }),
     },

@@ -1,3 +1,4 @@
+import { optionalProperty } from "../optional-property.ts";
 import {
   holeId,
   holeInstanceKey,
@@ -149,9 +150,7 @@ export function damageRelationshipDecisionHole(input: {
     }
     const damagedTarget = applyHpDamage(priorTarget, application.damageAmount, {
       deathFailuresAtZeroHp: 1,
-      ...(application.damageDisposition === undefined
-        ? {}
-        : { damageDisposition: application.damageDisposition }),
+      ...optionalProperty("damageDisposition", application.damageDisposition),
     });
     if (
       enemyZeroHitPointTransitionOccurs({

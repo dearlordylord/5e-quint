@@ -1,6 +1,7 @@
 // Readied release owns spell and movement continuation handling.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 
+import { optionalProperty } from "../optional-property.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 
@@ -85,9 +86,10 @@ export function resolveReleaseReadiedSpellCommand(
       state: input.state,
       subject: releaseSubject,
       fills: input.fills,
-      ...(options.handledInterruptTrigger === undefined
-        ? {}
-        : { handledInterruptTrigger: options.handledInterruptTrigger }),
+      ...optionalProperty(
+        "handledInterruptTrigger",
+        options.handledInterruptTrigger,
+      ),
       reactionContinuation: {
         subject: input.subject,
         fills: input.fills,

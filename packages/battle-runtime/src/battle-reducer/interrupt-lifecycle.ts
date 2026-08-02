@@ -1,3 +1,4 @@
+import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { sameBattleSubject } from "../battle-subjects.ts";
@@ -309,9 +310,10 @@ export function resolveActiveInterruptProcedure(input: {
     input: input.resolution,
     interruptRouteOptions: {
       replayingInterruptedProcedure: true,
-      ...(activeInterrupt.handledInterruptTrigger === undefined
-        ? {}
-        : { handledInterruptTrigger: activeInterrupt.handledInterruptTrigger }),
+      ...optionalProperty(
+        "handledInterruptTrigger",
+        activeInterrupt.handledInterruptTrigger,
+      ),
       ...(activeInterrupt.pendingAttackDamageReductions === undefined
         ? {}
         : {
@@ -612,9 +614,10 @@ function interruptCheckpointAfterModifier(
             procedureRef: choice.procedureRef,
             reduction: choice.reduction,
             reductionAmount: reduction,
-            ...(choice.zeroDamageRedirect === undefined
-              ? {}
-              : { zeroDamageRedirect: choice.zeroDamageRedirect }),
+            ...optionalProperty(
+              "zeroDamageRedirect",
+              choice.zeroDamageRedirect,
+            ),
           },
         ],
       },

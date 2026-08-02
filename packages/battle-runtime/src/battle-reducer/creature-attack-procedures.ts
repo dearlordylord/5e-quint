@@ -3,6 +3,7 @@
 // Resolution is separate from creature-attack.ts so the discovery leaf does
 // not depend back on snapshot-backed reducer results through battle discovery.
 
+import { optionalProperty } from "../optional-property.ts";
 import { spendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import * as Either from "effect/Either";
@@ -159,9 +160,7 @@ export function resolveCreatureAttack(
       actor: combatants.actor,
       target: combatants.target,
       damage,
-      ...(relationshipCheck.decisions === undefined
-        ? {}
-        : { relationshipDecisions: relationshipCheck.decisions }),
+      ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
     }),
   );
 }

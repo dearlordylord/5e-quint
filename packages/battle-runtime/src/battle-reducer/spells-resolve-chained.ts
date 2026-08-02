@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 
+import { optionalProperty } from "../optional-property.ts";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
@@ -332,12 +333,11 @@ export function resolveChainedSpellAttackDamageAct(input: {
         actorId: input.actorId,
         invocation: input.invocation,
         errorState: input.input.state,
-        ...(input.actionCostOverride === undefined
-          ? {}
-          : { actionCostOverride: input.actionCostOverride }),
-        ...(input.metamagicApplications === undefined
-          ? {}
-          : { metamagicApplications: input.metamagicApplications }),
+        ...optionalProperty("actionCostOverride", input.actionCostOverride),
+        ...optionalProperty(
+          "metamagicApplications",
+          input.metamagicApplications,
+        ),
       });
     }
     if (sanctuaryCheck.tag === "newTarget") {
@@ -884,9 +884,10 @@ export function resolveChainedSpellAttackDamageAct(input: {
         hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
         damageSourceId: input.actorId,
         spatialFacts: step.target.spatialFacts ?? [],
-        ...(relationshipCheck.decisions === undefined
-          ? {}
-          : { relationshipDecisions: relationshipCheck.decisions }),
+        ...optionalProperty(
+          "relationshipDecisions",
+          relationshipCheck.decisions,
+        ),
       },
     );
     afterDamageEvents.push({
@@ -982,12 +983,11 @@ export function resolveCompletedChainedSpell(input: {
     actorId: input.input.actorId,
     invocation: input.input.invocation,
     errorState: input.input.input.state,
-    ...(input.input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.input.actionCostOverride }),
-    ...(input.input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.input.metamagicApplications }),
+    ...optionalProperty("actionCostOverride", input.input.actionCostOverride),
+    ...optionalProperty(
+      "metamagicApplications",
+      input.input.metamagicApplications,
+    ),
   });
   if (spentResources.tag !== "resolved") {
     return spentResources;
@@ -1566,9 +1566,7 @@ export function applyChainedSpellDamage(
     damageDisposition: context.damageDisposition,
     damageSourceId: context.damageSourceId,
     spatialFacts: context.spatialFacts,
-    ...(context.relationshipDecisions === undefined
-      ? {}
-      : { relationshipDecisions: context.relationshipDecisions }),
+    ...optionalProperty("relationshipDecisions", context.relationshipDecisions),
     concentrationSavingThrow: context.concentrationSavingThrow,
     wardingBondDamageShareConcentrationSavingThrows:
       context.wardingBondDamageShareConcentrationSavingThrows,

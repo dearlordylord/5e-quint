@@ -4,6 +4,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 
 import { Match } from "effect";
+import { optionalProperty } from "../optional-property.ts";
 import { attackBonus, movementFeet, type AttackBonus } from "@dnd/shared/types";
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
@@ -278,7 +279,7 @@ export function attackDamage(attack: SupportedAttackActionOption): {
       return {
         dice: damage.expr.dice,
         dieSize: damage.expr.dieSize,
-        ...(damage.expr.flat === undefined ? {} : { flat: damage.expr.flat }),
+        ...optionalProperty("flat", damage.expr.flat),
         damageType: damage.damageType,
       };
     }),
@@ -891,10 +892,8 @@ export function attackDamageComponents(
       dice: critical ? rider.damage.expr.dice * 2 : rider.damage.expr.dice,
     },
     damageType: rider.damage.damageType,
-    ...(rider.operation === undefined ? {} : { operation: rider.operation }),
-    ...(rider.minimumDamageTotal === undefined
-      ? {}
-      : { minimumDamageTotal: rider.minimumDamageTotal }),
+    ...optionalProperty("operation", rider.operation),
+    ...optionalProperty("minimumDamageTotal", rider.minimumDamageTotal),
   }));
   const markedRiderComponents = spellMarkedDamageRiders.map((rider) => ({
     expr: {

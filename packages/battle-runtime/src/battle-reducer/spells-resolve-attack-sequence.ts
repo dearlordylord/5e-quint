@@ -4,6 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
+import { optionalProperty } from "../optional-property.ts";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
@@ -259,12 +260,8 @@ export function resolveSpellAttackSequenceAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("actionCostOverride", input.actionCostOverride),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
   if (spent.tag !== "resolved") {
     return spent;
@@ -285,9 +282,10 @@ export function resolveSpellAttackSequenceAct(input: {
     tag: "resolved",
     state: afterDamageReactionWindow.state,
     snapshot: snapshotBattle(afterDamageReactionWindow.state),
-    ...(afterDamageReactionWindow.objectDamages === undefined
-      ? {}
-      : { objectDamages: afterDamageReactionWindow.objectDamages }),
+    ...optionalProperty(
+      "objectDamages",
+      afterDamageReactionWindow.objectDamages,
+    ),
   };
 }
 
@@ -407,12 +405,8 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       actorId: input.actorId,
       invocation: input.invocation,
       errorState: input.input.state,
-      ...(input.actionCostOverride === undefined
-        ? {}
-        : { actionCostOverride: input.actionCostOverride }),
-      ...(input.metamagicApplications === undefined
-        ? {}
-        : { metamagicApplications: input.metamagicApplications }),
+      ...optionalProperty("actionCostOverride", input.actionCostOverride),
+      ...optionalProperty("metamagicApplications", input.metamagicApplications),
     });
   }
   if (sanctuaryCheck.tag === "newTarget") {
@@ -1026,9 +1020,7 @@ function resolveSpellAttackSequenceCreaturePart(input: {
       hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
       damageSourceId: input.actorId,
       spatialFacts: input.target.spatialFacts,
-      ...(relationshipCheck.decisions === undefined
-        ? {}
-        : { relationshipDecisions: relationshipCheck.decisions }),
+      ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
     },
   );
   const usedExtraFillHoleIds = [

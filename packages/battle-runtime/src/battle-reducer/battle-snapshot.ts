@@ -1,3 +1,4 @@
+import { optionalProperty } from "../optional-property.ts";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
 import { Match } from "effect";
@@ -186,9 +187,10 @@ export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
       resources.huntersPreyHordeBreakerUsedThisTurn,
     grapplerPunchAndGrabUsedThisTurn:
       resources.grapplerPunchAndGrabUsedThisTurn,
-    ...(resources.lightWeaponAttackMade === undefined
-      ? {}
-      : { lightWeaponAttackMade: resources.lightWeaponAttackMade }),
+    ...optionalProperty(
+      "lightWeaponAttackMade",
+      resources.lightWeaponAttackMade,
+    ),
     dashMovementBonusFeet: resources.dashMovementBonusFeet,
     disengaged: resources.disengaged,
   };

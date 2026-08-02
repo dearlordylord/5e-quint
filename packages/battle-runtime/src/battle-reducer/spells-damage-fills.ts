@@ -21,6 +21,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 
+import {
+  nonEmptyArrayProperty,
+  optionalProperty,
+} from "../optional-property.ts";
 import { Match } from "effect";
 import {
   holeId,
@@ -326,7 +330,7 @@ export function spellAttackSequencePartAttackRollHole(
     label: `Spell ${partName} ${partIndex + 1} spell attack roll`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     attackBonus: invocation.attackBonus,
-    ...(rollMode === undefined ? {} : { rollMode }),
+    ...optionalProperty("rollMode", rollMode),
   };
 }
 
@@ -388,7 +392,7 @@ function spellAttackRollHoleBase(
     label: `Spell spell attack roll`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     attackBonus: invocation.attackBonus,
-    ...(rollMode === undefined ? {} : { rollMode }),
+    ...optionalProperty("rollMode", rollMode),
   };
 }
 
@@ -572,7 +576,7 @@ export function chainedSpellAttackRollHole(
     label: `Spell spell attack roll ${stepIndex + 1}`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     attackBonus: invocation.attackBonus,
-    ...(rollMode === undefined ? {} : { rollMode }),
+    ...optionalProperty("rollMode", rollMode),
     ...attackRollMissToHitReplacementHolePayload(state, attackerId),
   };
 }
@@ -749,9 +753,10 @@ export function spellDamageHole(
     label: `Spell damage (${expr})`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     critical,
-    ...(spellMarkedDamageRiders.length === 0
-      ? {}
-      : { spellMarkedDamageRiders }),
+    ...nonEmptyArrayProperty(
+      "spellMarkedDamageRiders",
+      spellMarkedDamageRiders,
+    ),
   };
 }
 
@@ -797,9 +802,10 @@ export function spellAttackSequencePartDamageHole(
     label: `Spell ${partName} ${partIndex + 1} damage (${expr})`,
     sourceProcedureRef: invocation.sourceProcedureRef,
     critical,
-    ...(spellMarkedDamageRiders.length === 0
-      ? {}
-      : { spellMarkedDamageRiders }),
+    ...nonEmptyArrayProperty(
+      "spellMarkedDamageRiders",
+      spellMarkedDamageRiders,
+    ),
   };
 }
 
@@ -2116,17 +2122,20 @@ export function applySpellDamage(
     damageDisposition,
     damageSourceId,
     spatialFacts,
-    ...(relationshipDecisions === undefined ? {} : { relationshipDecisions }),
+    ...optionalProperty("relationshipDecisions", relationshipDecisions),
     concentrationSavingThrow,
-    ...(wardingBondDamageShareConcentrationSavingThrows === undefined
-      ? {}
-      : { wardingBondDamageShareConcentrationSavingThrows }),
-    ...(hideousLaughterDamageRepeatSaves === undefined
-      ? {}
-      : { hideousLaughterDamageRepeatSaves }),
-    ...(hideousLaughterDamageRepeatSaveEventKey === undefined
-      ? {}
-      : { hideousLaughterDamageRepeatSaveEventKey }),
+    ...optionalProperty(
+      "wardingBondDamageShareConcentrationSavingThrows",
+      wardingBondDamageShareConcentrationSavingThrows,
+    ),
+    ...optionalProperty(
+      "hideousLaughterDamageRepeatSaves",
+      hideousLaughterDamageRepeatSaves,
+    ),
+    ...optionalProperty(
+      "hideousLaughterDamageRepeatSaveEventKey",
+      hideousLaughterDamageRepeatSaveEventKey,
+    ),
   });
 }
 
@@ -2178,17 +2187,20 @@ export function applyPreparedSlotSpellDamage(
     damageDisposition,
     damageSourceId,
     spatialFacts,
-    ...(relationshipDecisions === undefined ? {} : { relationshipDecisions }),
+    ...optionalProperty("relationshipDecisions", relationshipDecisions),
     concentrationSavingThrow,
-    ...(wardingBondDamageShareConcentrationSavingThrows === undefined
-      ? {}
-      : { wardingBondDamageShareConcentrationSavingThrows }),
-    ...(hideousLaughterDamageRepeatSaves === undefined
-      ? {}
-      : { hideousLaughterDamageRepeatSaves }),
-    ...(hideousLaughterDamageRepeatSaveEventKey === undefined
-      ? {}
-      : { hideousLaughterDamageRepeatSaveEventKey }),
+    ...optionalProperty(
+      "wardingBondDamageShareConcentrationSavingThrows",
+      wardingBondDamageShareConcentrationSavingThrows,
+    ),
+    ...optionalProperty(
+      "hideousLaughterDamageRepeatSaves",
+      hideousLaughterDamageRepeatSaves,
+    ),
+    ...optionalProperty(
+      "hideousLaughterDamageRepeatSaveEventKey",
+      hideousLaughterDamageRepeatSaveEventKey,
+    ),
   });
 }
 

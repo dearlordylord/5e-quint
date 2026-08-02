@@ -12,6 +12,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
+import { nonEmptyArrayProperty } from "../optional-property.ts";
 import type {
   ActionEconomyState,
   RuntimeActionResource,
@@ -1682,9 +1683,7 @@ export function resolveShove(
     tag: "resolved",
     state: afterEffect.state,
     snapshot: snapshotBattle(afterEffect.state),
-    ...(afterEffect.shovePushes.length === 0
-      ? {}
-      : { shovePushes: afterEffect.shovePushes }),
+    ...nonEmptyArrayProperty("shovePushes", afterEffect.shovePushes),
   };
 }
 

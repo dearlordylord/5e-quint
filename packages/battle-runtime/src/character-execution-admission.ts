@@ -1,3 +1,4 @@
+import { optionalProperty } from "./optional-property.ts";
 import { sameSpellProcedureExecution } from "./same-spell-procedure-execution.ts";
 import {
   characterStoredExecutionProcedureRef,
@@ -690,9 +691,7 @@ export function unitFeatureProcedureExecution(
         activationTrigger: value.activationTrigger,
         spendsUse: value.spendsUse,
         lifecycle: value.lifecycle,
-        ...(value.concentrationEffect === undefined
-          ? {}
-          : { concentrationEffect: value.concentrationEffect }),
+        ...optionalProperty("concentrationEffect", value.concentrationEffect),
         actionRestrictions: value.actionRestrictions,
         rollModifiers: value.rollModifiers,
         spellModifiers: value.spellModifiers,
@@ -809,9 +808,10 @@ export function unitFeatureProcedureExecution(
                           requiresVisibleAttacker:
                             variant.requiresVisibleAttacker,
                         }),
-                    ...(variant.damageIncludes === undefined
-                      ? {}
-                      : { damageIncludes: variant.damageIncludes }),
+                    ...optionalProperty(
+                      "damageIncludes",
+                      variant.damageIncludes,
+                    ),
                     reduction: variant.reduction,
                   };
                 }
@@ -828,9 +828,10 @@ export function unitFeatureProcedureExecution(
                             requiresVisibleAttacker:
                               variant.requiresVisibleAttacker,
                           }),
-                      ...(variant.damageIncludes === undefined
-                        ? {}
-                        : { damageIncludes: variant.damageIncludes }),
+                      ...optionalProperty(
+                        "damageIncludes",
+                        variant.damageIncludes,
+                      ),
                       reduction: variant.reduction,
                       zeroDamageRedirect: {
                         spends: {
@@ -1224,7 +1225,7 @@ export function unitSupportProcedureExecution(
       }),
       passiveSpeedKindGrants: (value) => ({
         kind: value.kind,
-        ...(value.speed === undefined ? {} : { speed: value.speed }),
+        ...optionalProperty("speed", value.speed),
         grants: value.grants,
       }),
       acrobaticMovement: (value) => ({

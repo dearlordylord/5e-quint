@@ -82,6 +82,10 @@ import {
 } from "./spell-reroll-issues.ts";
 import type { CombatantId } from "../identity.ts";
 import {
+  nonEmptyArrayProperty,
+  optionalProperty,
+} from "../optional-property.ts";
+import {
   characterUnitProcedureBindings,
   characterSpellProcedure,
   type BattleSpellProcedureExecution,
@@ -1761,12 +1765,8 @@ export function resolveSpellAttackDamageAct(
 ): BattleResolutionResult {
   return resolveSpellActInternal(input.input, executionRegistry, {
     kind: "sharedSpellAttackDamage",
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("actionCostOverride", input.actionCostOverride),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
 }
 
@@ -2006,9 +2006,7 @@ function resolveSpellActInternal(
     actorId: subject.actorId,
     invocation,
     fills: input.fills,
-    ...(options.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: options.actionCostOverride }),
+    ...optionalProperty("actionCostOverride", options.actionCostOverride),
     metamagicApplications: invocationAdmission.applications,
   });
   if (slowSomaticSpellFailure.tag !== "continue") {
@@ -2246,12 +2244,11 @@ function resolveSpellActInternal(
       actorId: subject.actorId,
       invocation: invocationForResolution,
       fillSet: { ...fillSet, objectTarget },
-      ...(options.actionCostOverride === undefined
-        ? {}
-        : { actionCostOverride: options.actionCostOverride }),
-      ...(metamagicApplicationsForResolution === undefined
-        ? {}
-        : { metamagicApplications: metamagicApplicationsForResolution }),
+      ...optionalProperty("actionCostOverride", options.actionCostOverride),
+      ...optionalProperty(
+        "metamagicApplications",
+        metamagicApplicationsForResolution,
+      ),
     });
   }
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -2367,15 +2364,15 @@ function resolveSpellActInternal(
         actorId: subject.actorId,
         invocation: invocationForResolution,
         errorState: input.state,
-        ...(options.actionCostOverride === undefined
-          ? {}
-          : { actionCostOverride: options.actionCostOverride }),
-        ...(metamagicApplicationsForResolution === undefined
-          ? {}
-          : { metamagicApplications: metamagicApplicationsForResolution }),
-        ...(spiritualWeaponForcePosition === undefined
-          ? {}
-          : { spiritualWeaponForcePosition }),
+        ...optionalProperty("actionCostOverride", options.actionCostOverride),
+        ...optionalProperty(
+          "metamagicApplications",
+          metamagicApplicationsForResolution,
+        ),
+        ...optionalProperty(
+          "spiritualWeaponForcePosition",
+          spiritualWeaponForcePosition,
+        ),
       });
     }
     if (sanctuaryCheck.tag === "newTarget") {
@@ -2457,9 +2454,10 @@ function resolveSpellActInternal(
           reactionSpellTargetFacts: fillSet.reactionSpellTargetFacts,
           castingResource: spellCastingTimeResourceForSpellCast({
             invocation: invocationForResolution,
-            ...(options.actionCostOverride === undefined
-              ? {}
-              : { actionCostOverride: options.actionCostOverride }),
+            ...optionalProperty(
+              "actionCostOverride",
+              options.actionCostOverride,
+            ),
           }),
           ...spellCastMetamagicApplicationsInput(
             metamagicApplicationsForResolution ?? [],
@@ -2691,17 +2689,19 @@ function resolveSpellActInternal(
             actorId: subject.actorId,
             invocation: invocationForResolution,
             errorState: input.state,
-            ...(options.actionCostOverride === undefined
-              ? {}
-              : { actionCostOverride: options.actionCostOverride }),
+            ...optionalProperty(
+              "actionCostOverride",
+              options.actionCostOverride,
+            ),
             ...(metamagicApplicationsForDamageAndSpend === undefined
               ? {}
               : {
                   metamagicApplications: metamagicApplicationsForDamageAndSpend,
                 }),
-            ...(spiritualWeaponForcePosition === undefined
-              ? {}
-              : { spiritualWeaponForcePosition }),
+            ...optionalProperty(
+              "spiritualWeaponForcePosition",
+              spiritualWeaponForcePosition,
+            ),
           })
         : {
             tag: "resolved" as const,
@@ -2788,17 +2788,19 @@ function resolveSpellActInternal(
             actorId: subject.actorId,
             invocation: invocationForResolution,
             errorState: input.state,
-            ...(options.actionCostOverride === undefined
-              ? {}
-              : { actionCostOverride: options.actionCostOverride }),
+            ...optionalProperty(
+              "actionCostOverride",
+              options.actionCostOverride,
+            ),
             ...(metamagicApplicationsForDamageAndSpend === undefined
               ? {}
               : {
                   metamagicApplications: metamagicApplicationsForDamageAndSpend,
                 }),
-            ...(spiritualWeaponForcePosition === undefined
-              ? {}
-              : { spiritualWeaponForcePosition }),
+            ...optionalProperty(
+              "spiritualWeaponForcePosition",
+              spiritualWeaponForcePosition,
+            ),
           });
         }
       }
@@ -2919,17 +2921,16 @@ function resolveSpellActInternal(
           actorId: subject.actorId,
           invocation: invocationForResolution,
           errorState: input.state,
-          ...(options.actionCostOverride === undefined
-            ? {}
-            : { actionCostOverride: options.actionCostOverride }),
+          ...optionalProperty("actionCostOverride", options.actionCostOverride),
           ...(metamagicApplicationsForDamageAndSpend === undefined
             ? {}
             : {
                 metamagicApplications: metamagicApplicationsForDamageAndSpend,
               }),
-          ...(spiritualWeaponForcePosition === undefined
-            ? {}
-            : { spiritualWeaponForcePosition }),
+          ...optionalProperty(
+            "spiritualWeaponForcePosition",
+            spiritualWeaponForcePosition,
+          ),
         });
       }
       return {
@@ -3016,9 +3017,10 @@ function resolveSpellActInternal(
       actorId: subject.actorId,
       invocation: invocationForResolution,
       errorState: input.state,
-      ...(spiritualWeaponForcePosition === undefined
-        ? {}
-        : { spiritualWeaponForcePosition }),
+      ...optionalProperty(
+        "spiritualWeaponForcePosition",
+        spiritualWeaponForcePosition,
+      ),
     });
   if (spellDamageBaseStateResult.tag !== "resolved") {
     return spellDamageBaseStateResult;
@@ -3321,9 +3323,7 @@ function resolveSpellActInternal(
       damageSourceId: subject.actorId,
       saveDamageResult: spellDamageResult,
       spatialFacts: fillSet.targetSpatialFacts,
-      ...(relationshipCheck.decisions === undefined
-        ? {}
-        : { relationshipDecisions: relationshipCheck.decisions }),
+      ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
     },
   );
   const effected = spellAttackHit
@@ -3362,17 +3362,16 @@ function resolveSpellActInternal(
           actorId: subject.actorId,
           invocation: invocationForResolution,
           errorState: input.state,
-          ...(options.actionCostOverride === undefined
-            ? {}
-            : { actionCostOverride: options.actionCostOverride }),
+          ...optionalProperty("actionCostOverride", options.actionCostOverride),
           ...(metamagicApplicationsAfterEmpowered === undefined
             ? {}
             : {
                 metamagicApplications: metamagicApplicationsAfterEmpowered,
               }),
-          ...(spiritualWeaponForcePosition === undefined
-            ? {}
-            : { spiritualWeaponForcePosition }),
+          ...optionalProperty(
+            "spiritualWeaponForcePosition",
+            spiritualWeaponForcePosition,
+          ),
         });
   if (spentResources.tag !== "resolved") {
     return spentResources;
@@ -3637,12 +3636,8 @@ function spendSpellActResolutionResources(input: {
       actorId: input.actorId,
       invocation: input.invocation,
       errorState: input.errorState,
-      ...(input.actionCostOverride === undefined
-        ? {}
-        : { actionCostOverride: input.actionCostOverride }),
-      ...(input.metamagicApplications === undefined
-        ? {}
-        : { metamagicApplications: input.metamagicApplications }),
+      ...optionalProperty("actionCostOverride", input.actionCostOverride),
+      ...optionalProperty("metamagicApplications", input.metamagicApplications),
     });
     if (spent.tag !== "resolved") {
       return spent;
@@ -3880,9 +3875,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
       reactionSpellTargetFacts: input.fillSet.reactionSpellTargetFacts,
       castingResource: spellCastingTimeResourceForSpellCast({
         invocation: input.invocation,
-        ...(input.actionCostOverride === undefined
-          ? {}
-          : { actionCostOverride: input.actionCostOverride }),
+        ...optionalProperty("actionCostOverride", input.actionCostOverride),
       }),
       ...spellCastMetamagicApplicationsInput(input.metamagicApplications ?? []),
       continuation: spellReplayContinuation(input.input),
@@ -4042,12 +4035,8 @@ function resolveSpellAttackDamageObjectTarget(input: {
       actorId: input.actorId,
       invocation: input.invocation,
       errorState: input.input.state,
-      ...(input.actionCostOverride === undefined
-        ? {}
-        : { actionCostOverride: input.actionCostOverride }),
-      ...(input.metamagicApplications === undefined
-        ? {}
-        : { metamagicApplications: input.metamagicApplications }),
+      ...optionalProperty("actionCostOverride", input.actionCostOverride),
+      ...optionalProperty("metamagicApplications", input.metamagicApplications),
     });
   }
   if (input.fillSet.damageRoll == null) {
@@ -4178,12 +4167,8 @@ function resolveSpellAttackDamageObjectTarget(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("actionCostOverride", input.actionCostOverride),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
   if (spentResources.tag !== "resolved") {
     return spentResources;
@@ -4211,7 +4196,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
     state: spentResources.state,
     snapshot: snapshotBattle(spentResources.state),
     objectDamages: [objectDamage],
-    ...(objectIgnitions.length === 0 ? {} : { objectIgnitions }),
+    ...nonEmptyArrayProperty("objectIgnitions", objectIgnitions),
   };
 }
 
@@ -4332,7 +4317,7 @@ export function resolveBonusActionSpellAct(
       actorId: subject.actorId,
       invocation,
       fills: input.fills,
-      ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
+      ...optionalProperty("actionCostOverride", actionCostOverride),
       metamagicApplications: invocationAdmission.applications,
     });
   if (invocation.procedure === "weaponAttackOverride") {
@@ -4397,7 +4382,7 @@ export function resolveBonusActionSpellAct(
         )
           ? invocationAdmission.applications
           : [],
-        ...(actionCostOverride === undefined ? {} : { actionCostOverride }),
+        ...optionalProperty("actionCostOverride", actionCostOverride),
       },
     ),
   );

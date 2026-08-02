@@ -1,3 +1,4 @@
+import { optionalProperty } from "../optional-property.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
@@ -108,9 +109,10 @@ export function completeAfterHitSpellCast(input: {
     sourceProcedureRef: input.invocation.sourceProcedureRef,
     spellProcedure: input.invocation.procedure,
     targetIds: [input.targetId],
-    ...(input.handledInterruptTrigger === undefined
-      ? {}
-      : { handledInterruptTrigger: input.handledInterruptTrigger }),
+    ...optionalProperty(
+      "handledInterruptTrigger",
+      input.handledInterruptTrigger,
+    ),
   });
   return (
     readiedSpellCastReactionWindow ?? {

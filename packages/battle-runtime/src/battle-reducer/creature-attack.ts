@@ -1,5 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.MINIMAL_RESOLUTION
 
+import { optionalProperty } from "../optional-property.ts";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -178,9 +179,7 @@ export function battleStateAfterCreatureAttackDamage(input: {
     damageAmount: input.damage,
     deathFailuresAtZeroHp: 1,
     damageSourceId: input.actor.combatantId,
-    ...(input.relationshipDecisions === undefined
-      ? {}
-      : { relationshipDecisions: input.relationshipDecisions }),
+    ...optionalProperty("relationshipDecisions", input.relationshipDecisions),
   });
 }
 
@@ -250,7 +249,7 @@ export function creatureAttackFillSequence(
     tag: "damageRoll",
     attackRoll,
     damageRoll,
-    ...(relationshipFill === undefined ? {} : { relationshipFill }),
+    ...optionalProperty("relationshipFill", relationshipFill),
   };
 }
 

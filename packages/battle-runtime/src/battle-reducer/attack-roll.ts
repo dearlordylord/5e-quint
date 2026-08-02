@@ -7,6 +7,10 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY
 
 import {
+  nonEmptyArrayProperty,
+  optionalProperty,
+} from "../optional-property.ts";
+import {
   applyCondition,
   EMPTY_CONDITION_STATE,
   hasCondition,
@@ -192,7 +196,7 @@ export function attackRollHole(
     label: `${name} attack roll`,
     attack,
     attackBonus: attackActionBonusWithPassiveFeatureBonus(attacker, attack),
-    ...(rollMode === undefined ? {} : { rollMode }),
+    ...optionalProperty("rollMode", rollMode),
     ...(ongoingFeatureActivations === undefined ||
     ongoingFeatureActivations.length === 0
       ? {}
@@ -1445,13 +1449,15 @@ export function huntersPreyHordeBreakerDamageHole(
     label: `Horde Breaker damage (${expression})`,
     attack,
     critical,
-    ...(attackDamageRiders.length === 0 ? {} : { attackDamageRiders }),
-    ...(spellWeaponDamageRiders.length === 0
-      ? {}
-      : { spellWeaponDamageRiders }),
-    ...(spellMarkedDamageRiders.length === 0
-      ? {}
-      : { spellMarkedDamageRiders }),
+    ...nonEmptyArrayProperty("attackDamageRiders", attackDamageRiders),
+    ...nonEmptyArrayProperty(
+      "spellWeaponDamageRiders",
+      spellWeaponDamageRiders,
+    ),
+    ...nonEmptyArrayProperty(
+      "spellMarkedDamageRiders",
+      spellMarkedDamageRiders,
+    ),
     ...(damageDieFloorProcedureRefs === null
       ? {}
       : {

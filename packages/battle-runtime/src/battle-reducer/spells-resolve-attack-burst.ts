@@ -6,6 +6,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
 
+import { optionalProperty } from "../optional-property.ts";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
@@ -190,12 +191,8 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
       actorId: input.actorId,
       invocation: input.invocation,
       errorState: input.input.state,
-      ...(input.actionCostOverride === undefined
-        ? {}
-        : { actionCostOverride: input.actionCostOverride }),
-      ...(input.metamagicApplications === undefined
-        ? {}
-        : { metamagicApplications: input.metamagicApplications }),
+      ...optionalProperty("actionCostOverride", input.actionCostOverride),
+      ...optionalProperty("metamagicApplications", input.metamagicApplications),
     });
   }
   if (sanctuaryCheck.tag === "newTarget") {
@@ -1331,12 +1328,8 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
     actorId: input.actorId,
     invocation: input.invocation,
     errorState: input.input.state,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("actionCostOverride", input.actionCostOverride),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
   if (spentResources.tag !== "resolved") {
     return spentResources;

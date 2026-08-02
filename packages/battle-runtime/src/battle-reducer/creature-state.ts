@@ -7,6 +7,7 @@
 // The 5 small leaf helpers (combatantCanSee, currentActorId, etc.) live in
 // creature-state-leaves.ts to break the cluster_state ↔ movement_speed cycle.
 
+import { optionalProperty } from "../optional-property.ts";
 import { Either, Match } from "effect";
 import {
   Hp,
@@ -304,9 +305,7 @@ export function battleCreatureStateAdmissionFromInit(
       startingScopeOrdinal: attackScopeOrdinal,
       attack: initAttack,
       unarmedStrike: creatureInit.unarmedStrike,
-      ...(initOffHandAttack === undefined
-        ? {}
-        : { offHandAttack: initOffHandAttack }),
+      ...optionalProperty("offHandAttack", initOffHandAttack),
     });
     const executionCohort = statBlockExecutionAdmissionCohort(
       battleId,
@@ -453,11 +452,12 @@ export function battleCreatureStateAdmissionFromInit(
         speed: creatureInit.speed,
         attack: attackExecution.execution.attack,
         unarmedStrike: attackExecution.execution.unarmedStrike,
-        ...(attackExecution.execution.offHandAttack === undefined
-          ? {}
-          : { offHandAttack: attackExecution.execution.offHandAttack }),
+        ...optionalProperty(
+          "offHandAttack",
+          attackExecution.execution.offHandAttack,
+        ),
         resources,
-        ...(metamagic === undefined ? {} : { metamagic }),
+        ...optionalProperty("metamagic", metamagic),
         ...(spellcastingPresentationSource === undefined
           ? {}
           : {
@@ -478,9 +478,10 @@ export function battleCreatureStateAdmissionFromInit(
       nextScopeOrdinal: executionCohort.nextScopeOrdinal,
       runtimeContext: {
         resourceOwnership,
-        ...(spellcastingPresentationSource === undefined
-          ? {}
-          : { spellcastingPresentationSource }),
+        ...optionalProperty(
+          "spellcastingPresentationSource",
+          spellcastingPresentationSource,
+        ),
         spellPresentationSources: [],
         unitProcedureOwnership: execution.right.unitProcedureOwnership,
         unitPresentationSources: creatureInit.characterUnitRefs,

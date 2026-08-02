@@ -1,3 +1,4 @@
+import { optionalProperty } from "../../optional-property.ts";
 import { discoverSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-grease-ground-hazard unit-feature.metamagic-heightened-save-disadvantage
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
@@ -196,9 +197,7 @@ function resolveGreaseGroundHazard(
     actorId: input.actorId,
     invocation: input.invocation,
     fillSet: input.fillSet,
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
 }
 

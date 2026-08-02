@@ -1,3 +1,4 @@
+import { optionalProperty } from "../optional-property.ts";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Match } from "effect";
 import * as Either from "effect/Either";
@@ -165,9 +166,10 @@ export function resolveCastTriggeredReactionSpellCommand(
     frame,
     invocation,
     fills: input.fills,
-    ...(input.handledInterruptTrigger === undefined
-      ? {}
-      : { handledInterruptTrigger: input.handledInterruptTrigger }),
+    ...optionalProperty(
+      "handledInterruptTrigger",
+      input.handledInterruptTrigger,
+    ),
   });
   if (spellCastReactionWindow !== null) {
     return spellCastReactionWindow;
@@ -744,9 +746,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
       hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
       damageSourceId: input.subject.reactorId,
       spatialFacts: fillSet.targetSpatialFacts,
-      ...(relationshipCheck.decisions === undefined
-        ? {}
-        : { relationshipDecisions: relationshipCheck.decisions }),
+      ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
     },
   );
   const slotted = expendSpellSlot(

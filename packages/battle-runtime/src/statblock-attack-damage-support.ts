@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
+import { optionalProperty } from "./optional-property.ts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   CreatureAttackRollMechanics,
@@ -80,7 +81,7 @@ export function supportedStatBlockAttackDamage(
 
   return {
     baseComponents,
-    ...(advantageBonus === undefined ? {} : { advantageBonus }),
+    ...optionalProperty("advantageBonus", advantageBonus),
   };
 }
 
@@ -137,7 +138,7 @@ function statBlockDamageComponent(
   const staticDamage = statBlockDamageNotationStaticAmount(amount);
   return {
     expr: amount.expr,
-    ...(staticDamage === undefined ? {} : { static: staticDamage }),
+    ...optionalProperty("static", staticDamage),
     damageType,
   };
 }

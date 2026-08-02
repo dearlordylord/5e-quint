@@ -1,3 +1,4 @@
+import { optionalProperty } from "../../optional-property.ts";
 import { Schema } from "effect";
 import type {
   BattleActDiscoveryCandidate,
@@ -36,12 +37,8 @@ export function spellProcedureResolutionContext<
     actorId: input.actorId,
     invocation: input.invocation,
     fillSet: input.fillSet,
-    ...(input.actionCostOverride === undefined
-      ? {}
-      : { actionCostOverride: input.actionCostOverride }),
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("actionCostOverride", input.actionCostOverride),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   };
 }
 

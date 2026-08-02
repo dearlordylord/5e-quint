@@ -1,3 +1,7 @@
+import {
+  nonEmptyArrayProperty,
+  optionalProperty,
+} from "./optional-property.ts";
 import { spendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Hp } from "@dnd/shared/types";
 import * as Either from "effect/Either";
@@ -221,9 +225,7 @@ export function temporarilyDismissFindFamiliar(
     droppedObjectsForFamiliarDisappearance({
       casterId: input.casterId,
       familiarId,
-      ...(input.heldObjectIds === undefined
-        ? {}
-        : { heldObjectIds: input.heldObjectIds }),
+      ...optionalProperty("heldObjectIds", input.heldObjectIds),
     }),
     findFamiliarCompanionLifecycleRouteEvents(),
   );
@@ -404,9 +406,7 @@ export function applyFindFamiliarZeroHitPointDisappearance(input: {
     droppedObjectsForFamiliarDisappearance({
       casterId: entry.ownerId,
       familiarId: input.familiarId,
-      ...(input.heldObjectIds === undefined
-        ? {}
-        : { heldObjectIds: input.heldObjectIds }),
+      ...optionalProperty("heldObjectIds", input.heldObjectIds),
     }),
   );
 }
@@ -629,8 +629,8 @@ export function resolvedFindFamiliarResult(
     tag: "resolved",
     state,
     snapshot: snapshotBattle(state),
-    ...(droppedObjects.length === 0 ? {} : { droppedObjects }),
-    ...(routeEvents === undefined ? {} : { routeEvents }),
+    ...nonEmptyArrayProperty("droppedObjects", droppedObjects),
+    ...optionalProperty("routeEvents", routeEvents),
   };
 }
 

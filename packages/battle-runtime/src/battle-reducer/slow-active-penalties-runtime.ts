@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
+import { optionalProperty } from "../optional-property.ts";
 import { enableActionOrBonusActionExclusion } from "@dnd/shared-algebras/action-economy-algebra";
 import type {
   ActionSpellBattleResolutionInput,
@@ -117,12 +118,11 @@ export function resolveSlowSomaticSpellFailure(input: {
         invocation: input.invocation,
         errorState: input.state,
         startConcentration: false,
-        ...(input.actionCostOverride === undefined
-          ? {}
-          : { actionCostOverride: input.actionCostOverride }),
-        ...(input.metamagicApplications === undefined
-          ? {}
-          : { metamagicApplications: input.metamagicApplications }),
+        ...optionalProperty("actionCostOverride", input.actionCostOverride),
+        ...optionalProperty(
+          "metamagicApplications",
+          input.metamagicApplications,
+        ),
       })
     : { tag: "continue", fills: remainingFills };
 }

@@ -1,3 +1,4 @@
+import { optionalProperty } from "../../optional-property.ts";
 import { discoverTargetSavingThrowSpellCastActs } from "../saving-throw-metamagic-holes.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-hideous-laughter-repeat-save-lifecycle
 //
@@ -232,9 +233,7 @@ function resolveHideousLaughter(
     actorId: input.actorId,
     invocation: input.invocation,
     fillSet: input.fillSet,
-    ...(input.metamagicApplications === undefined
-      ? {}
-      : { metamagicApplications: input.metamagicApplications }),
+    ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
 }
 
