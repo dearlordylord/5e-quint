@@ -48,6 +48,7 @@ import {
 import {
   twoWeaponFightingUnitId,
   unitLibrary,
+  unitMechanicsVariant,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 
@@ -74,6 +75,24 @@ describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", 
         damageAbilityModifier: twoWeaponFightingDamageAbilityModifierProfile(),
       }),
     );
+  });
+
+  test("Two-Weapon Fighting rejects a same-family near miss", () => {
+    const unit = unitLibrary.requireUnit(twoWeaponFightingUnitId);
+    if (
+      unit.kind !== "feat" ||
+      unit.mechanics.family !== "light_extra_attack_damage_ability_modifier"
+    ) {
+      throw new Error("Expected Two-Weapon Fighting mechanics.");
+    }
+    const nearMiss = unitMechanicsVariant(unit, {
+      id: "synthetic_two_weapon_fighting_required",
+      mechanics: { ...unit.mechanics, optional: false },
+    });
+
+    expect(
+      battleLightExtraAttackDamageAbilityModifierSupportForUnit(nearMiss),
+    ).toBe("unsupported");
   });
 
   test("Light Property Bonus Action Attack still omits a positive damage modifier by default", () => {

@@ -14,6 +14,7 @@ import {
   spellCasterId,
   spellTargetId,
   unitLibrary,
+  unitMechanicsVariant,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackRollFill,
@@ -39,6 +40,7 @@ import {
   resolveBattleSubject,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
 } from "./unit-profile-admission.test-support.ts";
+import { battleWeaponDamageDiceRollChoiceSupportForUnit } from "./unit-feature-support.ts";
 import type { BattleState } from "./unit-profile-admission.test-support.ts";
 
 describe("QMBT31 deterministic Savage Attacker profile slice", () => {
@@ -66,6 +68,21 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
           choose: "eitherRoll",
         },
       }),
+    );
+  });
+
+  test("savage attacker support rejects a same-family near miss", () => {
+    const unit = unitLibrary.requireUnit(savageAttackerUnitId);
+    if (unit.kind !== "feat" || unit.mechanics.family !== "on_hit_trigger") {
+      throw new Error("Expected Savage Attacker mechanics.");
+    }
+    const nearMiss = unitMechanicsVariant(unit, {
+      id: "synthetic_savage_attacker_required",
+      mechanics: { ...unit.mechanics, optional: false },
+    });
+
+    expect(battleWeaponDamageDiceRollChoiceSupportForUnit(nearMiss)).toBe(
+      "unsupported",
     );
   });
 

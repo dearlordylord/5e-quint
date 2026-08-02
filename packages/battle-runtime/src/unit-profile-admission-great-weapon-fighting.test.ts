@@ -15,6 +15,7 @@ import {
   spellCasterId,
   spellTargetId,
   unitLibrary,
+  unitMechanicsVariant,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackRollFill,
@@ -74,6 +75,21 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
           minimumResult: 3,
         },
       }),
+    );
+  });
+
+  test("Great Weapon Fighting rejects a same-family near miss", () => {
+    const unit = unitLibrary.requireUnit(greatWeaponFightingUnitId);
+    if (unit.kind !== "feat" || unit.mechanics.family !== "damage_die_floor") {
+      throw new Error("Expected Great Weapon Fighting mechanics.");
+    }
+    const nearMiss = unitMechanicsVariant(unit, {
+      id: "synthetic_great_weapon_fighting_required",
+      mechanics: { ...unit.mechanics, optional: false },
+    });
+
+    expect(battleAttackDamageDieFloorSupportForUnit(nearMiss)).toBe(
+      "unsupported",
     );
   });
 

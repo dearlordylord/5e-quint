@@ -872,6 +872,24 @@ describe("L3MSPEC species battle support", () => {
     ).toEqual(expectedCreatureSpaceMovementPermissionSupport);
   });
 
+  test("Nimbleness creature-space Movement support rejects a same-family near miss", () => {
+    const unit = unitLibrary.requireUnit(speciesHalflingNimblenessUnitId);
+    if (
+      unit.kind !== "species_trait" ||
+      unit.mechanics.family !== "creature_space_movement_permission"
+    ) {
+      throw new Error("Expected Nimbleness movement-permission mechanics.");
+    }
+    const nearMiss = unitMechanicsVariant(unit, {
+      id: "synthetic_nimbleness_occupied_stop",
+      mechanics: { ...unit.mechanics, canStopInOccupiedSpace: true },
+    });
+
+    expect(battleCreatureSpaceMovementPermissionSupportForUnit(nearMiss)).toBe(
+      "unsupported",
+    );
+  });
+
   test("Brave projects Advantage for Frightened avoiding Saving Throws", () => {
     const state = halflingBraveBattle();
     const targetId = combatantId("halfling-brave-target");

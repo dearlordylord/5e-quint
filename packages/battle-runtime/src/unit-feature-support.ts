@@ -3069,7 +3069,6 @@ export function battleSaveDamageReplacementSupportForUnit(
   ) {
     return null;
   }
-  /* v8 ignore next -- Malformed Surface mechanics: the family gate above identifies the feature, while a null projection means its structured fields contradict the admitted save-damage-replacement profile. */
   return saveDamageReplacementMechanicsProjection(unit) === null
     ? "unsupported"
     : "saveDamageReplacement";
@@ -3324,7 +3323,6 @@ export function battleAttackRollMissToHitReplacementSupportForUnit(
     return null;
   }
   const replacement = attackRollMissToHitReplacementProfileForUnit(unit);
-  /* v8 ignore next -- Malformed Surface mechanics: the shape gate identifies this feature family, while a null profile means its structured fields fail profile admission. */
   return replacement === null
     ? "unsupported"
     : {
@@ -3363,7 +3361,6 @@ export function battleD20TestNaturalOneRerollSupportForUnit(
     return null;
   }
   const reroll = d20TestNaturalOneRerollProfileForUnit(unit);
-  /* v8 ignore next -- Malformed Surface mechanics: the shape gate identifies this feature family, while a null profile means its structured fields fail profile admission. */
   return reroll === null
     ? "unsupported"
     : {
@@ -3476,7 +3473,6 @@ export function battleCreatureSpaceMovementPermissionSupportForUnit(
     return null;
   }
   const permission = creatureSpaceMovementPermissionProfileForUnit(unit);
-  /* v8 ignore next -- Malformed Surface mechanics: the shape gate identifies this feature family, while a null profile means its structured fields fail profile admission. */
   return permission === null
     ? "unsupported"
     : {
@@ -3492,7 +3488,6 @@ export function battleHideActionObscurementPermissionSupportForUnit(
     return null;
   }
   const permission = hideActionObscurementPermissionProfileForUnit(unit);
-  /* v8 ignore next -- Malformed Surface mechanics: the shape gate identifies this feature family, while a null profile means its structured fields fail profile admission. */
   return permission === null
     ? "unsupported"
     : {
@@ -3507,7 +3502,6 @@ export function battleWeaponDamageDiceRollChoiceSupportForUnit(
   if (!hasWeaponDamageDiceRollChoiceMechanics(unit)) {
     return null;
   }
-  /* v8 ignore next -- Malformed Surface mechanics: the shape gate identifies this feature family, while a null profile means its structured fields fail profile admission. */
   return weaponDamageDiceRollChoiceProfileForUnit(unit) === null
     ? "unsupported"
     : "weaponDamageDiceRollChoice";
@@ -3519,7 +3513,6 @@ export function battleAttackDamageDieFloorSupportForUnit(
   if (!hasAttackDamageDieFloorMechanics(unit)) {
     return null;
   }
-  /* v8 ignore next -- Malformed Surface mechanics: the shape gate identifies this feature family, while a null profile means its structured fields fail profile admission. */
   return attackDamageDieFloorProfileForUnit(unit) === null
     ? "unsupported"
     : "attackDamageDieFloor";
@@ -3533,7 +3526,6 @@ export function battleLightExtraAttackDamageAbilityModifierSupportForUnit(
   }
   const damageAbilityModifier =
     lightExtraAttackDamageAbilityModifierProfileForUnit(unit);
-  /* v8 ignore next -- Malformed Surface mechanics: the shape gate identifies this feature family, while a null profile means its structured fields fail profile admission. */
   return damageAbilityModifier === null
     ? "unsupported"
     : {
@@ -3605,7 +3597,6 @@ export function battleFailedAbilityCheckResourceBoostSupportForUnit(
     return null;
   }
   const profile = failedAbilityCheckResourceBoostProfileForUnit(unit);
-  /* v8 ignore next -- Malformed Surface mechanics: the shape gate identifies this feature family, while a null profile means its structured fields fail profile admission. */
   return profile === null
     ? "unsupported"
     : {
@@ -3621,7 +3612,6 @@ export function battleFailedSavingThrowRerollSupportForUnit(
     return null;
   }
   const profile = failedSavingThrowRerollProfileForUnit(unit);
-  /* v8 ignore next -- Malformed Surface mechanics: the shape gate identifies this feature family, while a null profile means its structured fields fail profile admission. */
   return profile === null
     ? "unsupported"
     : {
@@ -3755,7 +3745,6 @@ export function battleCunningStrikeSupportForUnit(
     return null;
   }
   const profile = cunningStrikeProfileForUnit(unit);
-  /* v8 ignore next -- Malformed Surface mechanics: the family gate identifies this feature, while a null profile means its structured fields fail profile admission. */
   return profile === null
     ? "unsupported"
     : {
@@ -3771,7 +3760,6 @@ export function battleCunningStrikeOptionGrantSupportForUnit(
     return null;
   }
   const profile = cunningStrikeOptionGrantProfileForUnit(unit);
-  /* v8 ignore next -- Malformed Surface mechanics: the family gate identifies this feature, while a null profile means its structured fields fail profile admission. */
   return profile === null
     ? "unsupported"
     : {

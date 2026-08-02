@@ -50,6 +50,7 @@ import {
 import type { CharacterBattleClassLevels } from "./character-class-level.ts";
 import { resolveFailedSavingThrowReroll } from "./battle-reducer/failed-saving-throw-reroll.ts";
 import {
+  battleSaveDamageReplacementSupportForUnit,
   battleFailedSavingThrowRerollSupportForUnit,
   FAILED_SAVING_THROW_REROLL_SUPPORT_PROFILE,
 } from "./unit-feature-support.ts";
@@ -332,6 +333,27 @@ describe("QMBT7 deterministic Unit profile admission", () => {
       );
     },
   );
+
+  test("save-damage replacement support rejects a same-family near miss", () => {
+    const unit = unitLibrary.requireUnit(rogueEvasionUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "save_damage_replacement"
+    ) {
+      throw new Error("Expected Rogue Evasion mechanics.");
+    }
+    const nearMiss = unitMechanicsVariant(unit, {
+      id: "synthetic_evasion_wrong_ability",
+      mechanics: {
+        ...unit.mechanics,
+        trigger: { ...unit.mechanics.trigger, ability: "con" },
+      },
+    });
+
+    expect(battleSaveDamageReplacementSupportForUnit(nearMiss)).toBe(
+      "unsupported",
+    );
+  });
 });
 
 describe("QMBT62 Tactical Mind deterministic Unit profile admission", () => {
@@ -377,6 +399,24 @@ describe("QMBT62 Tactical Mind deterministic Unit profile admission", () => {
         unitLibrary.requireUnit(fighterSecondWindUnitId),
       ),
     ).toBeNull();
+  });
+
+  test("fighter_tactical_mind rejects a same-family near miss", () => {
+    const unit = unitLibrary.requireUnit(fighterTacticalMindUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "failed_ability_check_resource_boost"
+    ) {
+      throw new Error("Expected Tactical Mind mechanics.");
+    }
+    const nearMiss = unitMechanicsVariant(unit, {
+      id: "synthetic_tactical_mind_without_refund",
+      mechanics: { ...unit.mechanics, refundSpendOnStillFailed: false },
+    });
+
+    expect(battleFailedAbilityCheckResourceBoostSupportForUnit(nearMiss)).toBe(
+      "unsupported",
+    );
   });
 });
 
@@ -461,6 +501,27 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
         classLevels: fighterClassLevels(17),
       }),
     ).toBe(3);
+  });
+
+  test("fighter_indomitable rejects a same-family near miss", () => {
+    const unit = unitLibrary.requireUnit(fighterIndomitableUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "failed_saving_throw_reroll"
+    ) {
+      throw new Error("Expected Indomitable mechanics.");
+    }
+    const nearMiss = unitMechanicsVariant(unit, {
+      id: "synthetic_indomitable_optional_old_roll",
+      mechanics: {
+        ...unit.mechanics,
+        reroll: { ...unit.mechanics.reroll, mustUseNewRoll: false },
+      },
+    });
+
+    expect(battleFailedSavingThrowRerollSupportForUnit(nearMiss)).toBe(
+      "unsupported",
+    );
   });
 
   test("resolver spends a use and adds Fighter level to the mandatory new roll", () => {

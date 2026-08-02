@@ -172,6 +172,24 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     });
   });
 
+  test("D20 Test natural-1 reroll support rejects a same-family near miss", () => {
+    const unit = unitLibrary.requireUnit(speciesHalflingLuckUnitId);
+    if (
+      unit.kind !== "species_trait" ||
+      unit.mechanics.family !== "d20_test_natural_one_reroll"
+    ) {
+      throw new Error("Expected Halfling Luck mechanics.");
+    }
+    const nearMiss = unitMechanicsVariant(unit, {
+      id: "synthetic_halfling_luck_required_reroll",
+      mechanics: { ...unit.mechanics, optional: false },
+    });
+
+    expect(battleD20TestNaturalOneRerollSupportForUnit(nearMiss)).toBe(
+      "unsupported",
+    );
+  });
+
   test("Attack Rolls use the new d20 result after a selected natural-1 reroll", () => {
     const state = halflingLuckFighterBattle();
     const subject = attackSubject(state);

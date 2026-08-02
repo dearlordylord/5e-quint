@@ -100,6 +100,26 @@ describe("L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME deterministic profile 
     });
   });
 
+  test("Hide obscurement permission support rejects a same-family near miss", () => {
+    const unit = unitLibrary.requireUnit(
+      speciesHalflingNaturallyStealthyUnitId,
+    );
+    if (
+      unit.kind !== "species_trait" ||
+      unit.mechanics.family !== "hide_action_obscurement_permission"
+    ) {
+      throw new Error("Expected Naturally Stealthy mechanics.");
+    }
+    const nearMiss = unitMechanicsVariant(unit, {
+      id: "synthetic_naturally_stealthy_wrong_action",
+      mechanics: { ...unit.mechanics, action: "search" },
+    });
+
+    expect(battleHideActionObscurementPermissionSupportForUnit(nearMiss)).toBe(
+      "unsupported",
+    );
+  });
+
   test("a selected Hide obscurement permission allows Hide when a larger creature is the only obscurement", () => {
     const syntheticUnit = syntheticHideObscurementPermissionUnit();
     const { unitRef } = supportSelection(syntheticUnit);

@@ -14,6 +14,7 @@ import {
   spellCasterId,
   spellTargetId,
   unitLibrary,
+  unitMechanicsVariant,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackRollFill,
@@ -39,6 +40,7 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
 } from "./unit-profile-admission.test-support.ts";
+import { battleAttackRollMissToHitReplacementSupportForUnit } from "./unit-feature-support.ts";
 
 function combatProwessProcedureRef(
   state: Parameters<typeof requireCharacterUnitProcedureRefForTest>[0],
@@ -69,6 +71,24 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
         unit,
         replacement: combatProwessSupportProfile.replacement,
       }),
+    );
+  });
+
+  test("combat prowess support rejects a same-family near miss", () => {
+    const unit = unitLibrary.requireUnit(boonOfCombatProwessUnitId);
+    if (
+      unit.kind !== "feat" ||
+      unit.mechanics.family !== "triggered_replacement"
+    ) {
+      throw new Error("Expected Combat Prowess mechanics.");
+    }
+    const nearMiss = unitMechanicsVariant(unit, {
+      id: "synthetic_combat_prowess_required",
+      mechanics: { ...unit.mechanics, optional: false },
+    });
+
+    expect(battleAttackRollMissToHitReplacementSupportForUnit(nearMiss)).toBe(
+      "unsupported",
     );
   });
 
