@@ -1753,6 +1753,7 @@ export function resolveEscapeGrapple(
     input.state.currentTurnResources,
     input.subject.actorId,
   );
+  /* v8 ignore start -- Defensive internal guard: dispatcher Escape Grapple admission rejects turn resources that cannot pay the action cost before routing here. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.state,
@@ -1760,6 +1761,7 @@ export function resolveEscapeGrapple(
       "Escape Grapple is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const nextState = normalizeBattleGrapples({
     ...input.state,
     currentTurnResources: spent.right,
@@ -2024,11 +2026,12 @@ export function abilityCheckFill(
       };
       continue;
     }
-    /* v8 ignore next -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
+    /* v8 ignore start -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the ${label} replay holes.`,
     };
+    /* v8 ignore stop */
   }
   return { tag: "ok", value: check };
 }
@@ -2064,9 +2067,11 @@ function applyShoveOutcome(input: {
   return Match.value(input.outcome.failedEffect).pipe(
     Match.when({ kind: "prone" }, () => {
       const target = input.state.combatants.get(input.targetId);
+      /* v8 ignore start -- Defensive internal guard: Shove target admission and outcome validation preserve the selected combatant through effect application. */
       if (target === undefined) {
         return { state: input.state, shovePushes: [] };
       }
+      /* v8 ignore stop */
       const state = {
         ...input.state,
         combatants: new Map(input.state.combatants).set(
@@ -2133,11 +2138,12 @@ export function grappleFillSet(fills: readonly BattleFill[]): GrappleFillSet {
       outcome = fill;
       continue;
     }
-    /* v8 ignore next -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
+    /* v8 ignore start -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Grapple replay holes.`,
     };
+    /* v8 ignore stop */
   }
   return { tag: "ok", targetId, targetSpatialFacts, outcome };
 }
@@ -2183,11 +2189,12 @@ export function shoveFillSet(fills: readonly BattleFill[]): ShoveFillSet {
       outcome = fill;
       continue;
     }
-    /* v8 ignore next -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
+    /* v8 ignore start -- Malformed attack replay fill set: this parser rejects duplicate fills or fills that do not match the admitted replay holes. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the Shove replay holes.`,
     };
+    /* v8 ignore stop */
   }
   return { tag: "ok", targetId, targetSpatialFacts, outcome };
 }

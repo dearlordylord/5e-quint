@@ -2506,6 +2506,20 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       ]),
     );
     expect(escaped.state.grapples).toEqual([]);
+    const ungrappledGoblinTurn = requireResolved(
+      endTurn({ state: released.state, actorId: fighterId }),
+    ).state;
+    expect(
+      resolveBattleSubject({
+        state: ungrappledGoblinTurn,
+        subject,
+        fills: [grappleOutcomeFill(escape, true)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "No Grapple is available to escape.",
+    });
   });
 
   test("grapple drag movement enforces extra cost unless Fast Wrestler exempts the target", () => {
