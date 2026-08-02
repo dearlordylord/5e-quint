@@ -12,7 +12,6 @@ import {
   attackRollFill,
   battleId,
   characterSeed,
-  damageRollFillWithGroups,
   fogCloudAreaFill,
   spellTargetAllocationFill,
   startBattleSessionRight,
@@ -113,17 +112,6 @@ type CatalogReplayResult =
       readonly frontiers: readonly (readonly CatalogHoleKind[])[];
     };
 
-function catalogMinimumRolledDiceFill(
-  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
-): BattleFill | undefined {
-  const groups = [...hole.label.matchAll(/(\d+)d\d+/g)].map((match) =>
-    Array.from({ length: Number(match[1]) }, () => 1),
-  );
-  return groups.length === 0
-    ? undefined
-    : damageRollFillWithGroups(hole, groups);
-}
-
 function catalogFrontierFills(input: {
   readonly acceptedFills: readonly BattleFill[];
   readonly holes: readonly BattleHole[];
@@ -149,12 +137,6 @@ function catalogFrontierFills(input: {
   );
   for (const hole of input.holes) {
     if (hole.kind === "targetChoice") {
-      if (
-        input.procedure === "chainedSpellAttackDamage" &&
-        input.acceptedFills.some((fill) => fill.kind === "rolledDice")
-      ) {
-        return undefined;
-      }
       const targetId = hole.choices[0] ?? firstTargetId;
       fills.push(
         hole.spellTargetSpatialFactRequest?.requiresKnownWillingTarget === true
@@ -243,28 +225,11 @@ function catalogFrontierFills(input: {
       if ("outcomeTargeting" in hole && hole.outcomeTargeting === "area") {
         const outcomes = [{ targetId: firstTargetId, succeeded: false }];
         const fill =
-          input.procedure === "attackBurstSaveDamage"
-            ? {
-                kind: "savingThrowOutcome" as const,
-                holeId: hole.holeId,
-                value: {
-                  area: {
-                    originAnchorId: selectedTargetIds[0] ?? firstTargetId,
-                    affectedTargetIds: [selectedTargetIds[0] ?? firstTargetId],
-                  },
-                  outcomes: [
-                    {
-                      targetId: selectedTargetIds[0] ?? firstTargetId,
-                      succeeded: false,
-                    },
-                  ],
-                },
-              }
-            : input.procedure === "greaseGroundHazard"
-              ? greaseSavingThrowOutcomeFill(hole, outcomes)
-              : input.procedure === "gustOfWindLine"
-                ? gustOfWindLineSavingThrowOutcomeFill(hole, outcomes)
-                : undefined;
+          input.procedure === "greaseGroundHazard"
+            ? greaseSavingThrowOutcomeFill(hole, outcomes)
+            : input.procedure === "gustOfWindLine"
+              ? gustOfWindLineSavingThrowOutcomeFill(hole, outcomes)
+              : undefined;
         if (fill === undefined) return undefined;
         fills.push(fill);
         continue;
@@ -284,12 +249,7 @@ function catalogFrontierFills(input: {
       fills.push(attackRollFill(hole, { total: 20, naturalD20: 15 }));
       continue;
     }
-    if (hole.kind === "rolledDice") {
-      const fill = catalogMinimumRolledDiceFill(hole);
-      if (fill === undefined) return undefined;
-      fills.push(fill);
-      continue;
-    }
+    if (hole.kind === "rolledDice") return undefined;
     if (hole.kind === "teleportDestination") {
       fills.push(teleportDestinationFill({ hole }));
       continue;
@@ -607,8 +567,8 @@ describe("spell cast hole frontier catalog", () => {
     expect(replayOutcomes).toMatchInlineSnapshot(`
       [
         "abilityD20TestRollModeSaveGate: [spellTargetList] => [spellTargetList] -> [savingThrowOutcome] -> resolved",
-        "attackBurstSaveDamage: [targetChoice] => [targetChoice] -> [attackRoll] -> [rolledDice] -> [savingThrowOutcome] -> [rolledDice] -> resolved",
-        "chainedSpellAttackDamage: [damageTypeChoice] => [damageTypeChoice] -> [targetChoice] -> [attackRoll] -> [rolledDice] -> [targetChoice] -> unsupported",
+        "attackBurstSaveDamage: [targetChoice] => [targetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
+        "chainedSpellAttackDamage: [damageTypeChoice] => [damageTypeChoice] -> [targetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "chosenDamageResistance: [targetChoice, damageTypeChoice] => [targetChoice] -> [damageTypeChoice] -> resolved",
         "creatureSizeDecrease: [targetChoice] => [targetChoice] -> resolved",
         "creatureSizeIncrease: [targetChoice] => [targetChoice] -> resolved",
@@ -631,15 +591,15 @@ describe("spell cast hole frontier catalog", () => {
         "objectLight: [objectTargetChoice] => [objectTargetChoice] -> resolved",
         "ongoingSpellEnd: [ongoingSpellTargetChoice] => [ongoingSpellTargetChoice] -> unsupported",
         "persistentArmorEffect: [targetChoice] => [targetChoice] -> resolved",
-        "repeatedDamageAllocation: [spellTargetAllocation] => [spellTargetAllocation] -> [rolledDice] -> resolved",
+        "repeatedDamageAllocation: [spellTargetAllocation] => [spellTargetAllocation] -> [rolledDice] -> unsupported",
         "rollModifier: [spellTargetList, targetAbilityChoices] => [spellTargetList] -> [targetAbilityChoices] -> resolved",
         "rollModifier: [targetChoice, abilityChoice] => [targetChoice] -> [abilityChoice] -> resolved",
         "saveGatedCondition: [savingThrowOutcome] => [savingThrowOutcome] -> unsupported",
         "saveGatedCondition: [spellTargetList, conditionChoice] => [spellTargetList] -> [conditionChoice] -> [savingThrowOutcome] -> resolved",
         "saveGatedCondition: [spellTargetList] => [spellTargetList] -> [savingThrowOutcome] -> resolved",
         "saveGatedDamage: [savingThrowOutcome] => [savingThrowOutcome] -> unsupported",
-        "saveGatedDamage: [targetChoice] => [targetChoice] -> [savingThrowOutcome] -> [rolledDice] -> resolved",
-        "scalarBuff: [rolledDice] => [rolledDice] -> resolved",
+        "saveGatedDamage: [targetChoice] => [targetChoice] -> [savingThrowOutcome] -> [rolledDice] -> unsupported",
+        "scalarBuff: [rolledDice] => [rolledDice] -> unsupported",
         "scalarBuff: [spellTargetList] => [spellTargetList] -> resolved",
         "scalarBuff: [targetChoice] => [targetChoice] -> resolved",
         "selfTeleport: [teleportDestination] => [teleportDestination] -> resolved",
@@ -647,12 +607,12 @@ describe("spell cast hole frontier catalog", () => {
         "sleepTargetAdmission: [savingThrowOutcome] => [savingThrowOutcome] -> unsupported",
         "sleetStormAreaHazard: [spellAreaChoice] => [spellAreaChoice] -> resolved",
         "slowActivePenalties: [savingThrowOutcome] => [savingThrowOutcome] -> unsupported",
-        "spellAttackDamage: [targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> resolved",
-        "spellAttackDamage: [targetChoice] => [targetChoice] -> [attackRoll] -> [interruptDecision] -> unsupported | [targetChoice] -> [attackRoll] -> [rolledDice] -> resolved",
-        "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> [attackRoll] -> [rolledDice] -> [attackRoll] -> [rolledDice] -> [attackRoll] -> [rolledDice] -> [attackRoll] -> [rolledDice] -> [attackRoll] -> [rolledDice] -> resolved",
-        "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> [attackRoll] -> [rolledDice] -> [attackRoll] -> [rolledDice] -> [attackRoll] -> [rolledDice] -> [attackRoll] -> [rolledDice] -> resolved",
-        "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> [attackRoll] -> [rolledDice] -> [attackRoll] -> [rolledDice] -> [attackRoll] -> [rolledDice] -> resolved",
-        "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> [attackRoll] -> [rolledDice] -> [attackRoll] -> [rolledDice] -> resolved",
+        "spellAttackDamage: [targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
+        "spellAttackDamage: [targetChoice] => [targetChoice] -> [attackRoll] -> [interruptDecision] -> unsupported | [targetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
+        "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
+        "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
+        "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
+        "spellAttackSequence: [targetChoice, objectTargetChoice, targetChoice, objectTargetChoice, targetChoice, objectTargetChoice] => [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [targetChoice, objectTargetChoice] -> [attackRoll] -> [rolledDice] -> unsupported",
         "webRestraintHazard: [spellAreaChoice] => [spellAreaChoice] -> resolved",
       ]
     `);

@@ -1006,6 +1006,19 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
         Schema.decodeUnknownEither(BattleFillSchema)({
           ...fill,
           value: {
+            speedKind: "walk",
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            additionalSpeedSegments: [],
+          },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleFillSchema)({
+          ...fill,
+          value: {
             ...fill.value,
             brutalStrikeForcefulBlow: {
               kind: "brutalStrikeForcefulBlowStraightTowardTarget",
