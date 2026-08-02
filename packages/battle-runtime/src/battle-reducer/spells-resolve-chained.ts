@@ -942,12 +942,13 @@ export function resolveChainedSpellAttackDamageAct(input: {
     }
   }
 
-  /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+  /* v8 ignore start -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
   return invalidResult(
     input.input.state,
     "invalidFill",
     "Chromatic Orb chain exceeded its spell-slot leap budget.",
   );
+  /* v8 ignore stop */
 }
 
 export function resolveCompletedChainedSpell(input: {

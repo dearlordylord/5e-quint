@@ -1419,12 +1419,13 @@ export function resolveSelectedAttackProcedure<
   } else if (
     !isBrutalStrikeRollDecisionChoice(fillSet.brutalStrikeDecision.value)
   ) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    /* v8 ignore start -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.state,
       "invalidFill",
       "Brutal Strike roll decision must be use or decline.",
     );
+    /* v8 ignore stop */
   }
   const brutalStrikePending =
     replayedBrutalStrikePending ??

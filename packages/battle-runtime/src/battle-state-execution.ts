@@ -6488,14 +6488,14 @@ export type BattleResolutionCandidateInput = {
   readonly fills: readonly BattleFill[];
 };
 export type BattleResolutionInput = BattleResolutionCandidateInput;
-declare const admittedBattleResolutionInput: unique symbol;
-export type AdmittedBattleResolutionInput = BattleResolutionInput & {
-  readonly [admittedBattleResolutionInput]: true;
-};
 export type BattleResolutionInputForSubject<TSubject extends BattleSubject> =
   Omit<BattleResolutionCandidateInput, "subject"> & {
     readonly subject: TSubject;
   };
+declare const admittedBattleResolutionInput: unique symbol;
+export type AdmittedBattleResolutionInput = BattleResolutionInput & {
+  readonly [admittedBattleResolutionInput]: true;
+};
 export type BattleInterruptRouteOptions =
   | {
       readonly replayingInterruptedProcedure?: never;
@@ -6676,7 +6676,19 @@ export type AdmittedMonkFocusFlurryOfBlowsStrikeBattleResolutionInput =
 export type AdmittedDruidWildShapeBattleResolutionInput = WithAdmittedSubject<
   DruidWildShapeBattleResolutionInput,
   "druidWildShape"
->;
+> & {
+  readonly wildShapeAdmission: {
+    readonly actor: CharacterBattleCreatureState;
+    readonly procedure: {
+      readonly kind: "unitFeature";
+      readonly source: CharacterUnitProcedureSource;
+      readonly execution: Extract<
+        UnitFeatureProcedureExecution,
+        { readonly kind: "druidWildShapeKnownForm" }
+      >;
+    };
+  };
+};
 
 export const BATTLE_INVALID_REASON_CODES = [
   "staleSubject",

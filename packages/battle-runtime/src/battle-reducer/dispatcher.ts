@@ -191,7 +191,10 @@ import type {
   BattleResolutionResult,
   BattleState,
 } from "../battle-state-execution.ts";
-import { admitBattleResolutionInput } from "./resolution-admission.ts";
+import {
+  admitBattleResolutionInput,
+  admittedDruidWildShapeInput,
+} from "./resolution-admission.ts";
 import { battleSubjectActionEligibilityIssue } from "./action-eligibility.ts";
 
 type ResolveBattleSubjectInternalOptions = {
@@ -291,10 +294,20 @@ function resolveBattleSubjectInternal(
 ): BattleResolutionResult {
   const normalizedInputState = normalizeEarlyEndedOngoingFeatures(input.state);
   if (normalizedInputState !== input.state) {
-    return resolveBattleSubjectInternal(
-      { ...input, state: normalizedInputState },
-      options,
-    );
+    const normalizedAdmission = admitBattleResolutionInput({
+      ...input,
+      state: normalizedInputState,
+    });
+    /* v8 ignore start -- Normalization changes only active-effect lifecycle state and preserves every admitted procedure binding. */
+    if (normalizedAdmission.tag === "staleCharacterProcedure") {
+      return invalidResult(
+        normalizedInputState,
+        "staleSubject",
+        "The selected character procedure reference is no longer bound to this actor.",
+      );
+    }
+    /* v8 ignore stop */
+    return resolveBattleSubjectInternal(normalizedAdmission.input, options);
   }
   const d20TestNaturalOneRerollResult = resolveD20TestNaturalOneRerollFills({
     resolutionInput: input,
@@ -623,7 +636,9 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       return resolveUnitFeatureHeldWeaponActivation({ ...input, subject });
     }
     if (subject.tag === "druidWildShape") {
-      return resolveDruidWildShapeUnitFeature({ ...input, subject });
+      return resolveDruidWildShapeUnitFeature(
+        admittedDruidWildShapeInput({ ...input, subject }),
+      );
     }
     if (subject.tag === "runtimeCommand" && subject.command === "endTurn") {
       return resolveEndTurnCommand(input);

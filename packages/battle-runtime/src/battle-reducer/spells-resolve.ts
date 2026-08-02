@@ -2946,12 +2946,13 @@ function resolveSpellActInternal(
           : { tag: "spellAttackMiss" as const },
       };
     } else if (fillSet.attackRoll != null) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered hole contract. */
+      /* v8 ignore start -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered hole contract. */
       return invalidResult(
         input.state,
         "invalidFill",
         "Magic Missile does not use an attack roll.",
       );
+      /* v8 ignore stop */
     }
     return {
       tag: "damageContext" as const,

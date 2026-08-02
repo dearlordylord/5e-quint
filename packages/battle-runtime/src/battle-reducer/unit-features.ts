@@ -10,7 +10,6 @@
 
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
-  DRUID_WILD_SHAPE_PROCEDURE_QUERY,
   characterUnitProcedure,
 } from "../character-execution-queries.ts";
 import {
@@ -981,30 +980,7 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
 export function resolveDruidWildShapeUnitFeature(
   input: AdmittedDruidWildShapeBattleResolutionInput,
 ): BattleResolutionResult {
-  const actor = input.state.combatants.get(input.subject.actorId);
-  /* v8 ignore start -- Defensive internal guard: dispatcher actor eligibility proves the routed Wild Shape actor exists and can act. */
-  if (!isCharacterBattleCreatureState(actor)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Druid Wild Shape is no longer available for the current actor.",
-    );
-  }
-  /* v8 ignore stop */
-  const procedure = characterUnitProcedure(
-    actor.origin.execution,
-    input.subject.procedureRef,
-    DRUID_WILD_SHAPE_PROCEDURE_QUERY,
-  );
-  /* v8 ignore start -- Defensive internal guard: subject admission uses the same Wild Shape procedure query before routing. */
-  if (procedure?.kind !== "unitFeature") {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Druid Wild Shape is no longer available for the current actor.",
-    );
-  }
-  /* v8 ignore stop */
+  const { actor, procedure } = input.wildShapeAdmission;
   const source = procedure.source;
   const resource =
     source?.kind === "resourcePool"
@@ -1020,15 +996,6 @@ export function resolveDruidWildShapeUnitFeature(
     );
   }
   const unitFeature = procedure.execution;
-  /* v8 ignore start -- Defensive internal guard: the admitted Wild Shape procedure query accepts only this execution profile. */
-  if (unitFeature.kind !== "druidWildShapeKnownForm") {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Druid Wild Shape is no longer available for the current actor.",
-    );
-  }
-  /* v8 ignore stop */
 
   if (input.subject.action === "dismiss") {
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -1128,12 +1095,13 @@ export function resolveDruidWildShapeUnitFeature(
       fill?.kind !== "wildShapeEquipmentDisposition" ||
       fill.holeId !== expectedEquipmentDispositionHole.holeId
     ) {
-      /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+      /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
       return {
         tag: "invalid" as const,
         message:
           "Druid Wild Shape equipment disposition fill must match the equipment disposition hole.",
       };
+      /* v8 ignore stop */
     }
     const validation = validateWildShapeEquipmentDispositionFill({
       candidates: equipmentCandidates,
@@ -2104,11 +2072,12 @@ function attackActionAreaSaveDamageReplacementFills(
       damageRoll = fill;
       continue;
     }
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the area damage replacement replay holes.`,
     };
+    /* v8 ignore stop */
   }
   return { tag: "ok", value: { savingThrows, damageRoll } };
 }
@@ -3408,11 +3377,12 @@ export function selfBonusActionHealingRollFill(
       continue;
     }
 
-    /* v8 ignore next -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
+    /* v8 ignore start -- Malformed Unit-feature fill set: this validation result rejects duplicate, mismatched, out-of-range, or mechanically contradictory feature fills. */
     return {
       tag: "invalid",
       message: `Fill ${fill.kind} does not match the self-healing replay holes.`,
     };
+    /* v8 ignore stop */
   }
 
   if (healingRoll === undefined) {

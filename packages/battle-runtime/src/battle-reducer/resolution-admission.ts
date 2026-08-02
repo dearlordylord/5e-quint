@@ -9,8 +9,11 @@ import {
 import type { CharacterProcedureBattleSubject } from "../battle-subjects.ts";
 import type {
   AdmittedBattleResolutionInput,
+  AdmittedDruidWildShapeBattleResolutionInput,
   BattleResolutionInput,
+  CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
+import type { CharacterUnitProcedureExecution } from "../character-execution-vocabulary.ts";
 import { isCharacterBattleCreatureState } from "./creature-state-execution.ts";
 import { Match } from "effect";
 
@@ -113,9 +116,56 @@ function admitUnitSubject(
       ? { tag: "admitted", input: asAdmitted(input) }
       : { tag: "staleCharacterProcedure" };
   }
+  if (subject.tag === "druidWildShape") {
+    return unitProcedure?.kind === "unitFeature" &&
+      unitProcedure.execution.kind === "druidWildShapeKnownForm"
+      ? {
+          tag: "admitted",
+          input: asAdmittedDruidWildShape(input, actor, {
+            ...unitProcedure,
+            execution: unitProcedure.execution,
+          }),
+        }
+      : { tag: "staleCharacterProcedure" };
+  }
   return unitProcedure === undefined
     ? { tag: "staleCharacterProcedure" }
     : { tag: "admitted", input: asAdmitted(input) };
+}
+
+function asAdmittedDruidWildShape(
+  input: BattleResolutionInput,
+  actor: CharacterBattleCreatureState,
+  procedure: Extract<
+    CharacterUnitProcedureExecution,
+    { readonly kind: "unitFeature" }
+  > & {
+    readonly execution: Extract<
+      Extract<
+        CharacterUnitProcedureExecution,
+        { readonly kind: "unitFeature" }
+      >["execution"],
+      { readonly kind: "druidWildShapeKnownForm" }
+    >;
+  },
+): AdmittedDruidWildShapeBattleResolutionInput {
+  return {
+    ...input,
+    wildShapeAdmission: { actor, procedure },
+  } as AdmittedDruidWildShapeBattleResolutionInput;
+}
+
+export function admittedDruidWildShapeInput(
+  input: AdmittedBattleResolutionInput & {
+    readonly subject: Extract<
+      UnitProcedureSubject,
+      { readonly tag: "druidWildShape" }
+    >;
+  },
+): AdmittedDruidWildShapeBattleResolutionInput {
+  // The only constructor for an admitted Wild Shape subject attaches this
+  // subject-specific proof before the general dispatcher receives it.
+  return input as AdmittedDruidWildShapeBattleResolutionInput;
 }
 
 function asAdmitted(

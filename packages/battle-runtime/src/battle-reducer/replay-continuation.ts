@@ -386,13 +386,14 @@ function resolveGlyphStoredSpellReplayContinuationFromState(
     );
   }
   /* v8 ignore stop */
-  /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+  /* v8 ignore start -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
   return invalidResult(
     result.state,
     "invalidFill",
     result.message ??
       `Glyph stored spell release replay witness is invalid: ${result.reason}.`,
   );
+  /* v8 ignore stop */
 }
 
 type ActiveInterruptCheckpoint = BattleInterruptCheckpoint & {
