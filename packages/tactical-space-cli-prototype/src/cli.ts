@@ -1,38 +1,66 @@
 import { createInterface } from "node:readline";
 import {
+  isMovementProfile,
+  movementEvaluatorFor,
+  MOVEMENT_PROFILES,
+  type MovementProfile,
+} from "@dnd/tactical-adjudicator-prototype";
+import {
   arenaSnapshot,
   cell,
   createArena,
   createSpace,
+  findRoute,
   footprint,
-  moveToken,
   observeFrom,
   parseAnchorId,
   parseBoundaryId,
   parseCellFeet,
   placeToken,
-  reachableCells,
   relationBetween,
   removeToken,
   setDoorState,
   snapshot,
+  traverseRoute,
   type BoundaryId,
   type BoundaryDefinition,
+  type CellDefinition,
   type CellCoordinate,
   type DoorState,
   type SpatialObservation,
   type SpatialRelation,
+  type SpatialRoute,
   type SpatialResult,
   type SquareArenaDefinition,
-} from "./spatial.ts";
+} from "@dnd/tactical-space-prototype";
 
-const MAP_MIN_X = -2;
-const MAP_MAX_X = 2;
+const MAP_MIN_X = -4;
+const MAP_MAX_X = 4;
 const MAP_SOUTH_Y = -18;
 const MAP_NORTH_Y = 0;
 const GATE_NORTH_Y = -9;
 const GATE_SOUTH_Y = GATE_NORTH_Y - 1;
 const CELL_QUANTUM_FEET = requireOk(parseCellFeet(5));
+const ROUTE_EXPERIMENT_DESTINATION = cell(0, -8);
+const CLEAR_ROUTE = [
+  cell(0, 0),
+  cell(-1, 0),
+  cell(-2, -1),
+  cell(-3, -2),
+  cell(-3, -3),
+  cell(-3, -4),
+  cell(-3, -5),
+  cell(-3, -6),
+  cell(-2, -7),
+  cell(-1, -8),
+  ROUTE_EXPERIMENT_DESTINATION,
+];
+const CLEAR_ROUTE_KEYS = new Set(CLEAR_ROUTE.map(formatCell));
+const DIFFICULT_TERRAIN = new Set(
+  rectangle(MAP_MIN_X, MAP_MAX_X, -8, 0, 0)
+    .filter((coordinate) => !CLEAR_ROUTE_KEYS.has(formatCell(coordinate)))
+    .map(formatCell),
+);
 
 const gate = requireOk(parseBoundaryId("south-gate"));
 const groundCells = rectangle(
@@ -79,6 +107,9 @@ const arenaDefinition: SquareArenaDefinition = {
   },
   cells: [...groundCells, ...balconyCells].map((coordinate) => ({
     coordinate,
+    terrain: DIFFICULT_TERRAIN.has(formatCell(coordinate))
+      ? "difficult"
+      : "ordinary",
   })),
   boundaries: [
     ...gateWall,
@@ -95,12 +126,12 @@ const arenaDefinition: SquareArenaDefinition = {
     {
       from: cell(2, -8, 0),
       to: cell(2, -8, 1),
-      costFeet: requireOk(parseCellFeet(15)),
+      distanceFeet: requireOk(parseCellFeet(15)),
     },
     {
       from: cell(2, -8, 1),
       to: cell(2, -8, 0),
-      costFeet: requireOk(parseCellFeet(15)),
+      distanceFeet: requireOk(parseCellFeet(15)),
     },
   ],
   anchors: [
@@ -140,7 +171,8 @@ state = requireOk(placeToken(state, "ogre", cell(1, -15), footprint(2, 2)));
 state = requireOk(placeToken(state, "archer", cell(2, -6, 1), footprint(1, 1)));
 
 let focus = "fighter";
-let movementBudget = requireOk(parseCellFeet(30));
+let movementProfile: MovementProfile = "ordinary";
+let routeDestination = ROUTE_EXPERIMENT_DESTINATION;
 let status = `Ready. The orc is exactly ${MAP_NORTH_Y - MAP_SOUTH_Y} cells south of the fighter.`;
 
 const terminal = createInterface({
@@ -156,22 +188,21 @@ terminal.on("line", (line) => {
   if (command === "focus" && args[0] !== undefined) {
     focus = args[0];
     status = `Focused ${focus}.`;
-  } else if (command === "budget" && args[0] !== undefined) {
-    const parsedBudget = parseCellFeet(Number(args[0]));
-    if (parsedBudget.tag === "ok") {
-      movementBudget = parsedBudget.value;
-      status = `Observation movement budget is ${movementBudget} ft.`;
-    } else status = parsedBudget.issue.message;
-  } else if (command === "move" && args.length >= 3) {
-    const destination = coordinateFrom(args);
-    const parsedBudget = parseCellFeet(Number(args[3] ?? movementBudget));
-    if (parsedBudget.tag === "error") status = parsedBudget.issue.message;
+  } else if (command === "profile" && isMovementProfile(args[0])) {
+    movementProfile = args[0];
+    status = `Adjudicator traversal profile is ${movementProfile}.`;
+  } else if (command === "route" && args.length >= 3) {
+    routeDestination = coordinateFrom(args);
+    status = `Previewing route to ${formatCell(routeDestination)}.`;
+  } else if (command === "move") {
+    const preview = previewRoute();
+    if (preview.tag === "error") status = preview.issue.message;
     else {
-      const moved = moveToken(state, focus, destination, parsedBudget.value);
-      if (moved.tag === "ok") {
-        state = moved.value.state;
-        status = `Moved ${focus} ${moved.value.costFeet} ft via ${moved.value.path.map(formatCell).join(" -> ")}.`;
-      } else status = moved.issue.message;
+      const traversed = traverseRoute(state, preview.value);
+      if (traversed.tag === "ok") {
+        state = traversed.value;
+        status = `Traversed ${preview.value.distanceFeet} geometric ft with adjudicator weight ${preview.value.weight}.`;
+      } else status = traversed.issue.message;
     }
   } else if (
     command === "door" &&
@@ -217,7 +248,7 @@ function render(): void {
   const arenaView = arenaSnapshot(arena);
   const stateView = snapshot(state);
   const observation = observeFrom(state, focus);
-  const reachable = reachableCells(state, focus, movementBudget);
+  const routePreview = previewRoute();
   const gateState = requireDoorState(stateView.doors, gate);
 
   process.stdout.write(
@@ -227,9 +258,17 @@ function render(): void {
     `${dim(`square-8 · ${arenaView.topology.quantumFeet} ft cells · ${arenaView.policies.quantizedDistance} distance · revision ${stateView.revision}`)}\n\n`,
   );
   process.stdout.write(
-    `${bold("GROUND LEVEL")} ${dim("north is up; @ is focus")}\n`,
+    `${bold("GROUND LEVEL")} ${dim("north is up; @ focus; ~ Difficult Terrain; * preview route")}\n`,
   );
-  process.stdout.write(renderGroundMap(stateView.placements, focus, gateState));
+  process.stdout.write(
+    renderGroundMap(
+      arenaView.cells,
+      stateView.placements,
+      focus,
+      gateState,
+      routePreview.tag === "ok" ? routePreview.value : null,
+    ),
+  );
 
   process.stdout.write(`\n${bold("CANONICAL STATE")}\n`);
   process.stdout.write(`door ${gate}: ${gateState}\n`);
@@ -251,11 +290,20 @@ function render(): void {
         : `${String(placement.token)}: ${relation.issue.message}\n`,
     );
   }
+
   process.stdout.write(
-    reachable.tag === "ok"
-      ? `${dim(`occupancy-aware reachable endpoints at ${movementBudget} ft: ${reachable.value.length}`)}\n`
-      : `${reachable.issue.message}\n`,
+    `\n${bold("ROUTE PREVIEW")} ${dim("evaluator supplied by deterministic adjudicator")}\n`,
   );
+  process.stdout.write(`profile: ${movementProfile}\n`);
+  process.stdout.write(`destination: ${formatCell(routeDestination)}\n`);
+  if (routePreview.tag === "error") {
+    process.stdout.write(`${routePreview.issue.message}\n`);
+  } else {
+    process.stdout.write(
+      `geometry: ${routePreview.value.distanceFeet} ft; adjudicator weight: ${routePreview.value.weight}\n`,
+    );
+    process.stdout.write(`${renderRoute(routePreview.value)}\n`);
+  }
 
   process.stdout.write(`\n${bold(`PLAYER OBSERVATION: ${focus}`)}\n`);
   if (observation.tag === "error") {
@@ -273,13 +321,16 @@ function render(): void {
     `${bold("focus <token>")}                 ${dim("change observer/mover")}\n`,
   );
   process.stdout.write(
-    `${bold("move <x> <y> <level> [feet]")}   ${dim("move focus using a derived path")}\n`,
+    `${bold("profile <name>")}                ${dim(MOVEMENT_PROFILES.join(" | "))}\n`,
+  );
+  process.stdout.write(
+    `${bold("route <x> <y> <level>")}         ${dim("choose preview destination")}\n`,
+  );
+  process.stdout.write(
+    `${bold("move")}                          ${dim("commit the current revision-bound route")}\n`,
   );
   process.stdout.write(
     `${bold("door <open|closed>")}           ${dim("change one dynamic boundary")}\n`,
-  );
-  process.stdout.write(
-    `${bold("budget <feet>")}                ${dim("change privileged reachability query")}\n`,
   );
   process.stdout.write(
     `${bold("add <id> <x> <y> <level> [w h]")} ${dim("place a footprint")}\n`,
@@ -295,12 +346,26 @@ function render(): void {
 
 function renderRelation(relation: SpatialRelation<string>): string {
   const path =
-    relation.range.topologyRouteCostFeet === null
+    relation.range.routeLengthFeet === null
       ? "no route"
-      : `${relation.range.topologyRouteCostFeet} ft topology route`;
+      : `${relation.range.routeLengthFeet} ft route length`;
   const anchor =
     relation.anchor === null ? "unanchored" : relation.anchor.label;
   return `${String(relation.target).padEnd(8)} ${relation.arenaDirection.octant.padEnd(10)} ${relation.range.quantizedDistanceFeet} ft quantized; ${path}; visibility ${relation.visibility}; ${coverLabel(relation.cover)}; ${anchor}`;
+}
+
+function renderRoute(route: SpatialRoute<string>): string {
+  if (route.steps.length === 0) return "already at destination";
+  return route.steps
+    .map((step) => {
+      const terrain = step.enteredCells.some(
+        (entered) => entered.terrain === "difficult",
+      )
+        ? "difficult"
+        : "ordinary";
+      return `${formatCell(step.to)} [${terrain}; ${step.distanceFeet} ft]`;
+    })
+    .join(" -> ");
 }
 
 function coverLabel(cover: SpatialRelation<string>["cover"]): string {
@@ -308,10 +373,21 @@ function coverLabel(cover: SpatialRelation<string>["cover"]): string {
 }
 
 function renderGroundMap(
+  cells: readonly CellDefinition[],
   placements: readonly SpatialObservation<string>["viewer"][],
   focusedToken: string,
   doorState: DoorState,
+  route: SpatialRoute<string> | null,
 ): string {
+  const terrain = new Map(
+    cells.map((definition) => [
+      formatCell(definition.coordinate),
+      definition.terrain,
+    ]),
+  );
+  const routeCells = new Set(
+    route?.steps.map((step) => formatCell(step.to)) ?? [],
+  );
   const occupied = new Map<string, string>();
   for (const placement of placements) {
     for (let y = 0; y < placement.footprint.heightCells; y += 1) {
@@ -334,13 +410,51 @@ function renderGroundMap(
   const rows: string[] = [];
   for (let y = MAP_NORTH_Y; y >= MAP_SOUTH_Y; y -= 1) {
     const cells = inclusiveIntegers(MAP_MIN_X, MAP_MAX_X)
-      .map((x) => occupied.get(formatCell(cell(x, y))) ?? "·")
+      .map((x) => {
+        const key = formatCell(cell(x, y));
+        return (
+          occupied.get(key) ??
+          (routeCells.has(key) ? "*" : undefined) ??
+          (terrain.get(key) === "difficult" ? "~" : "·")
+        );
+      })
       .join(" ");
     rows.push(`${String(y).padStart(3)}  ${cells}`);
-    if (y === GATE_NORTH_Y)
-      rows.push(`     ────${doorState === "open" ? "╫" : "█"}────  south gate`);
+    if (y === GATE_NORTH_Y) {
+      const gateSide = "─".repeat(MAP_MAX_X - MAP_MIN_X);
+      rows.push(
+        `     ${gateSide}${doorState === "open" ? "╫" : "█"}${gateSide}  south gate`,
+      );
+    }
   }
   return `${rows.join("\n")}\n`;
+}
+
+function previewRoute(): SpatialResult<SpatialRoute<string>> {
+  const placement = snapshot(state).placements.find(
+    (candidate) => candidate.token === focus,
+  );
+  if (placement === undefined) return cliError(`Unknown token: ${focus}`);
+  if (
+    placement.footprint.widthCells !== 1 ||
+    placement.footprint.heightCells !== 1
+  ) {
+    return cliError(
+      "The evaluator comparison intentionally supports only the one-cell fighter.",
+    );
+  }
+  return findRoute(state, {
+    token: focus,
+    destination: routeDestination,
+    evaluateStep: movementEvaluatorFor(movementProfile),
+  });
+}
+
+function cliError(message: string): SpatialResult<never> {
+  return Object.freeze({
+    tag: "error",
+    issue: Object.freeze({ message }),
+  });
 }
 
 function rectangle(

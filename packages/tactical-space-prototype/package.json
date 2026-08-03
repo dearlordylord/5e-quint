@@ -3,8 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "exports": {
+    ".": "./src/spatial.ts"
+  },
   "scripts": {
-    "start": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit"
   }
 }

@@ -1,5 +1,6 @@
 const arenaBrand: unique symbol = Symbol("TacticalArena");
 const stateBrand: unique symbol = Symbol("TacticalSpace");
+const routeBrand: unique symbol = Symbol("SpatialRoute");
 
 export type CellFeet = number & { readonly __cellFeet: unique symbol };
 export type BoundaryId = string & { readonly __boundaryId: unique symbol };
@@ -16,6 +17,9 @@ export const COVER_VALUES = [
 ] as const;
 export type Cover = (typeof COVER_VALUES)[number];
 
+export const TERRAIN_KINDS = ["ordinary", "difficult"] as const;
+export type TerrainKind = (typeof TERRAIN_KINDS)[number];
+
 export type CellCoordinate = Readonly<{
   readonly x: number;
   readonly y: number;
@@ -29,6 +33,7 @@ export type Footprint = Readonly<{
 
 export type CellDefinition = Readonly<{
   readonly coordinate: CellCoordinate;
+  readonly terrain: TerrainKind;
 }>;
 
 export type StaticBoundaryDefinition = Readonly<{
@@ -54,7 +59,7 @@ export type BoundaryDefinition =
 export type VerticalLinkDefinition = Readonly<{
   readonly from: CellCoordinate;
   readonly to: CellCoordinate;
-  readonly costFeet: CellFeet;
+  readonly distanceFeet: CellFeet;
 }>;
 
 export type AnchorDefinition = Readonly<{
@@ -106,7 +111,7 @@ export type TokenPlacement<TokenId> = Readonly<{
 export type ArenaSnapshot = Readonly<{
   readonly topology: SquareArenaDefinition["topology"];
   readonly policies: SquareArenaDefinition["policies"];
-  readonly cells: readonly CellCoordinate[];
+  readonly cells: readonly CellDefinition[];
   readonly boundaries: readonly BoundaryDefinition[];
   readonly verticalLinks: readonly VerticalLinkDefinition[];
   readonly anchors: readonly AnchorDefinition[];
@@ -121,9 +126,41 @@ export type SpatialSnapshot<TokenId> = Readonly<{
   readonly placements: readonly TokenPlacement<TokenId>[];
 }>;
 
-export type ReachableCell = Readonly<{
-  readonly coordinate: CellCoordinate;
-  readonly costFeet: CellFeet;
+export type RouteStep = Readonly<{
+  readonly from: CellCoordinate;
+  readonly to: CellCoordinate;
+  readonly distanceFeet: CellFeet;
+  readonly enteredCells: readonly Readonly<{
+    readonly coordinate: CellCoordinate;
+    readonly terrain: TerrainKind;
+  }>[];
+  readonly transition:
+    | Readonly<{ readonly tag: "horizontal" }>
+    | Readonly<{ readonly tag: "vertical-link" }>;
+}>;
+
+export type StepEvaluation =
+  | Readonly<{ readonly tag: "passable"; readonly weight: number }>
+  | Readonly<{ readonly tag: "blocked" }>;
+
+/** Must be pure and deterministic for stable search and replay. */
+export type TraversalEvaluator = (step: RouteStep) => StepEvaluation;
+
+export type RouteRequest<TokenId> = Readonly<{
+  readonly token: TokenId;
+  readonly destination: CellCoordinate;
+  readonly evaluateStep: TraversalEvaluator;
+}>;
+
+export type SpatialRoute<TokenId> = Readonly<{
+  readonly [routeBrand]: TacticalArena;
+  readonly spatialRevision: number;
+  readonly token: TokenId;
+  readonly origin: CellCoordinate;
+  readonly destination: CellCoordinate;
+  readonly steps: readonly RouteStep[];
+  readonly distanceFeet: CellFeet;
+  readonly weight: number;
 }>;
 
 export type SpatialRelation<
@@ -155,7 +192,7 @@ export type SpatialRelation<
     readonly quantizedDistanceFeet: CellFeet;
     readonly centerHorizontalFeet: number;
     readonly levelSeparationFeet: number;
-    readonly topologyRouteCostFeet: CellFeet | null;
+    readonly routeLengthFeet: CellFeet | null;
   }>;
   readonly visibility: Visibility;
   readonly cover: Cover;
@@ -171,7 +208,10 @@ export type SpatialObservation<TokenId> = Readonly<{
   readonly entities: readonly SpatialRelation<TokenId, "clear">[];
 }>;
 
-type StoredCell = Readonly<{ readonly coordinate: CellCoordinate }>;
+type StoredCell = Readonly<{
+  readonly coordinate: CellCoordinate;
+  readonly terrain: TerrainKind;
+}>;
 
 type StoredBoundary = Readonly<{
   readonly definition: BoundaryDefinition;
@@ -180,7 +220,7 @@ type StoredBoundary = Readonly<{
 type StoredVerticalLink = Readonly<{
   readonly fromKey: string;
   readonly toKey: string;
-  readonly costFeet: CellFeet;
+  readonly distanceFeet: CellFeet;
 }>;
 
 type StoredAnchor = Readonly<{
@@ -211,8 +251,15 @@ type BoundaryFacts = Readonly<{
 }>;
 
 type PathResult = Readonly<{
-  readonly costFeet: CellFeet;
-  readonly path: readonly CellCoordinate[];
+  readonly weight: number;
+  readonly distanceFeet: CellFeet;
+  readonly steps: readonly RouteStep[];
+}>;
+
+type WeightedEdge = Readonly<{
+  readonly key: string;
+  readonly weight: number;
+  readonly step: RouteStep;
 }>;
 
 const arenaData = new WeakMap<TacticalArena, ArenaData>();
@@ -258,11 +305,19 @@ export function createArena(
     if (!isCoordinate(candidate.coordinate)) {
       return error("Every cell coordinate must contain integers.");
     }
+    if (!TERRAIN_KINDS.some((terrain) => terrain === candidate.terrain)) {
+      return error(
+        `Cell ${cellKey(candidate.coordinate)} has unknown terrain ${String(candidate.terrain)}.`,
+      );
+    }
     const key = cellKey(candidate.coordinate);
     if (cells.has(key)) return error(`Duplicate cell: ${key}`);
     cells.set(
       key,
-      Object.freeze({ coordinate: freezeCell(candidate.coordinate) }),
+      Object.freeze({
+        coordinate: freezeCell(candidate.coordinate),
+        terrain: candidate.terrain,
+      }),
     );
   }
   if (cells.size === 0) return error("Arena must contain at least one cell.");
@@ -308,15 +363,19 @@ export function createArena(
     if (fromKey === toKey || link.from.level === link.to.level) {
       return error(`Vertical link ${fromKey} -> ${toKey} must change level.`);
     }
-    if (!isPositiveInteger(link.costFeet)) {
-      return error(`Vertical link ${fromKey} -> ${toKey} has invalid cost.`);
+    if (!isPositiveInteger(link.distanceFeet)) {
+      return error(
+        `Vertical link ${fromKey} -> ${toKey} has invalid distance.`,
+      );
     }
     const directedKey = `${fromKey}->${toKey}`;
     if (verticalPairs.has(directedKey))
       return error(`Duplicate vertical link: ${directedKey}`);
     verticalPairs.add(directedKey);
     const outgoing = verticalLinks.get(fromKey) ?? [];
-    outgoing.push(Object.freeze({ fromKey, toKey, costFeet: link.costFeet }));
+    outgoing.push(
+      Object.freeze({ fromKey, toKey, distanceFeet: link.distanceFeet }),
+    );
     verticalLinks.set(fromKey, outgoing);
   }
 
@@ -381,7 +440,7 @@ export function arenaSnapshot(arena: TacticalArena): ArenaSnapshot {
   return Object.freeze({
     topology: definition.topology,
     policies: definition.policies,
-    cells: Object.freeze(definition.cells.map((item) => item.coordinate)),
+    cells: definition.cells,
     boundaries: definition.boundaries,
     verticalLinks: definition.verticalLinks,
     anchors: definition.anchors,
@@ -459,76 +518,94 @@ export function setDoorState<TokenId>(
   return ok(makeSpace(data.arena, data.revision + 1, doors, data.placements));
 }
 
-export function moveToken<TokenId>(
+export function findRoute<TokenId>(
   state: TacticalSpace<TokenId>,
-  token: TokenId,
-  destination: CellCoordinate,
-  budgetFeet: CellFeet,
-): SpatialResult<
-  Readonly<{
-    readonly state: TacticalSpace<TokenId>;
-    readonly costFeet: CellFeet;
-    readonly path: readonly CellCoordinate[];
-  }>
-> {
+  request: RouteRequest<TokenId>,
+): SpatialResult<SpatialRoute<TokenId>> {
   const data = requireSpace(state);
-  const placement = data.placements.get(token);
-  if (placement === undefined) return error(`Unknown token: ${String(token)}`);
-  const result = shortestPath(
+  const placement = data.placements.get(request.token);
+  if (placement === undefined)
+    return error(`Unknown token: ${String(request.token)}`);
+  const searched = shortestPath(
     data,
     placement.origin,
-    destination,
+    request.destination,
     placement.footprint,
-    token,
+    request.token,
     true,
+    request.evaluateStep,
   );
-  if (result === null)
-    return error(`No traversable route to ${cellKey(destination)}.`);
-  if (result.costFeet > budgetFeet) {
-    return error(
-      `Move costs ${result.costFeet} ft; budget is ${budgetFeet} ft.`,
-    );
-  }
-  const placements = new Map(data.placements);
-  placements.set(token, freezePlacement({ ...placement, origin: destination }));
+  if (searched.tag === "error") return searched;
+  if (searched.value === null)
+    return error(`No traversable route to ${cellKey(request.destination)}.`);
   return ok(
     Object.freeze({
-      state: makeSpace(data.arena, data.revision + 1, data.doors, placements),
-      costFeet: result.costFeet,
-      path: result.path,
+      spatialRevision: data.revision,
+      [routeBrand]: data.arena,
+      token: request.token,
+      origin: placement.origin,
+      destination: freezeCell(request.destination),
+      steps: searched.value.steps,
+      distanceFeet: searched.value.distanceFeet,
+      weight: searched.value.weight,
     }),
   );
 }
 
-export function reachableCells<TokenId>(
+export function traverseRoute<TokenId>(
   state: TacticalSpace<TokenId>,
-  token: TokenId,
-  budgetFeet: CellFeet,
-): SpatialResult<readonly ReachableCell[]> {
+  route: SpatialRoute<TokenId>,
+): SpatialResult<TacticalSpace<TokenId>> {
   const data = requireSpace(state);
-  const placement = data.placements.get(token);
-  if (placement === undefined) return error(`Unknown token: ${String(token)}`);
-  const reachable: ReachableCell[] = [];
-  for (const candidate of requireArena(data.arena).cells.values()) {
-    if (sameCell(candidate.coordinate, placement.origin)) continue;
-    const path = shortestPath(
-      data,
-      placement.origin,
-      candidate.coordinate,
-      placement.footprint,
-      placement.token,
-      true,
+  if (route[routeBrand] !== data.arena) {
+    return error("Route belongs to a different arena.");
+  }
+  if (route.spatialRevision !== data.revision) {
+    return error(
+      `Route spatial revision ${route.spatialRevision} is stale; state revision is ${data.revision}.`,
     );
-    if (path !== null && path.costFeet <= budgetFeet) {
-      reachable.push(
-        Object.freeze({
-          coordinate: candidate.coordinate,
-          costFeet: path.costFeet,
-        }),
+  }
+  const placement = data.placements.get(route.token);
+  if (placement === undefined)
+    return error(`Unknown token: ${String(route.token)}`);
+  if (!sameCell(placement.origin, route.origin)) {
+    return error("Route origin does not match the token placement.");
+  }
+
+  let current = placement.origin;
+  for (const suppliedStep of route.steps) {
+    if (!sameCell(suppliedStep.from, current)) {
+      return error(`Route is discontinuous at ${cellKey(current)}.`);
+    }
+    const edges = movementEdges(
+      data,
+      current,
+      placement.footprint,
+      route.token,
+      true,
+      distanceEvaluator,
+    );
+    if (edges.tag === "error") return edges;
+    const matching = edges.value.find((edge) =>
+      sameCell(edge.step.to, suppliedStep.to),
+    );
+    if (matching === undefined) {
+      return error(
+        `Route step ${cellKey(current)} -> ${cellKey(suppliedStep.to)} is no longer traversable.`,
       );
     }
+    current = matching.step.to;
   }
-  return ok(Object.freeze(reachable.sort(compareReachable)));
+  if (!sameCell(current, route.destination)) {
+    return error("Route destination does not match its final step.");
+  }
+  if (sameCell(placement.origin, route.destination)) return ok(state);
+  const placements = new Map(data.placements);
+  placements.set(
+    route.token,
+    freezePlacement({ ...placement, origin: route.destination }),
+  );
+  return ok(makeSpace(data.arena, data.revision + 1, data.doors, placements));
 }
 
 export function relationBetween<TokenId>(
@@ -582,14 +659,20 @@ function deriveRelation<TokenId>(
   const deltaY = targetCenter.y - fromCenter.y;
   const deltaLevel = targetCenter.level - fromCenter.level;
   const lineFacts = bestLineFacts(data, from, target);
-  const path = shortestPath(
+  const searched = shortestPath(
     data,
     from.origin,
     target.origin,
     from.footprint,
     from.token,
     false,
+    distanceEvaluator,
   );
+  if (searched.tag === "error") {
+    throw new Error(
+      `Internal invariant: distance evaluator failed: ${searched.issue.message}`,
+    );
+  }
   return Object.freeze({
     from: from.token,
     target: target.token,
@@ -600,7 +683,7 @@ function deriveRelation<TokenId>(
       quantizedDistanceFeet: minimumQuantizedDistance(from, target, quantum),
       centerHorizontalFeet: round(Math.hypot(deltaX, deltaY) * quantum),
       levelSeparationFeet: Math.abs(deltaLevel) * quantum,
-      topologyRouteCostFeet: path?.costFeet ?? null,
+      routeLengthFeet: searched.value?.distanceFeet ?? null,
     }),
     visibility: lineFacts.visibility,
     cover: lineFacts.cover,
@@ -699,62 +782,76 @@ function shortestPath<TokenId>(
   tokenFootprint: Footprint,
   movingToken: TokenId,
   considerOccupants: boolean,
-): PathResult | null {
+  evaluateStep: TraversalEvaluator,
+): SpatialResult<PathResult | null> {
   if (
     !footprintFitsArena(data.arena, destination, tokenFootprint) ||
     !footprintHasClearance(data, destination, tokenFootprint)
   )
-    return null;
+    return ok(null);
   if (
     considerOccupants &&
     placementIssue(data, destination, tokenFootprint, movingToken) !== null
   )
-    return null;
+    return ok(null);
   const originKey = cellKey(origin);
   const destinationKey = cellKey(destination);
   const frontier: Array<
-    Readonly<{ readonly key: string; readonly cost: number }>
-  > = [Object.freeze({ key: originKey, cost: 0 })];
-  const costs = new Map<string, number>([[originKey, 0]]);
-  const previous = new Map<string, string>();
+    Readonly<{ readonly key: string; readonly weight: number }>
+  > = [Object.freeze({ key: originKey, weight: 0 })];
+  const weights = new Map<string, number>([[originKey, 0]]);
+  const previous = new Map<
+    string,
+    Readonly<{ readonly key: string; readonly step: RouteStep }>
+  >();
 
   while (frontier.length > 0) {
     frontier.sort(
       (first, second) =>
-        first.cost - second.cost || first.key.localeCompare(second.key),
+        first.weight - second.weight || first.key.localeCompare(second.key),
     );
     const current = frontier.shift();
     if (current === undefined) break;
-    if (current.cost !== costs.get(current.key)) continue;
+    if (current.weight !== weights.get(current.key)) continue;
     if (current.key === destinationKey) {
-      return Object.freeze({
-        costFeet: computedFeet(current.cost),
-        path: Object.freeze(
-          reconstructPath(requireArena(data.arena), previous, destinationKey),
-        ),
-      });
+      const steps = reconstructSteps(previous, destinationKey);
+      return ok(
+        Object.freeze({
+          weight: current.weight,
+          distanceFeet: computedFeet(
+            steps.reduce((total, step) => total + step.distanceFeet, 0),
+          ),
+          steps,
+        }),
+      );
     }
     const currentCell = requireArena(data.arena).cells.get(
       current.key,
     )?.coordinate;
     if (currentCell === undefined) continue;
-    for (const edge of movementEdges(
+    const edges = movementEdges(
       data,
       currentCell,
       tokenFootprint,
       movingToken,
       considerOccupants,
-    )) {
-      const nextCost = current.cost + edge.costFeet;
-      const knownCost = costs.get(edge.key);
-      if (knownCost === undefined || nextCost < knownCost) {
-        costs.set(edge.key, nextCost);
-        previous.set(edge.key, current.key);
-        frontier.push(Object.freeze({ key: edge.key, cost: nextCost }));
+      evaluateStep,
+    );
+    if (edges.tag === "error") return edges;
+    for (const edge of edges.value) {
+      const nextWeight = current.weight + edge.weight;
+      const knownWeight = weights.get(edge.key);
+      if (knownWeight === undefined || nextWeight < knownWeight) {
+        weights.set(edge.key, nextWeight);
+        previous.set(
+          edge.key,
+          Object.freeze({ key: current.key, step: edge.step }),
+        );
+        frontier.push(Object.freeze({ key: edge.key, weight: nextWeight }));
       }
     }
   }
-  return null;
+  return ok(null);
 }
 
 function movementEdges<TokenId>(
@@ -763,11 +860,10 @@ function movementEdges<TokenId>(
   tokenFootprint: Footprint,
   movingToken: TokenId,
   considerOccupants: boolean,
-): readonly Readonly<{ readonly key: string; readonly costFeet: CellFeet }>[] {
+  evaluateStep: TraversalEvaluator,
+): SpatialResult<readonly WeightedEdge[]> {
   const quantum = requireArena(data.arena).definition.topology.quantumFeet;
-  const result: Array<
-    Readonly<{ readonly key: string; readonly costFeet: CellFeet }>
-  > = [];
+  const result: WeightedEdge[] = [];
   for (let deltaY = -1; deltaY <= 1; deltaY += 1) {
     for (let deltaX = -1; deltaX <= 1; deltaX += 1) {
       if (deltaX === 0 && deltaY === 0) continue;
@@ -782,9 +878,29 @@ function movementEdges<TokenId>(
           placementIssue(data, destination, tokenFootprint, movingToken) ===
             null)
       ) {
-        result.push(
-          Object.freeze({ key: cellKey(destination), costFeet: quantum }),
+        const step = makeRouteStep(
+          data.arena,
+          origin,
+          destination,
+          tokenFootprint,
+          quantum,
+          "horizontal",
         );
+        const evaluated = evaluateStep(step);
+        if (evaluated.tag === "passable") {
+          if (!isValidWeight(evaluated.weight)) {
+            return error(
+              `Traversal evaluator returned invalid weight ${evaluated.weight}.`,
+            );
+          }
+          result.push(
+            Object.freeze({
+              key: cellKey(destination),
+              weight: evaluated.weight,
+              step,
+            }),
+          );
+        }
       }
     }
   }
@@ -801,16 +917,35 @@ function movementEdges<TokenId>(
         movingToken,
       ) === null;
     if (geometryFits && occupancyFits) {
-      result.push(
-        Object.freeze({
-          key: cellKey(vertical.destination),
-          costFeet: vertical.costFeet,
-        }),
+      const step = makeRouteStep(
+        data.arena,
+        origin,
+        vertical.destination,
+        tokenFootprint,
+        vertical.distanceFeet,
+        "vertical-link",
       );
+      const evaluated = evaluateStep(step);
+      if (evaluated.tag === "passable") {
+        if (!isValidWeight(evaluated.weight)) {
+          return error(
+            `Traversal evaluator returned invalid weight ${evaluated.weight}.`,
+          );
+        }
+        result.push(
+          Object.freeze({
+            key: cellKey(vertical.destination),
+            weight: evaluated.weight,
+            step,
+          }),
+        );
+      }
     }
   }
-  return Object.freeze(
-    result.sort((first, second) => first.key.localeCompare(second.key)),
+  return ok(
+    Object.freeze(
+      result.sort((first, second) => first.key.localeCompare(second.key)),
+    ),
   );
 }
 
@@ -854,14 +989,14 @@ function verticalMoves(
   tokenFootprint: Footprint,
 ): readonly Readonly<{
   readonly destination: CellCoordinate;
-  readonly costFeet: CellFeet;
+  readonly distanceFeet: CellFeet;
 }>[] {
   const data = requireArena(arena);
   const firstLinks = data.verticalLinks.get(cellKey(origin)) ?? [];
   const result: Array<
     Readonly<{
       readonly destination: CellCoordinate;
-      readonly costFeet: CellFeet;
+      readonly distanceFeet: CellFeet;
     }>
   > = [];
   for (const firstLink of firstLinks) {
@@ -872,7 +1007,7 @@ function verticalMoves(
       y: firstTarget.y - origin.y,
       level: firstTarget.level - origin.level,
     };
-    let maximumCost = firstLink.costFeet;
+    let maximumDistance = firstLink.distanceFeet;
     let complete = true;
     for (const occupied of occupiedCells(origin, tokenFootprint)) {
       const expected = cell(
@@ -887,7 +1022,9 @@ function verticalMoves(
         complete = false;
         break;
       }
-      maximumCost = computedFeet(Math.max(maximumCost, matching.costFeet));
+      maximumDistance = computedFeet(
+        Math.max(maximumDistance, matching.distanceFeet),
+      );
     }
     if (complete) {
       result.push(
@@ -897,13 +1034,52 @@ function verticalMoves(
             origin.y + delta.y,
             origin.level + delta.level,
           ),
-          costFeet: maximumCost,
+          distanceFeet: maximumDistance,
         }),
       );
     }
   }
   return Object.freeze(result);
 }
+
+function makeRouteStep(
+  arena: TacticalArena,
+  from: CellCoordinate,
+  to: CellCoordinate,
+  tokenFootprint: Footprint,
+  distanceFeet: CellFeet,
+  transitionTag: RouteStep["transition"]["tag"],
+): RouteStep {
+  const data = requireArena(arena);
+  const previousCells = new Set(
+    occupiedCells(from, tokenFootprint).map(cellKey),
+  );
+  const enteredCells = occupiedCells(to, tokenFootprint)
+    .filter((coordinate) => !previousCells.has(cellKey(coordinate)))
+    .map((coordinate) => {
+      const terrain = data.cells.get(cellKey(coordinate))?.terrain;
+      if (terrain === undefined) {
+        throw new Error(
+          `Internal invariant: route enters missing cell ${cellKey(coordinate)}.`,
+        );
+      }
+      return Object.freeze({ coordinate, terrain });
+    });
+  const transition: RouteStep["transition"] =
+    transitionTag === "horizontal"
+      ? Object.freeze({ tag: "horizontal" })
+      : Object.freeze({ tag: "vertical-link" });
+  return Object.freeze({
+    from: freezeCell(from),
+    to: freezeCell(to),
+    distanceFeet,
+    enteredCells: Object.freeze(enteredCells),
+    transition,
+  });
+}
+
+const distanceEvaluator: TraversalEvaluator = (step) =>
+  Object.freeze({ tag: "passable", weight: step.distanceFeet });
 
 function isTraversalOpen<TokenId>(
   data: SpaceData<TokenId>,
@@ -1094,26 +1270,22 @@ function isVisibleRelation<TokenId>(
   return relation.visibility === "clear";
 }
 
-function reconstructPath(
-  arena: ArenaData,
-  previous: ReadonlyMap<string, string>,
+function reconstructSteps(
+  previous: ReadonlyMap<
+    string,
+    Readonly<{ readonly key: string; readonly step: RouteStep }>
+  >,
   destinationKey: string,
-): CellCoordinate[] {
-  const result: CellCoordinate[] = [];
+): readonly RouteStep[] {
+  const result: RouteStep[] = [];
   let current: string | undefined = destinationKey;
   while (current !== undefined) {
-    const coordinate = arena.cells.get(current)?.coordinate;
-    if (coordinate !== undefined) result.push(coordinate);
-    current = previous.get(current);
+    const edge = previous.get(current);
+    if (edge === undefined) break;
+    result.push(edge.step);
+    current = edge.key;
   }
-  return result.reverse();
-}
-
-function compareReachable(first: ReachableCell, second: ReachableCell): number {
-  return (
-    first.costFeet - second.costFeet ||
-    cellKey(first.coordinate).localeCompare(cellKey(second.coordinate))
-  );
+  return Object.freeze(result.reverse());
 }
 
 function lesserCover(first: Cover | null, second: Cover): Cover {
@@ -1157,7 +1329,10 @@ function freezeArenaDefinition(
     policies: Object.freeze({ ...definition.policies }),
     cells: Object.freeze(
       definition.cells.map((item) =>
-        Object.freeze({ coordinate: freezeCell(item.coordinate) }),
+        Object.freeze({
+          coordinate: freezeCell(item.coordinate),
+          terrain: item.terrain,
+        }),
       ),
     ),
     boundaries: Object.freeze(definition.boundaries.map(freezeBoundary)),
@@ -1166,7 +1341,7 @@ function freezeArenaDefinition(
         Object.freeze({
           from: freezeCell(item.from),
           to: freezeCell(item.to),
-          costFeet: item.costFeet,
+          distanceFeet: item.distanceFeet,
         }),
       ),
     ),
@@ -1268,9 +1443,13 @@ function isPositiveInteger(value: number): boolean {
   return Number.isInteger(value) && value > 0;
 }
 
+function isValidWeight(value: number): boolean {
+  return Number.isFinite(value) && value >= 0;
+}
+
 function computedFeet(value: number): CellFeet {
-  // CellFeet is erased at runtime. Callers provide parsed integer costs and all
-  // arithmetic in this module is addition, multiplication, min, or max.
+  // CellFeet is erased at runtime. Callers provide parsed integer lengths and
+  // all arithmetic in this module is addition, multiplication, min, or max.
   return value as CellFeet;
 }
 

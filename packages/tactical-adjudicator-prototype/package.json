@@ -1,0 +1,15 @@
+{
+  "name": "@dnd/tactical-adjudicator-prototype",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/movement-evaluator.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dnd/tactical-space-prototype": "workspace:*"
+  }
+}

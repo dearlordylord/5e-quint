@@ -8,6 +8,8 @@ packages:
   - "packages/shared"
   - "packages/shared-algebras"
   - "packages/surface"
+  - "packages/tactical-adjudicator-prototype"
+  - "packages/tactical-space-cli-prototype"
   - "packages/tactical-space-prototype"
 catalog:
   "@firfi/quint-connect": "^2.1.0"

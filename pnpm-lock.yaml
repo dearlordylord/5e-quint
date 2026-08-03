@@ -552,6 +552,23 @@ importers:
         specifier: ^3.0.5
         version: 3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
 
+  packages/tactical-adjudicator-prototype:
+    dependencies:
+      '@dnd/tactical-space-prototype':
+        specifier: workspace:*
+        version: link:../tactical-space-prototype
+
+  packages/tactical-space-cli-prototype:
+    dependencies:
+      '@dnd/tactical-adjudicator-prototype':
+        specifier: workspace:*
+        version: link:../tactical-adjudicator-prototype
+      '@dnd/tactical-space-prototype':
+        specifier: workspace:*
+        version: link:../tactical-space-prototype
+
+  packages/tactical-space-prototype: {}
+
 packages:
 
   '@acemir/cssom@0.9.31':

@@ -4,7 +4,7 @@
   "scripts": {
     "prepare": "husky",
     "dev": "turbo dev --filter=@dnd/app",
-    "prototype:tactical-space": "pnpm --filter @dnd/tactical-space-prototype start",
+    "prototype:tactical-space": "pnpm --filter @dnd/tactical-space-cli-prototype start",
     "check:authored-id-dispatch": "node scripts/check-authored-id-dispatch-boundary.cjs",
     "check:battle-runtime-import-ownership": "node scripts/check-battle-runtime-import-ownership.cjs",
     "check:battle-runtime-test-support-boundary": "node scripts/check-battle-runtime-test-support-boundary.cjs",
