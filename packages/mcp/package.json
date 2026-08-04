@@ -1,6 +1,7 @@
 {
   "name": "@dnd/mcp",
   "private": true,
+  "dndWorkspacePackageKind": "production",
   "type": "module",
   "exports": {
     "./experimental-admin-mirror-contract": "./src/admin-mirror-contract.ts"

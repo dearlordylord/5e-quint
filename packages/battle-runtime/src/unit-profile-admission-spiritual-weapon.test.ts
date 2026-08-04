@@ -1242,7 +1242,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     );
   });
 
-  test("Shield replay can turn the repeated Spiritual Weapon hit into a miss after repositioning once", () => {
+  test("Shield replay repositions a repeated Spiritual Weapon once and leaves the completed subject stale", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const initialForceId = battleTablePositionId("spiritual-weapon-force-a");
     const movedForceId = battleTablePositionId("spiritual-weapon-force-b");
@@ -1360,15 +1360,16 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       }),
       "attackRoll",
     );
+    const repeatFills = [
+      repeatForceFill,
+      repeatTargetFill,
+      attackRollFill(repeatAttackRoll, { total: 14, naturalD20: 10 }),
+    ] as const;
     const awaitingShield = requireNeedsHoles(
       resolveBattleSubject({
         state: casterTurn.state,
         subject: repeatAct.subject,
-        fills: [
-          repeatForceFill,
-          repeatTargetFill,
-          attackRollFill(repeatAttackRoll, { total: 14, naturalD20: 10 }),
-        ],
+        fills: repeatFills,
       }),
     );
     expect(awaitingShield.snapshot.pendingInterrupt).toMatchObject({
@@ -1412,6 +1413,18 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         forcePositionId: movedForceId,
       }),
     );
+    expect(
+      resolveBattleSubject({
+        state: resolved.state,
+        subject: repeatAct.subject,
+        fills: repeatFills,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Bonus Action spell is no longer available for the current actor.",
+    });
   });
 
   test("sanctuary loss on repeat still repositions the Spiritual Weapon proxy", () => {

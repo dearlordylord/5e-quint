@@ -1,6 +1,7 @@
 {
   "name": "@dnd/character-creation-runtime",
   "private": true,
+  "dndWorkspacePackageKind": "production",
   "version": "0.0.0",
   "type": "module",
   "exports": {

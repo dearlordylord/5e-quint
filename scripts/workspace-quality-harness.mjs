@@ -90,27 +90,35 @@ const PACKAGE_POLICIES = {
   },
 };
 
-// These packages own disposable design experiments rather than shipped runtime
-// code. Their package READMEs own that lifecycle decision; keeping the exact
-// set here makes every new workspace package fail inventory until it is either
-// given production quality policy or explicitly classified as throwaway.
-const THROWAWAY_PROTOTYPE_PACKAGES = new Set([
-  "tactical-adjudicator-prototype",
-  "tactical-space-cli-prototype",
-  "tactical-space-prototype",
-]);
+const WORKSPACE_PACKAGE_KINDS = new Set(["production", "throwawayPrototype"]);
 
 function discoveredPackages(packageRoot = PACKAGE_ROOT) {
   return readdirSync(packageRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
-    .filter((entry) => {
+    .flatMap((entry) => {
       const packageJsonPath = join(packageRoot, entry.name, "package.json");
-      if (!existsSync(packageJsonPath)) return false;
-      JSON.parse(readFileSync(packageJsonPath, "utf8"));
-      return true;
+      if (!existsSync(packageJsonPath)) return [];
+      const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+      return [
+        {
+          name: entry.name,
+          kind: packageJson.dndWorkspacePackageKind,
+        },
+      ];
     })
-    .map((entry) => entry.name)
-    .sort();
+    .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+function packageKindIssues(discovered) {
+  return discovered
+    .filter((entry) => !WORKSPACE_PACKAGE_KINDS.has(entry.kind))
+    .map((entry) => entry.name);
+}
+
+function productionPackageNames(discovered) {
+  return discovered
+    .filter((entry) => entry.kind === "production")
+    .map((entry) => entry.name);
 }
 
 function inventoryIssues(discovered, configured) {
@@ -121,11 +129,17 @@ function inventoryIssues(discovered, configured) {
 
 function checkInventory() {
   const discovered = discoveredPackages();
-  const configured = [
-    ...Object.keys(PACKAGE_POLICIES),
-    ...THROWAWAY_PROTOTYPE_PACKAGES,
-  ].sort();
-  const issues = inventoryIssues(discovered, configured);
+  const kindIssues = packageKindIssues(discovered);
+  if (kindIssues.length > 0) {
+    throw new Error(
+      `Workspace packages must declare dndWorkspacePackageKind as production or throwawayPrototype: ${kindIssues.join(", ")}.`,
+    );
+  }
+  const configured = Object.keys(PACKAGE_POLICIES).sort();
+  const issues = inventoryIssues(
+    productionPackageNames(discovered),
+    configured,
+  );
   if (issues.missing.length > 0 || issues.stale.length > 0) {
     throw new Error(
       `Workspace quality inventory mismatch. Missing: ${issues.missing.join(", ") || "none"}; stale: ${issues.stale.join(", ") || "none"}.`,
@@ -280,10 +294,7 @@ function checkCoverage() {
 
 function selfTest() {
   checkInventory();
-  const configured = [
-    ...Object.keys(PACKAGE_POLICIES),
-    ...THROWAWAY_PROTOTYPE_PACKAGES,
-  ];
+  const configured = Object.keys(PACKAGE_POLICIES);
   assert.deepEqual(inventoryIssues(configured, configured), {
     missing: [],
     stale: [],
@@ -297,8 +308,20 @@ function selfTest() {
       join(unlistedPackage, "package.json"),
       JSON.stringify({ name: "unlisted-package", private: false }),
     );
+    const unclassified = discoveredPackages(packageRoot);
+    assert.deepEqual(packageKindIssues(unclassified), ["unlisted-package"]);
+    writeFileSync(
+      join(unlistedPackage, "package.json"),
+      JSON.stringify({
+        name: "unlisted-package",
+        private: false,
+        dndWorkspacePackageKind: "production",
+      }),
+    );
+    const classified = discoveredPackages(packageRoot);
+    assert.deepEqual(packageKindIssues(classified), []);
     assert.deepEqual(
-      inventoryIssues(discoveredPackages(packageRoot), configured),
+      inventoryIssues(productionPackageNames(classified), configured),
       { missing: ["unlisted-package"], stale: configured },
     );
 

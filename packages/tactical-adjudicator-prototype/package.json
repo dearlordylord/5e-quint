@@ -1,6 +1,7 @@
 {
   "name": "@dnd/tactical-adjudicator-prototype",
   "private": true,
+  "dndWorkspacePackageKind": "throwawayPrototype",
   "version": "0.0.0",
   "type": "module",
   "exports": {

@@ -1,6 +1,7 @@
 {
   "name": "@dnd/app",
   "private": true,
+  "dndWorkspacePackageKind": "production",
   "type": "module",
   "imports": {
     "#/*": "./src/*"

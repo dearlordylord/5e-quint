@@ -1,6 +1,7 @@
 {
   "name": "@dnd/character-battle-runtime",
   "private": true,
+  "dndWorkspacePackageKind": "production",
   "version": "0.0.0",
   "type": "module",
   "exports": {

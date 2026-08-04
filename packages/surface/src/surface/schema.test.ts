@@ -16,6 +16,7 @@ import { srdSurface } from "./surface-catalog.ts";
 import {
   SRD_SURFACE_SCHEMA_BOUNDS,
   SRD_SURFACE_SCHEMA_SIZE,
+  surfacePublicationSchemaDefinitionCount,
 } from "./publication-artifacts.ts";
 import {
   decodeArmorRecordSync,
@@ -79,6 +80,15 @@ function requireSrdSpell(id: string): SpellRecord {
 }
 
 describe("SRD Surface publication schema", () => {
+  test("counts schemas with and without reusable definitions", () => {
+    expect(surfacePublicationSchemaDefinitionCount({})).toBe(0);
+    expect(
+      surfacePublicationSchemaDefinitionCount({
+        $defs: { first: {}, second: {} },
+      }),
+    ).toBe(2);
+  });
+
   test("decodes every public Unit and monster record family from canonical records", () => {
     const unitDecoders = [
       ["spell", decodeSpellRecordSync],

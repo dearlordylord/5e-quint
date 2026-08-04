@@ -34,6 +34,7 @@ import {
   attackInitialTargetHole,
   attackRollFill,
   attackRollHoleAfterTarget,
+  attackTargetSpatialFact,
   battleAreaId,
   battleBonusActionStandardActionSupportForUnit,
   BattleFillSchema,
@@ -236,6 +237,13 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     });
     const subject = fighterAttackSubject(state, "Unarmed Strike");
     const target = attackInitialTargetHole(state, subject);
+    const unarmedTargetFill = targetFill(target, goblinId, [
+      attackTargetSpatialFact(
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
+    ]);
     const attackRoll = attackRollHoleAfterTarget(
       state,
       target,
@@ -247,7 +255,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         state,
         subject,
         fills: [
-          targetFill(target, goblinId),
+          unarmedTargetFill,
           attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
         ],
       }),
@@ -263,7 +271,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         state,
         subject,
         fills: [
-          targetFill(target, goblinId),
+          unarmedTargetFill,
           attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
           unitFeatureDecisionFill(decision, "decline"),
         ],
@@ -278,7 +286,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         state,
         subject,
         fills: [
-          targetFill(target, goblinId),
+          unarmedTargetFill,
           attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
           unitFeatureDecisionFill(decision, "use"),
         ],
@@ -297,7 +305,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         state,
         subject,
         fills: [
-          targetFill(target, goblinId),
+          unarmedTargetFill,
           attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
           unitFeatureDecisionFill(decision, "use"),
           grappleOutcomeFill(outcome, false, [
@@ -328,7 +336,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         state,
         subject,
         fills: [
-          targetFill(target, goblinId),
+          unarmedTargetFill,
           attackRollFill(attackRoll, { naturalD20: 12, total: 17 }),
           unitFeatureDecisionFill(decision, "use"),
           grappleOutcomeFill(outcome, false),
