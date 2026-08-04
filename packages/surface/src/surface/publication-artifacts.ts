@@ -24,8 +24,10 @@ export const SRD_SURFACE_SCHEMA_BOUNDS = {
 } as const satisfies Readonly<Record<SurfaceSchemaBoundMeasure, number>>;
 
 export const SRD_SURFACE_SCHEMA_SIZE = {
+  /* v8 ignore start -- The committed generated Surface schema always owns its $defs object; the fallback only satisfies the generic JSON Schema library type. */
   definitions: Object.keys(SRD_SURFACE_PUBLICATION_SCHEMA_ARTIFACT.$defs ?? {})
     .length,
+  /* v8 ignore stop */
   bytes: serializeSurfacePublicationArtifact(
     SRD_SURFACE_PUBLICATION_SCHEMA_ARTIFACT,
   ).byteLength,

@@ -2708,9 +2708,11 @@ function resolveSpellActInternal(
             state: attackRolledStateAfterHurl,
             snapshot: snapshotBattle(attackRolledStateAfterHurl),
           };
+      /* v8 ignore start -- Internal invariant: Spiritual Weapon cast resources were admitted before attack resolution, and attack-roll bookkeeping cannot spend the admitted slot or Bonus Action. */
       if (attackRolledStateWithSpiritualWeaponCast.tag !== "resolved") {
         return attackRolledStateWithSpiritualWeaponCast;
       }
+      /* v8 ignore stop */
       const attackRolledStateBeforeHitContinuations =
         attackRolledStateWithSpiritualWeaponCast.state;
       /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -3023,9 +3025,11 @@ function resolveSpellActInternal(
         spiritualWeaponForcePosition,
       ),
     });
+  /* v8 ignore start -- Internal invariant: the pre-damage Spiritual Weapon cast uses the same admitted resources, and no preceding damage phase has committed them. */
   if (spellDamageBaseStateResult.tag !== "resolved") {
     return spellDamageBaseStateResult;
   }
+  /* v8 ignore stop */
   const spellDamageBaseState = spellDamageBaseStateResult.state;
   const targetBeforeDamage =
     spellDamageBaseState.combatants.get(target.combatantId) ?? target;
@@ -3502,34 +3506,13 @@ function spiritualWeaponCastCommitAlreadyApplied(input: {
   );
 }
 
-function spiritualWeaponRepeatCommitAlreadyApplied(input: {
-  readonly state: BattleState;
-  readonly actorId: CombatantId;
-  readonly invocation: Extract<
-    BattleExecutableSpellInvocation,
-    { readonly procedure: "spiritualWeaponRepeatAttack" }
-  >;
-  readonly forcePositionId: Extract<
-    BattleFill,
-    { readonly kind: "spiritualWeaponForcePosition" }
-  >["value"]["positionId"];
-}): boolean {
-  return (
-    input.state.currentTurnResources.currentHasBonusAction === false &&
-    spiritualWeaponProxyEffectMatches(input)
-  );
-}
-
 function spiritualWeaponResolutionCommitAlreadyApplied(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;
   readonly fills: readonly BattleFill[];
 }): boolean {
-  if (
-    input.invocation.procedure !== "spiritualWeaponAttackProxy" &&
-    input.invocation.procedure !== "spiritualWeaponRepeatAttack"
-  ) {
+  if (input.invocation.procedure !== "spiritualWeaponAttackProxy") {
     return false;
   }
   const fillSet = spellFillSet(
@@ -3545,15 +3528,7 @@ function spiritualWeaponResolutionCommitAlreadyApplied(input: {
   ) {
     return false;
   }
-  if (input.invocation.procedure === "spiritualWeaponAttackProxy") {
-    return spiritualWeaponCastCommitAlreadyApplied({
-      state: input.state,
-      actorId: input.actorId,
-      invocation: input.invocation,
-      forcePositionId: fillSet.spiritualWeaponForcePosition.positionId,
-    });
-  }
-  return spiritualWeaponRepeatCommitAlreadyApplied({
+  return spiritualWeaponCastCommitAlreadyApplied({
     state: input.state,
     actorId: input.actorId,
     invocation: input.invocation,
@@ -3640,9 +3615,11 @@ function spendSpellActResolutionResources(input: {
       ...optionalProperty("actionCostOverride", input.actionCostOverride),
       ...optionalProperty("metamagicApplications", input.metamagicApplications),
     });
+    /* v8 ignore start -- Internal invariant: the public spell resolver admitted the Spiritual Weapon slot and Bonus Action immediately before this private cast commit. */
     if (spent.tag !== "resolved") {
       return spent;
     }
+    /* v8 ignore stop */
     const nextState = applySpiritualWeaponAttackProxyEffect({
       state: spent.state,
       actorId: input.actorId,
@@ -3683,20 +3660,6 @@ function spendSpellActResolutionResources(input: {
       );
     }
     /* v8 ignore stop */
-    if (
-      spiritualWeaponRepeatCommitAlreadyApplied({
-        state: input.state,
-        actorId: input.actorId,
-        invocation: input.invocation,
-        forcePositionId: input.spiritualWeaponForcePosition.positionId,
-      })
-    ) {
-      return {
-        tag: "resolved",
-        state: input.state,
-        snapshot: snapshotBattle(input.state),
-      };
-    }
     const spellAttackState = battleStateAfterTargetActionEarlyEndForActor(
       input.state,
       input.actorId,
@@ -3705,6 +3668,7 @@ function spendSpellActResolutionResources(input: {
       spellAttackState.currentTurnResources,
       { kind: "bonusAction" },
     );
+    /* v8 ignore start -- Internal invariant: the public Bonus Action spell admission gate established this spend before this private commit phase, and the intervening spell-attack phases do not mutate Bonus Action availability. */
     if (Either.isLeft(spent)) {
       return invalidResult(
         input.errorState,
@@ -3712,6 +3676,7 @@ function spendSpellActResolutionResources(input: {
         "Bonus Action spell is no longer available for the current actor.",
       );
     }
+    /* v8 ignore stop */
     const repositioned = repositionSpiritualWeaponAttackProxyEffect({
       state: {
         ...spellAttackState,
@@ -3738,6 +3703,7 @@ function spendSpellActResolutionResources(input: {
     input.actorId,
   );
   const spent = spendAction(spellAttackState.currentTurnResources, "magic");
+  /* v8 ignore start -- Internal invariant: the public spell resolver established the Magic Action spend before this private held-object attack commit, and the intervening attack phases do not mutate Action availability. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.errorState,
@@ -3745,6 +3711,7 @@ function spendSpellActResolutionResources(input: {
       "Magic action is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   const nextState = {
     ...spellAttackState,
     currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
@@ -4171,9 +4138,11 @@ function resolveSpellAttackDamageObjectTarget(input: {
     ...optionalProperty("actionCostOverride", input.actionCostOverride),
     ...optionalProperty("metamagicApplications", input.metamagicApplications),
   });
+  /* v8 ignore start -- Internal invariant: object-target spell resolution preserves the slot and Action resources admitted before entering this private damage commit. */
   if (spentResources.tag !== "resolved") {
     return spentResources;
   }
+  /* v8 ignore stop */
   const objectDamage = spellObjectDamageOutcomeFromDamageByType({
     objectId: input.fillSet.objectTarget.objectId,
     damageType: damageInvocation.damage.damageType,

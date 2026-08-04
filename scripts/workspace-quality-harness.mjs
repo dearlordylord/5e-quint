@@ -49,7 +49,7 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "battle-runtime": {
-    coverage: { lines: 95, statements: 95, functions: 100, branches: 91 },
+    coverage: { lines: 96, statements: 96, functions: 100, branches: 92 },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
@@ -90,7 +90,17 @@ const PACKAGE_POLICIES = {
   },
 };
 
-function discoveredProductionPackages(packageRoot = PACKAGE_ROOT) {
+// These packages own disposable design experiments rather than shipped runtime
+// code. Their package READMEs own that lifecycle decision; keeping the exact
+// set here makes every new workspace package fail inventory until it is either
+// given production quality policy or explicitly classified as throwaway.
+const THROWAWAY_PROTOTYPE_PACKAGES = new Set([
+  "tactical-adjudicator-prototype",
+  "tactical-space-cli-prototype",
+  "tactical-space-prototype",
+]);
+
+function discoveredPackages(packageRoot = PACKAGE_ROOT) {
   return readdirSync(packageRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .filter((entry) => {
@@ -110,8 +120,11 @@ function inventoryIssues(discovered, configured) {
 }
 
 function checkInventory() {
-  const discovered = discoveredProductionPackages();
-  const configured = Object.keys(PACKAGE_POLICIES).sort();
+  const discovered = discoveredPackages();
+  const configured = [
+    ...Object.keys(PACKAGE_POLICIES),
+    ...THROWAWAY_PROTOTYPE_PACKAGES,
+  ].sort();
   const issues = inventoryIssues(discovered, configured);
   if (issues.missing.length > 0 || issues.stale.length > 0) {
     throw new Error(
@@ -267,7 +280,10 @@ function checkCoverage() {
 
 function selfTest() {
   checkInventory();
-  const configured = Object.keys(PACKAGE_POLICIES);
+  const configured = [
+    ...Object.keys(PACKAGE_POLICIES),
+    ...THROWAWAY_PROTOTYPE_PACKAGES,
+  ];
   assert.deepEqual(inventoryIssues(configured, configured), {
     missing: [],
     stale: [],
@@ -282,7 +298,7 @@ function selfTest() {
       JSON.stringify({ name: "unlisted-package", private: false }),
     );
     assert.deepEqual(
-      inventoryIssues(discoveredProductionPackages(packageRoot), configured),
+      inventoryIssues(discoveredPackages(packageRoot), configured),
       { missing: ["unlisted-package"], stale: configured },
     );
 

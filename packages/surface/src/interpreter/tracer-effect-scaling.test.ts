@@ -204,12 +204,20 @@ describe("Surface trace effect scaling", () => {
     ).toHaveLength(2);
   });
 
-  test("omits target-count scaling for attachments without target selection", () => {
+  test("omits target-count scaling without a scalable target selection", () => {
     const { nodes, edges } = scalingTraceState();
 
     traceTargetCountScaling(
       { kind: "self" },
       "attachment",
+      null,
+      nodes,
+      edges,
+      idGen(),
+    );
+    traceTargetCountScaling(
+      { kind: "target", selection: { mode: "one" } },
+      "single-target-attachment",
       null,
       nodes,
       edges,

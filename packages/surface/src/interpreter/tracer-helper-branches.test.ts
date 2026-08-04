@@ -14,6 +14,7 @@ import { formatPrimaryAbilityExpression } from "./tracer-character-sources.ts";
 import { traceActionRestriction } from "./tracer-action-restrictions.ts";
 import { traceEffectModeChoice } from "./tracer-activation.ts";
 import { traceDuration } from "./tracer-duration.ts";
+import { traceActionAndRollEffectAtom } from "./tracer-effect-actions-rolls.ts";
 import {
   describeFeatureChoiceChange,
   describePassiveOperationWindow,
@@ -52,17 +53,43 @@ describe("Surface trace helper branches", () => {
     ).toBe("int or wis");
   });
 
-  test("keeps unrestricted actions and permanent duration terse", () => {
+  test("keeps unrestricted actions and duration branches terse", () => {
     const nodes: TraceNode[] = [];
     const edges: TraceEdge[] = [];
     const ids = idGen();
 
     traceActionRestriction({ kind: "none" }, "target", nodes, edges, ids);
     traceDuration({ kind: "permanent" }, "procedure", nodes, edges, ids);
+    traceDuration(
+      {
+        kind: "slot_tiered",
+        base: {
+          kind: "concentration",
+          upTo: { amount: 1, unit: "minute" },
+        },
+        tiers: [
+          {
+            atSlot: 9,
+            duration: { kind: "permanent", endsOn: ["dispel"] },
+          },
+        ],
+      },
+      "tiered-procedure",
+      nodes,
+      edges,
+      ids,
+    );
 
-    expect(nodes.map((node) => node.label)).toEqual(["persist\npermanent"]);
+    expect(nodes.map((node) => node.label)).toEqual([
+      "persist\npermanent",
+      "slot_tiered_duration\nbase: concentration up to 1 minute\nslot >= 9: permanent until dispel",
+    ]);
     expect(edges).toEqual([
       expect.objectContaining({ from: "procedure", relation: "grants" }),
+      expect.objectContaining({
+        from: "tiered-procedure",
+        relation: "grants",
+      }),
     ]);
   });
 
@@ -90,6 +117,31 @@ describe("Surface trace helper branches", () => {
     );
 
     expect(nodes.some((node) => node.atomKind === "none")).toBe(false);
+  });
+
+  test("uses a hole id when an ability filter has no authored label", () => {
+    const nodes: TraceNode[] = [];
+
+    traceActionAndRollEffectAtom(
+      {
+        kind: "modify_roll_advantage",
+        mode: "advantage",
+        on: ["ability_check"],
+        abilityFilter: {
+          kind: "hole",
+          holeId: "synthetic_ability",
+          value: {
+            kind: "choice",
+            label: "Synthetic ability",
+            options: ["str"],
+          },
+        },
+      },
+      nodes,
+      idGen(),
+    );
+
+    expect(nodes.at(-1)?.label).toContain("ability: synthetic_ability");
   });
 
   test("describes both feature-choice replacement cadences", () => {
