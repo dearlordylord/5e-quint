@@ -1,6 +1,7 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
 import { attackBonus, classLevel } from "@dnd/shared/types";
+import { Either } from "effect";
 import {
   characterBattleFeatureInitForTest,
   startBattleRight,
@@ -72,6 +73,10 @@ import type {
 import { wardingBondUnitId } from "./unit-profile-admission-catalog.test-support.ts";
 import { weaponMasteryCleaveExtraAttack } from "./battle-reducer/attack-roll.ts";
 import { WEAPON_MASTERY_SAP_SUPPORT_PROFILE } from "./unit-feature-support.ts";
+import {
+  battleUnitRefWithSupportProfiles,
+  speciesHalflingLuckUnitId,
+} from "./unit-profile-admission.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   battleActiveEffectExecutionRefForTest,
@@ -899,12 +904,24 @@ describe("battle runtime: Weapon Mastery", () => {
   });
 
   test("Weapon Mastery Cleave optionally attacks a caller-eligible second target with same weapon damage and no positive ability modifier", () => {
+    const halflingLuck = unitLibrary.requireUnit(speciesHalflingLuckUnitId);
+    const halflingLuckRef = battleUnitRefWithSupportProfiles({
+      unitRef: { unitId: halflingLuck.id },
+      unit: halflingLuck,
+    });
+    if (Either.isLeft(halflingLuckRef)) {
+      throw new Error(halflingLuckRef.left.message);
+    }
     const state = startBattleRight({
       battleId: battleId("battle-weapon-mastery-cleave"),
       combatants: [
         characterSeed({
           initiative: 20,
-          characterUnitRefs: masteryCleaveUnitRefs(),
+          characterUnitRefs: [
+            ...masteryCleaveUnitRefs(),
+            halflingLuckRef.right,
+          ],
+          unitFeatures: [characterBattleFeatureInitForTest(halflingLuck)],
           weaponMasteries: greataxeWeaponMasterySelections(),
           attack: testGreataxeAttack(),
         }),
@@ -999,7 +1016,30 @@ describe("battle runtime: Weapon Mastery", () => {
       }),
     });
 
-    const missedCleave = requireResolved(
+    const naturalOneRoll = { total: 6, naturalD20: 1 } as const;
+    const naturalOneCleave = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        ...primaryFills,
+        unitFeatureDecisionFill(decision, "use"),
+        targetFillValue,
+        attackRollFill(cleaveRoll, naturalOneRoll),
+      ],
+    });
+    const naturalOneDecision = requireHole(naturalOneCleave, "attackRoll");
+    if (!("d20TestNaturalOneRerolls" in naturalOneDecision)) {
+      throw new Error("Expected Cleave to offer a natural-one reroll.");
+    }
+    expect(naturalOneDecision.d20TestNaturalOneRerolls).toHaveLength(1);
+    const rerollOffer = naturalOneDecision.d20TestNaturalOneRerolls[0];
+    if (rerollOffer === undefined) {
+      throw new Error("Expected one natural-one reroll offer.");
+    }
+
+    // Declining Luck is intentionally legal but tactically poor; it verifies
+    // that the missed extra attack still consumes Cleave's once-per-turn use.
+    const declinedRerollCleave = requireResolved(
       resolveBattleSubject({
         state,
         subject,
@@ -1007,13 +1047,21 @@ describe("battle runtime: Weapon Mastery", () => {
           ...primaryFills,
           unitFeatureDecisionFill(decision, "use"),
           targetFillValue,
-          attackRollFill(cleaveRoll, { total: 6, naturalD20: 1 }),
+          attackRollFill(naturalOneDecision, {
+            ...naturalOneRoll,
+            d20TestNaturalOneReroll: {
+              kind: "decline",
+              effectKind: rerollOffer.effectKind,
+            },
+          }),
         ],
       }),
     );
-    expect(missedCleave.state.combatants.get(skeletonId)?.hp).toBe(Hp(10));
+    expect(declinedRerollCleave.state.combatants.get(skeletonId)?.hp).toBe(
+      Hp(10),
+    );
     expect(
-      missedCleave.state.currentTurnResources
+      declinedRerollCleave.state.currentTurnResources
         .weaponMasteryCleaveAttackersUsedThisTurn,
     ).toEqual([fighterId]);
 
