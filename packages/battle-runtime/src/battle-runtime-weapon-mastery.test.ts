@@ -999,6 +999,24 @@ describe("battle runtime: Weapon Mastery", () => {
       }),
     });
 
+    const missedCleave = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(decision, "use"),
+          targetFillValue,
+          attackRollFill(cleaveRoll, { total: 6, naturalD20: 1 }),
+        ],
+      }),
+    );
+    expect(missedCleave.state.combatants.get(skeletonId)?.hp).toBe(Hp(10));
+    expect(
+      missedCleave.state.currentTurnResources
+        .weaponMasteryCleaveAttackersUsedThisTurn,
+    ).toEqual([fighterId]);
+
     const cleaveDamageRequest = resolveBattleSubject({
       state,
       subject,
