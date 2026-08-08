@@ -9,6 +9,7 @@ packages:
   - "packages/shared-algebras"
   - "packages/surface"
   - "packages/tactical-adjudicator-prototype"
+  - "packages/tactical-space"
   - "packages/tactical-space-cli-prototype"
   - "packages/tactical-space-prototype"
 catalog:

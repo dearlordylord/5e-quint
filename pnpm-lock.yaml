@@ -558,6 +558,21 @@ importers:
         specifier: workspace:*
         version: link:../tactical-space-prototype
 
+  packages/tactical-space:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.19.15
+        version: 22.19.15
+      fast-check:
+        specifier: 3.23.2
+        version: 3.23.2
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
+
   packages/tactical-space-cli-prototype:
     dependencies:
       '@dnd/tactical-adjudicator-prototype':
