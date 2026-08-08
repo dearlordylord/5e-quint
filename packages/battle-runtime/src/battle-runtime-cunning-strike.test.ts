@@ -61,6 +61,7 @@ import {
   resolveBattleSubject,
   savingThrowOutcomeFill,
   sneakAttackFeature,
+  snapshotBattle,
   startBattleSessionRight,
   statBlockCreatureInit,
   statBlockRecord,
@@ -593,6 +594,35 @@ describe("battle runtime: Cunning Strike", () => {
       holes: repeatSaveRequest.holes,
     });
     const repeatSave = requireHole(repeatSaveRequest, "savingThrowOutcome");
+    const failedRepeatSave = requireResolved(
+      endTurn({
+        state: targetTurn,
+        actorId: goblinId,
+        fills: [
+          savingThrowOutcomeFill(repeatSave, [
+            { targetId: goblinId, succeeded: false },
+          ]),
+        ],
+      }),
+    );
+    const maintainedTarget = failedRepeatSave.state.combatants.get(goblinId);
+    if (maintainedTarget === undefined) {
+      throw new Error(
+        "Expected Cunning Strike Poison target after failed repeat save.",
+      );
+    }
+    expect(hasCondition(maintainedTarget.conditions, "poisoned")).toBe(true);
+    expect(maintainedTarget.activeEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "unitFeatureConditionEndTurnSave",
+          sourceProcedureRef: poisonProcedureRef,
+        }),
+      ]),
+    );
+    expect(snapshotBattle(failedRepeatSave.state).currentActorId).toBe(
+      fighterId,
+    );
     const afterRepeatSave = requireResolved(
       endTurn({
         state: targetTurn,

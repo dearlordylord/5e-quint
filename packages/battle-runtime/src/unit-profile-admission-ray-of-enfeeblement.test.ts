@@ -61,6 +61,7 @@ import { supportedPreparedAbilityD20TestRollModeSaveGateProfile } from "./battle
 import {
   endTurn,
   resourceCount,
+  snapshotBattle,
   spellSlotLevel,
 } from "./unit-profile-admission.test-support.ts";
 import {
@@ -292,6 +293,28 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       "savingThrowOutcome",
     );
     expect(repeatSaveHole).toHaveProperty("abilityD20TestRollModeEndTurnSave");
+    const maintained = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+      fills: [
+        savingThrowOutcomeFill(repeatSaveHole, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    expect(maintained.tag).toBe("resolved");
+    if (maintained.tag !== "resolved") return;
+    expect(
+      requireCombatant(maintained.state, spellTargetId).activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "abilityD20TestRollModeEndTurnSave",
+      }),
+    );
+    expect(
+      requireCombatant(maintained.state, spellCasterId).concentration,
+    ).not.toBeNull();
+    expect(snapshotBattle(maintained.state).currentActorId).toBe(spellCasterId);
     const repeated = endTurn({
       state: targetTurn.state,
       actorId: spellTargetId,

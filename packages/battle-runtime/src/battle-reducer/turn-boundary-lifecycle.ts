@@ -1739,27 +1739,29 @@ function removeAbilityD20TestRollModeEffectFromCombatants(
   targetId: CombatantId,
   expiringEffect: AbilityD20TestRollModeEndTurnSaveEffect,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  const target = combatants.get(targetId);
-  if (
-    target === undefined ||
-    !target.activeEffects.some((effect) => effect === expiringEffect)
-  ) {
-    return combatants;
-  }
-  return combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
-    new Map(combatants).set(targetId, {
-      ...target,
-      activeEffects: target.activeEffects.filter(
-        (effect) =>
-          effect !== expiringEffect &&
-          !(
-            effect.kind === "sourceDamageRollPenalty" &&
-            effect.sourceProcedureRef === expiringEffect.sourceProcedureRef &&
-            effect.sourceCombatantId === expiringEffect.sourceCombatantId
-          ),
+  return afterActiveEffectOccurrenceUpdate(
+    updateCombatantWithActiveEffectOccurrence(
+      combatants,
+      targetId,
+      expiringEffect,
+      (target) => ({
+        ...target,
+        activeEffects: target.activeEffects.filter(
+          (effect) =>
+            effect !== expiringEffect &&
+            !(
+              effect.kind === "sourceDamageRollPenalty" &&
+              effect.sourceProcedureRef === expiringEffect.sourceProcedureRef &&
+              effect.sourceCombatantId === expiringEffect.sourceCombatantId
+            ),
+        ),
+      }),
+    ),
+    (updatedCombatants) =>
+      combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+        updatedCombatants,
+        expiringEffect,
       ),
-    }),
-    expiringEffect,
   );
 }
 
@@ -1770,31 +1772,31 @@ function removeSpellConditionEffectFromCombatants(
     | SpellConditionEndTurnSaveEffect
     | SpellConditionCountedEndTurnSaveEffect,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  const target = combatants.get(targetId);
-  if (
-    target === undefined ||
-    !target.activeEffects.some((effect) => effect === expiringEffect)
-  ) {
-    return combatants;
-  }
-  const activeEffects = target.activeEffects.filter(
-    (effect) => effect !== expiringEffect,
-  );
-  const nextCombatant: BattleCreatureState =
-    target.positiveHpUnconscious === null
-      ? {
-          ...target,
+  return afterActiveEffectOccurrenceUpdate(
+    updateCombatantWithActiveEffectOccurrence(
+      combatants,
+      targetId,
+      expiringEffect,
+      (target) => {
+        const activeEffects = target.activeEffects.filter(
+          (effect) => effect !== expiringEffect,
+        );
+        return battleCreatureWithActiveEffectsAndConditions(
+          target,
           activeEffects,
-          conditions: conditionsAfterExpiringSpellConditionEffects(
+          conditionsAfterExpiringSpellConditionEffects(
             target.conditions,
             activeEffects,
             [expiringEffect],
           ),
-        }
-      : { ...target, activeEffects };
-  return combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
-    new Map(combatants).set(targetId, nextCombatant),
-    expiringEffect,
+        );
+      },
+    ),
+    (updatedCombatants) =>
+      combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+        updatedCombatants,
+        expiringEffect,
+      ),
   );
 }
 
@@ -1809,19 +1811,17 @@ function updateSpellConditionCountedEndTurnSaveEffect(
     >
   >,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  const target = combatants.get(targetId);
-  if (
-    target === undefined ||
-    !target.activeEffects.some((candidate) => candidate === effect)
-  ) {
-    return combatants;
-  }
-  return new Map(combatants).set(targetId, {
-    ...target,
-    activeEffects: target.activeEffects.map((candidate) =>
-      candidate === effect ? { ...effect, ...patch } : candidate,
-    ),
-  });
+  return updateCombatantWithActiveEffectOccurrence(
+    combatants,
+    targetId,
+    effect,
+    (target) => ({
+      ...target,
+      activeEffects: target.activeEffects.map((candidate) =>
+        candidate === effect ? { ...effect, ...patch } : candidate,
+      ),
+    }),
+  ).combatants;
 }
 
 function removeUnitFeatureConditionEndTurnSaveEffectFromCombatants(
@@ -1829,29 +1829,25 @@ function removeUnitFeatureConditionEndTurnSaveEffectFromCombatants(
   targetId: CombatantId,
   expiringEffect: UnitFeatureConditionEndTurnSaveEffect,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  const target = combatants.get(targetId);
-  if (
-    target === undefined ||
-    !target.activeEffects.some((effect) => effect === expiringEffect)
-  ) {
-    return combatants;
-  }
-  const activeEffects = target.activeEffects.filter(
-    (effect) => effect !== expiringEffect,
-  );
-  const nextCombatant: BattleCreatureState =
-    target.positiveHpUnconscious === null
-      ? {
-          ...target,
+  return updateCombatantWithActiveEffectOccurrence(
+    combatants,
+    targetId,
+    expiringEffect,
+    (target) => {
+      const activeEffects = target.activeEffects.filter(
+        (effect) => effect !== expiringEffect,
+      );
+      return battleCreatureWithActiveEffectsAndConditions(
+        target,
+        activeEffects,
+        conditionsAfterExpiringSpellConditionEffects(
+          target.conditions,
           activeEffects,
-          conditions: conditionsAfterExpiringSpellConditionEffects(
-            target.conditions,
-            activeEffects,
-            [expiringEffect],
-          ),
-        }
-      : { ...target, activeEffects };
-  return new Map(combatants).set(targetId, nextCombatant);
+          [expiringEffect],
+        ),
+      );
+    },
+  ).combatants;
 }
 
 function removeSlowActivePenaltiesEffectFromCombatants(
@@ -1859,21 +1855,23 @@ function removeSlowActivePenaltiesEffectFromCombatants(
   targetId: CombatantId,
   expiringEffect: SlowActivePenaltiesEffect,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  const target = combatants.get(targetId);
-  if (
-    target === undefined ||
-    !target.activeEffects.some((effect) => effect === expiringEffect)
-  ) {
-    return combatants;
-  }
-  return combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
-    new Map(combatants).set(targetId, {
-      ...target,
-      activeEffects: target.activeEffects.filter(
-        (effect) => effect !== expiringEffect,
+  return afterActiveEffectOccurrenceUpdate(
+    updateCombatantWithActiveEffectOccurrence(
+      combatants,
+      targetId,
+      expiringEffect,
+      (target) => ({
+        ...target,
+        activeEffects: target.activeEffects.filter(
+          (effect) => effect !== expiringEffect,
+        ),
+      }),
+    ),
+    (updatedCombatants) =>
+      combatantsAfterConcentrationSpellEffectsEndedIfNoEffects(
+        updatedCombatants,
+        expiringEffect,
       ),
-    }),
-    expiringEffect,
   );
 }
 
@@ -1882,32 +1880,75 @@ function removeHideousLaughterEffectFromCombatants(
   targetId: CombatantId,
   expiringEffect: HideousLaughterEffect,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
-  const target = combatants.get(targetId);
-  if (
-    target === undefined ||
-    !target.activeEffects.some((effect) => effect === expiringEffect)
-  ) {
-    return combatants;
-  }
-  const activeEffects = target.activeEffects.filter(
-    (effect) => effect !== expiringEffect,
-  );
-  const nextCombatant: BattleCreatureState =
-    target.positiveHpUnconscious === null
-      ? {
-          ...target,
+  return afterActiveEffectOccurrenceUpdate(
+    updateCombatantWithActiveEffectOccurrence(
+      combatants,
+      targetId,
+      expiringEffect,
+      (target) => {
+        const activeEffects = target.activeEffects.filter(
+          (effect) => effect !== expiringEffect,
+        );
+        return battleCreatureWithActiveEffectsAndConditions(
+          target,
           activeEffects,
-          conditions: conditionsAfterExpiringSpellConditionEffects(
+          conditionsAfterExpiringSpellConditionEffects(
             target.conditions,
             activeEffects,
             [expiringEffect],
           ),
-        }
-      : { ...target, activeEffects };
-  return combatantsAfterHideousLaughterSpellEndedIfNoEffects(
-    new Map(combatants).set(targetId, nextCombatant),
-    expiringEffect,
+        );
+      },
+    ),
+    (updatedCombatants) =>
+      combatantsAfterHideousLaughterSpellEndedIfNoEffects(
+        updatedCombatants,
+        expiringEffect,
+      ),
   );
+}
+
+export type ActiveEffectOccurrenceUpdate =
+  | {
+      readonly tag: "updated";
+      readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
+    }
+  | {
+      readonly tag: "unchanged";
+      readonly combatants: ReadonlyMap<CombatantId, BattleCreatureState>;
+    };
+
+export function afterActiveEffectOccurrenceUpdate(
+  result: ActiveEffectOccurrenceUpdate,
+  onUpdated: (
+    combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  ) => ReadonlyMap<CombatantId, BattleCreatureState>,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  if (result.tag === "unchanged") {
+    return result.combatants;
+  }
+  return onUpdated(result.combatants);
+}
+
+export function updateCombatantWithActiveEffectOccurrence<
+  Effect extends BattleActiveEffect,
+>(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  targetId: CombatantId,
+  effectOccurrence: Effect,
+  update: (target: BattleCreatureState) => BattleCreatureState,
+): ActiveEffectOccurrenceUpdate {
+  const target = combatants.get(targetId);
+  if (
+    target === undefined ||
+    !target.activeEffects.some((effect) => effect === effectOccurrence)
+  ) {
+    return { tag: "unchanged", combatants };
+  }
+  return {
+    tag: "updated",
+    combatants: new Map(combatants).set(targetId, update(target)),
+  };
 }
 
 function battleCreatureWithActiveEffectsAndConditions(

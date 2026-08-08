@@ -67,6 +67,7 @@ import {
   combatantId,
   discoverBattleActs,
   endTurn,
+  snapshotBattle,
   type BattleActiveEffect,
   type BattleState,
   type CombatantId,
@@ -282,6 +283,34 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         }),
         ability: "wis",
       }),
+    );
+    const maintained = endTurn({
+      state: targetTurn.state,
+      actorId: spellTargetId,
+      fills: [
+        savingThrowOutcomeFill(repeatSave, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    expect(maintained).toMatchObject({ tag: "resolved" });
+    if (maintained.tag !== "resolved") {
+      throw new Error("Expected failed Hold Person repeat save to resolve.");
+    }
+    expect(maintained.state.combatants.get(spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ paralyzed: true }),
+      activeEffects: [
+        expect.objectContaining({
+          kind: "spellConditionEndTurnSave",
+          condition: "paralyzed",
+        }),
+      ],
+    });
+    expect(
+      maintained.state.combatants.get(spellCasterId)?.concentration,
+    ).not.toBe(null);
+    expect(snapshotBattle(maintained.state).currentActorId).toBe(
+      secondHumanoidId,
     );
     const ended = endTurn({
       state: targetTurn.state,

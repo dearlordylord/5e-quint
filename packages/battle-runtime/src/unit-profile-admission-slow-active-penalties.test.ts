@@ -257,6 +257,30 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       }),
     );
 
+    const maintained = endTurn({
+      state: casterTurnEnded.state,
+      actorId: spellTargetId,
+      fills: [
+        singleTargetSavingThrowOutcomeFill(repeatSave, spellTargetId, false),
+      ],
+    });
+    if (maintained.tag !== "resolved") {
+      throw new Error(
+        `Expected failed Slow repeat save to resolve: ${JSON.stringify(maintained)}`,
+      );
+    }
+    const maintainedTarget = requireCombatant(maintained.state, spellTargetId);
+    expect(maintainedTarget.activeEffects).toContainEqual(
+      expect.objectContaining({ kind: "slowActivePenalties" }),
+    );
+    expect(Number(effectiveWalkSpeed(maintained.state, maintainedTarget))).toBe(
+      15,
+    );
+    expect(
+      requireCombatant(maintained.state, spellCasterId).concentration,
+    ).not.toBeNull();
+    expect(snapshotBattle(maintained.state).currentActorId).toBe(spellCasterId);
+
     const saved = endTurn({
       state: casterTurnEnded.state,
       actorId: spellTargetId,
