@@ -404,6 +404,16 @@ describe("Stat Block execution references", () => {
         }),
       ),
     ).toBe(true);
+    expect(() =>
+      Schema.decodeUnknownSync(BattleResourcePoolExecutionRef)(
+        JSON.stringify({
+          scopeRef: forgedScopeRef,
+          kind: "resourcePool",
+          ordinal: 0,
+          extra: "synthetic",
+        }),
+      ),
+    ).toThrow("Invalid canonical Battle resource-pool execution ref.");
   });
 
   test("allocates deterministic combatant-scoped procedure and resource-pool references", () => {
