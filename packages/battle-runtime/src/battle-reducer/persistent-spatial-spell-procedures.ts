@@ -1143,8 +1143,8 @@ function resolveGustOfWindLineDirectionChangeCommand(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  /* v8 ignore start -- Defensive internal guard: the availability check above and this spend read the same turn resources, with no intervening state transition. */
   if (Either.isLeft(spent)) {
+    /* v8 ignore next -- Defensive internal guard: the availability check above and this spend read the same turn resources, with no intervening state transition. */
     return invalidResult(
       input.state,
       "staleSubject",
