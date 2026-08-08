@@ -55,6 +55,13 @@ function value<Value, Error>(result: Result<Value, Error>): Value {
   return result.value;
 }
 
+function expectFailure<Value, Error>(
+  result: Result<Value, Error>,
+  error: Error,
+): void {
+  expect(result).toEqual({ tag: "error", error });
+}
+
 function place(
   state: SpatialState,
   id: string,
@@ -757,6 +764,223 @@ describe("public error protocol seam", () => {
     expect(snapshot(placed).placements).toEqual([
       { token: mover, coordinate: coordinateValue({ x: 0, y: 0 }) },
     ]);
+  });
+});
+
+describe("public movement error protocol", () => {
+  it("keeps route planning failures typed with precise consequences", () => {
+    const map = arena(squareDefinition(2, 1));
+    const state = place(createState(map), "mover", { x: 0, y: 0 });
+    const mover = token("mover");
+    // Route planning explicitly promises a typed function-boundary failure.
+    const invalidEvaluator = undefined as unknown as Parameters<
+      typeof planRoute
+    >[3];
+
+    expectFailure(
+      planRoute(
+        state,
+        token("missing"),
+        coordinateValue({ x: 1, y: 0 }),
+        physicalDistanceEvaluator,
+      ),
+      { tag: "unknown-token", token: token("missing") },
+    );
+    expectFailure(
+      planRoute(
+        state,
+        mover,
+        coordinateValue({ x: 2, y: 0 }),
+        physicalDistanceEvaluator,
+      ),
+      {
+        tag: "missing-destination-cell",
+        coordinate: coordinateValue({ x: 2, y: 0 }),
+      },
+    );
+    expectFailure(routePlan(state, mover, { x: 1, y: 0 }, invalidEvaluator), {
+      tag: "invalid-evaluator",
+      message: "A route evaluator must be a function.",
+    });
+
+    const throwingEvaluator: Parameters<typeof planRoute>[3] = () => {
+      throw new Error("evaluator exploded");
+    };
+    expectFailure(routePlan(state, mover, { x: 1, y: 0 }, throwingEvaluator), {
+      tag: "evaluator-threw",
+      message: "evaluator exploded",
+    });
+    const malformedOutputEvaluator: Parameters<typeof planRoute>[3] = () =>
+      undefined as never;
+    expectFailure(
+      routePlan(state, mover, { x: 1, y: 0 }, malformedOutputEvaluator),
+      {
+        tag: "invalid-evaluator-output",
+        message: "The evaluator must return passable or impassable.",
+      },
+    );
+    expectFailure(
+      routePlan(state, mover, { x: 1, y: 0 }, () => ({
+        tag: "passable",
+        weight: Number.NaN,
+      })),
+      {
+        tag: "invalid-evaluator-output",
+        message: "A passable evaluator weight must be finite and nonnegative.",
+      },
+    );
+
+    const overflowMap = arena(squareDefinition(3, 1));
+    const overflowState = place(createState(overflowMap), "mover", {
+      x: 0,
+      y: 0,
+    });
+    expectFailure(
+      routePlan(overflowState, mover, { x: 2, y: 0 }, () => ({
+        tag: "passable",
+        weight: Number.MAX_VALUE,
+      })),
+      {
+        tag: "invalid-evaluator-output",
+        message: "The evaluator route total must be finite and nonnegative.",
+      },
+    );
+
+    const blockedMap = arena(
+      squareDefinition(
+        2,
+        1,
+        [],
+        [boundary({ x: 0, y: 0 }, { x: 1, y: 0 }, { traversal: "blocked" })],
+      ),
+    );
+    const blockedState = place(createState(blockedMap), "mover", {
+      x: 0,
+      y: 0,
+    });
+    expectFailure(
+      routePlan(blockedState, mover, { x: 1, y: 0 }, physicalDistanceEvaluator),
+      {
+        tag: "no-route",
+        mover,
+        destination: coordinateValue({ x: 1, y: 0 }),
+      },
+    );
+  });
+
+  it("keeps step preview, relation, and commit failures typed", () => {
+    const map = arena(
+      squareDefinition(
+        3,
+        3,
+        [],
+        [boundary({ x: 0, y: 0 }, { x: 1, y: 0 }, { traversal: "blocked" })],
+      ),
+    );
+    const state = place(createState(map), "mover", { x: 0, y: 0 });
+    const mover = token("mover");
+    const invalidEvaluator = undefined as unknown as Parameters<
+      typeof previewStep
+    >[3];
+    // previewStep publicly promises invalid-coordinate rejection for a value
+    // that only counterfeits the erased coordinate brand.
+    const forgedCoordinate = Object.freeze({ x: 0, y: 0 }) as CellCoordinate;
+
+    expectFailure(
+      previewStep(state, mover, forgedCoordinate, physicalDistanceEvaluator),
+      {
+        tag: "invalid-coordinate",
+        message:
+          "Coordinates must come from parseCoordinate or a public snapshot.",
+      },
+    );
+    expectFailure(
+      stepPreview(
+        state,
+        token("missing"),
+        { x: 0, y: 1 },
+        physicalDistanceEvaluator,
+      ),
+      { tag: "unknown-token", token: token("missing") },
+    );
+    expectFailure(
+      stepPreview(state, mover, { x: 3, y: 0 }, physicalDistanceEvaluator),
+      { tag: "missing-cell", coordinate: coordinateValue({ x: 3, y: 0 }) },
+    );
+    expectFailure(
+      stepPreview(state, mover, { x: 2, y: 0 }, physicalDistanceEvaluator),
+      {
+        tag: "not-adjacent",
+        from: coordinateValue({ x: 0, y: 0 }),
+        to: coordinateValue({ x: 2, y: 0 }),
+      },
+    );
+    expectFailure(
+      stepPreview(state, mover, { x: 1, y: 0 }, physicalDistanceEvaluator),
+      {
+        tag: "blocked-step",
+        from: coordinateValue({ x: 0, y: 0 }),
+        to: coordinateValue({ x: 1, y: 0 }),
+      },
+    );
+    expectFailure(stepPreview(state, mover, { x: 0, y: 1 }, invalidEvaluator), {
+      tag: "invalid-evaluator",
+      message: "A route evaluator must be a function.",
+    });
+
+    const throwingEvaluator: Parameters<typeof previewStep>[3] = () => {
+      throw new Error("preview evaluator exploded");
+    };
+    expectFailure(
+      stepPreview(state, mover, { x: 0, y: 1 }, throwingEvaluator),
+      { tag: "evaluator-threw", message: "preview evaluator exploded" },
+    );
+    const malformedOutputEvaluator: Parameters<typeof previewStep>[3] = () =>
+      undefined as never;
+    expectFailure(
+      stepPreview(state, mover, { x: 0, y: 1 }, malformedOutputEvaluator),
+      {
+        tag: "invalid-evaluator-output",
+        message: "The evaluator must return passable or impassable.",
+      },
+    );
+    expectFailure(
+      stepPreview(state, mover, { x: 0, y: 1 }, () => ({ tag: "impassable" })),
+      { tag: "step-impassable" },
+    );
+
+    const relationState = place(state, "target", { x: 1, y: 1 });
+    const preview = value(
+      stepPreview(
+        relationState,
+        mover,
+        { x: 0, y: 1 },
+        physicalDistanceEvaluator,
+      ),
+    );
+    expectFailure(previewRelation(preview, token("missing"), "before"), {
+      tag: "unknown-token",
+      token: token("missing"),
+    });
+    // previewRelation also publicly rejects handles it did not issue.
+    const forgedPreview = Object.freeze({}) as StepPreview;
+    expectFailure(previewRelation(forgedPreview, token("target"), "before"), {
+      tag: "forged-preview",
+    });
+
+    const changedOrigin = place(createState(map), "mover", { x: 1, y: 0 });
+    expect(commitPreview(changedOrigin, preview)).toEqual({
+      tag: "error",
+      error: expect.objectContaining({
+        tag: "stale-preview",
+        cause: {
+          tag: "mover-origin-changed",
+          mover,
+          expected: coordinateValue({ x: 0, y: 0 }),
+          actual: coordinateValue({ x: 1, y: 0 }),
+        },
+      }),
+    });
   });
 });
 
