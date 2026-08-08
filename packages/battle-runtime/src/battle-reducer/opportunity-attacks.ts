@@ -665,6 +665,7 @@ export function resolveOpportunityAttackCommand(
           damageInput: reducedDamageEventAfterSpellReduction,
           critical,
           continuation: {
+            kind: "damageOnly",
             concentrationSavingThrows: fillSet.concentrationSavingThrows,
             damageDisposition: fillSet.damageDisposition,
             attackDamageRiders: [],
@@ -1012,6 +1013,7 @@ export function resolveOpportunityAttackCommand(
         damageInput: reducedDamageEventAfterSpellReduction,
         critical,
         continuation: {
+          kind: "damageOnly",
           concentrationSavingThrows: fillSet.concentrationSavingThrows,
           damageDisposition: fillSet.damageDisposition,
           attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,

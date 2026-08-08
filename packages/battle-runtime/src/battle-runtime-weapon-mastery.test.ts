@@ -1873,6 +1873,97 @@ describe("battle runtime: Weapon Mastery", () => {
     });
   });
 
+  test("Weapon Mastery Cleave resumes its follow-up after declining primary damage Reaction", () => {
+    const baseState = startBattleRight({
+      battleId: battleId("battle-weapon-mastery-cleave-attack-damage-resume"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          characterUnitRefs: masteryCleaveUnitRefs(),
+          weaponMasteries: greataxeWeaponMasterySelections(),
+          attack: testGreataxeAttack(),
+        }),
+        statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          displayName: "Second Target",
+          initiative: 9,
+        }),
+      ],
+    });
+    const state = {
+      ...baseState,
+      readiedMovements: new Map(baseState.readiedMovements).set(goblinId, {
+        trigger: "attackDamage" as const,
+        expiresAt: { kind: "startOfTurn" as const, combatantId: goblinId },
+      }),
+    };
+    const subject = fighterAttackSubject(state, "Greataxe");
+    const primaryTarget = attackInitialTargetHole(state, subject);
+    const primaryRoll = attackRollHoleAfterTarget(
+      state,
+      primaryTarget,
+      subject,
+      goblinId,
+    );
+    const primaryDamage = attackDamageHoleAfterHit(
+      state,
+      primaryTarget,
+      primaryRoll,
+      { total: 15, naturalD20: 10 },
+      subject,
+      goblinId,
+    );
+    const primaryFills = [
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
+      attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
+      damageRollFill(primaryDamage, 1),
+    ];
+    const awaitingDamageReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: primaryFills,
+    });
+    expect(awaitingDamageReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "attackDamage" }],
+    });
+    if (awaitingDamageReaction.tag !== "needsHoles") {
+      throw new Error("Expected primary attack-damage Reaction window.");
+    }
+    const pendingInterrupt = awaitingDamageReaction.snapshot.pendingInterrupt;
+    if (pendingInterrupt === null) {
+      throw new Error("Expected a pending primary attack-damage interrupt.");
+    }
+    const declined = resolveBattleInterrupt({
+      state: awaitingDamageReaction.state,
+      fill: interruptDecisionFill(pendingInterrupt.decisionHole, {
+        kind: "decline",
+        responderId: goblinId,
+      }),
+    });
+    expect(declined).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "unitFeatureDecision", label: "Use Cleave" }],
+    });
+    if (declined.tag !== "needsHoles") {
+      throw new Error(
+        "Expected Cleave decision after declining damage Reaction.",
+      );
+    }
+    expect(declined.state.combatants.get(goblinId)?.hp).toBe(Hp(6));
+    expect(declined.state.combatants.get(skeletonId)?.hp).toBe(Hp(10));
+    expect(
+      declined.state.currentTurnResources
+        .weaponMasteryCleaveAttackersUsedThisTurn,
+    ).toEqual([]);
+  });
+
   test("Weapon Mastery Cleave opens attack-hit reactions for the extra attack before damage", () => {
     const state = startBattleRight({
       battleId: battleId("battle-weapon-mastery-cleave-attack-hit-window"),

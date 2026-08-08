@@ -115,7 +115,10 @@ import {
 } from "./attack-damage-events.ts";
 import { resolveAttackDamageReductionZeroDamageRedirectAfterReduction } from "./attack-damage-redirect.ts";
 import { resumeInterruptedProcedure } from "./interrupt-continuation.ts";
-import type { BattleAttackResolvers } from "./attack-resolvers.ts";
+import {
+  resolveAttackFollowUpContinuations,
+  type BattleAttackResolvers,
+} from "./attack-resolvers.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 
@@ -2314,9 +2317,12 @@ export function resolveSelectedAttackProcedure<
           damageInput: reducedDamageEventAfterSpellReduction,
           critical,
           continuation: {
+            kind: "primaryAttackDamage",
             concentrationSavingThrows: primaryConcentrationSavingThrows,
             damageDisposition: primaryAttackDamageDisposition(fillSet),
             attackDamageRiders: [],
+            attack,
+            fills: attackFollowUpFillsAfterPrimaryDamage(input.fills),
             ...optionalProperty(
               "relationshipDecisions",
               relationshipCheck.decisions,
@@ -2376,9 +2382,12 @@ export function resolveSelectedAttackProcedure<
             damageInput: reducedDamageEventAfterSpellReduction,
             critical,
             continuation: {
+              kind: "primaryAttackDamage",
               concentrationSavingThrows: primaryConcentrationSavingThrows,
               damageDisposition: primaryAttackDamageDisposition(fillSet),
               attackDamageRiders: [],
+              attack,
+              fills: attackFollowUpFillsAfterPrimaryDamage(input.fills),
               ...optionalProperty(
                 "relationshipDecisions",
                 relationshipCheck.decisions,
@@ -2484,14 +2493,17 @@ export function resolveSelectedAttackProcedure<
     if (primaryAfterDamageReactionWindow !== null) {
       return primaryAfterDamageReactionWindow;
     }
-    const afterPrimaryDamage = resolveAttackFollowUpContinuations({
-      state: spent.state,
-      subject: input.subject,
-      firstTargetId: target.combatantId,
-      attack,
-      fills: attackFollowUpFillsAfterPrimaryDamage(input.fills),
-      handledInterruptTrigger: input.handledInterruptTrigger,
-    });
+    const afterPrimaryDamage = resolveAttackFollowUpContinuations(
+      ATTACK_RESOLVERS,
+      {
+        state: spent.state,
+        subject: input.subject,
+        firstTargetId: target.combatantId,
+        attack,
+        fills: attackFollowUpFillsAfterPrimaryDamage(input.fills),
+        handledInterruptTrigger: input.handledInterruptTrigger,
+      },
+    );
     return withOpenHandTechniqueShovePushes(afterPrimaryDamage, shovePushes);
   }
   if (hit && fillSet.damageRoll == null) {
@@ -2800,9 +2812,12 @@ export function resolveSelectedAttackProcedure<
           damageInput: reducedDamageEventAfterSpellReduction,
           critical,
           continuation: {
+            kind: "primaryAttackDamage",
             concentrationSavingThrows: primaryConcentrationSavingThrows,
             damageDisposition: primaryAttackDamageDisposition(fillSet),
             attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+            attack,
+            fills: attackFollowUpFillsAfterPrimaryDamage(input.fills),
             ...optionalProperty(
               "relationshipDecisions",
               relationshipCheck.decisions,
@@ -2869,9 +2884,12 @@ export function resolveSelectedAttackProcedure<
             damageInput: reducedDamageEventAfterSpellReduction,
             critical,
             continuation: {
+              kind: "primaryAttackDamage",
               concentrationSavingThrows: primaryConcentrationSavingThrows,
               damageDisposition: primaryAttackDamageDisposition(fillSet),
               attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+              attack,
+              fills: attackFollowUpFillsAfterPrimaryDamage(input.fills),
               ...optionalProperty(
                 "relationshipDecisions",
                 relationshipCheck.decisions,
@@ -3018,7 +3036,7 @@ export function resolveSelectedAttackProcedure<
       return primaryAfterDamageReactionWindow;
     }
     return withOpenHandTechniqueShovePushes(
-      resolveAttackFollowUpContinuations({
+      resolveAttackFollowUpContinuations(ATTACK_RESOLVERS, {
         state: spent.state,
         subject: input.subject,
         firstTargetId: target.combatantId,
@@ -3042,7 +3060,7 @@ export function resolveSelectedAttackProcedure<
     return spent;
   }
   return withOpenHandTechniqueShovePushes(
-    resolveAttackFollowUpContinuations({
+    resolveAttackFollowUpContinuations(ATTACK_RESOLVERS, {
       state: spent.state,
       subject: input.subject,
       firstTargetId: target.combatantId,
@@ -3121,24 +3139,6 @@ function attackPostMirrorImageFillsArePresent(
     fillSet.grapplerPunchAndGrabDecision !== undefined ||
     fillSet.grapplerPunchAndGrabOutcome !== undefined
   );
-}
-
-function resolveAttackFollowUpContinuations(input: {
-  readonly state: BattleState;
-  readonly subject: BattleAttackHostSubject;
-  readonly firstTargetId: BattleCreatureState["combatantId"];
-  readonly attack: SupportedAttackActionOption;
-  readonly fills: readonly BattleFill[];
-  readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
-}): BattleResolutionResult {
-  const cleaveResult = resolveWeaponMasteryCleaveContinuation(input);
-  if (cleaveResult.tag !== "resolved") {
-    return cleaveResult;
-  }
-  return resolveHuntersPreyHordeBreakerContinuation({
-    ...input,
-    state: cleaveResult.state,
-  });
 }
 
 function attackFollowUpAfterPrimaryDamageContinuation(input: {
@@ -3824,6 +3824,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     damageInput: damageEvent,
     critical: cleaveCritical,
     continuation: {
+      kind: "damageOnly",
       concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
       damageDisposition: input.fillSet.weaponMasteryCleaveDamageDisposition,
       attackDamageRiders: [],
@@ -4623,6 +4624,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     damageInput: damageEvent,
     critical,
     continuation: {
+      kind: "damageOnly",
       concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
       damageDisposition: input.fillSet.huntersPreyHordeBreakerDamageDisposition,
       attackDamageRiders: hordeBreakerSelectedDamageRiders,

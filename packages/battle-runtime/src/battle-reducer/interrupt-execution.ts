@@ -4,6 +4,7 @@ import { Match } from "effect";
 import * as Either from "effect/Either";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { type BattleSubject } from "../battle-subjects.ts";
+import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import {
   characterSpellProcedure,
   type BattleSpellProcedureExecution,
@@ -51,6 +52,8 @@ export {
 } from "./battle-snapshot.ts";
 import type {
   BattleAfterDamageEvent,
+  BattleAttackHostSubject,
+  BattleFill,
   BattleAttackDamageContinuationConcentrationFrame,
   BattleAttackDamageContinuationWithoutConcentration,
   BattleAttackHitTriggerKind,
@@ -68,6 +71,10 @@ import type {
   BattleResolutionResult,
   BattleState,
 } from "../battle-state-execution.ts";
+import {
+  resolveAttackFollowUpContinuations,
+  type BattleAttackResolvers,
+} from "./attack-resolvers.ts";
 
 export function openBattleInterruptWindow(input: {
   readonly state: BattleState;
@@ -167,6 +174,32 @@ function afterHitSpellMatchesAttackTrigger(
   return triggerKind === "meleeWeapon" || triggerKind === "rangedWeapon";
 }
 
+type AfterDamageSequenceContinuation =
+  | {
+      readonly kind: "ordinary";
+      readonly subject: BattleSubject;
+    }
+  | {
+      readonly kind: "primaryAttackFollowUp";
+      readonly subject: BattleAttackHostSubject;
+      readonly firstTargetId: CombatantId;
+      readonly attack: SupportedAttackActionOption;
+      readonly fills: readonly BattleFill[];
+      readonly attackResolvers: BattleAttackResolvers;
+    };
+
+type AfterDamageSequenceWindowInput = {
+  readonly state: BattleState;
+  readonly events: readonly BattleAfterDamageEvent[];
+  readonly objectDamages: readonly BattleObjectDamageOutcome[];
+  readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
+  readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
+  readonly handledInterruptTrigger: BattleInterruptTrigger | undefined;
+  readonly continuation: AfterDamageSequenceContinuation;
+};
+
+const byAfterDamageSequenceContinuationKind = Match.discriminator("kind");
+
 export function openAfterDamageSequenceInterruptWindow(input: {
   readonly state: BattleState;
   readonly subject: BattleSubject;
@@ -176,16 +209,80 @@ export function openAfterDamageSequenceInterruptWindow(input: {
   readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
   readonly handledInterruptTrigger: BattleInterruptTrigger | undefined;
 }): BattleResolutionResult {
+  return openAfterDamageSequenceInterruptWindowInternal({
+    state: input.state,
+    events: input.events,
+    objectDamages: input.objectDamages,
+    objectIgnitions: input.objectIgnitions,
+    droppedObjects: input.droppedObjects,
+    handledInterruptTrigger: input.handledInterruptTrigger,
+    continuation: { kind: "ordinary", subject: input.subject },
+  });
+}
+
+export function openPrimaryAttackAfterDamageSequenceInterruptWindow(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly firstTargetId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly fills: readonly BattleFill[];
+  readonly events: readonly BattleAfterDamageEvent[];
+  readonly objectDamages: readonly BattleObjectDamageOutcome[];
+  readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
+  readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
+  readonly handledInterruptTrigger: BattleInterruptTrigger | undefined;
+  readonly attackResolvers: BattleAttackResolvers;
+}): BattleResolutionResult {
+  const continuation = {
+    kind: "primaryAttackFollowUp" as const,
+    subject: input.subject,
+    firstTargetId: input.firstTargetId,
+    attack: input.attack,
+    fills: input.fills,
+    attackResolvers: input.attackResolvers,
+  };
+  return openAfterDamageSequenceInterruptWindowInternal({
+    state: input.state,
+    events: input.events,
+    objectDamages: input.objectDamages,
+    objectIgnitions: input.objectIgnitions,
+    droppedObjects: input.droppedObjects,
+    handledInterruptTrigger: input.handledInterruptTrigger,
+    continuation,
+  });
+}
+
+function openAfterDamageSequenceInterruptWindowInternal(
+  input: AfterDamageSequenceWindowInput,
+): BattleResolutionResult {
   const [event, ...remainingEvents] = input.events;
   if (event === undefined) {
-    return {
-      tag: "resolved",
-      state: input.state,
-      snapshot: snapshotBattle(input.state),
-      ...nonEmptyArrayProperty("objectDamages", input.objectDamages),
-      ...nonEmptyArrayProperty("objectIgnitions", input.objectIgnitions),
-      ...nonEmptyArrayProperty("droppedObjects", input.droppedObjects),
-    };
+    return Match.value(input.continuation).pipe(
+      byAfterDamageSequenceContinuationKind("ordinary", () => ({
+        tag: "resolved" as const,
+        state: input.state,
+        snapshot: snapshotBattle(input.state),
+        ...nonEmptyArrayProperty("objectDamages", input.objectDamages),
+        ...nonEmptyArrayProperty("objectIgnitions", input.objectIgnitions),
+        ...nonEmptyArrayProperty("droppedObjects", input.droppedObjects),
+      })),
+      byAfterDamageSequenceContinuationKind(
+        "primaryAttackFollowUp",
+        (continuation) =>
+          resolveAttackFollowUpContinuations(continuation.attackResolvers, {
+            state: input.state,
+            subject: continuation.subject,
+            firstTargetId: continuation.firstTargetId,
+            attack: continuation.attack,
+            fills: continuation.fills,
+            handledInterruptTrigger:
+              input.handledInterruptTrigger === "afterDamage"
+                ? undefined
+                : input.handledInterruptTrigger,
+          }),
+      ),
+      Match.exhaustive,
+    );
   }
   const reactionWindow = maybeOpenInterruptWindow(
     input.state,
@@ -195,20 +292,37 @@ export function openAfterDamageSequenceInterruptWindow(input: {
       damagedId: event.damagedId,
       damageAmount: event.damageAmount,
       reactionSpellTargetFacts: event.reactionSpellTargetFacts,
-      continuation: {
-        kind: "afterDamageSequence",
-        subject: input.subject,
-        events: remainingEvents,
-        objectDamages: input.objectDamages,
-        objectIgnitions: input.objectIgnitions,
-        droppedObjects: input.droppedObjects,
-      },
+      continuation: Match.value(input.continuation).pipe(
+        byAfterDamageSequenceContinuationKind("ordinary", (continuation) => ({
+          kind: "afterDamageSequence" as const,
+          subject: continuation.subject,
+          events: remainingEvents,
+          objectDamages: input.objectDamages,
+          objectIgnitions: input.objectIgnitions,
+          droppedObjects: input.droppedObjects,
+        })),
+        byAfterDamageSequenceContinuationKind(
+          "primaryAttackFollowUp",
+          (continuation) => ({
+            kind: "afterDamageSequenceWithPrimaryAttackFollowUp" as const,
+            subject: continuation.subject,
+            firstTargetId: continuation.firstTargetId,
+            attack: continuation.attack,
+            fills: continuation.fills,
+            events: remainingEvents,
+            objectDamages: input.objectDamages,
+            objectIgnitions: input.objectIgnitions,
+            droppedObjects: input.droppedObjects,
+          }),
+        ),
+        Match.exhaustive,
+      ),
     },
     input.handledInterruptTrigger,
   );
   return (
     reactionWindow ??
-    openAfterDamageSequenceInterruptWindow({
+    openAfterDamageSequenceInterruptWindowInternal({
       ...input,
       events: remainingEvents,
     })

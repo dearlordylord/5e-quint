@@ -670,7 +670,7 @@ export type BattleAttackDamageCriticalConsequence =
   | {
       readonly kind: "criticalHit";
     };
-export type BattleAttackDamageInterruptionContinuation = {
+export type BattleAttackDamageInterruptionContinuationFacts = {
   readonly concentrationSavingThrows: readonly Extract<
     BattleFill,
     { readonly kind: "concentrationSavingThrow" }
@@ -681,6 +681,21 @@ export type BattleAttackDamageInterruptionContinuation = {
   readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFill;
   readonly cunningStrike?: BattleCunningStrikeDamageContinuation;
 };
+export type BattleAttackDamageInterruptionContinuation =
+  | (BattleAttackDamageInterruptionContinuationFacts & {
+      readonly kind: "damageOnly";
+    })
+  | (BattleAttackDamageInterruptionContinuationFacts & {
+      readonly kind: "primaryAttackDamage";
+      /**
+       * Facts required to resume the primary attack's post-damage feature
+       * sequence after an attack-damage interrupt closes. Participant and
+       * first target remain on the enclosing frame and are intentionally not
+       * copied here.
+       */
+      readonly attack: SupportedAttackActionOption;
+      readonly fills: readonly BattleFill[];
+    });
 export type BattleAttackDamageInterruptionFrame = {
   readonly kind: "attackDamage";
   readonly participant: BattleAttackHostSubject;
@@ -744,6 +759,17 @@ export type BattleInterruptedProcedure =
   | {
       readonly kind: "afterDamageSequence";
       readonly subject: BattleSubject;
+      readonly events: readonly BattleAfterDamageEvent[];
+      readonly objectDamages: readonly BattleObjectDamageOutcome[];
+      readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
+      readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
+    }
+  | {
+      readonly kind: "afterDamageSequenceWithPrimaryAttackFollowUp";
+      readonly subject: BattleAttackHostSubject;
+      readonly firstTargetId: CombatantId;
+      readonly attack: SupportedAttackActionOption;
+      readonly fills: readonly BattleFill[];
       readonly events: readonly BattleAfterDamageEvent[];
       readonly objectDamages: readonly BattleObjectDamageOutcome[];
       readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];

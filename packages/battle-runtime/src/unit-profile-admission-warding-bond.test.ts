@@ -325,6 +325,7 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
       },
       critical: false,
       continuation: {
+        kind: "damageOnly",
         concentrationSavingThrows: [],
         damageDisposition: { kind: "ordinaryDamage" },
         attackDamageRiders: [],

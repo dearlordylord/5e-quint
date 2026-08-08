@@ -41,8 +41,27 @@ module battleRuntimeWeaponAttackInterruptionFrameMbt {
     WeaponAttackDamageBoundaryPhase,
   )
 
+  val primaryContinuation =
+    ApplyPrimaryWeaponAttackDamage({ acceptedFillCount: 3 })
+
+  val primaryFrame: WeaponAttackInterruptionFrame = {
+    ...canonicalFrame,
+    continuation: primaryContinuation,
+  }
+
+  val primaryReconstruction = parseWeaponAttackInterruptionFrame(
+    WeaponAttacker,
+    WeaponTarget,
+    WeaponAttackHit({ total: 15, naturalD20: 10 }),
+    RolledWeaponDamage({ amount: 8 }),
+    OrdinaryHitDeathFailureConsequence,
+    WeaponAttackDamageBoundaryPhase,
+    primaryContinuation,
+  )
+
   val reconstructionEvidence: bool = all {
     canonicalReconstruction == WeaponAttackInterruptionFrameDecoded(canonicalFrame),
+    primaryReconstruction == WeaponAttackInterruptionFrameDecoded(primaryFrame),
     reconstructFrame(
       AlternateWeaponTarget,
       15,

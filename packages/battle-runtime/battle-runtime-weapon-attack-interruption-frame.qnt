@@ -26,7 +26,15 @@ module battleRuntimeWeaponAttackInterruptionFrame {
   type WeaponAttackInterruptionBoundaryPhase =
     | WeaponAttackHitBoundaryPhase
     | WeaponAttackDamageBoundaryPhase
-  type WeaponAttackContinuation = | ApplyWeaponAttackDamage
+  // A primary Attack carries only the post-damage facts that cannot be
+  // derived after an attack-damage Reaction resumes. The frame's participant
+  // and target remain the canonical actor/first-target facts.
+  type WeaponAttackPrimaryPostDamageContext = {
+    acceptedFillCount: int,
+  }
+  type WeaponAttackContinuation =
+    | ApplyWeaponAttackDamage
+    | ApplyPrimaryWeaponAttackDamage(WeaponAttackPrimaryPostDamageContext)
 
   type WeaponAttackInterruptionFrame = {
     participant: WeaponAttackParticipant,
@@ -90,16 +98,30 @@ module battleRuntimeWeaponAttackInterruptionFrame {
       | _ => delivery
     }
 
+  pure def handOffWeaponAttackInterruptionFrame(
+    frame: WeaponAttackInterruptionFrame,
+  ): WeaponAttackInterruptionDelivery =
+    WeaponAttackInterruptionHandedOff({
+      target: frame.target,
+      damageInput: frame.damageInput,
+      continuation: frame.continuation,
+    })
+
+  pure def declineWeaponAttackInterruption(
+    delivery: WeaponAttackInterruptionDelivery,
+  ): WeaponAttackInterruptionDelivery =
+    match delivery {
+      | WeaponAttackInterruptionOffered(frame) =>
+          handOffWeaponAttackInterruptionFrame(frame)
+      | _ => delivery
+    }
+
   pure def handOffWeaponAttackInterruption(
     delivery: WeaponAttackInterruptionDelivery,
   ): WeaponAttackInterruptionDelivery =
     match delivery {
       | WeaponAttackInterrupted(frame) =>
-          WeaponAttackInterruptionHandedOff({
-            target: frame.target,
-            damageInput: frame.damageInput,
-            continuation: frame.continuation,
-          })
+          handOffWeaponAttackInterruptionFrame(frame)
       | _ => delivery
     }
 }

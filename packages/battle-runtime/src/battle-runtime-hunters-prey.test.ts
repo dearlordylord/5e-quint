@@ -1014,6 +1014,95 @@ describe("battle runtime: Hunter's Prey", () => {
     ).toEqual([expect.objectContaining({ attackerId: fighterId })]);
   });
 
+  test("Horde Breaker resumes its follow-up after declining primary damage Reaction", () => {
+    const baseState = startBattleRight({
+      battleId: battleId("battle-hunters-prey-primary-damage-resume"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          characterUnitRefs: [huntersPreyUnitRef("hordeBreaker")],
+          attack: testLongswordAttack(),
+        }),
+        statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          displayName: "Second Target",
+          initiative: 9,
+        }),
+      ],
+    });
+    const state = {
+      ...baseState,
+      readiedMovements: new Map(baseState.readiedMovements).set(goblinId, {
+        trigger: "attackDamage" as const,
+        expiresAt: { kind: "startOfTurn" as const, combatantId: goblinId },
+      }),
+    };
+    const subject = fighterAttackSubject(state, "Longsword");
+    const primaryTarget = attackInitialTargetHole(state, subject);
+    const primaryRoll = attackRollHoleAfterTarget(
+      state,
+      primaryTarget,
+      subject,
+      goblinId,
+    );
+    const primaryDamage = attackDamageHoleAfterHit(
+      state,
+      primaryTarget,
+      primaryRoll,
+      { total: 15, naturalD20: 10 },
+      subject,
+      goblinId,
+    );
+    const primaryFills = [
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
+      attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
+      damageRollFillWithGroups(primaryDamage, [[1]]),
+    ];
+    const awaitingDamageReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: primaryFills,
+    });
+    expect(awaitingDamageReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "attackDamage" }],
+    });
+    if (awaitingDamageReaction.tag !== "needsHoles") {
+      throw new Error("Expected primary attack-damage Reaction window.");
+    }
+    const pendingInterrupt = awaitingDamageReaction.snapshot.pendingInterrupt;
+    if (pendingInterrupt === null) {
+      throw new Error("Expected a pending primary attack-damage interrupt.");
+    }
+    const declined = resolveBattleInterrupt({
+      state: awaitingDamageReaction.state,
+      fill: interruptDecisionFill(pendingInterrupt.decisionHole, {
+        kind: "decline",
+        responderId: goblinId,
+      }),
+    });
+    expect(declined).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "unitFeatureDecision", label: "Use Horde Breaker" }],
+    });
+    if (declined.tag !== "needsHoles") {
+      throw new Error(
+        "Expected Horde Breaker decision after declining damage Reaction.",
+      );
+    }
+    expect(declined.state.combatants.get(goblinId)?.hp).toBe(Hp(6));
+    expect(declined.state.combatants.get(skeletonId)?.hp).toBe(Hp(10));
+    expect(
+      declined.state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn,
+    ).toEqual([]);
+  });
+
   test("Horde Breaker can be used after the original weapon attack misses", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-hunters-prey-horde-breaker-after-miss"),

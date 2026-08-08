@@ -25,6 +25,7 @@ const canonicalBoundaryFacts = {
   },
   criticalConsequence: { kind: "ordinaryHit" },
   continuation: {
+    kind: "damageOnly",
     concentrationSavingThrows: [],
     damageDisposition: { kind: "ordinaryDamage" },
     attackDamageRiders: [],

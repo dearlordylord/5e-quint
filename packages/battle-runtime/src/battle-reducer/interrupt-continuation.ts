@@ -42,6 +42,7 @@ import { d20TestNaturalOneRerollOutcomeIssue } from "./d20-test-natural-one-rero
 import {
   attackDamageContinuationConcentrationFrame,
   openAfterDamageSequenceInterruptWindow,
+  openPrimaryAttackAfterDamageSequenceInterruptWindow,
 } from "./interrupt-execution.ts";
 import { resolveMoveAfterMovement } from "./movement-procedures.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
@@ -81,6 +82,24 @@ export function resumeInterruptedProcedure(
         handledInterruptTrigger === "afterDamage"
           ? undefined
           : handledInterruptTrigger,
+    });
+  }
+  if (continuation.kind === "afterDamageSequenceWithPrimaryAttackFollowUp") {
+    return openPrimaryAttackAfterDamageSequenceInterruptWindow({
+      state,
+      subject: continuation.subject,
+      firstTargetId: continuation.firstTargetId,
+      attack: continuation.attack,
+      fills: continuation.fills,
+      events: continuation.events,
+      objectDamages: continuation.objectDamages,
+      objectIgnitions: continuation.objectIgnitions,
+      droppedObjects: continuation.droppedObjects,
+      handledInterruptTrigger:
+        handledInterruptTrigger === "afterDamage"
+          ? undefined
+          : handledInterruptTrigger,
+      attackResolvers,
     });
   }
   if (continuation.kind === "weaponMasteryCleave") {
@@ -206,6 +225,7 @@ export function resumeInterruptedProcedure(
       },
       subject: continuation.participant,
       fills: attackDamageContinuationCunningStrikePrefixFills(continuation),
+      attackResolvers,
     });
   }
 
@@ -269,6 +289,18 @@ export class InterruptContinuationExecution {
       attackResolvers: this.attackResolvers,
     });
   }
+
+  resolveAttackDamageCunningStrike(
+    input: Omit<
+      Parameters<typeof resolveAttackDamageContinuationCunningStrike>[0],
+      "attackResolvers"
+    >,
+  ): BattleResolutionResult {
+    return resolveAttackDamageContinuationCunningStrike({
+      ...input,
+      attackResolvers: this.attackResolvers,
+    });
+  }
 }
 
 type ActiveInterruptContinuationResolution =
@@ -287,6 +319,7 @@ type ActiveInterruptContinuationResolution =
     };
 
 const byInterruptFrameKind = Match.discriminator("kind");
+const byAttackDamageContinuationKind = Match.discriminator("kind");
 
 export function resolveActiveInterruptContinuation(input: {
   readonly state: BattleState;
@@ -329,7 +362,7 @@ export function resolveActiveInterruptContinuation(input: {
       }
       /* v8 ignore stop */
       return activeContinuationResult(
-        resolveAttackDamageContinuationCunningStrike({
+        input.execution.resolveAttackDamageCunningStrike({
           state: input.state,
           frame,
           subject: input.subject,
@@ -393,17 +426,14 @@ function resolveAttackDamageContinuationCunningStrike(input: {
   readonly frame: BattleAttackDamageContinuationCunningStrikeFrame;
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
+  readonly attackResolvers: BattleAttackResolvers;
 }): BattleResolutionResult {
   const continuation = input.frame.continuation;
   if (continuation.continuation.cunningStrike === undefined) {
-    return openAfterDamageSequenceInterruptWindow({
+    return openAttackDamageAfterDamageSequence({
       state: input.state,
-      subject: continuation.participant,
-      events: [input.frame.afterDamageEvent],
-      objectDamages: [],
-      objectIgnitions: [],
-      droppedObjects: [],
-      handledInterruptTrigger: input.frame.handledInterruptTrigger,
+      frame: input.frame,
+      attackResolvers: input.attackResolvers,
     });
   }
   const stateWithoutCurrentFrame =
@@ -474,15 +504,43 @@ function resolveAttackDamageContinuationCunningStrike(input: {
     };
     return needsHolesResult(pendingState, input.subject, resolved.holes);
   }
-  return openAfterDamageSequenceInterruptWindow({
+  return openAttackDamageAfterDamageSequence({
     state: resolved.state,
+    frame: input.frame,
+    attackResolvers: input.attackResolvers,
+  });
+}
+
+function openAttackDamageAfterDamageSequence(input: {
+  readonly state: BattleState;
+  readonly frame: BattleAttackDamageContinuationCunningStrikeFrame;
+  readonly attackResolvers: BattleAttackResolvers;
+}): BattleResolutionResult {
+  const continuation = input.frame.continuation;
+  const common = {
+    state: input.state,
     subject: continuation.participant,
     events: [input.frame.afterDamageEvent],
     objectDamages: [],
     objectIgnitions: [],
     droppedObjects: [],
     handledInterruptTrigger: input.frame.handledInterruptTrigger,
-  });
+  } as const;
+  return Match.value(continuation.continuation).pipe(
+    byAttackDamageContinuationKind("primaryAttackDamage", (primary) =>
+      openPrimaryAttackAfterDamageSequenceInterruptWindow({
+        ...common,
+        firstTargetId: continuation.target.combatantId,
+        attack: primary.attack,
+        fills: primary.fills,
+        attackResolvers: input.attackResolvers,
+      }),
+    ),
+    byAttackDamageContinuationKind("damageOnly", () =>
+      openAfterDamageSequenceInterruptWindow(common),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function attackDamageContinuationTargetSpatialFacts(

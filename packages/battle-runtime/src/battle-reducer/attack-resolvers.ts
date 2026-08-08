@@ -47,3 +47,21 @@ export type BattleAttackRouteResolvers = BattleAttackResolvers & {
       BattleInterruptRouteOptions,
   ) => BattleResolutionResult;
 };
+
+export function resolveAttackFollowUpContinuations(
+  attackResolvers: Pick<
+    BattleAttackResolvers,
+    | "resolveWeaponMasteryCleaveContinuation"
+    | "resolveHuntersPreyHordeBreakerContinuation"
+  >,
+  input: BattleAttackContinuationResolutionInput,
+): BattleResolutionResult {
+  const cleave = attackResolvers.resolveWeaponMasteryCleaveContinuation(input);
+  if (cleave.tag !== "resolved") {
+    return cleave;
+  }
+  return attackResolvers.resolveHuntersPreyHordeBreakerContinuation({
+    ...input,
+    state: cleave.state,
+  });
+}

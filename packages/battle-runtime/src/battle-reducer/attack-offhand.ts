@@ -834,6 +834,7 @@ function resolveBonusActionAttack(
           damageInput: reducedDamageEventAfterSpellReduction,
           critical,
           continuation: {
+            kind: "damageOnly",
             concentrationSavingThrows: fillSet.concentrationSavingThrows,
             damageDisposition: fillSet.damageDisposition,
             attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,

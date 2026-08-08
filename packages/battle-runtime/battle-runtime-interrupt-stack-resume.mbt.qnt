@@ -3,12 +3,18 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
 module battleRuntimeInterruptStackResumeMbt {
+  import battleRuntimeWeaponAttackInterruptionFrame.* from "./battle-runtime-weapon-attack-interruption-frame"
   import battleRuntimeReplayEquivalence.* from "./battle-runtime-replay-equivalence"
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   type WitnessHole = | WitnessProtocolHole
 
-  type InterruptStackResumeScenarioOutcome = | Init | NestedDeclineResumedOuter | ActiveEffectMutationResumed | ReplayFromRootResolved
+  type InterruptStackResumeScenarioOutcome =
+    | Init
+    | NestedDeclineResumedOuter
+    | ActiveEffectMutationResumed
+    | ReplayFromRootResolved
+    | PrimaryAttackDamageDeclinedResumedFollowUp
 
   var qMaxStackDepthObserved: int
   var qFinalStackDepth: int
@@ -18,6 +24,7 @@ module battleRuntimeInterruptStackResumeMbt {
   var qReplayFromRootEquivalent: bool
   var qResponderReactionAvailable: bool
   var qTargetHp: int
+  var qPrimaryFollowUpResumed: bool
   var qScenarioOutcome: InterruptStackResumeScenarioOutcome
   var qProtocol: WitnessProtocol[WitnessHole]
 
@@ -45,6 +52,29 @@ module battleRuntimeInterruptStackResumeMbt {
       replayFixtureTargetHp,
     )
 
+  pure def primaryDamageDeclineResumesFollowUp: bool =
+    match declineWeaponAttackInterruption(
+      offerWeaponAttackInterruption({
+        participant: WeaponAttacker,
+        target: WeaponTarget,
+        attackResult: WeaponAttackHit({ total: 15, naturalD20: 10 }),
+        damageInput: RolledWeaponDamage({ amount: 4 }),
+        criticalConsequence: OrdinaryHitDeathFailureConsequence,
+        phase: WeaponAttackDamagePhase,
+        continuation: ApplyPrimaryWeaponAttackDamage({
+          acceptedFillCount: 3,
+        }),
+      }),
+    ) {
+      | WeaponAttackInterruptionHandedOff(outcome) =>
+          match outcome.continuation {
+            | ApplyPrimaryWeaponAttackDamage(context) =>
+                context.acceptedFillCount == 3
+            | _ => false
+          }
+      | _ => false
+    }
+
   action recordInterruptStackResumeState(
     maxStackDepthObserved: int,
     finalStackDepth: int,
@@ -54,6 +84,7 @@ module battleRuntimeInterruptStackResumeMbt {
     replayFromRootEquivalent: bool,
     responderReactionAvailable: bool,
     targetHp: int,
+    primaryFollowUpResumed: bool,
     lastResult: InterruptStackResumeScenarioOutcome,
   ): bool = all {
     qMaxStackDepthObserved' = maxStackDepthObserved,
@@ -64,6 +95,7 @@ module battleRuntimeInterruptStackResumeMbt {
     qReplayFromRootEquivalent' = replayFromRootEquivalent,
     qResponderReactionAvailable' = responderReactionAvailable,
     qTargetHp' = targetHp,
+    qPrimaryFollowUpResumed' = primaryFollowUpResumed,
     qScenarioOutcome' = lastResult,
     qProtocol' = witnessProtocolForProjection(lastResult),
   }
@@ -77,6 +109,7 @@ module battleRuntimeInterruptStackResumeMbt {
     false,
     true,
     initialHp,
+    false,
     Init,
   )
 
@@ -91,6 +124,7 @@ module battleRuntimeInterruptStackResumeMbt {
       false,
       true,
       nestedFixtureTargetHp,
+      false,
       NestedDeclineResumedOuter,
     ),
   }
@@ -106,6 +140,7 @@ module battleRuntimeInterruptStackResumeMbt {
       false,
       false,
       initialHp,
+      false,
       ActiveEffectMutationResumed,
     ),
   }
@@ -121,7 +156,25 @@ module battleRuntimeInterruptStackResumeMbt {
       replayRecordedAttackFromRootEquivalent,
       true,
       replayFixtureTargetHp,
+      false,
       ReplayFromRootResolved,
+    ),
+  }
+
+  action doPrimaryAttackDamageDeclineResumesFollowUp = all {
+    scenarioOutcome == Init,
+    primaryDamageDeclineResumesFollowUp,
+    recordInterruptStackResumeState(
+      1,
+      0,
+      noTrigger,
+      noResumedHole,
+      false,
+      false,
+      true,
+      6,
+      true,
+      PrimaryAttackDamageDeclinedResumedFollowUp,
     ),
   }
 
@@ -129,5 +182,6 @@ module battleRuntimeInterruptStackResumeMbt {
     doNestedDeclineResumesOuterInterrupt,
     doShieldMutationResumesInterruptedAttack,
     doReplayRecordedProcedureFromRoot,
+    doPrimaryAttackDamageDeclineResumesFollowUp,
   }
 }
