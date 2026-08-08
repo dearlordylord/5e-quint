@@ -1063,6 +1063,204 @@ const smallCoordinateArbitrary = fc.constantFrom(
   { x: 1, y: 1 },
 );
 
+type OraclePoint = Readonly<{ readonly x: number; readonly y: number }>;
+type OracleEdge = readonly [OraclePoint, OraclePoint];
+
+function gridEdges(width: number, height: number): readonly OracleEdge[] {
+  const edges: OracleEdge[] = [];
+  for (let x = 0; x < width - 1; x += 1) {
+    for (let y = 0; y < height; y += 1) {
+      edges.push([
+        { x, y },
+        { x: x + 1, y },
+      ]);
+    }
+  }
+  for (let x = 0; x < width; x += 1) {
+    for (let y = 0; y < height - 1; y += 1) {
+      edges.push([
+        { x, y },
+        { x, y: y + 1 },
+      ]);
+    }
+  }
+  return edges;
+}
+
+const oracleGridEdges = gridEdges(4, 4);
+const oraclePointArbitrary = fc.record({
+  x: fc.integer({ min: 0, max: 3 }),
+  y: fc.integer({ min: 0, max: 3 }),
+});
+const oracleEdgeFactArbitrary = fc.record({
+  present: fc.boolean(),
+  sight: fc.constantFrom("open" as const, "blocked" as const),
+  cover: fc.constantFrom(
+    "none" as const,
+    "half" as const,
+    "three-quarters" as const,
+    "total" as const,
+  ),
+});
+const oracleSlopeExampleArbitrary = fc
+  .record({
+    source: oraclePointArbitrary,
+    target: oraclePointArbitrary,
+    edgeFacts: fc.array(oracleEdgeFactArbitrary, {
+      minLength: oracleGridEdges.length,
+      maxLength: oracleGridEdges.length,
+    }),
+  })
+  .filter(
+    ({ source, target }) =>
+      source.x !== target.x &&
+      source.y !== target.y &&
+      Math.abs(source.x - target.x) !== Math.abs(source.y - target.y),
+  );
+
+function oraclePointKey(point: OraclePoint): string {
+  return `${point.x},${point.y}`;
+}
+
+function oracleEdgeKey(first: OraclePoint, second: OraclePoint): string {
+  const firstComesFirst =
+    first.x < second.x || (first.x === second.x && first.y <= second.y);
+  const earlier = firstComesFirst ? first : second;
+  const later = firstComesFirst ? second : first;
+  return `${oraclePointKey(earlier)}|${oraclePointKey(later)}`;
+}
+
+type OracleRayFacts = Readonly<{
+  readonly sight: "clear" | "blocked";
+  readonly cover: CoverDegree;
+}>;
+
+/** Test-only floating-point supercover oracle; production uses exact BigInt intersections. */
+function oracleRayFacts(
+  source: OraclePoint,
+  target: OraclePoint,
+  cells: ReadonlySet<string>,
+  boundaries: ReadonlyArray<ArenaDefinition["boundaries"][number]>,
+): OracleRayFacts {
+  const touchedEdges = new Set<string>();
+  const deltaX = target.x - source.x;
+  const deltaY = target.y - source.y;
+  const stepX = Math.sign(deltaX);
+  const stepY = Math.sign(deltaY);
+  const absoluteX = Math.abs(deltaX);
+  const absoluteY = Math.abs(deltaY);
+  const incrementX = absoluteX === 0 ? Number.POSITIVE_INFINITY : 1 / absoluteX;
+  const incrementY = absoluteY === 0 ? Number.POSITIVE_INFINITY : 1 / absoluteY;
+  let nextX = absoluteX === 0 ? Number.POSITIVE_INFINITY : 0.5 / absoluteX;
+  let nextY = absoluteY === 0 ? Number.POSITIVE_INFINITY : 0.5 / absoluteY;
+  let current = source;
+  let missingCell = false;
+
+  while (current.x !== target.x || current.y !== target.y) {
+    const atCorner = Math.abs(nextX - nextY) < 1e-12;
+    if (atCorner) {
+      const sideX = { x: current.x + stepX, y: current.y };
+      const sideY = { x: current.x, y: current.y + stepY };
+      const diagonal = {
+        x: current.x + stepX,
+        y: current.y + stepY,
+      };
+      touchedEdges.add(oracleEdgeKey(current, sideX));
+      touchedEdges.add(oracleEdgeKey(current, sideY));
+      touchedEdges.add(oracleEdgeKey(sideX, diagonal));
+      touchedEdges.add(oracleEdgeKey(sideY, diagonal));
+      missingCell =
+        missingCell ||
+        !cells.has(oraclePointKey(sideX)) ||
+        !cells.has(oraclePointKey(sideY)) ||
+        !cells.has(oraclePointKey(diagonal));
+      current = diagonal;
+      nextX += incrementX;
+      nextY += incrementY;
+      continue;
+    }
+
+    if (nextX < nextY) {
+      const next = { x: current.x + stepX, y: current.y };
+      touchedEdges.add(oracleEdgeKey(current, next));
+      missingCell = missingCell || !cells.has(oraclePointKey(next));
+      current = next;
+      nextX += incrementX;
+      continue;
+    }
+
+    const next = { x: current.x, y: current.y + stepY };
+    touchedEdges.add(oracleEdgeKey(current, next));
+    missingCell = missingCell || !cells.has(oraclePointKey(next));
+    current = next;
+    nextY += incrementY;
+  }
+
+  const sightBlockedByBoundary = boundaries.some(
+    (boundary) =>
+      boundary.sight === "blocked" &&
+      touchedEdges.has(oracleEdgeKey(boundary.between[0], boundary.between[1])),
+  );
+  const coverRanks = {
+    none: 0,
+    half: 1,
+    "three-quarters": 2,
+    total: 3,
+  } as const;
+  const cover = boundaries.reduce<CoverDegree>((highest, boundary) => {
+    if (
+      !touchedEdges.has(oracleEdgeKey(boundary.between[0], boundary.between[1]))
+    ) {
+      return highest;
+    }
+    return coverRanks[boundary.cover] > coverRanks[highest]
+      ? boundary.cover
+      : highest;
+  }, "none");
+  return {
+    sight: sightBlockedByBoundary || missingCell ? "blocked" : "clear",
+    cover,
+  };
+}
+
+function oracleSlopeDefinition(example: {
+  readonly source: OraclePoint;
+  readonly target: OraclePoint;
+  readonly edgeFacts: readonly {
+    readonly present: boolean;
+    readonly sight: "open" | "blocked";
+    readonly cover: CoverDegree;
+  }[];
+}): ArenaDefinition {
+  const cellsByKey = new Map<string, OraclePoint>();
+  const addCell = (point: OraclePoint): void => {
+    cellsByKey.set(oraclePointKey(point), point);
+  };
+  addCell(example.source);
+  addCell(example.target);
+  const boundaries = oracleGridEdges.flatMap((edge, index) => {
+    const facts = example.edgeFacts[index];
+    if (!facts.present) {
+      return [];
+    }
+    addCell(edge[0]);
+    addCell(edge[1]);
+    return [
+      boundary(edge[0], edge[1], {
+        sight: facts.sight,
+        cover: facts.cover,
+      }),
+    ];
+  });
+  return {
+    cells: Array.from(cellsByKey.values()).map((point) => ({
+      ...point,
+      terrain: "ordinary" as const,
+    })),
+    boundaries,
+  };
+}
+
 describe("public property seam", () => {
   it("preserves generated authored cells in deterministic snapshots", () => {
     fc.assert(
@@ -1076,6 +1274,14 @@ describe("public property seam", () => {
         const cellsByCoordinate = new Map(
           definition.cells.map((cell) => [`${cell.x},${cell.y}`, cell.terrain]),
         );
+        expect(firstSnapshot.cells).toHaveLength(definition.cells.length);
+        const snapshotCellsByCoordinate = new Map(
+          firstSnapshot.cells.map((cell) => [
+            `${cell.coordinate.x},${cell.coordinate.y}`,
+            cell.terrain,
+          ]),
+        );
+        expect(snapshotCellsByCoordinate).toEqual(cellsByCoordinate);
         for (const cell of firstSnapshot.cells) {
           expect(
             cellsByCoordinate.get(`${cell.coordinate.x},${cell.coordinate.y}`),
@@ -1290,6 +1496,48 @@ describe("public property seam", () => {
         expect(snapshot(state)).toEqual(before);
       }),
       { numRuns: 30 },
+    );
+  });
+
+  it("matches an independent supercover oracle for generated rational slopes", () => {
+    fc.assert(
+      fc.property(oracleSlopeExampleArbitrary, (example) => {
+        const definition = oracleSlopeDefinition(example);
+        const map = arena(definition);
+        const state = place(
+          place(createState(map), "source", example.source),
+          "target",
+          example.target,
+        );
+        const cellKeys = new Set(
+          definition.cells.map((cell) => `${cell.x},${cell.y}`),
+        );
+        const forwardExpected = oracleRayFacts(
+          example.source,
+          example.target,
+          cellKeys,
+          definition.boundaries,
+        );
+        const reverseExpected = oracleRayFacts(
+          example.target,
+          example.source,
+          cellKeys,
+          definition.boundaries,
+        );
+        const forward = value(
+          relationBetween(state, token("source"), token("target")),
+        );
+        const reverse = value(
+          relationBetween(state, token("target"), token("source")),
+        );
+        expect(forward.sight).toBe(forwardExpected.sight);
+        expect(forward.cover).toBe(forwardExpected.cover);
+        expect(reverse.sight).toBe(reverseExpected.sight);
+        expect(reverse.cover).toBe(reverseExpected.cover);
+        expect(reverse.sight).toBe(forward.sight);
+        expect(reverse.cover).toBe(forward.cover);
+      }),
+      { numRuns: 40 },
     );
   });
 

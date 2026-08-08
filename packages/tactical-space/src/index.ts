@@ -1245,9 +1245,12 @@ function initialRevision(): SpatialRevision {
 
 function nextRevision(revision: SpatialRevision): SpatialRevision | undefined {
   const candidate = revision + 1;
-  return Number.isSafeInteger(candidate) && candidate >= 0
-    ? (candidate as SpatialRevision)
-    : undefined;
+  if (!Number.isSafeInteger(candidate) || candidate < 0) {
+    return undefined;
+  }
+  // The checks immediately above establish a nonnegative safe integer; this
+  // cast adds only the compile-time revision brand.
+  return candidate as SpatialRevision;
 }
 
 function revisionLimitError(): RevisionLimitError {
