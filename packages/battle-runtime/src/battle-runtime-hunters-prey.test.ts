@@ -1,7 +1,7 @@
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.hunters-prey
 import { describe, expect, test } from "vitest";
-import { Hp, movementFeet } from "@dnd/shared/types";
+import { classLevel, Hp, movementFeet } from "@dnd/shared/types";
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   battleUnitRefWithSupportProfiles,
@@ -27,10 +27,13 @@ import {
   fighterId,
   findHole,
   goblinId,
+  interruptDecisionFill,
   requireHole,
   requireCharacterUnitProcedureRefForTest,
   requireResolved,
+  reactionModifierUnitRef,
   resolveBattleSubject,
+  resolveBattleInterrupt,
   skeletonId,
   sneakAttackFeature,
   sneakAttackUnitRefs,
@@ -44,10 +47,13 @@ import {
   testLongswordAttack,
   unitFeatureDecisionFill,
   unitLibrary,
+  uncannyDodgeUnit,
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import { huntersPreyUnsupportedDamageDieUnit } from "./unit-profile-admission-catalog.test-support.ts";
+import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
+import { resolveHuntersPreyHordeBreakerContinuation } from "./battle-reducer/attack-main.ts";
 import type {
   BattleRuntimeSession,
   BattleState,
@@ -633,6 +639,171 @@ describe("battle runtime: Hunter's Prey", () => {
         procedureRef: huntersPreyProcedureRef(session),
       },
     ]);
+  });
+
+  test("Horde Breaker carries an attack-hit reaction window through its follow-up", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-hunters-prey-horde-breaker-reaction-windows"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          characterUnitRefs: [huntersPreyUnitRef("hordeBreaker")],
+          attack: testLongswordAttack(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+        characterSeed({
+          combatantId: skeletonId,
+          displayName: "Horde Breaker Reaction Target",
+          initiative: 9,
+          classLevels: [{ className: "rogue", level: 5 }],
+          attack: null,
+          unitFeatures: [
+            characterBattleFeatureInitForTest(uncannyDodgeUnit(), [
+              { className: "rogue", level: classLevel(5) },
+            ]),
+          ],
+          characterUnitRefs: [reactionModifierUnitRef("rogue_uncanny_dodge")],
+        }),
+      ],
+    });
+    const subject = fighterAttackSubject(state, "Longsword");
+    const primaryTarget = attackInitialTargetHole(state, subject);
+    const primaryRoll = attackRollHoleAfterTarget(
+      state,
+      primaryTarget,
+      subject,
+      goblinId,
+    );
+    const primaryDamage = attackDamageHoleAfterHit(
+      state,
+      primaryTarget,
+      primaryRoll,
+      { total: 15, naturalD20: 10 },
+      subject,
+      goblinId,
+    );
+    const primaryFills = [
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
+      attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
+      damageRollFillWithGroups(primaryDamage, [[1]]),
+    ];
+    const decision = requireHole(
+      resolveBattleSubject({ state, subject, fills: primaryFills }),
+      "unitFeatureDecision",
+    );
+    const target = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [...primaryFills, unitFeatureDecisionFill(decision, "use")],
+      }),
+      "targetChoice",
+    );
+    const secondTargetFill = targetFill(target, skeletonId, [
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
+      {
+        kind: "hordeBreakerSecondTargetEligible",
+        attackerId: fighterId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(target),
+        originalTargetId: goblinId,
+        secondTargetId: skeletonId,
+      },
+    ]);
+    const hordeRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(decision, "use"),
+          secondTargetFill,
+        ],
+      }),
+      "attackRoll",
+    );
+    const awaitingAttackHit = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        ...primaryFills,
+        unitFeatureDecisionFill(decision, "use"),
+        secondTargetFill,
+        attackRollFill(hordeRoll, { total: 15, naturalD20: 10 }),
+      ],
+    });
+    expect(awaitingAttackHit).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
+      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
+    });
+    if (awaitingAttackHit.tag !== "needsHoles") {
+      throw new Error(
+        `Expected Horde Breaker attack-hit reaction, got ${awaitingAttackHit.tag}.`,
+      );
+    }
+    const attackHitInterrupt = requireHole(
+      awaitingAttackHit,
+      "interruptDecision",
+    );
+    const afterAttackHit = resolveBattleInterrupt({
+      state: awaitingAttackHit.state,
+      fill: interruptDecisionFill(attackHitInterrupt, {
+        kind: "decline",
+        responderId: skeletonId,
+      }),
+    });
+    if (afterAttackHit.tag !== "needsHoles") {
+      throw new Error(
+        `Expected Horde Breaker damage hole after attack-hit reaction, got ${afterAttackHit.tag}.`,
+      );
+    }
+    const hordeDamage = requireHole(afterAttackHit, "rolledDice");
+    const attack = attackActionOptionForSubject(state, subject);
+    if (attack === undefined) {
+      throw new Error("Expected Horde Breaker weapon attack option.");
+    }
+    const followupFills = [
+      unitFeatureDecisionFill(decision, "use"),
+      secondTargetFill,
+      attackRollFill(hordeRoll, { total: 15, naturalD20: 10 }),
+    ];
+    const damageRequest = resolveHuntersPreyHordeBreakerContinuation({
+      state: afterAttackHit.state,
+      subject,
+      firstTargetId: goblinId,
+      attack,
+      fills: followupFills,
+      handledInterruptTrigger: "attackHit",
+    });
+    if (damageRequest.tag !== "needsHoles") {
+      throw new Error(
+        `Expected Horde Breaker damage hole, got ${damageRequest.tag}.`,
+      );
+    }
+    const resolved = requireResolved(
+      resolveHuntersPreyHordeBreakerContinuation({
+        state: damageRequest.state,
+        subject,
+        firstTargetId: goblinId,
+        attack,
+        fills: [...followupFills, damageRollFillWithGroups(hordeDamage, [[1]])],
+        handledInterruptTrigger: "attackHit",
+      }),
+    );
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(Hp(8));
+    expect(
+      resolved.state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn,
+    ).toEqual([expect.objectContaining({ attackerId: fighterId })]);
   });
 
   test("Horde Breaker can be used after the original weapon attack misses", () => {

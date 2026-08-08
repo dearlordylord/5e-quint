@@ -5,6 +5,7 @@ import { Either } from "effect";
 import {
   characterBattleFeatureInitForTest,
   startBattleRight,
+  startBattleSessionRight,
   requireResolved,
   fighterVsGoblinBattle,
   masterySapUnitRefs,
@@ -42,7 +43,9 @@ import {
   testRangedCleaveLongbowAttack,
   testRangedCleaveLongbowUnitRef,
   statBlockCreatureInit,
+  requireCharacterUnitProcedureRefForTest,
   reactionModifierUnitRef,
+  testCharacterD20Statistics,
   uncannyDodgeUnit,
   wizardSpellcasting,
   fighterId,
@@ -109,6 +112,31 @@ function requireMechanicalCharacterProcedureRef(
     throw new Error(`Expected mechanical procedure ${procedure}.`);
   }
   return binding.procedureRef;
+}
+
+function selectedDarkOnesBlessingUnit() {
+  const unit = unitLibrary.requireUnit("warlock_dark_ones_blessing");
+  const admitted = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  if (Either.isLeft(admitted)) {
+    throw new Error(admitted.left.message);
+  }
+  return { unit, unitRef: admitted.right };
+}
+
+function darkOnesBlessingRangeFact(
+  sourceProcedureRef: ReturnType<typeof battleProcedureExecutionRefForTest>,
+) {
+  return {
+    kind: "enemyZeroHitPointTemporaryHitPointsBeneficiaryWithinRange" as const,
+    beneficiaryId: fighterId,
+    damageSourceId: fighterId,
+    targetId: skeletonId,
+    sourceProcedureRef,
+    rangeFeet: movementFeet(10),
+  };
 }
 
 function withWardingBondTargetAndConcentratingCaster(
@@ -2262,6 +2290,179 @@ describe("battle runtime: Weapon Mastery", () => {
         prone: true,
       }),
     });
+  });
+
+  test("Weapon Mastery Cleave carries a zero-hit-point relationship decision into Dark One's Blessing", () => {
+    const { unit: blessingUnit, unitRef: blessingUnitRef } =
+      selectedDarkOnesBlessingUnit();
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-weapon-mastery-cleave-dark-ones-blessing"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "warlock", level: 3 }],
+          d20Statistics: testCharacterD20Statistics({ str: 16, cha: 16 }),
+          characterUnitRefs: [...masteryCleaveUnitRefs(), blessingUnitRef],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(blessingUnit, [
+              { className: "warlock", level: classLevel(3) },
+            ]),
+          ],
+          weaponMasteries: greataxeWeaponMasterySelections(),
+          attack: testGreataxeAttack(),
+        }),
+        statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          displayName: "Dark Blessing Target",
+          initiative: 9,
+          currentHp: 1,
+        }),
+      ],
+    });
+    const state = session.state;
+    const subject = fighterAttackSubject(state, "Greataxe");
+    const blessingProcedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      fighterId,
+      String(blessingUnit.id),
+    );
+    const primaryTarget = attackInitialTargetHole(state, subject);
+    const primaryRoll = attackRollHoleAfterTarget(
+      state,
+      primaryTarget,
+      subject,
+      goblinId,
+    );
+    const primaryDamage = attackDamageHoleAfterHit(
+      state,
+      primaryTarget,
+      primaryRoll,
+      { total: 15, naturalD20: 10 },
+      subject,
+      goblinId,
+    );
+    const primaryFills = [
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
+      attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
+      damageRollFill(primaryDamage, 1),
+    ];
+    const decision = requireHole(
+      resolveBattleSubject({ state, subject, fills: primaryFills }),
+      "unitFeatureDecision",
+    );
+    const target = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [...primaryFills, unitFeatureDecisionFill(decision, "use")],
+      }),
+      "targetChoice",
+    );
+    const targetFillValue = targetFill(target, skeletonId, [
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
+      {
+        kind: "cleaveSecondTargetWithin5FeetOfFirstTarget" as const,
+        attackerId: fighterId,
+        firstTargetId: goblinId,
+        secondTargetId: skeletonId,
+      },
+      darkOnesBlessingRangeFact(blessingProcedureRef),
+    ]);
+    const cleaveRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(decision, "use"),
+          targetFillValue,
+        ],
+      }),
+      "attackRoll",
+    );
+    const cleaveDamage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(decision, "use"),
+          targetFillValue,
+          attackRollFill(cleaveRoll, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const fillsThroughDamage = [
+      ...primaryFills,
+      unitFeatureDecisionFill(decision, "use"),
+      targetFillValue,
+      attackRollFill(cleaveRoll, { total: 15, naturalD20: 10 }),
+      damageRollFill(cleaveDamage, 4),
+    ];
+    const disposition = requireHole(
+      resolveBattleSubject({ state, subject, fills: fillsThroughDamage }),
+      "attackDamageDisposition",
+    );
+    const fillsThroughDisposition = [
+      ...fillsThroughDamage,
+      attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
+    ];
+    const relationship = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: fillsThroughDisposition,
+      }),
+      "damageRelationshipDecisions",
+    );
+    expect(relationship.questions).toEqual([
+      expect.objectContaining({
+        kind: "enemyZeroHitPointTemporaryHitPoints",
+        beneficiaryId: fighterId,
+        targetId: skeletonId,
+        procedureRef: blessingProcedureRef,
+      }),
+    ]);
+    const relationshipQuestion = relationship.questions[0];
+    if (relationshipQuestion === undefined) {
+      throw new Error("Expected Dark One's Blessing relationship question.");
+    }
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...fillsThroughDisposition,
+          {
+            kind: "damageRelationshipDecisions" as const,
+            holeId: relationship.holeId,
+            answers: [
+              {
+                questionId: relationshipQuestion.questionId,
+                answer: true,
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(Hp(0));
+    expect(resolved.state.combatants.get(fighterId)?.tempHp).toBe(Hp(6));
+    expect(
+      resolved.state.currentTurnResources
+        .weaponMasteryCleaveAttackersUsedThisTurn,
+    ).toEqual([fighterId]);
   });
 
   test("Weapon Mastery Cleave rejects ineligible second-target facts and unsupported use", () => {
