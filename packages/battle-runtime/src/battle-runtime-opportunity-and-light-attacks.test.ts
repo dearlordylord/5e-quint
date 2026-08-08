@@ -25,6 +25,7 @@ import {
   interruptDecisionFill,
   movementFill,
   monsterResourceStatBlock,
+  statBlockRecord,
   damageRollFill,
   damageRollFillWithGroups,
   attackDamageDispositionFill,
@@ -47,13 +48,21 @@ import {
   difficultyClass,
   discoverBattleActs,
   endTurn,
+  fighterTurnWithReadiedRay,
   resolveBattleInterrupt,
   resolveBattleSubject,
+  wizardId,
 } from "./battle-runtime.test-support.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import { resolvedAnimalFriendshipState } from "./unit-profile-admission-spell-battle.test-support.ts";
+import {
+  spellCasterId,
+  spellTargetId,
+} from "./unit-profile-admission-catalog.test-support.ts";
 import type {
   BattleState,
   BattleSubject,
+  CombatantId,
 } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
@@ -81,6 +90,116 @@ function fighterUnarmedOpportunityAttackThreat(state: BattleState) {
   return {
     reactorId: fighterId,
     ...attackExecutionSelectionForSubjectForTest(subject),
+  };
+}
+
+function goblinMeleeOpportunityAttackThreatFromExecution(state: BattleState) {
+  const goblin = state.combatants.get(goblinId);
+  if (goblin?.origin.kind !== "statBlock") {
+    throw new Error("Expected a Stat Block reactor.");
+  }
+  const attack = statBlockAttackActionOptions(goblin.origin.execution).find(
+    (candidate) =>
+      candidate.damageNotation === "rolled" &&
+      candidate.attack.attackType === "melee",
+  );
+  if (attack === undefined) {
+    throw new Error("Expected the Animal Friendship reactor's melee attack.");
+  }
+  return { reactorId: goblinId, procedureRef: attack.procedureRef };
+}
+
+type OpportunityAttackThreat = Parameters<
+  typeof movementFill
+>[1]["provokedOpportunityAttacks"][number];
+
+type NeedsHolesResult = Extract<
+  ReturnType<typeof resolveBattleSubject>,
+  { readonly tag: "needsHoles" }
+>;
+
+function pendingInterruptForNeedsHoles(result: NeedsHolesResult) {
+  const pendingInterrupt = result.snapshot.pendingInterrupt;
+  if (pendingInterrupt === null) {
+    throw new Error("Expected a pending interrupt for the needsHoles result.");
+  }
+  return pendingInterrupt;
+}
+
+function resolveGoblinOpportunityAttackDamage(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly threat: OpportunityAttackThreat;
+  readonly damageRollTotal: number;
+}) {
+  const moveSubject: BattleSubject = {
+    tag: "runtimeCommand",
+    actorId: input.actorId,
+    command: "move",
+  };
+  const movement = requireHole(
+    resolveBattleSubject({
+      state: input.state,
+      subject: moveSubject,
+      fills: [],
+    }),
+    "movement",
+  );
+  const awaitingReaction = resolveBattleSubject({
+    state: input.state,
+    subject: moveSubject,
+    fills: [
+      movementFill(movement, {
+        movementCostFeet: 5,
+        provokedOpportunityAttacks: [input.threat],
+      }),
+    ],
+  });
+  if (awaitingReaction.tag !== "needsHoles") {
+    throw new Error("Expected the movement to open an Opportunity Attack.");
+  }
+  const pendingInterrupt = pendingInterruptForNeedsHoles(awaitingReaction);
+  const choice = reactionChoiceWithSubject(pendingInterrupt.choices);
+  const started = resolveBattleInterrupt({
+    state: awaitingReaction.state,
+    fill: interruptDecisionFill(pendingInterrupt.decisionHole, {
+      kind: "resolve",
+      responderId: goblinId,
+      choice: opportunityAttackProcedureSelectionForTest(choice),
+    }),
+  });
+  if (started.tag !== "needsHoles") {
+    throw new Error("Expected the Opportunity Attack attack roll hole.");
+  }
+  const attackRoll = findHole(started.holes, "attackRoll");
+  const attackFill = attackRollFill(attackRoll, {
+    total: 20,
+    naturalD20: 18,
+  });
+  const damageHole = requireHole(
+    resolveBattleSubject({
+      state: started.state,
+      subject: choice.subject,
+      fills: [attackFill],
+    }),
+    "rolledDice",
+  );
+  const damageFill = damageRollFill(damageHole, input.damageRollTotal);
+  const damageResult = resolveBattleSubject({
+    state: started.state,
+    subject: choice.subject,
+    fills: [attackFill, damageFill],
+  });
+  if (damageResult.tag !== "needsHoles") {
+    throw new Error("Expected a post-damage Opportunity Attack hole.");
+  }
+  return {
+    state: started.state,
+    subject: choice.subject,
+    attackRoll,
+    attackFill,
+    damageFill,
+    damageResult,
   };
 }
 
@@ -1388,6 +1507,121 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         }),
       ]),
     );
+  });
+
+  test("Opportunity Attack carries an Animal Friendship damage relationship through movement", () => {
+    const movingBeastId = combatantId("opportunity-animal-friendship-beast");
+    const charmedState = resolvedAnimalFriendshipState(movingBeastId, [
+      {
+        combatantId: goblinId,
+        statBlock: statBlockRecord(),
+        initiative: 8,
+      },
+    ]);
+    const afterCasterTurn = requireResolved(
+      endTurn({ state: charmedState, actorId: spellCasterId }),
+    ).state;
+    const state = requireResolved(
+      endTurn({ state: afterCasterTurn, actorId: spellTargetId }),
+    ).state;
+    const damaged = resolveGoblinOpportunityAttackDamage({
+      state,
+      actorId: movingBeastId,
+      threat: goblinMeleeOpportunityAttackThreatFromExecution(state),
+      damageRollTotal: 1,
+    });
+    const relationship = requireHole(
+      damaged.damageResult,
+      "damageRelationshipDecisions",
+    );
+    expect(relationship.questions).toEqual([
+      expect.objectContaining({
+        kind: "targetDamagedByCasterOrAlly",
+        targetId: movingBeastId,
+      }),
+    ]);
+    const question = relationship.questions[0];
+    if (question === undefined) {
+      throw new Error("Expected the Animal Friendship relationship question.");
+    }
+    const completed = resolveBattleSubject({
+      state: damaged.damageResult.state,
+      subject: damaged.subject,
+      fills: [
+        damaged.attackFill,
+        damaged.damageFill,
+        {
+          kind: "damageRelationshipDecisions",
+          holeId: relationship.holeId,
+          answers: [{ questionId: question.questionId, answer: false }],
+        },
+      ],
+    });
+    expect(completed).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        pendingInterrupt: null,
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: movingBeastId,
+            hp: 7,
+            conditions: expect.arrayContaining(["charmed"]),
+            movement: expect.objectContaining({ spentFeet: 5 }),
+          }),
+          expect.objectContaining({
+            combatantId: goblinId,
+            reactionAvailable: false,
+          }),
+        ]),
+      },
+    });
+  });
+
+  test("Opportunity Attack opens a Ready after-damage window before movement resumes", () => {
+    const state = fighterTurnWithReadiedRay("afterDamage");
+    const awaitingAfterDamage = resolveGoblinOpportunityAttackDamage({
+      state,
+      actorId: fighterId,
+      threat: goblinOpportunityAttackThreat(state),
+      damageRollTotal: 4,
+    });
+    expect(awaitingAfterDamage.damageResult).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+    });
+    const pendingInterrupt = pendingInterruptForNeedsHoles(
+      awaitingAfterDamage.damageResult,
+    );
+    const readyChoice = reactionChoiceWithSubject(pendingInterrupt.choices);
+    if (
+      readyChoice.subject.tag !== "runtimeCommand" ||
+      readyChoice.subject.command !== "releaseReadiedSpell"
+    ) {
+      throw new Error("Expected the readied-spell release subject.");
+    }
+    const completed = resolveBattleInterrupt({
+      state: awaitingAfterDamage.damageResult.state,
+      fill: interruptDecisionFill(pendingInterrupt.decisionHole, {
+        kind: "decline",
+        responderId: wizardId,
+      }),
+    });
+    expect(completed).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        pendingInterrupt: null,
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: fighterId,
+            movement: expect.objectContaining({ spentFeet: 5 }),
+          }),
+          expect.objectContaining({
+            combatantId: goblinId,
+            reactionAvailable: false,
+          }),
+        ]),
+      },
+    });
   });
 
   test("a Halfling Opportunity Attack rerolls a natural 1 and resolves fixed damage without a damage-roll hole", () => {
