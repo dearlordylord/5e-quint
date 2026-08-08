@@ -55,6 +55,7 @@ import {
   activeEffectProcedureMatches,
   activeEffectHasSourceCombatant,
   activeEffectSourceMatches,
+  activeEffectSourceRefsMatch as sourceRefsMatch,
 } from "./active-effect-replacement.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-hit-point-state.ts";
 import {
@@ -1315,10 +1316,7 @@ export function applyDancingLightsSpellEffect(
           (effect) =>
             !(
               effect.kind === "dancingLights" &&
-              activeEffectSourceMatches(effect, {
-                sourceProcedureRef: invocation.sourceProcedureRef,
-                sourceCombatantId: actorId,
-              })
+              activeEffectSourceMatches(effect, activeEffect)
             ),
         ),
         activeEffect,
@@ -1609,10 +1607,7 @@ export function applySelfTransformationModeEffect(input: {
       (effect) =>
         !(
           effect.kind === "selfTransformation" &&
-          activeEffectSourceMatches(effect, {
-            sourceProcedureRef: input.sourceProcedureRef,
-            sourceCombatantId: input.sourceCombatantId,
-          })
+          activeEffectSourceMatches(effect, input)
         ),
     ),
     {
@@ -1653,6 +1648,8 @@ export function applyFailedSaveSpellActiveEffects(
   if (activeEffectRiders.length === 0) {
     return state;
   }
+  const sourceProcedureRef = invocation.sourceProcedureRef;
+  const sourceCombatantId = actorId;
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
@@ -1667,10 +1664,7 @@ export function applyFailedSaveSpellActiveEffects(
           (effect) =>
             !(
               effect.kind === "nextAttackRollBySelf" &&
-              activeEffectSourceMatches(effect, {
-                sourceProcedureRef: invocation.sourceProcedureRef,
-                sourceCombatantId: actorId,
-              })
+              sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId)
             ),
         ),
         {
@@ -1710,6 +1704,8 @@ export function applyFailedSaveSpellConditionEffects(
   savingThrowDisadvantageAbilityChoice?: Ability | undefined,
   heightenedSpellTargetId: CombatantId | undefined = undefined,
 ): BattleState {
+  const sourceProcedureRef = invocation.sourceProcedureRef;
+  const sourceCombatantId = actorId;
   let nextState = state;
   for (const targetId of targetIds) {
     const target = nextState.combatants.get(targetId);
@@ -1733,10 +1729,7 @@ export function applyFailedSaveSpellConditionEffects(
         (activeEffect.kind === "spellCondition" ||
           activeEffect.kind === "spellConditionEndTurnSave" ||
           activeEffect.kind === "spellConditionCountedEndTurnSave") &&
-        activeEffectSourceMatches(activeEffect, {
-          sourceProcedureRef: invocation.sourceProcedureRef,
-          sourceCombatantId: actorId,
-        }) &&
+        sourceRefsMatch(activeEffect, sourceProcedureRef, sourceCombatantId) &&
         activeEffect.condition === appliedEffect.condition,
     );
     const expiresAt = activeEffectExpirationForPostDamageRider(
@@ -1913,6 +1906,8 @@ export function applySleepPendingRepeatSaveEffects(
     { readonly procedure: "sleepTargetAdmission" }
   >,
 ): BattleState {
+  const sourceProcedureRef = invocation.sourceProcedureRef;
+  const sourceCombatantId = actorId;
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
@@ -1922,10 +1917,7 @@ export function applySleepPendingRepeatSaveEffects(
     const replacing = target.activeEffects.filter(
       (effect) =>
         effect.kind === "sleepPendingRepeatSave" &&
-        activeEffectSourceMatches(effect, {
-          sourceProcedureRef: invocation.sourceProcedureRef,
-          sourceCombatantId: actorId,
-        }),
+        sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId),
     );
     const activeEffects = [
       ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
@@ -1974,6 +1966,8 @@ export function applyHideousLaughterEffects(
   >,
   heightenedSpellTargetId: CombatantId | undefined = undefined,
 ): BattleState {
+  const sourceProcedureRef = invocation.sourceProcedureRef;
+  const sourceCombatantId = actorId;
   const combatants = new Map(state.combatants);
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
@@ -1983,10 +1977,7 @@ export function applyHideousLaughterEffects(
     const replacing = target.activeEffects.filter(
       (effect) =>
         effect.kind === "hideousLaughter" &&
-        activeEffectSourceMatches(effect, {
-          sourceProcedureRef: invocation.sourceProcedureRef,
-          sourceCombatantId: actorId,
-        }),
+        sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId),
     );
     const activeEffects = [
       ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
@@ -2286,10 +2277,7 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
       (effect) =>
         !(
           effect.kind === "spiritualWeapon" &&
-          activeEffectSourceMatches(effect, {
-            sourceProcedureRef: input.invocation.sourceProcedureRef,
-            sourceCombatantId: input.actorId,
-          })
+          activeEffectSourceMatches(effect, activeEffect)
         ),
     ),
     activeEffect,
@@ -2601,10 +2589,7 @@ export function replaceGustOfWindLineDirection(input: {
   }
   const activeEffects = source.activeEffects.map((effect) =>
     effect.kind === "gustOfWindLine" &&
-    activeEffectSourceMatches(effect, {
-      sourceProcedureRef: input.sourceProcedureRef,
-      sourceCombatantId: input.sourceCombatantId,
-    }) &&
+    activeEffectSourceMatches(effect, input) &&
     effect.areaId === input.areaId
       ? { ...effect, directionId: input.directionId }
       : effect,
@@ -2981,10 +2966,7 @@ export function removeWebRestrainedCondition(input: {
       { readonly kind: "spellCondition" }
     > =>
       candidate.kind === "spellCondition" &&
-      activeEffectSourceMatches(candidate, {
-        sourceProcedureRef: input.sourceProcedureRef,
-        sourceCombatantId: input.sourceCombatantId,
-      }) &&
+      activeEffectSourceMatches(candidate, input) &&
       candidate.condition === "restrained",
   );
   return effect === undefined
@@ -3029,6 +3011,8 @@ export function applyCommandPendingEffects(
   >,
   option: BattleCommandOption,
 ): BattleState {
+  const sourceProcedureRef = invocation.sourceProcedureRef;
+  const sourceCombatantId = actorId;
   let nextState = state;
   for (const targetId of targetIds) {
     const target = nextState.combatants.get(targetId);
@@ -3049,10 +3033,7 @@ export function applyCommandPendingEffects(
             (effect) =>
               !(
                 effect.kind === "commandPending" &&
-                activeEffectSourceMatches(effect, {
-                  sourceProcedureRef: invocation.sourceProcedureRef,
-                  sourceCombatantId: actorId,
-                })
+                sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId)
               ),
           ),
           {
@@ -3149,10 +3130,7 @@ export function applyFailedSaveAttackRollAdvantageEffects(
         (effect) =>
           !(
             effect.kind === "faerieFireOutline" &&
-            activeEffectSourceMatches(effect, {
-              sourceProcedureRef: invocation.sourceProcedureRef,
-              sourceCombatantId: actorId,
-            })
+            activeEffectSourceMatches(effect, nextEffect)
           ),
       ),
       nextEffect,
@@ -3184,6 +3162,8 @@ export function applySaveGatedConditionImmunityEffects(
     { readonly procedure: "saveGatedConditionImmunity" }
   >,
 ): BattleState {
+  const sourceProcedureRef = invocation.sourceProcedureRef;
+  const sourceCombatantId = actorId;
   return targetIds.reduce((nextState, targetId) => {
     const target = nextState.combatants.get(targetId);
     /* v8 ignore start -- Defensive internal guard: protection-spell failed-save target ids are validated against the current combatant map before immunities are applied. */
@@ -3205,10 +3185,7 @@ export function applySaveGatedConditionImmunityEffects(
         (effect) =>
           !(
             effect.kind === "conditionImmunity" &&
-            activeEffectSourceMatches(effect, {
-              sourceProcedureRef: invocation.sourceProcedureRef,
-              sourceCombatantId: actorId,
-            }) &&
+            sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId) &&
             invocation.activeEffects.some(
               (candidate) => candidate.condition === effect.condition,
             )
@@ -3511,6 +3488,8 @@ export function applyDragonsBreathInitialSpellEffect(
     owner: target,
   });
   const allocatedTarget = allocation.owner;
+  const sourceProcedureRef = invocation.sourceProcedureRef;
+  const sourceCombatantId = actorId;
   const nextEffect: BattleActiveEffect = {
     ...invocation.activeEffect,
     sourceProcedureRef: procedureRef,
@@ -3524,10 +3503,7 @@ export function applyDragonsBreathInitialSpellEffect(
       (effect) =>
         !(
           effect.kind === "dragonsBreath" &&
-          activeEffectSourceMatches(effect, {
-            sourceProcedureRef: invocation.sourceProcedureRef,
-            sourceCombatantId: actorId,
-          })
+          sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId)
         ),
     ),
     nextEffect,

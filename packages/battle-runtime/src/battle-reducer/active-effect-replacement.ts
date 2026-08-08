@@ -16,16 +16,27 @@ import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "./spel
 /**
  * Source identity is part of the active-effect value for spell and feature
  * effects. Keep the three matching relations explicit: full source identity,
- * procedure occurrence only, and source-combatant identity only.
+ * procedure occurrence only, and source-combatant identity only. Full source
+ * matching accepts either an existing source-bearing value or explicit refs
+ * when the surrounding workflow has not built an active effect yet.
  */
 export function activeEffectSourceMatches(
   effect: BattleActiveEffectSource,
   source: BattleActiveEffectSource,
 ): boolean {
-  return (
-    effect.sourceProcedureRef === source.sourceProcedureRef &&
-    effect.sourceCombatantId === source.sourceCombatantId
+  return sourceRefsMatch(
+    effect,
+    source.sourceProcedureRef,
+    source.sourceCombatantId,
   );
+}
+
+export function activeEffectSourceRefsMatch(
+  effect: BattleActiveEffectSource,
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  sourceCombatantId: CombatantId,
+): boolean {
+  return sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId);
 }
 
 export function activeEffectProcedureMatches(
@@ -40,6 +51,17 @@ export function activeEffectHasSourceCombatant(
   combatantId: CombatantId,
 ): boolean {
   return effect.sourceCombatantId === combatantId;
+}
+
+function sourceRefsMatch(
+  effect: BattleActiveEffectSource,
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  sourceCombatantId: CombatantId,
+): boolean {
+  return (
+    effect.sourceProcedureRef === sourceProcedureRef &&
+    effect.sourceCombatantId === sourceCombatantId
+  );
 }
 
 export function replaceTargetActiveEffect(
