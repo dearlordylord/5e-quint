@@ -3424,7 +3424,7 @@ export function validateSavingThrowOutcomes(
       heightenedSpellTargetId,
     });
   }
-  /* v8 ignore start -- Malformed area Saving Throw fill: the procedure-specific area hole fixes its geometry kind, origin rule, unique in-battle affected targets, and any Fireball/Shatter/Thunderwave/Gust/Slow/Faerie Fire adjunct facts. This block rejects caller-mutated cross-procedure or spatial structure; Antimagic interdiction and outcome semantics remain measured below. */
+  /* v8 ignore next -- The public save-gate fill adapter rejects area-less values before this reducer validator; keep this defensive fallback for internal callers. */
   if (!("area" in value)) {
     return `Save-gate spell Saving Throw outcomes require area facts for ${targeting.kind}.`;
   }
@@ -3448,6 +3448,7 @@ export function validateSavingThrowOutcomes(
     if (invocation.procedure !== "saveGatedAttackRollAdvantage") {
       return "Faerie Fire object area facts are only valid for Faerie Fire.";
     }
+    /* v8 ignore next -- Spell procedure admission only exposes this profile for Faerie Fire; this defensive metadata cross-check has no public counterexample. */
     if (!saveGatedAttackRollAdvantageInvocationIsFaerieFire(invocation)) {
       return "Faerie Fire object area facts are only valid for Faerie Fire.";
     }
@@ -3523,7 +3524,6 @@ export function validateSavingThrowOutcomes(
       return "Save-gate spell area affected target must be a combatant in this battle.";
     }
   }
-  /* v8 ignore stop */
   const antimagicInterdiction = magicalEffectTargetsInterdictionMessage({
     state,
     source: SPELL_MAGICAL_EFFECT_SOURCE,

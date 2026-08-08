@@ -812,6 +812,30 @@ describe("battle runtime: Ice Knife", () => {
       tag: "invalid",
       message: "Ice Knife burst area must include the primary target.",
     });
+
+    const wrongOrigin = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetChoice,
+        attackRoll,
+        {
+          kind: "savingThrowOutcome",
+          holeId: savingThrows.holeId,
+          value: {
+            area: {
+              originAnchorId: wizardId,
+              affectedTargetIds: [skeletonId],
+            },
+            outcomes: [{ targetId: skeletonId, succeeded: false }],
+          },
+        },
+      ],
+    });
+    expect(wrongOrigin).toMatchObject({
+      tag: "invalid",
+      message: "Ice Knife burst area must originate from the primary target.",
+    });
   });
 
   test("Ice Knife burst damage requests Concentration follow-up for damaged burst targets", () => {

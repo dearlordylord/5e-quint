@@ -6,10 +6,13 @@ import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 import { characterAttackSubjectForTest } from "./battle-runtime.test-support.ts";
 import {
+  burningHandsUnitId,
   faerieFireUnitId,
+  gustOfWindUnitId,
   spellCasterId,
   spellTargetId,
   starryWispUnitId,
+  thunderwaveUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   attackTargetFill,
@@ -42,6 +45,27 @@ import {
   spellObjectTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import type { BattleSubject } from "./unit-profile-admission.test-support.ts";
+
+type SavingThrowFill = ReturnType<typeof savingThrowOutcomeFill>;
+
+function malformedAreaSavingThrowFill(
+  hole: Parameters<typeof savingThrowOutcomeFill>[0],
+  area: unknown,
+): SavingThrowFill {
+  const base = savingThrowOutcomeFill(hole, [
+    { targetId: spellTargetId, succeeded: false },
+  ]);
+  // Deliberately cross the typed fill boundary to model caller-mutated
+  // runtime data. `resolveBattleSubject` receives typed fills; it does not
+  // parse unknown input, and the branded ids/types are erased at runtime.
+  return {
+    ...base,
+    value:
+      area === undefined
+        ? { outcomes: base.value.outcomes }
+        : { area, outcomes: base.value.outcomes },
+  } as SavingThrowFill;
+}
 
 describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
   test("faerie_fire is admitted as point-origin Cube save-gated outline effects", () => {
@@ -85,6 +109,194 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
         areaChoices: [],
       }),
     ]);
+  });
+
+  test.each([
+    {
+      name: "missing area facts",
+      spellId: faerieFireUnitId,
+      area: undefined,
+      message: "Spell saving throw outcomes require area facts.",
+    },
+    {
+      name: "Grease area facts on a non-Grease spell",
+      spellId: faerieFireUnitId,
+      area: {
+        kind: "greaseGroundArea",
+        originAnchorId: spellCasterId,
+        affectedTargetIds: [spellTargetId],
+      },
+      message: "Grease ground-area facts are only valid for Grease.",
+    },
+    {
+      name: "Gust of Wind area facts on a non-Gust spell",
+      spellId: faerieFireUnitId,
+      area: {
+        kind: "gustOfWindLineArea",
+        originAnchorId: spellCasterId,
+        affectedTargetIds: [spellTargetId],
+      },
+      message: "Gust of Wind Line area facts are only valid for Gust of Wind.",
+    },
+    {
+      name: "Slow area facts on a non-Slow spell",
+      spellId: faerieFireUnitId,
+      area: {
+        kind: "slowArea",
+        originAnchorId: spellCasterId,
+        affectedTargetIds: [spellTargetId],
+      },
+      message: "Slow area facts are only valid for Slow.",
+    },
+    {
+      name: "Sleep non-sleeper facts on a non-Sleep spell",
+      spellId: faerieFireUnitId,
+      area: {
+        sleepNonSleeperFacts: [],
+        originAnchorId: spellCasterId,
+        affectedTargetIds: [spellTargetId],
+      },
+      message:
+        "Sleep non-sleeper facts are only valid for Sleep target admission.",
+    },
+    {
+      name: "Faerie Fire area facts on a non-Faerie Fire spell",
+      spellId: burningHandsUnitId,
+      area: {
+        kind: "faerieFireArea",
+        originAnchorId: spellCasterId,
+        affectedTargetIds: [],
+        affectedObjectIds: [],
+      },
+      message: "Faerie Fire object area facts are only valid for Faerie Fire.",
+    },
+    {
+      name: "duplicate Faerie Fire object ids",
+      spellId: faerieFireUnitId,
+      area: {
+        kind: "faerieFireArea",
+        originAnchorId: spellCasterId,
+        affectedTargetIds: [],
+        affectedObjectIds: [
+          battleObjectId("faerie-fire-boundary-duplicate"),
+          battleObjectId("faerie-fire-boundary-duplicate"),
+        ],
+      },
+      message:
+        "Faerie Fire area affected objects must not duplicate object ids.",
+    },
+    {
+      name: "self-origin Cone anchored away from the caster",
+      spellId: burningHandsUnitId,
+      area: {
+        originAnchorId: spellTargetId,
+        affectedTargetIds: [spellTargetId],
+      },
+      message:
+        "Self-origin Cone save-gate spell area must originate from the caster.",
+    },
+    {
+      name: "origin anchor outside this battle",
+      spellId: faerieFireUnitId,
+      area: {
+        originAnchorId: combatantId("faerie-fire-boundary-foreign-origin"),
+        affectedTargetIds: [spellTargetId],
+      },
+      message:
+        "Save-gate spell area origin anchor must be a combatant in this battle.",
+    },
+    {
+      name: "self-origin Cube anchored away from the caster",
+      spellId: thunderwaveUnitId,
+      area: {
+        originAnchorId: spellTargetId,
+        affectedTargetIds: [spellTargetId],
+      },
+      message:
+        "Self-origin Cube save-gate spell area must originate from the caster.",
+    },
+    {
+      name: "self-origin Line anchored away from the caster",
+      spellId: gustOfWindUnitId,
+      area: {
+        originAnchorId: spellTargetId,
+        affectedTargetIds: [spellTargetId],
+      },
+      message:
+        "Self-origin Line save-gate spell area must originate from the caster.",
+    },
+    {
+      name: "duplicate affected targets",
+      spellId: faerieFireUnitId,
+      area: {
+        originAnchorId: spellCasterId,
+        affectedTargetIds: [spellTargetId, spellTargetId],
+      },
+      message:
+        "Save-gate spell area affected targets must not duplicate targets.",
+    },
+    {
+      name: "affected target outside this battle",
+      spellId: faerieFireUnitId,
+      area: {
+        originAnchorId: spellCasterId,
+        affectedTargetIds: [combatantId("faerie-fire-boundary-foreign-target")],
+      },
+      message:
+        "Save-gate spell area affected target must be a combatant in this battle.",
+    },
+    {
+      name: "Thunderwave push facts on a non-Thunderwave spell",
+      spellId: burningHandsUnitId,
+      area: {
+        kind: "thunderwaveArea",
+        originAnchorId: spellCasterId,
+        affectedTargetIds: [spellTargetId],
+      },
+      message: "Thunderwave push facts are only valid for Thunderwave.",
+    },
+    {
+      name: "Fireball ignition facts on a non-Fireball spell",
+      spellId: burningHandsUnitId,
+      area: {
+        kind: "fireballArea",
+        originAnchorId: spellCasterId,
+        affectedTargetIds: [spellTargetId],
+      },
+      message: "Fireball object ignition facts are only valid for Fireball.",
+    },
+    {
+      name: "Shatter object facts on a non-Shatter spell",
+      spellId: burningHandsUnitId,
+      area: {
+        kind: "shatterArea",
+        originAnchorId: spellCasterId,
+        affectedTargetIds: [spellTargetId],
+      },
+      message: "Shatter object damage facts are only valid for Shatter.",
+    },
+  ] as const)("public save-gate area validation: $name", (testCase) => {
+    const state = spellBattle({
+      preparedSpells: [spellRecord(testCase.spellId)],
+      spellSlots: [
+        { spellLevel: 1, count: 1 },
+        { spellLevel: 2, count: 1 },
+      ],
+    });
+    const act = spellAct({ session: state, spellId: testCase.spellId });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+
+    expect(
+      resolveBattleSubject({
+        state: state.state,
+        subject: act.subject,
+        fills: [malformedAreaSavingThrowFill(savingThrow, testCase.area)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: testCase.message,
+    });
   });
 
   test("faerie_fire grants persistent attack Advantage against failed-save creatures", () => {
