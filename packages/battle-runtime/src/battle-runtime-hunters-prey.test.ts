@@ -42,6 +42,7 @@ import {
   startBattleSessionRight,
   statBlockCreatureInit,
   supportedBattleUnitRef,
+  testCharacterD20Statistics,
   testDaggerAttack,
   targetFill,
   testLongswordAttack,
@@ -99,6 +100,33 @@ function huntersPreyUnitRef(
         huntersPrey,
       },
     ],
+  };
+}
+
+function selectedDarkOnesBlessingUnit() {
+  const unit = unitLibrary.requireUnit("warlock_dark_ones_blessing");
+  const admitted = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  if (Either.isLeft(admitted)) {
+    throw new Error(admitted.left.message);
+  }
+  return { unit, unitRef: admitted.right };
+}
+
+function darkOnesBlessingRangeFact(
+  sourceProcedureRef: ReturnType<
+    typeof requireCharacterUnitProcedureRefForTest
+  >,
+) {
+  return {
+    kind: "enemyZeroHitPointTemporaryHitPointsBeneficiaryWithinRange" as const,
+    beneficiaryId: fighterId,
+    damageSourceId: fighterId,
+    targetId: skeletonId,
+    sourceProcedureRef,
+    rangeFeet: movementFeet(10),
   };
 }
 
@@ -522,6 +550,19 @@ describe("battle runtime: Hunter's Prey", () => {
       choices: ["use", "decline"],
     });
 
+    const declined = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [...primaryFills, unitFeatureDecisionFill(decision, "decline")],
+      }),
+    );
+    expect(declined.state.combatants.get(goblinId)?.hp).toBe(Hp(6));
+    expect(declined.state.combatants.get(skeletonId)?.hp).toBe(Hp(10));
+    expect(
+      declined.state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn,
+    ).toEqual([]);
+
     const target = requireHole(
       resolveBattleSubject({
         state,
@@ -589,6 +630,173 @@ describe("battle runtime: Hunter's Prey", () => {
     ).toEqual([
       { attackerId: fighterId, procedureRef: huntersPreyProcedureRef(session) },
     ]);
+  });
+
+  test("Horde Breaker carries a zero-hit-point relationship decision into Dark One's Blessing", () => {
+    const { unit: blessingUnit, unitRef: blessingUnitRef } =
+      selectedDarkOnesBlessingUnit();
+    const session = startBattleSessionRight({
+      battleId: battleId(
+        "battle-hunters-prey-horde-breaker-dark-ones-blessing",
+      ),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "warlock", level: classLevel(3) }],
+          d20Statistics: testCharacterD20Statistics({ str: 16, cha: 16 }),
+          characterUnitRefs: [
+            huntersPreyUnitRef("hordeBreaker"),
+            blessingUnitRef,
+          ],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(blessingUnit, [
+              { className: "warlock", level: classLevel(3) },
+            ]),
+          ],
+          attack: testLongswordAttack(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          displayName: "Dark Blessing Target",
+          initiative: 9,
+          currentHp: 1,
+        }),
+      ],
+    });
+    const state = session.state;
+    const subject = fighterAttackSubject(state, "Longsword");
+    const blessingProcedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      fighterId,
+      String(blessingUnit.id),
+    );
+    const primaryTarget = attackInitialTargetHole(state, subject);
+    const primaryRoll = attackRollHoleAfterTarget(
+      state,
+      primaryTarget,
+      subject,
+      goblinId,
+    );
+    const primaryDamage = attackDamageHoleAfterHit(
+      state,
+      primaryTarget,
+      primaryRoll,
+      { total: 15, naturalD20: 10 },
+      subject,
+      goblinId,
+    );
+    const primaryFills = [
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
+      attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
+      damageRollFillWithGroups(primaryDamage, [[1]]),
+    ];
+    const decision = requireHole(
+      resolveBattleSubject({ state, subject, fills: primaryFills }),
+      "unitFeatureDecision",
+    );
+    const target = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [...primaryFills, unitFeatureDecisionFill(decision, "use")],
+      }),
+      "targetChoice",
+    );
+    const secondTargetFill = targetFill(target, skeletonId, [
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
+      {
+        kind: "hordeBreakerSecondTargetEligible" as const,
+        attackerId: fighterId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(target),
+        originalTargetId: goblinId,
+        secondTargetId: skeletonId,
+      },
+      darkOnesBlessingRangeFact(blessingProcedureRef),
+    ]);
+    const hordeRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(decision, "use"),
+          secondTargetFill,
+        ],
+      }),
+      "attackRoll",
+    );
+    const hordeDamage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(decision, "use"),
+          secondTargetFill,
+          attackRollFill(hordeRoll, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const fillsThroughDamage = [
+      ...primaryFills,
+      unitFeatureDecisionFill(decision, "use"),
+      secondTargetFill,
+      attackRollFill(hordeRoll, { total: 15, naturalD20: 10 }),
+      damageRollFillWithGroups(hordeDamage, [[1]]),
+    ];
+    const disposition = requireHole(
+      resolveBattleSubject({ state, subject, fills: fillsThroughDamage }),
+      "attackDamageDisposition",
+    );
+    const relationship = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...fillsThroughDamage,
+          attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
+        ],
+      }),
+      "damageRelationshipDecisions",
+    );
+    const relationshipQuestion = relationship.questions[0];
+    if (relationshipQuestion === undefined) {
+      throw new Error("Expected Dark One's Blessing relationship question.");
+    }
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          ...fillsThroughDamage,
+          attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
+          {
+            kind: "damageRelationshipDecisions" as const,
+            holeId: relationship.holeId,
+            answers: [
+              {
+                questionId: relationshipQuestion.questionId,
+                answer: true,
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(Hp(0));
+    expect(resolved.state.combatants.get(fighterId)?.tempHp).toBe(Hp(6));
   });
 
   test("Horde Breaker resets on the Ranger's next turn", () => {

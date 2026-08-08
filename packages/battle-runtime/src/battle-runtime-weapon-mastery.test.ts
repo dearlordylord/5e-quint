@@ -999,6 +999,20 @@ describe("battle runtime: Weapon Mastery", () => {
       choices: ["use", "decline"],
     });
 
+    const declined = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [...primaryFills, unitFeatureDecisionFill(decision, "decline")],
+      }),
+    );
+    expect(declined.state.combatants.get(goblinId)?.hp).toBe(Hp(6));
+    expect(declined.state.combatants.get(skeletonId)?.hp).toBe(Hp(10));
+    expect(
+      declined.state.currentTurnResources
+        .weaponMasteryCleaveAttackersUsedThisTurn,
+    ).toEqual([]);
+
     const target = requireHole(
       resolveBattleSubject({
         state,
