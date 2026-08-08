@@ -2281,6 +2281,16 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
 
   test("Shove resolves the Unarmed Strike save and prone failure effect", () => {
     const state = fighterVsGoblinBattle();
+    const targetBefore = state.combatants.get(goblinId);
+    if (targetBefore === undefined) {
+      throw new Error("Expected the Shove target combatant.");
+    }
+    const targetSnapshotBefore = snapshotBattle(state).combatants.find(
+      (combatant) => combatant.combatantId === goblinId,
+    );
+    if (targetSnapshotBefore === undefined) {
+      throw new Error("Expected the Shove target snapshot.");
+    }
     const subject: BattleSubject = {
       tag: "action",
       actorId: fighterId,
@@ -2386,6 +2396,30 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         },
       },
     ]);
+
+    const succeeded = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          shoveOutcomeFill(outcome, { succeeded: true }),
+        ],
+      }),
+    );
+    expect(succeeded.shovePushes).toBeUndefined();
+    expect(succeeded.state.combatants.get(goblinId)).toBe(targetBefore);
+    expect(succeeded.state.combatants.get(goblinId)?.movementSpentFeet).toBe(
+      targetBefore.movementSpentFeet,
+    );
+    expect(
+      snapshotBattle(succeeded.state).combatants.find(
+        (combatant) => combatant.combatantId === goblinId,
+      ),
+    ).toEqual(targetSnapshotBefore);
+    expect(succeeded.state.combatants.get(goblinId)?.conditions).not.toContain(
+      "prone",
+    );
   });
 
   test("true-form Shove DC uses the projected Unarmed Strike ability modifier", () => {

@@ -495,7 +495,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       return resolveCreatureAttack({ ...input, subject });
     }
     if (subject.tag === "action" && subject.action === "dash") {
-      return resolveDash(input);
+      return resolveDash({ ...input, subject });
     }
     if (subject.tag === "action" && subject.action === "disengage") {
       return resolveDisengage(input);

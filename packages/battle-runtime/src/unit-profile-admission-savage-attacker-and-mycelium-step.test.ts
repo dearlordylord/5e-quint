@@ -7,6 +7,7 @@ import {
   characterBattleFeatureInitForTest,
   battleProcedureExecutionRefForTest,
   requireCharacterUnitProcedureRefForTest,
+  requireResolved,
 } from "./battle-runtime.test-support.ts";
 import {
   rogueSneakAttackUnitId,
@@ -127,26 +128,52 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
       ],
     });
 
-    const resolved = resolveBattleSubject({
-      state,
-      subject,
-      fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId),
-        attackRollFill(roll, { total: 15, naturalD20: 10 }),
-        damageRollFillWithGroups(damage, [[8]], undefined, {
-          procedureRef: requireCharacterUnitProcedureRefForTest(
-            session,
-            spellCasterId,
-            savageAttackerUnitId,
-          ),
-          selection: "second",
-          candidates: [
-            { results: [DieRollResult(2)] },
-            { results: [DieRollResult(8)] },
-          ],
-        }),
-      ],
-    });
+    const procedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      spellCasterId,
+      savageAttackerUnitId,
+    );
+    const resolvedFirst = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          attackTargetFill(target, spellCasterId, spellTargetId),
+          attackRollFill(roll, { total: 15, naturalD20: 10 }),
+          damageRollFillWithGroups(damage, [[2]], undefined, {
+            procedureRef,
+            selection: "first",
+            candidates: [
+              { results: [DieRollResult(2)] },
+              { results: [DieRollResult(8)] },
+            ],
+          }),
+        ],
+      }),
+    );
+    expect(Number(resolvedFirst.state.combatants.get(spellTargetId)?.hp)).toBe(
+      10,
+    );
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          attackTargetFill(target, spellCasterId, spellTargetId),
+          attackRollFill(roll, { total: 15, naturalD20: 10 }),
+          damageRollFillWithGroups(damage, [[8]], undefined, {
+            procedureRef,
+            selection: "second",
+            candidates: [
+              { results: [DieRollResult(2)] },
+              { results: [DieRollResult(8)] },
+            ],
+          }),
+        ],
+      }),
+    );
+    expect(Number(resolved.state.combatants.get(spellTargetId)?.hp)).toBe(4);
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {

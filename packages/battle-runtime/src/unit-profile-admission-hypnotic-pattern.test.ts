@@ -546,6 +546,69 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       requireCombatant(shaken.state, spellCasterId).concentration,
     ).toBeNull();
   });
+
+  test("Hypnotic Pattern shake-awake rejects a discovered action after the helper spends it", () => {
+    const cast = castFailedHypnoticPattern(
+      spellBattle({
+        preparedSpells: [hypnoticPatternSpellRecord()],
+        spellSlots: [{ spellLevel: 3, count: 1 }],
+      }),
+    );
+    const casterTurnEnded = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (casterTurnEnded.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const targetTurnEnded = endTurn({
+      state: casterTurnEnded.state,
+      actorId: spellTargetId,
+    });
+    if (targetTurnEnded.tag !== "resolved") {
+      throw new Error("Expected target End Turn to resolve.");
+    }
+
+    const activeSession: BattleRuntimeSession = battleRuntimeSessionForTest({
+      ...cast,
+      state: targetTurnEnded.state,
+    });
+    const act = discoverBattleActs(activeSession).find(
+      (candidate) =>
+        candidate.subject.tag === "action" &&
+        candidate.subject.actorId === spellCasterId &&
+        candidate.subject.action === "shakeAwakeFromHypnoticPattern",
+    );
+    if (act === undefined) {
+      throw new Error("Expected Hypnotic Pattern shake-awake act.");
+    }
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const dashed = resolveBattleSubject({
+      state: targetTurnEnded.state,
+      subject: {
+        tag: "action",
+        actorId: spellCasterId,
+        action: "dash",
+        speedKind: "walk",
+      },
+      fills: [],
+    });
+    if (dashed.tag !== "resolved") {
+      throw new Error("Expected the helper Dash to resolve.");
+    }
+
+    expect(
+      resolveBattleSubject({
+        state: dashed.state,
+        subject: act.subject,
+        fills: [hypnoticPatternShakeAwakeTargetFill(targetHole)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Hypnotic Pattern shake-awake is no longer available.",
+    });
+  });
 });
 
 function castFailedHypnoticPattern(

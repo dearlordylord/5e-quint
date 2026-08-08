@@ -1064,6 +1064,67 @@ describe("battle runtime: Stat Block actions", () => {
     });
   });
 
+  test("Goblin Warrior Nimble Escape rejects a discovered Hide after concealment ends", () => {
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: fighterVsGoblinBattle({
+          hidePrerequisites: hidePrerequisites([
+            [goblinId, { kind: "heavilyObscuredOutOfEnemyLineOfSight" }],
+          ]),
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject = discoveredStatBlockBonusActionSubject(goblinTurn, "hide");
+    const act = findAct(goblinTurn, subject);
+    const staleState = {
+      ...goblinTurn,
+      hidePrerequisites: new Map(),
+    } satisfies BattleState;
+
+    expect(
+      resolveBattleSubject({
+        state: staleState,
+        subject,
+        fills: [
+          abilityCheckFill(findHole(act.initialHoles, "abilityCheck"), 17),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message:
+        "Hide requires Heavily Obscured, sufficient cover, or an admitted creature-obscurement permission while out of enemy line of sight.",
+    });
+  });
+
+  test("Goblin Warrior Nimble Escape can fail its Hide check while spending Bonus Action", () => {
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: fighterVsGoblinBattle({
+          hidePrerequisites: hidePrerequisites([
+            [goblinId, { kind: "heavilyObscuredOutOfEnemyLineOfSight" }],
+          ]),
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject = discoveredStatBlockBonusActionSubject(goblinTurn, "hide");
+    const act = findAct(goblinTurn, subject);
+    const result = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject,
+        fills: [
+          abilityCheckFill(findHole(act.initialHoles, "abilityCheck"), 1),
+        ],
+      }),
+    ).state;
+
+    expect(result.currentTurnResources.currentHasBonusAction).toBe(false);
+    expect(result.combatants.get(goblinId)?.hidden).toBeNull();
+  });
+
   test("Stat Block Multiattack spends the Attack action and grants named dispatch attacks", () => {
     const goblinTurn = requireResolved(
       endTurn({
@@ -1394,7 +1455,12 @@ describe("battle runtime: Stat Block actions", () => {
         subject: escapeSubject,
         fills: [grappleOutcomeFill(escape, true)],
       }),
-    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Pending Stat Block Multiattack dispatches must be resolved, Movement may be taken between attacks, or the turn must end before other battle subjects.",
+    });
   });
 
   test("Stat Block Multiattack remains gated when dispatch names are ambiguous", () => {

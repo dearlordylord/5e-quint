@@ -1408,6 +1408,41 @@ describe("battle runtime: Sleep", () => {
     });
   });
 
+  test("Sleep shake-awake rejects a discovered action after the helper spends it", () => {
+    const state = battleAfterFailedSleepInitialSave({
+      battle: "battle-sleep-shake-awake-stale-action",
+    });
+    const subject = sleepShakeAwakeSubject();
+    const target = findHole(
+      findAct(state, subject).initialHoles,
+      "targetChoice",
+    );
+    const dashed = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "action",
+          actorId: fighterId,
+          action: "dash",
+          speedKind: "walk",
+        },
+        fills: [],
+      }),
+    ).state;
+
+    expect(
+      resolveBattleSubject({
+        state: dashed,
+        subject,
+        fills: [sleepShakeAwakeTargetFill(target)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Sleep shake-awake is no longer available.",
+    });
+  });
+
   test("Sleep shake-awake cannot be repeated after the target is awake", () => {
     const fighterTurn = battleAfterFailedSleepInitialSave({
       battle: "battle-sleep-shake-awake-repeat",

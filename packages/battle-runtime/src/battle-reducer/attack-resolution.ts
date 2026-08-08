@@ -222,7 +222,6 @@ import {
 } from "./battle-runtime-protocol.ts";
 import {
   actorHasClassFeatureExtraAttackActionResource,
-  actorHasStatBlockMultiattackActionResource,
   isStatBlockBattleCreatureState,
   spendTurnAction,
   supportedStatBlockBonusActionStandardAction,
@@ -272,7 +271,9 @@ export function needsAttackDamageConcentrationResult(input: {
 }
 
 export function resolveDash(
-  input: BattleResolutionInput,
+  input: BattleResolutionInputForSubject<
+    Extract<BattleSubject, { readonly tag: "action"; readonly action: "dash" }>
+  >,
 ): BattleResolutionResult {
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
@@ -290,10 +291,7 @@ export function resolveDash(
     );
   }
   /* v8 ignore stop */
-  const speedKind =
-    input.subject.tag === "action" && input.subject.action === "dash"
-      ? input.subject.speedKind
-      : "walk";
+  const speedKind = input.subject.speedKind;
   if (!representedMovementSpeedKinds(actor).includes(speedKind)) {
     return invalidResult(
       input.state,
@@ -1463,18 +1461,6 @@ export function resolveGrapple(
     );
   }
   /* v8 ignore stop */
-  if (
-    actorHasStatBlockMultiattackActionResource(
-      input.state,
-      input.subject.actorId,
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Grapple is not available during a Stat Block Multiattack dispatch.",
-    );
-  }
   const relationshipFacts = parseSavingThrowRelationshipFacts(
     fillSet.outcome.relationshipFacts ?? [],
     link.link.grapplerId,
@@ -1618,18 +1604,6 @@ export function resolveShove(
     }
     /* v8 ignore stop */
   }
-  if (
-    actorHasStatBlockMultiattackActionResource(
-      input.state,
-      input.subject.actorId,
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Shove is not available during a Stat Block Multiattack dispatch.",
-    );
-  }
   const relationshipFacts = parseSavingThrowRelationshipFacts(
     fillSet.outcome.relationshipFacts ?? [],
     input.subject.actorId,
@@ -1727,18 +1701,6 @@ export function resolveEscapeGrapple(
     );
   }
   /* v8 ignore stop */
-  if (
-    actorHasStatBlockMultiattackActionResource(
-      input.state,
-      input.subject.actorId,
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Escape Grapple is not available during a Stat Block Multiattack dispatch.",
-    );
-  }
   const spent = spendEscapeGrappleActionResource(
     input.state.currentTurnResources,
     input.subject.actorId,
@@ -1802,18 +1764,6 @@ export function resolveEscapeSpellRestraint(
     );
   }
   /* v8 ignore stop */
-  if (
-    actorHasStatBlockMultiattackActionResource(
-      input.state,
-      input.subject.actorId,
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Escape spell Restraint is not available during a Stat Block Multiattack dispatch.",
-    );
-  }
   const dc = spellSaveDcForCaster(input.state, effect.sourceCombatantId);
   /* v8 ignore start -- BattleState lifecycle invariant: removing a spell source also removes its sourced active effects, so a surviving restraint retains its caster DC. */
   if (dc === null) {
