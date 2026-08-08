@@ -26,7 +26,7 @@ const COVER_DEGREES = [
 ] as const satisfies ReadonlyArray<string>;
 export type CoverDegree = (typeof COVER_DEGREES)[number];
 
-export const DIRECTIONS = Object.freeze([
+const DIRECTIONS = Object.freeze([
   "same-horizontal-position",
   "north",
   "north-east",
@@ -38,6 +38,17 @@ export const DIRECTIONS = Object.freeze([
   "north-west",
 ] as const) satisfies ReadonlyArray<string>;
 export type Direction = (typeof DIRECTIONS)[number];
+
+const PREVIEW_RELATION_PHASES = ["before", "after"] as const;
+export type PreviewRelationPhase = (typeof PREVIEW_RELATION_PHASES)[number];
+
+const PREVIEW_RELATION_POLICIES = {
+  before: { movePreview: false },
+  after: { movePreview: true },
+} as const satisfies Record<
+  PreviewRelationPhase,
+  Readonly<{ readonly movePreview: boolean }>
+>;
 
 export type GeometricSight = "clear" | "blocked";
 
@@ -107,8 +118,6 @@ export type StepPreview = Readonly<{
   readonly stateFingerprint: StateFingerprint;
   readonly revision: SpatialRevision;
   readonly mover: TokenId;
-  readonly from: CellCoordinate;
-  readonly to: CellCoordinate;
   readonly step: RouteStep;
 }>;
 
@@ -241,11 +250,17 @@ export type UnknownTokenError = Readonly<{
   readonly token: TokenId;
 }>;
 
+export type RevisionLimitError = Readonly<{
+  readonly tag: "revision-limit";
+  readonly message: string;
+}>;
+
 export type PlaceTokenError =
   | CoordinateError
   | MissingCellError
-  | DuplicateTokenError;
-export type RemoveTokenError = UnknownTokenError;
+  | DuplicateTokenError
+  | RevisionLimitError;
+export type RemoveTokenError = UnknownTokenError | RevisionLimitError;
 export type OccupantsAtError = CoordinateError | MissingCellError;
 export type PlacementOfError = UnknownTokenError;
 export type RelationError = UnknownTokenError;
@@ -314,6 +329,7 @@ export type CommitError =
   | Readonly<{
       readonly tag: "cross-arena-preview";
     }>
+  | RevisionLimitError
   | StalePreviewError;
 
 export type StalePreviewCause =
@@ -368,8 +384,6 @@ type PreviewProjection = Readonly<{
   readonly stateFingerprint: StateFingerprint;
   readonly revision: SpatialRevision;
   readonly mover: TokenId;
-  readonly from: CellCoordinate;
-  readonly to: CellCoordinate;
   readonly step: RouteStep;
 }>;
 
@@ -728,9 +742,10 @@ export function placeToken(
   }
   const placements = new Map(stateData.placements);
   placements.set(token, coordinate);
-  return success(
-    makeState(stateData.arena, nextRevision(stateData.revision), placements),
-  );
+  const revision = nextRevision(stateData.revision);
+  return revision === undefined
+    ? failure(revisionLimitError())
+    : success(makeState(stateData.arena, revision, placements));
 }
 
 export function removeToken(
@@ -743,9 +758,10 @@ export function removeToken(
   }
   const placements = new Map(stateData.placements);
   placements.delete(token);
-  return success(
-    makeState(stateData.arena, nextRevision(stateData.revision), placements),
-  );
+  const revision = nextRevision(stateData.revision);
+  return revision === undefined
+    ? failure(revisionLimitError())
+    : success(makeState(stateData.arena, revision, placements));
 }
 
 export function occupantsAt(
@@ -1036,8 +1052,6 @@ export function previewStep(
       stateFingerprint: stateData.fingerprint,
       revision: stateData.revision,
       mover,
-      from,
-      to: destination,
       step,
     },
     {
@@ -1051,7 +1065,7 @@ export function previewStep(
 export function previewRelation(
   preview: StepPreview,
   counterpart: TokenId,
-  phase: "before" | "after",
+  phase: PreviewRelationPhase,
 ): Result<SpatialRelation, PreviewRelationError> {
   const previewData = isObject(preview)
     ? previewDataByHandle.get(preview)
@@ -1067,8 +1081,8 @@ export function previewRelation(
     });
   }
   const placements = new Map(stateData.placements);
-  if (phase === "after") {
-    placements.set(preview.mover, preview.to);
+  if (PREVIEW_RELATION_POLICIES[phase].movePreview) {
+    placements.set(preview.mover, preview.step.to);
   }
   return relationForPlacements(
     arenaDataOf(previewData.arena),
@@ -1092,19 +1106,22 @@ export function commitPreview(
   if (stateData.arena !== previewData.arena) {
     return failure({ tag: "cross-arena-preview" });
   }
-  if (stateData.fingerprint !== preview.stateFingerprint) {
-    const actualOrigin = stateData.placements.get(preview.mover);
-    const cause: StalePreviewCause =
-      actualOrigin === undefined
-        ? { tag: "mover-missing", mover: preview.mover }
-        : !sameCoordinate(actualOrigin, preview.from)
-          ? {
-              tag: "mover-origin-changed",
-              mover: preview.mover,
-              expected: preview.from,
-              actual: actualOrigin,
-            }
-          : { tag: "state-changed" };
+  const actualOrigin = stateData.placements.get(preview.mover);
+  const cause: StalePreviewCause =
+    actualOrigin === undefined
+      ? { tag: "mover-missing", mover: preview.mover }
+      : !sameCoordinate(actualOrigin, preview.step.from)
+        ? {
+            tag: "mover-origin-changed",
+            mover: preview.mover,
+            expected: preview.step.from,
+            actual: actualOrigin,
+          }
+        : { tag: "state-changed" };
+  const moverConflicts =
+    actualOrigin === undefined ||
+    !sameCoordinate(actualOrigin, preview.step.from);
+  if (stateData.fingerprint !== preview.stateFingerprint || moverConflicts) {
     return failure({
       tag: "stale-preview",
       cause,
@@ -1114,22 +1131,12 @@ export function commitPreview(
       actualRevision: stateData.revision,
     });
   }
-  const actualOrigin = stateData.placements.get(preview.mover);
-  if (actualOrigin === undefined) {
-    // An equal state fingerprint proves the mover is present; this branch is
-    // therefore an internal invariant failure, not a public stale case.
-    throw new Error("Equal state fingerprint lost the preview mover.");
-  }
-  if (!sameCoordinate(actualOrigin, preview.from)) {
-    // An equal state fingerprint proves the origin is unchanged; this branch
-    // is therefore an internal invariant failure, not a public stale case.
-    throw new Error("Equal state fingerprint changed the preview origin.");
-  }
   const placements = new Map(stateData.placements);
-  placements.set(preview.mover, preview.to);
-  return success(
-    makeState(stateData.arena, nextRevision(stateData.revision), placements),
-  );
+  placements.set(preview.mover, preview.step.to);
+  const revision = nextRevision(stateData.revision);
+  return revision === undefined
+    ? failure(revisionLimitError())
+    : success(makeState(stateData.arena, revision, placements));
 }
 
 function relationForPlacements(
@@ -1236,8 +1243,19 @@ function initialRevision(): SpatialRevision {
   return makeSpatialRevision(0);
 }
 
-function nextRevision(revision: SpatialRevision): SpatialRevision {
-  return makeSpatialRevision(revision + 1);
+function nextRevision(revision: SpatialRevision): SpatialRevision | undefined {
+  const candidate = revision + 1;
+  return Number.isSafeInteger(candidate) && candidate >= 0
+    ? (candidate as SpatialRevision)
+    : undefined;
+}
+
+function revisionLimitError(): RevisionLimitError {
+  return {
+    tag: "revision-limit",
+    message:
+      "The spatial revision cannot advance beyond exact numeric capacity.",
+  };
 }
 
 function makeSpatialRevision(value: number): SpatialRevision {
@@ -1691,19 +1709,28 @@ function rationalCoordinateInRange(
 }
 
 function directionFor(deltaX: number, deltaY: number): Direction {
-  if (deltaX === 0) {
-    if (deltaY === 0) {
-      return "same-horizontal-position";
-    }
-    return deltaY > 0 ? "north" : "south";
+  const direction: Direction =
+    deltaX === 0
+      ? deltaY === 0
+        ? "same-horizontal-position"
+        : deltaY > 0
+          ? "north"
+          : "south"
+      : deltaY === 0
+        ? deltaX > 0
+          ? "east"
+          : "west"
+        : deltaX > 0
+          ? deltaY > 0
+            ? "north-east"
+            : "south-east"
+          : deltaY > 0
+            ? "north-west"
+            : "south-west";
+  if (!DIRECTIONS.includes(direction)) {
+    throw new Error("Direction table lost a geometric direction.");
   }
-  if (deltaY === 0) {
-    return deltaX > 0 ? "east" : "west";
-  }
-  if (deltaX > 0) {
-    return deltaY > 0 ? "north-east" : "south-east";
-  }
-  return deltaY > 0 ? "north-west" : "south-west";
+  return direction;
 }
 
 function compareSearchNodes(

@@ -6,6 +6,7 @@ import {
   type ArenaDefinition,
   type CellCoordinate,
   type CellDefinition,
+  type CoverDegree,
   type ProspectiveStep,
   type Result,
   type SpatialState,
@@ -815,8 +816,8 @@ describe("state-bound step preview and commitment", () => {
     expect(preview.stateFingerprint).toBe(snapshot(initial).fingerprint);
     expect(preview.revision).toBe(snapshot(initial).revision);
     expect(preview.mover).toBe(token("mover"));
-    expect(preview.from).toEqual({ x: 0, y: 0 });
-    expect(preview.to).toEqual({ x: 1, y: 0 });
+    expect(preview.step.from).toEqual({ x: 0, y: 0 });
+    expect(preview.step.to).toEqual({ x: 1, y: 0 });
     expect(preview.step.distanceFeet).toBe(CELL_SIZE_FEET);
     expect(Object.isFrozen(preview)).toBe(true);
     expect(Object.isFrozen(preview.step)).toBe(true);
@@ -932,29 +933,38 @@ describe("state-bound step preview and commitment", () => {
   });
 
   it("traces several current previews, occupancy change, and named-counterpart reach", () => {
-    const map = arena(squareDefinition(5, 1));
+    const map = arena(squareDefinition(6, 1));
     const counterpart = token("counterpart");
     const mover = token("mover");
-    const initial = place(
-      place(createState(map), "mover", { x: 0, y: 0 }),
+    const routeOrigin = place(
+      place(createState(map), "mover", { x: 1, y: 0 }),
       "counterpart",
-      { x: 4, y: 0 },
+      { x: 0, y: 0 },
     );
-    const evaluator = (step: ProspectiveStep) => ({
-      tag: "passable" as const,
-      weight: step.distanceFeet,
-    });
+    const originalPlan = value(
+      routePlan(routeOrigin, mover, { x: 5, y: 0 }, physicalDistanceEvaluator),
+    );
     const observed: Array<readonly [number, number]> = [];
     const firstPreview = value(
-      stepPreview(initial, mover, { x: 1, y: 0 }, evaluator),
+      stepPreview(
+        routeOrigin,
+        mover,
+        originalPlan.steps[0].to,
+        physicalDistanceEvaluator,
+      ),
     );
     observed.push([
       value(previewRelation(firstPreview, counterpart, "before")).distanceFeet,
       value(previewRelation(firstPreview, counterpart, "after")).distanceFeet,
     ]);
-    const afterFirst = value(commitPreview(initial, firstPreview));
+    const afterFirst = value(commitPreview(routeOrigin, firstPreview));
     const secondPreview = value(
-      stepPreview(afterFirst, mover, { x: 2, y: 0 }, evaluator),
+      stepPreview(
+        afterFirst,
+        mover,
+        originalPlan.steps[1].to,
+        physicalDistanceEvaluator,
+      ),
     );
     observed.push([
       value(previewRelation(secondPreview, counterpart, "before")).distanceFeet,
@@ -962,38 +972,43 @@ describe("state-bound step preview and commitment", () => {
     ]);
     const afterSecond = value(commitPreview(afterFirst, secondPreview));
     expect(observed).toEqual([
-      [20, 15],
-      [15, 10],
+      [5, 10],
+      [10, 15],
     ]);
 
-    const occupied = place(afterSecond, "obstacle", { x: 3, y: 0 });
-    const nextSuggestion = planRoute(
+    const occupied = place(afterSecond, "obstacle", originalPlan.steps[2].to);
+    const occupantBlockingEvaluator = (step: ProspectiveStep) =>
+      step.occupants.length === 0
+        ? { tag: "passable" as const, weight: step.distanceFeet }
+        : { tag: "impassable" as const };
+    expect(
+      previewStep(
+        occupied,
+        mover,
+        originalPlan.steps[2].to,
+        occupantBlockingEvaluator,
+      ),
+    ).toEqual({
+      tag: "error",
+      error: {
+        tag: "step-impassable",
+      },
+    });
+    const replanned = routePlan(
       occupied,
       mover,
-      coordinateValue({ x: 4, y: 0 }),
-      (step) =>
-        step.occupants.length === 0
-          ? { tag: "passable", weight: step.distanceFeet }
-          : { tag: "impassable" },
+      { x: 5, y: 0 },
+      occupantBlockingEvaluator,
     );
-    expect(nextSuggestion).toEqual({
+    expect(replanned).toEqual({
       tag: "error",
       error: {
         tag: "no-route",
         mover,
-        destination: { x: 4, y: 0 },
+        destination: { x: 5, y: 0 },
       },
     });
-    const replanned = value(
-      planRoute(
-        occupied,
-        mover,
-        coordinateValue({ x: 2, y: 0 }),
-        physicalDistanceEvaluator,
-      ),
-    );
-    expect(replanned.steps.map((step) => step.to)).toEqual([]);
-    expect(snapshot(initial).revision).toBe(2);
+    expect(snapshot(routeOrigin).revision).toBe(2);
     expect(snapshot(afterSecond).revision).toBe(4);
   });
 });
@@ -1052,19 +1067,31 @@ describe("public property seam", () => {
   it("preserves generated authored cells in deterministic snapshots", () => {
     fc.assert(
       fc.property(validArenaDefinitionArbitrary, (definition) => {
-        const parsed = parseArena(definition);
-        expect(parsed.tag).toBe("ok");
-        if (parsed.tag === "error") {
+        const firstParsed = parseArena(definition);
+        expect(firstParsed.tag).toBe("ok");
+        if (firstParsed.tag === "error") {
           return;
         }
-        const actual = arenaSnapshot(parsed.value).cells.map((cell) => ({
-          ...cell.coordinate,
-          terrain: cell.terrain,
-        }));
-        const expected = [...definition.cells].sort(
-          (first, second) => first.x - second.x || first.y - second.y,
+        const firstSnapshot = arenaSnapshot(firstParsed.value);
+        const cellsByCoordinate = new Map(
+          definition.cells.map((cell) => [`${cell.x},${cell.y}`, cell.terrain]),
         );
-        expect(actual).toEqual(expected);
+        for (const cell of firstSnapshot.cells) {
+          expect(
+            cellsByCoordinate.get(`${cell.coordinate.x},${cell.coordinate.y}`),
+          ).toBe(cell.terrain);
+        }
+        const secondParsed = parseArena({
+          cells: [...definition.cells].reverse(),
+          boundaries: [],
+        });
+        expect(secondParsed.tag).toBe("ok");
+        if (secondParsed.tag === "error") {
+          return;
+        }
+        const secondSnapshot = arenaSnapshot(secondParsed.value);
+        expect(secondSnapshot).toEqual(firstSnapshot);
+        expect(secondSnapshot.fingerprint).toBe(firstSnapshot.fingerprint);
       }),
       { numRuns: 40 },
     );
@@ -1105,6 +1132,89 @@ describe("public property seam", () => {
         expect(JSON.parse(JSON.stringify(view))).toEqual(view);
       }),
       { numRuns: 30 },
+    );
+  });
+
+  it("keeps generated arenas immutable after raw definitions are mutated", () => {
+    fc.assert(
+      fc.property(cornerArenaDefinitionArbitrary, (definition) => {
+        const rawCells = definition.cells.map((cell) => ({ ...cell }));
+        const rawBoundaries = definition.boundaries.map((boundary) => ({
+          ...boundary,
+          between: boundary.between.map((coordinate) => ({ ...coordinate })),
+        }));
+        const parsed = parseArena({
+          cells: rawCells,
+          boundaries: rawBoundaries,
+        });
+        expect(parsed.tag).toBe("ok");
+        if (parsed.tag === "error") {
+          return;
+        }
+        const before = arenaSnapshot(parsed.value);
+        rawCells[0].x += 100;
+        rawCells[0].terrain =
+          rawCells[0].terrain === "ordinary" ? "difficult" : "ordinary";
+        rawBoundaries[0].between[0].x += 100;
+        expect(arenaSnapshot(parsed.value)).toEqual(before);
+      }),
+      { numRuns: 40 },
+    );
+  });
+
+  it("aggregates independently malformed cell and boundary facts", () => {
+    const malformedDefinitionArbitrary = fc
+      .record({
+        badCellCoordinate: fc.boolean(),
+        badTerrain: fc.boolean(),
+        badBoundaryShape: fc.boolean(),
+        badTraversal: fc.boolean(),
+        badSight: fc.boolean(),
+        badCover: fc.boolean(),
+      })
+      .filter((flags) => Object.values(flags).some(Boolean));
+    fc.assert(
+      fc.property(malformedDefinitionArbitrary, (flags) => {
+        const cells: unknown[] = [
+          {
+            x: 0,
+            y: 0,
+            terrain: flags.badTerrain ? "unknown" : "ordinary",
+          },
+          { x: 1, y: 0, terrain: "ordinary" },
+        ];
+        if (flags.badCellCoordinate) {
+          cells.push({ x: Number.NaN, y: 1, terrain: "ordinary" });
+        }
+        const validBoundary = {
+          between: [
+            { x: 0, y: 0 },
+            { x: 1, y: 0 },
+          ],
+          traversal: flags.badTraversal ? "unknown" : "open",
+          sight: flags.badSight ? "unknown" : "open",
+          cover: flags.badCover ? "unknown" : "none",
+        };
+        const boundaries: unknown[] = flags.badBoundaryShape
+          ? [{ between: [{ x: 0, y: 0 }] }, validBoundary]
+          : [validBoundary];
+        const parsed = parseArena({ cells, boundaries });
+        expect(parsed.tag).toBe("error");
+        if (parsed.tag === "ok") {
+          throw new Error("malformed arena unexpectedly parsed successfully");
+        }
+        const tags = parsed.issues.map((issue) => issue.tag);
+        const expected = [
+          flags.badCellCoordinate ? "invalid-cell-coordinate" : undefined,
+          flags.badTerrain ? "invalid-terrain" : undefined,
+          flags.badBoundaryShape ? "invalid-boundary-shape" : undefined,
+          flags.badTraversal ? "invalid-traversal" : undefined,
+          flags.badSight ? "invalid-sight" : undefined,
+          flags.badCover ? "invalid-cover" : undefined,
+        ].filter((tag): tag is string => tag !== undefined);
+        expect(tags).toEqual(expect.arrayContaining(expected));
+      }),
+      { numRuns: 40 },
     );
   });
 
@@ -1157,6 +1267,24 @@ describe("public property seam", () => {
         const reverse = value(
           relationBetween(state, token("target"), token("source")),
         );
+        const expectedSight = definition.boundaries.some(
+          (fact) => fact.sight === "blocked",
+        )
+          ? "blocked"
+          : "clear";
+        const coverRanks = {
+          none: 0,
+          half: 1,
+          "three-quarters": 2,
+          total: 3,
+        } as const;
+        const expectedCover = definition.boundaries.reduce<CoverDegree>(
+          (highest, fact) =>
+            coverRanks[fact.cover] > coverRanks[highest] ? fact.cover : highest,
+          "none" as const,
+        );
+        expect(forward.sight).toBe(expectedSight);
+        expect(forward.cover).toBe(expectedCover);
         expect(reverse.sight).toBe(forward.sight);
         expect(reverse.cover).toBe(forward.cover);
         expect(snapshot(state)).toEqual(before);
@@ -1262,6 +1390,27 @@ describe("public property seam", () => {
         expect(result.tag).toBe("ok");
         if (result.tag === "error") {
           return;
+        }
+        const expectedStepCount = Math.max(
+          Math.abs(example.destinationX - example.sourceX),
+          Math.abs(example.destinationY - example.sourceY),
+        );
+        expect(result.value.steps).toHaveLength(expectedStepCount);
+        if (expectedStepCount === 0) {
+          expect(result.value.steps).toEqual([]);
+          expect(result.value.distanceFeet).toBe(0);
+        } else {
+          expect(result.value.steps[0].from).toEqual({
+            x: example.sourceX,
+            y: example.sourceY,
+          });
+          expect(result.value.steps[result.value.steps.length - 1].to).toEqual({
+            x: example.destinationX,
+            y: example.destinationY,
+          });
+          expect(result.value.distanceFeet).toBe(
+            expectedStepCount * CELL_SIZE_FEET,
+          );
         }
         expect(result.value.distanceFeet).toBe(
           result.value.steps.reduce(
@@ -1427,6 +1576,7 @@ describe("public property seam", () => {
           const removed = removeToken(initial, token("other"));
           expect(removed.tag).toBe("ok");
           if (removed.tag === "ok") {
+            expect(snapshot(removed.value).revision).toBe(before.revision + 1);
             const removedStale = commitPreview(removed.value, preview.value);
             expect(removedStale.tag).toBe("error");
             if (removedStale.tag === "error") {
