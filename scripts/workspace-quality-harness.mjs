@@ -88,6 +88,11 @@ const PACKAGE_POLICIES = {
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
+  "tactical-space": {
+    coverage: { lines: 86, statements: 86, functions: 98, branches: 82 },
+    circularBaseline: 0,
+    duplicationCeiling: 2,
+  },
 };
 
 const WORKSPACE_PACKAGE_KINDS = new Set(["production", "throwawayPrototype"]);
