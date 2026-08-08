@@ -742,10 +742,7 @@ export function placeToken(
   }
   const placements = new Map(stateData.placements);
   placements.set(token, coordinate);
-  const revision = nextRevision(stateData.revision);
-  return typeof revision === "number"
-    ? success(makeState(stateData.arena, revision, placements))
-    : failure(revision);
+  return advanceState(stateData, placements);
 }
 
 export function removeToken(
@@ -758,10 +755,7 @@ export function removeToken(
   }
   const placements = new Map(stateData.placements);
   placements.delete(token);
-  const revision = nextRevision(stateData.revision);
-  return typeof revision === "number"
-    ? success(makeState(stateData.arena, revision, placements))
-    : failure(revision);
+  return advanceState(stateData, placements);
 }
 
 export function occupantsAt(
@@ -1122,10 +1116,7 @@ export function commitPreview(
   }
   const placements = new Map(stateData.placements);
   placements.set(preview.mover, preview.step.to);
-  const revision = nextRevision(stateData.revision);
-  return typeof revision === "number"
-    ? success(makeState(stateData.arena, revision, placements))
-    : failure(revision);
+  return advanceState(stateData, placements);
 }
 
 function relationForPlacements(
@@ -1237,6 +1228,16 @@ function nextRevision(
   // The checks immediately above establish a nonnegative safe integer; this
   // cast adds only the compile-time revision brand.
   return candidate as SpatialRevision;
+}
+
+function advanceState(
+  stateData: StateData,
+  placements: Map<TokenId, CellCoordinate>,
+): Result<SpatialState, RevisionLimitError> {
+  const revision = nextRevision(stateData.revision);
+  return typeof revision === "number"
+    ? success(makeState(stateData.arena, revision, placements))
+    : failure(revision);
 }
 
 function makeSpatialRevision(value: number): SpatialRevision {
