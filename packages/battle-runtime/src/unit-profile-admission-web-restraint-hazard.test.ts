@@ -556,11 +556,23 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     expect(
       requireCombatant(noLongerRestrained.state, spellCasterId).activeEffects,
     ).toEqual([expect.objectContaining({ kind: "webRestraintHazard" })]);
+    expect(
+      resolveBattleSubject({
+        state: noLongerRestrained.state,
+        subject: noLongerInWebsAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Web Restraint cleanup is no longer available.",
+    });
 
     const areaRemovalSession = failedWebEntrySession();
+    const areaRemovedAct = webAreaRemovedAct(areaRemovalSession);
     const removed = resolveBattleSubject({
       state: areaRemovalSession.state,
-      subject: webAreaRemovedAct(areaRemovalSession).subject,
+      subject: areaRemovedAct.subject,
       fills: [],
     });
     if (removed.tag !== "resolved") {
@@ -572,6 +584,17 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     });
     expect(requireCombatant(removed.state, spellTargetId)).toMatchObject({
       conditions: expect.objectContaining({ restrained: false }),
+    });
+    expect(
+      resolveBattleSubject({
+        state: removed.state,
+        subject: areaRemovedAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Web area is no longer active.",
     });
   });
 

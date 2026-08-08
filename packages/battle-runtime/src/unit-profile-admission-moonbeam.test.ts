@@ -25,6 +25,7 @@ import {
   BattleHoleSchema,
   BattleSnapshotSchema,
   characterSeed,
+  concentrationSavingThrowFill,
   Either,
   Schema,
   startBattleSessionRight,
@@ -46,6 +47,7 @@ import {
   singleTargetSavingThrowOutcomeFill,
   spellAct,
   spellHoleInvocation,
+  webAreaFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
@@ -72,6 +74,7 @@ import {
   spellTargetId,
   statBlockCatalog,
   unitLibrary,
+  webUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer/spell-reroll-issues.ts";
 
@@ -426,6 +429,57 @@ describe("L12G deterministic Moonbeam admission", () => {
       throw new Error("Expected Moonbeam half-damage save to resolve.");
     }
     expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(24));
+  });
+
+  test("failed end-turn save routes applied damage through target Concentration before completing End Turn", () => {
+    const concentrating = battleWithTargetWebConcentration();
+    const endTurnSave = moonbeamEndTurnSaveAct(concentrating);
+    const save = requireHole(endTurnSave.initialHoles, "savingThrowOutcome");
+    const failedSave = singleTargetSavingThrowOutcomeFill(
+      save,
+      spellTargetId,
+      false,
+    );
+    const needsDamage = resolveBattleSubject({
+      state: concentrating.state,
+      subject: endTurnSave.subject,
+      fills: [failedSave],
+    });
+    const damage = requireResultHole(needsDamage, "rolledDice");
+    const damageFill = damageRollFillWithGroups(damage, [[5, 8]]);
+    const needsConcentration = resolveBattleSubject({
+      state: concentrating.state,
+      subject: endTurnSave.subject,
+      fills: [failedSave, damageFill],
+    });
+    const concentration = requireResultHole(
+      needsConcentration,
+      "concentrationSavingThrow",
+    );
+    expect(concentration).toMatchObject({ damageAmount: 13 });
+
+    const resolved = resolveBattleSubject({
+      state: concentrating.state,
+      subject: endTurnSave.subject,
+      fills: [
+        failedSave,
+        damageFill,
+        concentrationSavingThrowFill(concentration, false),
+      ],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: { currentActorId: spellCasterId },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Moonbeam damage and End Turn to resolve.");
+    }
+    expect(requireCombatant(resolved.state, spellTargetId)).toMatchObject({
+      hp: Hp(17),
+      concentration: null,
+      activeEffects: [],
+    });
   });
 
   test("table-triggered save is limited once per creature per turn and resets on turn advance", () => {
@@ -812,6 +866,18 @@ describe("L12G deterministic Moonbeam admission", () => {
       "movableZoneRepositionMovement",
     );
     const moveFill = moonbeamRepositionMovementFill(movementHole, 30);
+    expect(
+      resolveBattleSubject({
+        state: casterTurn.state,
+        subject: repositionAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({ kind: "movableZoneRepositionMovement" }),
+      ],
+    });
     const resolved = resolveBattleSubject({
       state: casterTurn.state,
       subject: repositionAct.subject,
@@ -819,6 +885,20 @@ describe("L12G deterministic Moonbeam admission", () => {
     });
 
     expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Moonbeam reposition to resolve.");
+    }
+    expect(
+      resolveBattleSubject({
+        state: resolved.state,
+        subject: repositionAct.subject,
+        fills: [moveFill],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Movable zone reposition requires an available Magic action.",
+    });
   });
 
   test("breaking concentration removes the movable cylinder effect", () => {
@@ -873,6 +953,87 @@ describe("L12G deterministic Moonbeam admission", () => {
     });
   });
 });
+
+function battleWithTargetWebConcentration(): BattleRuntimeSession {
+  const moonbeam = spellRecord(moonbeamUnitId);
+  const web = spellRecord(webUnitId);
+  const initial = startBattleSessionRight({
+    battleId: battleId("battle-moonbeam-target-web-concentration"),
+    combatants: [
+      characterSeed({
+        combatantId: spellTargetId,
+        displayName: "Web Caster Target",
+        initiative: 20,
+        attack: null,
+        classLevels: [{ className: "wizard", level: 3 }],
+        spellcasting: wizardSpellcasting({
+          preparedSpells: [web],
+          spellSlots: [{ spellLevel: 2, count: 1 }],
+        }),
+        currentHp: 30,
+        maxHp: 30,
+      }),
+      characterSeed({
+        combatantId: spellCasterId,
+        displayName: "Moonbeam Caster",
+        initiative: 10,
+        attack: null,
+        classLevels: [{ className: "druid", level: 3 }],
+        spellcasting: {
+          ...wizardSpellcasting({
+            preparedSpells: [moonbeam],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
+          sourceClassName: "druid",
+        },
+      }),
+    ],
+  });
+  const webAct = spellAct({
+    session: initial,
+    spellId: webUnitId,
+    slotLevel: 2,
+  });
+  const webArea = requireHole(webAct.initialHoles, "spellAreaChoice");
+  const webCast = resolveBattleSubject({
+    state: initial.state,
+    subject: webAct.subject,
+    fills: [webAreaFill(webArea)],
+  });
+  if (webCast.tag !== "resolved") {
+    throw new Error("Expected target Web cast to resolve.");
+  }
+  const casterTurn = endTurn({
+    state: webCast.state,
+    actorId: spellTargetId,
+  });
+  if (casterTurn.tag !== "resolved") {
+    throw new Error("Expected target Web caster End Turn to resolve.");
+  }
+
+  const moonbeamAct = spellAct({
+    session: battleSessionWithState(initial, casterTurn.state),
+    spellId: moonbeamUnitId,
+    slotLevel: 2,
+  });
+  const moonbeamArea = requireHole(moonbeamAct.initialHoles, "spellAreaChoice");
+  const moonbeamCast = resolveBattleSubject({
+    state: casterTurn.state,
+    subject: moonbeamAct.subject,
+    fills: [moonbeamAreaFill(moonbeamArea)],
+  });
+  if (moonbeamCast.tag !== "resolved") {
+    throw new Error("Expected Moonbeam cast to resolve.");
+  }
+  const targetTurn = endTurn({
+    state: moonbeamCast.state,
+    actorId: spellCasterId,
+  });
+  if (targetTurn.tag !== "resolved") {
+    throw new Error("Expected Moonbeam caster End Turn to resolve.");
+  }
+  return battleSessionWithState(initial, targetTurn.state);
+}
 
 const syntheticSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
   kind: "spellShapeShiftedForm",
