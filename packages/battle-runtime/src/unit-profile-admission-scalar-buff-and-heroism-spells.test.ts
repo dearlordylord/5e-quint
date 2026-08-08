@@ -46,6 +46,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   applyCondition,
+  applyBattleHitPointDamage,
   breakBattleConcentration,
   combatantId,
   DieRollResult,
@@ -1528,6 +1529,80 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         expect.objectContaining({
           combatantId: spellTargetId,
           hp: 5,
+          maxHp: 17,
+        }),
+      ]),
+    );
+  });
+
+  test("aid restores a positive-HP Unconscious target and retains its maximum-HP effect", () => {
+    const spell = spellRecord(aidUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 5,
+      targetMaxHp: 12,
+    });
+    const target = session.state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected Aid target.");
+    }
+    const knockedOutState: BattleState = applyBattleHitPointDamage({
+      state: session.state,
+      target,
+      damageAmount: Number(target.hp),
+      deathFailuresAtZeroHp: 1,
+      damageDisposition: { kind: "knockOut" },
+    });
+    const knockedOutSession = battleRuntimeSessionForTest({
+      ...session,
+      state: knockedOutState,
+    });
+    const act = spellAct({
+      session: knockedOutSession,
+      spellId: aidUnitId,
+      slotLevel: 2,
+    });
+    const targetListHole = requireHole(act.initialHoles, "spellTargetList");
+
+    const resolved = resolveBattleSubject({
+      state: knockedOutSession.state,
+      subject: act.subject,
+      fills: [
+        spellTargetListFill(targetListHole, spellCasterId, aidUnitId, [
+          spellTargetId,
+        ]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        "Expected Aid to restore a positive-HP Unconscious target.",
+      );
+    }
+    const restored = resolved.state.combatants.get(spellTargetId);
+    if (restored === undefined) {
+      throw new Error("Expected restored Aid target.");
+    }
+
+    expect(Number(restored.hp)).toBe(6);
+    expect(Number(restored.maxHp)).toBe(12);
+    expect(hasCondition(restored.conditions, "unconscious")).toBe(false);
+    expect(restored.positiveHpUnconscious).toBeNull();
+    expect(restored.zeroHpLifecycle).toEqual(target.zeroHpLifecycle);
+    expect(restored.activeEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "hitPointMaximumIncrease",
+          sourceCombatantId: spellCasterId,
+          amount: 5,
+        }),
+      ]),
+    );
+    expect(resolved.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: spellTargetId,
+          hp: 6,
           maxHp: 17,
         }),
       ]),

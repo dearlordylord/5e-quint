@@ -2,6 +2,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT32 cure_wounds mass_healing_word
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT34 mass_cure_wounds
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -13,7 +14,10 @@ import {
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
-import { requireHole } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import {
+  damageRollFillWithGroups,
+  requireHole,
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
@@ -24,7 +28,9 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
+  applyBattleHitPointDamage,
   battleAreaId,
+  hasCondition,
   movementFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
@@ -86,6 +92,64 @@ describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
         rangeFeet: 60,
       }),
     );
+  });
+
+  test("Healing Word restores a positive-HP Unconscious target through the public procedure", () => {
+    const spell = spellRecord(healingWordUnitId);
+    const session = spellBattle({ preparedSpells: [spell] });
+    const target = session.state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected Healing Word target.");
+    }
+    const knockedOutState = applyBattleHitPointDamage({
+      state: session.state,
+      target,
+      damageAmount: Number(target.hp),
+      deathFailuresAtZeroHp: 1,
+      damageDisposition: { kind: "knockOut" },
+    });
+    const knockedOutSession = battleRuntimeSessionForTest({
+      ...session,
+      state: knockedOutState,
+    });
+    const act = bonusSpellAct({
+      session: knockedOutSession,
+      spellId: healingWordUnitId,
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      targetHole,
+      healingWordUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const awaitingHealingRoll = resolveBattleSubject({
+      state: knockedOutSession.state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    if (awaitingHealingRoll.tag !== "needsHoles") {
+      throw new Error("Expected Healing Word healing roll hole.");
+    }
+    const healingRoll = requireHole(awaitingHealingRoll.holes, "rolledDice");
+    const resolved = resolveBattleSubject({
+      state: awaitingHealingRoll.state,
+      subject: awaitingHealingRoll.subject,
+      fills: [targetFill, damageRollFillWithGroups(healingRoll, [[1, 1]])],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Healing Word to restore the target.");
+    }
+    const restored = resolved.state.combatants.get(spellTargetId);
+    if (restored === undefined) {
+      throw new Error("Expected restored Healing Word target.");
+    }
+
+    expect(Number(restored.hp)).toBe(6);
+    expect(Number(restored.maxHp)).toBe(Number(target.maxHp));
+    expect(hasCondition(restored.conditions, "unconscious")).toBe(false);
+    expect(restored.positiveHpUnconscious).toBeNull();
+    expect(restored.zeroHpLifecycle).toEqual(target.zeroHpLifecycle);
   });
 });
 

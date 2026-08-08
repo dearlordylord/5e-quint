@@ -383,9 +383,17 @@ function applyCurrentHitPointIncrease(
   combatant: BattleCreatureState,
   amount: number,
 ): BattleCreatureState {
-  const currentHp = Number(combatant.hp);
-  const nextHp = Hp(currentHp + amount);
-  if (currentHp <= 0 && Number(nextHp) > 0) {
+  return battleCreatureStateAfterHitPointIncrease(
+    combatant,
+    Hp(Number(combatant.hp) + amount),
+  );
+}
+
+function battleCreatureStateAfterHitPointIncrease(
+  combatant: BattleCreatureState,
+  nextHp: Hp,
+): BattleCreatureState {
+  if (Number(combatant.hp) <= 0 && Number(nextHp) > 0) {
     return {
       ...battleCreatureStateWithoutKnockOut(
         combatant,
@@ -1343,36 +1351,8 @@ export function applyHpHealing(
     ),
   );
   const regainedHitPoints = Number(nextHp) > currentHp;
-  if (currentHp <= 0 && Number(nextHp) > 0) {
-    return {
-      ...battleCreatureStateWithoutKnockOut(
-        combatant,
-        nextHp,
-        removeCondition(combatant.conditions, "unconscious"),
-      ),
-      zeroHpLifecycle:
-        combatant.zeroHpLifecycle.policy === "usesDeathSavingThrows"
-          ? {
-              ...combatant.zeroHpLifecycle,
-              deathSaves: resetDeathSaveRuntimeState(),
-            }
-          : combatant.zeroHpLifecycle,
-    };
-  }
-  if (regainedHitPoints && combatant.positiveHpUnconscious !== null) {
-    return battleCreatureStateWithoutKnockOut(
-      combatant,
-      nextHp,
-      removeCondition(combatant.conditions, "unconscious"),
-    );
-  }
-
   return regainedHitPoints
-    ? battleCreatureStateWithoutKnockOut(
-        combatant,
-        nextHp,
-        combatant.conditions,
-      )
+    ? battleCreatureStateAfterHitPointIncrease(combatant, nextHp)
     : combatant;
 }
 
