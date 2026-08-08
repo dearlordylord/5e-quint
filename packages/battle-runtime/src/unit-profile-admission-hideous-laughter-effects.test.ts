@@ -21,7 +21,11 @@ import {
   requireHole,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  declineTargetReadiedSpellAfterFailedSave,
+  spellBattle,
+  spellBattleWithTargetReadiedRay,
+} from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   savingThrowOutcomeFill,
   spellAct,
@@ -519,6 +523,50 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
         ],
       }),
     ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+  });
+
+  test("a failed Hideous Laughter save opens the target's readied-spell Reaction", () => {
+    const spell = spellRecord(hideousLaughterUnitId);
+    const session = spellBattleWithTargetReadiedRay({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: hideousLaughterUnitId,
+      slotLevel: 1,
+    });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      hideousLaughterUnitId,
+      [spellTargetId],
+    );
+    const needsSave = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    const savingThrow = requireResultHole(needsSave, "savingThrowOutcome");
+    const awaitingReaction = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+
+    const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
+    const target = requireCombatant(declined.state, spellTargetId);
+    expect(hasCondition(target.conditions, "prone")).toBe(true);
+    expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
+    expect(target.activeEffects).toContainEqual(
+      expect.objectContaining({ kind: "hideousLaughter" }),
+    );
   });
 
   test("Heightened Hideous Laughter carries Disadvantage from failed initial save to end-turn repeat save", () => {

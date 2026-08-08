@@ -28,7 +28,7 @@ import {
   statBlockCreatureInit,
   testBattleCreatureStateWithConditions,
 } from "./battle-runtime.test-support.ts";
-import { resolvedAnimalFriendshipState } from "./unit-profile-admission-spell-battle-support.ts";
+import { resolvedAnimalFriendshipState } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellCasterId } from "./unit-profile-admission-catalog.test-support.ts";
 import { resolveCreatureAttack } from "./battle-reducer/creature-attack-procedures.ts";
 import { creatureAttackRouteForDiscoveredAct } from "./battle-reducer/attack-routes.ts";

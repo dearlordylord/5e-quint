@@ -35,7 +35,7 @@ import {
   weaponAttackSubject,
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { savingThrowOutcomeFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { afterHitSpellSavingThrowCompletionRoutes } from "./battle-reducer/after-hit-spell-routes.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";

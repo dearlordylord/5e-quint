@@ -16,7 +16,11 @@ import {
   requireHole,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  declineTargetReadiedSpellAfterFailedSave,
+  spellBattle,
+  spellBattleWithTargetReadiedRay,
+} from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   applyCondition,
@@ -185,6 +189,38 @@ describe("SRDINV30E deterministic Faerie Fire Spell Unit admission", () => {
       "attackRoll",
     );
     expect(attackRoll).toMatchObject({ rollMode: "advantage" });
+  });
+
+  test("a failed Faerie Fire save opens the target's readied-spell Reaction", () => {
+    const spell = spellRecord(faerieFireUnitId);
+    const session = spellBattleWithTargetReadiedRay({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+      casterClassLevels: [{ className: "druid", level: 1 }],
+    });
+    const act = spellAct({ session, spellId: faerieFireUnitId });
+    const savingThrows = requireHole(act.initialHoles, "savingThrowOutcome");
+    const awaitingReaction = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        savingThrowOutcomeFill(savingThrows, [
+          { targetId: spellCasterId, succeeded: true },
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
+    const target = declined.state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected Faerie Fire target combatant.");
+    }
+    expect(target.activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "faerieFireOutline",
+        sourceCombatantId: spellCasterId,
+      }),
+    ]);
   });
 
   test("faerie_fire outline denies Invisible benefit for affected creatures", () => {

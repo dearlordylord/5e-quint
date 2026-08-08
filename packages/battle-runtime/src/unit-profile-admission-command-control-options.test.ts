@@ -21,7 +21,11 @@ import {
   requireResultHole,
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  declineTargetReadiedSpellAfterFailedSave,
+  spellBattle,
+  spellBattleWithTargetReadiedRay,
+} from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   savingThrowOutcomeFill,
   spellAct,
@@ -226,6 +230,64 @@ describe("QMBT14 deterministic Command control option admission", () => {
       [],
     );
   });
+
+  test("a failed Command save opens the target's readied-spell Reaction", () => {
+    const spell = spellRecord(commandUnitId);
+    const session = spellBattleWithTargetReadiedRay({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+      casterClassLevels: [{ className: "bard", level: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: commandUnitId,
+      slotLevel: 1,
+    });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      commandUnitId,
+      [spellTargetId],
+    );
+    const optionFill: Extract<
+      BattleFill,
+      { readonly kind: "commandOptionChoice" }
+    > = {
+      kind: "commandOptionChoice",
+      holeId: commandOption.holeId,
+      value: "grovel",
+    };
+    const needsSave = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [targetFill, optionFill],
+    });
+    const savingThrow = requireResultHole(needsSave, "savingThrowOutcome");
+    const awaitingReaction = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        optionFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
+    expect(
+      requireCombatant(declined.state, spellTargetId).activeEffects,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "commandPending",
+        option: "grovel",
+        sourceCombatantId: spellCasterId,
+      }),
+    ]);
+  });
+
   test("command Halt suppresses target turn Movement, Action, and Bonus Action until end turn", () => {
     const spell = spellRecord(commandUnitId);
     const session = spellBattle({

@@ -16,7 +16,7 @@ import {
   requireCombatant,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   maybeSpellAct,
   spellAct,

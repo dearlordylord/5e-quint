@@ -92,7 +92,7 @@ import {
   statBlockCreature,
   statBlockWithCreatureType,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import type { CharacterProcedureBattleSubject } from "./battle-subjects.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";

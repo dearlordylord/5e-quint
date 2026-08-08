@@ -34,7 +34,11 @@ import {
   type BattleState,
   discoverBattleActCandidates,
 } from "./index.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  declineTargetReadiedSpellAfterFailedSave,
+  spellBattle,
+  spellBattleWithTargetReadiedRay,
+} from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   greaseGroundHazardEndTurnAct,
   greaseGroundHazardSaveAct,
@@ -157,6 +161,41 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
         areaId: greaseAreaId,
         save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
         expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
+      }),
+    ]);
+  });
+  test("a failed Grease appearance save opens the target's readied-spell Reaction", () => {
+    const spell = spellRecord(greaseUnitId);
+    const session = spellBattleWithTargetReadiedRay({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: greaseUnitId,
+      slotLevel: 1,
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    const awaitingReaction = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        greaseSavingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+
+    const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
+    expect(requireCombatant(declined.state, spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ prone: true }),
+    });
+    expect(
+      requireCombatant(declined.state, spellCasterId).activeEffects,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "greaseGroundHazard",
+        areaId: greaseAreaId,
       }),
     ]);
   });

@@ -36,7 +36,11 @@ import {
   requireResultHole,
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  declineTargetReadiedSpellAfterFailedSave,
+  spellBattle,
+  spellBattleWithTargetReadiedRay,
+} from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   requireSpellDamageReductionHole,
   savingThrowOutcomeFill,
@@ -306,6 +310,49 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     ).toBe(false);
     expect(requireCombatant(repeated.state, spellCasterId).concentration).toBe(
       null,
+    );
+  });
+
+  test("a failed Ray of Enfeeblement save opens the target's readied-spell Reaction", () => {
+    const spell = rayOfEnfeeblementSpell();
+    const session = spellBattleWithTargetReadiedRay({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterClassLevels: [{ className: "wizard", level: 3 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: rayOfEnfeeblementUnitId,
+    });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      rayOfEnfeeblementUnitId,
+      [spellTargetId],
+    );
+    const needsSave = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    const savingThrow = requireResultHole(needsSave, "savingThrowOutcome");
+    const awaitingReaction = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+
+    const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
+    expect(
+      requireCombatant(declined.state, spellTargetId).activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({ kind: "abilityD20TestRollModeEndTurnSave" }),
     );
   });
 

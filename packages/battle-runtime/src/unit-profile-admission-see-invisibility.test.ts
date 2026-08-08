@@ -23,7 +23,7 @@ import {
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {

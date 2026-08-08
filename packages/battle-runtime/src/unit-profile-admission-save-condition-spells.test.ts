@@ -41,7 +41,11 @@ import {
   statBlockWithCreatureType,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  declineTargetReadiedSpellAfterFailedSave,
+  spellBattle,
+  spellBattleWithTargetReadiedRay,
+} from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
   abilityChoiceFill,
@@ -299,6 +303,54 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       activeEffects: [],
     });
     expect(ended.state.combatants.get(spellCasterId)?.concentration).toBeNull();
+  });
+
+  test("a failed Hold Person save opens the target's readied-spell Reaction", () => {
+    const spell = spellRecord(holdPersonUnitId);
+    const session = spellBattleWithTargetReadiedRay({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterClassLevels: [{ className: "wizard", level: 3 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: holdPersonUnitId,
+      slotLevel: 2,
+    });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      holdPersonUnitId,
+      [spellTargetId],
+    );
+    const needsSave = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+    const savingThrow = requireResultHole(needsSave, "savingThrowOutcome");
+    const awaitingReaction = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+
+    const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
+    expect(requireCombatant(declined.state, spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ paralyzed: true }),
+      activeEffects: [
+        expect.objectContaining({
+          kind: "spellConditionEndTurnSave",
+          condition: "paralyzed",
+        }),
+      ],
+    });
   });
 
   test("Heightened hold_person carries Disadvantage only to the selected failed target repeat save", () => {
@@ -1261,6 +1313,36 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         areaChoices: [],
       }),
     ]);
+  });
+  test("a failed Sleep save opens the target's readied-spell Reaction", () => {
+    const spell = spellRecord(sleepUnitId);
+    const session = spellBattleWithTargetReadiedRay({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: sleepUnitId,
+      slotLevel: 1,
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    const awaitingReaction = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+
+    const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
+    expect(requireCombatant(declined.state, spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ directIncapacitated: true }),
+      activeEffects: [
+        expect.objectContaining({ kind: "sleepPendingRepeatSave" }),
+      ],
+    });
   });
   test("sleep is not admitted through the generic save-gated condition projection", () => {
     const spell = spellRecord(sleepUnitId);

@@ -230,7 +230,7 @@ import {
 export * from "./unit-profile-admission-catalog.test-support.ts";
 export * from "./unit-profile-admission-creature-fixture.test-support.ts";
 export * from "./unit-profile-admission-feature-fixture.test-support.ts";
-export * from "./unit-profile-admission-spell-battle-support.ts";
+export * from "./unit-profile-admission-spell-battle.test-support.ts";
 export * from "./unit-profile-admission-spell-fill.test-support.ts";
 export * from "./unit-profile-admission-spell-record.test-support.ts";
 export {

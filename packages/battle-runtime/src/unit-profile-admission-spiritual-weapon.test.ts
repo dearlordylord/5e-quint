@@ -25,7 +25,7 @@ import type {
   BattleProcedureExecutionRef,
   BattleResolutionResult,
 } from "./index.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
   savingThrowOutcomeFill,

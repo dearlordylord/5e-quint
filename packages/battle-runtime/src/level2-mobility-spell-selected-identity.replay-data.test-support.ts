@@ -8,7 +8,7 @@ import {
   spellCasterId,
   spiderClimbUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
   spellAct,

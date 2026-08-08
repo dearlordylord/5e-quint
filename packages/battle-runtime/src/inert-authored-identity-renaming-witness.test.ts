@@ -29,7 +29,7 @@ import { discoverBattleActs } from "./battle-act-composition.ts";
 import type { BattleRuntimeContext } from "./battle-runtime-context.ts";
 import type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
 import type { StatBlockExecutionAdmission } from "./stat-block-execution-state.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleRuntimeContextForTest,

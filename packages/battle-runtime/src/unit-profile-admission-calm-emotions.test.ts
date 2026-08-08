@@ -16,7 +16,11 @@ import {
   requireHole,
   statBlockWithCreatureType,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import {
+  declineTargetReadiedSpellAfterFailedSave,
+  spellBattle,
+  spellBattleWithTargetReadiedRay,
+} from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   maybeSpellAct,
   savingThrowOutcomeFill,
@@ -225,6 +229,47 @@ describe("L12G deterministic Calm Emotions Spell Unit admission", () => {
         ? false
         : hasCondition(restoredTarget.conditions, "frightened"),
     ).toBe(true);
+  });
+
+  test("a failed Calm Emotions save opens the target's readied-spell Reaction", () => {
+    const spell = spellRecord(calmEmotionsUnitId);
+    const session = spellBattleWithTargetReadiedRay({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterClassLevels: [{ className: "bard", level: 3 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: calmEmotionsUnitId,
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    const awaitingReaction = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+
+    const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
+    const target = requireCombatant(declined.state, spellTargetId);
+    expect(target.conditions).toEqual(
+      expect.not.objectContaining({ charmed: true, frightened: true }),
+    );
+    expect(target.activeEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "conditionImmunity",
+          condition: "charmed",
+        }),
+        expect.objectContaining({
+          kind: "conditionImmunity",
+          condition: "frightened",
+        }),
+      ]),
+    );
   });
 
   test("non-Humanoids are rejected by the condition-immunity branch", () => {

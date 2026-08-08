@@ -24,7 +24,7 @@ import {
 import {
   resolvedAnimalFriendshipState,
   spellBattle,
-} from "./unit-profile-admission-spell-battle-support.ts";
+} from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   savingThrowOutcomeFill,
   spellAct,

@@ -40,7 +40,7 @@ import type {
   BattleSpellSavingThrowOutcomeHole,
 } from "./unit-profile-admission.test-support.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-state.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,

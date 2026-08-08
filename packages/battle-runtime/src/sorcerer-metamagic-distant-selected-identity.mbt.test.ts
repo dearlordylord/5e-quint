@@ -37,7 +37,7 @@ import {
   type BattleReducerRouteEvent,
 } from "./index.ts";
 import { requireHole } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   spellDistantObjectLightTargetFill,
   spellAct,

@@ -136,7 +136,7 @@ import {
   statBlockWithCreatureType,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   maybeSpellAct,
   spellAct,

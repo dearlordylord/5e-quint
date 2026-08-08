@@ -16,7 +16,7 @@ import {
   requireCombatant,
   requireHole,
 } from "../unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "../unit-profile-admission-spell-battle-support.ts";
+import { spellBattle } from "../unit-profile-admission-spell-battle.test-support.ts";
 import { withResistanceEffect } from "../unit-profile-admission-spell-fill.test-support.ts";
 import { combatantId } from "../identity.ts";
 import type { BattleActiveEffect } from "../battle-state-execution.ts";

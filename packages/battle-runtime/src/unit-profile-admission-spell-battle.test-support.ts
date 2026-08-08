@@ -1,4 +1,5 @@
 import { optionalProperty } from "./optional-property.ts";
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { proficiencyBonus, type ProficiencyBonus } from "@dnd/shared/types";
 import type {
@@ -12,13 +13,22 @@ import { expect } from "vitest";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleId,
+  cantripSpellInvocationRef,
+  endTurn,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   startBattle,
   type BattleCreatureInit,
+  type BattleResolutionResult,
   type BattleState,
   type BattleRuntimeSession,
   type CombatantId,
 } from "./index.ts";
+import {
+  interruptDecisionFill,
+  requireCharacterSpellProcedureRefForTest,
+  wizardSpellcasting,
+} from "./battle-runtime.test-support.ts";
 import {
   animalFriendshipUnitId,
   spellCasterId,
@@ -231,6 +241,100 @@ export function spellBattle(input: {
     throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
+}
+
+export function spellBattleWithTargetReadiedRay(
+  input: Parameters<typeof spellBattle>[0] = {},
+): BattleRuntimeSession {
+  const rayOfFrost = spellRecord("ray_of_frost");
+  const session = spellBattle({
+    ...input,
+    targetSpellcasting:
+      input.targetSpellcasting ??
+      wizardSpellcasting({ cantrips: [rayOfFrost], preparedSpells: [] }),
+  });
+  const casterId = input.casterId ?? spellCasterId;
+  const afterCasterTurn = endTurn({
+    state: session.state,
+    actorId: casterId,
+  });
+  if (afterCasterTurn.tag !== "resolved") {
+    throw new Error("Expected caster End Turn before Ready setup.");
+  }
+  const targetTurnSession = battleRuntimeSessionForTest({
+    ...session,
+    state: afterCasterTurn.state,
+  });
+  const readied = resolveBattleSubject({
+    state: afterCasterTurn.state,
+    subject: {
+      tag: "actionSpell",
+      actorId: spellTargetId,
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        targetTurnSession,
+        spellTargetId,
+        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+      ),
+      mode: { tag: "ready", trigger: "saveFailed" },
+    },
+    fills: [],
+  });
+  if (readied.tag !== "resolved") {
+    throw new Error("Expected target to Ready Ray of Frost.");
+  }
+  if (readied.state.readiedSpells.get(spellTargetId) === undefined) {
+    throw new Error("Expected target to hold the readied Ray of Frost.");
+  }
+  const afterTargetTurn = endTurn({
+    state: readied.state,
+    actorId: spellTargetId,
+  });
+  if (afterTargetTurn.tag !== "resolved") {
+    throw new Error("Expected target End Turn after Ready setup.");
+  }
+  return battleRuntimeSessionForTest({
+    ...session,
+    state: afterTargetTurn.state,
+  });
+}
+
+export function declineTargetReadiedSpellAfterFailedSave(
+  result: BattleResolutionResult,
+  responderId: CombatantId = spellTargetId,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  if (result.tag !== "needsHoles") {
+    throw new Error("Expected a failed-save Reaction window.");
+  }
+  const pendingInterrupt = result.snapshot.pendingInterrupt;
+  if (
+    pendingInterrupt === null ||
+    pendingInterrupt.trigger !== "saveFailed" ||
+    pendingInterrupt.decisionHole.trigger !== "saveFailed"
+  ) {
+    throw new Error("Expected a saveFailed interrupt decision.");
+  }
+  const ownsReadiedSpell = pendingInterrupt.choices.some(
+    (choice) =>
+      choice.kind === "releaseReadiedSpell" &&
+      choice.readiedSpellCasterId === responderId,
+  );
+  if (!ownsReadiedSpell) {
+    throw new Error("Expected the target to own the readied-spell Reaction.");
+  }
+  const declined = resolveBattleInterrupt({
+    state: result.state,
+    fill: interruptDecisionFill(pendingInterrupt.decisionHole, {
+      kind: "decline",
+      responderId,
+    }),
+  });
+  if (declined.tag !== "resolved") {
+    throw new Error("Expected the failed-save Reaction decline to resume.");
+  }
+  if (declined.snapshot.pendingInterrupt !== null) {
+    throw new Error("Expected the resumed spell to clear the Reaction window.");
+  }
+  return declined;
 }
 
 export function resolvedAnimalFriendshipState(
