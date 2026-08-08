@@ -192,6 +192,45 @@ describe("public arena and state seam", () => {
     }
   });
 
+  it("rejects only authored spans that exceed exact distance capacity", () => {
+    const tooWide = parseArena({
+      cells: [
+        { x: 0, y: 0, terrain: "ordinary" },
+        { x: 1_801_439_850_948_199, y: 0, terrain: "ordinary" },
+      ],
+      boundaries: [],
+    });
+    expect(tooWide.tag).toBe("error");
+    if (tooWide.tag === "error") {
+      expect(tooWide.issues).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ tag: "arena-span-too-large" }),
+        ]),
+      );
+    }
+
+    const exactCapacity = parseArena({
+      cells: [
+        { x: 0, y: 0, terrain: "ordinary" },
+        { x: 1_801_439_850_948_198, y: 0, terrain: "ordinary" },
+      ],
+      boundaries: [],
+    });
+    expect(exactCapacity.tag).toBe("ok");
+    if (exactCapacity.tag === "ok") {
+      const first = place(
+        place(createState(exactCapacity.value), "source", { x: 0, y: 0 }),
+        "target",
+        { x: 1_801_439_850_948_198, y: 0 },
+      );
+      const relation = value(
+        relationBetween(first, token("source"), token("target")),
+      );
+      expect(relation.distanceFeet).toBe(9_007_199_254_740_990);
+      expect(relation.sight).toBe("blocked");
+    }
+  });
+
   it("uses the canonical SHA-256 digest for arena and empty-state identity", () => {
     const map = arena(squareDefinition(1, 1));
     expect(arenaSnapshot(map).fingerprint).toBe(
@@ -237,6 +276,8 @@ describe("public arena and state seam", () => {
       Object.defineProperty(stateView.placements, "0", { value: undefined });
     }).toThrow();
     expect(snapshot(initial).placements).toEqual([]);
+    expect(JSON.parse(JSON.stringify(arenaView))).toEqual(arenaView);
+    expect(JSON.parse(JSON.stringify(stateView))).toEqual(stateView);
   });
 
   it("places, overlaps, removes, and reports stable occupants", () => {
@@ -390,6 +431,12 @@ describe("static boundaries and geometric relations", () => {
         [
           boundary({ x: 0, y: 0 }, { x: 1, y: 0 }, { cover: "half" }),
           boundary({ x: 0, y: 0 }, { x: 0, y: 1 }, { cover: "three-quarters" }),
+          boundary(
+            { x: 1, y: 0 },
+            { x: 1, y: 1 },
+            { sight: "blocked", cover: "total" },
+          ),
+          boundary({ x: 0, y: 1 }, { x: 1, y: 1 }, { cover: "half" }),
         ],
       ),
     );
@@ -399,9 +446,87 @@ describe("static boundaries and geometric relations", () => {
     });
     const forward = value(relationBetween(state, token("a"), token("b")));
     const reverse = value(relationBetween(state, token("b"), token("a")));
-    expect(forward.cover).toBe("three-quarters");
+    expect(forward.cover).toBe("total");
+    expect(forward.sight).toBe("blocked");
     expect(reverse.cover).toBe(forward.cover);
     expect(reverse.sight).toBe(forward.sight);
+  });
+
+  it("keeps named sight and Cover cases independent", () => {
+    const isolatedBlocked = arena(
+      squareDefinition(
+        2,
+        1,
+        [],
+        [
+          boundary(
+            { x: 0, y: 0 },
+            { x: 1, y: 0 },
+            { sight: "blocked", cover: "none" },
+          ),
+        ],
+      ),
+    );
+    const blockedState = place(
+      place(createState(isolatedBlocked), "source", { x: 0, y: 0 }),
+      "target",
+      { x: 1, y: 0 },
+    );
+    const blocked = value(
+      relationBetween(blockedState, token("source"), token("target")),
+    );
+    expect(blocked.sight).toBe("blocked");
+    expect(blocked.cover).toBe("none");
+
+    const opaqueTotal = arena(
+      squareDefinition(
+        2,
+        1,
+        [],
+        [
+          boundary(
+            { x: 0, y: 0 },
+            { x: 1, y: 0 },
+            { sight: "blocked", cover: "total" },
+          ),
+        ],
+      ),
+    );
+    const opaqueTotalState = place(
+      place(createState(opaqueTotal), "source", { x: 0, y: 0 }),
+      "target",
+      { x: 1, y: 0 },
+    );
+    const opaque = value(
+      relationBetween(opaqueTotalState, token("source"), token("target")),
+    );
+    expect(opaque.sight).toBe("blocked");
+    expect(opaque.cover).toBe("total");
+
+    for (const [cover, expected] of [
+      ["half", "half"],
+      ["three-quarters", "three-quarters"],
+      ["total", "total"],
+    ] as const) {
+      const direct = arena(
+        squareDefinition(
+          2,
+          1,
+          [],
+          [boundary({ x: 0, y: 0 }, { x: 1, y: 0 }, { sight: "open", cover })],
+        ),
+      );
+      const directState = place(
+        place(createState(direct), "source", { x: 0, y: 0 }),
+        "target",
+        { x: 1, y: 0 },
+      );
+      const relation = value(
+        relationBetween(directState, token("source"), token("target")),
+      );
+      expect(relation.sight).toBe("clear");
+      expect(relation.cover).toBe(expected);
+    }
   });
 
   it("does not grant Cover from other token footprints", () => {
@@ -488,6 +613,66 @@ describe("explicit route planning", () => {
     expect(renderRoute(terrainAware)).toContain("opaque weight");
   });
 
+  it("compares movement policies on one geometry without embedding their rules", () => {
+    const map = arena(squareDefinition(3, 2, ["1,0"]));
+    const state = place(
+      place(createState(map), "mover", { x: 0, y: 0 }),
+      "blocker",
+      { x: 1, y: 0 },
+    );
+    const destination = { x: 2, y: 0 };
+    const ordinary = value(
+      routePlan(state, token("mover"), destination, (step) => ({
+        tag: "passable",
+        weight: step.distanceFeet,
+      })),
+    );
+    const crawling = value(
+      routePlan(state, token("mover"), destination, (step) => ({
+        tag: "passable",
+        weight: step.distanceFeet * 2,
+      })),
+    );
+    const occupantPermitting = value(
+      routePlan(state, token("mover"), destination, () => ({
+        tag: "passable",
+        weight: 1,
+      })),
+    );
+    const occupantBlocking = value(
+      routePlan(state, token("mover"), destination, (step) =>
+        step.occupants.length === 0
+          ? { tag: "passable", weight: step.distanceFeet }
+          : { tag: "impassable" },
+      ),
+    );
+    const difficultTerrainUnaffected = value(
+      routePlan(state, token("mover"), destination, (step) => ({
+        tag: "passable",
+        weight: step.distanceFeet,
+      })),
+    );
+
+    expect(ordinary.steps.map((step) => step.to)).toEqual([
+      { x: 1, y: 0 },
+      { x: 2, y: 0 },
+    ]);
+    expect(crawling.steps.map((step) => step.to)).toEqual(
+      ordinary.steps.map((step) => step.to),
+    );
+    expect(occupantPermitting.steps.map((step) => step.to)).toEqual(
+      ordinary.steps.map((step) => step.to),
+    );
+    expect(occupantBlocking.steps.map((step) => step.to)).toEqual([
+      { x: 1, y: 1 },
+      { x: 2, y: 0 },
+    ]);
+    expect(difficultTerrainUnaffected.steps.map((step) => step.to)).toEqual(
+      ordinary.steps.map((step) => step.to),
+    );
+    expect(crawling.weight).toBe(ordinary.weight * 2);
+  });
+
   it("passes terrain and stable occupants to an evaluator and supports zero-step routes", () => {
     const map = arena(squareDefinition(2, 1, ["1,0"]));
     const state = place(
@@ -559,6 +744,8 @@ describe("explicit route planning", () => {
       relationBetween(relationState, token("mover"), token("target")),
     );
     expect(Object.isFrozen(relation)).toBe(true);
+    expect(JSON.parse(JSON.stringify(plan))).toEqual(plan);
+    expect(JSON.parse(JSON.stringify(relation))).toEqual(relation);
   });
 
   it("replays route ties with the documented coordinate tie-break", () => {
@@ -625,6 +812,14 @@ describe("state-bound step preview and commitment", () => {
         physicalDistanceEvaluator,
       ),
     );
+    expect(preview.stateFingerprint).toBe(snapshot(initial).fingerprint);
+    expect(preview.revision).toBe(snapshot(initial).revision);
+    expect(preview.mover).toBe(token("mover"));
+    expect(preview.from).toEqual({ x: 0, y: 0 });
+    expect(preview.to).toEqual({ x: 1, y: 0 });
+    expect(preview.step.distanceFeet).toBe(CELL_SIZE_FEET);
+    expect(Object.isFrozen(preview)).toBe(true);
+    expect(Object.isFrozen(preview.step)).toBe(true);
     const before = value(previewRelation(preview, token("target"), "before"));
     const after = value(previewRelation(preview, token("target"), "after"));
     expect(before.distanceFeet).toBe(10);
@@ -655,6 +850,28 @@ describe("state-bound step preview and commitment", () => {
     expect(stale.tag).toBe("error");
     if (stale.tag === "error") {
       expect(stale.error.tag).toBe("stale-preview");
+      if (stale.error.tag === "stale-preview") {
+        expect(stale.error.cause).toEqual({ tag: "state-changed" });
+      }
+    }
+
+    const sameRevisionSibling = place(createState(firstArena), "other", {
+      x: 2,
+      y: 0,
+    });
+    const sameRevisionStale = commitPreview(sameRevisionSibling, preview);
+    expect(sameRevisionStale.tag).toBe("error");
+    if (sameRevisionStale.tag === "error") {
+      expect(sameRevisionStale.error.tag).toBe("stale-preview");
+      if (sameRevisionStale.error.tag === "stale-preview") {
+        expect(sameRevisionStale.error.expectedRevision).toBe(
+          sameRevisionStale.error.actualRevision,
+        );
+        expect(sameRevisionStale.error.cause).toEqual({
+          tag: "mover-missing",
+          mover: token("mover"),
+        });
+      }
     }
 
     const sibling = place(createState(firstArena), "mover", { x: 0, y: 0 });
@@ -713,6 +930,72 @@ describe("state-bound step preview and commitment", () => {
     expect(renderRoute(route)).toContain("route to");
     expect(snapshot(initial).revision).toBe(1);
   });
+
+  it("traces several current previews, occupancy change, and named-counterpart reach", () => {
+    const map = arena(squareDefinition(5, 1));
+    const counterpart = token("counterpart");
+    const mover = token("mover");
+    const initial = place(
+      place(createState(map), "mover", { x: 0, y: 0 }),
+      "counterpart",
+      { x: 4, y: 0 },
+    );
+    const evaluator = (step: ProspectiveStep) => ({
+      tag: "passable" as const,
+      weight: step.distanceFeet,
+    });
+    const observed: Array<readonly [number, number]> = [];
+    const firstPreview = value(
+      stepPreview(initial, mover, { x: 1, y: 0 }, evaluator),
+    );
+    observed.push([
+      value(previewRelation(firstPreview, counterpart, "before")).distanceFeet,
+      value(previewRelation(firstPreview, counterpart, "after")).distanceFeet,
+    ]);
+    const afterFirst = value(commitPreview(initial, firstPreview));
+    const secondPreview = value(
+      stepPreview(afterFirst, mover, { x: 2, y: 0 }, evaluator),
+    );
+    observed.push([
+      value(previewRelation(secondPreview, counterpart, "before")).distanceFeet,
+      value(previewRelation(secondPreview, counterpart, "after")).distanceFeet,
+    ]);
+    const afterSecond = value(commitPreview(afterFirst, secondPreview));
+    expect(observed).toEqual([
+      [20, 15],
+      [15, 10],
+    ]);
+
+    const occupied = place(afterSecond, "obstacle", { x: 3, y: 0 });
+    const nextSuggestion = planRoute(
+      occupied,
+      mover,
+      coordinateValue({ x: 4, y: 0 }),
+      (step) =>
+        step.occupants.length === 0
+          ? { tag: "passable", weight: step.distanceFeet }
+          : { tag: "impassable" },
+    );
+    expect(nextSuggestion).toEqual({
+      tag: "error",
+      error: {
+        tag: "no-route",
+        mover,
+        destination: { x: 4, y: 0 },
+      },
+    });
+    const replanned = value(
+      planRoute(
+        occupied,
+        mover,
+        coordinateValue({ x: 2, y: 0 }),
+        physicalDistanceEvaluator,
+      ),
+    );
+    expect(replanned.steps.map((step) => step.to)).toEqual([]);
+    expect(snapshot(initial).revision).toBe(2);
+    expect(snapshot(afterSecond).revision).toBe(4);
+  });
 });
 
 const validArenaDefinitionArbitrary = fc
@@ -734,6 +1017,36 @@ const validArenaDefinitionArbitrary = fc
     })),
     boundaries: [],
   }));
+
+const cornerBoundaryFactsArbitrary = fc.record({
+  traversal: fc.constantFrom("open" as const, "blocked" as const),
+  sight: fc.constantFrom("open" as const, "blocked" as const),
+  cover: fc.constantFrom(
+    "none" as const,
+    "half" as const,
+    "three-quarters" as const,
+    "total" as const,
+  ),
+});
+
+const cornerArenaDefinitionArbitrary = fc
+  .array(cornerBoundaryFactsArbitrary, { minLength: 4, maxLength: 4 })
+  .map((facts) => ({
+    cells: squareDefinition(2, 2).cells,
+    boundaries: [
+      boundary({ x: 0, y: 0 }, { x: 1, y: 0 }, facts[0]),
+      boundary({ x: 0, y: 0 }, { x: 0, y: 1 }, facts[1]),
+      boundary({ x: 1, y: 0 }, { x: 1, y: 1 }, facts[2]),
+      boundary({ x: 0, y: 1 }, { x: 1, y: 1 }, facts[3]),
+    ],
+  }));
+
+const smallCoordinateArbitrary = fc.constantFrom(
+  { x: 0, y: 0 },
+  { x: 1, y: 0 },
+  { x: 0, y: 1 },
+  { x: 1, y: 1 },
+);
 
 describe("public property seam", () => {
   it("preserves generated authored cells in deterministic snapshots", () => {
@@ -757,7 +1070,102 @@ describe("public property seam", () => {
     );
   });
 
-  it("keeps direct distance symmetric and query output deterministic", () => {
+  it("preserves generated authored cells and static boundaries", () => {
+    fc.assert(
+      fc.property(cornerArenaDefinitionArbitrary, (definition) => {
+        const parsed = parseArena(definition);
+        expect(parsed.tag).toBe("ok");
+        if (parsed.tag === "error") {
+          return;
+        }
+        const view = arenaSnapshot(parsed.value);
+        expect(view.cells).toHaveLength(definition.cells.length);
+        expect(view.boundaries).toHaveLength(definition.boundaries.length);
+        for (const authored of definition.boundaries) {
+          const [first, second] = authored.between;
+          const normalized = view.boundaries.find(
+            (candidate) =>
+              candidate.between.some(
+                (coordinate) =>
+                  coordinate.x === first.x && coordinate.y === first.y,
+              ) &&
+              candidate.between.some(
+                (coordinate) =>
+                  coordinate.x === second.x && coordinate.y === second.y,
+              ),
+          );
+          expect(normalized).toEqual(
+            expect.objectContaining({
+              traversal: authored.traversal,
+              sight: authored.sight,
+              cover: authored.cover,
+            }),
+          );
+        }
+        expect(JSON.parse(JSON.stringify(view))).toEqual(view);
+      }),
+      { numRuns: 30 },
+    );
+  });
+
+  it("keeps overlap and occupant completeness for generated placements", () => {
+    fc.assert(
+      fc.property(
+        fc.array(smallCoordinateArbitrary, { minLength: 3, maxLength: 3 }),
+        (coordinates) => {
+          const map = arena(squareDefinition(2, 2));
+          const ids = ["alpha", "beta", "gamma"];
+          const state = ids.reduce(
+            (current, id, index) => place(current, id, coordinates[index]),
+            createState(map),
+          );
+          for (const coordinate of [
+            { x: 0, y: 0 },
+            { x: 1, y: 0 },
+            { x: 0, y: 1 },
+            { x: 1, y: 1 },
+          ]) {
+            const expected = ids
+              .filter(
+                (_, index) =>
+                  coordinates[index].x === coordinate.x &&
+                  coordinates[index].y === coordinate.y,
+              )
+              .map(token)
+              .sort();
+            expect(value(occupantQuery(state, coordinate))).toEqual(expected);
+          }
+        },
+      ),
+      { numRuns: 30 },
+    );
+  });
+
+  it("keeps Cover and sight independent and symmetric for generated corners", () => {
+    fc.assert(
+      fc.property(cornerArenaDefinitionArbitrary, (definition) => {
+        const map = arena(definition);
+        const state = place(
+          place(createState(map), "source", { x: 0, y: 0 }),
+          "target",
+          { x: 1, y: 1 },
+        );
+        const before = snapshot(state);
+        const forward = value(
+          relationBetween(state, token("source"), token("target")),
+        );
+        const reverse = value(
+          relationBetween(state, token("target"), token("source")),
+        );
+        expect(reverse.sight).toBe(forward.sight);
+        expect(reverse.cover).toBe(forward.cover);
+        expect(snapshot(state)).toEqual(before);
+      }),
+      { numRuns: 30 },
+    );
+  });
+
+  it("keeps direct distance symmetric and relation rendering nonmutating", () => {
     fc.assert(
       fc.property(validArenaDefinitionArbitrary, (definition) => {
         const parsed = parseArena(definition);
@@ -779,10 +1187,22 @@ describe("public property seam", () => {
         const reverse = value(
           relationBetween(state, token("second"), token("first")),
         );
-        expect(forward.distanceFeet).toBe(reverse.distanceFeet);
-        expect(relationBetween(state, token("first"), token("second"))).toEqual(
-          relationBetween(state, token("first"), token("second")),
+        const equivalentArena = arena({
+          cells: [...definition.cells].reverse(),
+          boundaries: [],
+        });
+        const equivalentState = place(
+          place(createState(equivalentArena), "first", firstCoordinate),
+          "second",
+          secondCoordinate,
         );
+        const equivalentForward = value(
+          relationBetween(equivalentState, token("first"), token("second")),
+        );
+        const before = snapshot(state);
+        expect(forward.distanceFeet).toBe(reverse.distanceFeet);
+        expect(renderRelation(forward)).toBe(renderRelation(equivalentForward));
+        expect(snapshot(state)).toEqual(before);
         expect(snapshot(state).fingerprint).toMatch(/^sha256:[0-9a-f]{64}$/);
       }),
       { numRuns: 40 },
@@ -859,6 +1279,176 @@ describe("public property seam", () => {
     );
   });
 
+  it("replays generated routes deterministically and accepts every returned step", () => {
+    const routeExampleArbitrary = fc
+      .record({
+        width: fc.integer({ min: 2, max: 4 }),
+        height: fc.integer({ min: 2, max: 4 }),
+      })
+      .map(({ width, height }) => ({ width, height }));
+    fc.assert(
+      fc.property(routeExampleArbitrary, ({ width, height }) => {
+        const map = arena(squareDefinition(width, height));
+        const state = place(createState(map), "mover", { x: 0, y: 0 });
+        const before = snapshot(state);
+        const first = routePlan(
+          state,
+          token("mover"),
+          { x: width - 1, y: height - 1 },
+          physicalDistanceEvaluator,
+        );
+        const replay = routePlan(
+          state,
+          token("mover"),
+          { x: width - 1, y: height - 1 },
+          physicalDistanceEvaluator,
+        );
+        expect(first).toEqual(replay);
+        expect(snapshot(state)).toEqual(before);
+        expect(first.tag).toBe("ok");
+        if (first.tag === "error") {
+          return;
+        }
+        for (const step of first.value.steps) {
+          const stepState = place(createState(map), "mover", step.from);
+          const preview = stepPreview(
+            stepState,
+            token("mover"),
+            step.to,
+            physicalDistanceEvaluator,
+          );
+          expect(preview.tag).toBe("ok");
+          if (preview.tag === "ok") {
+            expect(preview.value.step).toEqual(step);
+          }
+        }
+      }),
+      { numRuns: 25 },
+    );
+  });
+
+  it("keeps equal-state fingerprints stable across independently parsed values", () => {
+    fc.assert(
+      fc.property(validArenaDefinitionArbitrary, (definition) => {
+        const firstArena = arena(definition);
+        const secondArena = arena({
+          cells: [...definition.cells].reverse(),
+          boundaries: [],
+        });
+        const firstState = place(
+          place(createState(firstArena), "first", definition.cells[0]),
+          "second",
+          definition.cells[1],
+        );
+        const secondState = place(
+          place(createState(secondArena), "first", definition.cells[0]),
+          "second",
+          definition.cells[1],
+        );
+        expect(snapshot(firstState).fingerprint).toBe(
+          snapshot(secondState).fingerprint,
+        );
+      }),
+      { numRuns: 30 },
+    );
+  });
+
+  it("rejects equal-revision sibling previews with a precise stale cause", () => {
+    fc.assert(
+      fc.property(fc.constantFrom({ x: 0, y: 0 }, { x: 1, y: 0 }), (origin) => {
+        const map = arena(squareDefinition(2, 1));
+        const alternate = origin.x === 0 ? { x: 1, y: 0 } : { x: 0, y: 0 };
+        const first = place(createState(map), "mover", origin);
+        const sibling = place(createState(map), "mover", alternate);
+        const preview = stepPreview(
+          first,
+          token("mover"),
+          alternate,
+          physicalDistanceEvaluator,
+        );
+        expect(preview.tag).toBe("ok");
+        if (preview.tag === "error") {
+          return;
+        }
+        const stale = commitPreview(sibling, preview.value);
+        expect(stale.tag).toBe("error");
+        if (stale.tag === "error" && stale.error.tag === "stale-preview") {
+          expect(stale.error.expectedRevision).toBe(stale.error.actualRevision);
+          expect(stale.error.cause).toEqual({
+            tag: "mover-origin-changed",
+            mover: token("mover"),
+            expected: origin,
+            actual: alternate,
+          });
+        }
+      }),
+      { numRuns: 20 },
+    );
+  });
+
+  it("commits one mover frame, advances once, stales after every successful change, and replays history", () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom({ x: 1, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }),
+        (destination) => {
+          const map = arena(squareDefinition(2, 2));
+          const initial = place(
+            place(createState(map), "mover", { x: 0, y: 0 }),
+            "other",
+            { x: 0, y: 1 },
+          );
+          const before = snapshot(initial);
+          const preview = stepPreview(
+            initial,
+            token("mover"),
+            destination,
+            physicalDistanceEvaluator,
+          );
+          expect(preview.tag).toBe("ok");
+          if (preview.tag === "error") {
+            return;
+          }
+          const committed = commitPreview(initial, preview.value);
+          expect(committed.tag).toBe("ok");
+          if (committed.tag === "error") {
+            return;
+          }
+          expect(snapshot(committed.value).revision).toBe(before.revision + 1);
+          expect(
+            value(placementOf(committed.value, token("other"))).coordinate,
+          ).toEqual({ x: 0, y: 1 });
+          expect(snapshot(initial)).toEqual(before);
+          const changed = place(initial, "changed", { x: 1, y: 1 });
+          const stale = commitPreview(changed, preview.value);
+          expect(stale.tag).toBe("error");
+          if (stale.tag === "error") {
+            expect(stale.error.tag).toBe("stale-preview");
+          }
+          const removed = removeToken(initial, token("other"));
+          expect(removed.tag).toBe("ok");
+          if (removed.tag === "ok") {
+            const removedStale = commitPreview(removed.value, preview.value);
+            expect(removedStale.tag).toBe("error");
+            if (removedStale.tag === "error") {
+              expect(removedStale.error.tag).toBe("stale-preview");
+              if (removedStale.error.tag === "stale-preview") {
+                expect(removedStale.error.cause).toEqual({
+                  tag: "state-changed",
+                });
+              }
+            }
+          }
+          const replay = commitPreview(initial, preview.value);
+          expect(replay.tag).toBe("ok");
+          if (replay.tag === "ok") {
+            expect(snapshot(replay.value)).toEqual(snapshot(committed.value));
+          }
+        },
+      ),
+      { numRuns: 20 },
+    );
+  });
+
   it("gives semantically equal arenas and states equal identities", () => {
     const firstDefinition = squareDefinition(
       2,
@@ -892,5 +1482,3 @@ describe("public property seam", () => {
     );
   });
 });
-
-expect(CELL_SIZE_FEET).toBe(5);

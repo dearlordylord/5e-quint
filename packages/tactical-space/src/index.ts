@@ -6,8 +6,6 @@
  * callers own movement costs and battle legality.
  */
 
-export const CELL_SIZE_FEET = 5 as const;
-
 const TERRAIN_KINDS = [
   "ordinary",
   "difficult",
@@ -28,7 +26,7 @@ const COVER_DEGREES = [
 ] as const satisfies ReadonlyArray<string>;
 export type CoverDegree = (typeof COVER_DEGREES)[number];
 
-const DIRECTIONS = [
+export const DIRECTIONS = Object.freeze([
   "same-horizontal-position",
   "north",
   "north-east",
@@ -38,13 +36,16 @@ const DIRECTIONS = [
   "south-west",
   "west",
   "north-west",
-] as const satisfies ReadonlyArray<string>;
+] as const) satisfies ReadonlyArray<string>;
 export type Direction = (typeof DIRECTIONS)[number];
 
 export type GeometricSight = "clear" | "blocked";
 
 declare const tokenIdBrand: unique symbol;
 declare const coordinateBrand: unique symbol;
+declare const distanceFeetBrand: unique symbol;
+declare const opaqueWeightBrand: unique symbol;
+declare const spatialRevisionBrand: unique symbol;
 declare const arenaFingerprintBrand: unique symbol;
 declare const fingerprintBrand: unique symbol;
 declare const arenaBrand: unique symbol;
@@ -59,12 +60,27 @@ export type CoordinateInput = Readonly<{
 export type CellCoordinate = CoordinateInput & {
   readonly [coordinateBrand]: true;
 };
+export type DistanceFeet = number & { readonly [distanceFeetBrand]: true };
+export type CellStepFeet = 5 & DistanceFeet;
+export type OpaqueWeight = number & { readonly [opaqueWeightBrand]: true };
+export type SpatialRevision = number & {
+  readonly [spatialRevisionBrand]: true;
+};
 export type ArenaFingerprint = string & {
   readonly [arenaFingerprintBrand]: true;
 };
 export type StateFingerprint = string & {
   readonly [fingerprintBrand]: true;
 };
+
+function makeCellStepFeet(): CellStepFeet {
+  const value = 5 as const;
+  // The literal value proves the fixed five-foot step; this cast only adds the
+  // compile-time domain brand to that already-checked literal.
+  return value as CellStepFeet;
+}
+
+export const CELL_SIZE_FEET = makeCellStepFeet();
 
 export type CellDefinition = Readonly<{
   readonly x: number;
@@ -86,7 +102,15 @@ export type ArenaDefinition = Readonly<{
 
 export type Arena = Readonly<{ readonly [arenaBrand]: true }>;
 export type SpatialState = Readonly<{ readonly [stateBrand]: true }>;
-export type StepPreview = Readonly<{ readonly [previewBrand]: true }>;
+export type StepPreview = Readonly<{
+  readonly [previewBrand]: true;
+  readonly stateFingerprint: StateFingerprint;
+  readonly revision: SpatialRevision;
+  readonly mover: TokenId;
+  readonly from: CellCoordinate;
+  readonly to: CellCoordinate;
+  readonly step: RouteStep;
+}>;
 
 export type ArenaCell = Readonly<{
   readonly coordinate: CellCoordinate;
@@ -101,7 +125,7 @@ export type ArenaBoundary = Readonly<{
 }>;
 
 export type ArenaSnapshot = Readonly<{
-  readonly cellSizeFeet: typeof CELL_SIZE_FEET;
+  readonly cellSizeFeet: CellStepFeet;
   readonly fingerprint: ArenaFingerprint;
   readonly cells: readonly ArenaCell[];
   readonly boundaries: readonly ArenaBoundary[];
@@ -114,7 +138,7 @@ export type TokenPlacement = Readonly<{
 
 export type SpatialSnapshot = Readonly<{
   readonly arenaFingerprint: ArenaFingerprint;
-  readonly revision: number;
+  readonly revision: SpatialRevision;
   readonly fingerprint: StateFingerprint;
   readonly placements: readonly TokenPlacement[];
 }>;
@@ -123,7 +147,7 @@ export type SpatialRelation = Readonly<{
   readonly source: TokenId;
   readonly target: TokenId;
   readonly direction: Direction;
-  readonly distanceFeet: number;
+  readonly distanceFeet: DistanceFeet;
   readonly sight: GeometricSight;
   readonly cover: CoverDegree;
 }>;
@@ -131,7 +155,7 @@ export type SpatialRelation = Readonly<{
 export type ProspectiveStep = Readonly<{
   readonly from: CellCoordinate;
   readonly to: CellCoordinate;
-  readonly distanceFeet: typeof CELL_SIZE_FEET;
+  readonly distanceFeet: CellStepFeet;
   readonly terrain: TerrainKind;
   readonly occupants: readonly TokenId[];
 }>;
@@ -144,23 +168,25 @@ export type StepEvaluator = (step: ProspectiveStep) => StepEvaluation;
 
 export type RouteStep = ProspectiveStep &
   Readonly<{
-    readonly weight: number;
+    readonly weight: OpaqueWeight;
   }>;
 
 export type RoutePlan = Readonly<{
   readonly plannedAtStateFingerprint: StateFingerprint;
-  readonly plannedAtRevision: number;
+  readonly plannedAtRevision: SpatialRevision;
   readonly mover: TokenId;
   readonly origin: CellCoordinate;
   readonly destination: CellCoordinate;
   readonly steps: readonly RouteStep[];
-  readonly distanceFeet: number;
-  readonly weight: number;
+  readonly distanceFeet: DistanceFeet;
+  readonly weight: OpaqueWeight;
 }>;
 
 export type Result<Value, Error> =
   | Readonly<{ readonly tag: "ok"; readonly value: Value }>
   | Readonly<{ readonly tag: "error"; readonly error: Error }>;
+
+type NonEmptyReadonlyArray<Value> = readonly [Value, ...Value[]];
 
 export type ArenaIssue = Readonly<{
   readonly tag:
@@ -177,7 +203,8 @@ export type ArenaIssue = Readonly<{
     | "duplicate-boundary"
     | "invalid-traversal"
     | "invalid-sight"
-    | "invalid-cover";
+    | "invalid-cover"
+    | "arena-span-too-large";
   readonly path: string;
   readonly message: string;
 }>;
@@ -287,18 +314,31 @@ export type CommitError =
   | Readonly<{
       readonly tag: "cross-arena-preview";
     }>
+  | StalePreviewError;
+
+export type StalePreviewCause =
   | Readonly<{
-      readonly tag: "stale-preview";
-      readonly expectedFingerprint: StateFingerprint;
-      readonly actualFingerprint: StateFingerprint;
-      readonly expectedRevision: number;
-      readonly actualRevision: number;
+      readonly tag: "state-changed";
     }>
   | Readonly<{
-      readonly tag: "mismatched-origin";
+      readonly tag: "mover-missing";
+      readonly mover: TokenId;
+    }>
+  | Readonly<{
+      readonly tag: "mover-origin-changed";
+      readonly mover: TokenId;
       readonly expected: CellCoordinate;
       readonly actual: CellCoordinate;
     }>;
+
+export type StalePreviewError = Readonly<{
+  readonly tag: "stale-preview";
+  readonly cause: StalePreviewCause;
+  readonly expectedFingerprint: StateFingerprint;
+  readonly actualFingerprint: StateFingerprint;
+  readonly expectedRevision: SpatialRevision;
+  readonly actualRevision: SpatialRevision;
+}>;
 
 export type PreviewRelationError =
   | Readonly<{
@@ -314,7 +354,7 @@ type ArenaData = Readonly<{
 
 type StateData = Readonly<{
   readonly arena: Arena;
-  readonly revision: number;
+  readonly revision: SpatialRevision;
   readonly fingerprint: StateFingerprint;
   readonly placements: ReadonlyMap<TokenId, CellCoordinate>;
 }>;
@@ -322,13 +362,56 @@ type StateData = Readonly<{
 type PreviewData = Readonly<{
   readonly arena: Arena;
   readonly state: SpatialState;
+}>;
+
+type PreviewProjection = Readonly<{
   readonly stateFingerprint: StateFingerprint;
-  readonly revision: number;
+  readonly revision: SpatialRevision;
   readonly mover: TokenId;
   readonly from: CellCoordinate;
   readonly to: CellCoordinate;
   readonly step: RouteStep;
 }>;
+
+type CanonicalCoordinate = Readonly<{
+  readonly x: number;
+  readonly y: number;
+}>;
+
+type CanonicalArenaCell = Readonly<{
+  readonly coordinate: CanonicalCoordinate;
+  readonly terrain: TerrainKind;
+}>;
+
+type CanonicalArenaBoundary = Readonly<{
+  readonly between: readonly [CanonicalCoordinate, CanonicalCoordinate];
+  readonly traversal: BoundaryOpenness;
+  readonly sight: BoundaryOpenness;
+  readonly cover: CoverDegree;
+}>;
+
+type CanonicalArenaProjection = Readonly<{
+  readonly schema: "tactical-space/1";
+  readonly cellSizeFeet: CellStepFeet;
+  readonly cells: readonly CanonicalArenaCell[];
+  readonly boundaries: readonly CanonicalArenaBoundary[];
+}>;
+
+type CanonicalPlacement = Readonly<{
+  readonly token: TokenId;
+  readonly x: number;
+  readonly y: number;
+}>;
+
+type CanonicalStateProjection = Readonly<{
+  readonly schema: "tactical-space/state/1";
+  readonly arenaFingerprint: ArenaFingerprint;
+  readonly revision: SpatialRevision;
+  readonly placements: readonly CanonicalPlacement[];
+}>;
+
+const MAX_EXACT_DISTANCE_FEET = BigInt(Number.MAX_SAFE_INTEGER);
+const MAX_AUTHORED_CELL_SPAN = MAX_EXACT_DISTANCE_FEET / BigInt(CELL_SIZE_FEET);
 
 const arenaDataByHandle = new WeakMap<Arena, ArenaData>();
 const stateDataByHandle = new WeakMap<SpatialState, StateData>();
@@ -555,8 +638,12 @@ export function parseArena(input: unknown): ArenaParseResult {
         return;
       }
       const [canonicalFirst, canonicalSecond] = canonicalPair(first, second);
+      const canonicalBetween: readonly [CellCoordinate, CellCoordinate] = [
+        canonicalFirst,
+        canonicalSecond,
+      ];
       const boundary = freezeValue({
-        between: [canonicalFirst, canonicalSecond] as const,
+        between: canonicalBetween,
         traversal,
         sight,
         cover,
@@ -566,21 +653,26 @@ export function parseArena(input: unknown): ArenaParseResult {
     });
   }
 
-  if (issues.length > 0) {
-    return arenaFailure(issues);
+  const spanIssue = authoredArenaSpanIssue(cells);
+  if (spanIssue !== undefined) {
+    issues.push(spanIssue);
+  }
+
+  const nonEmptyIssues = asNonEmpty(issues);
+  if (nonEmptyIssues !== undefined) {
+    return arenaFailure(nonEmptyIssues);
   }
 
   cells.sort(compareCells);
   boundaries.sort(compareBoundaries);
-  const snapshotWithoutFingerprint = {
+  const snapshotWithoutFingerprint: Omit<ArenaSnapshot, "fingerprint"> = {
     cellSizeFeet: CELL_SIZE_FEET,
     cells,
     boundaries,
   };
-  const fingerprint = makeArenaFingerprint({
-    schema: "tactical-space/1",
-    ...snapshotWithoutFingerprint,
-  });
+  const fingerprint = makeArenaFingerprint(
+    canonicalArenaProjection(snapshotWithoutFingerprint),
+  );
   const snapshot = freezeValue({
     ...snapshotWithoutFingerprint,
     fingerprint,
@@ -606,7 +698,7 @@ export function arenaSnapshot(arena: Arena): ArenaSnapshot {
 
 export function createState(arena: Arena): SpatialState {
   const placements = new Map<TokenId, CellCoordinate>();
-  return makeState(arena, 0, placements);
+  return makeState(arena, initialRevision(), placements);
 }
 
 export function snapshot(state: SpatialState): SpatialSnapshot {
@@ -637,7 +729,7 @@ export function placeToken(
   const placements = new Map(stateData.placements);
   placements.set(token, coordinate);
   return success(
-    makeState(stateData.arena, stateData.revision + 1, placements),
+    makeState(stateData.arena, nextRevision(stateData.revision), placements),
   );
 }
 
@@ -652,7 +744,7 @@ export function removeToken(
   const placements = new Map(stateData.placements);
   placements.delete(token);
   return success(
-    makeState(stateData.arena, stateData.revision + 1, placements),
+    makeState(stateData.arena, nextRevision(stateData.revision), placements),
   );
 }
 
@@ -750,7 +842,15 @@ export function planRoute(
   }
   if (sameCoordinate(origin, destination)) {
     return success(
-      makeRoutePlan(stateData, mover, origin, destination, [], 0, 0),
+      makeRoutePlan(
+        stateData,
+        mover,
+        origin,
+        destination,
+        [],
+        zeroDistanceFeet(),
+        zeroOpaqueWeight(),
+      ),
     );
   }
 
@@ -758,15 +858,15 @@ export function planRoute(
     readonly coordinate: CellCoordinate;
     readonly steps: readonly RouteStep[];
     readonly coordinates: readonly CellCoordinate[];
-    readonly weight: number;
-    readonly distanceFeet: number;
+    readonly weight: OpaqueWeight;
+    readonly distanceFeet: DistanceFeet;
   }>;
   const initial: SearchNode = {
     coordinate: origin,
     steps: [],
     coordinates: [origin],
-    weight: 0,
-    distanceFeet: 0,
+    weight: zeroOpaqueWeight(),
+    distanceFeet: zeroDistanceFeet(),
   };
   const queue: SearchNode[] = [initial];
   const bestByCell = new Map<string, SearchNode>([
@@ -814,19 +914,24 @@ export function planRoute(
       if (evaluation.tag === "impassable") {
         continue;
       }
+      const weight = addOpaqueWeights(node.weight, evaluation.step.weight);
+      const distanceFeet = addDistanceFeet(
+        node.distanceFeet,
+        evaluation.step.distanceFeet,
+      );
+      if (weight === undefined || distanceFeet === undefined) {
+        return failure({
+          tag: "invalid-evaluator-output",
+          message: "The evaluator route total must be finite and nonnegative.",
+        });
+      }
       const candidate: SearchNode = {
         coordinate: next,
         steps: [...node.steps, evaluation.step],
         coordinates: [...node.coordinates, next],
-        weight: node.weight + evaluation.step.weight,
-        distanceFeet: node.distanceFeet + evaluation.step.distanceFeet,
+        weight,
+        distanceFeet,
       };
-      if (!Number.isFinite(candidate.weight)) {
-        return failure({
-          tag: "invalid-evaluator-output",
-          message: "The evaluator weights must have a finite route total.",
-        });
-      }
       const nextKey = coordinateKey(next);
       const previous = bestByCell.get(nextKey);
       if (
@@ -926,19 +1031,19 @@ export function previewStep(
     return failure({ tag: "step-impassable" });
   }
   const step = evaluation.step;
-  const handle = makePreviewHandle();
-  previewDataByHandle.set(
-    handle,
-    freezeValue({
-      arena: stateData.arena,
-      state,
+  const handle = makePreviewHandle(
+    {
       stateFingerprint: stateData.fingerprint,
       revision: stateData.revision,
       mover,
       from,
       to: destination,
       step,
-    }),
+    },
+    {
+      arena: stateData.arena,
+      state,
+    },
   );
   return success(handle);
 }
@@ -963,12 +1068,12 @@ export function previewRelation(
   }
   const placements = new Map(stateData.placements);
   if (phase === "after") {
-    placements.set(previewData.mover, previewData.to);
+    placements.set(preview.mover, preview.to);
   }
   return relationForPlacements(
     arenaDataOf(previewData.arena),
     placements,
-    previewData.mover,
+    preview.mover,
     counterpart,
   );
 }
@@ -987,34 +1092,43 @@ export function commitPreview(
   if (stateData.arena !== previewData.arena) {
     return failure({ tag: "cross-arena-preview" });
   }
-  if (stateData.fingerprint !== previewData.stateFingerprint) {
+  if (stateData.fingerprint !== preview.stateFingerprint) {
+    const actualOrigin = stateData.placements.get(preview.mover);
+    const cause: StalePreviewCause =
+      actualOrigin === undefined
+        ? { tag: "mover-missing", mover: preview.mover }
+        : !sameCoordinate(actualOrigin, preview.from)
+          ? {
+              tag: "mover-origin-changed",
+              mover: preview.mover,
+              expected: preview.from,
+              actual: actualOrigin,
+            }
+          : { tag: "state-changed" };
     return failure({
       tag: "stale-preview",
-      expectedFingerprint: previewData.stateFingerprint,
+      cause,
+      expectedFingerprint: preview.stateFingerprint,
       actualFingerprint: stateData.fingerprint,
-      expectedRevision: previewData.revision,
+      expectedRevision: preview.revision,
       actualRevision: stateData.revision,
     });
   }
-  const actualOrigin = stateData.placements.get(previewData.mover);
+  const actualOrigin = stateData.placements.get(preview.mover);
   if (actualOrigin === undefined) {
-    return failure({
-      tag: "mismatched-origin",
-      expected: previewData.from,
-      actual: previewData.from,
-    });
+    // An equal state fingerprint proves the mover is present; this branch is
+    // therefore an internal invariant failure, not a public stale case.
+    throw new Error("Equal state fingerprint lost the preview mover.");
   }
-  if (!sameCoordinate(actualOrigin, previewData.from)) {
-    return failure({
-      tag: "mismatched-origin",
-      expected: previewData.from,
-      actual: actualOrigin,
-    });
+  if (!sameCoordinate(actualOrigin, preview.from)) {
+    // An equal state fingerprint proves the origin is unchanged; this branch
+    // is therefore an internal invariant failure, not a public stale case.
+    throw new Error("Equal state fingerprint changed the preview origin.");
   }
   const placements = new Map(stateData.placements);
-  placements.set(previewData.mover, previewData.to);
+  placements.set(preview.mover, preview.to);
   return success(
-    makeState(stateData.arena, stateData.revision + 1, placements),
+    makeState(stateData.arena, nextRevision(stateData.revision), placements),
   );
 }
 
@@ -1045,17 +1159,98 @@ function relationForPlacements(
       source,
       target,
       direction: directionFor(deltaX, deltaY),
-      distanceFeet:
-        Math.max(Math.abs(deltaX), Math.abs(deltaY)) * CELL_SIZE_FEET,
+      distanceFeet: makeDistanceFeet(
+        Math.max(Math.abs(deltaX), Math.abs(deltaY)),
+      ),
       sight: ray.sightBlocked ? "blocked" : "clear",
       cover: ray.cover,
     }),
   );
 }
 
+function distanceFeetFromCellDistance(
+  cellDistance: number,
+): DistanceFeet | undefined {
+  const value = cellDistance * Number(CELL_SIZE_FEET);
+  if (!Number.isSafeInteger(value) || value < 0) {
+    return undefined;
+  }
+  // The checks immediately above establish a finite, nonnegative safe integer;
+  // this cast adds only the domain brand.
+  return value as DistanceFeet;
+}
+
+function makeDistanceFeet(cellDistance: number): DistanceFeet {
+  const distance = distanceFeetFromCellDistance(cellDistance);
+  if (distance === undefined) {
+    // Arena parsing bounds authored spans so every reachable relation has an
+    // exact safe distance. This branch protects the internal invariant if a
+    // future caller bypasses that aggregate.
+    throw new Error("Tactical-space distance exceeded exact numeric capacity.");
+  }
+  return distance;
+}
+
+function zeroDistanceFeet(): DistanceFeet {
+  return makeDistanceFeet(0);
+}
+
+function addDistanceFeet(
+  first: DistanceFeet,
+  second: DistanceFeet,
+): DistanceFeet | undefined {
+  const value = first + second;
+  if (!Number.isSafeInteger(value) || value < 0) {
+    return undefined;
+  }
+  // Both operands are branded safe distances and the checks above establish
+  // that their sum remains in the same domain.
+  return value as DistanceFeet;
+}
+
+function makeOpaqueWeight(raw: number): OpaqueWeight | undefined {
+  if (!Number.isFinite(raw) || raw < 0) {
+    return undefined;
+  }
+  // The runtime predicate immediately above establishes the opaque evaluator
+  // fact; only its compile-time brand is added here.
+  return raw as OpaqueWeight;
+}
+
+function zeroOpaqueWeight(): OpaqueWeight {
+  const weight = makeOpaqueWeight(0);
+  if (weight === undefined) {
+    throw new Error("Zero opaque weight failed its finite nonnegative check.");
+  }
+  return weight;
+}
+
+function addOpaqueWeights(
+  first: OpaqueWeight,
+  second: OpaqueWeight,
+): OpaqueWeight | undefined {
+  return makeOpaqueWeight(first + second);
+}
+
+function initialRevision(): SpatialRevision {
+  return makeSpatialRevision(0);
+}
+
+function nextRevision(revision: SpatialRevision): SpatialRevision {
+  return makeSpatialRevision(revision + 1);
+}
+
+function makeSpatialRevision(value: number): SpatialRevision {
+  if (!Number.isSafeInteger(value) || value < 0) {
+    throw new Error("Spatial revision exceeded exact numeric capacity.");
+  }
+  // The check above establishes the post-construction revision invariant.
+  return value as SpatialRevision;
+}
+
 function makeState(
   arena: Arena,
-  revision: number,
+  revision: SpatialRevision,
   placements: Map<TokenId, CellCoordinate>,
 ): SpatialState {
   const arenaData = arenaDataOf(arena);
@@ -1111,8 +1306,8 @@ function makeRoutePlan(
   origin: CellCoordinate,
   destination: CellCoordinate,
   steps: readonly RouteStep[],
-  distanceFeet: number,
-  weight: number,
+  distanceFeet: DistanceFeet,
+  weight: OpaqueWeight,
 ): RoutePlan {
   return freezeValue({
     plannedAtStateFingerprint: state.fingerprint,
@@ -1180,23 +1375,39 @@ type EvaluationResult =
       >;
     }>;
 
+type EvaluatorCall =
+  | Readonly<{ readonly tag: "returned"; readonly value: unknown }>
+  | Readonly<{ readonly tag: "threw"; readonly message: string }>;
+
+function invokeStepEvaluator(
+  evaluateStep: StepEvaluator,
+  step: ProspectiveStep,
+): EvaluatorCall {
+  try {
+    return { tag: "returned", value: evaluateStep(step) };
+  } catch (error) {
+    return {
+      tag: "threw",
+      message: error instanceof Error ? error.message : "The evaluator threw.",
+    };
+  }
+}
+
 function evaluateProspectiveStep(
   evaluateStep: StepEvaluator,
   step: ProspectiveStep,
 ): EvaluationResult {
-  let raw: unknown;
-  try {
-    raw = evaluateStep(step);
-  } catch (error) {
+  const call = invokeStepEvaluator(evaluateStep, step);
+  if (call.tag === "threw") {
     return {
       tag: "error",
       error: {
         tag: "evaluator-threw",
-        message:
-          error instanceof Error ? error.message : "The evaluator threw.",
+        message: call.message,
       },
     };
   }
+  const raw = call.value;
   if (!isRecord(raw) || typeof raw.tag !== "string") {
     return {
       tag: "error",
@@ -1209,12 +1420,17 @@ function evaluateProspectiveStep(
   if (raw.tag === "impassable") {
     return { tag: "impassable" };
   }
-  if (
-    raw.tag !== "passable" ||
-    typeof raw.weight !== "number" ||
-    !Number.isFinite(raw.weight) ||
-    raw.weight < 0
-  ) {
+  if (raw.tag !== "passable" || typeof raw.weight !== "number") {
+    return {
+      tag: "error",
+      error: {
+        tag: "invalid-evaluator-output",
+        message: "A passable evaluator weight must be finite and nonnegative.",
+      },
+    };
+  }
+  const weight = makeOpaqueWeight(raw.weight);
+  if (weight === undefined) {
     return {
       tag: "error",
       error: {
@@ -1225,7 +1441,7 @@ function evaluateProspectiveStep(
   }
   return {
     tag: "passable",
-    step: freezeValue({ ...step, weight: raw.weight }),
+    step: freezeValue({ ...step, weight }),
   };
 }
 
@@ -1321,8 +1537,33 @@ function rayFacts(
   source: CellCoordinate,
   target: CellCoordinate,
 ): RayFacts {
-  let sightBlocked = false;
-  let cover: CoverDegree = "none";
+  const initialBoundaryFacts: RayFacts = {
+    sightBlocked: false,
+    cover: "none",
+  };
+  const boundaryFacts = Array.from(arena.boundaries.values())
+    .filter((boundary) => rayTouchesBoundary(source, target, boundary.between))
+    .reduce(
+      (facts, boundary) => ({
+        sightBlocked: facts.sightBlocked || boundary.sight === "blocked",
+        cover: moreProtectiveCover(facts.cover, boundary.cover),
+      }),
+      initialBoundaryFacts,
+    );
+  const sightBlockedByMissingCell = boundaryFacts.sightBlocked
+    ? false
+    : rayCellsHaveMissing(arena, source, target);
+  return {
+    sightBlocked: sightBlockedByMissingCell || boundaryFacts.sightBlocked,
+    cover: boundaryFacts.cover,
+  };
+}
+
+function rayCellsHaveMissing(
+  arena: ArenaData,
+  source: CellCoordinate,
+  target: CellCoordinate,
+): boolean {
   let current = source;
   const deltaX = target.x - source.x;
   const deltaY = target.y - source.y;
@@ -1334,20 +1575,6 @@ function rayFacts(
   let nextY = absY === 0 ? undefined : 1n;
   const denominatorX = absX === 0 ? undefined : 2n * BigInt(absX);
   const denominatorY = absY === 0 ? undefined : 2n * BigInt(absY);
-
-  const inspect = (first: CellCoordinate, second: CellCoordinate): void => {
-    if (!arena.cells.has(coordinateKey(second))) {
-      sightBlocked = true;
-    }
-    const boundary = arena.boundaries.get(boundaryKey(first, second));
-    if (boundary === undefined) {
-      return;
-    }
-    if (boundary.sight === "blocked") {
-      sightBlocked = true;
-    }
-    cover = moreProtectiveCover(cover, boundary.cover);
-  };
 
   while (!sameCoordinate(current, target)) {
     const xBeforeY =
@@ -1364,79 +1591,131 @@ function rayFacts(
         nextY * denominatorX < nextX * denominatorY);
     if (xBeforeY) {
       const next = coordinateFromIntegers(current.x + stepX, current.y);
-      inspect(current, next);
+      if (!arena.cells.has(coordinateKey(next))) {
+        return true;
+      }
       current = next;
       nextX = (nextX ?? 1n) + 2n;
       continue;
     }
     if (yBeforeX) {
       const next = coordinateFromIntegers(current.x, current.y + stepY);
-      inspect(current, next);
+      if (!arena.cells.has(coordinateKey(next))) {
+        return true;
+      }
       current = next;
       nextY = (nextY ?? 1n) + 2n;
       continue;
     }
 
-    // At an exact grid corner the center ray touches all four local
-    // cardinal boundaries.  Inspecting both orthogonal transition orders on
-    // each side makes reversal symmetric and applies blocked-if-either plus
-    // maximum-Cover without coupling the two facts.
+    // An exact corner traverses both possible cardinal transition orders.
+    // All four touched cells must be authored for sight to continue.
     const sideX = coordinateFromIntegers(current.x + stepX, current.y);
     const sideY = coordinateFromIntegers(current.x, current.y + stepY);
     const diagonal = coordinateFromIntegers(
       current.x + stepX,
       current.y + stepY,
     );
-    inspect(current, sideX);
-    inspect(current, sideY);
-    inspect(sideX, diagonal);
-    inspect(sideY, diagonal);
+    if (
+      !arena.cells.has(coordinateKey(sideX)) ||
+      !arena.cells.has(coordinateKey(sideY)) ||
+      !arena.cells.has(coordinateKey(diagonal))
+    ) {
+      return true;
+    }
     current = diagonal;
     nextX = (nextX ?? 1n) + 2n;
     nextY = (nextY ?? 1n) + 2n;
   }
-  return { sightBlocked, cover };
+  return false;
+}
+
+function rayTouchesBoundary(
+  source: CellCoordinate,
+  target: CellCoordinate,
+  between: readonly [CellCoordinate, CellCoordinate],
+): boolean {
+  const [first, second] = between;
+  const sourceX = BigInt(source.x) * 2n;
+  const sourceY = BigInt(source.y) * 2n;
+  const deltaX = (BigInt(target.x) - BigInt(source.x)) * 2n;
+  const deltaY = (BigInt(target.y) - BigInt(source.y)) * 2n;
+  if (first.y === second.y) {
+    const boundaryX = BigInt(first.x) + BigInt(second.x);
+    const minimumY = BigInt(first.y) * 2n - 1n;
+    const maximumY = BigInt(first.y) * 2n + 1n;
+    return rationalCoordinateInRange(
+      boundaryX - sourceX,
+      deltaX,
+      sourceY,
+      deltaY,
+      minimumY,
+      maximumY,
+    );
+  }
+  const boundaryY = BigInt(first.y) + BigInt(second.y);
+  const minimumX = BigInt(first.x) * 2n - 1n;
+  const maximumX = BigInt(first.x) * 2n + 1n;
+  return rationalCoordinateInRange(
+    boundaryY - sourceY,
+    deltaY,
+    sourceX,
+    deltaX,
+    minimumX,
+    maximumX,
+  );
+}
+
+function rationalCoordinateInRange(
+  numerator: bigint,
+  denominator: bigint,
+  start: bigint,
+  delta: bigint,
+  minimum: bigint,
+  maximum: bigint,
+): boolean {
+  if (denominator === 0n) {
+    return false;
+  }
+  const positiveNumerator = denominator < 0n ? -numerator : numerator;
+  const positiveDenominator = denominator < 0n ? -denominator : denominator;
+  if (positiveNumerator < 0n || positiveNumerator > positiveDenominator) {
+    return false;
+  }
+  const coordinateNumerator =
+    start * positiveDenominator + delta * positiveNumerator;
+  return (
+    coordinateNumerator >= minimum * positiveDenominator &&
+    coordinateNumerator <= maximum * positiveDenominator
+  );
 }
 
 function directionFor(deltaX: number, deltaY: number): Direction {
-  let direction: Direction;
-  if (deltaX === 0 && deltaY === 0) {
-    direction = "same-horizontal-position";
-  } else if (deltaX === 0 && deltaY > 0) {
-    direction = "north";
-  } else if (deltaX === 0 && deltaY < 0) {
-    direction = "south";
-  } else if (deltaX > 0 && deltaY > 0) {
-    direction = "north-east";
-  } else if (deltaX > 0 && deltaY < 0) {
-    direction = "south-east";
-  } else if (deltaX < 0 && deltaY > 0) {
-    direction = "north-west";
-  } else if (deltaX < 0 && deltaY < 0) {
-    direction = "south-west";
-  } else if (deltaX > 0) {
-    direction = "east";
-  } else {
-    direction = "west";
+  if (deltaX === 0) {
+    if (deltaY === 0) {
+      return "same-horizontal-position";
+    }
+    return deltaY > 0 ? "north" : "south";
   }
-  if (!DIRECTIONS.includes(direction)) {
-    // Every branch above assigns a Direction; this protects the fixed runtime
-    // vocabulary if a future branch is edited without updating the array.
-    throw new Error("Direction vocabulary drifted from directionFor.");
+  if (deltaY === 0) {
+    return deltaX > 0 ? "east" : "west";
   }
-  return direction;
+  if (deltaX > 0) {
+    return deltaY > 0 ? "north-east" : "south-east";
+  }
+  return deltaY > 0 ? "north-west" : "south-west";
 }
 
 function compareSearchNodes(
   first: Readonly<{
     readonly coordinates: readonly CellCoordinate[];
-    readonly weight: number;
-    readonly distanceFeet: number;
+    readonly weight: OpaqueWeight;
+    readonly distanceFeet: DistanceFeet;
   }>,
   second: Readonly<{
     readonly coordinates: readonly CellCoordinate[];
-    readonly weight: number;
-    readonly distanceFeet: number;
+    readonly weight: OpaqueWeight;
+    readonly distanceFeet: DistanceFeet;
   }>,
 ): number {
   if (first.weight !== second.weight) {
@@ -1496,37 +1775,25 @@ function compareStringsByCodeUnit(first: string, second: string): number {
   return first.length - second.length;
 }
 
+const COVER_INFO = {
+  none: { rank: 0, label: "no cover" },
+  half: { rank: 1, label: "Half Cover" },
+  "three-quarters": { rank: 2, label: "Three-Quarters Cover" },
+  total: { rank: 3, label: "Total Cover" },
+} as const satisfies Record<
+  CoverDegree,
+  Readonly<{ readonly rank: number; readonly label: string }>
+>;
+
 function moreProtectiveCover(
   first: CoverDegree,
   second: CoverDegree,
 ): CoverDegree {
-  return coverRank(first) >= coverRank(second) ? first : second;
-}
-
-function coverRank(cover: CoverDegree): number {
-  if (cover === "none") {
-    return 0;
-  }
-  if (cover === "half") {
-    return 1;
-  }
-  if (cover === "three-quarters") {
-    return 2;
-  }
-  return 3;
+  return COVER_INFO[first].rank >= COVER_INFO[second].rank ? first : second;
 }
 
 function coverLabel(cover: CoverDegree): string {
-  if (cover === "none") {
-    return "no cover";
-  }
-  if (cover === "half") {
-    return "Half Cover";
-  }
-  if (cover === "three-quarters") {
-    return "Three-Quarters Cover";
-  }
-  return "Total Cover";
+  return COVER_INFO[cover].label;
 }
 
 function formatCoordinate(coordinate: CellCoordinate): string {
@@ -1670,6 +1937,42 @@ function isObject(input: unknown): input is object {
   return input !== null && typeof input === "object";
 }
 
+function authoredArenaSpanIssue(
+  cells: readonly ArenaCell[],
+): ArenaIssue | undefined {
+  const first = cells[0];
+  if (first === undefined) {
+    return undefined;
+  }
+  const bounds = cells.slice(1).reduce(
+    (current, cell) => ({
+      minX: Math.min(current.minX, cell.coordinate.x),
+      maxX: Math.max(current.maxX, cell.coordinate.x),
+      minY: Math.min(current.minY, cell.coordinate.y),
+      maxY: Math.max(current.maxY, cell.coordinate.y),
+    }),
+    {
+      minX: first.coordinate.x,
+      maxX: first.coordinate.x,
+      minY: first.coordinate.y,
+      maxY: first.coordinate.y,
+    },
+  );
+  const xSpan = BigInt(bounds.maxX) - BigInt(bounds.minX);
+  const ySpan = BigInt(bounds.maxY) - BigInt(bounds.minY);
+  if (
+    xSpan * BigInt(CELL_SIZE_FEET) <= MAX_EXACT_DISTANCE_FEET &&
+    ySpan * BigInt(CELL_SIZE_FEET) <= MAX_EXACT_DISTANCE_FEET
+  ) {
+    return undefined;
+  }
+  return arenaIssue(
+    "arena-span-too-large",
+    "cells",
+    `Authored cell span must be at most ${MAX_AUTHORED_CELL_SPAN.toString()} cells per axis so distances remain exact safe integers.`,
+  );
+}
+
 function arenaIssue(
   tag: ArenaIssue["tag"],
   path: string,
@@ -1678,11 +1981,19 @@ function arenaIssue(
   return freezeValue({ tag, path, message });
 }
 
-function arenaFailure(issues: readonly ArenaIssue[]): ArenaParseResult {
-  // The caller of this helper supplies at least one issue by construction.
+function asNonEmpty(
+  issues: readonly ArenaIssue[],
+): NonEmptyReadonlyArray<ArenaIssue> | undefined {
+  const first = issues[0];
+  return first === undefined ? undefined : [first, ...issues.slice(1)];
+}
+
+function arenaFailure(
+  issues: NonEmptyReadonlyArray<ArenaIssue>,
+): ArenaParseResult {
   return freezeValue({
     tag: "error",
-    issues: issues as readonly [ArenaIssue, ...ArenaIssue[]],
+    issues,
   });
 }
 
@@ -1696,9 +2007,15 @@ function makeArenaHandle(): Arena {
   return Object.freeze({}) as Arena;
 }
 
-function makePreviewHandle(): StepPreview {
-  // Brands are erased at runtime; previewDataByHandle rejects forged objects.
-  return Object.freeze({}) as StepPreview;
+function makePreviewHandle(
+  projection: PreviewProjection,
+  data: PreviewData,
+): StepPreview {
+  // The public projection is deeply frozen for inspection, while WeakMap
+  // membership remains the unforgeable commit authority.
+  const handle = freezeValue({ ...projection }) as StepPreview;
+  previewDataByHandle.set(handle, freezeValue(data));
+  return handle;
 }
 
 function arenaDataOf(arena: Arena): ArenaData {
@@ -1719,41 +2036,88 @@ function stateDataOf(state: SpatialState): StateData {
 
 function makeStateFingerprint(
   arenaFingerprint: ArenaFingerprint,
-  revision: number,
+  revision: SpatialRevision,
   placements: ReadonlyMap<TokenId, CellCoordinate>,
 ): StateFingerprint {
   const canonicalPlacements = Array.from(placements.entries())
     .sort(([first], [second]) => compareStringsByCodeUnit(first, second))
-    .map(([token, coordinate]) => ({
-      token,
-      x: coordinate.x,
-      y: coordinate.y,
-    }));
-  const digest = makeFingerprint({
+    .map(
+      ([token, coordinate]): CanonicalPlacement => ({
+        token,
+        x: coordinate.x,
+        y: coordinate.y,
+      }),
+    );
+  const projection: CanonicalStateProjection = {
     schema: "tactical-space/state/1",
     arenaFingerprint,
     revision,
     placements: canonicalPlacements,
-  });
+  };
+  const digest = fingerprintCanonicalJson(canonicalJson(projection));
   // The canonical state projection is constructed immediately above; the
   // brand distinguishes this digest from the arena digest at the API type.
   return digest as StateFingerprint;
 }
 
-function makeArenaFingerprint(value: unknown): ArenaFingerprint {
-  const digest = makeFingerprint(value);
+function canonicalArenaProjection(
+  snapshot: Omit<ArenaSnapshot, "fingerprint">,
+): CanonicalArenaProjection {
+  return {
+    schema: "tactical-space/1",
+    cellSizeFeet: snapshot.cellSizeFeet,
+    cells: snapshot.cells.map(
+      (cell): CanonicalArenaCell => ({
+        coordinate: {
+          x: cell.coordinate.x,
+          y: cell.coordinate.y,
+        },
+        terrain: cell.terrain,
+      }),
+    ),
+    boundaries: snapshot.boundaries.map((boundary): CanonicalArenaBoundary => {
+      const between: readonly [CanonicalCoordinate, CanonicalCoordinate] = [
+        {
+          x: boundary.between[0].x,
+          y: boundary.between[0].y,
+        },
+        {
+          x: boundary.between[1].x,
+          y: boundary.between[1].y,
+        },
+      ];
+      return {
+        between,
+        traversal: boundary.traversal,
+        sight: boundary.sight,
+        cover: boundary.cover,
+      };
+    }),
+  };
+}
+
+function makeArenaFingerprint(
+  projection: CanonicalArenaProjection,
+): ArenaFingerprint {
+  const digest = fingerprintCanonicalJson(canonicalJson(projection));
   // The canonical arena projection is the only caller of this helper; the
   // brand distinguishes its digest from a state fingerprint at the API type.
   return digest as ArenaFingerprint;
 }
 
-function makeFingerprint(value: unknown): string {
-  const canonical = JSON.stringify(value);
+type CanonicalProjection = CanonicalArenaProjection | CanonicalStateProjection;
+
+function canonicalJson(projection: CanonicalProjection): string {
+  const canonical = JSON.stringify(projection);
   if (canonical === undefined) {
     throw new Error(
-      "Canonical tactical-space projection was not serializable.",
+      "A proven tactical-space canonical projection was not serializable.",
     );
   }
+  return canonical;
+}
+
+function fingerprintCanonicalJson(canonical: string): string {
   return `sha256:${sha256Hex(canonical)}`;
 }
 

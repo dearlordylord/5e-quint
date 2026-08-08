@@ -51,6 +51,16 @@ hidden consumption state, so replaying one against the same retained state is
 pure. `previewRelation` exposes before/after facts for one explicitly named
 counterpart.
 
+The readable fields on a successful preview are advisory facts for an
+adjudicator or client to inspect. A future client-copy plan may use them for
+local suggestions, but only the authoritative server-selected evaluator and
+server commit determine a server decision.
+
+An authored arena may use any finite safe-integer coordinates whose per-axis
+span is at most `floor(Number.MAX_SAFE_INTEGER / 5)` cells. This is an exact
+numeric-capacity rule, not an arbitrary map-size limit; sparse authored maps do
+not make sight or Cover walk through every coordinate between two cells.
+
 All ordinary failures are discriminated result values. Parsed values,
 snapshots, plans, relations, and returned facts are deeply frozen. The package
 does not expose redaction, deltas, subscriptions, or client/server
