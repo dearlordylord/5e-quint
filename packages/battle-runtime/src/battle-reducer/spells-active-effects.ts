@@ -255,6 +255,11 @@ type DancingLightsEffectShape =
       "form" | "light"
     >;
 
+type SpellLightEmitterTargetAttachment = Extract<
+  BattleLightEmitterAttachment,
+  { readonly kind: "combatant" | "object" }
+>;
+
 export type SaveGatedAttackRollAdvantageInvocation = Extract<
   SupportedSpellInvocation,
   { readonly procedure: "saveGatedAttackRollAdvantage" }
@@ -619,13 +624,16 @@ export function applySpellCreatedHeldObjectEffect(input: {
   }
   /* v8 ignore stop */
   const activeEffects = [
-    ...actor.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "spellCreatedHeldObject" &&
-          activeEffectSourceMatches(effect, input.activeEffect)
-        ),
-    ),
+    ...actor.activeEffects.filter((effect) => {
+      const sameSourceReplay =
+        effect.kind === "spellCreatedHeldObject" &&
+        activeEffectSourceMatches(effect, input.activeEffect);
+      if (sameSourceReplay) {
+        /* v8 ignore next -- Pure replay/idempotency guard: `spendConfiguredSpellCastResources` breaks prior Concentration before initial held-object application; legal re-evocation uses `setSpellCreatedHeldObjectState` after release instead. */
+        return false;
+      }
+      return true;
+    }),
     input.activeEffect,
   ];
   const nextActor = battleCreatureWithSpellCreatedHeldObjectHand(
@@ -1127,7 +1135,7 @@ export function battleObscurementZones(
 export function applySpellLightEmitterEffects(
   state: BattleState,
   actorId: CombatantId,
-  attachment: BattleLightEmitterAttachment,
+  attachment: SpellLightEmitterTargetAttachment,
   invocation: Extract<
     BattleExecutableSpellInvocation,
     { readonly procedure: "heldLightHurl" | "spellAttackDamage" }
@@ -1200,27 +1208,19 @@ export function tickDurationBattleLightEmitters(
 
 function sameLightEmitterAttachment(
   left: BattleLightEmitterAttachment,
-  right: BattleLightEmitterAttachment,
+  right: SpellLightEmitterTargetAttachment,
 ): boolean {
-  return Match.value(left).pipe(
+  return Match.value(right).pipe(
     Match.when(
       { kind: "combatant" },
-      (leftCombatant) =>
-        right.kind === "combatant" &&
-        leftCombatant.combatantId === right.combatantId,
+      (rightCombatant) =>
+        left.kind === "combatant" &&
+        left.combatantId === rightCombatant.combatantId,
     ),
     Match.when(
       { kind: "object" },
-      (leftObject) =>
-        right.kind === "object" && leftObject.objectId === right.objectId,
-    ),
-    Match.when(
-      { kind: "dancingLight" },
-      (leftLight) =>
-        right.kind === "dancingLight" &&
-        leftLight.lightId === right.lightId &&
-        leftLight.positionId === right.positionId &&
-        leftLight.form === right.form,
+      (rightObject) =>
+        left.kind === "object" && left.objectId === rightObject.objectId,
     ),
     Match.exhaustive,
   );
@@ -1228,7 +1228,7 @@ function sameLightEmitterAttachment(
 
 function lightEmitterMatchesAttachment(
   emitter: BattleLightEmitter,
-  attachment: BattleLightEmitterAttachment,
+  attachment: SpellLightEmitterTargetAttachment,
 ): boolean {
   return Match.value(emitter).pipe(
     Match.when({ kind: "spellLightEmitter" }, (spellEmitter) =>
@@ -1312,13 +1312,16 @@ export function applyDancingLightsSpellEffect(
     combatants: new Map(state.combatants).set(actorId, {
       ...owner,
       activeEffects: [
-        ...owner.activeEffects.filter(
-          (effect) =>
-            !(
-              effect.kind === "dancingLights" &&
-              activeEffectSourceMatches(effect, activeEffect)
-            ),
-        ),
+        ...owner.activeEffects.filter((effect) => {
+          const sameSourceReplay =
+            effect.kind === "dancingLights" &&
+            activeEffectSourceMatches(effect, activeEffect);
+          if (sameSourceReplay) {
+            /* v8 ignore next -- Pure replay/idempotency guard: `resolveDancingLightsCastSpellAct` spends the Magic Action and breaks prior Concentration before this application; legal reposition uses `repositionDancingLightsSpellEffect` instead. */
+            return false;
+          }
+          return true;
+        }),
         activeEffect,
       ],
       origin: {
@@ -1494,7 +1497,7 @@ export function dancingLightsFromEffect(
 function lightEmitterFromPostDamageRider(
   state: BattleState,
   actorId: CombatantId,
-  attachment: BattleLightEmitterAttachment,
+  attachment: SpellLightEmitterTargetAttachment,
   invocation: Extract<
     BattleExecutableSpellInvocation,
     { readonly procedure: "spellAttackDamage" }
@@ -3181,16 +3184,19 @@ export function applySaveGatedConditionImmunityEffects(
       ),
     }));
     const activeEffects = [
-      ...target.activeEffects.filter(
-        (effect) =>
-          !(
-            effect.kind === "conditionImmunity" &&
-            sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId) &&
-            invocation.activeEffects.some(
-              (candidate) => candidate.condition === effect.condition,
-            )
-          ),
-      ),
+      ...target.activeEffects.filter((effect) => {
+        const sameSourceReplay =
+          effect.kind === "conditionImmunity" &&
+          sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId) &&
+          invocation.activeEffects.some(
+            (candidate) => candidate.condition === effect.condition,
+          );
+        if (sameSourceReplay) {
+          /* v8 ignore next -- Pure replay/idempotency guard: save-gated spell resolution spends the slot and breaks prior Concentration before this application, so a legal Calm Emotions subject cannot retain a matching source immunity. */
+          return false;
+        }
+        return true;
+      }),
       ...nextEffects,
     ];
     return {
@@ -3537,16 +3543,16 @@ export function applyShieldReactionSpellActiveEffect(
     combatants: new Map(state.combatants).set(reactorId, {
       ...reactor,
       activeEffects: [
-        ...reactor.activeEffects.filter(
-          (effect) =>
-            !(
-              effect.kind === "spellArmorClassBonus" &&
-              activeEffectProcedureMatches(
-                effect,
-                invocation.sourceProcedureRef,
-              )
-            ),
-        ),
+        ...reactor.activeEffects.filter((effect) => {
+          const sameSourceReplay =
+            effect.kind === "spellArmorClassBonus" &&
+            activeEffectProcedureMatches(effect, invocation.sourceProcedureRef);
+          if (sameSourceReplay) {
+            /* v8 ignore next -- Pure replay/idempotency guard: the interrupt lifecycle spends the Reaction before `resolveShieldReaction`, and Shield's start-of-turn expiry runs before the next reaction window, so a legal Shield cast cannot retain this matching bonus. */
+            return false;
+          }
+          return true;
+        }),
         {
           kind: "spellArmorClassBonus",
           sourceProcedureRef: invocation.sourceProcedureRef,
