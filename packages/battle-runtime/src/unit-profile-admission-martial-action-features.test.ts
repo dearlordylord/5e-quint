@@ -124,6 +124,52 @@ const UNSUPPORTED_PASSIVE_SAVE_CONDITIONS = CONDITIONS.filter(
 const speciesGoliathPowerfulBuildUnitId = "species_goliath_powerful_build";
 const speciesHalflingNimblenessUnitId = "species_halfling_nimbleness";
 
+function reactionTriggerFieldOmissionVariant(
+  unit: UnitRecord,
+  id: string,
+  field: "requiresVisibleAttacker" | "damageIncludes",
+): UnitRecord {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "reaction_roll_or_damage_reduction"
+  ) {
+    throw new Error("Expected reaction roll or damage reduction mechanics.");
+  }
+  let matchedModifiers = 0;
+  const modifiers = unit.mechanics.modifiers.map((modifier) => {
+    if (modifier.kind !== "attack_damage_reduction") return modifier;
+    if (
+      field === "requiresVisibleAttacker" &&
+      modifier.trigger.requiresVisibleAttacker === true
+    ) {
+      matchedModifiers += 1;
+      const { requiresVisibleAttacker: _omitted, ...trigger } =
+        modifier.trigger;
+      return { ...modifier, trigger };
+    }
+    if (
+      field === "damageIncludes" &&
+      "damageIncludes" in modifier.trigger &&
+      modifier.trigger.damageIncludes !== undefined
+    ) {
+      matchedModifiers += 1;
+      const { damageIncludes: _omitted, ...trigger } = modifier.trigger;
+      return { ...modifier, trigger };
+    }
+    return modifier;
+  });
+  if (matchedModifiers !== 1) {
+    throw new Error(
+      `Expected exactly one ${field} trigger, got ${matchedModifiers}.`,
+    );
+  }
+  return decodeUnitRecordSync({
+    ...unit,
+    id,
+    mechanics: { ...unit.mechanics, modifiers },
+  });
+}
+
 describe("L3MSPEC species battle support", () => {
   const dragonbornSpeciesRecord = decodeSpeciesRecordSync(
     speciesDragonbornInput,
@@ -363,6 +409,147 @@ describe("L3MSPEC species battle support", () => {
         draconicAncestryDamageType,
       }),
     ).toEqual(expectedBreathWeaponSupport);
+  });
+
+  test("Breath Weapon shape, scaling, and ancestry source admission rejects one-fact near misses", () => {
+    const unit = unitLibrary.requireUnit(speciesDragonbornBreathWeaponUnitId);
+    if (
+      unit.kind !== "species_trait" ||
+      unit.mechanics.family !== "activation"
+    ) {
+      throw new Error("Expected Breath Weapon activation species trait.");
+    }
+    const [phase] = unit.mechanics.phases;
+    if (
+      phase?.kind !== "save_gate" ||
+      phase.attachment.kind !== "area" ||
+      phase.attachment.shape.kind !== "choice" ||
+      phase.onFail.kind !== "damage"
+    ) {
+      throw new Error("Expected Breath Weapon area save-gate damage phase.");
+    }
+    const [cone, line] = phase.attachment.shape.options;
+    if (cone === undefined || line?.kind !== "line") {
+      throw new Error("Expected Breath Weapon Cone/Line shape choice.");
+    }
+    const [level5, level11, level17] =
+      "tiers" in phase.onFail.amount ? phase.onFail.amount.tiers : [];
+    if (level5 === undefined || level11 === undefined || level17 === undefined)
+      throw new Error("Expected Breath Weapon character-level dice tiers.");
+
+    const nearMisses = [
+      {
+        id: "synthetic_breath_weapon_non_choice_shape",
+        mechanics: {
+          ...unit.mechanics,
+          phases: [
+            {
+              ...phase,
+              attachment: { ...phase.attachment, shape: cone },
+            },
+          ],
+        },
+      },
+      {
+        id: "synthetic_breath_weapon_wrong_damage_amount_kind",
+        mechanics: {
+          ...unit.mechanics,
+          phases: [
+            {
+              ...phase,
+              onFail: {
+                ...phase.onFail,
+                amount: { kind: "fixed", expr: { dice: 1, dieSize: 10 } },
+              },
+            },
+          ],
+        },
+      },
+      {
+        id: "synthetic_breath_weapon_wrong_damage_tier",
+        mechanics: {
+          ...unit.mechanics,
+          phases: [
+            {
+              ...phase,
+              onFail: {
+                ...phase.onFail,
+                amount: {
+                  ...phase.onFail.amount,
+                  tiers: [
+                    level5,
+                    { ...level11, override: { dice: 4 } },
+                    level17,
+                  ],
+                },
+              },
+            },
+          ],
+        },
+      },
+    ] as const satisfies readonly {
+      readonly id: string;
+      readonly mechanics: unknown;
+    }[];
+
+    for (const nearMiss of nearMisses) {
+      const nearMissUnit = decodeUnitRecordSync({
+        ...unit,
+        id: nearMiss.id,
+        mechanics: nearMiss.mechanics,
+      });
+      expect(
+        battleAttackActionAreaSaveDamageReplacementSupportForUnit({
+          unit: nearMissUnit,
+          draconicAncestryDamageType,
+        }),
+      ).toBe("unsupported");
+      expect(
+        parseSupportedUnitFeatureProfile(
+          nearMissUnit,
+          [],
+          draconicAncestrySourceFacts,
+        ),
+        nearMiss.id,
+      ).toBeNull();
+    }
+
+    const resistanceUnit = unitLibrary.requireUnit(
+      speciesDragonbornDamageResistanceUnitId,
+    );
+    if (
+      resistanceUnit.kind !== "species_trait" ||
+      resistanceUnit.mechanics.family !== "passive"
+    ) {
+      throw new Error("Expected Dragonborn Damage Resistance passive trait.");
+    }
+    const [resistanceGrant] = resistanceUnit.mechanics.grants;
+    if (
+      resistanceGrant?.kind !== "grant_resistance" ||
+      typeof resistanceGrant.damageType !== "object" ||
+      resistanceGrant.damageType === null
+    ) {
+      throw new Error("Expected Draconic Ancestry resistance source choice.");
+    }
+    const wrongResistanceSource = decodeUnitRecordSync({
+      ...resistanceUnit,
+      id: "synthetic_draconic_resistance_wrong_hole",
+      mechanics: {
+        ...resistanceUnit.mechanics,
+        grants: [
+          {
+            ...resistanceGrant,
+            damageType: { ...resistanceGrant.damageType, holeId: "wrong_hole" },
+          },
+        ],
+      },
+    });
+    expect(
+      passiveDamageResistanceProfileForUnit({
+        unit: wrongResistanceSource,
+        draconicAncestryDamageType,
+      }),
+    ).toBeNull();
   });
 
   test("Breath Weapon admission rejects malformed shape, source, and rest facts", () => {
@@ -1796,6 +1983,64 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
     expect(
       battleReactionRollOrDamageReductionSupportForUnit(malformedUnit),
     ).toBe("unsupported");
+  });
+
+  test("rogue_uncanny_dodge admits an optional-trigger omission parser shape", () => {
+    const unit = unitLibrary.requireUnit(rogueUncannyDodgeUnitId);
+    const syntheticUnit = reactionTriggerFieldOmissionVariant(
+      unit,
+      "synthetic_uncanny_dodge_without_visible_attacker",
+      "requiresVisibleAttacker",
+    );
+    expect(
+      battleReactionRollOrDamageReductionSupportForUnit(syntheticUnit),
+    ).toBe(REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE);
+    expect(
+      parseSupportedUnitFeatureProfile(syntheticUnit, [
+        { className: "rogue", level: classLevel(5) },
+      ]),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "reactionRollOrDamageReduction",
+        modifiers: [
+          expect.objectContaining({
+            kind: "attackDamageReduction",
+            reduction: { kind: "halfDamage" },
+          }),
+        ],
+      }),
+    );
+  });
+
+  test("monk_deflect_attacks admits an optional-trigger omission parser shape", () => {
+    const unit = unitLibrary.requireUnit(monkDeflectAttacksUnitId);
+    const syntheticUnit = reactionTriggerFieldOmissionVariant(
+      unit,
+      "synthetic_deflect_attacks_without_damage_type_filter",
+      "damageIncludes",
+    );
+    expect(
+      battleReactionRollOrDamageReductionSupportForUnit(syntheticUnit),
+    ).toBe(ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE);
+    expect(
+      parseSupportedUnitFeatureProfile(syntheticUnit, [
+        { className: "monk", level: classLevel(5) },
+      ]),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "reactionRollOrDamageReduction",
+        modifiers: [
+          expect.objectContaining({
+            kind: "attackDamageReduction",
+            reduction: {
+              kind: "dicePlusAbilityModifierPlusClassLevel",
+              dieSize: 10,
+              ability: "dex",
+            },
+          }),
+        ],
+      }),
+    );
   });
 });
 
