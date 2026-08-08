@@ -276,6 +276,198 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     });
   });
 
+  test("Light Property Bonus Action Attack spends its Bonus Action after a miss", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-off-hand-miss"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          attack: testShortswordAttack(),
+          offHandAttack: testDaggerAttack(),
+          selectedLoadout: {
+            weapon: {
+              itemId: battleObjectId("main:weapon_shortsword"),
+              unitId: parseSharedUnitId("weapon_shortsword"),
+              grip: "one_handed",
+            },
+            offHandWeapon: {
+              itemId: battleObjectId("off:weapon_dagger"),
+              unitId: parseSharedUnitId("weapon_dagger"),
+            },
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const attackSubject = fighterAttackSubject(state, "Shortsword");
+    const attackTarget = requireHole(
+      resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [targetFill(attackTarget, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const afterQualifyingAttack = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(attackTarget, goblinId),
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ],
+      }),
+    ).state;
+    const subject = characterBonusAttackSubjectForTest(
+      afterQualifyingAttack,
+      fighterId,
+      "offHandAttack",
+    );
+    const target = requireHole(
+      resolveBattleSubject({
+        state: afterQualifyingAttack,
+        subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state: afterQualifyingAttack,
+        subject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "attackRoll",
+    );
+
+    const completed = resolveBattleSubject({
+      state: afterQualifyingAttack,
+      subject,
+      fills: [
+        targetFill(target, goblinId),
+        attackRollFill(roll, { total: 1, naturalD20: 1 }),
+      ],
+    });
+
+    expect(completed).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        turn: { bonusActionAvailable: false },
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: goblinId, hp: 10 }),
+        ]),
+      },
+    });
+  });
+
+  test("Light Property Bonus Action Attack requests a zero-Hit-Point disposition", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-off-hand-zero-hit-point-disposition"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          attack: testShortswordAttack(),
+          offHandAttack: testDaggerAttack(),
+          selectedLoadout: {
+            weapon: {
+              itemId: battleObjectId("main:weapon_shortsword"),
+              unitId: parseSharedUnitId("weapon_shortsword"),
+              grip: "one_handed",
+            },
+            offHandWeapon: {
+              itemId: battleObjectId("off:weapon_dagger"),
+              unitId: parseSharedUnitId("weapon_dagger"),
+            },
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10, currentHp: 3 }),
+      ],
+    });
+    const attackSubject = fighterAttackSubject(state, "Shortsword");
+    const attackTarget = requireHole(
+      resolveBattleSubject({ state, subject: attackSubject, fills: [] }),
+      "targetChoice",
+    );
+    const attackRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [targetFill(attackTarget, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const afterQualifyingAttack = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(attackTarget, goblinId),
+          attackRollFill(attackRoll, { total: 1, naturalD20: 1 }),
+        ],
+      }),
+    ).state;
+    const subject = characterBonusAttackSubjectForTest(
+      afterQualifyingAttack,
+      fighterId,
+      "offHandAttack",
+    );
+    const target = requireHole(
+      resolveBattleSubject({
+        state: afterQualifyingAttack,
+        subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state: afterQualifyingAttack,
+        subject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "attackRoll",
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: afterQualifyingAttack,
+        subject,
+        fills: [
+          targetFill(target, goblinId),
+          attackRollFill(roll, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const needsDisposition = resolveBattleSubject({
+      state: afterQualifyingAttack,
+      subject,
+      fills: [
+        targetFill(target, goblinId),
+        attackRollFill(roll, { total: 15, naturalD20: 10 }),
+        damageRollFill(damage, 4),
+      ],
+    });
+
+    expect(needsDisposition).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({
+          kind: "attackDamageDisposition",
+          targetId: goblinId,
+          choices: expect.arrayContaining([
+            { kind: "ordinaryDamage" },
+            { kind: "knockOut" },
+          ]),
+        }),
+      ],
+    });
+  });
+
   test("Light Property Bonus Action Attack rejects stale source damage penalty fills", () => {
     const state = startBattleRight({
       battleId: battleId("battle-off-hand-stale-source-penalty"),

@@ -568,12 +568,35 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       "attackRoll",
     );
 
-    const rerolledHit = resolveBattleSubject({
+    const rerollRequested = resolveBattleSubject({
       state: afterQualifyingAttack,
       subject: offHandAttack,
       fills: [
         targetFill(target, goblinId),
-        attackRollFill(roll, {
+        attackRollFill(roll, { total: 2, naturalD20: 1 }),
+      ],
+    });
+
+    expect(rerollRequested).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({
+          kind: "attackRoll",
+          d20TestNaturalOneRerolls: expect.any(Array),
+        }),
+      ],
+    });
+    if (rerollRequested.tag !== "needsHoles") {
+      throw new Error("Expected the off-hand natural-1 reroll decision.");
+    }
+    const rerollHole = requireTypedHole(rerollRequested, "attackRoll");
+
+    const rerolledHit = resolveBattleSubject({
+      state: rerollRequested.state,
+      subject: offHandAttack,
+      fills: [
+        targetFill(target, goblinId),
+        attackRollFill(rerollHole, {
           total: 2,
           naturalD20: 1,
           d20TestNaturalOneReroll: rerollRoll({
