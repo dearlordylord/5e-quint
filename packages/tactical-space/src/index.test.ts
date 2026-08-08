@@ -1088,10 +1088,10 @@ function gridEdges(width: number, height: number): readonly OracleEdge[] {
 }
 
 const oracleGridEdges = gridEdges(4, 4);
-const oraclePointArbitrary = fc.record({
-  x: fc.integer({ min: 0, max: 3 }),
-  y: fc.integer({ min: 0, max: 3 }),
-});
+const oracleGridPoints: readonly OraclePoint[] = Array.from(
+  { length: 16 },
+  (_, index) => ({ x: index % 4, y: Math.floor(index / 4) }),
+);
 const oracleEdgeFactArbitrary = fc.record({
   present: fc.boolean(),
   sight: fc.constantFrom("open" as const, "blocked" as const),
@@ -1102,20 +1102,31 @@ const oracleEdgeFactArbitrary = fc.record({
     "total" as const,
   ),
 });
+const oracleSlopePairs: readonly (readonly [OraclePoint, OraclePoint])[] =
+  (() => {
+    const pairs: Array<readonly [OraclePoint, OraclePoint]> = [];
+    for (const source of oracleGridPoints) {
+      for (const target of oracleGridPoints) {
+        const deltaX = Math.abs(source.x - target.x);
+        const deltaY = Math.abs(source.y - target.y);
+        if (deltaX !== 0 && deltaY !== 0 && deltaX !== deltaY) {
+          pairs.push([source, target]);
+        }
+      }
+    }
+    return pairs;
+  })();
 const oracleSlopeExampleArbitrary = fc
-  .record({
-    source: oraclePointArbitrary,
-    target: oraclePointArbitrary,
-    edgeFacts: fc.array(oracleEdgeFactArbitrary, {
-      minLength: oracleGridEdges.length,
-      maxLength: oracleGridEdges.length,
+  .constantFrom(...oracleSlopePairs)
+  .chain(([source, target]) =>
+    fc.record({
+      source: fc.constant(source),
+      target: fc.constant(target),
+      edgeFacts: fc.array(oracleEdgeFactArbitrary, {
+        minLength: oracleGridEdges.length,
+        maxLength: oracleGridEdges.length,
+      }),
     }),
-  })
-  .filter(
-    ({ source, target }) =>
-      source.x !== target.x &&
-      source.y !== target.y &&
-      Math.abs(source.x - target.x) !== Math.abs(source.y - target.y),
   );
 
 function oraclePointKey(point: OraclePoint): string {
