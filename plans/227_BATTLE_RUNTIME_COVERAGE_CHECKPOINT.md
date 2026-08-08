@@ -30,16 +30,19 @@ workspace coverage universe.
 
 ## Latest authoritative evidence
 
-On 2026-08-08, at HEAD `6ffe49e7d`, `pnpm coverage` completed every production
-package and exited 0. Battle-runtime ran 203 test files: 2,123 tests passed and
+On 2026-08-08, at HEAD `2c0015df5`, `pnpm coverage` completed every production
+package and exited 0. Battle-runtime ran 203 test files: 2,129 tests passed and
 53 opt-in QNT proof tests were skipped. Its authoritative summary was:
 
-| Metric     | Covered / total   | Result | Harness ratchet | Issue target | Static-denominator gap to 99% |
-| ---------- | ----------------- | -----: | --------------: | -----------: | ----------------------------: |
-| Statements | 120,201 / 124,851 | 96.27% |             96% |          99% |                         3,402 |
-| Branches   | 29,902 / 32,202   | 92.85% |             92% |          99% |                         1,978 |
-| Functions  | 4,774 / 4,774     |   100% |            100% |          99% |                             0 |
-| Lines      | 120,201 / 124,851 | 96.27% |             96% |          99% |                         3,402 |
+| Metric     | Covered / total   | Result |  Delta from `6ffe49e7d` | Harness ratchet | Issue target | Static-denominator gap to 99% |
+| ---------- | ----------------- | -----: | ----------------------: | --------------: | -----------: | ----------------------------: |
+| Statements | 120,215 / 124,849 | 96.28% |  +14 covered / -2 total |             96% |          99% |                         3,386 |
+| Branches   | 29,943 / 32,229   |  92.9% | +41 covered / +27 total |             92% |          99% |                         1,964 |
+| Functions  | 4,774 / 4,774     |   100% |               no change |            100% |          99% |                             0 |
+| Lines      | 120,215 / 124,849 | 96.28% |  +14 covered / -2 total |             96% |          99% |                         3,386 |
+
+Relative to that durable baseline, uncovered statements/lines fell by 16 and
+uncovered branch arms fell by 14 despite the larger branch denominator.
 
 The gap column is planning guidance only. Production edits can change the
 denominators; a completed `pnpm coverage` result decides the real status.
@@ -55,11 +58,11 @@ before claiming it remains the sole remainder.
 | Package                    | Statements | Branches | Functions |  Lines | Position on this run |
 | -------------------------- | ---------: | -------: | --------: | -----: | -------------------- |
 | app                        |     99.37% |    99.1% |    99.44% | 99.37% | Meets 99%            |
-| battle-runtime             |     96.27% |   92.85% |      100% | 96.27% | Below 99%            |
+| battle-runtime             |     96.28% |    92.9% |      100% | 96.28% | Below 99%            |
 | character-battle-runtime   |     99.48% |   99.08% |      100% | 99.48% | Meets 99%            |
 | character-creation-runtime |     99.33% |   99.02% |      100% | 99.33% | Meets 99%            |
 | character-sheet-runtime    |     99.31% |      99% |      100% | 99.31% | Meets 99%            |
-| mcp                        |     99.72% |   99.11% |      100% | 99.72% | Meets 99%            |
+| mcp                        |     99.72% |    99.1% |      100% | 99.72% | Meets 99%            |
 | shared                     |     99.72% |   99.13% |      100% | 99.72% | Meets 99%            |
 | shared-algebras            |     99.57% |   99.11% |      100% | 99.57% | Meets 99%            |
 | surface                    |     99.55% |   99.02% |    99.79% | 99.55% | Meets 99%            |
@@ -80,43 +83,34 @@ before claiming it remains the sole remainder.
 - `6ffe49e7d` consolidated Fire-immunity and nonflammable save-gate outcomes.
   Extend that shared outcome boundary rather than recreating parallel test
   setup when covering adjacent save-gate branches.
+- `2c0015df5` covered valid unit-feature admission and projection alternatives,
+  and narrowed ongoing-effect parsing to its established class-feature source.
+  Strict Surface decoding makes the attempted Abjure Foes range and mismatched
+  activation/resource records unrepresentable; alternate effect-composition
+  fallbacks absent from the current SRD catalog remain classified non-targets
+  rather than synthetic mechanics to manufacture for coverage.
 
-## Next campaign: unit-feature support profiles
+## Next campaign: save-gated condition spell hole negotiation
 
-Start with behaviorally meaningful branches in
-`packages/battle-runtime/src/unit-feature-support.ts`, using the existing
-unit-profile admission tests and fixtures. The authoritative run reports only
-package totals, so it does not prove any file-level arm is uncovered. A prior
-focused audit identified these stable symbols and predicate arms. Reconfirm
-them with a newly generated focused diagnostic before editing, then let the
-next complete `pnpm coverage` establish the result.
+A fresh full-universe navigation report at `2c0015df5` ranks
+`battle-reducer/spells-resolve-save-gates.ts` as the largest uncovered owner
+(118 statements and 59 branch arms). Its Metamagic-selection and condition-style
+save-gate regions account for about 30 uncovered statements and 10 branch arms,
+forming the next cohesive campaign. This custom report is navigation only; the
+next completed `pnpm coverage` remains authoritative.
 
-1. `passiveDamageResistanceProfileForUnit`: cover the independent rejection
-   meanings in `unit.kind !== "species_trait" || unit.mechanics.family !==
-"passive"`, zero and multiple results for
-   `resistanceGrants.length !== 1`, and the present/non-`undefined`
-   `sourceFilter` rejection arm. Assert `null`, not only execution counts.
-2. `magicActionSaveGatedConditionProfileForUnit`: exercise both sides of
-   `classLevels === undefined ? classLevel(unit.acquiredAtLevel) :
-findCharacterClassLevel(classLevels, unit.className)`, including the
-   `paladinLevel === undefined` and
-   `paladinLevel < unit.acquiredAtLevel` rejections.
-3. `parseSelfBonusActionHealingUnitFeatureProfile`: independently omit
-   `effect.amount.base.flat` and `effect.amount.perLevel.flat`; the expected
-   projection arms are `flatBase: ... ?? 0` and
-   `flatPerLevel: ... ?? 0`, both yielding zero without changing the dice
-   projection.
-4. `parseOngoingFeatureLifecycle`: cover absent versus present
-   `earlyEndConditions ?? []` and `earlyEndArmorCategories ?? []` on supported
-   lifecycle variants, plus the typed `null` result when either parser rejects
-   a supplied value.
-5. `parseOngoingFeatureEffects` and
-   `parseOngoingFeatureUnitFeatureProfile`: cover no weapon filter versus
-   `effect.weaponFilter?.kind === "weapon_category"`, and the empty
-   roll/damage/resistance result that delegates to
-   `parseSpellBenefitActivationProjectionEffects(effects)`. Keep unsupported
-   structured-input rejection exclusions narrow; do not manufacture invalid
-   runtime states solely to move a percentage.
+1. Trace missing Careful Spell and Heightened Spell selections through
+   `saveMetamagicSelectionState`, `resolveAreaSaveMetamagicFills`, and the
+   production candidate/fill workflow. Assert requested holes and resumed
+   resolution, not helper call counts.
+2. Cover valid hole negotiation in `resolveSaveGateConditionSpellAct`,
+   `resolveSaveGateConditionImmunitySpellAct`, and
+   `resolveSaveGateAttackRollAdvantageSpellAct`, using the existing Metamagic,
+   save-condition, Calm Emotions, Faerie Fire, and hole-frontier test owners.
+3. Exercise resource-spend rejection arms in those resolvers and Command only
+   when a valid initialized battle state can reach them. Classify typed-hole
+   contradictions and strict-decoder rejections as non-targets instead of
+   bypassing admission with malformed fixtures.
 
 ## Checkpoint update and acceptance procedure
 
