@@ -30,19 +30,28 @@ workspace coverage universe.
 
 ## Latest authoritative evidence
 
-On 2026-08-08, at HEAD `2c0015df5`, `pnpm coverage` completed every production
-package and exited 0. Battle-runtime ran 203 test files: 2,129 tests passed and
-53 opt-in QNT proof tests were skipped. Its authoritative summary was:
+On 2026-08-08, at pushed HEAD `df7a0e279`, `pnpm coverage` completed every
+production package and exited 0. Battle-runtime ran 203 test files. Its
+authoritative summary was:
 
-| Metric     | Covered / total   | Result |  Delta from `6ffe49e7d` | Harness ratchet | Issue target | Static-denominator gap to 99% |
-| ---------- | ----------------- | -----: | ----------------------: | --------------: | -----------: | ----------------------------: |
-| Statements | 120,215 / 124,849 | 96.28% |  +14 covered / -2 total |             96% |          99% |                         3,386 |
-| Branches   | 29,943 / 32,229   |  92.9% | +41 covered / +27 total |             92% |          99% |                         1,964 |
-| Functions  | 4,774 / 4,774     |   100% |               no change |            100% |          99% |                             0 |
-| Lines      | 120,215 / 124,849 | 96.28% |  +14 covered / -2 total |             96% |          99% |                         3,386 |
+| Metric     | Covered / total       | Result |        Delta from `2c0015df5` | Harness ratchet | Issue target | Static-denominator gap to 99% |
+| ---------- | --------------------- | -----: | ----------------------------: | --------------: | -----------: | ----------------------------: |
+| Statements | 120,282 / 124,849     | 96.34% | +67 covered / no total change |             96% |          99% |                         3,319 |
+| Branches   | 29,989 / 32,248       | 92.99% |       +46 covered / +19 total |             92% |          99% |                         1,937 |
+| Functions  | fraction not retained |   100% |                 100% retained |            100% |          99% |                             0 |
+| Lines      | 120,282 / 124,849     | 96.34% | +67 covered / no total change |             96% |          99% |                         3,319 |
 
-Relative to that durable baseline, uncovered statements/lines fell by 16 and
-uncovered branch arms fell by 14 despite the larger branch denominator.
+Relative to `2c0015df5`, uncovered statements/lines fell from 4,634 to 4,567,
+a reduction of 67. Covered branch arms rose by 46 while the instrumented
+denominator rose by 19, so uncovered branch arms fell from 2,286 to 2,259, a
+net reduction of 27.
+
+The completed root command proves exactly 100% functions because the public
+harness requires 100% and exited 0. Its covered/total function fraction was
+discarded by terminal-output truncation. A separate temporary report using the
+same test selection and production include/exclude universe measured
+4,774 / 4,774; that fraction is navigation continuity, not a replacement for
+the authoritative root transcript.
 
 The gap column is planning guidance only. Production edits can change the
 denominators; a completed `pnpm coverage` result decides the real status.
@@ -50,19 +59,20 @@ Successful diagnostic coverage is not a substitute for `pnpm quality`.
 
 ### Workspace position
 
-The same completed run emitted the following exact package summaries. On that
-HEAD, battle-runtime was the only production package below 99% in any metric.
-This is dated evidence, not a standing assumption; remeasure the whole workspace
-before claiming it remains the sole remainder.
+The same completed run confirmed that every other production package remained
+at or above 99% in every metric. On this HEAD, battle-runtime was the only
+production package below 99%. This is dated evidence, not a standing
+assumption; remeasure the whole workspace before claiming it remains the sole
+remainder.
 
 | Package                    | Statements | Branches | Functions |  Lines | Position on this run |
 | -------------------------- | ---------: | -------: | --------: | -----: | -------------------- |
-| app                        |     99.37% |    99.1% |    99.44% | 99.37% | Meets 99%            |
-| battle-runtime             |     96.28% |    92.9% |      100% | 96.28% | Below 99%            |
+| app                        |     99.37% |   99.10% |    99.44% | 99.37% | Meets 99%            |
+| battle-runtime             |     96.34% |   92.99% |      100% | 96.34% | Below 99%            |
 | character-battle-runtime   |     99.48% |   99.08% |      100% | 99.48% | Meets 99%            |
 | character-creation-runtime |     99.33% |   99.02% |      100% | 99.33% | Meets 99%            |
 | character-sheet-runtime    |     99.31% |      99% |      100% | 99.31% | Meets 99%            |
-| mcp                        |     99.72% |    99.1% |      100% | 99.72% | Meets 99%            |
+| mcp                        |     99.72% |   99.11% |      100% | 99.72% | Meets 99%            |
 | shared                     |     99.72% |   99.13% |      100% | 99.72% | Meets 99%            |
 | shared-algebras            |     99.57% |   99.11% |      100% | 99.57% | Meets 99%            |
 | surface                    |     99.55% |   99.02% |    99.79% | 99.55% | Meets 99%            |
@@ -89,28 +99,41 @@ before claiming it remains the sole remainder.
   activation/resource records unrepresentable; alternate effect-composition
   fallbacks absent from the current SRD catalog remain classified non-targets
   rather than synthetic mechanics to manufacture for coverage.
+- `df7a0e279` marks two reviewed Metamagic batches: save-gate selection and
+  condition outcomes, followed by typed Distant, Extended, Subtle, Transmuted,
+  Twinned, Empowered, and Seeking admission, resource, and execution
+  boundaries. The authoritative reduction was 67 uncovered statements/lines
+  and 27 uncovered branch arms; malformed typed-hole contradictions remain
+  non-targets.
 
-## Next campaign: save-gated condition spell hole negotiation
+## Next campaign: persistent spatial spell lifecycle
 
-A fresh full-universe navigation report at `2c0015df5` ranks
-`battle-reducer/spells-resolve-save-gates.ts` as the largest uncovered owner
-(118 statements and 59 branch arms). Its Metamagic-selection and condition-style
-save-gate regions account for about 30 uncovered statements and 10 branch arms,
-forming the next cohesive campaign. This custom report is navigation only; the
-next completed `pnpm coverage` remains authoritative.
+A fresh matching-universe navigation report at `df7a0e279` still ranks
+`battle-reducer/spells-resolve-save-gates.ts` first, with 115 uncovered
+statements and 57 branch arms, but the reviewed campaign left its remaining
+gaps dominated by defensive and malformed-input paths. The next large cohesive
+production-reachable seam is persistent spatial spell lifecycle:
+`battle-reducer/persistent-spatial-spell-procedures.ts` has 97 uncovered
+statements and 38 branch arms, and its adjacent Moonbeam, Web, and single-save
+hazard bookkeeping in `battle-reducer/spells-active-effects.ts` has 12
+uncovered statements and 9 branch arms. The combined navigation cluster is
+therefore 109 statements and 47 branch arms. These counts are navigation only;
+the next completed `pnpm coverage` remains authoritative.
 
-1. Trace missing Careful Spell and Heightened Spell selections through
-   `saveMetamagicSelectionState`, `resolveAreaSaveMetamagicFills`, and the
-   production candidate/fill workflow. Assert requested holes and resumed
-   resolution, not helper call counts.
-2. Cover valid hole negotiation in `resolveSaveGateConditionSpellAct`,
-   `resolveSaveGateConditionImmunitySpellAct`, and
-   `resolveSaveGateAttackRollAdvantageSpellAct`, using the existing Metamagic,
-   save-condition, Calm Emotions, Faerie Fire, and hole-frontier test owners.
-3. Exercise resource-spend rejection arms in those resolvers and Command only
-   when a valid initialized battle state can reach them. Classify typed-hole
-   contradictions and strict-decoder rejections as non-targets instead of
-   bypassing admission with malformed fixtures.
+1. Drive the existing admitted Grease, Web, Sleet Storm, Gust of Wind, Flaming
+   Sphere, and Moonbeam subjects through discovery, fill negotiation, replay,
+   and end-turn continuation rather than calling reducer helpers directly.
+2. Cover the valid save-failed reaction-window branches, handled replay
+   continuations, damage and Concentration hole frontiers, and end-turn
+   `needsHoles` subject restoration. These are reachable through the existing
+   typed runtime-command owners and already-admitted SRD profiles.
+3. Cover canonical per-turn save bookkeeping for Moonbeam, Web entry/start-turn
+   triggers, and single-save area hazards, including the distinct already-saved
+   and newly-recorded transitions where production discovery can present them.
+4. Keep caller-mutated fill geometry, missing active-effect owners, impossible
+   resource races, and other immediately preceding boundary contradictions as
+   non-targets. Do not bypass discovery or weaken typed fills to manufacture
+   them.
 
 ## Checkpoint update and acceptance procedure
 
