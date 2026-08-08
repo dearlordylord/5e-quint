@@ -3273,6 +3273,49 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(3));
   });
 
+  test("Careful Command requests protected targets before the saving throw", () => {
+    const session = commandMetamagicBattle({
+      knownOptions: [carefulMetamagicOption()],
+    });
+    const act = carefulCommandAct(session);
+    const targetHole = requireSpellTargetListHole(
+      act.initialHoles,
+      "Spell targets",
+    );
+    const commandOptionHole = findHole(act.initialHoles, "commandOptionChoice");
+    const targetFill = spellTargetListFill(targetHole, "command", [skeletonId]);
+    const optionFill: Extract<
+      BattleFill,
+      { readonly kind: "commandOptionChoice" }
+    > = {
+      kind: "commandOptionChoice",
+      holeId: commandOptionHole.holeId,
+      value: "halt",
+    };
+    const needsProtectedTargets = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [targetFill, optionFill],
+    });
+
+    expect(needsProtectedTargets).toMatchObject({ tag: "needsHoles" });
+    if (needsProtectedTargets.tag !== "needsHoles") {
+      throw new Error("Expected Careful Command protected-target hole.");
+    }
+    expect(needsProtectedTargets.holes).toHaveLength(1);
+    expect(needsProtectedTargets.holes[0]).toMatchObject({
+      kind: "spellTargetList",
+      label: "Spell Careful Spell protected targets",
+      maxTargets: 3,
+      choices: expect.arrayContaining([skeletonId]),
+    });
+    expect(
+      needsProtectedTargets.holes.some(
+        (hole) => hole.kind === "savingThrowOutcome",
+      ),
+    ).toBe(false);
+  });
+
   test("Careful Spell is admitted for target-list save spells such as Command", () => {
     const session = commandMetamagicBattle({
       knownOptions: [carefulMetamagicOption()],

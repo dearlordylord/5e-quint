@@ -58,9 +58,9 @@ import {
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 
-function castHeightenedHideousLaughter() {
+function heightenedHideousLaughterFixture() {
   const spell = spellRecord(hideousLaughterUnitId);
-  const state = spellBattle({
+  const session = spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 1, count: 1 }],
     casterClassLevels: [{ className: "sorcerer", level: 5 }],
@@ -82,7 +82,7 @@ function castHeightenedHideousLaughter() {
       ],
     },
   });
-  const act = discoverBattleActs(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.procedure ===
@@ -104,8 +104,14 @@ function castHeightenedHideousLaughter() {
     [spellTargetId],
   );
   const heightenedFill = targetChoiceFill(heightenedHole, spellTargetId);
+  return { session, act, targetFill, heightenedFill };
+}
+
+function castHeightenedHideousLaughter() {
+  const { session, act, targetFill, heightenedFill } =
+    heightenedHideousLaughterFixture();
   const needsSave = resolveBattleSubject({
-    state: state.state,
+    state: session.state,
     subject: act.subject,
     fills: [targetFill, heightenedFill],
   });
@@ -114,7 +120,7 @@ function castHeightenedHideousLaughter() {
     { targetId: spellTargetId, rollMode: "disadvantage" },
   ]);
   const resolved = resolveBattleSubject({
-    state: state.state,
+    state: session.state,
     subject: act.subject,
     fills: [
       targetFill,
@@ -613,6 +619,31 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
         ],
       }),
     );
+  });
+
+  test("Heightened Hideous Laughter requests its target before the saving throw", () => {
+    const { session, act, targetFill } = heightenedHideousLaughterFixture();
+    const needsHeightenedTarget = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+
+    expect(needsHeightenedTarget).toMatchObject({ tag: "needsHoles" });
+    if (needsHeightenedTarget.tag !== "needsHoles") {
+      throw new Error("Expected Heightened Hideous Laughter target hole.");
+    }
+    expect(needsHeightenedTarget.holes).toHaveLength(1);
+    expect(needsHeightenedTarget.holes[0]).toMatchObject({
+      kind: "targetChoice",
+      label: "Spell Heightened Spell target",
+      choices: expect.arrayContaining([spellTargetId]),
+    });
+    expect(
+      needsHeightenedTarget.holes.some(
+        (hole) => hole.kind === "savingThrowOutcome",
+      ),
+    ).toBe(false);
   });
 
   test("Heightened Hideous Laughter damage repeat save cancels damage Advantage to normal", () => {

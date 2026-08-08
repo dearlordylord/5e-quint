@@ -382,6 +382,44 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     });
   });
 
+  test("Heightened Hold Person requests its target before the saving throw", () => {
+    const secondHumanoidId = combatantId("heightened-hold-person-humanoid-2");
+    const session = heightenedHoldPersonSession({
+      slotLevel: 3,
+      targetIds: [spellTargetId, secondHumanoidId],
+    });
+    const act = heightenedSaveGatedConditionAct(session, holdPersonUnitId);
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      holdPersonUnitId,
+      [spellTargetId, secondHumanoidId],
+    );
+
+    const needsHeightenedTarget = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+
+    expect(needsHeightenedTarget).toMatchObject({ tag: "needsHoles" });
+    if (needsHeightenedTarget.tag !== "needsHoles") {
+      throw new Error("Expected Heightened Hold Person target hole.");
+    }
+    expect(needsHeightenedTarget.holes).toHaveLength(1);
+    expect(needsHeightenedTarget.holes[0]).toMatchObject({
+      kind: "targetChoice",
+      label: "Spell Heightened Spell target",
+      choices: expect.arrayContaining([spellTargetId, secondHumanoidId]),
+    });
+    expect(
+      needsHeightenedTarget.holes.some(
+        (hole) => hole.kind === "savingThrowOutcome",
+      ),
+    ).toBe(false);
+  });
+
   test("Heightened hold_person carries Disadvantage only to the selected failed target repeat save", () => {
     const secondHumanoidId = combatantId("heightened-hold-person-humanoid-2");
     const cast = castHeightenedHoldPerson({
@@ -1630,14 +1668,16 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
   });
 });
 
-function castHeightenedHoldPerson(input: {
+type HeightenedHoldPersonSessionInput = {
   readonly slotLevel: 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   readonly targetIds: readonly [typeof spellTargetId, ...CombatantId[]];
-  readonly heightenedTargetId: CombatantId;
-  readonly failedTargetIds: readonly CombatantId[];
-}): BattleState {
+};
+
+function heightenedHoldPersonSession(
+  input: HeightenedHoldPersonSessionInput,
+): ReturnType<typeof spellBattle> {
   const spell = spellRecord(holdPersonUnitId);
-  const session = spellBattle({
+  return spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: input.slotLevel, count: 1 }],
     extraTargetIds: input.targetIds.filter(
@@ -1662,6 +1702,15 @@ function castHeightenedHoldPerson(input: {
       ],
     },
   });
+}
+
+function castHeightenedHoldPerson(
+  input: HeightenedHoldPersonSessionInput & {
+    readonly heightenedTargetId: CombatantId;
+    readonly failedTargetIds: readonly CombatantId[];
+  },
+): BattleState {
+  const session = heightenedHoldPersonSession(input);
   const state = session.state;
   const act = heightenedSaveGatedConditionAct(session, holdPersonUnitId);
   const targetHole = requireHole(act.initialHoles, "spellTargetList");
