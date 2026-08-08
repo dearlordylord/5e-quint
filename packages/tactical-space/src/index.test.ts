@@ -583,6 +583,183 @@ describe("static boundaries and geometric relations", () => {
   });
 });
 
+describe("public error protocol seam", () => {
+  it("returns precise token, coordinate, and arena parsing failures", () => {
+    expect(parseTokenId("")).toEqual({
+      tag: "error",
+      error: {
+        tag: "invalid-token-id",
+        message: "A token identity must be a nonempty string.",
+      },
+    });
+    expect(parseTokenId(42)).toEqual({
+      tag: "error",
+      error: {
+        tag: "invalid-token-id",
+        message: "A token identity must be a nonempty string.",
+      },
+    });
+    expect(parseCoordinate({ x: 0, y: Number.POSITIVE_INFINITY })).toEqual({
+      tag: "error",
+      error: {
+        tag: "invalid-coordinate",
+        message: "A coordinate requires finite safe integer x and y values.",
+      },
+    });
+    expect(parseArena(null)).toEqual({
+      tag: "error",
+      issues: [
+        {
+          tag: "invalid-arena",
+          path: "arena",
+          message: "An arena must be an object.",
+        },
+      ],
+    });
+    expect(parseArena({ cells: "not-an-array", boundaries: {} })).toEqual({
+      tag: "error",
+      issues: [
+        {
+          tag: "invalid-cells",
+          path: "cells",
+          message: "Arena cells must be an array.",
+        },
+        {
+          tag: "invalid-boundaries",
+          path: "boundaries",
+          message: "Arena boundaries must be an array.",
+        },
+      ],
+    });
+
+    const malformed = parseArena({
+      cells: [
+        null,
+        { x: 0, y: 0, terrain: "ordinary" },
+        { x: 1, y: 0, terrain: "ordinary" },
+      ],
+      boundaries: [
+        null,
+        { between: [] },
+        {
+          between: [
+            { x: "bad", y: 0 },
+            { x: 1, y: 0 },
+          ],
+          traversal: "open",
+          sight: "open",
+          cover: "none",
+        },
+        boundary({ x: 0, y: 0 }, { x: 1, y: 0 }),
+        boundary({ x: 1, y: 0 }, { x: 0, y: 0 }),
+        boundary({ x: 0, y: 0 }, { x: 3, y: 0 }),
+      ],
+    });
+    expect(malformed.tag).toBe("error");
+    if (malformed.tag === "error") {
+      expect(malformed.issues).toEqual([
+        {
+          tag: "invalid-cell-coordinate",
+          path: "cells[0]",
+          message: "A cell must be an object with x, y, and terrain.",
+        },
+        {
+          tag: "invalid-boundary-shape",
+          path: "boundaries[0]",
+          message: "A boundary requires a pair of cell coordinates.",
+        },
+        {
+          tag: "invalid-boundary-shape",
+          path: "boundaries[1].between",
+          message: "A boundary requires exactly two cell coordinates.",
+        },
+        {
+          tag: "invalid-boundary-coordinate",
+          path: "boundaries[2].between[0]",
+          message:
+            "A boundary endpoint requires finite safe integer x and y values.",
+        },
+        {
+          tag: "duplicate-boundary",
+          path: "boundaries[4]",
+          message: "Each pair of adjacent cells may have only one boundary.",
+        },
+        {
+          tag: "missing-boundary-cell",
+          path: "boundaries[5].between[1]",
+          message: "A boundary endpoint must name an authored cell.",
+        },
+        {
+          tag: "invalid-boundary-adjacency",
+          path: "boundaries[5].between",
+          message: "A boundary must join orthogonally adjacent cells.",
+        },
+      ]);
+    }
+  });
+
+  it("keeps state mutation and query failures typed and nonmutating", () => {
+    const map = arena(squareDefinition(2, 1));
+    const initial = createState(map);
+    const mover = token("mover");
+    const missingCell = coordinateValue({ x: 2, y: 0 });
+    // placeToken and occupantsAt publicly promise invalid-coordinate results
+    // for values that only counterfeit the erased CellCoordinate brand.
+    const forgedCoordinate = Object.freeze({ x: 0, y: 0 }) as CellCoordinate;
+
+    expect(placeToken(initial, mover, forgedCoordinate)).toEqual({
+      tag: "error",
+      error: {
+        tag: "invalid-coordinate",
+        message:
+          "Coordinates must come from parseCoordinate or a public snapshot.",
+      },
+    });
+    expect(placeToken(initial, mover, missingCell)).toEqual({
+      tag: "error",
+      error: { tag: "missing-cell", coordinate: missingCell },
+    });
+
+    const placed = place(initial, "mover", { x: 0, y: 0 });
+    expect(placeToken(placed, mover, coordinateValue({ x: 1, y: 0 }))).toEqual({
+      tag: "error",
+      error: { tag: "duplicate-token", token: mover },
+    });
+    expect(removeToken(initial, token("missing"))).toEqual({
+      tag: "error",
+      error: { tag: "unknown-token", token: token("missing") },
+    });
+    expect(occupantsAt(initial, forgedCoordinate)).toEqual({
+      tag: "error",
+      error: {
+        tag: "invalid-coordinate",
+        message:
+          "Coordinates must come from parseCoordinate or a public snapshot.",
+      },
+    });
+    expect(occupantsAt(initial, missingCell)).toEqual({
+      tag: "error",
+      error: { tag: "missing-cell", coordinate: missingCell },
+    });
+    expect(placementOf(initial, token("missing"))).toEqual({
+      tag: "error",
+      error: { tag: "unknown-token", token: token("missing") },
+    });
+    expect(relationBetween(placed, token("missing"), mover)).toEqual({
+      tag: "error",
+      error: { tag: "unknown-token", token: token("missing") },
+    });
+    expect(relationBetween(placed, mover, token("missing"))).toEqual({
+      tag: "error",
+      error: { tag: "unknown-token", token: token("missing") },
+    });
+    expect(snapshot(initial).placements).toEqual([]);
+    expect(snapshot(placed).placements).toEqual([
+      { token: mover, coordinate: coordinateValue({ x: 0, y: 0 }) },
+    ]);
+  });
+});
+
 describe("explicit route planning", () => {
   it("lets trusted evaluators choose different routes over the same geometry", () => {
     const map = arena(squareDefinition(5, 3, ["1,0"]));
