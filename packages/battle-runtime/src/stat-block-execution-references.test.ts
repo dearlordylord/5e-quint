@@ -582,11 +582,17 @@ describe("Stat Block execution references", () => {
         snapshotBattle(removedCharacter.right),
       ),
     );
-    expect(
+    const retiredCharacterAllocation =
       serializedAfterCharacterRemoval.retiredExecutionScopeAllocations.find(
         (allocation) => allocation.combatantId === characterWithoutFormsId,
-      ),
-    ).toMatchObject({
+      );
+    if (
+      retiredCharacterAllocation === undefined ||
+      retiredCharacterAllocation.ownership.kind !== "character"
+    ) {
+      throw new Error("Expected the retired character allocation.");
+    }
+    expect(retiredCharacterAllocation).toMatchObject({
       ownership: {
         kind: "character",
         characterScopeRef: expect.any(String),
@@ -594,6 +600,51 @@ describe("Stat Block execution references", () => {
         formScopeRefs: [],
       },
     });
+    const allocatedFormScopeOrdinal = battleExecutionScopeOrdinal(
+      Number(retiredCharacterAllocation.nextScopeOrdinal) - 1,
+    );
+    const unallocatedFormScopeOrdinal = battleExecutionScopeOrdinal(
+      Number(retiredCharacterAllocation.nextScopeOrdinal),
+    );
+    const snapshotWithRetiredFormScopeRef = (
+      formScopeRef: BattleStatBlockExecutionScopeReference,
+    ) =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...serializedAfterCharacterRemoval,
+        retiredExecutionScopeAllocations:
+          serializedAfterCharacterRemoval.retiredExecutionScopeAllocations.map(
+            (allocation) =>
+              allocation.combatantId === characterWithoutFormsId
+                ? {
+                    ...allocation,
+                    ownership: {
+                      ...allocation.ownership,
+                      formScopeRefs: [formScopeRef],
+                    },
+                  }
+                : allocation,
+          ),
+      });
+    const invalidRetiredFormScopeRefs = [
+      battleStatBlockExecutionScopeRef(
+        removedCharacter.right.battleId,
+        combatantId("foreign-retired-form-owner"),
+        allocatedFormScopeOrdinal,
+      ),
+      battleStatBlockExecutionScopeRef(
+        battleId("foreign-retired-form-battle"),
+        characterWithoutFormsId,
+        allocatedFormScopeOrdinal,
+      ),
+      battleStatBlockExecutionScopeRef(
+        removedCharacter.right.battleId,
+        characterWithoutFormsId,
+        unallocatedFormScopeOrdinal,
+      ),
+    ] as const;
+    for (const formScopeRef of invalidRetiredFormScopeRefs) {
+      expect(() => snapshotWithRetiredFormScopeRef(formScopeRef)).toThrow();
+    }
     const readmitted = addBattleCombatant({
       state: restoredAfterRemoval,
       combatant: actorInit,
@@ -1444,6 +1495,26 @@ describe("Stat Block execution references", () => {
         snapshotWithEffectOwner(fighterId, fighterEffectRef),
       ),
     ).not.toThrow();
+    const duplicateActiveEffectSnapshot = snapshotWithEffectOwner(
+      fighterId,
+      fighterEffectRef,
+    );
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...duplicateActiveEffectSnapshot,
+        combatants: duplicateActiveEffectSnapshot.combatants.map((combatant) =>
+          combatant.combatantId === fighterId
+            ? {
+                ...combatant,
+                activeEffectRefs: [
+                  ...combatant.activeEffectRefs,
+                  fighterEffectRef,
+                ],
+              }
+            : combatant,
+        ),
+      }),
+    ).toThrow();
     expect(() =>
       Schema.decodeUnknownSync(BattleSnapshotSchema)({
         ...snapshotWithEffectOwner(actorId, actorEffectRef),
@@ -1699,13 +1770,13 @@ describe("Stat Block execution references", () => {
     const invalidGraph = {
       ...decodedOrigin.execution,
       procedureBindings: decodedOrigin.execution.procedureBindings.map(
-        (binding, index) =>
-          index === 0
+        (binding) =>
+          binding.procedureRef === limitedBinding.procedureRef
             ? {
                 ...binding,
                 resourcePoolRefs: [
                   ...binding.resourcePoolRefs,
-                  "synthetic-dangling-pool-ref",
+                  unboundResourceRef,
                 ],
               }
             : binding,
