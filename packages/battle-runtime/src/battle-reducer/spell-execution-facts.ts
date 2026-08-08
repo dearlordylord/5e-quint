@@ -348,15 +348,22 @@ export type SpellProcedureWithQuickenedActionCostRewrite = {
     : never;
 }[SupportedSpellInvocation["procedure"]];
 
-export type SpellProcedureWithProfileDelegatedSpellAttackDamageBody = {
+type SpellProcedureWithSharedSpellAttackDamageBody<
+  Routing extends "profileDelegated" | "direct",
+> = {
   [P in SupportedSpellInvocation["procedure"]]: SpellProcedureExecutionFactsByProcedure[P] extends {
     readonly resolution: {
-      readonly sharedSpellAttackDamageBody: "profileDelegated";
+      readonly sharedSpellAttackDamageBody: Routing;
     };
   }
     ? P
     : never;
 }[SupportedSpellInvocation["procedure"]];
+
+export type SpellProcedureWithProfileDelegatedSpellAttackDamageBody =
+  SpellProcedureWithSharedSpellAttackDamageBody<"profileDelegated">;
+export type SpellProcedureWithDirectSpellAttackDamageBody =
+  SpellProcedureWithSharedSpellAttackDamageBody<"direct">;
 
 export function spellProcedureAcceptsMetamagicApplications(
   procedure: SupportedSpellInvocation["procedure"],
@@ -400,6 +407,23 @@ export function spellProcedureSharedSpellAttackDamageBodyRouting(
     "sharedSpellAttackDamageBody" in facts.resolution
     ? facts.resolution.sharedSpellAttackDamageBody
     : undefined;
+}
+
+export function spellProcedureUsesProfileDelegatedSpellAttackDamageBody(
+  procedure: SupportedSpellInvocation["procedure"],
+): procedure is SpellProcedureWithProfileDelegatedSpellAttackDamageBody {
+  return (
+    spellProcedureSharedSpellAttackDamageBodyRouting(procedure) ===
+    "profileDelegated"
+  );
+}
+
+export function spellProcedureUsesDirectSpellAttackDamageBody(
+  procedure: SupportedSpellInvocation["procedure"],
+): procedure is SpellProcedureWithDirectSpellAttackDamageBody {
+  return (
+    spellProcedureSharedSpellAttackDamageBodyRouting(procedure) === "direct"
+  );
 }
 
 export function spellExecutionClassForProcedure(
