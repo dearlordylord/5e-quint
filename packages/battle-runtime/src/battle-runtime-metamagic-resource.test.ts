@@ -37,10 +37,14 @@ import {
 } from "./battle-reducer/spell-reroll-issues.ts";
 import {
   admitSpellMetamagicApplications,
+  actorCanOfferQuickenedSpellMetamagic,
   CAREFUL_METAMAGIC_EFFECT_KIND,
   DISTANT_METAMAGIC_EFFECT_KIND,
   EMPOWERED_METAMAGIC_EFFECT_KIND,
   EMPOWERED_METAMAGIC_UNSUPPORTED_MESSAGE,
+  empoweredSpellDamageRerollOption,
+  empoweredSpellMetamagicApplication,
+  empoweredSpellStackingIssue,
   effectiveEmpoweredSpellDamageRoll,
   EXTENDED_METAMAGIC_EFFECT_KIND,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
@@ -48,13 +52,27 @@ import {
   QUICKENED_SPELL_METAMAGIC_SELECTION,
   SEEKING_METAMAGIC_EFFECT_KIND,
   SEEKING_METAMAGIC_UNSUPPORTED_MESSAGE,
+  seekingSpellAttackRerollOption,
+  seekingSpellCombinedUseIssue,
+  seekingSpellMetamagicApplication,
+  seekingSpellStackingIssue,
   spellMetamagicApplications,
   SUBTLE_METAMAGIC_EFFECT_KIND,
   subtleSpellComponentProjectionForApplications,
+  spendSpellMetamagicSorceryPoints,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
   TWINNED_METAMAGIC_EFFECT_KIND,
   twinnedSpellTargetCountInvocation,
 } from "./battle-reducer/metamagic.ts";
+import {
+  discoverDistantSpellMetamagicSelections,
+  discoverExtendedSpellMetamagicSelections,
+  discoverSubtleSpellMetamagicSelections,
+  discoverTransmutedSpellMetamagicSelections,
+  discoverTwinnedSpellMetamagicSelections,
+  saveMetamagicSupportIssue,
+  subtleSpellComponentProjectionIssue,
+} from "./battle-reducer/metamagic-support.ts";
 import {
   resolveAreaSaveMetamagicFills,
   saveMetamagicSelectionState,
@@ -110,6 +128,54 @@ import {
 } from "./index.ts";
 
 describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
+  test("returns typed spend failures for non-owners and exhausted Sorcery Points", () => {
+    const session = saveMetamagicBattle({
+      knownOptions: [empoweredMetamagicOption()],
+      sorceryPoints: 0,
+    });
+    const actor = requireBattleCreature(session.state, wizardId);
+    const [application] = spellMetamagicApplications(actor, [
+      { effectKind: EMPOWERED_METAMAGIC_EFFECT_KIND },
+    ]);
+    if (application === undefined) {
+      throw new Error("Expected the known Empowered Spell application.");
+    }
+
+    expect(
+      spendSpellMetamagicSorceryPoints({
+        state: session.state,
+        actorId: skeletonId,
+        applications: [application],
+      }),
+    ).toEqual(
+      Either.left(
+        "Metamagic selection requires a character with known Metamagic options.",
+      ),
+    );
+    expect(
+      spendSpellMetamagicSorceryPoints({
+        state: session.state,
+        actorId: wizardId,
+        applications: [application],
+      }),
+    ).toEqual(
+      Either.left("Metamagic requires enough unexpended Sorcery Points."),
+    );
+
+    const characterSession = metamagicBattle();
+    expect(
+      spendSpellMetamagicSorceryPoints({
+        state: characterSession.state,
+        actorId: fighterId,
+        applications: [application],
+      }),
+    ).toEqual(
+      Either.left(
+        "Metamagic selection requires a character with known Metamagic options.",
+      ),
+    );
+  });
+
   test("stores Metamagic option facts beside the shared Sorcery Point point pool", () => {
     const sorcererId = combatantId("combatant:sorcerer-metamagic-resource");
     const state = startBattleRight({
@@ -1045,6 +1111,79 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     expect(buffed.state.combatants.get(wizardId)?.tempHp).toBe(11);
   });
 
+  test("excludes absent and non-character actors from character-owned Metamagic offers", () => {
+    const { session, invocation } = burningHandsMetamagicContext({
+      knownOptions: [subtleMetamagicOption()],
+    });
+    const skeleton = requireBattleCreature(session.state, skeletonId);
+
+    expect(
+      actorCanOfferQuickenedSpellMetamagic({
+        state: session.state,
+        actor: skeleton,
+        actorId: skeletonId,
+        invocation,
+      }),
+    ).toBe(false);
+    expect(seekingSpellAttackRerollOption({ actor: skeleton })).toBeNull();
+    expect(
+      empoweredSpellDamageRerollOption({
+        actor: skeleton,
+        castApplications: [],
+      }),
+    ).toBeNull();
+    expect(empoweredSpellMetamagicApplication(skeleton)).toBeNull();
+    expect(seekingSpellMetamagicApplication(skeleton)).toBeNull();
+    expect(
+      spellMetamagicApplications(skeleton, [
+        { effectKind: SUBTLE_METAMAGIC_EFFECT_KIND },
+      ]),
+    ).toEqual([]);
+    expect(
+      discoverDistantSpellMetamagicSelections({
+        actor: undefined,
+        invocation,
+      }),
+    ).toEqual([]);
+    expect(
+      discoverExtendedSpellMetamagicSelections({
+        actor: undefined,
+        invocation,
+      }),
+    ).toEqual([]);
+  });
+
+  test("discovers only options present in the character's known Metamagic facts", () => {
+    const { actor, invocation } = burningHandsMetamagicContext({
+      knownOptions: [empoweredMetamagicOption()],
+    });
+
+    expect({
+      distant: discoverDistantSpellMetamagicSelections({ actor, invocation }),
+      extended: discoverExtendedSpellMetamagicSelections({
+        actor,
+        invocation,
+      }),
+      transmuted: discoverTransmutedSpellMetamagicSelections({
+        actor,
+        invocation,
+      }),
+      twinned: discoverTwinnedSpellMetamagicSelections({ actor, invocation }),
+    }).toEqual({
+      distant: [],
+      extended: [],
+      transmuted: [],
+      twinned: [],
+    });
+    expect(
+      discoverSubtleSpellMetamagicSelections({
+        actor,
+        invocation,
+        subject: { tag: "actionSpell", mode: { tag: "cast" } },
+      }),
+    ).toEqual([]);
+  });
+
   test("requires known Metamagic options and enough unexpended Sorcery Points", () => {
     const unaffordableSession = metamagicBattle({ sorceryPoints: 1 });
     const unaffordable = unaffordableSession.state;
@@ -1118,6 +1257,66 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
   });
 
+  test("requires character-owned Metamagic before admitting a selection", () => {
+    const { session, invocation } = burningHandsMetamagicContext({
+      knownOptions: [subtleMetamagicOption()],
+    });
+    const subject = {
+      tag: "actionSpell",
+      mode: { tag: "cast" },
+      metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
+    } as const;
+    const issue = {
+      tag: "spellMetamagicAdmissionIssue",
+      message:
+        "Metamagic selection requires a character with known Metamagic options.",
+    } as const;
+
+    const characterSession = metamagicBattle();
+    expect([
+      admitSpellMetamagicApplications({
+        state: session.state,
+        actor: requireBattleCreature(session.state, skeletonId),
+        actorId: skeletonId,
+        invocation,
+        subject,
+      }),
+      admitSpellMetamagicApplications({
+        state: characterSession.state,
+        actor: requireBattleCreature(characterSession.state, fighterId),
+        actorId: fighterId,
+        invocation,
+        subject,
+      }),
+    ]).toEqual([issue, issue]);
+  });
+
+  test("rejects duplicate Metamagic selections before option support", () => {
+    const { session, invocation } = burningHandsMetamagicContext({
+      knownOptions: [subtleMetamagicOption()],
+    });
+
+    expect(
+      admitSpellMetamagicApplications({
+        state: session.state,
+        actor: requireBattleCreature(session.state, wizardId),
+        actorId: wizardId,
+        invocation,
+        subject: {
+          tag: "actionSpell",
+          mode: { tag: "cast" },
+          metamagic: [
+            { effectKind: SUBTLE_METAMAGIC_EFFECT_KIND },
+            { effectKind: SUBTLE_METAMAGIC_EFFECT_KIND },
+          ],
+        },
+      }),
+    ).toEqual({
+      tag: "spellMetamagicAdmissionIssue",
+      message: "Metamagic selections must not repeat an option effect.",
+    });
+  });
+
   test("enforces one Metamagic option per spell without admitting unsupported second-option effects", () => {
     const session = metamagicBattle({
       sorceryPoints: 5,
@@ -1164,6 +1363,56 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       message:
         "A spell can use only one Metamagic option unless one selected option explicitly combines with a different Metamagic option.",
     });
+  });
+
+  test("keeps Distant and Extended undiscoverable for unsupported spell procedures", () => {
+    const { actor, invocation } = burningHandsMetamagicContext({
+      knownOptions: [distantMetamagicOption(), extendedMetamagicOption()],
+    });
+
+    expect({
+      distant: discoverDistantSpellMetamagicSelections({ actor, invocation }),
+      extended: discoverExtendedSpellMetamagicSelections({
+        actor,
+        invocation,
+      }),
+    }).toEqual({ distant: [], extended: [] });
+  });
+
+  test("offers Light for Distant range projection but not Quickened action rewrite", () => {
+    const session = metamagicBattle({
+      knownOptions: [distantMetamagicOption(), quickenedMetamagicOption()],
+      preparedSpells: ["light"],
+    });
+    const actor = requireBattleCreature(session.state, wizardId);
+    const invocation = supportedInvocationFor(session, "light", "objectLight");
+
+    expect(
+      discoverDistantSpellMetamagicSelections({ actor, invocation }),
+    ).toEqual([[{ effectKind: DISTANT_METAMAGIC_EFFECT_KIND }]]);
+    expect(
+      actorCanOfferQuickenedSpellMetamagic({
+        state: session.state,
+        actor,
+        actorId: wizardId,
+        invocation,
+      }),
+    ).toBe(false);
+  });
+
+  test("does not offer Distant Light without its Sorcery Point cost", () => {
+    const session = metamagicBattle({
+      knownOptions: [distantMetamagicOption()],
+      preparedSpells: ["light"],
+      sorceryPoints: 0,
+    });
+
+    expect(
+      discoverDistantSpellMetamagicSelections({
+        actor: requireBattleCreature(session.state, wizardId),
+        invocation: supportedInvocationFor(session, "light", "objectLight"),
+      }),
+    ).toEqual([]);
   });
 
   test("explicitly closes unpromoted cast-property Metamagic options before Sorcery Point spending", () => {
@@ -1295,6 +1544,37 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
   });
 
+  test("requires the admitted Subtle application before projecting components", () => {
+    const { invocation } = burningHandsMetamagicContext({
+      knownOptions: [transmutedMetamagicOption()],
+    });
+
+    expect(
+      subtleSpellComponentProjectionIssue({
+        applications: [transmutedMetamagicOption()],
+        invocation,
+        subject: { tag: "actionSpell", mode: { tag: "cast" } },
+      }),
+    ).toBe(
+      "Selected Metamagic option effect is not supported for this spell procedure.",
+    );
+  });
+
+  test("does not discover Subtle Spell without its Sorcery Point cost", () => {
+    const { actor, invocation } = burningHandsMetamagicContext({
+      knownOptions: [subtleMetamagicOption()],
+      sorceryPoints: 0,
+    });
+
+    expect(
+      discoverSubtleSpellMetamagicSelections({
+        actor,
+        invocation,
+        subject: { tag: "actionSpell", mode: { tag: "cast" } },
+      }),
+    ).toEqual([]);
+  });
+
   test("rejects Subtle Spell outside action-time spell casts before Sorcery Point spending", () => {
     const session = metamagicBattle({
       knownOptions: [subtleMetamagicOption()],
@@ -1325,6 +1605,20 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       message: "Subtle Spell is supported only for action-time spell casts.",
     });
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("does not discover Twinned target-count projection without its Sorcery Point cost", () => {
+    const session = twinnedTargetCountBattle(
+      combatantId("combatant:unaffordable-twinned-target"),
+      resourceCount(0),
+    );
+
+    expect(
+      discoverTwinnedSpellMetamagicSelections({
+        actor: requireBattleCreature(session.state, wizardId),
+        invocation: supportedInvocationFor(session, "bless", "rollModifier"),
+      }),
+    ).toEqual([]);
   });
 
   test("discovers Twinned target-count spells with the next effective target maximum", () => {
@@ -1623,6 +1917,20 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
 
     expect(sorceryPointsRemaining(damageState)).toBe(resourceCount(4));
     expect(sorceryPointsRemaining(restorationState)).toBe(resourceCount(4));
+  });
+
+  test("does not discover Transmuted damage substitution without its Sorcery Point cost", () => {
+    const { actor, invocation } = burningHandsMetamagicContext({
+      knownOptions: [transmutedMetamagicOption()],
+      sorceryPoints: 0,
+    });
+
+    expect(
+      discoverTransmutedSpellMetamagicSelections({
+        actor,
+        invocation,
+      }),
+    ).toEqual([]);
   });
 
   test("threads Transmuted Spell through spell attack sequence resolution", () => {
@@ -1961,6 +2269,32 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
 
+  test("rejects a second Empowered Spell application on the same cast", () => {
+    const session = saveMetamagicBattle({
+      knownOptions: [empoweredMetamagicOption()],
+    });
+    const actor = requireBattleCreature(session.state, wizardId);
+    const application = empoweredSpellMetamagicApplication(actor);
+    if (application === null) {
+      throw new Error("Expected the affordable Empowered Spell application.");
+    }
+    const issue =
+      "Empowered Spell can combine only with a different Metamagic option.";
+
+    expect(
+      empoweredSpellStackingIssue({
+        castApplications: [application],
+        empoweredApplication: application,
+      }),
+    ).toBe(issue);
+    expect(
+      empoweredSpellDamageRerollOption({
+        actor,
+        castApplications: [application],
+      }),
+    ).toBeNull();
+  });
+
   test("Empowered Spell can reroll damage after a different Metamagic option modified the spell", () => {
     const session = saveMetamagicBattle({
       knownOptions: [quickenedMetamagicOption(), empoweredMetamagicOption()],
@@ -2253,6 +2587,42 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     ).state;
 
     expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(3));
+  });
+
+  test("rejects repeated Seeking Spell and requires an actor for combined use", () => {
+    const session = saveMetamagicBattle({
+      knownOptions: [seekingMetamagicOption()],
+    });
+    const actor = requireBattleCreature(session.state, wizardId);
+    const application = seekingSpellMetamagicApplication(actor);
+    if (application === null) {
+      throw new Error("Expected the affordable Seeking Spell application.");
+    }
+    const stackingIssue =
+      "Seeking Spell can combine only with a different Metamagic option.";
+
+    expect(
+      seekingSpellStackingIssue({
+        castApplications: [application],
+        seekingApplication: application,
+      }),
+    ).toBe(stackingIssue);
+    expect(
+      seekingSpellCombinedUseIssue({
+        actor,
+        castApplications: [application],
+        seekingApplication: application,
+      }),
+    ).toBe(stackingIssue);
+    expect(
+      seekingSpellCombinedUseIssue({
+        actor: undefined,
+        castApplications: [],
+        seekingApplication: application,
+      }),
+    ).toBe(
+      "Seeking Spell requires a character that knows Seeking Spell and has enough Sorcery Points.",
+    );
   });
 
   test("Seeking Spell can reroll a miss after a different Metamagic option modified the spell", () => {
@@ -3829,6 +4199,22 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     });
   });
 
+  test("rejects non-save Metamagic effects at the save-specific support boundary", () => {
+    const { invocation } = burningHandsMetamagicContext({
+      knownOptions: [subtleMetamagicOption()],
+    });
+
+    expect(
+      saveMetamagicSupportIssue({
+        effectKinds: new Set([SUBTLE_METAMAGIC_EFFECT_KIND]),
+        invocation,
+        subject: { tag: "actionSpell", mode: { tag: "cast" } },
+      }),
+    ).toBe(
+      "Selected Metamagic option effect is not supported for this spell procedure.",
+    );
+  });
+
   test("Careful Spell rejects non-save spell procedures", () => {
     const session = metamagicBattle({
       knownOptions: [carefulMetamagicOption()],
@@ -4245,6 +4631,24 @@ function metamagicBattle(input?: {
   });
 }
 
+function burningHandsMetamagicContext(
+  input: Pick<
+    Parameters<typeof saveMetamagicBattle>[0],
+    "knownOptions" | "sorceryPoints"
+  >,
+) {
+  const session = saveMetamagicBattle(input);
+  return {
+    session,
+    actor: requireBattleCreature(session.state, wizardId),
+    invocation: supportedInvocationFor(
+      session,
+      "burning_hands",
+      "saveGatedDamage",
+    ),
+  };
+}
+
 function dissonantWhispersMetamagicBattle(
   knownOption: MetamagicOptionFixture,
 ): BattleRuntimeSession {
@@ -4459,6 +4863,7 @@ function quickenedProfileBattle(input: {
 
 function twinnedTargetCountBattle(
   extraTargetId: ReturnType<typeof combatantId>,
+  sorceryPointsRemaining = resourceCount(4),
 ): BattleRuntimeSession {
   return startBattleSessionRight({
     battleId: battleId("battle:sorcerer-metamagic-twinned-target-count"),
@@ -4474,7 +4879,7 @@ function twinnedTargetCountBattle(
         resources: [
           {
             unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
-            pointsRemaining: resourceCount(4),
+            pointsRemaining: sorceryPointsRemaining,
           },
         ],
         metamagic: {
