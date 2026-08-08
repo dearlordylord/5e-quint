@@ -521,11 +521,12 @@ function resolveRegisteredSpellProcedureExecution(
 function actionSpellProfileResolutionInput(
   input: ActionSpellBattleResolutionInput,
   castingState: BattleState,
-  invocation: BattleExecutableSpellInvocation,
+  _invocation: Exclude<
+    ActionSpellProfileInvocation,
+    { readonly procedure: "persistentArmorEffect" }
+  >,
 ): ActionSpellBattleResolutionInput & { readonly castingState?: BattleState } {
-  return invocation.procedure === "persistentArmorEffect"
-    ? { ...input, castingState }
-    : { ...input, state: castingState };
+  return { ...input, state: castingState };
 }
 
 type OrdinaryProfileInvocation = Exclude<

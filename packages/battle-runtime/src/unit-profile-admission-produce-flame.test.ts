@@ -367,6 +367,30 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
       procedureRef: hurl.subject.procedureRef,
       mode: { tag: "cast" },
     });
+    const litCaster = lit.state.combatants.get(spellCasterId);
+    if (litCaster === undefined) {
+      throw new Error("Expected Produce Flame caster after lighting.");
+    }
+    const withoutHeldLight: BattleState = {
+      ...lit.state,
+      combatants: new Map(lit.state.combatants).set(spellCasterId, {
+        ...litCaster,
+        activeEffects: litCaster.activeEffects.filter(
+          (effect) => effect.kind !== "heldLight",
+        ),
+      }),
+    };
+    expect(
+      resolveBattleSubject({
+        state: withoutHeldLight,
+        subject: hurl.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Action-time spell act requires its active caster spell effect.",
+    });
     const attackRoll = requireResultHole(
       resolveBattleSubject({
         state: lit.state,

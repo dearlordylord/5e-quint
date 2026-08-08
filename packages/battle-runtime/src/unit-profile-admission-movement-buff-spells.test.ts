@@ -35,6 +35,9 @@ import {
   spellTargetListFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { admitBattleResolutionInput } from "./battle-reducer/resolution-admission.ts";
+import { resolveBonusActionDashSpellAct } from "./battle-reducer/spells-resolve.ts";
+import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 import {
   breakBattleConcentration,
   combatantId,
@@ -212,6 +215,53 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
         }),
       ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
     }
+  });
+
+  test("admitted Bonus Action Dash subjects reject stale caller-mutation actors", () => {
+    const spell = spellRecord(expeditiousRetreatUnitId);
+    const session = spellBattle({ preparedSpells: [spell] });
+    const act = bonusActionDashSpellAct({
+      session,
+      spellId: expeditiousRetreatUnitId,
+    });
+    const admission = admitBattleResolutionInput({
+      state: session.state,
+      subject: act.subject,
+      fills: [],
+    });
+    if (admission.tag !== "admitted") {
+      throw new Error(
+        "Expected admitted Expeditious Retreat resolution input.",
+      );
+    }
+    const statBlockSource = session.state.combatants.get(spellTargetId);
+    if (statBlockSource === undefined) {
+      throw new Error("Expected a stat-block combatant for caller mutation.");
+    }
+    const staleActor = {
+      ...statBlockSource,
+      combatantId: spellCasterId,
+    };
+    expect(
+      resolveBonusActionDashSpellAct(
+        {
+          ...admission.input,
+          state: {
+            ...admission.input.state,
+            combatants: new Map(session.state.combatants).set(
+              spellCasterId,
+              staleActor,
+            ),
+          },
+        },
+        spellProcedureExecutionRegistry(),
+      ),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message:
+        "Bonus Action Dash spell act requires a supported Expeditious Retreat spell.",
+    });
   });
 
   test("expeditious_retreat grants later Bonus Action Dash until Concentration ends", () => {

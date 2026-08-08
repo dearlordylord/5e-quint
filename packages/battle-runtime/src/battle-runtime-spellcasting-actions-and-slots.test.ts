@@ -267,6 +267,100 @@ describe("battle runtime: spellcasting actions and slots", () => {
     });
   });
 
+  test("admitted spell subjects reject stale caller-mutation actors and lane mismatches", () => {
+    const actionSession = wizardVsSkeletonBattle();
+    const actionAct = discoverBattleActs(actionSession).find(
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(act)?.invocation.spellId === "magic_missile",
+    );
+    if (actionAct?.subject.tag !== "actionSpell") {
+      throw new Error("Expected Magic Missile Action spell act.");
+    }
+    const actionAdmission = admitBattleResolutionInput({
+      state: actionSession.state,
+      subject: actionAct.subject,
+      fills: [],
+    });
+    if (actionAdmission.tag !== "admitted") {
+      throw new Error("Expected admitted Magic Missile resolution input.");
+    }
+    const statBlockSource = actionSession.state.combatants.get(skeletonId);
+    if (statBlockSource === undefined) {
+      throw new Error("Expected a stat-block combatant for caller mutation.");
+    }
+    const statBlockActor = {
+      ...statBlockSource,
+      combatantId: wizardId,
+    };
+    expect(
+      resolveSpellAct(
+        {
+          ...actionAdmission.input,
+          state: {
+            ...actionAdmission.input.state,
+            combatants: new Map(actionSession.state.combatants).set(
+              wizardId,
+              statBlockActor,
+            ),
+          },
+        },
+        spellProcedureExecutionRegistry(),
+      ),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message:
+        "Action-time spell act requires a supported prepared spell or cantrip.",
+    });
+
+    const retaggedBonusActionSubject = {
+      tag: "bonusActionSpell" as const,
+      actorId: actionAct.subject.actorId,
+      procedureRef: actionAct.subject.procedureRef,
+      mode: { tag: "cast" as const },
+    };
+    const bonusActionAdmission = admitBattleResolutionInput({
+      state: actionSession.state,
+      subject: retaggedBonusActionSubject,
+      fills: [],
+    });
+    if (bonusActionAdmission.tag !== "admitted") {
+      throw new Error("Expected admitted retagged Bonus Action spell input.");
+    }
+    expect(
+      resolveBonusActionSpellAct(
+        bonusActionAdmission.input,
+        spellProcedureExecutionRegistry(),
+      ),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedSubject",
+      message:
+        "Bonus Action spell subject requires a supported Bonus Action spell act.",
+    });
+    expect(
+      resolveBonusActionSpellAct(
+        {
+          ...bonusActionAdmission.input,
+          state: {
+            ...bonusActionAdmission.input.state,
+            combatants: new Map(actionSession.state.combatants).set(
+              wizardId,
+              statBlockActor,
+            ),
+          },
+        },
+        spellProcedureExecutionRegistry(),
+      ),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message:
+        "Bonus Action spell act requires a supported Bonus Action spell.",
+    });
+  });
+
   test("Wizard action-time spell acts spend slots for prepared level-1 spells but not cantrips", () => {
     const magicMissileState = wizardVsSkeletonBattle();
     const magicMissileProcedureRef = requireCharacterSpellProcedureRefForTest(
