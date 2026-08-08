@@ -743,9 +743,9 @@ export function placeToken(
   const placements = new Map(stateData.placements);
   placements.set(token, coordinate);
   const revision = nextRevision(stateData.revision);
-  return revision === undefined
-    ? failure(revisionLimitError())
-    : success(makeState(stateData.arena, revision, placements));
+  return typeof revision === "number"
+    ? success(makeState(stateData.arena, revision, placements))
+    : failure(revision);
 }
 
 export function removeToken(
@@ -759,9 +759,9 @@ export function removeToken(
   const placements = new Map(stateData.placements);
   placements.delete(token);
   const revision = nextRevision(stateData.revision);
-  return revision === undefined
-    ? failure(revisionLimitError())
-    : success(makeState(stateData.arena, revision, placements));
+  return typeof revision === "number"
+    ? success(makeState(stateData.arena, revision, placements))
+    : failure(revision);
 }
 
 export function occupantsAt(
@@ -873,14 +873,12 @@ export function planRoute(
   type SearchNode = Readonly<{
     readonly coordinate: CellCoordinate;
     readonly steps: readonly RouteStep[];
-    readonly coordinates: readonly CellCoordinate[];
     readonly weight: OpaqueWeight;
     readonly distanceFeet: DistanceFeet;
   }>;
   const initial: SearchNode = {
     coordinate: origin,
     steps: [],
-    coordinates: [origin],
     weight: zeroOpaqueWeight(),
     distanceFeet: zeroDistanceFeet(),
   };
@@ -891,10 +889,7 @@ export function planRoute(
 
   while (queue.length > 0) {
     queue.sort(compareSearchNodes);
-    const node = queue.shift();
-    if (node === undefined) {
-      break;
-    }
+    const node = queue.shift() as SearchNode;
     const best = bestByCell.get(coordinateKey(node.coordinate));
     if (best !== node) {
       continue;
@@ -912,17 +907,16 @@ export function planRoute(
         ),
       );
     }
-    for (const next of movementNeighbours(arenaData, node.coordinate)) {
+    for (const destinationCell of movementNeighbours(
+      arenaData,
+      node.coordinate,
+    )) {
       const stepGeometry = makeProspectiveStep(
-        arenaData,
         stateData.placements,
         mover,
         node.coordinate,
-        next,
+        destinationCell,
       );
-      if (stepGeometry === undefined) {
-        continue;
-      }
       const evaluation = evaluateProspectiveStep(evaluateStep, stepGeometry);
       if (evaluation.tag === "error") {
         return failure(evaluation.error);
@@ -942,13 +936,12 @@ export function planRoute(
         });
       }
       const candidate: SearchNode = {
-        coordinate: next,
+        coordinate: destinationCell.coordinate,
         steps: [...node.steps, evaluation.step],
-        coordinates: [...node.coordinates, next],
         weight,
         distanceFeet,
       };
-      const nextKey = coordinateKey(next);
+      const nextKey = coordinateKey(destinationCell.coordinate);
       const previous = bestByCell.get(nextKey);
       if (
         previous === undefined ||
@@ -993,35 +986,35 @@ export function previewStep(
         "Coordinates must come from parseCoordinate or a public snapshot.",
     });
   }
-  if (!stateData.placements.has(mover)) {
-    return failure({
-      tag: "unknown-token",
-      token: mover,
-    });
-  }
   const from = stateData.placements.get(mover);
   if (from === undefined) {
     return failure({ tag: "unknown-token", token: mover });
   }
-  if (!arenaData.cells.has(coordinateKey(destination))) {
+  const destinationCell = arenaData.cells.get(coordinateKey(destination));
+  if (destinationCell === undefined) {
     return failure({ tag: "missing-cell", coordinate: destination });
   }
-  const deltaX = Math.abs(destination.x - from.x);
-  const deltaY = Math.abs(destination.y - from.y);
+  const destinationCoordinate = destinationCell.coordinate;
+  const deltaX = Math.abs(destinationCoordinate.x - from.x);
+  const deltaY = Math.abs(destinationCoordinate.y - from.y);
   if (deltaX > 1 || deltaY > 1 || (deltaX === 0 && deltaY === 0)) {
-    return failure({ tag: "not-adjacent", from, to: destination });
+    return failure({ tag: "not-adjacent", from, to: destinationCoordinate });
   }
   if (
-    isDiagonal(from, destination) &&
-    !isDiagonalTraversalOpen(arenaData, from, destination)
+    isDiagonal(from, destinationCoordinate) &&
+    !isDiagonalTraversalOpen(arenaData, from, destinationCoordinate)
   ) {
-    return failure({ tag: "blocked-diagonal", from, to: destination });
+    return failure({
+      tag: "blocked-diagonal",
+      from,
+      to: destinationCoordinate,
+    });
   }
   if (
-    !isDiagonal(from, destination) &&
-    !boundaryTraversalOpen(arenaData, from, destination)
+    !isDiagonal(from, destinationCoordinate) &&
+    !boundaryTraversalOpen(arenaData, from, destinationCoordinate)
   ) {
-    return failure({ tag: "blocked-step", from, to: destination });
+    return failure({ tag: "blocked-step", from, to: destinationCoordinate });
   }
   if (typeof evaluateStep !== "function") {
     return failure({
@@ -1030,15 +1023,11 @@ export function previewStep(
     });
   }
   const geometry = makeProspectiveStep(
-    arenaData,
     stateData.placements,
     mover,
     from,
-    destination,
+    destinationCell,
   );
-  if (geometry === undefined) {
-    return failure({ tag: "blocked-diagonal", from, to: destination });
-  }
   const evaluation = evaluateProspectiveStep(evaluateStep, geometry);
   if (evaluation.tag === "error") {
     return failure(evaluation.error);
@@ -1134,9 +1123,9 @@ export function commitPreview(
   const placements = new Map(stateData.placements);
   placements.set(preview.mover, preview.step.to);
   const revision = nextRevision(stateData.revision);
-  return revision === undefined
-    ? failure(revisionLimitError())
-    : success(makeState(stateData.arena, revision, placements));
+  return typeof revision === "number"
+    ? success(makeState(stateData.arena, revision, placements))
+    : failure(revision);
 }
 
 function relationForPlacements(
@@ -1145,18 +1134,13 @@ function relationForPlacements(
   source: TokenId,
   target: TokenId,
 ): Result<SpatialRelation, RelationError> {
-  if (!placements.has(source)) {
+  const sourceCoordinate = placements.get(source);
+  if (sourceCoordinate === undefined) {
     return failure({ tag: "unknown-token", token: source });
   }
-  if (!placements.has(target)) {
-    return failure({ tag: "unknown-token", token: target });
-  }
-  const sourceCoordinate = placements.get(source);
   const targetCoordinate = placements.get(target);
-  if (sourceCoordinate === undefined || targetCoordinate === undefined) {
-    // The map lookup checks immediately above establish this as an internal
-    // invariant; the branch keeps the implementation total if its type widens.
-    throw new Error("placement map lost a token after presence check");
+  if (targetCoordinate === undefined) {
+    return failure({ tag: "unknown-token", token: target });
   }
   const deltaX = targetCoordinate.x - sourceCoordinate.x;
   const deltaY = targetCoordinate.y - sourceCoordinate.y;
@@ -1225,11 +1209,7 @@ function makeOpaqueWeight(raw: number): OpaqueWeight | undefined {
 }
 
 function zeroOpaqueWeight(): OpaqueWeight {
-  const weight = makeOpaqueWeight(0);
-  if (weight === undefined) {
-    throw new Error("Zero opaque weight failed its finite nonnegative check.");
-  }
-  return weight;
+  return 0 as OpaqueWeight;
 }
 
 function addOpaqueWeights(
@@ -1243,22 +1223,20 @@ function initialRevision(): SpatialRevision {
   return makeSpatialRevision(0);
 }
 
-function nextRevision(revision: SpatialRevision): SpatialRevision | undefined {
+function nextRevision(
+  revision: SpatialRevision,
+): SpatialRevision | RevisionLimitError {
   const candidate = revision + 1;
   if (!Number.isSafeInteger(candidate) || candidate < 0) {
-    return undefined;
+    return {
+      tag: "revision-limit",
+      message:
+        "The spatial revision cannot advance beyond exact numeric capacity.",
+    };
   }
   // The checks immediately above establish a nonnegative safe integer; this
   // cast adds only the compile-time revision brand.
   return candidate as SpatialRevision;
-}
-
-function revisionLimitError(): RevisionLimitError {
-  return {
-    tag: "revision-limit",
-    message:
-      "The spatial revision cannot advance beyond exact numeric capacity.",
-  };
 }
 
 function makeSpatialRevision(value: number): SpatialRevision {
@@ -1352,19 +1330,12 @@ function makeRoutePlan(
 }
 
 function makeProspectiveStep(
-  arena: ArenaData,
   placements: ReadonlyMap<TokenId, CellCoordinate>,
   mover: TokenId,
   from: CellCoordinate,
-  to: CellCoordinate,
-): ProspectiveStep | undefined {
-  if (!isAdjacentStep(arena, from, to)) {
-    return undefined;
-  }
-  const destinationCell = arena.cells.get(coordinateKey(to));
-  if (destinationCell === undefined) {
-    return undefined;
-  }
+  destinationCell: ArenaCell,
+): ProspectiveStep {
+  const to = destinationCell.coordinate;
   const occupants = Array.from(placements.entries())
     .filter(
       ([token, coordinate]) =>
@@ -1469,8 +1440,8 @@ function evaluateProspectiveStep(
 function movementNeighbours(
   arena: ArenaData,
   from: CellCoordinate,
-): readonly CellCoordinate[] {
-  const candidates: CellCoordinate[] = [];
+): readonly ArenaCell[] {
+  const candidates: ArenaCell[] = [];
   for (const dx of [-1, 0, 1]) {
     for (const dy of [-1, 0, 1]) {
       if (dx === 0 && dy === 0) {
@@ -1485,33 +1456,26 @@ function movementNeighbours(
         continue;
       }
       const candidate = coordinateFromIntegers(candidateX, candidateY);
+      const candidateCell = arena.cells.get(coordinateKey(candidate));
       if (
-        arena.cells.has(coordinateKey(candidate)) &&
-        isAdjacentStep(arena, from, candidate)
+        candidateCell !== undefined &&
+        isTraversalOpenForNeighbor(arena, from, candidateCell)
       ) {
-        candidates.push(candidate);
+        candidates.push(candidateCell);
       }
     }
   }
-  return candidates.sort(compareCoordinates);
+  return candidates.sort(compareCells);
 }
 
-function isAdjacentStep(
+function isTraversalOpenForNeighbor(
   arena: ArenaData,
   from: CellCoordinate,
-  to: CellCoordinate,
+  destinationCell: ArenaCell,
 ): boolean {
+  const to = destinationCell.coordinate;
   const dx = Math.abs(to.x - from.x);
   const dy = Math.abs(to.y - from.y);
-  if (dx > 1 || dy > 1 || (dx === 0 && dy === 0)) {
-    return false;
-  }
-  if (
-    !arena.cells.has(coordinateKey(from)) ||
-    !arena.cells.has(coordinateKey(to))
-  ) {
-    return false;
-  }
   if (dx === 1 && dy === 1) {
     return isDiagonalTraversalOpen(arena, from, to);
   }
@@ -1616,7 +1580,7 @@ function rayCellsHaveMissing(
         return true;
       }
       current = next;
-      nextX = (nextX ?? 1n) + 2n;
+      nextX = (nextX as bigint) + 2n;
       continue;
     }
     if (yBeforeX) {
@@ -1625,7 +1589,7 @@ function rayCellsHaveMissing(
         return true;
       }
       current = next;
-      nextY = (nextY ?? 1n) + 2n;
+      nextY = (nextY as bigint) + 2n;
       continue;
     }
 
@@ -1645,8 +1609,8 @@ function rayCellsHaveMissing(
       return true;
     }
     current = diagonal;
-    nextX = (nextX ?? 1n) + 2n;
-    nextY = (nextY ?? 1n) + 2n;
+    nextX = (nextX as bigint) + 2n;
+    nextY = (nextY as bigint) + 2n;
   }
   return false;
 }
@@ -1730,20 +1694,17 @@ function directionFor(deltaX: number, deltaY: number): Direction {
           : deltaY > 0
             ? "north-west"
             : "south-west";
-  if (!DIRECTIONS.includes(direction)) {
-    throw new Error("Direction table lost a geometric direction.");
-  }
   return direction;
 }
 
 function compareSearchNodes(
   first: Readonly<{
-    readonly coordinates: readonly CellCoordinate[];
+    readonly steps: readonly RouteStep[];
     readonly weight: OpaqueWeight;
     readonly distanceFeet: DistanceFeet;
   }>,
   second: Readonly<{
-    readonly coordinates: readonly CellCoordinate[];
+    readonly steps: readonly RouteStep[];
     readonly weight: OpaqueWeight;
     readonly distanceFeet: DistanceFeet;
   }>,
@@ -1754,21 +1715,20 @@ function compareSearchNodes(
   if (first.distanceFeet !== second.distanceFeet) {
     return first.distanceFeet - second.distanceFeet;
   }
-  return compareCoordinateSequences(first.coordinates, second.coordinates);
+  return compareStepSequences(first.steps, second.steps);
 }
 
-function compareCoordinateSequences(
-  first: readonly CellCoordinate[],
-  second: readonly CellCoordinate[],
+function compareStepSequences(
+  first: readonly RouteStep[],
+  second: readonly RouteStep[],
 ): number {
   const length = Math.min(first.length, second.length);
+  let firstDifference = 0;
   for (let index = 0; index < length; index += 1) {
-    const comparison = compareCoordinates(first[index], second[index]);
-    if (comparison !== 0) {
-      return comparison;
-    }
+    const comparison = compareCoordinates(first[index].to, second[index].to);
+    firstDifference ||= comparison;
   }
-  return first.length - second.length;
+  return firstDifference || first.length - second.length;
 }
 
 function compareCells(first: ArenaCell, second: ArenaCell): number {

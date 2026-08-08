@@ -613,6 +613,13 @@ describe("public error protocol seam", () => {
         message: "A coordinate requires finite safe integer x and y values.",
       },
     });
+    expect(parseCoordinate(null)).toEqual({
+      tag: "error",
+      error: {
+        tag: "invalid-coordinate",
+        message: "A coordinate requires finite safe integer x and y values.",
+      },
+    });
     expect(parseArena(null)).toEqual({
       tag: "error",
       issues: [
@@ -760,6 +767,13 @@ describe("public error protocol seam", () => {
       tag: "error",
       error: { tag: "unknown-token", token: token("missing") },
     });
+    const prefixed = place(place(initial, "aa", { x: 0, y: 0 }), "a", {
+      x: 0,
+      y: 0,
+    });
+    expect(
+      value(occupantsAt(prefixed, coordinateValue({ x: 0, y: 0 }))),
+    ).toEqual([token("a"), token("aa")]);
     expect(snapshot(initial).placements).toEqual([]);
     expect(snapshot(placed).placements).toEqual([
       { token: mover, coordinate: coordinateValue({ x: 0, y: 0 }) },
@@ -810,6 +824,13 @@ describe("public movement error protocol", () => {
       tag: "evaluator-threw",
       message: "evaluator exploded",
     });
+    const nonErrorThrowingEvaluator: Parameters<typeof planRoute>[3] = () => {
+      throw "non-error evaluator failure";
+    };
+    expectFailure(
+      routePlan(state, mover, { x: 1, y: 0 }, nonErrorThrowingEvaluator),
+      { tag: "evaluator-threw", message: "The evaluator threw." },
+    );
     const malformedOutputEvaluator: Parameters<typeof planRoute>[3] = () =>
       undefined as never;
     expectFailure(
@@ -817,6 +838,15 @@ describe("public movement error protocol", () => {
       {
         tag: "invalid-evaluator-output",
         message: "The evaluator must return passable or impassable.",
+      },
+    );
+    const wrongShapeEvaluator: Parameters<typeof planRoute>[3] = () =>
+      ({ tag: "passable", weight: "not-a-number" }) as never;
+    expectFailure(
+      routePlan(state, mover, { x: 1, y: 0 }, wrongShapeEvaluator),
+      {
+        tag: "invalid-evaluator-output",
+        message: "A passable evaluator weight must be finite and nonnegative.",
       },
     );
     expectFailure(
@@ -866,6 +896,68 @@ describe("public movement error protocol", () => {
         destination: coordinateValue({ x: 1, y: 0 }),
       },
     );
+    const zeroStepPlan = value(
+      routePlan(state, mover, { x: 0, y: 0 }, physicalDistanceEvaluator),
+    );
+    expect(renderRoute(zeroStepPlan)).toContain("no steps.");
+  });
+
+  it("replays stale route candidates and preserves edge coordinates", () => {
+    const map = arena(squareDefinition(3, 2));
+    const state = place(createState(map), "mover", { x: 0, y: 0 });
+    const mover = token("mover");
+    const evaluator: Parameters<typeof planRoute>[3] = (step) => {
+      if (
+        step.from.x === 0 &&
+        step.from.y === 0 &&
+        step.to.x === 1 &&
+        step.to.y === 0
+      ) {
+        return { tag: "passable", weight: 10 };
+      }
+      if (step.to.x === 2 && step.to.y === 0) {
+        return { tag: "passable", weight: 100 };
+      }
+      return { tag: "passable", weight: 1 };
+    };
+    const plan = value(routePlan(state, mover, { x: 2, y: 0 }, evaluator));
+    expect(plan.destination).toEqual({ x: 2, y: 0 });
+    expect(plan.steps).toEqual([
+      expect.objectContaining({
+        from: { x: 0, y: 0 },
+        to: { x: 1, y: 1 },
+        weight: 1,
+      }),
+      expect.objectContaining({
+        from: { x: 1, y: 1 },
+        to: { x: 2, y: 0 },
+        weight: 100,
+      }),
+    ]);
+    expect(plan.distanceFeet).toBe(10);
+    expect(plan.weight).toBe(101);
+
+    const edge = Number.MAX_SAFE_INTEGER;
+    const edgeArena = arena({
+      cells: [
+        { x: edge - 1, y: 0, terrain: "ordinary" },
+        { x: edge, y: 0, terrain: "ordinary" },
+      ],
+      boundaries: [],
+    });
+    const edgeState = place(createState(edgeArena), "mover", {
+      x: edge,
+      y: 0,
+    });
+    const edgePlan = value(
+      routePlan(
+        edgeState,
+        mover,
+        { x: edge - 1, y: 0 },
+        physicalDistanceEvaluator,
+      ),
+    );
+    expect(edgePlan.steps).toHaveLength(1);
   });
 
   it("keeps step preview, relation, and commit failures typed", () => {
@@ -967,6 +1059,17 @@ describe("public movement error protocol", () => {
     expectFailure(previewRelation(forgedPreview, token("target"), "before"), {
       tag: "forged-preview",
     });
+    expectFailure(
+      previewRelation(
+        null as unknown as StepPreview,
+        token("target"),
+        "before",
+      ),
+      { tag: "forged-preview" },
+    );
+    expectFailure(commitPreview(state, "forged" as unknown as StepPreview), {
+      tag: "forged-preview",
+    });
 
     const changedOrigin = place(createState(map), "mover", { x: 1, y: 0 });
     expect(commitPreview(changedOrigin, preview)).toEqual({
@@ -981,6 +1084,43 @@ describe("public movement error protocol", () => {
         },
       }),
     });
+  });
+
+  it("rejects sparse diagonal sight and keeps vertical rays parallel to walls", () => {
+    const sparse = arena({
+      cells: [
+        { x: 0, y: 0, terrain: "ordinary" },
+        { x: 1, y: 1, terrain: "ordinary" },
+      ],
+      boundaries: [],
+    });
+    const sparseState = place(createState(sparse), "mover", { x: 0, y: 0 });
+    expectFailure(
+      stepPreview(
+        sparseState,
+        token("mover"),
+        { x: 1, y: 1 },
+        physicalDistanceEvaluator,
+      ),
+      {
+        tag: "blocked-diagonal",
+        from: coordinateValue({ x: 0, y: 0 }),
+        to: coordinateValue({ x: 1, y: 1 }),
+      },
+    );
+
+    const vertical = arena(
+      squareDefinition(2, 3, [], [boundary({ x: 0, y: 0 }, { x: 1, y: 0 })]),
+    );
+    const verticalState = place(
+      place(createState(vertical), "source", { x: 0, y: 0 }),
+      "target",
+      { x: 0, y: 2 },
+    );
+    expect(
+      value(relationBetween(verticalState, token("source"), token("target")))
+        .sight,
+    ).toBe("clear");
   });
 });
 
