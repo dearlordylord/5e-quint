@@ -55,6 +55,10 @@ import {
   TWINNED_METAMAGIC_EFFECT_KIND,
   twinnedSpellTargetCountInvocation,
 } from "./battle-reducer/metamagic.ts";
+import {
+  resolveAreaSaveMetamagicFills,
+  saveMetamagicSelectionState,
+} from "./battle-reducer/spells-resolve-save-gates.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { battleContinuationFillEquals } from "./battle-reducer/battle-fill-equality.ts";
 import {
@@ -86,6 +90,7 @@ import {
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import { spellId } from "./identity.ts";
+import { spellHoleInvocation } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   type AvailableBattleAct,
   type BattleFill,
@@ -2871,17 +2876,84 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
   });
 });
 
+const SAVE_CONDITION_METAMAGIC_SORCERY_POINTS = resourceCount(2);
+const CAREFUL_SAVE_CONDITION_PROTECTED_TARGET_ID = fighterId;
+const CAREFUL_SPELL_PROTECTED_TARGET_MUST_SUCCEED_MESSAGE =
+  "Careful Spell protected targets must be non-caster spell targets that succeed on the saving throw.";
+type SaveConditionExpectedEffect =
+  | Pick<
+      Extract<BattleActiveEffect, { readonly kind: "conditionImmunity" }>,
+      "kind" | "condition"
+    >
+  | Pick<
+      Extract<BattleActiveEffect, { readonly kind: "faerieFireOutline" }>,
+      "kind"
+    >;
+type SaveConditionMetamagicCaseShape = {
+  readonly failedSaveTargetId: typeof fighterId;
+  readonly carefulFailedSaveTargetIds: readonly (typeof fighterId)[];
+  readonly expectedFailedSaveEffects: readonly SaveConditionExpectedEffect[];
+} & (
+  | { readonly preparedSpell: "calm_emotions"; readonly spellLevel: 2 }
+  | { readonly preparedSpell: "faerie_fire"; readonly spellLevel: 1 }
+);
+const SAVE_CONDITION_METAMAGIC_CASES = [
+  {
+    preparedSpell: "calm_emotions",
+    spellLevel: 2,
+    failedSaveTargetId: fighterId,
+    carefulFailedSaveTargetIds: [],
+    expectedFailedSaveEffects: [
+      { kind: "conditionImmunity", condition: "charmed" },
+      { kind: "conditionImmunity", condition: "frightened" },
+    ],
+  },
+  {
+    preparedSpell: "faerie_fire",
+    spellLevel: 1,
+    failedSaveTargetId: skeletonId,
+    carefulFailedSaveTargetIds: [skeletonId],
+    expectedFailedSaveEffects: [{ kind: "faerieFireOutline" }],
+  },
+] as const satisfies readonly SaveConditionMetamagicCaseShape[];
+type SaveConditionMetamagicSpellCase =
+  (typeof SAVE_CONDITION_METAMAGIC_CASES)[number];
+
 describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
   test("discovers Heightened Burning Hands and spends Sorcery Points after choosing one disadvantaged target", () => {
+    const heightenedOption = heightenedMetamagicOption();
     const session = saveMetamagicBattle({
-      knownOptions: [heightenedMetamagicOption()],
+      knownOptions: [heightenedOption],
     });
     const state = session.state;
     const act = heightenedBurningHandsAct(session);
     const heightenedHole = findHole(act.initialHoles, "targetChoice");
+    const invocation = spellHoleInvocation(session, act.initialHoles);
+    if (invocation.procedure !== "saveGatedDamage") {
+      throw new Error("Expected Burning Hands save-gated damage invocation.");
+    }
 
     expect(
       resolveBattleSubject({ state, subject: act.subject, fills: [] }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        expect.objectContaining({
+          kind: "targetChoice",
+          label: "Spell Heightened Spell target",
+        }),
+      ],
+    });
+    expect(
+      resolveAreaSaveMetamagicFills({
+        state,
+        subject: act.subject,
+        actorId: wizardId,
+        invocation,
+        fills: [],
+        metamagicApplications: [heightenedOption],
+        savingThrowOutcomes: undefined,
+      }),
     ).toMatchObject({
       tag: "needsHoles",
       holes: [
@@ -2921,27 +2993,42 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
         (projection) => projection.targetId === fighterId,
       ),
     ).toBe(false);
+    const savingThrow = {
+      kind: "savingThrowOutcome" as const,
+      holeId: saveHole.holeId,
+      value: {
+        area: {
+          originAnchorId: wizardId,
+          affectedTargetIds: [fighterId, skeletonId],
+        },
+        outcomes: [
+          { targetId: fighterId, succeeded: true },
+          { targetId: skeletonId, succeeded: false },
+        ],
+      },
+    };
+
+    expect(
+      resolveAreaSaveMetamagicFills({
+        state,
+        subject: act.subject,
+        actorId: wizardId,
+        invocation,
+        fills: [heightenedTarget, savingThrow],
+        metamagicApplications: [heightenedOption],
+        savingThrowOutcomes: savingThrow.value,
+      }),
+    ).toMatchObject({
+      tag: "ready",
+      carefulSpellProtectedTargetIds: [],
+      heightenedSpellTargetId: skeletonId,
+      savingThrowOutcomes: savingThrow.value,
+    });
 
     const awaitingDamage = resolveBattleSubject({
       state,
       subject: act.subject,
-      fills: [
-        heightenedTarget,
-        {
-          kind: "savingThrowOutcome",
-          holeId: saveHole.holeId,
-          value: {
-            area: {
-              originAnchorId: wizardId,
-              affectedTargetIds: [fighterId, skeletonId],
-            },
-            outcomes: [
-              { targetId: fighterId, succeeded: true },
-              { targetId: skeletonId, succeeded: false },
-            ],
-          },
-        },
-      ],
+      fills: [heightenedTarget, savingThrow],
     });
     const damageHole = findHole(
       awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
@@ -2953,20 +3040,7 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
         subject: act.subject,
         fills: [
           heightenedTarget,
-          {
-            kind: "savingThrowOutcome",
-            holeId: saveHole.holeId,
-            value: {
-              area: {
-                originAnchorId: wizardId,
-                affectedTargetIds: [fighterId, skeletonId],
-              },
-              outcomes: [
-                { targetId: fighterId, succeeded: true },
-                { targetId: skeletonId, succeeded: false },
-              ],
-            },
-          },
+          savingThrow,
           damageRollFillWithGroups(damageHole, [[4, 3, 2]]),
         ],
       }),
@@ -3012,12 +3086,33 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
   });
 
   test("Careful Dissonant Whispers uses its only spell target as the protected target", () => {
-    const session = dissonantWhispersMetamagicBattle(carefulMetamagicOption());
+    const carefulOption = carefulMetamagicOption();
+    const session = dissonantWhispersMetamagicBattle(carefulOption);
     const act = carefulSpellAct(session, spellId("dissonant_whispers"));
+    const invocation = spellHoleInvocation(session, act.initialHoles);
+    if (invocation.procedure !== "saveGatedDamage") {
+      throw new Error(
+        "Expected Dissonant Whispers save-gated damage invocation.",
+      );
+    }
     const targetHoles = act.initialHoles.filter(
       (hole) => hole.kind === "targetChoice",
     );
 
+    expect(
+      saveMetamagicSelectionState({
+        state: session.state,
+        actorId: wizardId,
+        invocation,
+        fills: [],
+        metamagicApplications: [carefulOption],
+        targetId: undefined,
+      }),
+    ).toEqual({
+      tag: "ok",
+      carefulSpellProtectedTargetIds: [],
+      heightenedSpellTargetId: undefined,
+    });
     expect(targetHoles.map((hole) => hole.label)).toEqual(["Spell target"]);
     expect(act.initialHoles).not.toEqual(
       expect.arrayContaining([
@@ -3059,8 +3154,7 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       }),
     ).toMatchObject({
       tag: "invalid",
-      message:
-        "Careful Spell protected targets must be non-caster spell targets that succeed on the saving throw.",
+      message: CAREFUL_SPELL_PROTECTED_TARGET_MUST_SUCCEED_MESSAGE,
     });
   });
 
@@ -3096,6 +3190,77 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       targetRollModes: [{ targetId: skeletonId, rollMode: "disadvantage" }],
     });
   });
+
+  test.each(SAVE_CONDITION_METAMAGIC_CASES)(
+    "Heightened $preparedSpell projects Disadvantage and resolves failed-save effects",
+    (spellCase) => {
+      const metamagicOption = heightenedMetamagicOption();
+      const session = bardSorcererSaveMetamagicBattle({
+        metamagicOption,
+        spellCase,
+      });
+      const act = heightenedSpellAct(session, spellId(spellCase.preparedSpell));
+      const selectionHole = findHole(act.initialHoles, "targetChoice");
+      const selectionFill = targetFill(
+        selectionHole,
+        spellCase.failedSaveTargetId,
+      );
+      const awaitingSave = resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [selectionFill],
+      });
+      const saveHole = findHole(
+        awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+        "savingThrowOutcome",
+      );
+
+      expect(selectionHole).toMatchObject({
+        label: "Spell Heightened Spell target",
+        choices: expect.arrayContaining([spellCase.failedSaveTargetId]),
+      });
+      expect(saveHole).toMatchObject({
+        targetRollModes: [
+          {
+            targetId: spellCase.failedSaveTargetId,
+            rollMode: "disadvantage",
+          },
+        ],
+      });
+
+      const resolved = requireResolved(
+        resolveBattleSubject({
+          state: session.state,
+          subject: act.subject,
+          fills: [
+            selectionFill,
+            savingThrowOutcomeFill(saveHole, [
+              {
+                targetId: spellCase.failedSaveTargetId,
+                succeeded: false,
+              },
+            ]),
+          ],
+        }),
+      );
+
+      expect(
+        resolved.state.combatants.get(spellCase.failedSaveTargetId)
+          ?.activeEffects,
+      ).toEqual(
+        expect.arrayContaining(
+          spellCase.expectedFailedSaveEffects.map((effect) =>
+            expect.objectContaining(effect),
+          ),
+        ),
+      );
+      expectSaveConditionMetamagicResources({
+        state: resolved.state,
+        metamagicOption,
+        spellCase,
+      });
+    },
+  );
 
   test("Heightened Spell Disadvantage cancels an existing save Advantage source", () => {
     const baseSession = saveMetamagicBattle({
@@ -3284,6 +3449,99 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       ]),
     );
   });
+
+  test.each(SAVE_CONDITION_METAMAGIC_CASES)(
+    "Careful $preparedSpell enforces protected success and resolves other failed-save effects",
+    (spellCase) => {
+      const metamagicOption = carefulMetamagicOption();
+      const session = bardSorcererSaveMetamagicBattle({
+        metamagicOption,
+        spellCase,
+      });
+      const act = carefulSpellAct(session, spellId(spellCase.preparedSpell));
+      const selectionHole = findHole(act.initialHoles, "spellTargetList");
+      const selectionFill = {
+        kind: "spellTargetList" as const,
+        holeId: selectionHole.holeId,
+        value: { targetIds: [CAREFUL_SAVE_CONDITION_PROTECTED_TARGET_ID] },
+        spatialFacts: [],
+      };
+      const awaitingSave = resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [selectionFill],
+      });
+      const saveHole = findHole(
+        awaitingSave.tag === "needsHoles" ? awaitingSave.holes : [],
+        "savingThrowOutcome",
+      );
+      const otherFailedOutcomes = spellCase.carefulFailedSaveTargetIds.map(
+        (targetId) => ({ targetId, succeeded: false }),
+      );
+
+      expect(selectionHole).toMatchObject({
+        label: "Spell Careful Spell protected targets",
+        choices: expect.arrayContaining([
+          CAREFUL_SAVE_CONDITION_PROTECTED_TARGET_ID,
+        ]),
+      });
+      expect(
+        resolveBattleSubject({
+          state: session.state,
+          subject: act.subject,
+          fills: [
+            selectionFill,
+            savingThrowOutcomeFill(saveHole, [
+              {
+                targetId: CAREFUL_SAVE_CONDITION_PROTECTED_TARGET_ID,
+                succeeded: false,
+              },
+              ...otherFailedOutcomes,
+            ]),
+          ],
+        }),
+      ).toMatchObject({
+        tag: "invalid",
+        message: CAREFUL_SPELL_PROTECTED_TARGET_MUST_SUCCEED_MESSAGE,
+      });
+      const resolved = requireResolved(
+        resolveBattleSubject({
+          state: session.state,
+          subject: act.subject,
+          fills: [
+            selectionFill,
+            savingThrowOutcomeFill(saveHole, [
+              {
+                targetId: CAREFUL_SAVE_CONDITION_PROTECTED_TARGET_ID,
+                succeeded: true,
+              },
+              ...otherFailedOutcomes,
+            ]),
+          ],
+        }),
+      );
+
+      expect(
+        resolved.state.combatants.get(
+          CAREFUL_SAVE_CONDITION_PROTECTED_TARGET_ID,
+        )?.activeEffects,
+      ).toEqual([]);
+      for (const targetId of spellCase.carefulFailedSaveTargetIds) {
+        expect(resolved.state.combatants.get(targetId)?.activeEffects).toEqual(
+          expect.arrayContaining(
+            spellCase.expectedFailedSaveEffects.map((effect) =>
+              expect.objectContaining(effect),
+            ),
+          ),
+        );
+      }
+      expectSaveConditionMetamagicResources({
+        state: resolved.state,
+        metamagicOption,
+        spellCase,
+      });
+    },
+  );
 
   test("Careful Command requests protected targets before the saving throw", () => {
     const session = commandMetamagicBattle({
@@ -4008,6 +4266,49 @@ function dissonantWhispersMetamagicBattle(
   });
 }
 
+function bardSorcererSaveMetamagicBattle(input: {
+  readonly metamagicOption: MetamagicOptionFixture;
+  readonly spellCase: SaveConditionMetamagicSpellCase;
+}): BattleRuntimeSession {
+  return saveMetamagicBattle({
+    sorceryPoints: SAVE_CONDITION_METAMAGIC_SORCERY_POINTS,
+    knownOptions: [input.metamagicOption],
+    classLevels: [
+      { className: "bard", level: 3 },
+      { className: "sorcerer", level: 2 },
+    ],
+    spellcastingSourceClassName: "bard",
+    cantrips: [],
+    preparedSpells: [input.spellCase.preparedSpell],
+    spellSlots: [
+      { spellLevel: 1, count: 4 },
+      { spellLevel: 2, count: 3 },
+      { spellLevel: 3, count: 2 },
+    ],
+  });
+}
+
+function expectSaveConditionMetamagicResources(input: {
+  readonly state: BattleState;
+  readonly metamagicOption: MetamagicOptionFixture;
+  readonly spellCase: SaveConditionMetamagicSpellCase;
+}): void {
+  expect(sorceryPointsRemaining(input.state)).toBe(
+    resourceCount(
+      SAVE_CONDITION_METAMAGIC_SORCERY_POINTS -
+        input.metamagicOption.sorceryPointCost,
+    ),
+  );
+  expect(sorcererSpellSlots(input.state)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        spellLevel: input.spellCase.spellLevel,
+        expended: 1,
+      }),
+    ]),
+  );
+}
+
 function saveMetamagicBattle(input: {
   readonly sorceryPoints?: number;
   readonly knownOptions: readonly MetamagicOptionFixture[];
@@ -4021,8 +4322,10 @@ function saveMetamagicBattle(input: {
   readonly cantrips?: readonly ("eldritch_blast" | "ray_of_frost")[];
   readonly preparedSpells?: readonly (
     | "burning_hands"
+    | "calm_emotions"
     | "color_spray"
     | "dissonant_whispers"
+    | "faerie_fire"
     | "scorching_ray"
   )[];
   readonly spellSlots?: readonly {
