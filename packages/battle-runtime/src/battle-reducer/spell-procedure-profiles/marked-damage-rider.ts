@@ -42,10 +42,7 @@ import { Either, Match } from "effect";
 import { characterBattleResourcePoolRefHasUsesRemaining } from "../../character-battle-resource-execution.ts";
 import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
-import {
-  characterExecutionWithMarkedDamageRiderTransfer,
-  characterSpellProcedureRefsForProcedure,
-} from "../../character-execution-queries.ts";
+import { characterExecutionWithMarkedDamageRiderTransfer } from "../../character-execution-queries.ts";
 import type { MarkedDamageRiderTransferSpellProcedureExecution } from "../../character-execution.ts";
 import {
   type BattleActDiscoveryCandidate,
@@ -108,7 +105,6 @@ import {
   supportedDamageAmountExpr,
 } from "../spells-execution-facts.ts";
 import {
-  spellAdmissionBattleTurn,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -134,45 +130,6 @@ function admitMarkedDamageRider(
   }
   const { abilityCheckBehavior, damageType, expr, rangeFeet, retargetTiming } =
     projection;
-  const selectedExecutionRefs = new Set(
-    characterSpellProcedureRefsForProcedure(
-      ctx.actor.origin.execution,
-      new Set(["markedDamageRider"]),
-    ),
-  );
-  const activeMark =
-    ctx.actor.activeEffects.find(
-      (effect): effect is SpellMarkedDamageRider =>
-        effect.kind === "spellMarkedDamageRider" &&
-        selectedExecutionRefs.has(effect.sourceProcedureRef),
-    ) ?? null;
-  if (activeMark !== null) {
-    // TODO: Allow an ordinary recast while the current mark is still active.
-    // RAW permits replacing Concentration by casting the spell again and
-    // choosing a new quarry; this branch currently exposes only the slotless
-    // Bonus Action transfer after the marked target drops to 0 Hit Points.
-    return markedDamageRiderTransferIsAvailableOnTurn(
-      activeMark.transfer,
-      spellAdmissionBattleTurn(ctx),
-    )
-      ? [
-          {
-            access: {
-              tag: "spellEffect",
-              sourceCombatantId: activeMark.sourceCombatantId,
-            },
-            resource: { tag: "none" },
-            procedure: "markedDamageRider",
-            action: "transfer",
-            spell,
-            actionCost: "bonusAction",
-            targeting: { kind: "singleCombatant" },
-            rangeFeet,
-            activeEffect: activeMark,
-          },
-        ]
-      : [];
-  }
   const favoredEnemyResourcePoolRef =
     spell.classFeatureFreeCastResourcePoolRefs.find((resourcePoolRef) =>
       characterBattleResourcePoolRefHasUsesRemaining(
@@ -457,6 +414,9 @@ function discoverMarkedDamageRiderCastAct(
       (effect) => effect.kind === "spellMarkedDamageRider",
     ) === true
   ) {
+    // TODO: Allow an ordinary recast while the current mark is still active.
+    // RAW permits replacing Concentration by casting the spell again and
+    // choosing a new quarry; this guard currently suppresses that cast act.
     return [];
   }
   if (
