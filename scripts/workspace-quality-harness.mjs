@@ -89,7 +89,7 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "tactical-space": {
-    coverage: { lines: 86, statements: 86, functions: 98, branches: 82 },
+    coverage: { lines: 99, statements: 99, functions: 99, branches: 99 },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
