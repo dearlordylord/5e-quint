@@ -258,7 +258,7 @@ invisible if it hides inside a slow default test run, so the lane is structured
 to surface it instead:
 
 - **Not in `pnpm test`.** The proof lane is opt-in: `pnpm --filter
-  @dnd/battle-runtime test:qnt-proofs` (sets `RUN_QNT_PROOFS=1`). A normal
+@dnd/battle-runtime test:qnt-proofs` (sets `RUN_QNT_PROOFS=1`). A normal
   `pnpm test` runs only a fast reminder test and renders the proof modules as
   skipped — that standing skip is the nag to run the lane consciously. Do not
   fold the proofs back into the default lane.
@@ -419,3 +419,15 @@ part of development verification.
 `.references/srd-5.2.1-conversion/` — official 5.1→5.2.1 conversion guide (delta manifest)
 `.references/srd/` — SRD 5.1 (2014, archived)
 `.references/rules/` — D&D 5e PHB chapters as markdown (5.1 era)
+
+## Agent skills
+
+### Issue tracker
+
+Issues, specifications, and Wayfinder maps use GitHub Issues. See
+`docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+This repository uses the multi-context layout rooted at `CONTEXT-MAP.md`. See
+`docs/agents/domain.md` for skill-facing consumption rules.
