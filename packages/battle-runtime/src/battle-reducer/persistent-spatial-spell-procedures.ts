@@ -918,13 +918,13 @@ function gustOfWindLineEffectFor(
   );
 }
 
-/* v8 ignore start -- Malformed Gust of Wind witness: command discovery binds the active Line geometry, ending-turn target, saving-throw outcome, and push facts. */
 function validateGustOfWindLineSavingThrowOutcome(
   value: BattleSavingThrowOutcomeValue,
   targetId: CombatantId,
   effect: GustOfWindLineEffect,
 ): string | null {
   if (!("area" in value)) {
+    /* v8 ignore next -- Gust of Wind discovery always supplies the active Line area; this rejects only a caller-mutated missing-area witness. */
     return "Gust of Wind Line Saving Throw outcome requires Line area facts.";
   }
   const area: BattleSpellAreaChoice = value.area;
@@ -934,6 +934,7 @@ function validateGustOfWindLineSavingThrowOutcome(
     area.directionId !== effect.directionId ||
     area.originAnchorId !== effect.sourceCombatantId
   ) {
+    /* v8 ignore next -- Gust of Wind discovery binds this area to the active Line; this rejects only a caller-mutated geometry or source identity. */
     return "Gust of Wind Line Saving Throw outcome must match the active Line area.";
   }
   if (
@@ -942,6 +943,7 @@ function validateGustOfWindLineSavingThrowOutcome(
     value.outcomes.length !== 1 ||
     value.outcomes[0]?.targetId !== targetId
   ) {
+    /* v8 ignore next -- Gust of Wind discovery selects the ending-turn target exactly once; this rejects only a caller-mutated target or outcome cardinality. */
     return "Gust of Wind Line Saving Throw outcome must match the ending-turn target.";
   }
   return validateGustOfWindLineAreaPushFacts({
@@ -950,7 +952,6 @@ function validateGustOfWindLineSavingThrowOutcome(
     pushDistanceFeet: effect.pushDistanceFeet,
   });
 }
-/* v8 ignore stop */
 
 function resolveGustOfWindLineSaveCommand(
   input: BattleResolutionInput & {
