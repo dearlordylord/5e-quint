@@ -1,24 +1,41 @@
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
+import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import {
   BattleHoleSchema,
   BattleSnapshotSchema,
   battleId,
+  characterAttackSubjectForTest,
   characterSeed,
+  combatantId,
+  endTurn,
+  monsterMultiattackStatBlock,
+  requireHole,
   skeletonCreatureInit,
   snapshotBattle,
   startBattleSessionRight,
+  targetFill,
+  testDaggerAttack,
+  testShortswordAttack,
+  attackRollFill,
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   skeletonId,
+  statBlockCreatureInit,
+  resolveBattleSubject,
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
-import { battleAreaId, battleSpellEffectOccurrenceId } from "./identity.ts";
+import {
+  battleAreaId,
+  battleObjectId,
+  battleSpellEffectOccurrenceId,
+} from "./identity.ts";
 
 type EncodedHole = Schema.Schema.Encoded<typeof BattleHoleSchema>;
 type EncodedSnapshot = Schema.Schema.Encoded<typeof BattleSnapshotSchema>;
+type EncodedAct = EncodedSnapshot["acts"][number];
 type CodecCase = {
   readonly name: string;
   readonly expected: "Right" | "Left";
@@ -61,6 +78,48 @@ function replaceActHole(
     index === ownerIndex ? { ...act, initialHoles: [replacement] } : act,
   );
   return { ...snapshot, acts };
+}
+
+function replaceActSubject(
+  snapshot: EncodedSnapshot,
+  predicate: (act: EncodedAct) => boolean,
+  replace: (act: EncodedAct) => EncodedAct,
+): EncodedSnapshot {
+  const matches = snapshot.acts
+    .map((act, index) => (predicate(act) ? index : -1))
+    .filter((index) => index >= 0);
+  if (matches.length !== 1) {
+    throw new Error(
+      `Expected exactly one matching act; found ${matches.length}.`,
+    );
+  }
+  const match = matches[0]!;
+  return {
+    ...snapshot,
+    acts: snapshot.acts.map((act, index) =>
+      index === match ? replace(act) : act,
+    ),
+  };
+}
+
+function replaceActOwner(
+  snapshot: EncodedSnapshot,
+  predicate: (act: EncodedAct) => boolean,
+  actorId: ReturnType<typeof combatantId>,
+): EncodedSnapshot {
+  return replaceActSubject(snapshot, predicate, (act) => ({
+    ...act,
+    subject: { ...act.subject, actorId },
+  }));
+}
+
+const encodedSnapshotFromState = (
+  state: Parameters<typeof snapshotBattle>[0],
+) => Schema.encodeSync(BattleSnapshotSchema)(snapshotBattle(state));
+
+function expectSnapshotDecodeLeft(snapshot: EncodedSnapshot): void {
+  const decoded = Schema.decodeUnknownEither(BattleSnapshotSchema)(snapshot);
+  expect(Either.isLeft(decoded)).toBe(true);
 }
 
 function codecFixture() {
@@ -400,5 +459,107 @@ describe("battle codec execution-reference boundaries", () => {
       replaceActHole(fixture.snapshot, fixture.sourceProcedureRef, replacement),
     );
     expect(Either.isRight(decoded)).toBe(expected === "Right");
+  });
+});
+
+describe("battle codec act ownership boundaries", () => {
+  test("rejects an action spell act with an unknown owner", () => {
+    const malformed = replaceActOwner(
+      fixture.snapshot,
+      (act) =>
+        act.subject.tag === "actionSpell" &&
+        act.subject.mode.tag === "cast" &&
+        act.subject.procedureRef === fixture.sourceProcedureRef &&
+        act.subject.actorId === wizardId,
+      combatantId("codec-unknown"),
+    );
+    expectSnapshotDecodeLeft(malformed);
+  });
+  test("rejects a stat-block multiattack owned by a character", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("codec-multiattack-ownership"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Codec Caster",
+          initiative: 20,
+          spellcasting: wizardSpellcasting(),
+        }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          statBlock: monsterMultiattackStatBlock(),
+          initiative: 10,
+        }),
+      ],
+    });
+    const turn = endTurn({ state: session.state, actorId: wizardId });
+    if (turn.tag !== "resolved") {
+      throw new Error(`Expected resolved End Turn, got ${turn.tag}.`);
+    }
+    const malformed = replaceActOwner(
+      encodedSnapshotFromState(turn.state),
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "multiattack" &&
+        act.subject.actorId === skeletonId,
+      wizardId,
+    );
+    expectSnapshotDecodeLeft(malformed);
+  });
+  test("rejects a character off-hand attack owned by a stat block", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("codec-off-hand-ownership"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          initiative: 20,
+          attack: testShortswordAttack(),
+          offHandAttack: testDaggerAttack(),
+          selectedLoadout: {
+            weapon: {
+              itemId: battleObjectId("main:weapon_shortsword"),
+              unitId: parseSharedUnitId("weapon_shortsword"),
+              grip: "one_handed",
+            },
+            offHandWeapon: {
+              itemId: battleObjectId("off:weapon_dagger"),
+              unitId: parseSharedUnitId("weapon_dagger"),
+            },
+          },
+        }),
+        statBlockCreatureInit({ combatantId: skeletonId, initiative: 10 }),
+      ],
+    });
+    const subject = characterAttackSubjectForTest(
+      session.state,
+      wizardId,
+      "Shortsword",
+    );
+    const targetHole = requireHole(
+      resolveBattleSubject({ state: session.state, subject, fills: [] }),
+      "targetChoice",
+    );
+    const target = targetFill(targetHole, skeletonId);
+    const attackHole = requireHole(
+      resolveBattleSubject({ state: session.state, subject, fills: [target] }),
+      "attackRoll",
+    );
+    const result = resolveBattleSubject({
+      state: session.state,
+      subject,
+      fills: [target, attackRollFill(attackHole, { total: 1, naturalD20: 1 })],
+    });
+    if (result.tag !== "resolved") {
+      throw new Error(`Expected resolved attack, got ${result.tag}.`);
+    }
+    const malformed = replaceActOwner(
+      encodedSnapshotFromState(result.state),
+      (act) =>
+        act.subject.tag === "bonusAction" &&
+        act.subject.action === "offHandAttack" &&
+        act.subject.actorId === wizardId,
+      skeletonId,
+    );
+    expectSnapshotDecodeLeft(malformed);
   });
 });
