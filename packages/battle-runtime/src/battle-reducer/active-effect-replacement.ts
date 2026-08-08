@@ -8,9 +8,39 @@ import type {
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
+import type { BattleActiveEffectSource } from "../active-effect/source.ts";
 import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle.ts";
 import { allocateBattleActiveEffectRef } from "../active-effect/execution-ref.ts";
 import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "./spell-condition-effects-helpers.ts";
+
+/**
+ * Source identity is part of the active-effect value for spell and feature
+ * effects. Keep the three matching relations explicit: full source identity,
+ * procedure occurrence only, and source-combatant identity only.
+ */
+export function activeEffectSourceMatches(
+  effect: BattleActiveEffectSource,
+  source: BattleActiveEffectSource,
+): boolean {
+  return (
+    effect.sourceProcedureRef === source.sourceProcedureRef &&
+    effect.sourceCombatantId === source.sourceCombatantId
+  );
+}
+
+export function activeEffectProcedureMatches(
+  effect: BattleActiveEffectSource,
+  sourceProcedureRef: BattleProcedureExecutionRef,
+): boolean {
+  return effect.sourceProcedureRef === sourceProcedureRef;
+}
+
+export function activeEffectHasSourceCombatant(
+  effect: BattleActiveEffectSource,
+  combatantId: CombatantId,
+): boolean {
+  return effect.sourceCombatantId === combatantId;
+}
 
 export function replaceTargetActiveEffect(
   state: BattleState,

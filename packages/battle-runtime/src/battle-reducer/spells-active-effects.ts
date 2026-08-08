@@ -51,6 +51,11 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import { allocateBattleActiveEffectRefForCreature } from "../active-effect/execution-ref.ts";
+import {
+  activeEffectProcedureMatches,
+  activeEffectHasSourceCombatant,
+  activeEffectSourceMatches,
+} from "./active-effect-replacement.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-hit-point-state.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
@@ -581,7 +586,7 @@ export function spellCreatedHeldObjectEffectsForActor(
     combatant?.activeEffects.filter(
       (effect): effect is SpellCreatedHeldObjectActiveEffect =>
         effect.kind === "spellCreatedHeldObject" &&
-        effect.sourceCombatantId === combatant.combatantId,
+        activeEffectHasSourceCombatant(effect, combatant.combatantId),
     ) ?? []
   );
 }
@@ -617,8 +622,7 @@ export function applySpellCreatedHeldObjectEffect(input: {
       (effect) =>
         !(
           effect.kind === "spellCreatedHeldObject" &&
-          effect.sourceProcedureRef === input.activeEffect.sourceProcedureRef &&
-          effect.sourceCombatantId === input.activeEffect.sourceCombatantId
+          activeEffectSourceMatches(effect, input.activeEffect)
         ),
     ),
     input.activeEffect,
@@ -774,7 +778,7 @@ export function releaseSpellCreatedHeldObjectState(input: {
   const effect = spellCreatedHeldObjectEffectsForActor(actor).find(
     (candidate) =>
       candidate.effectRef === input.effectRef &&
-      candidate.sourceCombatantId === input.actorId,
+      activeEffectHasSourceCombatant(candidate, input.actorId),
   );
   if (actor === undefined || effect?.objectState.kind !== "held") {
     return {
@@ -1311,8 +1315,10 @@ export function applyDancingLightsSpellEffect(
           (effect) =>
             !(
               effect.kind === "dancingLights" &&
-              effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-              effect.sourceCombatantId === actorId
+              activeEffectSourceMatches(effect, {
+                sourceProcedureRef: invocation.sourceProcedureRef,
+                sourceCombatantId: actorId,
+              })
             ),
         ),
         activeEffect,
@@ -1559,7 +1565,7 @@ export function activeSelfTransformationModeEffect(
     (effect): effect is SelfTransformationModeActiveEffect =>
       effect.kind === "selfTransformation" &&
       (source === undefined ||
-        effect.sourceCombatantId === source.sourceCombatantId),
+        activeEffectHasSourceCombatant(effect, source.sourceCombatantId)),
   );
 }
 
@@ -1603,8 +1609,10 @@ export function applySelfTransformationModeEffect(input: {
       (effect) =>
         !(
           effect.kind === "selfTransformation" &&
-          effect.sourceCombatantId === input.sourceCombatantId &&
-          effect.sourceProcedureRef === input.sourceProcedureRef
+          activeEffectSourceMatches(effect, {
+            sourceProcedureRef: input.sourceProcedureRef,
+            sourceCombatantId: input.sourceCombatantId,
+          })
         ),
     ),
     {
@@ -1659,9 +1667,10 @@ export function applyFailedSaveSpellActiveEffects(
           (effect) =>
             !(
               effect.kind === "nextAttackRollBySelf" &&
-              "sourceProcedureRef" in effect &&
-              effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-              effect.sourceCombatantId === actorId
+              activeEffectSourceMatches(effect, {
+                sourceProcedureRef: invocation.sourceProcedureRef,
+                sourceCombatantId: actorId,
+              })
             ),
         ),
         {
@@ -1724,8 +1733,10 @@ export function applyFailedSaveSpellConditionEffects(
         (activeEffect.kind === "spellCondition" ||
           activeEffect.kind === "spellConditionEndTurnSave" ||
           activeEffect.kind === "spellConditionCountedEndTurnSave") &&
-        activeEffect.sourceProcedureRef === invocation.sourceProcedureRef &&
-        activeEffect.sourceCombatantId === actorId &&
+        activeEffectSourceMatches(activeEffect, {
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          sourceCombatantId: actorId,
+        }) &&
         activeEffect.condition === appliedEffect.condition,
     );
     const expiresAt = activeEffectExpirationForPostDamageRider(
@@ -1911,8 +1922,10 @@ export function applySleepPendingRepeatSaveEffects(
     const replacing = target.activeEffects.filter(
       (effect) =>
         effect.kind === "sleepPendingRepeatSave" &&
-        effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-        effect.sourceCombatantId === actorId,
+        activeEffectSourceMatches(effect, {
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          sourceCombatantId: actorId,
+        }),
     );
     const activeEffects = [
       ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
@@ -1970,8 +1983,10 @@ export function applyHideousLaughterEffects(
     const replacing = target.activeEffects.filter(
       (effect) =>
         effect.kind === "hideousLaughter" &&
-        effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-        effect.sourceCombatantId === actorId,
+        activeEffectSourceMatches(effect, {
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          sourceCombatantId: actorId,
+        }),
     );
     const activeEffects = [
       ...target.activeEffects.filter((effect) => !replacing.includes(effect)),
@@ -2114,8 +2129,7 @@ function sameCasterAreaSpellOccurrence(
   return (
     isCasterAreaSpellActiveEffect(candidate) &&
     candidate.kind === activeEffect.kind &&
-    candidate.sourceProcedureRef === activeEffect.sourceProcedureRef &&
-    candidate.sourceCombatantId === activeEffect.sourceCombatantId &&
+    activeEffectSourceMatches(candidate, activeEffect) &&
     candidate.areaId === activeEffect.areaId
   );
 }
@@ -2272,8 +2286,10 @@ export function applySpiritualWeaponAttackProxyEffect(input: {
       (effect) =>
         !(
           effect.kind === "spiritualWeapon" &&
-          effect.sourceProcedureRef === input.invocation.sourceProcedureRef &&
-          effect.sourceCombatantId === input.actorId
+          activeEffectSourceMatches(effect, {
+            sourceProcedureRef: input.invocation.sourceProcedureRef,
+            sourceCombatantId: input.actorId,
+          })
         ),
     ),
     activeEffect,
@@ -2585,8 +2601,10 @@ export function replaceGustOfWindLineDirection(input: {
   }
   const activeEffects = source.activeEffects.map((effect) =>
     effect.kind === "gustOfWindLine" &&
-    effect.sourceCombatantId === input.sourceCombatantId &&
-    effect.sourceProcedureRef === input.sourceProcedureRef &&
+    activeEffectSourceMatches(effect, {
+      sourceProcedureRef: input.sourceProcedureRef,
+      sourceCombatantId: input.sourceCombatantId,
+    }) &&
     effect.areaId === input.areaId
       ? { ...effect, directionId: input.directionId }
       : effect,
@@ -2726,8 +2744,7 @@ function moonbeamEffectMatches(
 ): current is Extract<BattleActiveEffect, { readonly kind: "moonbeam" }> {
   return (
     current.kind === "moonbeam" &&
-    current.sourceCombatantId === effect.sourceCombatantId &&
-    current.sourceProcedureRef === effect.sourceProcedureRef &&
+    activeEffectSourceMatches(current, effect) &&
     current.areaId === effect.areaId
   );
 }
@@ -2909,8 +2926,7 @@ export function applyWebRestrainedCondition(
   const replacing = target.activeEffects.filter(
     (candidate) =>
       candidate.kind === "spellCondition" &&
-      candidate.sourceProcedureRef === effect.sourceProcedureRef &&
-      candidate.sourceCombatantId === effect.sourceCombatantId &&
+      activeEffectSourceMatches(candidate, effect) &&
       candidate.condition === "restrained",
   );
   const allocation = allocateBattleActiveEffectRefForCreature({
@@ -2965,8 +2981,10 @@ export function removeWebRestrainedCondition(input: {
       { readonly kind: "spellCondition" }
     > =>
       candidate.kind === "spellCondition" &&
-      candidate.sourceProcedureRef === input.sourceProcedureRef &&
-      candidate.sourceCombatantId === input.sourceCombatantId &&
+      activeEffectSourceMatches(candidate, {
+        sourceProcedureRef: input.sourceProcedureRef,
+        sourceCombatantId: input.sourceCombatantId,
+      }) &&
       candidate.condition === "restrained",
   );
   return effect === undefined
@@ -3031,8 +3049,10 @@ export function applyCommandPendingEffects(
             (effect) =>
               !(
                 effect.kind === "commandPending" &&
-                effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-                effect.sourceCombatantId === actorId
+                activeEffectSourceMatches(effect, {
+                  sourceProcedureRef: invocation.sourceProcedureRef,
+                  sourceCombatantId: actorId,
+                })
               ),
           ),
           {
@@ -3129,8 +3149,10 @@ export function applyFailedSaveAttackRollAdvantageEffects(
         (effect) =>
           !(
             effect.kind === "faerieFireOutline" &&
-            effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-            effect.sourceCombatantId === actorId
+            activeEffectSourceMatches(effect, {
+              sourceProcedureRef: invocation.sourceProcedureRef,
+              sourceCombatantId: actorId,
+            })
           ),
       ),
       nextEffect,
@@ -3183,8 +3205,10 @@ export function applySaveGatedConditionImmunityEffects(
         (effect) =>
           !(
             effect.kind === "conditionImmunity" &&
-            effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-            effect.sourceCombatantId === actorId &&
+            activeEffectSourceMatches(effect, {
+              sourceProcedureRef: invocation.sourceProcedureRef,
+              sourceCombatantId: actorId,
+            }) &&
             invocation.activeEffects.some(
               (candidate) => candidate.condition === effect.condition,
             )
@@ -3248,6 +3272,26 @@ export function activeEffectKindForSpellPostDamageRider(
   );
 }
 
+type SpellPostDamageRiderActiveEffect = Extract<
+  BattleActiveEffect,
+  {
+    readonly kind:
+      | "speedDelta"
+      | "spellCondition"
+      | "opportunityAttackDenied"
+      | "nextAttackRollAgainstSelf"
+      | "hitPointRegainPrevented"
+      | "invisibleBenefitDenied";
+  }
+>;
+
+function isSpellPostDamageRiderActiveEffect(
+  effect: BattleActiveEffect,
+  rider: SpellActiveEffectPostDamageRider,
+): effect is SpellPostDamageRiderActiveEffect {
+  return effect.kind === activeEffectKindForSpellPostDamageRider(rider);
+}
+
 export function spellPostDamageRiderReplacesActiveEffect(
   rider: SpellActiveEffectPostDamageRider,
   effect: BattleActiveEffect,
@@ -3255,9 +3299,8 @@ export function spellPostDamageRiderReplacesActiveEffect(
   actorId: CombatantId,
 ): boolean {
   if (
-    effect.kind !== activeEffectKindForSpellPostDamageRider(rider) ||
-    !("sourceProcedureRef" in effect) ||
-    effect.sourceProcedureRef !== sourceProcedureRef
+    !isSpellPostDamageRiderActiveEffect(effect, rider) ||
+    !activeEffectProcedureMatches(effect, sourceProcedureRef)
   ) {
     return false;
   }
@@ -3439,7 +3482,7 @@ export function endHeldLightSpellEffect(
           !(
             effect.kind === "heldLight" &&
             effect.effectRef === invocation.sourceEffectRef &&
-            effect.sourceCombatantId === actorId
+            activeEffectHasSourceCombatant(effect, actorId)
           ),
       ),
     }),
@@ -3481,8 +3524,10 @@ export function applyDragonsBreathInitialSpellEffect(
       (effect) =>
         !(
           effect.kind === "dragonsBreath" &&
-          effect.sourceProcedureRef === invocation.sourceProcedureRef &&
-          effect.sourceCombatantId === actorId
+          activeEffectSourceMatches(effect, {
+            sourceProcedureRef: invocation.sourceProcedureRef,
+            sourceCombatantId: actorId,
+          })
         ),
     ),
     nextEffect,
@@ -3520,7 +3565,10 @@ export function applyShieldReactionSpellActiveEffect(
           (effect) =>
             !(
               effect.kind === "spellArmorClassBonus" &&
-              effect.sourceProcedureRef === invocation.sourceProcedureRef
+              activeEffectProcedureMatches(
+                effect,
+                invocation.sourceProcedureRef,
+              )
             ),
         ),
         {
