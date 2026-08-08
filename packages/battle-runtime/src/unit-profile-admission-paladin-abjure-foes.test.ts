@@ -56,7 +56,10 @@ import {
   resolveBattleSubject,
   startBattle,
 } from "./unit-profile-admission.test-support.ts";
-import { battleMagicActionSaveGatedConditionSupportForUnit } from "./unit-feature-support.ts";
+import {
+  battleMagicActionSaveGatedConditionSupportForUnit,
+  magicActionSaveGatedConditionProfileForUnit,
+} from "./unit-feature-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const paladinAbjureFoesUnitId = "paladin_abjure_foes";
@@ -67,17 +70,26 @@ const channelDivinityUnit = unitLibrary.requireUnit(
 const secondTargetId = combatantId("abjure-foes-second-target");
 
 describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
-  test("rejects admission without the required Paladin class level and returns null for a different mechanics family", () => {
+  test("uses the acquired level without character context and rejects unavailable class levels or another mechanics family", () => {
     expect(
-      battleMagicActionSaveGatedConditionSupportForUnit(abjureFoesUnit, []),
-    ).toBe("unsupported");
+      magicActionSaveGatedConditionProfileForUnit(abjureFoesUnit, undefined),
+    ).toMatchObject({
+      kind: "magicActionSaveGatedCondition",
+      unit: abjureFoesUnit,
+    });
     expect(
-      battleMagicActionSaveGatedConditionSupportForUnit(abjureFoesUnit, [
+      magicActionSaveGatedConditionProfileForUnit(abjureFoesUnit, []),
+    ).toBeNull();
+    expect(
+      magicActionSaveGatedConditionProfileForUnit(abjureFoesUnit, [
         {
           className: "paladin",
           level: classLevel(8),
         },
       ]),
+    ).toBeNull();
+    expect(
+      battleMagicActionSaveGatedConditionSupportForUnit(abjureFoesUnit, []),
     ).toBe("unsupported");
     expect(
       battleMagicActionSaveGatedConditionSupportForUnit(channelDivinityUnit),

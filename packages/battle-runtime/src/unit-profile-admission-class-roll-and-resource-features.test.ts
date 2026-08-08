@@ -251,6 +251,71 @@ describe("QMBT7 deterministic Unit profile admission", () => {
     );
   });
 
+  test("self-healing admission projects independently omitted flat terms as zero", () => {
+    const unit = unitLibrary.requireUnit(fighterSecondWindUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "activation"
+    ) {
+      throw new Error("Expected Second Wind activation feature Unit.");
+    }
+    const [phase] = unit.mechanics.phases;
+    const effect = phase?.kind === "direct" ? phase.effects?.[0] : undefined;
+    if (
+      effect?.kind !== "heal_hp" ||
+      effect.amount.kind !== "linear_per_level"
+    ) {
+      throw new Error("Expected Second Wind linear self-healing effect.");
+    }
+    const baseWithoutFlat = { ...effect.amount.base };
+    delete baseWithoutFlat.flat;
+    const perLevelWithoutFlat = { ...effect.amount.perLevel };
+    delete perLevelWithoutFlat.flat;
+    const variants = [
+      {
+        id: "synthetic_self_healing_without_base_flat",
+        amount: { ...effect.amount, base: baseWithoutFlat },
+        expected: { flatBase: 0, flatPerLevel: 1 },
+      },
+      {
+        id: "synthetic_self_healing_without_per_level_flat",
+        amount: { ...effect.amount, perLevel: perLevelWithoutFlat },
+        expected: { flatBase: 1, flatPerLevel: 0 },
+      },
+    ] as const;
+
+    for (const variant of variants) {
+      const syntheticUnit = decodeUnitRecordSync({
+        ...unit,
+        id: variant.id,
+        provenance: {
+          kind: "synthetic-test",
+          section: "Second Wind healing projection",
+        },
+        mechanics: {
+          ...unit.mechanics,
+          phases: [
+            {
+              ...phase,
+              effects: [{ ...effect, amount: variant.amount }],
+            },
+          ],
+        },
+      });
+
+      expect(
+        parseSupportedUnitFeatureProfile(syntheticUnit, [
+          { className: "fighter", level: classLevel(1) },
+        ]),
+      ).toEqual(
+        expect.objectContaining({
+          kind: "selfBonusActionHealing",
+          ...variant.expected,
+        }),
+      );
+    }
+  });
+
   test("barbarian_reckless_attack is admitted and projected through production feature support", () => {
     const unit = unitLibrary.requireUnit(barbarianRecklessAttackUnitId);
     const profile = parseSupportedUnitFeatureProfile(unit, [
@@ -296,6 +361,42 @@ describe("QMBT7 deterministic Unit profile admission", () => {
         resistances: [],
       }),
     );
+  });
+
+  test("ongoing feature admission rejects an unsupported turn-boundary armor end", () => {
+    const unit = unitLibrary.requireUnit(barbarianRecklessAttackUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "activation" ||
+      unit.mechanics.ongoingFeature?.lifecycle.kind !== "turn_boundary"
+    ) {
+      throw new Error("Expected Reckless Attack turn-boundary mechanics.");
+    }
+    const support = unit.mechanics.ongoingFeature;
+    const unsupportedArmorEnd = decodeUnitRecordSync({
+      ...unit,
+      id: "synthetic_turn_boundary_light_armor_end",
+      provenance: {
+        kind: "synthetic-test",
+        section: "Reckless Attack lifecycle admission",
+      },
+      mechanics: {
+        ...unit.mechanics,
+        ongoingFeature: {
+          ...support,
+          lifecycle: {
+            ...support.lifecycle,
+            earlyEndArmorCategories: ["light"],
+          },
+        },
+      },
+    });
+
+    expect(
+      parseSupportedUnitFeatureProfile(unsupportedArmorEnd, [
+        { className: "barbarian", level: classLevel(2) },
+      ]),
+    ).toBeNull();
   });
 
   test.each([
@@ -1082,6 +1183,42 @@ describe("SRDINV75A Innate Sorcery deterministic Unit profile admission", () => 
         resistances: [],
       }),
     );
+  });
+
+  test("fixed-duration ongoing feature admission rejects an unsupported armor early end", () => {
+    const unit = unitLibrary.requireUnit(sorcererInnateSorceryUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "activation" ||
+      unit.mechanics.ongoingFeature?.lifecycle.kind !== "fixed_duration"
+    ) {
+      throw new Error("Expected Innate Sorcery fixed-duration mechanics.");
+    }
+    const support = unit.mechanics.ongoingFeature;
+    const unsupportedUnit = decodeUnitRecordSync({
+      ...unit,
+      id: "synthetic_fixed_duration_light_armor_end",
+      provenance: {
+        kind: "synthetic-test",
+        section: "Innate Sorcery lifecycle admission",
+      },
+      mechanics: {
+        ...unit.mechanics,
+        ongoingFeature: {
+          ...support,
+          lifecycle: {
+            ...support.lifecycle,
+            earlyEndArmorCategories: ["light"],
+          },
+        },
+      },
+    });
+
+    expect(
+      parseSupportedUnitFeatureProfile(unsupportedUnit, [
+        { className: "sorcerer", level: classLevel(1) },
+      ]),
+    ).toBeNull();
   });
 
   test("spell attack benefit admission rejects unsupported roll filters", () => {

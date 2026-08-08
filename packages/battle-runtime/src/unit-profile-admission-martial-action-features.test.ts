@@ -709,6 +709,62 @@ describe("L3MSPEC species battle support", () => {
     ).toEqual(expectedDamageResistanceSupport);
   });
 
+  test("Damage Resistance profile rejects other Unit shapes, ambiguous grants, and attack-filtered Resistance", () => {
+    const unit = unitLibrary.requireUnit(
+      speciesDragonbornDamageResistanceUnitId,
+    );
+    if (unit.kind !== "species_trait" || unit.mechanics.family !== "passive") {
+      throw new Error("Expected Dragonborn Damage Resistance passive trait.");
+    }
+    const [grant] = unit.mechanics.grants;
+    if (grant?.kind !== "grant_resistance") {
+      throw new Error("Expected Dragonborn Resistance grant.");
+    }
+    const profileFor = (candidate: UnitRecord) =>
+      passiveDamageResistanceProfileForUnit({
+        unit: candidate,
+        draconicAncestryDamageType,
+      });
+    const rejectedUnits = [
+      unitLibrary.requireUnit(fighterActionSurgeUnitId),
+      unitLibrary.requireUnit(speciesDragonbornBreathWeaponUnitId),
+      decodeUnitRecordSync({
+        ...unit,
+        id: "synthetic_resistance_without_grant",
+        provenance: {
+          kind: "synthetic-test",
+          section: "Damage Resistance admission",
+        },
+        mechanics: { ...unit.mechanics, grants: [] },
+      }),
+      decodeUnitRecordSync({
+        ...unit,
+        id: "synthetic_resistance_with_ambiguous_grants",
+        provenance: {
+          kind: "synthetic-test",
+          section: "Damage Resistance admission",
+        },
+        mechanics: { ...unit.mechanics, grants: [grant, grant] },
+      }),
+      decodeUnitRecordSync({
+        ...unit,
+        id: "synthetic_attack_filtered_resistance",
+        provenance: {
+          kind: "synthetic-test",
+          section: "Damage Resistance admission",
+        },
+        mechanics: {
+          ...unit.mechanics,
+          grants: [{ ...grant, sourceFilter: { kind: "attack" } }],
+        },
+      }),
+    ];
+
+    for (const rejectedUnit of rejectedUnits) {
+      expect(profileFor(rejectedUnit), rejectedUnit.id).toBeNull();
+    }
+  });
+
   test("Damage Resistance halves matching spell damage through its reducer route", () => {
     const unit = unitLibrary.requireUnit(
       speciesDragonbornDamageResistanceUnitId,
@@ -2225,6 +2281,96 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
           },
         ],
         resistances: ["bludgeoning", "piercing", "slashing"],
+      }),
+    );
+  });
+
+  test("barbarian_rage projects its level-15 Persistent Rage lifecycle override", () => {
+    const unit = unitLibrary.requireUnit(barbarianRageUnitId);
+
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
+        { className: "barbarian", level: classLevel(15) },
+      ]),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "ongoingFeature",
+        lifecycle: {
+          kind: "fixedDuration",
+          maximumDurationRounds: 100,
+          earlyEndConditions: ["unconscious"],
+          earlyEndArmorCategories: ["heavy"],
+          extensionTriggers: [],
+        },
+      }),
+    );
+  });
+
+  test("synthetic round-extended support defaults omitted early ends and projects a melee damage filter", () => {
+    const unit = unitLibrary.requireUnit(barbarianRageUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "activation" ||
+      unit.mechanics.ongoingFeature?.lifecycle.kind !== "round_extended"
+    ) {
+      throw new Error("Expected Rage round-extended activation mechanics.");
+    }
+    const [phase] = unit.mechanics.phases;
+    if (phase?.kind !== "direct" || phase.effects === undefined) {
+      throw new Error("Expected Rage direct ongoing effects.");
+    }
+    const lifecycle = { ...unit.mechanics.ongoingFeature.lifecycle };
+    delete lifecycle.earlyEndConditions;
+    delete lifecycle.earlyEndArmorCategories;
+    const syntheticUnit = decodeUnitRecordSync({
+      ...unit,
+      id: "synthetic_round_extended_melee_damage",
+      provenance: {
+        kind: "synthetic-test",
+        section: "Rage ongoing feature projection",
+      },
+      mechanics: {
+        ...unit.mechanics,
+        ongoingFeature: {
+          ...unit.mechanics.ongoingFeature,
+          lifecycle,
+        },
+        phases: [
+          {
+            ...phase,
+            effects: phase.effects.map((effect) =>
+              effect.kind === "modify_damage_numeric"
+                ? {
+                    ...effect,
+                    weaponFilter: {
+                      kind: "weapon_category",
+                      category: "melee",
+                    },
+                  }
+                : effect,
+            ),
+          },
+        ],
+      },
+    });
+
+    expect(
+      parseSupportedUnitFeatureProfile(syntheticUnit, [
+        { className: "barbarian", level: classLevel(1) },
+      ]),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "ongoingFeature",
+        lifecycle: expect.objectContaining({
+          earlyEndConditions: [],
+          earlyEndArmorCategories: [],
+        }),
+        damageModifiers: expect.arrayContaining([
+          expect.objectContaining({
+            amount: 2,
+            weaponUsageFilter: "melee",
+          }),
+        ]),
       }),
     );
   });

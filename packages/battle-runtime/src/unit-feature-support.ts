@@ -8510,7 +8510,7 @@ function durationToRounds(duration: {
 function parseOngoingFeatureEffects(
   effects: readonly EffectAtom[],
   classLevels: readonly CharacterBattleClassLevel[],
-  unit: AuthoredUnitSource,
+  unit: Extract<AuthoredUnitSource, { readonly kind: "class_feature" }>,
 ): Pick<
   Extract<SupportedUnitFeatureProfile, { readonly kind: "ongoingFeature" }>,
   "rollModifiers" | "spellModifiers" | "damageModifiers" | "resistances"
@@ -8589,9 +8589,7 @@ function parseOngoingFeatureEffects(
       /* v8 ignore stop */
       const amount = numericDeltaForClassLevel(
         effect.delta,
-        unit.kind === "class_feature"
-          ? classLevelForClass(classLevels, unit.className)
-          : 0,
+        classLevelForClass(classLevels, unit.className),
       );
       /* v8 ignore start -- Unsupported structured input: numericDeltaForClassLevel admits only the fixed-number and class-threshold shapes projected by this profile. */
       if (amount === null) {
