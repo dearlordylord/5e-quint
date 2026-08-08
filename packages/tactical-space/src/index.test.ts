@@ -1087,10 +1087,16 @@ function gridEdges(width: number, height: number): readonly OracleEdge[] {
   return edges;
 }
 
-const oracleGridEdges = gridEdges(4, 4);
+const ORACLE_GRID_WIDTH = 4;
+const ORACLE_GRID_HEIGHT = 4;
+const ORACLE_GRID_POINT_COUNT = ORACLE_GRID_WIDTH * ORACLE_GRID_HEIGHT;
+const oracleGridEdges = gridEdges(ORACLE_GRID_WIDTH, ORACLE_GRID_HEIGHT);
 const oracleGridPoints: readonly OraclePoint[] = Array.from(
-  { length: 16 },
-  (_, index) => ({ x: index % 4, y: Math.floor(index / 4) }),
+  { length: ORACLE_GRID_POINT_COUNT },
+  (_, index) => ({
+    x: index % ORACLE_GRID_WIDTH,
+    y: Math.floor(index / ORACLE_GRID_WIDTH),
+  }),
 );
 const oracleEdgeFactArbitrary = fc.record({
   present: fc.boolean(),
