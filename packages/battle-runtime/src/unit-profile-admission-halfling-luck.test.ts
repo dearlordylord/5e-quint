@@ -1402,18 +1402,24 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           displayName: "Warlock",
           initiative: 20,
           attack: null,
-          spellcasting: wizardSpellcasting({
-            cantrips: [spellRecord("eldritch_blast")],
-            preparedSpells: [],
-          }),
+          classLevels: [{ className: "warlock", level: 1 }],
+          spellcasting: {
+            ...wizardSpellcasting({
+              cantrips: [spellRecord("eldritch_blast")],
+              preparedSpells: [],
+            }),
+            sourceClassName: "warlock",
+          },
           characterUnitRefs: [unitRef],
           unitFeatures: [characterBattleFeatureInitForTest(unit)],
         }),
         characterSeed({
           combatantId: skeletonId,
-          displayName: "Concentrating Halfling",
+          displayName: "Halfling Warlock",
           initiative: 10,
           attack: null,
+          classLevels: [{ className: "warlock", level: 1 }],
+          invocationFeatures: [{ tag: "eldritchMind" }],
           characterUnitRefs: [unitRef],
           unitFeatures: [characterBattleFeatureInitForTest(unit)],
         }),
@@ -1498,6 +1504,10 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       }),
       "concentrationSavingThrow",
     );
+    expect(concentration).toMatchObject({
+      combatantId: skeletonId,
+      rollMode: "advantage",
+    });
 
     const omittedRolledDie = resolveBattleSubject({
       state,
@@ -1544,7 +1554,12 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
         damageRollFillWithGroups(damage, [[4]]),
         concentrationSavingThrowFill(concentration, {
           succeeded: false,
-          naturalD20: 1,
+          naturalD20: 2,
+          rolledD20s: rolledD20s({
+            first: 1,
+            second: 2,
+            selected: "second",
+          }),
         }),
       ],
     });
@@ -1563,10 +1578,16 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
           damageRollFillWithGroups(damage, [[4]]),
           concentrationSavingThrowFill(concentration, {
             succeeded: false,
-            naturalD20: 1,
-            d20TestNaturalOneReroll: rerollOutcome({
-              succeeded: true,
-              naturalD20: 12,
+            naturalD20: 2,
+            rolledD20s: rolledD20s({
+              first: 1,
+              second: 2,
+              selected: "second",
+            }),
+            d20TestNaturalOneReroll: rerollRolledDieOutcome({
+              die: "first",
+              naturalD20: 20,
+              result: { succeeded: true, naturalD20: 20 },
             }),
           }),
         ],

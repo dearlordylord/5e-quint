@@ -8,6 +8,8 @@ import {
   characterSeed,
   damageAmount,
   damageRollFillWithGroups,
+  discoverBattleActCandidates,
+  endTurn,
   findAct,
   findHole,
   Hp,
@@ -16,9 +18,11 @@ import {
   objectTargetFill,
   requireHole,
   requireResolved,
+  requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
   skeletonCreatureInit,
   skeletonId,
+  cantripSpellInvocationRef,
   spellRecord,
   startBattleSessionRight,
   wizardId,
@@ -26,6 +30,116 @@ import {
 } from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: Fire Bolt object targets", () => {
+  test("a readied Fire Bolt exposes both creature and object target holes on release", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-readied-fire-bolt-object-targets"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          classLevel: 5,
+          spellcasting: wizardSpellcasting({
+            cantrips: [spellRecord("fire_bolt")],
+            preparedSpells: [],
+          }),
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const procedureRef = requireCharacterSpellProcedureRefForTest(
+      session,
+      wizardId,
+      cantripSpellInvocationRef("fire_bolt", "spellAttackDamage"),
+    );
+    const ready = resolveBattleSubject({
+      state: session.state,
+      subject: {
+        tag: "actionSpell",
+        actorId: wizardId,
+        procedureRef,
+        mode: { tag: "ready", trigger: "attackHit" },
+      },
+      fills: [],
+    });
+    expect(ready.tag).toBe("resolved");
+    if (ready.tag !== "resolved") {
+      throw new Error(`Expected Ready to resolve, got ${ready.tag}.`);
+    }
+    const nextTurn = endTurn({ state: ready.state, actorId: wizardId });
+    expect(nextTurn.tag).toBe("resolved");
+    if (nextTurn.tag !== "resolved") {
+      throw new Error(`Expected end turn to resolve, got ${nextTurn.tag}.`);
+    }
+    const release = discoverBattleActCandidates(nextTurn.state).find(
+      (candidate) =>
+        candidate.subject.tag === "runtimeCommand" &&
+        candidate.subject.command === "releaseReadiedSpell" &&
+        candidate.subject.readiedSpellCasterId === wizardId,
+    );
+
+    expect(release?.initialHoles).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "targetChoice" }),
+        expect.objectContaining({ kind: "objectTargetChoice" }),
+      ]),
+    );
+  });
+
+  test("a readied single-target save spell exposes its target-selection hole on release", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-readied-single-target-save"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Cleric",
+          initiative: 20,
+          attack: null,
+          classLevels: [{ className: "cleric", level: 1 }],
+          spellcasting: {
+            ...wizardSpellcasting({
+              cantrips: [spellRecord("sacred_flame")],
+              preparedSpells: [],
+            }),
+            sourceClassName: "cleric",
+          },
+        }),
+        skeletonCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const procedureRef = requireCharacterSpellProcedureRefForTest(
+      session,
+      wizardId,
+      cantripSpellInvocationRef("sacred_flame", "saveGatedDamage"),
+    );
+    const ready = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: {
+          tag: "actionSpell",
+          actorId: wizardId,
+          procedureRef,
+          mode: { tag: "ready", trigger: "attackHit" },
+        },
+        fills: [],
+      }),
+    );
+    const nextTurn = requireResolved(
+      endTurn({ state: ready.state, actorId: wizardId }),
+    );
+    const release = discoverBattleActCandidates(nextTurn.state).find(
+      (candidate) =>
+        candidate.subject.tag === "runtimeCommand" &&
+        candidate.subject.command === "releaseReadiedSpell" &&
+        candidate.subject.readiedSpellCasterId === wizardId,
+    );
+
+    expect(release?.initialHoles).toEqual([
+      expect.objectContaining({ kind: "targetChoice" }),
+    ]);
+  });
+
   test("Fire Bolt object target requires ignition facts before resolving the object attack", () => {
     const state = startBattleSessionRight({
       battleId: battleId("battle-fire-bolt-object-missing-ignition"),

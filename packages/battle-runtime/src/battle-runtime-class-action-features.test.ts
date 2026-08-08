@@ -2006,6 +2006,26 @@ describe("battle runtime: class action features", () => {
     ).toBe(0);
   });
 
+  test("Spell Save DC is absent for non-spellcasting or non-character casters", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-spell-save-dc-boundaries"),
+      combatants: [
+        characterSeed({
+          combatantId: fighterId,
+          initiative: 20,
+          spellcasting: undefined,
+        }),
+        statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
+      ],
+    });
+
+    expect(spellSaveDcForCaster(session.state, fighterId)).toBeNull();
+    expect(spellSaveDcForCaster(session.state, goblinId)).toBeNull();
+    expect(
+      spellSaveDcForCaster(session.state, combatantId("missing-caster")),
+    ).toBeNull();
+  });
+
   test("Innate Sorcery activation spends a Bonus Action and one Long Rest use for one minute", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-innate-sorcery"),
