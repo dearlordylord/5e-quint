@@ -2237,6 +2237,69 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         }),
       }),
     );
+
+    const immuneState = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      targetHp: 50,
+      targetMaxHp: 50,
+      targetStatBlock: fireImmuneHumanoidStatBlock(),
+    });
+    const immuneInitialHp = Number(
+      requireCombatant(immuneState.state, spellTargetId).hp,
+    );
+    const immuneAct = spellAct({
+      session: immuneState,
+      spellId: fireballUnitId,
+      slotLevel: 3,
+    });
+    const immuneSavingThrow = requireHole(
+      immuneAct.initialHoles,
+      "savingThrowOutcome",
+    );
+    const immuneSaveFill = fireballSavingThrowOutcomeFill(
+      immuneSavingThrow,
+      [{ targetId: spellTargetId, succeeded: false }],
+      [],
+    );
+    const immuneDamageRoll = requireResultHole(
+      resolveBattleSubject({
+        state: immuneState.state,
+        subject: immuneAct.subject,
+        fills: [immuneSaveFill],
+      }),
+      "rolledDice",
+    );
+    const immuneResolved = resolveBattleSubject({
+      state: immuneState.state,
+      subject: immuneAct.subject,
+      fills: [
+        immuneSaveFill,
+        damageRollFillWithGroups(immuneDamageRoll, [[4, 4, 4, 4, 4, 4, 4, 4]]),
+      ],
+    });
+
+    expect(immuneResolved).toMatchObject({ tag: "resolved" });
+    if (immuneResolved.tag !== "resolved") {
+      throw new Error("Expected Fireball immunity case to resolve.");
+    }
+    expect(
+      Number(requireCombatant(immuneResolved.state, spellTargetId).hp),
+    ).toBe(immuneInitialHp);
+    expect("objectIgnitions" in immuneResolved).toBe(false);
+    expect(
+      snapshotBattle(immuneResolved.state).combatants.find(
+        (combatant) => combatant.combatantId === spellCasterId,
+      )?.origin,
+    ).toEqual(
+      expect.objectContaining({
+        spellcasting: expect.objectContaining({
+          spellSlots: expect.arrayContaining([
+            expect.objectContaining({ spellLevel: 3, expended: 1 }),
+          ]),
+        }),
+      }),
+    );
   });
   test("fireball can ignite unattended flammable objects when no creature is caught in the area", () => {
     const spell = spellRecord(fireballUnitId);
@@ -2262,6 +2325,14 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
             {
               objectId: fireballObjectId,
               disposition: { kind: "flammableUnattended" },
+            },
+            {
+              objectId: battleObjectId("unit-profile-fireball-not-flammable"),
+              disposition: { kind: "notFlammable" },
+            },
+            {
+              objectId: battleObjectId("unit-profile-fireball-worn-object"),
+              disposition: { kind: "wornOrCarried" },
             },
           ],
         ),
@@ -2518,6 +2589,17 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     });
   });
 });
+
+function fireImmuneHumanoidStatBlock() {
+  const base = statBlockWithCreatureType("humanoid");
+  return {
+    ...base,
+    statBlock: {
+      ...base.statBlock,
+      immunities: { damageTypes: ["fire"] as const },
+    },
+  };
+}
 
 function fireballSavingThrowOutcomeFill(
   hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,

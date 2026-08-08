@@ -2972,7 +2972,14 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       }),
     );
 
+    expect(resolved.state.combatants.get(fighterId)?.hp).toBe(8);
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(1);
     expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
+    expect(sorcererSpellSlots(resolved.state)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ spellLevel: 1, expended: 1 }),
+      ]),
+    );
   });
 
   test("Heightened Dissonant Whispers uses its only spell target as the disadvantaged target", () => {
@@ -3271,6 +3278,11 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     expect(resolved.state.combatants.get(fighterId)?.hp).toBe(12);
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBeLessThan(7);
     expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(3));
+    expect(sorcererSpellSlots(resolved.state)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ spellLevel: 1, expended: 1 }),
+      ]),
+    );
   });
 
   test("Careful Command requests protected targets before the saving throw", () => {
