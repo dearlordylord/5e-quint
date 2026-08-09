@@ -31,23 +31,26 @@ totals, and comparison below are the self-contained durable evidence.
 ## Current authoritative diagnostic
 
 - Date: 2026-08-09
-- Git HEAD: `07e9580b55dc8aa1edffae22ab7d8314184d6059`
+- Git HEAD: `962fa84620c1af79e94114c5bf96fd5e444f8ef4`
 - Command: `pnpm coverage`
-- Result: exit `0`
-- Total wall duration: approximately 342 seconds
+- Result: battle-runtime segment complete and green; overall workspace wrapper
+  exit status unrecorded
+- Total wall duration: unrecorded for this run
 - Battle-runtime tests: 204/204 files passed; 2,166 tests passed and 53
   skipped (2,219 total)
 
-| Metric     |                 `85869fc2` |                `07e9580b5` | Covered / total change |     Uncovered change |   Delta |
-| ---------- | -------------------------: | -------------------------: | ---------------------: | -------------------: | ------: |
-| Statements | 120,221 / 124,616 (96.47%) | 120,175 / 124,554 (96.48%) |              -46 / -62 | 4,395 -> 4,379 (-16) | +0.01pp |
-| Branches   |   29,979 / 32,143 (93.26%) |   29,966 / 32,121 (93.29%) |              -13 / -22 |  2,164 -> 2,155 (-9) | +0.03pp |
-| Functions  |       4,795 / 4,795 (100%) |       4,793 / 4,793 (100%) |                -2 / -2 |               0 -> 0 |       0 |
-| Lines      | 120,221 / 124,616 (96.47%) | 120,175 / 124,554 (96.48%) |              -46 / -62 | 4,395 -> 4,379 (-16) | +0.01pp |
+| Metric     |                 `85869fc2` |                `07e9580b5` |                `962fa8462` | `07e` -> `962fa` covered / total |    Uncovered change |   Delta |
+| ---------- | -------------------------: | -------------------------: | -------------------------: | -------------------------------: | ------------------: | ------: |
+| Statements | 120,221 / 124,616 (96.47%) | 120,175 / 124,554 (96.48%) | 120,173 / 124,545 (96.48%) |                          -2 / -9 | 4,379 -> 4,372 (-7) | +0.00pp |
+| Branches   |   29,979 / 32,143 (93.26%) |   29,966 / 32,121 (93.29%) |   29,977 / 32,131 (93.29%) |                        +11 / +10 | 2,155 -> 2,154 (-1) | +0.00pp |
+| Functions  |       4,795 / 4,795 (100%) |       4,793 / 4,793 (100%) |       4,794 / 4,794 (100%) |                          +1 / +1 |              0 -> 0 |       0 |
+| Lines      | 120,221 / 124,616 (96.47%) | 120,175 / 124,554 (96.48%) | 120,173 / 124,545 (96.48%) |                          -2 / -9 | 4,379 -> 4,372 (-7) | +0.00pp |
 
-The statement/line percentage improved by 0.01 percentage points and the branch
-percentage improved by 0.03 percentage points. These are measured deltas from
-the authoritative public run, not a forecast toward 99%.
+The statement/line percentage remained 96.48% and the branch percentage
+remained 93.29% from the prior checkpoint; uncovered statements/lines fell by
+7 and uncovered branches fell by 1. These are measured deltas from the
+authoritative public run, not a forecast toward 99%. Denominator changes are
+shown explicitly because production code changed between checkpoints.
 
 ## Remaining static 99% gaps
 
@@ -56,21 +59,23 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 120,175 | 124,554 |                  123,309 |         3,134 |
-| Branches   |  29,966 |  32,121 |                   31,800 |         1,834 |
-| Functions  |   4,793 |   4,793 |                    4,746 |             0 |
-| Lines      | 120,175 | 124,554 |                  123,309 |         3,134 |
+| Statements | 120,173 | 124,545 |                  123,300 |         3,127 |
+| Branches   |  29,977 |  32,131 |                   31,810 |         1,833 |
+| Functions  |   4,794 |   4,794 |                    4,747 |             0 |
+| Lines      | 120,173 | 124,545 |                  123,300 |         3,127 |
 
 ## Milestone context
 
-Since the prior authoritative checkpoint, `14a70bcf6` narrowed Dancing Lights
-reposition plans and made correlated form/cardinality states explicit. Commit
-`07e9580b5` unified duplicated light-emitter target identity matching. The
-first milestone was production net -29 with focused 5/5 plus typecheck; the
-second was production net -37 with focused illumination 5 files/71 tests plus
-typecheck. Combined, they produced production net -66 and test net +35. The
-public checkpoint records 16 fewer
-uncovered statements/lines and nine fewer uncovered branches than `85869fc2`.
+Since the prior authoritative checkpoint, `c99b55671` consolidated duplicate
+object-target spell resource-spending protocols into one local closure. That
+was connascence cleanup, not itself an uncovered-gap claim. Commit
+`962fa8462` added admitted light-emitter projection witnesses for Sacred Weapon
+and Starry Wisp, covering matching and mismatching target projections in tests;
+it made no production-code change. Earlier commits `14a70bcf6` (Dancing Lights
+reposition narrowing) and `07e9580b5` (light-emitter target matching) remain
+part of the preceding milestone context. The public checkpoint now records 7
+fewer uncovered statements/lines and 1 fewer uncovered branch than
+`07e9580b5`.
 
 Focused cohort uncovered counts remain regression and navigation evidence, not a
 forecast of the global public delta, because other public tests may already
