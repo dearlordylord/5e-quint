@@ -41,12 +41,14 @@ import {
 } from "@dnd/surface/surface/stat-block-catalog";
 import chromaticOrbInput from "../../surface/content/chromatic_orb.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
-import type { SpellRecord } from "@dnd/surface/surface/types";
+import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
+  requireCharacterUnitProcedureRefForTest,
   resolveBattleSubject,
+  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 } from "./battle-runtime.test-support.ts";
 
 const spellCasterId = combatantId("chromatic-orb-caster");
@@ -63,6 +65,23 @@ if (statBlockCatalogResult.tag !== "ok") {
 
 const statBlockCatalog = statBlockCatalogResult.catalog;
 const chromaticOrb = decodeSpellRecord(chromaticOrbInput);
+const syntheticZeroHitPointReplacement = decodeUnitRecordSync({
+  id: "synthetic_zero_hit_point_replacement",
+  kind: "species_trait",
+  mechanics: {
+    effect: { kind: "prevent_drop_to_0_hp", replacementHp: 1 },
+    family: "triggered_replacement",
+    optional: true,
+    resetCadence: { kind: "long_rest" },
+    trigger: { kind: "reduced_to_0_hp_not_killed_outright" },
+  },
+  name: "Synthetic Zero Hit Point Replacement",
+  provenance: {
+    kind: "synthetic-test",
+    section: "battle-runtime synthetic zero-HP replacement fixture",
+  },
+  species: "synthetic_fixture_species",
+});
 
 type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
@@ -448,6 +467,67 @@ describe("Chromatic Orb chained spell attack", () => {
     });
   });
 
+  test("a zero-HP replacement disposition resumes and completes the chained spell", () => {
+    const session = chromaticOrbSession({
+      spellLevel: 1,
+      firstTargetHp: 4,
+      firstTargetZeroHitPointReplacementUnit: syntheticZeroHitPointReplacement,
+    });
+    const state = session.state;
+    const damage = chromaticOrbDamageFills(state, {
+      damageType: "acid",
+      targetId: firstTargetId,
+      attackTotal: 18,
+      naturalD20: 12,
+      damageFaces: [1, 2, 3],
+    });
+    const awaitingDisposition = resolveNeedsHoles(
+      state,
+      damage.subject,
+      damage.fills,
+    );
+    const disposition = requireHole(
+      awaitingDisposition.holes,
+      "attackDamageDisposition",
+    );
+    const replacementProcedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      firstTargetId,
+      syntheticZeroHitPointReplacement.id,
+    );
+
+    expect(disposition.choices).toEqual(
+      expect.arrayContaining([
+        { kind: "ordinaryDamage" },
+        {
+          kind: "zeroHitPointReplacement",
+          procedureRef: replacementProcedureRef,
+        },
+      ]),
+    );
+
+    const resolved = resolveResolved(state, damage.subject, [
+      ...damage.fills,
+      {
+        kind: "attackDamageDisposition",
+        holeId: disposition.holeId,
+        value: {
+          kind: "zeroHitPointReplacement",
+          procedureRef: replacementProcedureRef,
+        },
+      },
+    ]);
+    const target = resolved.state.combatants.get(firstTargetId);
+
+    expect(target?.hp).toBe(1);
+    expect(target?.conditions).not.toContain("unconscious");
+    expect(
+      resolved.state.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed",
+      ),
+    ).toBe(true);
+  });
+
   test("can be readied and released without spending the spell resources twice", () => {
     const state = chromaticOrbBattle({ spellLevel: 1 });
     const readyAct = chromaticOrbReadyAct(state);
@@ -516,6 +596,7 @@ describe("Chromatic Orb chained spell attack", () => {
 function chromaticOrbBattle(input: {
   readonly spellLevel: 1 | 2;
   readonly firstTargetHp?: number;
+  readonly firstTargetZeroHitPointReplacementUnit?: UnitRecord;
   readonly secondTargetKind?: "character" | "poisonImmuneSkeleton";
   readonly spell?: SpellRecord;
 }): BattleState {
@@ -525,6 +606,7 @@ function chromaticOrbBattle(input: {
 function chromaticOrbSession(input: {
   readonly spellLevel: 1 | 2;
   readonly firstTargetHp?: number;
+  readonly firstTargetZeroHitPointReplacementUnit?: UnitRecord;
   readonly secondTargetKind?: "character" | "poisonImmuneSkeleton";
   readonly spell?: SpellRecord;
 }): BattleRuntimeSession {
@@ -555,6 +637,12 @@ function chromaticOrbSession(input: {
         ...(input.firstTargetHp === undefined
           ? {}
           : { hp: input.firstTargetHp }),
+        ...(input.firstTargetZeroHitPointReplacementUnit === undefined
+          ? {}
+          : {
+              zeroHitPointReplacementUnit:
+                input.firstTargetZeroHitPointReplacementUnit,
+            }),
       }),
       input.secondTargetKind === "poisonImmuneSkeleton"
         ? poisonImmuneSkeletonCreature({
@@ -971,6 +1059,7 @@ function characterCreature(input: {
     { readonly kind: "character" }
   >["spellcasting"];
   readonly hp?: number;
+  readonly zeroHitPointReplacementUnit?: UnitRecord;
 }): BattleCreatureInit {
   const hp = Hp(input.hp ?? 12);
   return {
@@ -980,7 +1069,15 @@ function characterCreature(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
-      characterUnitRefs: [],
+      characterUnitRefs:
+        input.zeroHitPointReplacementUnit === undefined
+          ? []
+          : [
+              {
+                unit: input.zeroHitPointReplacementUnit,
+                supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
+              },
+            ],
       classLevels: [{ className: "wizard", level: 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
@@ -992,6 +1089,9 @@ function characterCreature(input: {
       maxHp: hp,
       tempHp: Hp(0),
       selectedLoadout: {},
+      ...(input.zeroHitPointReplacementUnit === undefined
+        ? {}
+        : { resources: [{ unit: input.zeroHitPointReplacementUnit }] }),
       attack: null,
       unarmedStrike: {
         kind: "unarmedStrike",
