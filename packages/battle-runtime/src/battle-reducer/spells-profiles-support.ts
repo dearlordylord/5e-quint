@@ -52,6 +52,7 @@ import {
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
+  targetSelectionFromAttachment,
 } from "./spells-execution-facts.ts";
 
 type D20RollModifierSpellProjection = {
@@ -190,14 +191,12 @@ export function scalarBuffSpellTargeting(
   if (attachment.kind === "self") {
     return { kind: "self" };
   }
-  if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
-    return null;
-  }
-  if (!scalarBuffCreatureTargetSelection(attachment.value.selection)) {
+  const selection = targetSelectionFromAttachment(attachment);
+  if (selection === null || !scalarBuffCreatureTargetSelection(selection)) {
     return null;
   }
   const targetCount = scalarBuffSpellTargetCount(
-    attachment.value.selection,
+    selection,
     spellLevel,
     slotLevel,
   );
@@ -207,9 +206,7 @@ export function scalarBuffSpellTargeting(
         kind: "targetList",
         minTargets: 1,
         maxTargets: targetCount,
-        requiredTargetDisposition: scalarBuffRequiredTargetDisposition(
-          attachment.value.selection,
-        ),
+        requiredTargetDisposition: spellTargetRequiredDisposition(selection),
       };
 }
 
@@ -222,12 +219,11 @@ function scalarBuffCreatureTargetSelection(
   );
 }
 
-function scalarBuffRequiredTargetDisposition(
+type SpellTargetRequiredDisposition = "unrestricted" | "willing";
+
+function spellTargetRequiredDisposition(
   selection: TargetSelection,
-): Extract<
-  ScalarBuffSpellTargeting,
-  { readonly kind: "targetList" }
->["requiredTargetDisposition"] {
+): SpellTargetRequiredDisposition {
   return "disposition" in selection && selection.disposition === "willing"
     ? "willing"
     : "unrestricted";
@@ -526,23 +522,20 @@ export function rollModifierSpellTargeting(
   ) {
     return { kind: "selfAndChosenLegalTargets", minTargets: 1 };
   }
-  if (attachment.kind !== "hole" || attachment.value.kind !== "target") {
+  const selection = targetSelectionFromAttachment(attachment);
+  if (selection === null) {
     return null;
   }
-  if (attachment.value.selection.mode === "any_number") {
+  if (selection.mode === "any_number") {
     return {
       kind: "targetList",
       minTargets: 1,
       maxTargets: "allLegalTargets",
-      requiredTargetDisposition:
-        "disposition" in attachment.value.selection &&
-        attachment.value.selection.disposition === "willing"
-          ? "willing"
-          : "unrestricted",
+      requiredTargetDisposition: spellTargetRequiredDisposition(selection),
     };
   }
   const targetCount = scalarBuffSpellTargetCount(
-    attachment.value.selection,
+    selection,
     spellLevel,
     slotLevel,
   );
@@ -552,12 +545,24 @@ export function rollModifierSpellTargeting(
         kind: "targetList",
         minTargets: 1,
         maxTargets: targetCount,
-        requiredTargetDisposition:
-          "disposition" in attachment.value.selection &&
-          attachment.value.selection.disposition === "willing"
-            ? "willing"
-            : "unrestricted",
+        requiredTargetDisposition: spellTargetRequiredDisposition(selection),
       };
+}
+
+function rollModifierAbilityCheckUsesRejectedFact(
+  effect: Extract<EffectAtom, { readonly kind: "modify_roll_advantage" }>,
+): boolean {
+  return [
+    effect.skillFilter,
+    effect.conditionFilter,
+    effect.saveAbilityFilter,
+    effect.saveSourceFilter,
+    effect.contextRangeFeet,
+    effect.spellSourceFilter,
+    effect.attackerTypeFilter,
+    effect.count,
+    effect.expiresOn,
+  ].some((fact) => fact !== undefined);
 }
 
 export function rollModifierActiveEffect(
@@ -605,15 +610,7 @@ export function rollModifierAbilityCheckRollModeEffect(
     (effect.affects ?? "self_roll") !== "self_roll" ||
     effect.mode !== "advantage" ||
     !sameStringSet(effect.on, ["ability_check"]) ||
-    effect.skillFilter !== undefined ||
-    effect.conditionFilter !== undefined ||
-    effect.saveAbilityFilter !== undefined ||
-    effect.saveSourceFilter !== undefined ||
-    effect.contextRangeFeet !== undefined ||
-    effect.spellSourceFilter !== undefined ||
-    effect.attackerTypeFilter !== undefined ||
-    effect.count !== undefined ||
-    effect.expiresOn !== undefined ||
+    rollModifierAbilityCheckUsesRejectedFact(effect) ||
     abilityFilter === null
   ) {
     return null;

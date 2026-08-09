@@ -13,6 +13,14 @@ export function sameStringSet(
   );
 }
 
+export function targetSelectionFromAttachment(
+  attachment: Attachment,
+): TargetSelection | null {
+  return attachment.kind === "hole" && attachment.value.kind === "target"
+    ? attachment.value.selection
+    : null;
+}
+
 export function supportedDamageAmountExpr(input: {
   readonly amount: SurfaceDiceAmount;
   readonly spellLevel?: number | undefined;
@@ -116,6 +124,7 @@ import {
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import type {
+  Attachment,
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
   Range,

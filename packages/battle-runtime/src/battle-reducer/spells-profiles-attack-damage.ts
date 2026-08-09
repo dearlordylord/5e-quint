@@ -49,6 +49,7 @@ import {
   sameStringSet,
   singleTargetSpellRangeFeet,
   supportedDamageAmountExpr,
+  targetSelectionFromAttachment,
 } from "./spells-execution-facts.ts";
 
 export type SpellAttackDamageInvocation = Extract<
@@ -79,6 +80,12 @@ const SCORCHING_RAY_ATTACK_KIND = "ranged_spell_attack" as const;
 const SCORCHING_RAY_BASE_LEVEL = 2;
 const SCORCHING_RAY_BASE_RAY_COUNT = 3;
 const SCORCHING_RAY_RAYS_PER_SLOT_ABOVE_BASE = 1;
+type ScorchingRayCountProgression = {
+  readonly kind: "linear";
+  readonly base: typeof SCORCHING_RAY_BASE_RAY_COUNT;
+  readonly baseLevel: typeof SCORCHING_RAY_BASE_LEVEL;
+  readonly perSlotAboveBase: typeof SCORCHING_RAY_RAYS_PER_SLOT_ABOVE_BASE;
+};
 
 export function supportedSpellAttackKind(
   attackKind: string,
@@ -314,6 +321,10 @@ export function supportedPreparedSpellAttackSequenceProfile(
       ? spell.mechanics.phases[0]
       : undefined;
   const damageEffect = phase?.kind === "attack_roll" ? phase.onHit[0] : null;
+  const countProgression =
+    phase?.kind === "attack_roll"
+      ? scorchingRayCountProgressionFromAttachment(phase.attachment)
+      : null;
   const range = spell.mechanics.range;
   if (
     spell.mechanics.family !== "activation" ||
@@ -329,11 +340,9 @@ export function supportedPreparedSpellAttackSequenceProfile(
     damageEffect?.kind !== "damage" ||
     damageEffect.damageType !== SCORCHING_RAY_DAMAGE_TYPE ||
     phase.onMiss.length !== 1 ||
-    phase.onMiss[0]?.kind !== "none"
+    phase.onMiss[0]?.kind !== "none" ||
+    countProgression === null
   ) {
-    return [];
-  }
-  if (scorchingRayTargetingIsCanonical(phase.attachment) !== true) {
     return [];
   }
   return spellSlots.flatMap(
@@ -342,7 +351,7 @@ export function supportedPreparedSpellAttackSequenceProfile(
         return [];
       }
       const targeting = spellAttackSequenceSlotTargeting(
-        phase.attachment,
+        countProgression,
         slot.spellLevel,
       );
       const damageExpr = supportedDamageAmountExpr({
@@ -893,20 +902,11 @@ function spellAttackSequenceTargeting(
   attachment: Attachment,
   characterLevel: number,
 ): CantripSpellAttackSequenceTargeting | null {
-  if (
-    attachment.kind !== "hole" ||
-    attachment.value.kind !== "target" ||
-    !sameStringSet(attachment.value.selection.targetKinds ?? [], [
-      "creature",
-      "object",
-    ])
-  ) {
+  const selection = creatureOrObjectTargetSelectionFromAttachment(attachment);
+  if (selection === null) {
     return null;
   }
-  const beamCount = eldritchBlastBeamCount(
-    attachment.value.selection,
-    characterLevel,
-  );
+  const beamCount = eldritchBlastBeamCount(selection, characterLevel);
   return beamCount === null
     ? null
     : {
@@ -917,23 +917,10 @@ function spellAttackSequenceTargeting(
 }
 
 function spellAttackSequenceSlotTargeting(
-  attachment: Attachment,
+  countProgression: ScorchingRayCountProgression,
   slotLevel: SpellSlotLevel,
 ): PreparedSpellAttackSequenceTargeting | null {
-  if (
-    attachment.kind !== "hole" ||
-    attachment.value.kind !== "target" ||
-    !sameStringSet(attachment.value.selection.targetKinds ?? [], [
-      "creature",
-      "object",
-    ])
-  ) {
-    return null;
-  }
-  const attackCount = scorchingRayAttackCount(
-    attachment.value.selection,
-    slotLevel,
-  );
+  const attackCount = scorchingRayAttackCount(countProgression, slotLevel);
   return attackCount === null
     ? null
     : {
@@ -943,21 +930,32 @@ function spellAttackSequenceSlotTargeting(
       };
 }
 
-function scorchingRayTargetingIsCanonical(attachment: Attachment): boolean {
-  if (
-    attachment.kind !== "hole" ||
-    attachment.value.kind !== "target" ||
-    !sameStringSet(attachment.value.selection.targetKinds ?? [], [
-      "creature",
-      "object",
-    ])
-  ) {
-    return false;
-  }
-  return scorchingRaySelectionIsCanonical(attachment.value.selection);
+function creatureOrObjectTargetSelectionFromAttachment(
+  attachment: Attachment,
+): TargetSelection | null {
+  const selection = targetSelectionFromAttachment(attachment);
+  return selection !== null &&
+    sameStringSet(selection.targetKinds ?? [], ["creature", "object"])
+    ? selection
+    : null;
 }
 
-function scorchingRaySelectionIsCanonical(selection: TargetSelection): boolean {
+function scorchingRayCountProgressionFromAttachment(
+  attachment: Attachment,
+): ScorchingRayCountProgression | null {
+  const selection = creatureOrObjectTargetSelectionFromAttachment(attachment);
+  return selection !== null && scorchingRaySelectionIsCanonical(selection)
+    ? selection.count
+    : null;
+}
+
+function scorchingRaySelectionIsCanonical(
+  selection: TargetSelection,
+): selection is TargetSelection & {
+  readonly mode: "choose_up_to";
+  readonly repeatsAllowed: true;
+  readonly count: ScorchingRayCountProgression;
+} {
   if (selection.mode !== "choose_up_to" || selection.repeatsAllowed !== true) {
     return false;
   }
@@ -972,19 +970,15 @@ function scorchingRaySelectionIsCanonical(selection: TargetSelection): boolean {
 }
 
 function scorchingRayAttackCount(
-  selection: TargetSelection,
+  countProgression: ScorchingRayCountProgression,
   slotLevel: SpellSlotLevel,
 ): ScorchingRayRayCount | null {
-  if (!scorchingRaySelectionIsCanonical(selection)) {
-    return null;
-  }
-  const slotOffset = Number(slotLevel) - SCORCHING_RAY_BASE_LEVEL;
+  const slotOffset = Number(slotLevel) - countProgression.baseLevel;
   if (slotOffset < 0) {
     return null;
   }
   return scorchingRayRayCount(
-    SCORCHING_RAY_BASE_RAY_COUNT +
-      slotOffset * SCORCHING_RAY_RAYS_PER_SLOT_ABOVE_BASE,
+    countProgression.base + slotOffset * countProgression.perSlotAboveBase,
   );
 }
 
@@ -1076,14 +1070,11 @@ function isFireDamageObjectIgnitionShape(input: {
 export function spellAttackDamageTargeting(
   attachment: Attachment,
 ): SpellAttackDamageTargeting | null {
-  if (
-    attachment.kind !== "hole" ||
-    attachment.value.kind !== "target" ||
-    attachment.value.selection.mode !== "one"
-  ) {
+  const selection = targetSelectionFromAttachment(attachment);
+  if (selection === null || selection.mode !== "one") {
     return null;
   }
-  const targetKinds = attachment.value.selection.targetKinds;
+  const targetKinds = selection.targetKinds;
   if (targetKinds === undefined || sameStringSet(targetKinds, ["creature"])) {
     return { kind: "singleCombatant" };
   }
