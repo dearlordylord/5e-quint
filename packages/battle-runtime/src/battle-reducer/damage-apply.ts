@@ -110,6 +110,7 @@ import {
   flySpeedGrantEndFallCleanupFramesForExpiredEffects,
 } from "./fly-speed-grant-end-fall-cleanup.ts";
 import {
+  checkHideousLaughterDamageRepeatSaveFills,
   hideousLaughterDamageRepeatSaveHoles,
   hideousLaughterRepeatSavingThrowOutcomeHole,
   validateHideousLaughterRepeatSavingThrowOutcome,
@@ -693,43 +694,12 @@ export function damageLifecycleHideousLaughterDamageRepeatSaveFillCheck(input: {
   readonly damageAmount: number;
   readonly fills: readonly SavingThrowOutcomeFill[];
   readonly damageEventKey?: string | undefined;
-}):
-  | {
-      readonly tag: "ok";
-      readonly holes: readonly HideousLaughterRepeatSaveHole[];
-    }
-  | {
-      readonly tag: "needsHoles";
-      readonly holes: readonly HideousLaughterRepeatSaveHole[];
-    }
-  | { readonly tag: "invalid"; readonly message: string } {
+}): ReturnType<typeof checkHideousLaughterDamageRepeatSaveFills> {
   const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles(input);
-  const missingHoles = holes.filter(
-    (hole) => !input.fills.some((fill) => fill.holeId === hole.holeId),
-  );
-  if (missingHoles.length > 0) {
-    return { tag: "needsHoles", holes: missingHoles };
-  }
-  const invalidFill = input.fills.find((fill) => {
-    const hole = holes.find((candidate) => candidate.holeId === fill.holeId);
-    return (
-      hole === undefined ||
-      validateHideousLaughterRepeatSavingThrowOutcome(
-        fill.value,
-        hole.hideousLaughterRepeatSave.targetId,
-      ) !== null
-    );
+  return checkHideousLaughterDamageRepeatSaveFills({
+    holes,
+    fills: input.fills,
   });
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (invalidFill !== undefined) {
-    return {
-      tag: "invalid",
-      message:
-        "Hideous Laughter damage repeat save fill must match a requested damaged target.",
-    };
-  }
-  /* v8 ignore stop */
-  return { tag: "ok", holes };
 }
 
 export function damageLifecycleHideousLaughterDamageRepeatSaveHoles(input: {
@@ -755,9 +725,6 @@ function wardingBondSharedDamageHideousLaughterRepeatSaveHoles(input: {
   readonly damageAmount: number;
   readonly damageEventKey?: string | undefined;
 }): ReturnType<typeof hideousLaughterDamageRepeatSaveHoles> {
-  if (input.damageAmount <= 0) {
-    return [];
-  }
   return wardingBondDamageShareCasters(input.state, input.target).flatMap(
     (caster) =>
       hideousLaughterDamageRepeatSaveHoles(caster, input.damageEventKey),

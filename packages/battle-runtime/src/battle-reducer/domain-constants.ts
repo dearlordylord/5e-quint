@@ -104,8 +104,10 @@ export const CHROMATIC_ORB_CONTINUATION_LIMIT_KINDS = [
   "max_leaps_from_slot_level",
   "exclude_already_targeted_in_same_cast",
 ] as const;
-export const HIDEOUS_LAUGHTER_REPEAT_SAVE_HOLE_KEY_PREFIX =
-  "battle:hideous-laughter-repeat-save:";
+export const HIDEOUS_LAUGHTER_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX =
+  "battle:hideous-laughter-repeat-save:end-turn:";
+export const HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX =
+  "battle:hideous-laughter-repeat-save:damage:";
 export const HIDEOUS_LAUGHTER_DURATION_TICKS = elapsedTimeTicks(10);
 export const SLOW_ACTIVE_PENALTIES_SPEED_RATIO = {
   numerator: 1,

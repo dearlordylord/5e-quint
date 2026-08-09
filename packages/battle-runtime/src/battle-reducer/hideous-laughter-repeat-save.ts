@@ -2,6 +2,7 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { Match } from "effect";
 import type {
   BattleCreatureState,
   BattleFill,
@@ -11,7 +12,10 @@ import type {
   BattleSavingThrowOutcomeValue,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
-import { HIDEOUS_LAUGHTER_REPEAT_SAVE_HOLE_KEY_PREFIX } from "./domain-constants.ts";
+import {
+  HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX,
+  HIDEOUS_LAUGHTER_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX,
+} from "./domain-constants.ts";
 import { uniqueSavingThrowRollModeProjections } from "./saving-throw-roll-mode-projections.ts";
 import { wardingBondSavingThrowFlatBonusProjectionsForTarget } from "./warding-bond.ts";
 
@@ -21,6 +25,26 @@ export type HideousLaughterEffect = Extract<
   BattleCreatureState["activeEffects"][number],
   { readonly kind: "hideousLaughter" }
 >;
+
+type HideousLaughterRepeatSaveTrigger =
+  BattleHideousLaughterRepeatSavingThrowOutcomeHole["hideousLaughterRepeatSave"]["trigger"];
+type SavingThrowOutcomeFill = Extract<
+  BattleFill,
+  { readonly kind: "savingThrowOutcome" }
+>;
+type HideousLaughterDamageRepeatSaveFillCheckResult =
+  | {
+      readonly tag: "ok";
+      readonly holes: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[];
+    }
+  | {
+      readonly tag: "needsHoles";
+      readonly holes: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[];
+    }
+  | { readonly tag: "invalid"; readonly message: string };
+
+const HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_FILL_HOLE_MISMATCH_MESSAGE =
+  "Hideous Laughter damage repeat save fills must match every requested damaged target exactly once.";
 
 export function hideousLaughterEffects(
   combatant: BattleCreatureState | undefined,
@@ -37,20 +61,35 @@ function repeatSaveKeyPart(value: string): string {
   return encodeURIComponent(value);
 }
 
+function hideousLaughterRepeatSaveHoleKeyPrefix(
+  trigger: HideousLaughterRepeatSaveTrigger,
+): string {
+  return Match.value(trigger).pipe(
+    Match.when(
+      "endTurn",
+      () => HIDEOUS_LAUGHTER_END_TURN_REPEAT_SAVE_HOLE_KEY_PREFIX,
+    ),
+    Match.when(
+      "damage",
+      () => HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX,
+    ),
+    Match.exhaustive,
+  );
+}
+
 export function hideousLaughterRepeatSavingThrowOutcomeHole(
   targetId: CombatantId,
   effect: HideousLaughterEffect,
-  trigger: "endTurn" | "damage",
+  trigger: HideousLaughterRepeatSaveTrigger,
   damageEventKey: string = DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY,
   targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
 ): BattleHideousLaughterRepeatSavingThrowOutcomeHole {
   const key = [
-    HIDEOUS_LAUGHTER_REPEAT_SAVE_HOLE_KEY_PREFIX,
+    hideousLaughterRepeatSaveHoleKeyPrefix(trigger),
     [
       targetId,
       effect.sourceCombatantId,
       effect.sourceProcedureRef,
-      trigger,
       ...(trigger === "damage" ? [damageEventKey] : []),
     ]
       .map(repeatSaveKeyPart)
@@ -83,7 +122,7 @@ export function hideousLaughterRepeatSavingThrowOutcomeHole(
 function hideousLaughterRepeatSavingThrowRollModeProjections(
   targetId: CombatantId,
   effect: HideousLaughterEffect,
-  trigger: "endTurn" | "damage",
+  trigger: HideousLaughterRepeatSaveTrigger,
 ): readonly BattleSavingThrowRollModeProjection[] {
   const damageRepeatSaveRollModeProjections: readonly BattleSavingThrowRollModeProjection[] =
     trigger === "damage" ? [{ targetId, rollMode: "advantage" }] : [];
@@ -115,26 +154,18 @@ export function hideousLaughterDamageRepeatSaveHoles(
 }
 
 export function isHideousLaughterDamageRepeatSaveFill(
-  fill: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>,
+  fill: SavingThrowOutcomeFill,
 ): boolean {
-  const holeIdString = String(fill.holeId);
-  if (!holeIdString.startsWith(HIDEOUS_LAUGHTER_REPEAT_SAVE_HOLE_KEY_PREFIX)) {
-    return false;
-  }
-  const [, , , trigger] = holeIdString
-    .slice(HIDEOUS_LAUGHTER_REPEAT_SAVE_HOLE_KEY_PREFIX.length)
-    .split(":");
-  return trigger === "damage";
+  return String(fill.holeId).startsWith(
+    HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_HOLE_KEY_PREFIX,
+  );
 }
 
 export function hideousLaughterDamageRepeatSaveFillsForTarget(
   target: BattleCreatureState,
-  fills: readonly Extract<
-    BattleFill,
-    { readonly kind: "savingThrowOutcome" }
-  >[],
+  fills: readonly SavingThrowOutcomeFill[],
   damageEventKey: string = DEFAULT_DAMAGE_REPEAT_SAVE_EVENT_KEY,
-): readonly Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>[] {
+): readonly SavingThrowOutcomeFill[] {
   const holeIds = new Set(
     hideousLaughterDamageRepeatSaveHoles(target, damageEventKey).map(
       (hole) => hole.holeId,
@@ -146,25 +177,24 @@ export function hideousLaughterDamageRepeatSaveFillsForTarget(
 export function hideousLaughterDamageRepeatSaveFillCheck(input: {
   readonly target: BattleCreatureState;
   readonly damageAmount: number;
-  readonly fills: readonly Extract<
-    BattleFill,
-    { readonly kind: "savingThrowOutcome" }
-  >[];
+  readonly fills: readonly SavingThrowOutcomeFill[];
   readonly damageEventKey?: string | undefined;
-}):
-  | {
-      readonly tag: "ok";
-      readonly holes: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[];
-    }
-  | {
-      readonly tag: "needsHoles";
-      readonly holes: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[];
-    }
-  | { readonly tag: "invalid"; readonly message: string } {
+}): HideousLaughterDamageRepeatSaveFillCheckResult {
   const holes =
     input.damageAmount > 0
       ? hideousLaughterDamageRepeatSaveHoles(input.target, input.damageEventKey)
       : [];
+  return checkHideousLaughterDamageRepeatSaveFills({
+    holes,
+    fills: input.fills,
+  });
+}
+
+export function checkHideousLaughterDamageRepeatSaveFills(input: {
+  readonly holes: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[];
+  readonly fills: readonly SavingThrowOutcomeFill[];
+}): HideousLaughterDamageRepeatSaveFillCheckResult {
+  const { holes } = input;
   const missingHoles = holes.filter(
     (hole) => !input.fills.some((fill) => fill.holeId === hole.holeId),
   );
@@ -175,35 +205,35 @@ export function hideousLaughterDamageRepeatSaveFillCheck(input: {
   if (input.fills.length !== holes.length) {
     return {
       tag: "invalid",
-      message:
-        "Hideous Laughter repeat save fills are only valid for a damaged target affected by Hideous Laughter.",
+      message: HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_FILL_HOLE_MISMATCH_MESSAGE,
     };
   }
   /* v8 ignore stop */
-  const invalidFill = input.fills.find((fill) => {
-    const hole = holes.find((candidate) => candidate.holeId === fill.holeId);
-    return (
-      hole === undefined ||
-      validateHideousLaughterRepeatSavingThrowOutcome(
-        fill.value,
-        hole.hideousLaughterRepeatSave.targetId,
-      ) !== null
-    );
-  });
+  const invalidFillIssue = input.fills
+    .map((fill) => hideousLaughterDamageRepeatSaveFillIssue(fill, holes))
+    .find((issue): issue is string => issue !== null);
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (invalidFill !== undefined) {
+  if (invalidFillIssue !== undefined) {
     return {
       tag: "invalid",
-      message:
-        validateHideousLaughterRepeatSavingThrowOutcome(
-          invalidFill.value,
-          input.target.combatantId,
-        ) ??
-        "Hideous Laughter damage repeat save fill must match a requested damaged target.",
+      message: invalidFillIssue,
     };
   }
   /* v8 ignore stop */
   return { tag: "ok", holes };
+}
+
+function hideousLaughterDamageRepeatSaveFillIssue(
+  fill: SavingThrowOutcomeFill,
+  holes: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[],
+): string | null {
+  const hole = holes.find((candidate) => candidate.holeId === fill.holeId);
+  return hole === undefined
+    ? HIDEOUS_LAUGHTER_DAMAGE_REPEAT_SAVE_FILL_HOLE_MISMATCH_MESSAGE
+    : validateHideousLaughterRepeatSavingThrowOutcome(
+        fill.value,
+        hole.hideousLaughterRepeatSave.targetId,
+      );
 }
 
 export function validateHideousLaughterRepeatSavingThrowOutcome(

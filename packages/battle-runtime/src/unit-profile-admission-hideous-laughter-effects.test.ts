@@ -292,6 +292,22 @@ describe("QMBT14 deterministic Hideous Laughter effects admission", () => {
     expect(damageSaveHole.targetRollModes).toEqual([
       { targetId: spellTargetId, rollMode: "advantage" },
     ]);
+    const zeroDamage = applyBattleHitPointDamage({
+      state: cast.state,
+      target: laughed,
+      damageAmount: 0,
+      deathFailuresAtZeroHp: 1,
+      damageSourceId: spellCasterId,
+      hideousLaughterDamageRepeatSaves: [],
+    });
+    const zeroDamageTarget = requireCombatant(zeroDamage, spellTargetId);
+    expect(zeroDamageTarget.activeEffects).toContainEqual(
+      hideousLaughterEffect,
+    );
+    expect(hasCondition(zeroDamageTarget.conditions, "prone")).toBe(true);
+    expect(hasCondition(zeroDamageTarget.conditions, "incapacitated")).toBe(
+      true,
+    );
     const damaged = applyBattleHitPointDamage({
       state: cast.state,
       target: laughed,
