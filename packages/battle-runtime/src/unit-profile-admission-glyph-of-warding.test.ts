@@ -726,6 +726,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     if (created.tag !== "created") return;
     expect(created.effect.release).toEqual({
       kind: "spellGlyph",
+      executionKind: "ordinaryTriggeringCreature",
       storedProcedure: spellProcedureExecution(storedInvocation),
     });
     const added = addGlyphDurableOccurrence({ state, effect: created.effect });

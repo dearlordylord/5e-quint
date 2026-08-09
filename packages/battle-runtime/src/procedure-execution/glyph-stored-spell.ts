@@ -1,9 +1,10 @@
-import { Brand } from "effect";
+import { Brand, Match } from "effect";
 import type { SpellProcedureExecution } from "./spell-procedure-execution.ts";
 import type { SpellRuleExecutionFacts } from "./spell-rule-facts.ts";
 import type {
   PreparedSpellAccess,
   SpellSlotInvocationResource,
+  SpellTargeting,
 } from "./spell-invocation-vocabulary.ts";
 
 const GLYPH_STORED_IMMEDIATE_OR_OCCURRENCE_PROCEDURES = [
@@ -88,6 +89,140 @@ export type GlyphStoredSpellProcedureExecution =
   GlyphStoredSpellProcedureExecutionFacts &
     Brand.Brand<"GlyphStoredSpellProcedureExecution">;
 
+type GlyphStoredProcedureFor<
+  Procedure extends GlyphStoredSpellProcedureExecution["procedure"],
+> = Extract<
+  GlyphStoredSpellProcedureExecution,
+  { readonly procedure: Procedure }
+>;
+type GlyphStoredProcedureWithConcentration<Execution> = Execution & {
+  readonly spellRuleFacts: {
+    readonly duration: { readonly kind: "concentration" };
+  };
+};
+type GlyphStoredProcedureWithoutConcentration<Execution> = Execution & {
+  readonly spellRuleFacts: {
+    readonly duration: Exclude<
+      SpellRuleExecutionFacts["duration"],
+      { readonly kind: "concentration" }
+    >;
+  };
+};
+type GlyphStoredSingleCreatureTargeting =
+  | Extract<
+      SpellTargeting,
+      { readonly kind: "singleCombatant" | "singleCreatureOrObject" }
+    >
+  | (Extract<SpellTargeting, { readonly kind: "targetList" }> & {
+      readonly minTargets: 1;
+      readonly maxTargets: 1;
+    });
+const GLYPH_STORED_AREA_TARGETING_KINDS = [
+  "pointOriginSphere",
+  "pointOriginSphereDiameter",
+  "pointOriginCylinder",
+  "pointOriginCubeExcludingCaster",
+  "pointOriginCube",
+  "selfOriginCube",
+  "selfOriginCone",
+  "selfOriginLine",
+  "selfOriginEmanation",
+  "primaryTargetOriginEmanation",
+] as const satisfies ReadonlyArray<SpellTargeting["kind"]>;
+type GlyphStoredAreaTargetingKind =
+  (typeof GLYPH_STORED_AREA_TARGETING_KINDS)[number];
+type GlyphStoredAreaTargeting = Extract<
+  SpellTargeting,
+  { readonly kind: GlyphStoredAreaTargetingKind }
+>;
+type GlyphStoredProcedureWithTargeting<Execution, Targeting> = Execution & {
+  readonly targeting: Targeting;
+};
+type GlyphStoredConcentrationSingleCreatureProcedure<
+  Procedure extends GlyphStoredSpellProcedureExecution["procedure"],
+> = GlyphStoredProcedureWithTargeting<
+  GlyphStoredProcedureWithConcentration<GlyphStoredProcedureFor<Procedure>>,
+  GlyphStoredSingleCreatureTargeting
+>;
+type GlyphStoredNonConcentrationSingleCreatureSaveDamageProcedure =
+  GlyphStoredProcedureWithTargeting<
+    GlyphStoredProcedureWithoutConcentration<
+      GlyphStoredProcedureFor<"saveGatedDamage">
+    >,
+    GlyphStoredSingleCreatureTargeting
+  >;
+type GlyphStoredNonConcentrationAreaSaveDamageProcedure =
+  GlyphStoredProcedureWithTargeting<
+    GlyphStoredProcedureWithoutConcentration<
+      GlyphStoredProcedureFor<"saveGatedDamage">
+    >,
+    GlyphStoredAreaTargeting
+  >;
+type GlyphStoredOrdinaryProcedure = GlyphStoredProcedureFor<
+  "spellAttackDamage" | "chainedSpellAttackDamage" | "attackBurstSaveDamage"
+>;
+type GlyphStoredOrdinaryTriggeringCreatureProcedure =
+  | GlyphStoredNonConcentrationSingleCreatureSaveDamageProcedure
+  | GlyphStoredProcedureWithConcentration<
+      GlyphStoredProcedureFor<"spiritualWeaponAttackProxy">
+    >
+  | GlyphStoredProcedureWithoutConcentration<GlyphStoredOrdinaryProcedure>;
+
+export type GlyphStoredSpellRelease =
+  | {
+      readonly kind: "spellGlyph";
+      readonly executionKind: "areaOngoing";
+      readonly storedProcedure: GlyphStoredProcedureWithConcentration<
+        GlyphStoredProcedureFor<GlyphStoredAreaOngoingProcedure>
+      >;
+    }
+  | {
+      readonly kind: "spellGlyph";
+      readonly executionKind: "areaControl";
+      readonly storedProcedure: GlyphStoredProcedureWithConcentration<
+        GlyphStoredProcedureFor<GlyphStoredAreaControlProcedure>
+      >;
+    }
+  | {
+      readonly kind: "spellGlyph";
+      readonly executionKind: "greaseGroundHazard";
+      readonly storedProcedure: GlyphStoredProcedureWithoutConcentration<
+        GlyphStoredProcedureFor<"greaseGroundHazard">
+      >;
+    }
+  | {
+      readonly kind: "spellGlyph";
+      readonly executionKind: "saveGatedCondition";
+      readonly storedProcedure: GlyphStoredConcentrationSingleCreatureProcedure<"saveGatedCondition">;
+    }
+  | {
+      readonly kind: "spellGlyph";
+      readonly executionKind: "fullDurationSaveGatedDamage";
+      readonly storedProcedure: GlyphStoredConcentrationSingleCreatureProcedure<"saveGatedDamage">;
+    }
+  | {
+      readonly kind: "spellGlyph";
+      readonly executionKind: "ordinaryArea";
+      readonly storedProcedure: GlyphStoredNonConcentrationAreaSaveDamageProcedure;
+    }
+  | {
+      readonly kind: "spellGlyph";
+      readonly executionKind: "ordinaryTriggeringCreature";
+      readonly storedProcedure: GlyphStoredOrdinaryTriggeringCreatureProcedure;
+    }
+  | {
+      readonly kind: "spellGlyph";
+      readonly executionKind: "singleCreatureActiveEffect";
+      readonly storedProcedure: GlyphStoredConcentrationSingleCreatureProcedure<GlyphStoredSingleCreatureActiveEffectProcedure>;
+    }
+  | {
+      readonly kind: "spellGlyph";
+      readonly executionKind: "selfTransformation";
+      readonly storedProcedure: GlyphStoredProcedureWithConcentration<
+        GlyphStoredProcedureFor<GlyphStoredSelfTransformationProcedure>
+      >;
+    };
+
 const glyphStoredSpellProcedureExecutionBrand =
   Brand.nominal<GlyphStoredSpellProcedureExecution>();
 const glyphStoredSpellProcedures: ReadonlySet<
@@ -113,4 +248,201 @@ export function glyphStoredSpellProcedureExecution(
   return isGlyphStoredSpellProcedureExecutionFacts(execution)
     ? glyphStoredSpellProcedureExecutionBrand(execution)
     : null;
+}
+
+function glyphStoredProcedureTargetsOneCreature(
+  execution: GlyphStoredSpellProcedureExecution,
+): execution is GlyphStoredProcedureWithTargeting<
+  GlyphStoredSpellProcedureExecution,
+  GlyphStoredSingleCreatureTargeting
+> {
+  if (!("targeting" in execution)) return false;
+  return (
+    execution.targeting.kind === "singleCombatant" ||
+    execution.targeting.kind === "singleCreatureOrObject" ||
+    (execution.targeting.kind === "targetList" &&
+      execution.targeting.minTargets === 1 &&
+      execution.targeting.maxTargets === 1)
+  );
+}
+
+function glyphStoredProcedureTargetsArea(
+  execution: GlyphStoredSpellProcedureExecution,
+): execution is GlyphStoredProcedureWithTargeting<
+  GlyphStoredSpellProcedureExecution,
+  GlyphStoredAreaTargeting
+> {
+  if (!("targeting" in execution)) return false;
+  return GLYPH_STORED_AREA_TARGETING_KINDS.some(
+    (areaKind) => areaKind === execution.targeting.kind,
+  );
+}
+
+function glyphStoredProcedureRequiresConcentration(
+  execution: GlyphStoredSpellProcedureExecution,
+): execution is GlyphStoredProcedureWithConcentration<GlyphStoredSpellProcedureExecution> {
+  return execution.spellRuleFacts.duration.kind === "concentration";
+}
+
+function glyphStoredProcedureDoesNotRequireConcentration(
+  execution: GlyphStoredSpellProcedureExecution,
+): execution is GlyphStoredProcedureWithoutConcentration<GlyphStoredSpellProcedureExecution> {
+  return execution.spellRuleFacts.duration.kind !== "concentration";
+}
+
+function glyphStoredOrdinaryRelease(
+  storedProcedure: GlyphStoredOrdinaryProcedure,
+): Extract<
+  GlyphStoredSpellRelease,
+  { readonly executionKind: "ordinaryTriggeringCreature" }
+> | null {
+  if (!glyphStoredProcedureDoesNotRequireConcentration(storedProcedure))
+    return null;
+  return {
+    kind: "spellGlyph",
+    executionKind: "ordinaryTriggeringCreature",
+    storedProcedure,
+  };
+}
+
+function glyphStoredProcedureHasProcedure<
+  Procedure extends GlyphStoredSpellProcedureExecution["procedure"],
+>(
+  execution: GlyphStoredSpellProcedureExecution,
+  procedures: readonly Procedure[],
+): execution is GlyphStoredProcedureFor<Procedure> {
+  return procedures.some((procedure) => procedure === execution.procedure);
+}
+
+export function glyphStoredSpellRelease(
+  execution: SpellProcedureExecution,
+): GlyphStoredSpellRelease | null {
+  const storedProcedure = glyphStoredSpellProcedureExecution(execution);
+  if (storedProcedure === null) return null;
+
+  if (
+    glyphStoredProcedureHasProcedure(
+      storedProcedure,
+      GLYPH_STORED_AREA_ONGOING_PROCEDURES,
+    )
+  ) {
+    if (!glyphStoredProcedureRequiresConcentration(storedProcedure))
+      return null;
+    return {
+      kind: "spellGlyph",
+      executionKind: "areaOngoing",
+      storedProcedure,
+    };
+  } else if (
+    glyphStoredProcedureHasProcedure(
+      storedProcedure,
+      GLYPH_STORED_AREA_CONTROL_PROCEDURES,
+    )
+  ) {
+    if (!glyphStoredProcedureRequiresConcentration(storedProcedure))
+      return null;
+    return {
+      kind: "spellGlyph",
+      executionKind: "areaControl",
+      storedProcedure,
+    };
+  } else if (storedProcedure.procedure === "greaseGroundHazard") {
+    if (!glyphStoredProcedureDoesNotRequireConcentration(storedProcedure))
+      return null;
+    return {
+      kind: "spellGlyph",
+      executionKind: "greaseGroundHazard",
+      storedProcedure,
+    };
+  } else if (storedProcedure.procedure === "saveGatedCondition") {
+    if (
+      !glyphStoredProcedureRequiresConcentration(storedProcedure) ||
+      !glyphStoredProcedureTargetsOneCreature(storedProcedure)
+    ) {
+      return null;
+    }
+    return {
+      kind: "spellGlyph",
+      executionKind: "saveGatedCondition",
+      storedProcedure,
+    };
+  } else if (storedProcedure.procedure === "saveGatedDamage") {
+    if (glyphStoredProcedureRequiresConcentration(storedProcedure)) {
+      if (!glyphStoredProcedureTargetsOneCreature(storedProcedure)) return null;
+      return {
+        kind: "spellGlyph",
+        executionKind: "fullDurationSaveGatedDamage",
+        storedProcedure,
+      };
+    }
+    if (!glyphStoredProcedureDoesNotRequireConcentration(storedProcedure))
+      return null;
+    if (glyphStoredProcedureTargetsArea(storedProcedure)) {
+      return {
+        kind: "spellGlyph",
+        executionKind: "ordinaryArea",
+        storedProcedure,
+      };
+    }
+    if (!glyphStoredProcedureTargetsOneCreature(storedProcedure)) return null;
+    return {
+      kind: "spellGlyph",
+      executionKind: "ordinaryTriggeringCreature",
+      storedProcedure,
+    };
+  } else if (
+    glyphStoredProcedureHasProcedure(
+      storedProcedure,
+      GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_PROCEDURES,
+    )
+  ) {
+    if (
+      !glyphStoredProcedureRequiresConcentration(storedProcedure) ||
+      !glyphStoredProcedureTargetsOneCreature(storedProcedure)
+    ) {
+      return null;
+    }
+    return {
+      kind: "spellGlyph",
+      executionKind: "singleCreatureActiveEffect",
+      storedProcedure,
+    };
+  } else if (
+    glyphStoredProcedureHasProcedure(
+      storedProcedure,
+      GLYPH_STORED_SELF_TRANSFORMATION_PROCEDURES,
+    )
+  ) {
+    if (!glyphStoredProcedureRequiresConcentration(storedProcedure))
+      return null;
+    return {
+      kind: "spellGlyph",
+      executionKind: "selfTransformation",
+      storedProcedure,
+    };
+  } else if (storedProcedure.procedure === "spiritualWeaponAttackProxy") {
+    if (!glyphStoredProcedureRequiresConcentration(storedProcedure))
+      return null;
+    return {
+      kind: "spellGlyph",
+      executionKind: "ordinaryTriggeringCreature",
+      storedProcedure,
+    };
+  } else {
+    return Match.value(storedProcedure).pipe(
+      Match.when(
+        { procedure: "spellAttackDamage" },
+        glyphStoredOrdinaryRelease,
+      ),
+      Match.when(
+        { procedure: "chainedSpellAttackDamage" },
+        glyphStoredOrdinaryRelease,
+      ),
+      Match.when(
+        { procedure: "attackBurstSaveDamage" },
+        glyphStoredOrdinaryRelease,
+      ),
+      Match.exhaustive,
+    );
+  }
 }

@@ -34,7 +34,7 @@ import type {
   Round as RoundType,
   SpellSlotLevel,
 } from "@dnd/shared/types";
-import type { GlyphStoredSpellProcedureExecution } from "../procedure-execution/glyph-stored-spell.ts";
+import type { GlyphStoredSpellRelease } from "../procedure-execution/glyph-stored-spell.ts";
 import type {
   Ability,
   ActionRestriction,
@@ -338,10 +338,7 @@ export type GlyphDurableOccurrenceRelease =
       readonly kind: "explosiveRune";
       readonly damageType: DamageType;
     }
-  | {
-      readonly kind: "spellGlyph";
-      readonly storedProcedure: GlyphStoredSpellProcedureExecution;
-    };
+  | GlyphStoredSpellRelease;
 export type GlyphDurableOccurrenceActiveEffect = BattleSpellEffectBase & {
   readonly kind: "glyphDurableOccurrence";
   readonly sourceEffectId: BattleSpellEffectOccurrenceId;
