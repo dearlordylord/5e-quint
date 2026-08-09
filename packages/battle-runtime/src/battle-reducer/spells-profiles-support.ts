@@ -193,7 +193,7 @@ export function scalarBuffSpellTargeting(
     return { kind: "self" };
   }
   const selection = targetSelectionFromAttachment(attachment);
-  if (selection === null || !scalarBuffCreatureTargetSelection(selection)) {
+  if (selection === null || !creatureTargetSelection(selection)) {
     return null;
   }
   const targetCount = scalarBuffSpellTargetCount(
@@ -211,9 +211,7 @@ export function scalarBuffSpellTargeting(
       };
 }
 
-function scalarBuffCreatureTargetSelection(
-  selection: TargetSelection,
-): boolean {
+function creatureTargetSelection(selection: TargetSelection): boolean {
   return (
     selection.targetKinds === undefined ||
     sameStringSet(selection.targetKinds, ["creature"])
@@ -524,7 +522,7 @@ export function rollModifierSpellTargeting(
     return { kind: "selfAndChosenLegalTargets", minTargets: 1 };
   }
   const selection = targetSelectionFromAttachment(attachment);
-  if (selection === null) {
+  if (selection === null || !creatureTargetSelection(selection)) {
     return null;
   }
   if (selection.mode === "any_number") {

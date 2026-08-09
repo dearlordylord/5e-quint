@@ -575,6 +575,49 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     }
   });
 
+  test("roll modifier admission rejects object-target selections", () => {
+    const unsupportedTargetSelections = [
+      {
+        id: "synthetic_roll_modifier_object_target",
+        selection: { mode: "one", targetKinds: ["object"] },
+      },
+      {
+        id: "synthetic_roll_modifier_creature_object_targets",
+        selection: {
+          mode: "one",
+          targetKinds: ["creature", "object"],
+          objectFilter: {},
+        },
+      },
+    ] as const;
+
+    for (const { id, selection } of unsupportedTargetSelections) {
+      const spell = decodeSpellRecordForTest({
+        ...guidanceInput,
+        id,
+        name: id,
+        provenance: { kind: "synthetic-test", section: id },
+        mechanics: {
+          ...guidanceInput.mechanics,
+          attachment: {
+            ...guidanceInput.mechanics.attachment,
+            value: {
+              ...guidanceInput.mechanics.attachment.value,
+              selection,
+            },
+          },
+        },
+      });
+
+      expect(
+        maybeSpellAct({
+          session: spellBattle({ cantrips: [spell], spellSlots: [] }),
+          spellId: spell.id,
+        }),
+      ).toBeUndefined();
+    }
+  });
+
   test("pass without trace stores a fixed Stealth ability-check bonus on the caster and chosen creatures in the emanation", () => {
     const spell = spellRecord(passWithoutTraceUnitId);
     const secondTargetId = combatantId(
