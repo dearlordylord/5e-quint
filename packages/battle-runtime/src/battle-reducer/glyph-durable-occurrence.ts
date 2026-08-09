@@ -2385,6 +2385,7 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
     const spellDamageReductionRoll = spellDamageReductionRollForTarget(
       areaMembership.spellDamageReductionRolls,
       target,
+      damageByType,
     );
     const spellReduction = applyAvailableSpellDamageReduction(
       target,

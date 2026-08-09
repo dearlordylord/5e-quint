@@ -23,9 +23,11 @@ import type { BattleActiveEffect } from "../battle-state-execution.ts";
 import {
   activeSpellWeaponDamageRiders,
   applyAvailableSpellDamageReduction,
+  applySpellDamageReductionConsumption,
   applyAvailableSourceDamageRollPenalty,
   entriesAfterProportionalDamageReduction,
   ongoingFeatureDamageModifierApplies,
+  spellDamageReductionRollForTarget,
   type DamageAmountByTypeEntry,
 } from "./damage-helpers.ts";
 
@@ -131,6 +133,56 @@ function availableSourceDamageRollPenalty() {
 }
 
 describe("damage reduction helper boundaries", () => {
+  test("selects a target reduction roll by exact protocol identity", () => {
+    const first = availableSlashingReduction();
+    const eligibleEffect = first.target.activeEffects.find(
+      (effect) =>
+        effect.kind === "spellDamageReduction" &&
+        effect.damageType === "slashing" &&
+        !effect.usedThisTurn,
+    );
+    if (eligibleEffect?.kind !== "spellDamageReduction") {
+      throw new Error("Expected the first target's available reduction.");
+    }
+    const secondTargetId = combatantId("second-reduction-target");
+    const secondTarget = {
+      ...first.target,
+      combatantId: secondTargetId,
+      activeEffects: [
+        {
+          ...eligibleEffect,
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            "first-target-sourced-reduction",
+          ),
+          sourceCombatantId: first.target.combatantId,
+          expiresAt: {
+            kind: "concentration" as const,
+            combatantId: first.target.combatantId,
+          },
+        },
+      ],
+    };
+    const secondRequest = applyAvailableSpellDamageReduction(
+      secondTarget,
+      first.damageByType,
+      undefined,
+    );
+    if (secondRequest.tag !== "needsHoles") {
+      throw new Error("Expected the second target's reduction roll hole.");
+    }
+    const secondHole = requireHole(secondRequest.holes, "rolledDice");
+    const firstRoll = damageRollFillWithGroups(first.hole, [[3]]);
+    const secondRoll = damageRollFillWithGroups(secondHole, [[2]]);
+
+    expect(
+      spellDamageReductionRollForTarget(
+        [secondRoll, firstRoll],
+        first.target,
+        first.damageByType,
+      ),
+    ).toEqual(firstRoll);
+  });
+
   test("accepts the requested roll and rejects mismatched or invalid dice fills", () => {
     const { target, damageByType, hole } = availableSlashingReduction();
     const validRoll = damageRollFillWithGroups(hole, [[3]]);
@@ -149,6 +201,40 @@ describe("damage reduction helper boundaries", () => {
       target.activeEffects.map((effect, index) =>
         index === 1 ? { ...effect, usedThisTurn: true } : effect,
       ),
+    );
+
+    const consumed = applySpellDamageReductionConsumption(
+      target,
+      applied.consumption,
+    );
+    expect(consumed).toEqual(applied.target);
+    expect(
+      applySpellDamageReductionConsumption(consumed, applied.consumption),
+    ).toEqual(consumed);
+
+    const targetAfterEffectTeardown = {
+      ...target,
+      activeEffects: target.activeEffects.filter(
+        (effect) => effect.kind !== "spellDamageReduction",
+      ),
+    };
+    expect(
+      applySpellDamageReductionConsumption(
+        targetAfterEffectTeardown,
+        applied.consumption,
+      ),
+    ).toEqual(targetAfterEffectTeardown);
+    const mismatchedTarget = {
+      ...target,
+      combatantId: combatantId("unrelated-reduction-target"),
+    };
+    expect(() =>
+      applySpellDamageReductionConsumption(
+        mismatchedTarget,
+        applied.consumption,
+      ),
+    ).toThrow(
+      "Resolved spell damage reduction must belong to its application target.",
     );
 
     expect(

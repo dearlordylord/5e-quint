@@ -25,6 +25,7 @@ import { ATTACK_RESOLVERS } from "./battle-reducer/attack-main.ts";
 import { attackDamageInterruptionFrame } from "./battle-reducer/attack-damage-events.ts";
 import {
   burningHandsUnitId,
+  flameStrikeUnitId,
   hideousLaughterDurationTicks,
   hideousLaughterUnitId,
   iceKnifeUnitId,
@@ -682,6 +683,50 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     expect(
       requireCombatant(resolved.state, spellCasterId).concentration,
     ).toBeNull();
+  });
+
+  test("multi-target save damage preserves an earlier Warding Bond share on a later direct target", () => {
+    const session = damageSpellTurnSession(flameStrikeUnitId, [
+      { spellLevel: 5, count: 1 },
+      { spellLevel: 2, count: 1 },
+    ]);
+    const act = spellAct({
+      session,
+      spellId: flameStrikeUnitId,
+      slotLevel: 5,
+    });
+    const save = requireHole(act.initialHoles, "savingThrowOutcome");
+    const saveFill = savingThrowOutcomeFill(save, [
+      { targetId: spellTargetId, succeeded: false },
+      { targetId: spellCasterId, succeeded: false },
+    ]);
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [saveFill],
+      }),
+      "rolledDice",
+    );
+    const resolved = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        saveFill,
+        damageRollFillWithGroups(damage, [
+          [1, 1, 1, 1, 1],
+          [1, 1, 1, 1, 1],
+        ]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        `Expected multi-target Flame Strike damage to resolve: ${JSON.stringify(resolved)}`,
+      );
+    }
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(8);
+    expect(requireCombatant(resolved.state, spellCasterId).hp).toBe(0);
   });
 
   test("attack-burst spell damage requests the linked caster Concentration save", () => {

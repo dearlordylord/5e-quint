@@ -3048,10 +3048,6 @@ function resolveSpellActInternal(
     return invalidResult(input.state, "invalidFill", effectiveDamageValidation);
   }
   /* v8 ignore stop */
-  const spellReductionRoll = spellDamageReductionRollForTarget(
-    fillSet.spellDamageReductionRolls,
-    target,
-  );
   const spellDamageByType = spellDamageByTypeForTarget(
     target,
     damageInvocation,
@@ -3059,6 +3055,11 @@ function resolveSpellActInternal(
     spellDamageResult,
     spellMarkedDamageRiders,
     spellAttackHit && critical,
+  );
+  const spellReductionRoll = spellDamageReductionRollForTarget(
+    fillSet.spellDamageReductionRolls,
+    target,
+    spellDamageByType,
   );
   const damageSource = spellDamageBaseState.combatants.get(subject.actorId);
   const expectedSourcePenaltyHole =

@@ -239,6 +239,7 @@ export function resolveDragonsBreathExhaleCommand(
     const spellDamageReductionRoll = spellDamageReductionRollForTarget(
       spellDamageReductionRolls,
       target,
+      damageByType,
     );
     const spellReduction = applyAvailableSpellDamageReduction(
       target,

@@ -38,6 +38,7 @@ import {
   spellDamageReductionRollForTarget,
   sourceDamageRollPenaltyRollHoleForDamageRoll,
   sourceDamageRollPenaltyRollForDamageRoll,
+  type SpellDamageReductionConsumption,
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
 import {
@@ -67,9 +68,9 @@ import {
   applyFailedSaveSpellActiveEffects,
   applyFailedSaveSpellConditionEffects,
   applySaveGatedConditionImmunityEffects,
+  applyResolvedSpellDamage,
   selectFailedSaveConditionEffect,
   saveGatedAttackRollAdvantageInvocationIsFaerieFire,
-  applySpellDamage,
   saveGateDamageResultForOutcome,
   commandOptionChoiceHole,
   carefulSpellProtectedTargetsHoleId,
@@ -1509,10 +1510,9 @@ export function resolveSaveGateDamageSpellAct(input: {
   const selectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
-  const saveDamageResultByTargetId = new Map(
-    savingThrowOutcomes.outcomes.map((outcome) => [
-      outcome.targetId,
-      potentCantripSaveDamageResultForOutcome({
+  const damagingTargetOutcomes = savingThrowOutcomes.outcomes.flatMap(
+    (outcome) => {
+      const saveDamageResult = potentCantripSaveDamageResultForOutcome({
         state: stateAfterCastConcentrationBreak,
         actorId: input.actorId,
         targetId: outcome.targetId,
@@ -1520,15 +1520,21 @@ export function resolveSaveGateDamageSpellAct(input: {
         savingThrowSucceeded: outcome.succeeded,
         carefulSpellProtectedTargetIds:
           metamagicSelections.carefulSpellProtectedTargetIds,
-      }),
-    ]),
+      });
+      return saveDamageResult === "none"
+        ? []
+        : [
+            {
+              target: stateAfterCastConcentrationBreak.combatants.get(
+                outcome.targetId,
+              )!,
+              saveDamageResult,
+            },
+          ];
+    },
   );
-  const saveDamageResultForTarget = (targetId: CombatantId): SaveDamageResult =>
-    saveDamageResultByTargetId.get(targetId) ?? "none";
-  const damageTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
-    saveDamageResultForTarget(outcome.targetId) === "none"
-      ? []
-      : [outcome.targetId],
+  const damageTargets = damagingTargetOutcomes.map(
+    ({ target }) => target.combatantId,
   );
   const objectDamageFacts = postSaveAreaObjectDamageFacts({
     area: savingThrowArea,
@@ -1630,22 +1636,18 @@ export function resolveSaveGateDamageSpellAct(input: {
   const sourceCombatant = stateAfterCastConcentrationBreak.combatants.get(
     input.actorId,
   );
-  const targetDamageInputs = damageTargets.flatMap((targetId) => {
-    const target = stateAfterCastConcentrationBreak.combatants.get(targetId);
-    return target === undefined
-      ? []
-      : [
-          {
-            target,
-            damageByType: spellDamageByTypeForTarget(
-              target,
-              damageInvocation,
-              damageRoll,
-              "full",
-            ),
-          },
-        ];
-  });
+  const targetDamageInputs = damagingTargetOutcomes.map(
+    ({ target, saveDamageResult }) => ({
+      target,
+      saveDamageResult,
+      damageByType: spellDamageByTypeForTarget(
+        target,
+        damageInvocation,
+        damageRoll,
+        "full",
+      ),
+    }),
+  );
   const expectedSourcePenaltyHoles = [
     ...targetDamageInputs.flatMap(({ damageByType }) => {
       const hole = sourceDamageRollPenaltyRollHoleForDamageRoll(
@@ -1680,149 +1682,124 @@ export function resolveSaveGateDamageSpellAct(input: {
     );
   }
   /* v8 ignore stop */
-  const targetSourcePenaltyChecks = targetDamageInputs.map(
-    ({ target, damageByType }) => ({
-      target,
-      ...applyAvailableSourceDamageRollPenalty(
+  const sourceAdjustedTargets: Array<{
+    readonly target: BattleCreatureState;
+    readonly saveDamageResult: SaveDamageResult;
+    readonly damageByType: ReadonlyMap<DamageType, number>;
+  }> = [];
+  const missingSourcePenaltyHoles: BattleHole[] = [];
+  for (const targetDamage of targetDamageInputs) {
+    const check = applyAvailableSourceDamageRollPenalty(
+      sourceCombatant,
+      targetDamage.damageByType,
+      damageRoll.holeId,
+      sourceDamageRollPenaltyRollForDamageRoll(
+        input.fillSet.sourceDamageRollPenaltyRolls,
         sourceCombatant,
-        damageByType,
+        targetDamage.damageByType,
         damageRoll.holeId,
-        sourceDamageRollPenaltyRollForDamageRoll(
-          input.fillSet.sourceDamageRollPenaltyRolls,
-          sourceCombatant,
-          damageByType,
-          damageRoll.holeId,
-        ),
       ),
-    }),
-  );
-  const objectSourcePenalty =
-    objectDamageByType === undefined
-      ? undefined
-      : applyAvailableSourceDamageRollPenalty(
-          sourceCombatant,
-          objectDamageByType,
-          damageRoll.holeId,
-          sourceDamageRollPenaltyRollForDamageRoll(
-            input.fillSet.sourceDamageRollPenaltyRolls,
-            sourceCombatant,
-            objectDamageByType,
-            damageRoll.holeId,
-          ),
-        );
-  const sourcePenaltyChecks = [
-    ...targetSourcePenaltyChecks,
-    ...(objectSourcePenalty === undefined ? [] : [objectSourcePenalty]),
-  ];
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (sourcePenaltyChecks.some((check) => check.tag === "invalid")) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Source damage roll penalty does not match an active source-side damage penalty.",
     );
+    if (check.tag === "invalid") {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      );
+    }
+    if (check.tag === "needsHoles") {
+      missingSourcePenaltyHoles.push(...check.holes);
+    } else {
+      sourceAdjustedTargets.push({
+        target: targetDamage.target,
+        saveDamageResult: targetDamage.saveDamageResult,
+        damageByType: check.damageByType,
+      });
+    }
   }
-  /* v8 ignore stop */
-  const missingSourcePenaltyHoles = deduplicateBattleHolesById(
-    sourcePenaltyChecks.flatMap((check) =>
-      check.tag === "needsHoles" ? [...check.holes] : [],
-    ),
-  );
+  let objectDamages: readonly BattleObjectDamageOutcome[] = [];
+  if (objectDamageByType !== undefined) {
+    const check = applyAvailableSourceDamageRollPenalty(
+      sourceCombatant,
+      objectDamageByType,
+      damageRoll.holeId,
+      sourceDamageRollPenaltyRollForDamageRoll(
+        input.fillSet.sourceDamageRollPenaltyRolls,
+        sourceCombatant,
+        objectDamageByType,
+        damageRoll.holeId,
+      ),
+    );
+    if (check.tag === "invalid") {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      );
+    }
+    if (check.tag === "needsHoles") {
+      missingSourcePenaltyHoles.push(...check.holes);
+    } else {
+      objectDamages = postSaveAreaObjectDamages({
+        facts: objectDamageFacts,
+        invocation: damageInvocation,
+        damageByType: check.damageByType,
+      });
+    }
+  }
   if (missingSourcePenaltyHoles.length > 0) {
     return needsHolesResult(input.input.state, input.input.subject, [
-      ...missingSourcePenaltyHoles,
+      ...deduplicateBattleHolesById(missingSourcePenaltyHoles),
     ]);
   }
-  const resolvedTargetSourcePenalties = targetSourcePenaltyChecks.map(
-    (check) => {
-      if (check.tag !== "ok") {
-        throw new Error(
-          "Target source penalties must be resolved after validation and hole discovery.",
-        );
-      }
-      return check;
-    },
-  );
-  const resolvedObjectSourcePenalty = (() => {
-    if (objectSourcePenalty === undefined) {
-      return undefined;
-    }
-    if (objectSourcePenalty.tag !== "ok") {
-      throw new Error(
-        "Object source penalty must be resolved after validation and hole discovery.",
-      );
-    }
-    return objectSourcePenalty;
-  })();
-  const objectDamages =
-    resolvedObjectSourcePenalty === undefined
-      ? []
-      : postSaveAreaObjectDamages({
-          facts: objectDamageFacts,
-          invocation: damageInvocation,
-          damageByType: resolvedObjectSourcePenalty.damageByType,
-        });
-  const spellReductionChecks = resolvedTargetSourcePenalties.map((check) => ({
-    target: check.target,
-    ...applyAvailableSpellDamageReduction(
-      check.target,
-      damageAmountByTypeAfterSaveDamageResult(
-        check.damageByType,
-        saveDamageResultForTarget(check.target.combatantId),
-      ),
+  const resolvedTargetDamages: Array<{
+    readonly target: BattleCreatureState;
+    readonly damageAmount: number;
+    readonly spellDamageReductionConsumption: SpellDamageReductionConsumption;
+  }> = [];
+  const missingSpellReductionHoles: BattleHole[] = [];
+  for (const sourceAdjusted of sourceAdjustedTargets) {
+    const damageAfterSave = damageAmountByTypeAfterSaveDamageResult(
+      sourceAdjusted.damageByType,
+      sourceAdjusted.saveDamageResult,
+    );
+    const check = applyAvailableSpellDamageReduction(
+      sourceAdjusted.target,
+      damageAfterSave,
       spellDamageReductionRollForTarget(
         input.fillSet.spellDamageReductionRolls,
-        check.target,
+        sourceAdjusted.target,
+        damageAfterSave,
       ),
-    ),
-  }));
-  const invalidSpellReductionCheck = spellReductionChecks.find(
-    (check) => check.tag === "invalid",
-  );
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (invalidSpellReductionCheck?.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Spell damage reduction roll is only valid for an available target-side damage reduction.",
     );
-  }
-  /* v8 ignore stop */
-  const missingSpellReductionHoles = deduplicateBattleHolesById(
-    spellReductionChecks.flatMap((check) =>
-      check.tag === "needsHoles" ? [...check.holes] : [],
-    ),
-  );
-  if (missingSpellReductionHoles.length > 0) {
-    return needsHolesResult(input.input.state, input.input.subject, [
-      ...missingSpellReductionHoles,
-    ]);
-  }
-  const resolvedSpellReductions = spellReductionChecks.map((check) => {
-    if (check.tag !== "ok") {
-      throw new Error(
-        "Spell reductions must be resolved after validation and hole discovery.",
+    if (check.tag === "invalid") {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Spell damage reduction roll is only valid for an available target-side damage reduction.",
       );
     }
-    return check;
-  });
-  const targetDamageProjectionById = new Map(
-    resolvedSpellReductions.map((check) => [
-      check.target.combatantId,
-      {
-        target: check.target,
+    if (check.tag === "needsHoles") {
+      missingSpellReductionHoles.push(...check.holes);
+    } else {
+      resolvedTargetDamages.push({
+        target: sourceAdjusted.target,
         damageAmount: damageAmountByTypeAfterTargetAdjustments(
           input.input.state,
           check.target,
           check.damageByType,
         ),
-      },
-    ]),
-  );
+        spellDamageReductionConsumption: check.consumption,
+      });
+    }
+  }
+  if (missingSpellReductionHoles.length > 0) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      ...deduplicateBattleHolesById(missingSpellReductionHoles),
+    ]);
+  }
 
-  const concentrationSaves = [...targetDamageProjectionById.values()].flatMap(
+  const concentrationSaves = resolvedTargetDamages.flatMap(
     ({ target, damageAmount }) =>
       damageLifecycleConcentrationSavingThrowHoles({
         state: stateAfterCastConcentrationBreak,
@@ -1870,16 +1847,16 @@ export function resolveSaveGateDamageSpellAct(input: {
       ),
     ]),
   );
-  const damageDispositionHoles = [
-    ...targetDamageProjectionById.values(),
-  ].flatMap(({ target, damageAmount }) => {
-    const hole = zeroHitPointReplacementDispositionHole({
-      damageSourceId: input.actorId,
-      target,
-      damageAmount,
-    });
-    return hole === null ? [] : [hole];
-  });
+  const damageDispositionHoles = resolvedTargetDamages.flatMap(
+    ({ target, damageAmount }) => {
+      const hole = zeroHitPointReplacementDispositionHole({
+        damageSourceId: input.actorId,
+        target,
+        damageAmount,
+      });
+      return hole === null ? [] : [hole];
+    },
+  );
   const damageDispositionValidation = damageDispositionFillsValidation({
     holes: damageDispositionHoles,
     fills: input.fillSet.damageDispositions,
@@ -1904,24 +1881,24 @@ export function resolveSaveGateDamageSpellAct(input: {
       ...missingDamageDispositionHoles,
     ]);
   }
-  const hideousLaughterSaveChecks = [
-    ...targetDamageProjectionById.values(),
-  ].map(({ target, damageAmount }) => {
-    const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-      state: stateAfterCastConcentrationBreak,
-      target,
-      damageAmount,
-    });
-    return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-      state: stateAfterCastConcentrationBreak,
-      target,
-      damageAmount,
-      fills: fillsMatchingHoleIds(
-        input.fillSet.hideousLaughterDamageRepeatSaves,
-        holes,
-      ),
-    });
-  });
+  const hideousLaughterSaveChecks = resolvedTargetDamages.map(
+    ({ target, damageAmount }) => {
+      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+        state: stateAfterCastConcentrationBreak,
+        target,
+        damageAmount,
+      });
+      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+        state: stateAfterCastConcentrationBreak,
+        target,
+        damageAmount,
+        fills: fillsMatchingHoleIds(
+          input.fillSet.hideousLaughterDamageRepeatSaves,
+          holes,
+        ),
+      });
+    },
+  );
   const invalidHideousLaughterSaveCheck = hideousLaughterSaveChecks.find(
     (check) => check.tag === "invalid",
   );
@@ -1976,15 +1953,15 @@ export function resolveSaveGateDamageSpellAct(input: {
     state: stateAfterCastConcentrationBreak,
     damageEventHoleId: damageRoll.holeId,
     damageSourceId: input.actorId,
-    targets: damageTargets.flatMap((targetId) => {
-      const damageAmount =
-        targetDamageProjectionById.get(targetId)?.damageAmount ?? 0;
+    targets: resolvedTargetDamages.flatMap(({ target, damageAmount }) => {
       return damageAmount > 0
         ? [
             {
-              targetId,
+              targetId: target.combatantId,
               damageAmount: toDamageAmount(damageAmount),
-              damageDisposition: damageDispositionByTargetId.get(targetId),
+              damageDisposition: damageDispositionByTargetId.get(
+                target.combatantId,
+              ),
             },
           ]
         : [];
@@ -2009,55 +1986,26 @@ export function resolveSaveGateDamageSpellAct(input: {
     );
   }
   /* v8 ignore stop */
-  const damaged = damageTargets.reduce((state, targetId) => {
+  const requireResolvedDamageTarget = (
+    state: BattleState,
+    targetId: BattleCreatureState["combatantId"],
+  ): BattleCreatureState => {
     const target = state.combatants.get(targetId);
-    if (target === undefined) {
-      return state;
+    if (target == null) {
+      throw new Error(
+        "A resolved spell damage target must remain in the battle state during sequential application.",
+      );
     }
-    const damageByType = spellDamageByTypeForTarget(
-      target,
-      damageInvocation,
-      damageRoll,
-      "full",
-    );
-    const sourcePenalty = applyAvailableSourceDamageRollPenalty(
-      state.combatants.get(input.actorId),
-      damageByType,
-      damageRoll.holeId,
-      sourceDamageRollPenaltyRollForDamageRoll(
-        input.fillSet.sourceDamageRollPenaltyRolls,
-        state.combatants.get(input.actorId),
-        damageByType,
-        damageRoll.holeId,
-      ),
-    );
-    if (sourcePenalty.tag !== "ok") {
-      return state;
-    }
-    const spellReduction = applyAvailableSpellDamageReduction(
-      target,
-      damageAmountByTypeAfterSaveDamageResult(
-        sourcePenalty.damageByType,
-        saveDamageResultForTarget(targetId),
-      ),
-      spellDamageReductionRollForTarget(
-        input.fillSet.spellDamageReductionRolls,
-        target,
-      ),
-    );
-    const damageAmountAfterSourcePenalty =
-      spellReduction.tag !== "ok"
-        ? 0
-        : damageAmountByTypeAfterTargetAdjustments(
-            input.input.state,
-            spellReduction.target,
-            spellReduction.damageByType,
-          );
+    return target;
+  };
+  const damaged = resolvedTargetDamages.reduce((state, resolvedDamage) => {
+    const targetId = resolvedDamage.target.combatantId;
+    const currentTarget = requireResolvedDamageTarget(state, targetId);
     const concentrationLifecycleHoles =
       damageLifecycleConcentrationSavingThrowHoles({
         state,
-        target,
-        damageAmount: damageAmountAfterSourcePenalty,
+        target: currentTarget,
+        damageAmount: resolvedDamage.damageAmount,
       });
     const concentrationLifecycleFills = fillsMatchingHoleIds(
       input.fillSet.concentrationSavingThrows,
@@ -2066,36 +2014,27 @@ export function resolveSaveGateDamageSpellAct(input: {
     const hideousLaughterLifecycleHoles =
       damageLifecycleHideousLaughterDamageRepeatSaveHoles({
         state,
-        target,
-        damageAmount: damageAmountAfterSourcePenalty,
+        target: currentTarget,
+        damageAmount: resolvedDamage.damageAmount,
       });
     const hideousLaughterLifecycleFills = fillsMatchingHoleIds(
       input.fillSet.hideousLaughterDamageRepeatSaves,
       hideousLaughterLifecycleHoles,
     );
-    return applySpellDamage(
+    return applyResolvedSpellDamage(
       state,
-      targetId,
-      damageInvocation,
-      damageRoll,
+      {
+        targetId,
+        damageAmount: resolvedDamage.damageAmount,
+        spellDamageReductionConsumption:
+          resolvedDamage.spellDamageReductionConsumption,
+      },
       false,
       {
         concentrationSavingThrow: concentrationSaveByTargetId.get(targetId),
         wardingBondDamageShareConcentrationSavingThrows:
           concentrationLifecycleFills,
         hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
-        saveDamageResult: saveDamageResultForTarget(targetId),
-        sourcePenaltyDamageByType: sourcePenalty.damageByType,
-        spellDamageReductionRoll: spellDamageReductionRollForTarget(
-          input.fillSet.spellDamageReductionRolls,
-          target,
-        ),
-        sourceDamageRollPenaltyRoll: sourceDamageRollPenaltyRollForDamageRoll(
-          input.fillSet.sourceDamageRollPenaltyRolls,
-          state.combatants.get(input.actorId),
-          damageByType,
-          damageRoll.holeId,
-        ),
         damageDisposition: damageDispositionByTargetId.get(targetId),
         damageSourceId: input.actorId,
         spatialFacts: input.fillSet.targetSpatialFacts,
@@ -2144,18 +2083,18 @@ export function resolveSaveGateDamageSpellAct(input: {
     return spentResources;
   }
   const nextState = spentResources.state;
-  const afterDamageEvents = damageTargets.map((targetId) => ({
-    damageSourceId: input.actorId,
-    damagedId: targetId,
-    damageAmount: toDamageAmount(
-      targetDamageProjectionById.get(targetId)?.damageAmount ?? 0,
-    ),
-    reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
-      facts: input.fillSet.targetSpatialFacts,
-      damagedId: targetId,
+  const afterDamageEvents = resolvedTargetDamages.map(
+    ({ target, damageAmount }) => ({
       damageSourceId: input.actorId,
+      damagedId: target.combatantId,
+      damageAmount: toDamageAmount(damageAmount),
+      reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+        facts: input.fillSet.targetSpatialFacts,
+        damagedId: target.combatantId,
+        damageSourceId: input.actorId,
+      }),
     }),
-  }));
+  );
   const forcedMovement = resolveFailedSaveForcedReactionMovement({
     state: nextState,
     subject: input.input.subject,

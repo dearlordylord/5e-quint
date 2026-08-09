@@ -402,8 +402,13 @@ export function isSourceDamageRollPenaltyRollFill(
   return fill.holeId.startsWith(SOURCE_DAMAGE_ROLL_PENALTY_ROLL_HOLE_PREFIX);
 }
 
+export type SpellDamageReductionIdentity = Omit<
+  SpellDamageReductionRoll,
+  "amount"
+>;
+
 export function spellDamageReductionRollProtocolId(
-  reduction: Omit<SpellDamageReductionRoll, "amount">,
+  reduction: SpellDamageReductionIdentity,
 ): string {
   return [
     SPELL_DAMAGE_REDUCTION_ROLL_HOLE_PREFIX,
@@ -471,17 +476,68 @@ type AvailableSpellDamageReduction = {
   >;
 };
 
+export type SpellDamageReductionConsumption =
+  | { readonly kind: "none" }
+  | {
+      readonly kind: "spellDamageReduction";
+      readonly identity: SpellDamageReductionIdentity;
+    };
+
+export function applySpellDamageReductionConsumption(
+  target: BattleCreatureState,
+  consumption: SpellDamageReductionConsumption,
+): BattleCreatureState {
+  if (consumption.kind === "none") {
+    return target;
+  }
+  if (target.combatantId !== consumption.identity.targetId) {
+    throw new Error(
+      "Resolved spell damage reduction must belong to its application target.",
+    );
+  }
+  const effectIndex = target.activeEffects.findIndex(
+    (candidate) =>
+      candidate.kind === "spellDamageReduction" &&
+      candidate.sourceProcedureRef ===
+        consumption.identity.sourceProcedureRef &&
+      candidate.sourceCombatantId === consumption.identity.sourceCombatantId &&
+      candidate.damageType === consumption.identity.damageType,
+  );
+  const effect = target.activeEffects[effectIndex];
+  if (effect?.kind !== "spellDamageReduction") {
+    return target;
+  }
+  if (effect.usedThisTurn) {
+    return target;
+  }
+  return {
+    ...target,
+    activeEffects: target.activeEffects.map((candidate, index) =>
+      index === effectIndex ? { ...effect, usedThisTurn: true } : candidate,
+    ),
+  };
+}
+
 function spellDamageReductionRollForAvailable(
   target: BattleCreatureState,
   available: AvailableSpellDamageReduction,
 ): SpellDamageReductionRoll {
+  return {
+    ...spellDamageReductionIdentityForAvailable(target, available),
+    amount: available.effect.amount,
+  };
+}
+
+function spellDamageReductionIdentityForAvailable(
+  target: BattleCreatureState,
+  available: AvailableSpellDamageReduction,
+): SpellDamageReductionIdentity {
   const { effect } = available;
   return {
     sourceProcedureRef: effect.sourceProcedureRef,
     sourceCombatantId: effect.sourceCombatantId,
     targetId: target.combatantId,
     damageType: effect.damageType,
-    amount: effect.amount,
   };
 }
 
@@ -529,8 +585,14 @@ export function availableSourceDamageRollPenalty(
 export function spellDamageReductionRollForTarget(
   rolls: readonly Extract<BattleFill, { readonly kind: "rolledDice" }>[],
   target: BattleCreatureState,
+  damageByType: ReadonlyMap<DamageType, number>,
 ): Extract<BattleFill, { readonly kind: "rolledDice" }> | undefined {
-  return rolls.find((roll) => roll.holeId.includes(`:${target.combatantId}:`));
+  const reduction = availableSpellDamageReduction(target, damageByType);
+  if (reduction === null) {
+    return undefined;
+  }
+  const expectedHoleId = spellDamageReductionRollHole(reduction).holeId;
+  return rolls.find((roll) => roll.holeId === expectedHoleId);
 }
 
 export function sourceDamageRollPenaltyRollForDamageRoll(
@@ -585,13 +647,19 @@ export function applyAvailableSpellDamageReduction(
       readonly tag: "ok";
       readonly target: BattleCreatureState;
       readonly damageByType: ReadonlyMap<DamageType, number>;
+      readonly consumption: SpellDamageReductionConsumption;
     }
   | { readonly tag: "needsHoles"; readonly holes: readonly BattleHole[] }
   | { readonly tag: "invalid" } {
   const available = availableSpellDamageReductionEffect(target, damageByType);
   if (roll === undefined) {
     if (available === null) {
-      return { tag: "ok", target, damageByType };
+      return {
+        tag: "ok",
+        target,
+        damageByType,
+        consumption: { kind: "none" },
+      };
     }
     return {
       tag: "needsHoles",
@@ -634,6 +702,10 @@ export function applyAvailableSpellDamageReduction(
     tag: "ok",
     target: { ...target, activeEffects },
     damageByType: reducedDamageByType,
+    consumption: {
+      kind: "spellDamageReduction",
+      identity: spellDamageReductionIdentityForAvailable(target, available),
+    },
   };
 }
 

@@ -57,11 +57,13 @@ import {
 } from "./spell-effects.ts";
 import {
   addDamageAmountForType,
+  applySpellDamageReductionConsumption,
   applyAvailableSourceDamageRollPenalty,
   applyAvailableSpellDamageReduction,
   damageAmountByTypeEntriesToMap,
   damageAmountByTypeAfterTargetAdjustments,
   damageAmountByTypeMapEntries,
+  type SpellDamageReductionConsumption,
 } from "./damage-helpers.ts";
 import { applyBattleHitPointDamage } from "./damage-apply.ts";
 import {
@@ -2010,7 +2012,7 @@ function attackDamageChoiceUnsupportedIssue(
   return attackDamageAbilityModifierChoiceUnsupportedIssue(fill);
 }
 
-type SpellDamageContext = {
+type ResolvedSpellDamageContext = {
   readonly concentrationSavingThrow?:
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
@@ -2024,8 +2026,14 @@ type SpellDamageContext = {
     | readonly Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>[]
     | undefined;
   readonly hideousLaughterDamageRepeatSaveEventKey?: string | undefined;
-  readonly saveDamageResult?: SaveDamageResult | undefined;
   readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
+  readonly damageSourceId?: CombatantId | undefined;
+  readonly spatialFacts: readonly BattleTargetSpatialFact[];
+  readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
+};
+
+type SpellDamageContext = ResolvedSpellDamageContext & {
+  readonly saveDamageResult?: SaveDamageResult | undefined;
   readonly spellMarkedDamageRiders?:
     | readonly SpellMarkedDamageRider[]
     | undefined;
@@ -2041,10 +2049,62 @@ type SpellDamageContext = {
   readonly sourcePenaltyDamageByType?:
     | ReadonlyMap<DamageType, number>
     | undefined;
-  readonly damageSourceId?: CombatantId | undefined;
-  readonly spatialFacts: readonly BattleTargetSpatialFact[];
-  readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
 };
+
+export function applyResolvedSpellDamage(
+  state: BattleState,
+  resolved: {
+    readonly targetId: BattleCreatureState["combatantId"];
+    readonly damageAmount: number;
+    readonly spellDamageReductionConsumption: SpellDamageReductionConsumption;
+  },
+  critical: boolean,
+  context: ResolvedSpellDamageContext,
+): BattleState {
+  const {
+    concentrationSavingThrow,
+    wardingBondDamageShareConcentrationSavingThrows,
+    hideousLaughterDamageRepeatSaves,
+    hideousLaughterDamageRepeatSaveEventKey,
+    damageDisposition = { kind: "ordinaryDamage" },
+    damageSourceId,
+    spatialFacts,
+    relationshipDecisions,
+  } = context;
+  const liveTarget = state.combatants.get(resolved.targetId);
+  if (liveTarget == null) {
+    throw new Error(
+      "A resolved spell damage target must remain in the battle state during application.",
+    );
+  }
+  const target = applySpellDamageReductionConsumption(
+    liveTarget,
+    resolved.spellDamageReductionConsumption,
+  );
+  return applyBattleHitPointDamage({
+    state,
+    target,
+    damageAmount: resolved.damageAmount,
+    deathFailuresAtZeroHp: critical ? 2 : 1,
+    damageDisposition,
+    damageSourceId,
+    spatialFacts,
+    ...optionalProperty("relationshipDecisions", relationshipDecisions),
+    concentrationSavingThrow,
+    ...optionalProperty(
+      "wardingBondDamageShareConcentrationSavingThrows",
+      wardingBondDamageShareConcentrationSavingThrows,
+    ),
+    ...optionalProperty(
+      "hideousLaughterDamageRepeatSaves",
+      hideousLaughterDamageRepeatSaves,
+    ),
+    ...optionalProperty(
+      "hideousLaughterDamageRepeatSaveEventKey",
+      hideousLaughterDamageRepeatSaveEventKey,
+    ),
+  });
+}
 
 export function applySpellDamage(
   state: BattleState,
@@ -2059,20 +2119,13 @@ export function applySpellDamage(
     return state;
   }
   const {
-    concentrationSavingThrow,
-    wardingBondDamageShareConcentrationSavingThrows,
-    hideousLaughterDamageRepeatSaves,
-    hideousLaughterDamageRepeatSaveEventKey,
     saveDamageResult = "full",
-    damageDisposition = { kind: "ordinaryDamage" },
     spellMarkedDamageRiders = [],
     spellDamageReductionRoll,
     spellDamageReductionRollHoleForReduction,
     sourceDamageRollPenaltyRoll,
     sourcePenaltyDamageByType,
     damageSourceId,
-    spatialFacts,
-    relationshipDecisions,
   } = context;
   const spellDamageByType = spellDamageByTypeForTarget(
     target,
@@ -2114,50 +2167,19 @@ export function applySpellDamage(
     reduction.target,
     reduction.damageByType,
   );
-  return applyBattleHitPointDamage({
+  return applyResolvedSpellDamage(
     state,
-    target: reduction.target,
-    damageAmount: effectiveDamage,
-    deathFailuresAtZeroHp: critical ? 2 : 1,
-    damageDisposition,
-    damageSourceId,
-    spatialFacts,
-    ...optionalProperty("relationshipDecisions", relationshipDecisions),
-    concentrationSavingThrow,
-    ...optionalProperty(
-      "wardingBondDamageShareConcentrationSavingThrows",
-      wardingBondDamageShareConcentrationSavingThrows,
-    ),
-    ...optionalProperty(
-      "hideousLaughterDamageRepeatSaves",
-      hideousLaughterDamageRepeatSaves,
-    ),
-    ...optionalProperty(
-      "hideousLaughterDamageRepeatSaveEventKey",
-      hideousLaughterDamageRepeatSaveEventKey,
-    ),
-  });
+    {
+      targetId,
+      damageAmount: effectiveDamage,
+      spellDamageReductionConsumption: reduction.consumption,
+    },
+    critical,
+    context,
+  );
 }
 
-type PreparedSlotSpellDamageContext = {
-  readonly concentrationSavingThrow?:
-    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
-    | undefined;
-  readonly wardingBondDamageShareConcentrationSavingThrows?:
-    | readonly Extract<
-        BattleFill,
-        { readonly kind: "concentrationSavingThrow" }
-      >[]
-    | undefined;
-  readonly hideousLaughterDamageRepeatSaves?:
-    | readonly Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>[]
-    | undefined;
-  readonly hideousLaughterDamageRepeatSaveEventKey?: string | undefined;
-  readonly damageDisposition?: BattleAttackDamageDisposition | undefined;
-  readonly damageSourceId?: CombatantId | undefined;
-  readonly spatialFacts: readonly BattleTargetSpatialFact[];
-  readonly relationshipDecisions?: BattleDamageRelationshipDecisions;
-};
+type PreparedSlotSpellDamageContext = ResolvedSpellDamageContext;
 
 export function applyPreparedSlotSpellDamage(
   state: BattleState,
@@ -2169,39 +2191,16 @@ export function applyPreparedSlotSpellDamage(
   if (target == null) {
     return state;
   }
-  const {
-    concentrationSavingThrow,
-    wardingBondDamageShareConcentrationSavingThrows,
-    hideousLaughterDamageRepeatSaves,
-    hideousLaughterDamageRepeatSaveEventKey,
-    damageDisposition = { kind: "ordinaryDamage" },
-    damageSourceId,
-    spatialFacts,
-    relationshipDecisions,
-  } = context;
-  return applyBattleHitPointDamage({
+  return applyResolvedSpellDamage(
     state,
-    target,
-    damageAmount,
-    deathFailuresAtZeroHp: 1,
-    damageDisposition,
-    damageSourceId,
-    spatialFacts,
-    ...optionalProperty("relationshipDecisions", relationshipDecisions),
-    concentrationSavingThrow,
-    ...optionalProperty(
-      "wardingBondDamageShareConcentrationSavingThrows",
-      wardingBondDamageShareConcentrationSavingThrows,
-    ),
-    ...optionalProperty(
-      "hideousLaughterDamageRepeatSaves",
-      hideousLaughterDamageRepeatSaves,
-    ),
-    ...optionalProperty(
-      "hideousLaughterDamageRepeatSaveEventKey",
-      hideousLaughterDamageRepeatSaveEventKey,
-    ),
-  });
+    {
+      targetId,
+      damageAmount,
+      spellDamageReductionConsumption: { kind: "none" },
+    },
+    false,
+    context,
+  );
 }
 
 export function spellDamageByTypeForTarget(
