@@ -429,12 +429,14 @@ export function requireCombatant(
   return combatant;
 }
 
-export function weaponAttackRollHole(input: {
+type WeaponAttackRollInput = {
   readonly session: BattleRuntimeSession;
   readonly attackName: "Longsword" | "Shortbow";
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
-}): Extract<BattleHole, { readonly kind: "attackRoll" }> {
+};
+
+function weaponAttackRollFacts(input: WeaponAttackRollInput) {
   const subject = discoverBattleActs(input.session).find(
     (act) =>
       act.subject.tag === "action" &&
@@ -450,14 +452,51 @@ export function weaponAttackRollHole(input: {
     resolveBattleSubject({ state: input.session.state, subject, fills: [] }),
     "targetChoice",
   );
-  return requireResultHole(
+  const targetFill = attackTargetFill(
+    targetHole,
+    input.actorId,
+    input.targetId,
+  );
+  const attackRoll = requireResultHole(
     resolveBattleSubject({
       state: input.session.state,
       subject,
-      fills: [attackTargetFill(targetHole, input.actorId, input.targetId)],
+      fills: [targetFill],
     }),
     "attackRoll",
   );
+  return { subject, targetFill, attackRoll } as const;
+}
+
+export function weaponAttackRollHole(
+  input: WeaponAttackRollInput,
+): Extract<BattleHole, { readonly kind: "attackRoll" }> {
+  return weaponAttackRollFacts(input).attackRoll;
+}
+
+export function resolveWeaponAttackMiss(input: WeaponAttackRollInput): {
+  readonly attackRoll: Extract<BattleHole, { readonly kind: "attackRoll" }>;
+  readonly state: BattleState;
+} {
+  const { subject, targetFill, attackRoll } = weaponAttackRollFacts(input);
+  const resolved = resolveBattleSubject({
+    state: input.session.state,
+    subject,
+    fills: [
+      targetFill,
+      attackRollFill(attackRoll, {
+        total: 1,
+        naturalD20: 1,
+        ...(attackRoll.rollMode === undefined
+          ? {}
+          : { rollMode: attackRoll.rollMode }),
+      }),
+    ],
+  });
+  if (resolved.tag !== "resolved") {
+    throw new Error(`Expected discovered ${input.attackName} miss to resolve.`);
+  }
+  return { attackRoll, state: resolved.state };
 }
 
 export function interruptDecisionFill(

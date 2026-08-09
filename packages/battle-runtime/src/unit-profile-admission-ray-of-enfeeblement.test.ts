@@ -14,10 +14,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import rayOfEnfeeblementInput from "../../surface/content/ray_of_enfeeblement.json";
-import {
-  consumeSelfAttackRollEffects,
-  requiredAttackRollMode,
-} from "./battle-reducer/attack-roll.ts";
+import { requiredAttackRollMode } from "./battle-reducer/attack-roll.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import { breakBattleConcentration } from "./battle-reducer/damage-apply.ts";
@@ -34,6 +31,7 @@ import {
   requireCombatant,
   requireHole,
   requireResultHole,
+  resolveWeaponAttackMiss,
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
@@ -140,6 +138,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       casterClassLevels: [{ className: "wizard", level: 3 }],
+      targetAttack: zeroAbilityWeaponAttack("weapon_longsword"),
     });
     const cast = resolveRayOfEnfeeblementCast({
       session: baseSession,
@@ -165,26 +164,29 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
         mode: "disadvantage",
       }),
     );
+    const successTargetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    expect(successTargetTurn).toMatchObject({ tag: "resolved" });
+    if (successTargetTurn.tag !== "resolved") return;
+
+    const { attackRoll, state: afterMiss } = resolveWeaponAttackMiss({
+      session: battleRuntimeSessionForTest({
+        state: successTargetTurn.state,
+        context: baseSession.context,
+      }),
+      attackName: "Longsword",
+      actorId: spellTargetId,
+      targetId: spellCasterId,
+    });
+    expect(attackRoll).toMatchObject({ rollMode: "disadvantage" });
     expect(
-      requiredAttackRollMode(
-        cast.state,
-        spellTargetId,
-        spellCasterId,
-        zeroAbilityWeaponAttack("weapon_longsword"),
-      ),
-    ).toBe("disadvantage");
-    const afterConsumedAttack = consumeSelfAttackRollEffects(
-      cast.state,
-      spellTargetId,
-    );
-    expect(
-      requireCombatant(afterConsumedAttack, spellTargetId).activeEffects.some(
+      requireCombatant(afterMiss, spellTargetId).activeEffects.some(
         (effect) => effect.kind === "nextAttackRollBySelf",
       ),
     ).toBe(false);
-    expect(
-      requireCombatant(afterConsumedAttack, spellCasterId).concentration,
-    ).toBe(null);
+    expect(requireCombatant(afterMiss, spellCasterId).concentration).toBe(null);
 
     const castForStartTurnExpiry = resolveRayOfEnfeeblementCast({
       session: baseSession,

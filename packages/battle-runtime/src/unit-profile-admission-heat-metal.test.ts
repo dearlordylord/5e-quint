@@ -22,6 +22,8 @@ import {
   requireCombatant,
   requireHole,
   requireResultHole,
+  resolveWeaponAttackMiss,
+  zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
@@ -778,6 +780,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     const spell = spellRecord(heatMetalUnitId);
     const objectId = battleObjectId("heat-metal-worn-breastplate");
     const session = spellBattle({
+      targetAttack: zeroAbilityWeaponAttack("weapon_longsword"),
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
       targetHp: 30,
@@ -953,11 +956,21 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected Heat Metal caster End Turn to resolve.");
     }
+    const { attackRoll, state: afterMiss } = resolveWeaponAttackMiss({
+      session: battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: session.context,
+      }),
+      attackName: "Longsword",
+      actorId: spellTargetId,
+      targetId: spellCasterId,
+    });
+    expect(attackRoll).toMatchObject({ rollMode: "disadvantage" });
     expect(
-      requiredAttackRollMode(targetTurn.state, spellTargetId, spellCasterId),
+      requiredAttackRollMode(afterMiss, spellTargetId, spellCasterId),
     ).toBe("disadvantage");
     const casterTurn = endTurn({
-      state: targetTurn.state,
+      state: afterMiss,
       actorId: spellTargetId,
     });
     if (casterTurn.tag !== "resolved") {
