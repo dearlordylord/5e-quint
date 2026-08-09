@@ -35,7 +35,7 @@ import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
-import type { CombatantId } from "../identity.ts";
+import { battleDancingLightId, type CombatantId } from "../identity.ts";
 import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
@@ -49,6 +49,12 @@ import {
   requiredSpellAttackRollMode,
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state-execution.ts";
+import {
+  dancingLightListFromArray,
+  dancingLightsForReposition,
+  type DancingLightsCastPlan,
+  type DancingLightsRepositionPlan,
+} from "./spells-active-effects.ts";
 import {
   breakBattleConcentration,
   concentrationSavingThrowHole,
@@ -201,24 +207,15 @@ export function resolveDancingLightsCastSpellAct(input: {
       ),
     ]);
   }
-  const placementError = dancingLightsCastPlacementError(
+  const placementPlan = dancingLightsCastPlacementPlan(
+    input.actorId,
     input.invocation,
     placement,
   );
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (placementError !== null) {
+  if (Either.isLeft(placementPlan)) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.input.state, "invalidFill", placementError);
-  }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (placement.mode !== "cast") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Dancing Lights placement does not match the selected form.",
-    );
+    return invalidResult(input.input.state, "invalidFill", placementPlan.left);
   }
   /* v8 ignore stop */
   const spellCastReactionWindow = maybeOpenInterruptWindow(
@@ -243,15 +240,13 @@ export function resolveDancingLightsCastSpellAct(input: {
     errorState: input.input.state,
   });
   /* v8 ignore start -- Defensive internal guard: dispatcher admission proves this cantrip's Magic Action, and spell-cast interrupt replay cannot spend the caster's Action before this synchronous commit. */
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
+  if (resourced.tag === "invalid") return resourced;
   /* v8 ignore stop */
   const effected = applyDancingLightsSpellEffect(
     resourced.state,
     input.actorId,
     input.invocation,
-    placement,
+    placementPlan.right,
   );
   return {
     tag: "resolved",
@@ -311,33 +306,22 @@ export function resolveDancingLightsRepositionSpellAct(input: {
       ),
     ]);
   }
-  const placementError = dancingLightsRepositionPlacementError(
+  const placementPlan = dancingLightsRepositionPlacementPlan(
     input.input.state,
     input.actorId,
     input.invocation,
     placement,
   );
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (placementError !== null) {
+  if (Either.isLeft(placementPlan)) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.input.state, "invalidFill", placementError);
-  }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (placement.mode !== "reposition") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Dancing Lights movement requires reposition placement.",
-    );
+    return invalidResult(input.input.state, "invalidFill", placementPlan.left);
   }
   /* v8 ignore stop */
   const effected = repositionDancingLightsSpellEffect(
     input.input.state,
     input.actorId,
-    input.invocation,
-    placement,
+    placementPlan.right,
   );
   const spent = spendActivationResource(effected.currentTurnResources, {
     kind: "bonusAction",
@@ -362,7 +346,8 @@ export function resolveDancingLightsRepositionSpellAct(input: {
   };
 }
 
-function dancingLightsCastPlacementError(
+function dancingLightsCastPlacementPlan(
+  actorId: CombatantId,
   invocation: Extract<
     BattleExecutableSpellInvocation,
     {
@@ -372,23 +357,50 @@ function dancingLightsCastPlacementError(
     }
   >,
   placement: BattleDancingLightsPlacementValue,
-): string | null {
+): Either.Either<DancingLightsCastPlan, string> {
   if (placement.mode !== "cast" || placement.form !== invocation.form) {
-    return "Dancing Lights placement does not match the selected form.";
+    return Either.left(
+      "Dancing Lights placement does not match the selected form.",
+    );
+  }
+  const placementError =
+    placement.form === "combinedMediumForm"
+      ? placement.light.distanceFromCasterFeet > invocation.rangeFeet
+        ? "Dancing Lights placement must be within the spell range."
+        : null
+      : dancingLightsSeparatePlacementError(
+          placement.lights,
+          invocation.rangeFeet,
+          invocation.spacingFeet,
+        );
+  if (placementError !== null) {
+    return Either.left(placementError);
   }
   if (placement.form === "combinedMediumForm") {
-    return placement.light.distanceFromCasterFeet > invocation.rangeFeet
-      ? "Dancing Lights placement must be within the spell range."
-      : null;
+    return Either.right({
+      form: "combinedMediumForm",
+      light: {
+        lightId: battleDancingLightId(
+          `${actorId}:${invocation.sourceProcedureRef}:combinedMediumForm:1`,
+        ),
+        positionId: placement.light.positionId,
+      },
+    });
   }
-  return dancingLightsSeparatePlacementError(
-    placement.lights,
-    invocation.rangeFeet,
-    invocation.spacingFeet,
+  const lights = dancingLightListFromArray(
+    placement.lights.map((light, index) => ({
+      lightId: battleDancingLightId(
+        `${actorId}:${invocation.sourceProcedureRef}:separateLights:${index + 1}`,
+      ),
+      positionId: light.positionId,
+    })),
   );
+  return lights === null
+    ? Either.left("Dancing Lights separate form requires one to four lights.")
+    : Either.right({ form: "separateLights", lights });
 }
 
-function dancingLightsRepositionPlacementError(
+function dancingLightsRepositionPlacementPlan(
   state: BattleState,
   actorId: CombatantId,
   invocation: Extract<
@@ -396,9 +408,11 @@ function dancingLightsRepositionPlacementError(
     { readonly procedure: "dancingLightsReposition" }
   >,
   placement: BattleDancingLightsPlacementValue,
-): string | null {
+): Either.Either<DancingLightsRepositionPlan, string> {
   if (placement.mode !== "reposition") {
-    return "Dancing Lights movement requires reposition placement.";
+    return Either.left(
+      "Dancing Lights movement requires reposition placement.",
+    );
   }
   const effect = state.combatants
     .get(actorId)
@@ -416,10 +430,14 @@ function dancingLightsRepositionPlacementError(
         candidate.sourceCombatantId === actorId,
     );
   if (effect === undefined) {
-    return "Dancing Lights movement requires active lights from this spell.";
+    return Either.left(
+      "Dancing Lights movement requires active lights from this spell.",
+    );
   }
   if (placement.form !== effect.form) {
-    return "Dancing Lights movement form does not match the active lights.";
+    return Either.left(
+      "Dancing Lights movement form does not match the active lights.",
+    );
   }
   const placements =
     placement.form === "combinedMediumForm"
@@ -430,7 +448,7 @@ function dancingLightsRepositionPlacementError(
       (candidate) => candidate.moveDistanceFeet > invocation.maxMoveFeet,
     )
   ) {
-    return "Dancing Lights can move a light up to 60 feet.";
+    return Either.left("Dancing Lights can move a light up to 60 feet.");
   }
   const currentDancingLightIds = dancingLightsFromEffect(effect).map(
     (dancingLight) => dancingLight.lightId,
@@ -441,7 +459,9 @@ function dancingLightsRepositionPlacementError(
     placedLightIds.length !== currentDancingLightIds.length ||
     placedLightIds.some((lightId) => !currentDancingLightIds.includes(lightId))
   ) {
-    return "Dancing Lights movement must place each active light identity.";
+    return Either.left(
+      "Dancing Lights movement must place each active light identity.",
+    );
   }
   const inRange =
     placement.form === "combinedMediumForm"
@@ -454,15 +474,29 @@ function dancingLightsRepositionPlacementError(
         );
   if (placement.form === "separateLights") {
     if (inRange.length === 0) {
-      return null;
+      return Either.right({
+        kind: "removeEffect",
+        effect,
+      });
     }
-    return dancingLightsSeparatePlacementError(
+    const placementError = dancingLightsSeparatePlacementError(
       inRange,
       invocation.rangeFeet,
       invocation.spacingFeet,
     );
+    if (placementError !== null) {
+      return Either.left(placementError);
+    }
   }
-  return null;
+  const effectShape = dancingLightsForReposition(effect, placement, inRange);
+  if (effectShape === null) {
+    return Either.right({ kind: "removeEffect", effect });
+  }
+  return Either.right({
+    kind: "replaceEffect",
+    effect,
+    effectShape,
+  });
 }
 
 function dancingLightsFillSetHasUnrelatedFills(

@@ -101,6 +101,7 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { battleActsWithReducerRouteEvents } from "./battle-act-composition.ts";
 
 type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly lightEmitterCount: number;
@@ -3495,8 +3496,17 @@ function spellProcedureForAct(
     : undefined;
 }
 
+function discoverRoutedBattleActCandidates(
+  state: BattleState,
+): readonly BattleActDiscoveryCandidate[] {
+  return battleActsWithReducerRouteEvents(
+    state,
+    discoverBattleActCandidates(state),
+  );
+}
+
 function dancingLightsSeparateCastAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure ===
@@ -3509,7 +3519,7 @@ function dancingLightsSeparateCastAct(state: BattleState): ActionSpellAct {
 }
 
 function dancingLightsRepositionAct(state: BattleState): BonusActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure ===
@@ -3522,7 +3532,7 @@ function dancingLightsRepositionAct(state: BattleState): BonusActionSpellAct {
 }
 
 function faerieFireAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure ===
@@ -3535,7 +3545,7 @@ function faerieFireAct(state: BattleState): ActionSpellAct {
 }
 
 function fogCloudAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure ===
@@ -3548,7 +3558,7 @@ function fogCloudAct(state: BattleState): ActionSpellAct {
 }
 
 function greaseAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure ===
@@ -3561,7 +3571,7 @@ function greaseAct(state: BattleState): ActionSpellAct {
 }
 
 function greaseMovementAct(state: BattleState): MovementAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is MovementAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "move" &&
@@ -3578,7 +3588,7 @@ function greaseGroundHazardSaveAct(
   actorId: CombatantId,
   trigger: GreaseGroundHazardSaveAct["subject"]["trigger"],
 ): GreaseGroundHazardSaveAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is GreaseGroundHazardSaveAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "greaseGroundHazardSave" &&
@@ -3593,7 +3603,7 @@ function greaseGroundHazardSaveAct(
 }
 
 function jumpCastAct(state: BattleState): BonusActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure ===
@@ -3606,7 +3616,7 @@ function jumpCastAct(state: BattleState): BonusActionSpellAct {
 }
 
 function lightAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure === "objectLight",
@@ -3618,7 +3628,7 @@ function lightAct(state: BattleState): ActionSpellAct {
 }
 
 function produceFlameHeldLightAct(state: BattleState): BonusActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is BonusActionSpellAct =>
       candidate.subject.tag === "bonusActionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure === "heldLight",
@@ -3630,7 +3640,7 @@ function produceFlameHeldLightAct(state: BattleState): BonusActionSpellAct {
 }
 
 function produceFlameHurlAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure === "heldLightHurl",
@@ -3642,7 +3652,7 @@ function produceFlameHurlAct(state: BattleState): ActionSpellAct {
 }
 
 function thunderwaveAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure === "saveGatedDamage",
@@ -3668,7 +3678,7 @@ function maybeJumpMovementReplacementAct(
   state: BattleState,
   actorId: CombatantId,
 ): JumpMovementReplacementAct | undefined {
-  return discoverBattleActCandidates(state).find(
+  return discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is JumpMovementReplacementAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "jumpMovementReplacement" &&
@@ -4125,7 +4135,7 @@ function fogCloudAreaFill(
 function fogCloudStrongWindDispersalAct(
   state: BattleState,
 ): FogCloudStrongWindDispersalAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is FogCloudStrongWindDispersalAct =>
       candidate.subject.tag === "runtimeCommand" &&
       candidate.subject.command === "disperseFogCloud" &&
@@ -4351,7 +4361,7 @@ function attackRollModeForFaerieFireObject(
 }
 
 function actionSpellAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = discoverRoutedBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       spellProcedureForAct(state, candidate)?.procedure === "spellAttackDamage",

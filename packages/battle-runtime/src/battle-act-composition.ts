@@ -101,6 +101,12 @@ function discoverBattleActsForState(
     context,
     discoverBattleActCandidates(state),
   );
+  return battleActsWithReducerRouteEvents(state, acts);
+}
+
+export function battleActsWithReducerRouteEvents<
+  TAct extends BattleActDiscoveryCandidate,
+>(state: BattleState, acts: readonly TAct[]): readonly TAct[] {
   return acts.map((act) => {
     const routeEvents = battleReducerRouteEventsForDiscoveredAct(state, act);
     return routeEvents === undefined ? act : { ...act, routeEvents };

@@ -800,6 +800,28 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
     }
     expect(cast.snapshot.lightEmitters).toHaveLength(1);
 
+    const fourLightCast = resolveBattleSubject({
+      state: session.state,
+      subject: separateAct.subject,
+      fills: [
+        {
+          ...oneLightPlacement,
+          value: {
+            ...oneLightPlacement.value,
+            lights: Array.from({ length: 4 }, (_, index) => ({
+              positionId: battleTablePositionId(`dancing-lights-four-${index}`),
+              distanceFromCasterFeet: movementFeet(30 + index * 5),
+              nearestSiblingDistanceFeet: movementFeet(5),
+            })),
+          },
+        } satisfies BattleFill,
+      ],
+    });
+    if (fourLightCast.tag !== "resolved") {
+      throw new Error("Expected four-light Dancing Lights cast.");
+    }
+    expect(fourLightCast.snapshot.lightEmitters).toHaveLength(4);
+
     const moveAct = bonusSpellAct({
       session: battleRuntimeSessionForTest({
         state: cast.state,

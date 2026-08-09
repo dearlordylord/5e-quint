@@ -41,7 +41,6 @@ import {
   type DifficultyClass,
 } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
-import { battleDancingLightId } from "../identity.ts";
 import type {
   BattleActiveEffectExecutionRef,
   BattleAreaId,
@@ -1247,6 +1246,23 @@ function lightEmitterMatchesAttachment(
   );
 }
 
+export type DancingLightsCastPlan = DancingLightsEffectShape;
+type DancingLightsEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "dancingLights" }
+>;
+
+export type DancingLightsRepositionPlan =
+  | {
+      readonly kind: "replaceEffect";
+      readonly effect: DancingLightsEffect;
+      readonly effectShape: DancingLightsEffectShape;
+    }
+  | {
+      readonly kind: "removeEffect";
+      readonly effect: DancingLightsEffect;
+    };
+
 export function applyDancingLightsSpellEffect(
   state: BattleState,
   actorId: CombatantId,
@@ -1258,10 +1274,7 @@ export function applyDancingLightsSpellEffect(
         | "dancingLightsCombinedCast";
     }
   >,
-  placement: Extract<
-    BattleDancingLightsPlacementValue,
-    { readonly mode: "cast" }
-  >,
+  plan: DancingLightsCastPlan,
 ): BattleState {
   const caster = state.combatants.get(actorId);
   /* v8 ignore start -- Defensive internal guard: action-spell admission preserves the character caster through Dancing Lights cast application. */
@@ -1269,14 +1282,6 @@ export function applyDancingLightsSpellEffect(
     return state;
   }
   /* v8 ignore stop */
-  const dancingLights = dancingLightsForCastPlacement(
-    actorId,
-    invocation,
-    placement,
-  );
-  if (dancingLights === null) {
-    return state;
-  }
   const allocation = allocateBattleActiveEffectRefForCreature({
     owner: caster,
   });
@@ -1293,7 +1298,7 @@ export function applyDancingLightsSpellEffect(
     sourceProcedureRef: invocation.sourceProcedureRef,
     sourceCombatantId: actorId,
     expiresAt: invocation.expiresAt,
-    ...dancingLights,
+    ...plan,
   };
   const repositionExecution: DancingLightsRepositionSpellProcedureExecution = {
     spellRuleFacts: invocation.spellRuleFacts,
@@ -1312,16 +1317,11 @@ export function applyDancingLightsSpellEffect(
     combatants: new Map(state.combatants).set(actorId, {
       ...owner,
       activeEffects: [
-        ...owner.activeEffects.filter((effect) => {
-          const sameSourceReplay =
-            effect.kind === "dancingLights" &&
-            activeEffectSourceMatches(effect, activeEffect);
-          if (sameSourceReplay) {
-            /* v8 ignore next -- Pure replay/idempotency guard: `resolveDancingLightsCastSpellAct` spends the Magic Action and breaks prior Concentration before this application; legal reposition uses `repositionDancingLightsSpellEffect` instead. */
-            return false;
-          }
-          return true;
-        }),
+        ...owner.activeEffects.filter(
+          (effect) =>
+            effect.kind !== "dancingLights" ||
+            !activeEffectSourceMatches(effect, activeEffect),
+        ),
         activeEffect,
       ],
       origin: {
@@ -1338,14 +1338,7 @@ export function applyDancingLightsSpellEffect(
 export function repositionDancingLightsSpellEffect(
   state: BattleState,
   actorId: CombatantId,
-  invocation: Extract<
-    BattleExecutableSpellInvocation,
-    { readonly procedure: "dancingLightsReposition" }
-  >,
-  placement: Extract<
-    BattleDancingLightsPlacementValue,
-    { readonly mode: "reposition" }
-  >,
+  plan: DancingLightsRepositionPlan,
 ): BattleState {
   const caster = state.combatants.get(actorId);
   /* v8 ignore start -- Defensive internal guard: the admitted Dancing Lights reposition subject retains its caster while the active effect is replayed. */
@@ -1360,89 +1353,34 @@ export function repositionDancingLightsSpellEffect(
       activeEffects: caster.activeEffects.flatMap((effect) => {
         if (
           effect.kind !== "dancingLights" ||
-          effect.effectRef !== invocation.activeEffectRef ||
-          effect.sourceProcedureRef !==
-            invocation.sourceDancingLightsProcedureRef ||
-          effect.sourceCombatantId !== actorId
+          effect.effectRef !== plan.effect.effectRef ||
+          effect.sourceProcedureRef !== plan.effect.sourceProcedureRef ||
+          effect.sourceCombatantId !== actorId ||
+          plan.effect.sourceCombatantId !== actorId
         ) {
           return [effect];
         }
-        const moved = dancingLightsForReposition(
-          effect,
-          placement,
-          invocation.rangeFeet,
-        );
-        return moved === null ? [] : [{ ...effect, ...moved }];
+        return plan.kind === "removeEffect"
+          ? []
+          : [{ ...effect, ...plan.effectShape }];
       }),
     }),
   };
 }
 
-function dancingLightsForCastPlacement(
-  actorId: CombatantId,
-  invocation: Extract<
-    BattleExecutableSpellInvocation,
-    {
-      readonly procedure:
-        | "dancingLightsSeparateCast"
-        | "dancingLightsCombinedCast";
-    }
-  >,
-  placement: Extract<
-    BattleDancingLightsPlacementValue,
-    { readonly mode: "cast" }
-  >,
-): DancingLightsEffectShape | null {
-  if (
-    invocation.procedure === "dancingLightsCombinedCast" &&
-    placement.form === "combinedMediumForm"
-  ) {
-    return {
-      form: "combinedMediumForm",
-      light: {
-        lightId: battleDancingLightId(
-          `${actorId}:${invocation.sourceProcedureRef}:combinedMediumForm:1`,
-        ),
-        positionId: placement.light.positionId,
-      },
-    };
-  }
-  if (
-    invocation.procedure === "dancingLightsSeparateCast" &&
-    placement.form === "separateLights"
-  ) {
-    const lights = dancingLightListFromArray(
-      placement.lights.map((light, index) => ({
-        lightId: battleDancingLightId(
-          `${actorId}:${invocation.sourceProcedureRef}:separateLights:${index + 1}`,
-        ),
-        positionId: light.positionId,
-      })),
-    );
-    if (lights === null) {
-      return null;
-    }
-    return {
-      form: "separateLights",
-      lights,
-    };
-  }
-  return null;
-}
-
-function dancingLightsForReposition(
+export function dancingLightsForReposition(
   effect: Extract<BattleActiveEffect, { readonly kind: "dancingLights" }>,
   placement: Extract<
     BattleDancingLightsPlacementValue,
     { readonly mode: "reposition" }
   >,
-  rangeFeet: number,
+  inRange: readonly BattleDancingLight[],
 ): DancingLightsEffectShape | null {
   if (
     effect.form === "combinedMediumForm" &&
     placement.form === "combinedMediumForm"
   ) {
-    if (placement.light.distanceFromCasterFeet > rangeFeet) {
+    if (inRange.length === 0) {
       return null;
     }
     return {
@@ -1459,9 +1397,9 @@ function dancingLightsForReposition(
   const currentDancingLightById = new Map(
     effect.lights.map((dancingLight) => [dancingLight.lightId, dancingLight]),
   );
-  const lights = placement.lights.flatMap((candidate) => {
+  const lights = inRange.flatMap((candidate) => {
     const current = currentDancingLightById.get(candidate.lightId);
-    return current === undefined || candidate.distanceFromCasterFeet > rangeFeet
+    return current === undefined
       ? []
       : [{ lightId: current.lightId, positionId: candidate.positionId }];
   });
@@ -1471,7 +1409,7 @@ function dancingLightsForReposition(
     : { form: "separateLights", lights: narrowedLights };
 }
 
-function dancingLightListFromArray(
+export function dancingLightListFromArray(
   lights: readonly BattleDancingLight[],
 ): BattleDancingLightList | null {
   if (new Set(lights.map((light) => light.lightId)).size !== lights.length) {
