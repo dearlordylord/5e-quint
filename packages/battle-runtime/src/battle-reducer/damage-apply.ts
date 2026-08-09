@@ -45,7 +45,6 @@ import {
   unavailableStatBlockRechargePoolRefs,
 } from "../stat-block-execution-state.ts";
 import { KNOCKED_OUT_UNCONSCIOUS } from "../positive-hp-unconscious.ts";
-import { characterProcedureBinding } from "../character-execution-queries.ts";
 import {
   type AttackDamageRider,
   type BattleActiveEffect,
@@ -77,7 +76,7 @@ import { zeroHpLifecycleIsTerminal } from "./creature-state-leaves.ts";
 import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
-  type CharacterBattleResourceState,
+  type CharacterBattleUseCountResourceState,
 } from "../character-battle-resource-execution.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { setCompanion } from "../companion-state.ts";
@@ -1178,19 +1177,37 @@ export function applyHpDamage(
     return applyKnockOut(damaged);
   }
 
+  const zeroHitPointReplacementProcedureRef =
+    context.damageDisposition?.kind === "zeroHitPointReplacement"
+      ? context.damageDisposition.procedureRef
+      : undefined;
   if (
-    context.damageDisposition?.kind === "zeroHitPointReplacement" &&
-    zeroHitPointReplacementCanApply(
-      combatant,
-      projection,
-      context.damageDisposition.procedureRef,
-    )
+    zeroHitPointReplacementProcedureRef !== undefined &&
+    hpDamageProjectionAllowsKnockOut(projection) &&
+    !projection.massiveDamageKills &&
+    combatant.origin.kind === "character"
   ) {
-    return applyZeroHitPointReplacement(
-      combatant,
-      projection,
-      context.damageDisposition.procedureRef,
+    const capability = zeroHitPointReplacementCapabilities(
+      combatant.origin,
+    ).find(
+      (candidate) =>
+        candidate.procedureRef === zeroHitPointReplacementProcedureRef,
     );
+    const resource =
+      capability === undefined
+        ? null
+        : availableZeroHitPointReplacementResource(
+            combatant.origin,
+            capability.resourcePoolRef,
+          );
+    if (resource !== null) {
+      return applyZeroHitPointReplacement(
+        combatant,
+        projection,
+        combatant.origin,
+        resource,
+      );
+    }
   }
 
   return projection.massiveDamageKills
@@ -1228,53 +1245,71 @@ export function damageAllowsKnockOut(
   combatant: BattleCreatureState,
   damageAmount: number,
 ): boolean {
-  const projection = hpDamageProjection(combatant, damageAmount);
+  return hpDamageProjectionAllowsKnockOut(
+    hpDamageProjection(combatant, damageAmount),
+  );
+}
+
+function hpDamageProjectionAllowsKnockOut(
+  projection: HpDamageProjection,
+): boolean {
   return projection.currentHp > 0 && Number(projection.nextHp) === 0;
 }
 
-function zeroHitPointReplacementCanApply(
-  combatant: BattleCreatureState,
-  projection: HpDamageProjection,
-  procedureRef: BattleProcedureExecutionRef,
-): boolean {
-  return (
-    projection.currentHp > 0 &&
-    Number(projection.nextHp) === 0 &&
-    !projection.massiveDamageKills &&
-    zeroHitPointReplacementResource(combatant, procedureRef) !== null
-  );
+type CharacterBattleCreatureOrigin = Extract<
+  BattleCreatureState["origin"],
+  { readonly kind: "character" }
+>;
+
+export type ZeroHitPointReplacementCapability = {
+  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly resourcePoolRef: CharacterBattleUseCountResourceState["resourcePoolRef"];
+};
+
+export function zeroHitPointReplacementCapabilities(
+  origin: CharacterBattleCreatureOrigin,
+): readonly ZeroHitPointReplacementCapability[] {
+  const capabilities: ZeroHitPointReplacementCapability[] = [];
+  for (const binding of origin.execution.procedureBindings) {
+    const procedure = binding.procedure;
+    if (
+      procedure.kind !== "unitFeature" ||
+      procedure.execution.kind !== "zeroHitPointReplacement" ||
+      procedure.source.kind !== "resourcePool"
+    ) {
+      continue;
+    }
+    const resourcePoolRef = procedure.source.resourcePoolRef;
+    if (
+      availableZeroHitPointReplacementResource(origin, resourcePoolRef) === null
+    ) {
+      continue;
+    }
+    capabilities.push({
+      procedureRef: binding.procedureRef,
+      resourcePoolRef,
+    });
+  }
+  return capabilities;
 }
 
-export function zeroHitPointReplacementResource(
-  combatant: BattleCreatureState,
-  procedureRef: BattleProcedureExecutionRef,
-): CharacterBattleResourceState | null {
-  if (combatant.origin.kind !== "character") return null;
-  const binding = characterProcedureBinding(
-    combatant.origin.execution,
-    procedureRef,
-  );
-  if (
-    binding?.procedure.kind !== "unitFeature" ||
-    binding.procedure.execution.kind !== "zeroHitPointReplacement" ||
-    binding.procedure.source.kind !== "resourcePool"
-  ) {
-    return null;
-  }
-  const resourcePoolRef = binding.procedure.source.resourcePoolRef;
-  const resource = combatant.origin.resources.find(
+function availableZeroHitPointReplacementResource(
+  origin: CharacterBattleCreatureOrigin,
+  resourcePoolRef: CharacterBattleUseCountResourceState["resourcePoolRef"],
+): CharacterBattleUseCountResourceState | null {
+  const resource = origin.resources.find(
     (candidate) => candidate.resourcePoolRef === resourcePoolRef,
   );
-  if (resource === undefined || !resourceHasUsesRemaining(resource)) {
-    return null;
-  }
-  return resource;
+  return resource !== undefined && resourceHasUsesRemaining(resource)
+    ? resource
+    : null;
 }
 
 function applyZeroHitPointReplacement(
   combatant: BattleCreatureState,
   projection: HpDamageProjection,
-  procedureRef: BattleProcedureExecutionRef,
+  origin: CharacterBattleCreatureOrigin,
+  resource: CharacterBattleUseCountResourceState,
 ): BattleCreatureState {
   const nextCombatant = {
     ...battleCreatureStateWithoutKnockOut(
@@ -1284,30 +1319,14 @@ function applyZeroHitPointReplacement(
     ),
     tempHp: Hp(projection.currentTempHp - projection.tempHpAbsorbed),
   };
-  if (nextCombatant.origin.kind !== "character") {
-    return nextCombatant;
-  }
-  const binding = characterProcedureBinding(
-    nextCombatant.origin.execution,
-    procedureRef,
-  );
-  if (
-    binding?.procedure.kind !== "unitFeature" ||
-    binding.procedure.execution.kind !== "zeroHitPointReplacement" ||
-    binding.procedure.source.kind !== "resourcePool"
-  ) {
-    return nextCombatant;
-  }
-  const resourcePoolRef = binding.procedure.source.resourcePoolRef;
   return {
     ...nextCombatant,
     origin: {
-      ...nextCombatant.origin,
-      resources: nextCombatant.origin.resources.map((resource) =>
-        resource.resourcePoolRef === resourcePoolRef &&
-        resourceHasUsesRemaining(resource)
+      ...origin,
+      resources: origin.resources.map((candidate) =>
+        candidate === resource
           ? spendCharacterResourceUse(resource)
-          : resource,
+          : candidate,
       ),
     },
   };

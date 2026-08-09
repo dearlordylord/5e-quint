@@ -71,7 +71,7 @@ import { attackDamageDieFloorChoiceProcedureRefs } from "./attack-damage-die-flo
 import {
   damageAllowsKnockOut,
   hpDamageProjection,
-  zeroHitPointReplacementResource,
+  zeroHitPointReplacementCapabilities,
 } from "./damage-apply.ts";
 import {
   attackActionOptionName,
@@ -349,17 +349,11 @@ export function zeroHitPointReplacementChoices(
   ) {
     return [];
   }
-  return target.origin.execution.procedureBindings.flatMap((binding) =>
-    binding.procedure.kind === "unitFeature" &&
-    binding.procedure.execution.kind === "zeroHitPointReplacement" &&
-    zeroHitPointReplacementResource(target, binding.procedureRef) !== null
-      ? [
-          {
-            kind: "zeroHitPointReplacement" as const,
-            procedureRef: binding.procedureRef,
-          },
-        ]
-      : [],
+  return zeroHitPointReplacementCapabilities(target.origin).map(
+    (capability) => ({
+      kind: "zeroHitPointReplacement" as const,
+      procedureRef: capability.procedureRef,
+    }),
   );
 }
 
