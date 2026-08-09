@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { afterAll, describe, expect, test, vi } from "vitest";
 import type {
   SrdStatBlockCollection,
   StatBlockCatalog,
@@ -7,7 +7,6 @@ import type {
   SrdUnitCollection,
   UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
-import { createMcpCompositionRoot } from "./composition-root.ts";
 
 const catalogFailure = vi.hoisted<{
   invalidCatalog: "unit" | "statBlock";
@@ -69,6 +68,15 @@ vi.mock("@dnd/surface/surface/stat-block-catalog", () => {
           }
         : { tag: "ok", catalog: emptyStatBlockCatalog },
   };
+});
+
+vi.resetModules();
+const { createMcpCompositionRoot } = await import("./composition-root.ts");
+
+afterAll(() => {
+  vi.doUnmock("@dnd/surface/surface/unit-catalog");
+  vi.doUnmock("@dnd/surface/surface/stat-block-catalog");
+  vi.resetModules();
 });
 
 describe("MCP canonical catalog composition failures", () => {
