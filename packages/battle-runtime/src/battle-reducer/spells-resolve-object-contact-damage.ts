@@ -705,9 +705,12 @@ function resolveObjectContactDamage(input: {
     );
   }
   /* v8 ignore stop */
-  const sourcePenaltyChecks = damageTargets.map((damageTarget) => ({
-    damageTarget,
-    check: applyAvailableSourceDamageRollPenalty(
+  const resolvedDamageTargets: BattleDamageTarget<number>[] = [];
+  const unresolvedSourcePenaltyHoles: Array<
+    Parameters<typeof deduplicateBattleHolesById>[0][number]
+  > = [];
+  for (const damageTarget of damageTargets) {
+    const check = applyAvailableSourceDamageRollPenalty(
       sourceCombatant,
       damageTarget.damage,
       damageRoll.holeId,
@@ -717,43 +720,38 @@ function resolveObjectContactDamage(input: {
         damageTarget.damage,
         damageRoll.holeId,
       ),
-    ),
-  }));
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (sourcePenaltyChecks.some(({ check }) => check.tag === "invalid")) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.errorState,
-      "invalidFill",
-      "Source damage roll penalty does not match an active source-side damage penalty.",
     );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    if (check.tag === "invalid") {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      return invalidResult(
+        input.errorState,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      );
+    }
+    /* v8 ignore stop */
+    if (check.tag === "needsHoles") {
+      unresolvedSourcePenaltyHoles.push(...check.holes);
+      continue;
+    }
+    resolvedDamageTargets.push({
+      target: damageTarget.target,
+      damage: damageAmountByTypeAfterTargetAdjustments(
+        input.state,
+        damageTarget.target,
+        check.damageByType,
+      ),
+    });
   }
-  /* v8 ignore stop */
   const missingSourcePenaltyHoles = deduplicateBattleHolesById(
-    sourcePenaltyChecks.flatMap(({ check }) =>
-      check.tag === "needsHoles" ? [...check.holes] : [],
-    ),
+    unresolvedSourcePenaltyHoles,
   );
   if (missingSourcePenaltyHoles.length > 0) {
     return needsHolesResult(needsHolesState, input.subject, [
       ...missingSourcePenaltyHoles,
     ]);
   }
-  const resolvedDamageTargets: readonly BattleDamageTarget<number>[] =
-    sourcePenaltyChecks.flatMap(({ damageTarget, check }) =>
-      check.tag === "ok"
-        ? [
-            {
-              target: damageTarget.target,
-              damage: damageAmountByTypeAfterTargetAdjustments(
-                input.state,
-                damageTarget.target,
-                check.damageByType,
-              ),
-            },
-          ]
-        : [],
-    );
   const concentrationSaves = resolvedDamageTargets.flatMap(
     ({ target, damage }) =>
       damageLifecycleConcentrationSavingThrowHoles({
