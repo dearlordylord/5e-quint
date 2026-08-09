@@ -695,7 +695,13 @@ export function supportedSpellAttackDamageProfile(
     damageEffect,
     input.spellcastingAbilityModifier,
   );
-  if (fixedDamageType === null && sorcerousBurstProjection === null) {
+  const damageTypeProjection =
+    sorcerousBurstProjection !== null
+      ? { kind: "choice" as const, projection: sorcerousBurstProjection }
+      : fixedDamageType !== null
+        ? { kind: "fixed" as const, damageType: fixedDamageType }
+        : null;
+  if (damageTypeProjection === null) {
     return [];
   }
   const objectHitProjection = supportedSpellObjectHitEffect({
@@ -705,9 +711,6 @@ export function supportedSpellAttackDamageProfile(
     damageEffect,
     postDamageEffects: laterDamageProjection.postDamageEffects,
   });
-  if (objectHitProjection === null) {
-    return [];
-  }
   const postDamageRiders = supportedSpellPostDamageRiders(
     spell,
     phase,
@@ -740,25 +743,20 @@ export function supportedSpellAttackDamageProfile(
   ) {
     return [];
   }
-  const chosenDamageProjection = sorcerousBurstProjection;
   const damage =
-    chosenDamageProjection === null
-      ? fixedDamageType === null
-        ? null
-        : {
-            kind: "fixedSpellAttackDamage" as const,
-            expr: damageExpr,
-            damageType: fixedDamageType,
-          }
+    damageTypeProjection.kind === "fixed"
+      ? {
+          kind: "fixedSpellAttackDamage" as const,
+          expr: damageExpr,
+          damageType: damageTypeProjection.damageType,
+        }
       : {
           kind: "sorcerousBurstDamageTypeChoice" as const,
           expr: damageExpr,
-          damageTypeChoices: chosenDamageProjection.damageTypes,
-          maxDieAdditionalDiceLimit: chosenDamageProjection.maxAdditionalDice,
+          damageTypeChoices: damageTypeProjection.projection.damageTypes,
+          maxDieAdditionalDiceLimit:
+            damageTypeProjection.projection.maxAdditionalDice,
         };
-  if (damage === null) {
-    return [];
-  }
   const attackDamageInvocation = {
     procedure: "spellAttackDamage" as const,
     spell,
@@ -1029,7 +1027,7 @@ function supportedSpellObjectHitEffect(input: {
 }): {
   readonly objectHitEffect: SpellObjectHitEffect;
   readonly postDamageEffects: readonly SpellAttackHitEffect[];
-} | null {
+} {
   if (
     input.targeting.kind === "singleCreatureOrObject" &&
     isFireDamageObjectIgnitionShape(input)

@@ -2,6 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { unitId } from "@dnd/shared/game-facts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type { BattleProcedureExecutionRef } from "./index.ts";
+import aidInput from "../../surface/content/aid.json";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-AID aid
@@ -36,6 +37,7 @@ import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.
 import {
   bonusSpellAct,
   maybeBonusSpellAct,
+  maybeSpellAct,
   knownWillingSpellTargetFill,
   knownWillingSpellTargetListFill,
   spellAct,
@@ -43,7 +45,10 @@ import {
   spellTargetFill,
   spellTargetListFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   applyCondition,
   applyBattleHitPointDamage,
@@ -1481,6 +1486,50 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         ],
       },
     });
+  });
+
+  test("aid admission rejects unsupported synthetic maximum Hit Point amounts", () => {
+    type AidDeltaInput =
+      (typeof aidInput.mechanics.phases)[number]["effects"][number]["delta"];
+    const unsupportedDeltaMutations = {
+      synthetic_max_hp_resource_spent: (_delta: AidDeltaInput) => ({
+        kind: "resource_spent" as const,
+      }),
+      synthetic_max_hp_random_base: (delta: AidDeltaInput) => ({
+        ...delta,
+        base: { ...delta.base, dice: 1, dieSize: 4 },
+      }),
+    } as const;
+
+    for (const [id, mutateDelta] of Object.entries(unsupportedDeltaMutations)) {
+      const spell = decodeSpellRecordForTest({
+        ...aidInput,
+        id,
+        name: id,
+        provenance: { kind: "synthetic-test", section: id },
+        mechanics: {
+          ...aidInput.mechanics,
+          phases: aidInput.mechanics.phases.map((phase) => ({
+            ...phase,
+            effects: phase.effects.map((effect) => ({
+              ...effect,
+              delta: mutateDelta(effect.delta),
+            })),
+          })),
+        },
+      });
+
+      expect(
+        maybeSpellAct({
+          session: spellBattle({
+            preparedSpells: [spell],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
+          spellId: spell.id,
+          slotLevel: 2,
+        }),
+      ).toBeUndefined();
+    }
   });
 
   test("aid restores a zero-HP target to consciousness and resets death saves", () => {

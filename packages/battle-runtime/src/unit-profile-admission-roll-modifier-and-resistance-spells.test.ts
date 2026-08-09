@@ -22,6 +22,7 @@ import {
   attackExecutionSelectionForSubjectForTest,
   characterAttackSubjectForTest,
 } from "./battle-runtime.test-support.ts";
+import guidanceInput from "../../surface/content/guidance.json";
 import protectionFromEnergyInput from "../../surface/content/protection_from_energy.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { DamageType } from "@dnd/shared/types";
@@ -61,6 +62,7 @@ import {
   requireSpellDamageReductionHole,
   savingThrowOutcomeFill,
   skillChoiceFill,
+  maybeSpellAct,
   spellAct,
   knownWillingSpellTargetFill,
   targetAbilityChoicesFill,
@@ -68,7 +70,10 @@ import {
   spellTargetListFill,
   withResistanceEffect,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   applyCondition,
   assertBattleSnapshotCodecRoundTripForTest,
@@ -524,6 +529,49 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         skill: "stealth",
       }),
     );
+  });
+
+  test("guidance admission rejects unsupported synthetic roll-modifier profiles", () => {
+    type GuidanceEffectInput =
+      (typeof guidanceInput.mechanics.operations)[number]["effect"];
+    const unsupportedEffectMutations = {
+      synthetic_roll_modifier_die_size: (effect: GuidanceEffectInput) => ({
+        ...effect,
+        delta: { ...effect.delta, dieSize: 6 },
+      }),
+      synthetic_roll_modifier_fixed_skills: (effect: GuidanceEffectInput) => ({
+        ...effect,
+        skillFilter: {
+          kind: "fixed" as const,
+          skills: ["athletics", "stealth"] as const,
+        },
+      }),
+    } as const;
+
+    for (const [id, mutateEffect] of Object.entries(
+      unsupportedEffectMutations,
+    )) {
+      const spell = decodeSpellRecordForTest({
+        ...guidanceInput,
+        id,
+        name: id,
+        provenance: { kind: "synthetic-test", section: id },
+        mechanics: {
+          ...guidanceInput.mechanics,
+          operations: guidanceInput.mechanics.operations.map((operation) => ({
+            ...operation,
+            effect: mutateEffect(operation.effect),
+          })),
+        },
+      });
+
+      expect(
+        maybeSpellAct({
+          session: spellBattle({ cantrips: [spell] }),
+          spellId: spell.id,
+        }),
+      ).toBeUndefined();
+    }
   });
 
   test("pass without trace stores a fixed Stealth ability-check bonus on the caster and chosen creatures in the emanation", () => {

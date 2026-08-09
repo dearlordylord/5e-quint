@@ -8,6 +8,7 @@ import {
   movementDeltaFeet,
   movementFeet,
   type MovementFeet,
+  type ReadonlyNonEmptyArray,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import type {
@@ -121,22 +122,22 @@ export function thaumaturgyBoomingVoiceProjection(
     return null;
   }
   const operation = spell.mechanics.operations[0];
-  const effect = operation?.effect;
+  const effect = operation.effect;
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.value,
   );
   const skillFilter =
-    effect?.kind === "modify_roll_advantage"
+    effect.kind === "modify_roll_advantage"
       ? rollModifierSkillFilter(effect.skillFilter)
       : null;
   const abilityFilter =
-    effect?.kind === "modify_roll_advantage" ? effect.abilityFilter : undefined;
+    effect.kind === "modify_roll_advantage" ? effect.abilityFilter : undefined;
   if (
     Either.isLeft(durationTicks) ||
     Number(durationTicks.right) !==
       Number(THAUMATURGY_BOOMING_VOICE_DURATION_TICKS) ||
-    operation?.trigger.kind !== "passive" ||
-    effect?.kind !== "modify_roll_advantage" ||
+    operation.trigger.kind !== "passive" ||
+    effect.kind !== "modify_roll_advantage" ||
     effect.mode !== "advantage" ||
     (effect.affects ?? "self_roll") !== "self_roll" ||
     !sameStringSet(effect.on, ["ability_check"]) ||
@@ -418,7 +419,7 @@ export function rollModifierSpellProjection(
     if (
       rangeFeet === null ||
       spell.mechanics.operations.length !== 1 ||
-      operation?.trigger.kind !== "passive"
+      operation.trigger.kind !== "passive"
     ) {
       return null;
     }
@@ -480,7 +481,7 @@ export function rollModifierSpellProjection(
   if (
     rangeFeet === null ||
     spell.mechanics.phases.length !== 1 ||
-    phase?.kind !== "save_gate" ||
+    phase.kind !== "save_gate" ||
     phase.onFail.kind !== "modify_roll_numeric" ||
     phase.onSuccess.kind !== "none"
   ) {
@@ -632,7 +633,7 @@ type RollModifierPerTargetAbilityChoiceFilter = {
   readonly kind: "per_target_hole";
   readonly value: {
     readonly kind: "choice";
-    readonly options: readonly Ability[];
+    readonly options: ReadonlyNonEmptyArray<Ability>;
   };
 };
 type RollModifierAbilityChoiceFilter =
@@ -661,8 +662,7 @@ function rollModifierAbilityChoiceFilter(
   if (
     (abilityFilter.kind !== "hole" &&
       abilityFilter.kind !== "per_target_hole") ||
-    abilityFilter.value.kind !== "choice" ||
-    abilityFilter.value.options.length === 0
+    abilityFilter.value.kind !== "choice"
   ) {
     return null;
   }
