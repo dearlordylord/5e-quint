@@ -31,26 +31,27 @@ totals, and comparison below are the self-contained durable evidence.
 ## Current authoritative diagnostic
 
 - Date: 2026-08-09
-- Git HEAD: `962fa84620c1af79e94114c5bf96fd5e444f8ef4`
+- Git HEAD: `51c2015810943e5eff756c02ad58072a64e7af1b`
 - Command: `pnpm coverage`
-- Result: battle-runtime segment complete and green; overall workspace wrapper
-  exit status unrecorded
-- Total wall duration: unrecorded for this run
-- Battle-runtime tests: 204/204 files passed; 2,166 tests passed and 53
-  skipped (2,219 total)
+- Result: exit 0; battle-runtime segment complete and green
+- Total wall duration: 577 seconds
+- Battle-runtime tests: 204/204 files passed; 2,169 tests passed and 53
+  skipped (2,222 total)
 
-| Metric     |                 `85869fc2` |                `07e9580b5` |                `962fa8462` | `07e` -> `962fa` covered / total |    Uncovered change |   Delta |
-| ---------- | -------------------------: | -------------------------: | -------------------------: | -------------------------------: | ------------------: | ------: |
-| Statements | 120,221 / 124,616 (96.47%) | 120,175 / 124,554 (96.48%) | 120,173 / 124,545 (96.48%) |                          -2 / -9 | 4,379 -> 4,372 (-7) | +0.00pp |
-| Branches   |   29,979 / 32,143 (93.26%) |   29,966 / 32,121 (93.29%) |   29,977 / 32,131 (93.29%) |                        +11 / +10 | 2,155 -> 2,154 (-1) | +0.00pp |
-| Functions  |       4,795 / 4,795 (100%) |       4,793 / 4,793 (100%) |       4,794 / 4,794 (100%) |                          +1 / +1 |              0 -> 0 |       0 |
-| Lines      | 120,221 / 124,616 (96.47%) | 120,175 / 124,554 (96.48%) | 120,173 / 124,545 (96.48%) |                          -2 / -9 | 4,379 -> 4,372 (-7) | +0.00pp |
+| Metric     |                 `85869fc2` |                `07e9580b5` |                `962fa8462` |                `51c201581` | `962fa` -> `51c` covered / total |     Uncovered change |   Delta |
+| ---------- | -------------------------: | -------------------------: | -------------------------: | -------------------------: | -------------------------------: | -------------------: | ------: |
+| Statements | 120,221 / 124,616 (96.47%) | 120,175 / 124,554 (96.48%) | 120,173 / 124,545 (96.48%) | 120,172 / 124,529 (96.50%) |                         -1 / -16 | 4,372 -> 4,357 (-15) | +0.02pp |
+| Branches   |   29,979 / 32,143 (93.26%) |   29,966 / 32,121 (93.29%) |   29,977 / 32,131 (93.29%) |   29,981 / 32,135 (93.29%) |                          +4 / +4 |   2,154 -> 2,154 (0) | +0.00pp |
+| Functions  |       4,795 / 4,795 (100%) |       4,793 / 4,793 (100%) |       4,794 / 4,794 (100%) |       4,794 / 4,794 (100%) |                            0 / 0 |               0 -> 0 |       0 |
+| Lines      | 120,221 / 124,616 (96.47%) | 120,175 / 124,554 (96.48%) | 120,173 / 124,545 (96.48%) | 120,172 / 124,529 (96.50%) |                         -1 / -16 | 4,372 -> 4,357 (-15) | +0.02pp |
 
-The statement/line percentage remained 96.48% and the branch percentage
-remained 93.29% from the prior checkpoint; uncovered statements/lines fell by
-7 and uncovered branches fell by 1. These are measured deltas from the
-authoritative public run, not a forecast toward 99%. Denominator changes are
-shown explicitly because production code changed between checkpoints.
+The Vitest statement/line percentage rose to 96.50% while branches remained at
+93.29%; uncovered statements/lines fell by 15 and uncovered branches were
+unchanged. These are measured deltas from the authoritative public run, not a
+forecast toward 99%. Denominator changes are shown explicitly because
+production code changed between checkpoints. Every other executable package in
+this root run met all 99% metric thresholds; battle-runtime is the only
+remaining package below acceptance.
 
 ## Remaining static 99% gaps
 
@@ -59,23 +60,26 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 120,173 | 124,545 |                  123,300 |         3,127 |
-| Branches   |  29,977 |  32,131 |                   31,810 |         1,833 |
+| Statements | 120,172 | 124,529 |                  123,284 |         3,112 |
+| Branches   |  29,981 |  32,135 |                   31,814 |         1,833 |
 | Functions  |   4,794 |   4,794 |                    4,747 |             0 |
-| Lines      | 120,173 | 124,545 |                  123,300 |         3,127 |
+| Lines      | 120,172 | 124,529 |                  123,284 |         3,112 |
 
 ## Milestone context
 
-Since the prior authoritative checkpoint, `c99b55671` consolidated duplicate
-object-target spell resource-spending protocols into one local closure. That
-was connascence cleanup, not itself an uncovered-gap claim. Commit
-`962fa8462` added admitted light-emitter projection witnesses for Sacred Weapon
-and Starry Wisp, covering matching and mismatching target projections in tests;
-it made no production-code change. Earlier commits `14a70bcf6` (Dancing Lights
-reposition narrowing) and `07e9580b5` (light-emitter target matching) remain
-part of the preceding milestone context. The public checkpoint now records 7
-fewer uncovered statements/lines and 1 fewer uncovered branch than
-`07e9580b5`.
+Since the prior authoritative checkpoint, `f7494d2fb` removed an unreachable
+Dragon's Breath post-Concentration same-source guard (production net -11), and
+`e300f6559` fixed roll-modifier object/mixed-target admission using the
+canonical `creatureTargetSelection` predicate. `e0e170611` removed unreachable
+Faerie Fire post-Concentration combatant/object replay filters (production net
+-11). `51c201581` fixed direct HP-restoration/area-healing and
+condition-removal/protection object/mixed-target admission with that same
+canonical predicate. These behavior changes were accompanied by focused package
+tests and typechecks; the Dragon's Breath and Faerie Fire lanes also received
+their focused MBT runs. Focused evidence is navigation and regression evidence,
+not a replacement for the public totals above. The public checkpoint now records
+15 fewer uncovered statements/lines and no uncovered-branch movement than
+`962fa8462`.
 
 Focused cohort uncovered counts remain regression and navigation evidence, not a
 forecast of the global public delta, because other public tests may already
