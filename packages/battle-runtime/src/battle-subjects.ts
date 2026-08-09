@@ -1466,240 +1466,256 @@ function spellMetamagicSelectionKey(
 }
 
 function battleSubjectKey(subject: BattleSubject): string {
-  if (subject.tag === "action" && subject.action === "shakeAwakeFromSleep") {
-    return JSON.stringify([subject.tag, subject.actorId, subject.action]);
-  }
-  if (
-    subject.tag === "action" &&
-    subject.action === "shakeAwakeFromHypnoticPattern"
-  ) {
-    return JSON.stringify([subject.tag, subject.actorId, subject.action]);
-  }
-  if (subject.tag === "action" && subject.action === "shove") {
-    return JSON.stringify([subject.tag, subject.actorId, subject.action]);
-  }
-  if (subject.tag === "bonusActionDashSpell") {
-    return JSON.stringify([
-      subject.tag,
-      subject.actorId,
-      subject.procedureRef,
-      spellSubjectModeKey(subject.mode),
-      subject.speedKind,
-    ]);
-  }
-  if (
-    subject.tag === "bonusAction" &&
-    (subject.action === "offHandAttack" ||
-      subject.action === "martialArtsUnarmedStrike")
-  ) {
-    return JSON.stringify([
-      subject.tag,
-      subject.actorId,
-      subject.action,
-      attackExecutionSelectionKey(subject),
-    ]);
-  }
-  if (subject.tag === "monkFocusOption") {
-    return JSON.stringify([
-      subject.tag,
-      subject.actorId,
-      subject.procedureRef,
-      subject.option,
-      "mode" in subject ? subject.mode : null,
-      "speedKind" in subject ? subject.speedKind : null,
-    ]);
-  }
-  if (subject.tag === "monkFocusFlurryOfBlowsStrike") {
-    return JSON.stringify([
-      subject.tag,
-      subject.actorId,
-      subject.focusProcedureRef,
-      subject.procedureRef,
-    ]);
-  }
-  if (subject.tag === "druidWildShape") {
-    return JSON.stringify([
-      subject.tag,
-      subject.actorId,
-      subject.procedureRef,
-      subject.action,
-      "formExecutionRef" in subject ? subject.formExecutionRef : null,
-    ]);
-  }
-  if (subject.tag === "companionLifecycle") {
-    return JSON.stringify([subject.tag, subject.actorId, subject.action]);
-  }
-  if (subject.tag === "findFamiliarSharedSenses") {
-    return JSON.stringify([subject.tag, subject.actorId, subject.familiarId]);
-  }
-  if (subject.tag === "findFamiliarTouchSpell") {
-    return JSON.stringify([
-      subject.tag,
-      subject.actorId,
-      subject.procedureRef,
-      subject.companionId,
-      subject.spellAction,
-      spellSubjectModeKey(subject.mode),
-      spellMetamagicSelectionKey(subject.metamagic),
-    ]);
-  }
-  if (subject.tag === "unitFeatureHeldWeaponActivation") {
-    return JSON.stringify([
-      subject.tag,
-      subject.actorId,
-      subject.procedureRef,
-      subject.weaponItemId,
-    ]);
-  }
-  if (subject.tag === "pactOfTheChainFamiliarAttack") {
-    return JSON.stringify([
-      subject.tag,
-      subject.actorId,
-      subject.familiarId,
-      subject.procedureRef,
-      subject.statBlockDamageNotation ?? "rolled",
-    ]);
-  }
-  if (subject.tag === "creatureAttack") {
-    return JSON.stringify([subject.tag, subject.actorId, subject.targetId]);
-  }
   return Match.value(subject).pipe(
-    Match.when({ tag: "action", action: "attack" }, (attack) =>
+    Match.when({ tag: "action", action: "shakeAwakeFromSleep" }, (action) =>
+      JSON.stringify([action.tag, action.actorId, action.action]),
+    ),
+    Match.when(
+      { tag: "action", action: "shakeAwakeFromHypnoticPattern" },
+      (action) => JSON.stringify([action.tag, action.actorId, action.action]),
+    ),
+    Match.when({ tag: "action", action: "shove" }, (action) =>
+      JSON.stringify([action.tag, action.actorId, action.action]),
+    ),
+    Match.when({ tag: "bonusActionDashSpell" }, (spell) =>
       JSON.stringify([
-        attack.tag,
-        attack.actorId,
-        attack.action,
-        attackExecutionSelectionKey(attack),
-        "statBlockDamageNotation" in attack
-          ? (attack.statBlockDamageNotation ?? "rolled")
-          : null,
+        spell.tag,
+        spell.actorId,
+        spell.procedureRef,
+        spellSubjectModeKey(spell.mode),
+        spell.speedKind,
       ]),
     ),
-    Match.when({ tag: "action", action: "dash" }, (action) =>
+    Match.when({ tag: "bonusAction", action: "offHandAttack" }, (action) =>
       JSON.stringify([
         action.tag,
         action.actorId,
         action.action,
-        action.speedKind,
-      ]),
-    ),
-    Match.when({ tag: "action", action: "disengage" }, (action) =>
-      JSON.stringify([action.tag, action.actorId, action.action]),
-    ),
-    Match.when({ tag: "action", action: "dodge" }, (action) =>
-      JSON.stringify([action.tag, action.actorId, action.action]),
-    ),
-    Match.when({ tag: "action", action: "helpAttack" }, (action) =>
-      JSON.stringify([action.tag, action.actorId, action.action]),
-    ),
-    Match.when({ tag: "action", action: "hide" }, (action) =>
-      JSON.stringify([action.tag, action.actorId, action.action]),
-    ),
-    Match.when({ tag: "action", action: "multiattack" }, (action) =>
-      JSON.stringify([
-        action.tag,
-        action.actorId,
-        action.action,
-        action.procedureRef,
-      ]),
-    ),
-    Match.when({ tag: "action", action: "ready" }, (action) =>
-      JSON.stringify([
-        action.tag,
-        action.actorId,
-        action.action,
-        "readyTrigger" in action ? action.readyTrigger : null,
-      ]),
-    ),
-    Match.when({ tag: "action", action: "search" }, (action) =>
-      JSON.stringify([action.tag, action.actorId, action.action]),
-    ),
-    Match.when({ tag: "action", action: "grapple" }, (action) =>
-      JSON.stringify([action.tag, action.actorId, action.action]),
-    ),
-    Match.when({ tag: "action", action: "escapeGrapple" }, (action) =>
-      JSON.stringify([action.tag, action.actorId, action.action]),
-    ),
-    Match.when({ tag: "action", action: "escapeSpellRestraint" }, (action) =>
-      JSON.stringify([
-        action.tag,
-        action.actorId,
-        action.action,
-        action.targetId,
-        action.effectRef,
+        attackExecutionSelectionKey(action),
       ]),
     ),
     Match.when(
-      { tag: "bonusAction", action: "statBlockActionOption" },
+      { tag: "bonusAction", action: "martialArtsUnarmedStrike" },
       (action) =>
         JSON.stringify([
           action.tag,
           action.actorId,
           action.action,
-          action.procedureRef,
-          action.standardAction,
+          attackExecutionSelectionKey(action),
         ]),
     ),
-    Match.when({ tag: "bonusActionStandardAction" }, (action) =>
+    Match.when({ tag: "monkFocusOption" }, (option) =>
       JSON.stringify([
-        action.tag,
-        action.actorId,
-        action.procedureRef,
-        action.action,
-        "speedKind" in action ? action.speedKind : null,
+        option.tag,
+        option.actorId,
+        option.procedureRef,
+        option.option,
+        "mode" in option ? option.mode : null,
+        "speedKind" in option ? option.speedKind : null,
       ]),
     ),
-    Match.when({ tag: "actionSpell" }, (spell) =>
+    Match.when({ tag: "monkFocusFlurryOfBlowsStrike" }, (strike) =>
+      JSON.stringify([
+        strike.tag,
+        strike.actorId,
+        strike.focusProcedureRef,
+        strike.procedureRef,
+      ]),
+    ),
+    Match.when({ tag: "druidWildShape" }, (wildShape) =>
+      JSON.stringify([
+        wildShape.tag,
+        wildShape.actorId,
+        wildShape.procedureRef,
+        wildShape.action,
+        "formExecutionRef" in wildShape ? wildShape.formExecutionRef : null,
+      ]),
+    ),
+    Match.when({ tag: "companionLifecycle" }, (companion) =>
+      JSON.stringify([companion.tag, companion.actorId, companion.action]),
+    ),
+    Match.when({ tag: "findFamiliarSharedSenses" }, (sharedSenses) =>
+      JSON.stringify([
+        sharedSenses.tag,
+        sharedSenses.actorId,
+        sharedSenses.familiarId,
+      ]),
+    ),
+    Match.when({ tag: "findFamiliarTouchSpell" }, (spell) =>
       JSON.stringify([
         spell.tag,
         spell.actorId,
         spell.procedureRef,
+        spell.companionId,
+        spell.spellAction,
         spellSubjectModeKey(spell.mode),
         spellMetamagicSelectionKey(spell.metamagic),
       ]),
     ),
-    Match.when({ tag: "bonusActionSpell" }, (spell) =>
+    Match.when({ tag: "unitFeatureHeldWeaponActivation" }, (activation) =>
       JSON.stringify([
-        spell.tag,
-        spell.actorId,
-        spell.procedureRef,
-        spellSubjectModeKey(spell.mode),
-        spellMetamagicSelectionKey(spell.metamagic),
+        activation.tag,
+        activation.actorId,
+        activation.procedureRef,
+        activation.weaponItemId,
       ]),
     ),
-    Match.when({ tag: "unitFeature" }, (feature) =>
-      JSON.stringify([feature.tag, feature.actorId, feature.procedureRef]),
-    ),
-    Match.when({ tag: "runtimeCommand" }, (command) =>
+    Match.when({ tag: "pactOfTheChainFamiliarAttack" }, (attack) =>
       JSON.stringify([
-        command.tag,
-        command.actorId,
-        command.command,
-        "readiedSpellCasterId" in command ? command.readiedSpellCasterId : null,
-        "readiedMovementActorId" in command
-          ? command.readiedMovementActorId
-          : null,
-        "targetId" in command ? command.targetId : null,
-        "reactorId" in command ? command.reactorId : null,
-        "procedureRef" in command ? command.procedureRef : null,
-        "attackAbility" in command ? (command.attackAbility ?? null) : null,
-        "attackDamageType" in command
-          ? (command.attackDamageType ?? null)
-          : null,
-        "sourceCombatantId" in command ? command.sourceCombatantId : null,
-        "condition" in command ? command.condition : null,
-        "mode" in command ? command.mode : null,
-        "naturalWeaponDamageType" in command
-          ? command.naturalWeaponDamageType
-          : null,
-        "areaId" in command ? command.areaId : null,
-        "trigger" in command ? command.trigger : null,
-        "areaMembershipTrigger" in command
-          ? JSON.stringify(command.areaMembershipTrigger)
-          : null,
-        "relevantEffect" in command ? command.relevantEffect : null,
+        attack.tag,
+        attack.actorId,
+        attack.familiarId,
+        attack.procedureRef,
+        attack.statBlockDamageNotation ?? "rolled",
       ]),
     ),
-    Match.exhaustive,
+    Match.when({ tag: "creatureAttack" }, (attack) =>
+      JSON.stringify([attack.tag, attack.actorId, attack.targetId]),
+    ),
+    Match.orElse((remainingSubject) =>
+      Match.value(remainingSubject).pipe(
+        Match.when({ tag: "action", action: "attack" }, (attack) =>
+          JSON.stringify([
+            attack.tag,
+            attack.actorId,
+            attack.action,
+            attackExecutionSelectionKey(attack),
+            "statBlockDamageNotation" in attack
+              ? (attack.statBlockDamageNotation ?? "rolled")
+              : null,
+          ]),
+        ),
+        Match.when({ tag: "action", action: "dash" }, (action) =>
+          JSON.stringify([
+            action.tag,
+            action.actorId,
+            action.action,
+            action.speedKind,
+          ]),
+        ),
+        Match.when({ tag: "action", action: "disengage" }, (action) =>
+          JSON.stringify([action.tag, action.actorId, action.action]),
+        ),
+        Match.when({ tag: "action", action: "dodge" }, (action) =>
+          JSON.stringify([action.tag, action.actorId, action.action]),
+        ),
+        Match.when({ tag: "action", action: "helpAttack" }, (action) =>
+          JSON.stringify([action.tag, action.actorId, action.action]),
+        ),
+        Match.when({ tag: "action", action: "hide" }, (action) =>
+          JSON.stringify([action.tag, action.actorId, action.action]),
+        ),
+        Match.when({ tag: "action", action: "multiattack" }, (action) =>
+          JSON.stringify([
+            action.tag,
+            action.actorId,
+            action.action,
+            action.procedureRef,
+          ]),
+        ),
+        Match.when({ tag: "action", action: "ready" }, (action) =>
+          JSON.stringify([
+            action.tag,
+            action.actorId,
+            action.action,
+            "readyTrigger" in action ? action.readyTrigger : null,
+          ]),
+        ),
+        Match.when({ tag: "action", action: "search" }, (action) =>
+          JSON.stringify([action.tag, action.actorId, action.action]),
+        ),
+        Match.when({ tag: "action", action: "grapple" }, (action) =>
+          JSON.stringify([action.tag, action.actorId, action.action]),
+        ),
+        Match.when({ tag: "action", action: "escapeGrapple" }, (action) =>
+          JSON.stringify([action.tag, action.actorId, action.action]),
+        ),
+        Match.when(
+          { tag: "action", action: "escapeSpellRestraint" },
+          (action) =>
+            JSON.stringify([
+              action.tag,
+              action.actorId,
+              action.action,
+              action.targetId,
+              action.effectRef,
+            ]),
+        ),
+        Match.when(
+          { tag: "bonusAction", action: "statBlockActionOption" },
+          (action) =>
+            JSON.stringify([
+              action.tag,
+              action.actorId,
+              action.action,
+              action.procedureRef,
+              action.standardAction,
+            ]),
+        ),
+        Match.when({ tag: "bonusActionStandardAction" }, (action) =>
+          JSON.stringify([
+            action.tag,
+            action.actorId,
+            action.procedureRef,
+            action.action,
+            "speedKind" in action ? action.speedKind : null,
+          ]),
+        ),
+        Match.when({ tag: "actionSpell" }, (spell) =>
+          JSON.stringify([
+            spell.tag,
+            spell.actorId,
+            spell.procedureRef,
+            spellSubjectModeKey(spell.mode),
+            spellMetamagicSelectionKey(spell.metamagic),
+          ]),
+        ),
+        Match.when({ tag: "bonusActionSpell" }, (spell) =>
+          JSON.stringify([
+            spell.tag,
+            spell.actorId,
+            spell.procedureRef,
+            spellSubjectModeKey(spell.mode),
+            spellMetamagicSelectionKey(spell.metamagic),
+          ]),
+        ),
+        Match.when({ tag: "unitFeature" }, (feature) =>
+          JSON.stringify([feature.tag, feature.actorId, feature.procedureRef]),
+        ),
+        Match.when({ tag: "runtimeCommand" }, (command) =>
+          JSON.stringify([
+            command.tag,
+            command.actorId,
+            command.command,
+            "readiedSpellCasterId" in command
+              ? command.readiedSpellCasterId
+              : null,
+            "readiedMovementActorId" in command
+              ? command.readiedMovementActorId
+              : null,
+            "targetId" in command ? command.targetId : null,
+            "reactorId" in command ? command.reactorId : null,
+            "procedureRef" in command ? command.procedureRef : null,
+            "attackAbility" in command ? (command.attackAbility ?? null) : null,
+            "attackDamageType" in command
+              ? (command.attackDamageType ?? null)
+              : null,
+            "sourceCombatantId" in command ? command.sourceCombatantId : null,
+            "condition" in command ? command.condition : null,
+            "mode" in command ? command.mode : null,
+            "naturalWeaponDamageType" in command
+              ? command.naturalWeaponDamageType
+              : null,
+            "areaId" in command ? command.areaId : null,
+            "trigger" in command ? command.trigger : null,
+            "areaMembershipTrigger" in command
+              ? JSON.stringify(command.areaMembershipTrigger)
+              : null,
+            "relevantEffect" in command ? command.relevantEffect : null,
+          ]),
+        ),
+        Match.exhaustive,
+      ),
+    ),
   );
 }
