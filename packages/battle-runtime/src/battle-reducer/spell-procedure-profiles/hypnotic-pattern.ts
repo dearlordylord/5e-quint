@@ -33,11 +33,7 @@ import type {
   BattleState,
   SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
-import {
-  GLYPH_STORED_AREA_CONTROL_PROCEDURES,
-  type GlyphStoredAreaControlInvocation,
-  type GlyphStoredAreaControlProcedure,
-} from "../../glyph-stored-spell-invocation.ts";
+import { type GlyphStoredAreaControlInvocation } from "../../glyph-stored-spell-invocation.ts";
 import {
   maybeOpenInterruptWindow,
   snapshotBattle,
@@ -106,37 +102,6 @@ type HypnoticPatternPhase = Extract<
 
 type HypnoticPatternResolveInput =
   SpellProcedureProfileResolveInput<HypnoticPatternSpellInvocation>;
-
-export function isGlyphStoredAreaControlSpellInvocation(
-  invocation: SupportedSpellInvocation,
-): invocation is GlyphStoredAreaControlInvocation;
-export function isGlyphStoredAreaControlSpellInvocation(
-  invocation: SpellProcedureExecution,
-): invocation is StoredGlyphAreaControlSpellInvocation;
-export function isGlyphStoredAreaControlSpellInvocation(
-  invocation: SupportedSpellInvocation | SpellProcedureExecution,
-): invocation is
-  | GlyphStoredAreaControlInvocation
-  | StoredGlyphAreaControlSpellInvocation;
-export function isGlyphStoredAreaControlSpellInvocation(
-  invocation: SupportedSpellInvocation | SpellProcedureExecution,
-): boolean {
-  return (
-    isGlyphStoredAreaControlProcedure(invocation.procedure) &&
-    ("spellRuleFacts" in invocation
-      ? invocation.spellRuleFacts.duration.kind === "concentration"
-      : "spell" in invocation &&
-        invocation.spell.mechanics.duration.kind === "concentration")
-  );
-}
-
-export function isGlyphStoredAreaControlProcedure(
-  procedure: SupportedSpellInvocation["procedure"],
-): procedure is GlyphStoredAreaControlProcedure {
-  return GLYPH_STORED_AREA_CONTROL_PROCEDURES.some(
-    (candidate) => candidate === procedure,
-  );
-}
 
 export function resolveStoredGlyphAreaControlSpellRelease(input: {
   readonly input: ActionSpellBattleResolutionInput;

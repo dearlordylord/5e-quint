@@ -27,12 +27,8 @@ import type {
   BattleResolutionResult,
   BattleState,
   BattleTrackedOngoingSpellLightEmitter,
-  SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
-import {
-  GLYPH_STORED_AREA_ONGOING_PROCEDURES,
-  type GlyphStoredAreaOngoingProcedure,
-} from "../glyph-stored-spell-invocation.ts";
+import type { GlyphStoredAreaOngoingProcedure } from "../glyph-stored-spell-invocation.ts";
 import type { CombatantId } from "../identity.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
@@ -91,31 +87,6 @@ type AreaOngoingSpellReleaseResource =
       readonly kind: "storedGlyphSpellRelease";
       readonly selfOriginAreaAnchorId: CombatantId;
     };
-
-export function isGlyphStoredAreaOngoingSpellInvocation(
-  invocation: SupportedSpellInvocation,
-): invocation is Extract<
-  SupportedSpellInvocation,
-  { readonly procedure: GlyphStoredAreaOngoingProcedure }
->;
-export function isGlyphStoredAreaOngoingSpellInvocation(
-  invocation: SpellProcedureExecution,
-): invocation is StoredGlyphAreaOngoingSpellInvocation;
-export function isGlyphStoredAreaOngoingSpellInvocation(
-  invocation: SupportedSpellInvocation | SpellProcedureExecution,
-): invocation is
-  | Extract<
-      SupportedSpellInvocation,
-      { readonly procedure: GlyphStoredAreaOngoingProcedure }
-    >
-  | StoredGlyphAreaOngoingSpellInvocation;
-export function isGlyphStoredAreaOngoingSpellInvocation(
-  invocation: SupportedSpellInvocation | SpellProcedureExecution,
-): boolean {
-  return GLYPH_STORED_AREA_ONGOING_PROCEDURES.some(
-    (procedure) => procedure === invocation.procedure,
-  );
-}
 
 function ordinarySpellCastResource(
   metamagicApplications:
