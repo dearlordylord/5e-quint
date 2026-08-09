@@ -87,11 +87,10 @@ The required accounting result is:
 
 ## Future Follow-up Queue
 
-Tasks 23-26 close `paladin_aura_of_protection`,
+The generated registries close `paladin_aura_of_protection`,
 `sorcerer_elemental_affinity`, `warlock_dark_ones_own_luck`, and
-`wizard_sculpt_spells` as `future-owner-before-SDK` boundaries, matching the
-L6 follow-up pattern. Tasks 54-57 in
-`plans/RALPH_L5_EXTENSION_L6_HORIZONTAL_SLICE.md` record the future owners:
+`wizard_sculpt_spells` as `future-owner-before-SDK` boundaries. Tracker-owned
+follow-up work records the future owners:
 
 | Task | Status | Depends on | Notes |
 | --- | --- | --- | --- |

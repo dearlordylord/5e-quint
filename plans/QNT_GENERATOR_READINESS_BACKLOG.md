@@ -87,8 +87,7 @@ only non-`done` rows are parked here.
 
 ## Reopen Checklist
 
-- Start from `plans/QNT_COVERAGE_PROGRAM.md` and
-  `plans/rules-kernel-coverage/README.md`.
+- Start from `plans/rules-kernel-coverage/README.md`.
 - Read only the relevant rows in `generator-readiness.jsonl`,
   `obligations.jsonl`, `qnt-owner-roles.jsonl`, and
   `profile-obligations.jsonl`.

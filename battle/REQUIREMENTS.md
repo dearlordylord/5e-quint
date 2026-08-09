@@ -1,6 +1,8 @@
 # Battle State — Requirements (SRD-Derived)
 
-Everything in this file is derived from SRD 5.2.1 text. Each requirement references its source. No opinions or design choices — those live in `OPTIONS.md`.
+Everything in this file is derived from SRD 5.2.1 text. Each requirement
+references its source. Accepted design boundaries live in
+[`ARCHITECTURE.md`](../ARCHITECTURE.md), not here.
 
 ---
 
@@ -383,7 +385,9 @@ AoE shapes (SRD, Rules Glossary "Areas of Effect"):
 - **Line**: origin at caster, width 5ft
 - **Sphere**: origin at a point, radius
 
-Which creatures are "in the area" is a spatial/distance question — caller-provided per our O2 decision. The battle machine receives the set of affected creatures as input.
+Which creatures are "in the area" is a spatial/distance question. Per the
+[spatial ownership boundary](../ARCHITECTURE.md#spatial-modeling-frontier),
+the battle machine receives the set of affected creatures as input.
 
 Key properties:
 - Each target saves/takes damage independently

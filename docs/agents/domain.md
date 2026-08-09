@@ -14,5 +14,5 @@ the relevant context document in issue titles, design discussion, code, and
 tests. If a proposed decision contradicts an accepted ADR or an owning context,
 surface the conflict instead of silently replacing its language.
 
-For the ownership and historical status of Wayfinder decision artifacts, follow
-the rule in [`CONTEXT-MAP.md`](../../CONTEXT-MAP.md).
+For Wayfinder promotion and deletion, follow the rule in
+[`CONTEXT-MAP.md`](../../CONTEXT-MAP.md).

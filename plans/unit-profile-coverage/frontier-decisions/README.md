@@ -1,8 +1,7 @@
 # Frontier Decision Artifacts
 
-This directory holds task-local decision artifacts for the level-support
-frontier now summarized by `plans/LEVEL1_2_FULL_SUPPORT_BACKLOG.md` and the
-generated reports in `plans/unit-profile-coverage/`.
+This directory holds executable evidence artifacts referenced by the generated
+level-support reports in `plans/unit-profile-coverage/`.
 
 Use these artifacts for `AT-L1X-*` no-matrix spell expansion decisions and
 `AT-L1Y-*` non-executable class/profile expansion decisions. Each artifact

@@ -33,9 +33,9 @@ Stat Block, and not in-play Character Sheet state.
 | finalized `CharacterBuild` plus level gain | `advanceCharacterBuildClassLevel` | advanced `CharacterBuild`      |
 | finalized `CharacterBuild`                 | application composition outside   | battle creature initialization |
 
-`@dnd/character-creation-runtime` must not import `@dnd/battle-runtime` or the
-legacy Core package. Battle initialization from a `CharacterBuild` belongs to
-the composition layer and battle runtime boundary.
+`@dnd/character-creation-runtime` must not import `@dnd/battle-runtime` or own
+battle execution. Battle initialization from a `CharacterBuild` belongs to the
+composition layer and battle runtime boundary.
 
 ## Runtime Flow
 

@@ -320,5 +320,5 @@ runtime packages own executable semantics and parity tests.
 
 ## Related docs
 
-- [`docs/mushroom-playbook/AUTHORING.md`](/workspace/typescript/dnd/docs/mushroom-playbook/AUTHORING.md) — public/private authoring and publication boundary.
-- [`ARCHITECTURE.md`](/workspace/typescript/dnd/ARCHITECTURE.md) — system ownership and runtime boundaries.
+- [`docs/mushroom-playbook/AUTHORING.md`](../../docs/mushroom-playbook/AUTHORING.md) — public/private authoring and publication boundary.
+- [`ARCHITECTURE.md`](../../ARCHITECTURE.md) — system ownership and runtime boundaries.

@@ -207,9 +207,8 @@ This table groups the 110 class-list rows into their 42 spell identities. The
 
 ## Next Action Mapping
 
-Each row mapped to the completed L5 full SRD launch queue, which has been
-removed from the active tree after closeout. Current follow-up work starts from
-`plans/RALPH_L5_EXTENSION_L6_HORIZONTAL_SLICE.md`.
+Each row maps to the generated coverage registries and tracker-owned follow-up
+work.
 
 | Bucket | Rows | Ralph action |
 | --- | ---: | --- |
@@ -269,12 +268,6 @@ description anchor below.
 | `wind_wall` | .references/srd-5.2.1/Spells/Descriptions-S-Z.md:1313 |
 
 ## Stale Artifact Hygiene
-
-The four earlier L5 lane plans and generated finalization plan were removed
-from the active tree after this audit. They are historical implementation lanes,
-not the remaining launch queue. The later L5 full SRD launch queue has also
-closed and been removed from the active tree; the active launch source is now
-`plans/RALPH_L5_EXTENSION_L6_HORIZONTAL_SLICE.md`.
 
 The L4 planning precedent included a separate progression-delta audit. L5 now
 has the same accounting layer at

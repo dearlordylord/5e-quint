@@ -2,6 +2,8 @@
 
 Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-frontier.jsonl`, `profile-obligations.jsonl`, `qnt-owner-roles.jsonl`, `generator-readiness.jsonl`, `kernel-ir-boundaries.jsonl`, and `KERNEL-COVERAGE` source markers.
 
+Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-coverage/README.md` and this report's Summary, then inspect only the relevant obligations.
+
 ## Summary
 
 - Total obligations: 134

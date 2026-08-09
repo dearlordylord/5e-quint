@@ -9,9 +9,7 @@ mechanics profiles, which installed Units are explicitly unsupported or need
 widening, which authored Surface Units are not yet admitted to the Unit catalog,
 and which QNT/runtime/verification owners cover each supported profile.
 
-The current executable backlog for SRD character levels 1-2 full-support claim
-closure is `plans/LEVEL1_2_FULL_SUPPORT_BACKLOG.md`. Character level and spell
-level are separate axes: character levels 1-2 include cantrips and spell-level-1
+Character level and spell level are separate axes: character levels 1-2 include cantrips and spell-level-1
 spells; character level 3 is the first frontier that includes spell-level-2
 spells; spell-level-3 spells belong to the later character-level-5 frontier.
 The generated reports currently include `LEVEL1_FULL_SUPPORT.md`,
@@ -325,7 +323,8 @@ Any task that adds or changes `UNIT-IDENTITY-EVIDENCE`, `unit-claims.jsonl`,
 `unit-evidence.jsonl`, `profiles.jsonl`, Surface catalog admission, or profile
 owner markers must run `pnpm unit-profile-coverage:check --write` before the
 task can be marked `done`. The generated inventory and matrix artifacts in this
-directory are part of the task output and must agree with `ACTIVE_PLAN.md`.
+directory are part of the task output and must agree with the current executable
+coverage registries.
 Any task that changes `plans/rules-kernel-coverage/profile-obligations.jsonl`,
 rules-kernel obligations, or rules-kernel covered status must run both
 `pnpm rules-kernel-coverage:check --write` and
@@ -410,7 +409,7 @@ exists, whether it is installed in the SRD Unit catalog, and what explicit
 disposition closes the row for planning.
 
 The generated report also emits `Recommended Ralph Batches`. These are mirrored
-in `plans/ACTIVE_PLAN.md` as the `SRDINV*` queue when the SRD inventory frontier
+in the active delivery as the `SRDINV*` queue when the SRD inventory frontier
 is active. This lane is not QMBT unless a later batch deliberately promotes
 battle-runtime behavior.
 

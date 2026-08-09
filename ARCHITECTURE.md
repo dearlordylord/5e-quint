@@ -46,7 +46,6 @@ Licenses:
 
 - Project code: [Apache License 2.0](LICENSE)
 - SRD 5.2.1 content: [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/), (c) Wizards of the Coast LLC
-- SRD markdown source: [DND.SRD.Wiki](https://github.com/OldManUmby/DND.SRD.Wiki) by OldManUmby, CC-BY-4.0
 - Full attribution: [NOTICE](NOTICE)
 
 ## Package Map
@@ -133,13 +132,6 @@ Coverage and accounting live in two registries:
 Generator readiness is a separate axis from parity. A QNT owner that is shaped
 as semantic core (suitable input for a future QNT-to-Rust generator) is
 recorded distinctly from a QNT owner that is proof-only.
-
-The previous root QNT monoliths were archived restore source material under
-`plans/LARGE_FILE_DOMAIN_SPLIT_PLAN.md` policy and have been removed from the
-worktree. They remain recoverable from git history, but they are not the active
-verification corpus and not a gate for any runtime behavior. The old QA
-assertion-generation lane that prompted against the root creature spec is also
-retired; see `scripts/qa/QA_README.md`.
 
 ## Authored Content
 
@@ -348,13 +340,13 @@ weapon, feature, or Stat Block.
 
 ## Package Ownership
 
-| Package | Owns | Does not own |
-| --- | --- | --- |
-| `@dnd/surface` | Provenance-bearing authored Unit and Stat Block records, structural readers, SRD collections, and decode/catalog boundaries. | Runtime state, reducer legality, character draft sessions, battle sessions, or projected executable IR. |
-| `@dnd/shared-algebras` | Reusable reducer algebras such as action economy, Initiative, Armor Class, attack rolls, conditions, Death Saving Throw counters, runtime dice, and runtime hole identity. | Unit support gates, act subjects, authored-content catalogs, MCP sessions, or complete character/battle reducers. |
-| `@dnd/character-creation-runtime` | Character Draft mutation, creation holes/fills, support gates, finalization, and `CharacterBuild` projection from Surface Unit facts. | Battle initialization, battle state, current HP, in-play resource expenditure, or authored content provenance. |
-| `@dnd/battle-runtime` | Battle initialization from caller-built creature inputs, durable battle state, act discovery, replay fills, action resources, damage/HP mutation, supported feature/spell/attack resolution, table-supplied spatial facts consumed or stored by those procedures, and snapshots. | Character draft legality, catalog installation, MCP transient fill storage, post-battle character-session persistence, or geometry inference such as grids, coordinates, LOS, pathfinding, cover calculation, and adjacency caches. |
-| `@dnd/mcp` | Tool schemas, session storage, installed Surface catalogs, Character Build to battle-init projection, selected Stat Block identity, transient battle fills, table/caller-provided spatial facts for tool calls, and cross-runtime workflow tests. | Reducer semantics, authored content rules, runtime QNT authority, duplicated executable content, or private geometry state that substitutes for table-supplied spatial facts. |
+| Package                           | Owns                                                                                                                                                                                                                                                                             | Does not own                                                                                                                                                                                                                        |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@dnd/surface`                    | Provenance-bearing authored Unit and Stat Block records, structural readers, SRD collections, and decode/catalog boundaries.                                                                                                                                                     | Runtime state, reducer legality, character draft sessions, battle sessions, or projected executable IR.                                                                                                                             |
+| `@dnd/shared-algebras`            | Reusable reducer algebras such as action economy, Initiative, Armor Class, attack rolls, conditions, Death Saving Throw counters, runtime dice, and runtime hole identity.                                                                                                       | Unit support gates, act subjects, authored-content catalogs, MCP sessions, or complete character/battle reducers.                                                                                                                   |
+| `@dnd/character-creation-runtime` | Character Draft mutation, creation holes/fills, support gates, finalization, and `CharacterBuild` projection from Surface Unit facts.                                                                                                                                            | Battle initialization, battle state, current HP, in-play resource expenditure, or authored content provenance.                                                                                                                      |
+| `@dnd/battle-runtime`             | Battle initialization from caller-built creature inputs, durable battle state, act discovery, replay fills, action resources, damage/HP mutation, supported feature/spell/attack resolution, table-supplied spatial facts consumed or stored by those procedures, and snapshots. | Character draft legality, catalog installation, MCP transient fill storage, post-battle character-session persistence, or geometry inference such as grids, coordinates, LOS, pathfinding, cover calculation, and adjacency caches. |
+| `@dnd/mcp`                        | Tool schemas, session storage, installed Surface catalogs, Character Build to battle-init projection, selected Stat Block identity, transient battle fills, table/caller-provided spatial facts for tool calls, and cross-runtime workflow tests.                                | Reducer semantics, authored content rules, runtime QNT authority, duplicated executable content, or private geometry state that substitutes for table-supplied spatial facts.                                                       |
 
 The composition rule is direct use of owned package APIs, not an adapter layer.
 If a future task needs a lower layer to expose a stronger fact, change that
@@ -395,8 +387,6 @@ slices, and focused witnesses:
   behavior.
 - `packages/character-creation-runtime/character-creation-runtime-slice.qnt`
   constrains character-creation reducer behavior.
-- The deleted root `.qnt` files are historical restore material recoverable
-  from git history, not the active authority for any runtime.
 
 Runtime correctness mechanisms:
 
@@ -415,14 +405,14 @@ Quint assertions and treat that as proof.
 
 Proof layers for the promoted path are package-owned:
 
-| Boundary | Proof owner | Default proof shape | Escalate when |
-| --- | --- | --- | --- |
-| Authored Surface records and catalogs | `@dnd/surface` | Decode/reader tests, trace review, provenance/cross-collection constraints, and table-driven catalog contract tests. | A new record family or structural reader changes runtime-visible meaning. |
-| Reusable rule mechanic | `@dnd/shared-algebras` `proofs/rule-core/` slice | Stateless contract module plus stateful inductive proof machine (`*-inductive.qnt`); integration MBT through a package-local bridge where the mechanic is composed at scale. | A new reusable procedure family is introduced or an existing slice's state transitions change. |
-| Character creation reducer | `@dnd/character-creation-runtime` | Focused reducer tests, focused QNT, and randomized MBT where present. | Draft mutation, hole/fill semantics, support gates, or final `CharacterBuild` projection changes. |
-| Battle reducer deterministic semantics | `@dnd/battle-runtime` | Focused reducer tests plus hand-authored focused QNT tests and rule-core bridge modules. | Implemented battle behavior, action resources, HP lifecycle, act discovery, replay, or snapshots change. |
-| Selected composed battle-runtime flows | `@dnd/battle-runtime` | Focused `*.mbt.qnt` / `*.mbt.test.ts` drivers per obligation, profile, or selected identity, including `battle-runtime-weapon-attack-skeleton.mbt.qnt` as one bounded fixture. | Trace generation adds value across discovery, replay holes, action resources, damage, and snapshots. |
-| MCP runtime composition | `@dnd/mcp` | Deterministic MCP server/protocol tests and end-user acceptance scenarios over real tool calls and in-memory sessions. | Tool schema, session ownership, cross-runtime projection, battle fill storage, handoff, or workflow recovery changes. |
+| Boundary                               | Proof owner                                      | Default proof shape                                                                                                                                                            | Escalate when                                                                                                         |
+| -------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| Authored Surface records and catalogs  | `@dnd/surface`                                   | Decode/reader tests, trace review, provenance/cross-collection constraints, and table-driven catalog contract tests.                                                           | A new record family or structural reader changes runtime-visible meaning.                                             |
+| Reusable rule mechanic                 | `@dnd/shared-algebras` `proofs/rule-core/` slice | Stateless contract module plus stateful inductive proof machine (`*-inductive.qnt`); integration MBT through a package-local bridge where the mechanic is composed at scale.   | A new reusable procedure family is introduced or an existing slice's state transitions change.                        |
+| Character creation reducer             | `@dnd/character-creation-runtime`                | Focused reducer tests, focused QNT, and randomized MBT where present.                                                                                                          | Draft mutation, hole/fill semantics, support gates, or final `CharacterBuild` projection changes.                     |
+| Battle reducer deterministic semantics | `@dnd/battle-runtime`                            | Focused reducer tests plus hand-authored focused QNT tests and rule-core bridge modules.                                                                                       | Implemented battle behavior, action resources, HP lifecycle, act discovery, replay, or snapshots change.              |
+| Selected composed battle-runtime flows | `@dnd/battle-runtime`                            | Focused `*.mbt.qnt` / `*.mbt.test.ts` drivers per obligation, profile, or selected identity, including `battle-runtime-weapon-attack-skeleton.mbt.qnt` as one bounded fixture. | Trace generation adds value across discovery, replay holes, action resources, damage, and snapshots.                  |
+| MCP runtime composition                | `@dnd/mcp`                                       | Deterministic MCP server/protocol tests and end-user acceptance scenarios over real tool calls and in-memory sessions.                                                         | Tool schema, session ownership, cross-runtime projection, battle fill storage, handoff, or workflow recovery changes. |
 
 No layer requires MBT per authored Unit, Spell, weapon, feature, or Stat Block.
 Ordinary catalog width belongs in Surface reader/contract tests and package
@@ -524,31 +514,33 @@ The runtime path uses this dependency direction:
 
 ## Reference Authority
 
-| Document | Scope | Authority |
-| --- | --- | --- |
-| `.references/srd-5.2.1/` | Rules text | Ground truth for modeled SRD rules |
-| `UBIQUITOUS_LANGUAGE.md` | Canonical D&D domain terminology | Naming authority for domain terms |
-| `ASSUMPTIONS.md` | Explicit modeling choices where SRD is underspecified | Sole record of intentional RAW assumptions |
-| `docs/adr/0001-forest-of-qnt-slices.md` | QNT verification shape | Architectural decision authority for the QNT corpus structure |
-| `docs/adr/0002-character-creature-monster-ownership.md` | Character/creature/monster domain ownership | Architectural decision authority for the character→creature projection and Quint-owns-semantics boundary |
-| `docs/adr/0003-monster-stat-blocks-authored-data-provenance.md` | Monster Stat Block authoring and provenance | Architectural decision authority for Stat Blocks as authored data with explicit provenance |
-| `docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md` | Light/obscurement/cover/sight boundary | Architectural decision authority for runtime source-facts plus table-supplied witnesses |
-| `docs/adr/0006-battle-runtime-holes-do-not-expose-partial-state.md` | Battle committed-state and continuation boundary | Architectural decision authority for atomic Act commits, deterministic continuation replay, and separate frontiers |
-| `packages/character-creation-runtime/VOCABULARY.md` | Character-creation runtime terms | Character-creation package vocabulary |
-| `plans/rules-kernel-coverage/` | Reducer semantic obligation coverage and generator-readiness ledger | Coverage authority for TS-current reducer semantics |
-| `plans/unit-profile-coverage/` | Authored Surface Unit/profile support breadth | Coverage authority for authored-content support and the generated rules-kernel join view |
-| `plans/BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md` | Battle-runtime QNT/TS connectivity map | Reference map for how battle-runtime QNT bridges into rule-core and connects to TypeScript via MBT |
-| Package READMEs | Package-owned APIs and local invariants | Local package contracts |
+| Document                                                              | Scope                                                               | Authority                                                                                                          |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `.references/srd-5.2.1/`                                              | Rules text                                                          | Ground truth for modeled SRD rules                                                                                 |
+| `UBIQUITOUS_LANGUAGE.md`                                              | Canonical D&D domain terminology                                    | Naming authority for domain terms                                                                                  |
+| `ASSUMPTIONS.md`                                                      | Explicit modeling choices where SRD is underspecified               | Sole record of intentional RAW assumptions                                                                         |
+| `docs/adr/0001-forest-of-qnt-slices.md`                               | QNT verification shape                                              | Architectural decision authority for the QNT corpus structure                                                      |
+| `docs/adr/0002-character-creature-monster-ownership.md`               | Character/creature/monster domain ownership                         | Architectural decision authority for the character→creature projection and Quint-owns-semantics boundary           |
+| `docs/adr/0003-monster-stat-blocks-authored-data-provenance.md`       | Monster Stat Block authoring and provenance                         | Architectural decision authority for Stat Blocks as authored data with explicit provenance                         |
+| `docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md` | Light/obscurement/cover/sight boundary                              | Architectural decision authority for runtime source-facts plus table-supplied witnesses                            |
+| `docs/adr/0006-battle-runtime-holes-do-not-expose-partial-state.md`   | Battle committed-state and continuation boundary                    | Architectural decision authority for atomic Act commits, deterministic continuation replay, and separate frontiers |
+| `packages/character-creation-runtime/VOCABULARY.md`                   | Character-creation runtime terms                                    | Character-creation package vocabulary                                                                              |
+| `plans/rules-kernel-coverage/`                                        | Reducer semantic obligation coverage and generator-readiness ledger | Coverage authority for TS-current reducer semantics                                                                |
+| `plans/unit-profile-coverage/`                                        | Authored Surface Unit/profile support breadth                       | Coverage authority for authored-content support and the generated rules-kernel join view                           |
+| `plans/raw-coverage/`                                                 | Local SRD span classification and implementation traceability       | Coverage authority linking reviewed RAW spans to requirements, executable owners, and delivery claims              |
+| `plans/BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md`                         | Battle-runtime QNT/TS connectivity map                              | Reference map for how battle-runtime QNT bridges into rule-core and connects to TypeScript via MBT                 |
+| Package READMEs                                                       | Package-owned APIs and local invariants                             | Local package contracts                                                                                            |
 
 ## Choosing The Right Owner
 
-| Question                                        | Owner                                           |
-| ----------------------------------------------- | ----------------------------------------------- |
-| What does the SRD say?                          | `.references/srd-5.2.1/`                        |
-| What term should code use?                      | `UBIQUITOUS_LANGUAGE.md` or package vocabulary  |
-| What authored content exists?                   | `@dnd/surface`                                  |
-| Is a Unit or Stat Block decoded correctly?      | Surface tests and trace review                  |
-| Is character creation state valid?              | `@dnd/character-creation-runtime`               |
-| Is battle reducer behavior correct?             | `@dnd/battle-runtime` plus its QNT/parity tests |
-| Is a reusable mechanic correct?                 | `packages/shared-algebras/proofs/rule-core/` slice plus its inductive proof or MBT driver |
-| How are runtimes exposed to tools?              | `@dnd/mcp` composition                          |
+| Question                                             | Owner                                                                                     |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| What does the SRD say?                               | `.references/srd-5.2.1/`                                                                  |
+| Which RAW spans have reviewed implementation owners? | `plans/raw-coverage/`                                                                     |
+| What term should code use?                           | `UBIQUITOUS_LANGUAGE.md` or package vocabulary                                            |
+| What authored content exists?                        | `@dnd/surface`                                                                            |
+| Is a Unit or Stat Block decoded correctly?           | Surface tests and trace review                                                            |
+| Is character creation state valid?                   | `@dnd/character-creation-runtime`                                                         |
+| Is battle reducer behavior correct?                  | `@dnd/battle-runtime` plus its QNT/parity tests                                           |
+| Is a reusable mechanic correct?                      | `packages/shared-algebras/proofs/rule-core/` slice plus its inductive proof or MBT driver |
+| How are runtimes exposed to tools?                   | `@dnd/mcp` composition                                                                    |

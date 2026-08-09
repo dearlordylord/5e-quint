@@ -106,9 +106,6 @@ substitutes for reducer-semantic ownership.
 `generator-readiness.jsonl` records the separate C-axis question defined in
 [Generator Readiness Source Of Truth](#generator-readiness-source-of-truth).
 Generated reports summarize those rows but are not the source of truth.
-The Ralph Lane A closeout summary is
-[`GENERATOR_READINESS_CLOSURE_REPORT.md`](GENERATOR_READINESS_CLOSURE_REPORT.md);
-it links back to the checker-owned artifacts rather than replacing them.
 
 `kernel-ir-boundaries.jsonl` records the future kernel IR boundary inventory.
 It is descriptive C-lane evidence, not a new runtime abstraction. Each row names
@@ -163,11 +160,13 @@ empty, every QNT owner role is classified, and the kernel IR boundary inventory
 is complete. Building an emitter or committing generated Rust is outside this
 readiness gate.
 
-For runnable Rust migration or generator-readiness queue selection, start from
-`plans/QNT_COVERAGE_PROGRAM.md#rust--generator-readiness-entrypoints`. This
-README owns the row contract and vocabulary; it is not a historical task queue.
-Closed QNT/QMBT planning files redirect to that entrypoint because the durable
-facts now live in checked JSONL artifacts and the active A/B Ralph plans.
+There is no active generator-readiness blocker queue while every checked row is
+`generation-subset-clean` and every `blockedBy` and `followUpTaskIds` array is
+empty. The checked entrypoints for future work are `generator-readiness.jsonl`,
+`qnt-owner-roles.jsonl`, `kernel-ir-boundaries.jsonl`, and the scoped manual
+Hit Point dry runs in this directory. Parked non-runnable ideas live in
+`../QNT_GENERATOR_READINESS_BACKLOG.md`; reopen one only by creating a fresh,
+small delivery from current checker-owned inputs.
 
 `generator-readiness.jsonl` is obligation-centered. Each row must point to a
 real obligation id and must explicitly declare `semanticCore`, `proofOnly`,

@@ -1,6 +1,6 @@
 # Forest of QNT slices, no single top, sibling Target-owned language harnesses
 
-The engine is QNT-verified via MBT parity and the long-term goal is generating implementations in multiple language targets from one Quint source. A whole-battle Quint model is infeasible: the `creature x turn x effect x hole x fill` cross-product explodes the MBT state space, as the deleted root monoliths demonstrated at scale. Therefore the QNT corpus is structured as a forest of small composite slices that `import` shared atomic rule files, each slice with its own bounded MBT trace generator (state minimal, variability pushed into per-action `nondet`/fills). Composition across slices lives at the production reducer (command dispatch) and at one bounded-fixture-world integration MBT that witnesses cross-slice sequencing (never a generation input). Each language-target implementation owns an independent MBT harness against the same Quint source via that language's `quint-connect` equivalent; the Target Language Adapter does not supply that harness, and harnesses do not call each other.
+The engine is QNT-verified via MBT parity and the long-term goal is generating implementations in multiple language targets from one Quint source. A whole-battle Quint model is infeasible because the `creature x turn x effect x hole x fill` cross-product explodes the MBT state space. Therefore the QNT corpus is structured as a forest of small composite slices that `import` shared atomic rule files, each slice with its own bounded MBT trace generator (state minimal, variability pushed into per-action `nondet`/fills). Composition across slices lives at the production reducer (command dispatch) and at one bounded-fixture-world integration MBT that witnesses cross-slice sequencing (never a generation input). Each language-target implementation owns an independent MBT harness against the same Quint source via that language's `quint-connect` equivalent; the Target Language Adapter does not supply that harness, and harnesses do not call each other.
 
 ## TypeScript calibration before another language target
 
@@ -31,14 +31,16 @@ QNT rule acquires an implementation.
 “Exhaustive” applies to active semantic obligations, cleanroom-facing branch
 actions, supported-profile joins, and language-level dispatch. It does not mean
 that every `.qnt` file needs a production handler: proof-only examples,
-inductive companions, type-vocabulary leaves, witness protocol leaves, and
-retired/exempt files are classified separately. It also does not claim
+inductive companions, type-vocabulary leaves, and witness protocol leaves are
+classified separately. It also does not claim
 exhaustive whole-battle state-space coverage; cross-slice integration remains
 the bounded-fixture tier described below.
 
 ## Considered options
 
-- **Monolithic whole-battle QNT** — rejected; the deleted root monoliths were exactly that path at scale, and the explosion is documented in CLAUDE.md (Apalache record-set enumeration becomes infeasible for large records; MBT trace generation slows under branch count).
+- **Monolithic whole-battle QNT** — rejected because Apalache record-set
+  enumeration becomes infeasible for large records and MBT trace generation
+  slows sharply with broad behavioral import closures.
 - **Cross-language harness coupling (one harness driving multiple language implementations via FFI)** — rejected; entangles language targets, breaks linear scaling for adding new languages, adds plumbing nobody needs.
 
 ## Consequences
