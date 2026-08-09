@@ -496,7 +496,7 @@ export function battleLightEmitterProjection(
   emitter: BattleLightEmitter,
   fact: BattleLightEmitterProjectionFact,
 ): BattleLightEmitterProjection | null {
-  if (!lightEmitterMatchesProjectionFact(emitter, fact)) {
+  if (!lightEmitterMatchesTarget(emitter, fact)) {
     return null;
   }
   if (lightEmitterOpaqueCoverBlocksEmission(emitter, fact)) {
@@ -822,49 +822,53 @@ function spellCreatedHeldObjectHeldActor(input: {
   };
 }
 
-function lightEmitterMatchesProjectionFact(
+function lightEmitterMatchesTarget(
   emitter: BattleLightEmitter,
-  fact: BattleLightEmitterProjectionFact,
+  target: BattleLightEmitterAttachment,
 ): boolean {
   return Match.value(emitter).pipe(
     Match.when({ kind: "spellLightEmitter" }, (spellEmitter) =>
-      lightEmitterAttachmentMatchesFact(spellEmitter.attachment, fact),
+      lightEmitterAttachmentMatchesTarget(spellEmitter.attachment, target),
     ),
     Match.when({ kind: "unitFeatureLightEmitter" }, (unitFeatureEmitter) =>
-      lightEmitterAttachmentMatchesFact(unitFeatureEmitter.attachment, fact),
+      lightEmitterAttachmentMatchesTarget(
+        unitFeatureEmitter.attachment,
+        target,
+      ),
     ),
     Match.when(
       { kind: "objectInvisibleRevealLightEmitter" },
       (objectEmitter) =>
-        fact.kind === "object" && objectEmitter.objectId === fact.objectId,
+        target.kind === "object" && objectEmitter.objectId === target.objectId,
     ),
     Match.exhaustive,
   );
 }
 
-function lightEmitterAttachmentMatchesFact(
+function lightEmitterAttachmentMatchesTarget(
   attachment: BattleLightEmitterAttachment,
-  fact: BattleLightEmitterProjectionFact,
+  target: BattleLightEmitterAttachment,
 ): boolean {
   return Match.value(attachment).pipe(
     Match.when(
       { kind: "combatant" },
       (combatantAttachment) =>
-        fact.kind === "combatant" &&
-        combatantAttachment.combatantId === fact.combatantId,
+        target.kind === "combatant" &&
+        combatantAttachment.combatantId === target.combatantId,
     ),
     Match.when(
       { kind: "object" },
       (objectAttachment) =>
-        fact.kind === "object" && objectAttachment.objectId === fact.objectId,
+        target.kind === "object" &&
+        objectAttachment.objectId === target.objectId,
     ),
     Match.when(
       { kind: "dancingLight" },
       (lightAttachment) =>
-        fact.kind === "dancingLight" &&
-        lightAttachment.lightId === fact.lightId &&
-        lightAttachment.positionId === fact.positionId &&
-        lightAttachment.form === fact.form,
+        target.kind === "dancingLight" &&
+        lightAttachment.lightId === target.lightId &&
+        lightAttachment.positionId === target.positionId &&
+        lightAttachment.form === target.form,
     ),
     Match.exhaustive,
   );
@@ -1155,7 +1159,7 @@ export function applySpellLightEmitterEffects(
             emitter.kind === "spellLightEmitter" &&
             emitter.sourceProcedureRef === invocation.sourceProcedureRef &&
             emitter.sourceCombatantId === actorId &&
-            lightEmitterMatchesAttachment(emitter, attachment)
+            lightEmitterMatchesTarget(emitter, attachment)
           ),
       ),
       lightEmitterFromPostDamageRider(
@@ -1201,47 +1205,6 @@ export function tickDurationBattleLightEmitters(
           },
         ];
   });
-}
-
-function sameLightEmitterAttachment(
-  left: BattleLightEmitterAttachment,
-  right: SpellLightEmitterTargetAttachment,
-): boolean {
-  return Match.value(right).pipe(
-    Match.when(
-      { kind: "combatant" },
-      (rightCombatant) =>
-        left.kind === "combatant" &&
-        left.combatantId === rightCombatant.combatantId,
-    ),
-    Match.when(
-      { kind: "object" },
-      (rightObject) =>
-        left.kind === "object" && left.objectId === rightObject.objectId,
-    ),
-    Match.exhaustive,
-  );
-}
-
-function lightEmitterMatchesAttachment(
-  emitter: BattleLightEmitter,
-  attachment: SpellLightEmitterTargetAttachment,
-): boolean {
-  return Match.value(emitter).pipe(
-    Match.when({ kind: "spellLightEmitter" }, (spellEmitter) =>
-      sameLightEmitterAttachment(spellEmitter.attachment, attachment),
-    ),
-    Match.when({ kind: "unitFeatureLightEmitter" }, (unitFeatureEmitter) =>
-      sameLightEmitterAttachment(unitFeatureEmitter.attachment, attachment),
-    ),
-    Match.when(
-      { kind: "objectInvisibleRevealLightEmitter" },
-      (objectRevealEmitter) =>
-        attachment.kind === "object" &&
-        objectRevealEmitter.objectId === attachment.objectId,
-    ),
-    Match.exhaustive,
-  );
 }
 
 export type DancingLightsCastPlan = DancingLightsEffectShape;
