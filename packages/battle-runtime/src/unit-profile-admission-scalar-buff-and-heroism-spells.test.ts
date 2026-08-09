@@ -3,6 +3,7 @@ import { unitId } from "@dnd/shared/game-facts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type { BattleProcedureExecutionRef } from "./index.ts";
 import aidInput from "../../surface/content/aid.json";
+import heroismInput from "../../surface/content/heroism.json";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-AID aid
@@ -2009,6 +2010,40 @@ function interruptDecisionFill(
 }
 
 describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
+  test("heroism admission rejects a creature target without willing disposition", () => {
+    const { mode, count } = heroismInput.mechanics.attachment.value.selection;
+    const spell = decodeSpellRecordForTest({
+      ...heroismInput,
+      id: "synthetic_heroism_missing_willing",
+      name: "Synthetic Heroism missing willingness",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic_heroism_missing_willing",
+      },
+      mechanics: {
+        ...heroismInput.mechanics,
+        attachment: {
+          ...heroismInput.mechanics.attachment,
+          value: {
+            ...heroismInput.mechanics.attachment.value,
+            selection: {
+              mode,
+              count,
+              targetKinds: ["creature"],
+            },
+          },
+        },
+      },
+    });
+
+    expect(
+      maybeSpellAct({
+        session: spellBattle({ preparedSpells: [spell] }),
+        spellId: spell.id,
+      }),
+    ).toBeUndefined();
+  });
+
   test("heroism stores Frightened immunity separately from turn-start Temporary Hit Points", () => {
     const spell = spellRecord(heroismUnitId);
     const session = spellBattle({ preparedSpells: [spell] });

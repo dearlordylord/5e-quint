@@ -34,7 +34,10 @@ import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { conditionHadNonSpellSourceBeforeSpellEffect } from "../spell-condition-effects-helpers.ts";
 import { scalarBuffSpellTargetCount } from "../spells-execution-facts.ts";
-import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
+import {
+  scalarBuffActiveEffectExpiration,
+  willingCreatureTargetSelection,
+} from "../spells-profiles-support.ts";
 import { spellTargetHole, spellTargetListHole } from "../spells-holes-fills.ts";
 import { spellTargetListHoleId } from "../spells-targeting.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
@@ -123,6 +126,9 @@ function conditionImmunityAndTurnStartTemporaryHitPointsSpellProjection(
     spell.mechanics.duration.upTo.amount !== 1 ||
     spell.mechanics.attachment.kind !== "hole" ||
     spell.mechanics.attachment.value.kind !== "target" ||
+    !willingCreatureTargetSelection(
+      spell.mechanics.attachment.value.selection,
+    ) ||
     spell.mechanics.operations.length !== 2
   ) {
     return null;

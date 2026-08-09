@@ -218,6 +218,15 @@ export function creatureTargetSelection(selection: TargetSelection): boolean {
   );
 }
 
+export function willingCreatureTargetSelection(
+  selection: TargetSelection,
+): boolean {
+  return (
+    creatureTargetSelection(selection) &&
+    spellTargetRequiredDisposition(selection) === "willing"
+  );
+}
+
 type SpellTargetRequiredDisposition = "unrestricted" | "willing";
 
 function spellTargetRequiredDisposition(
