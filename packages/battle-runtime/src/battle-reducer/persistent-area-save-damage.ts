@@ -83,31 +83,46 @@ type CloudkillResolutionInput = BattleResolutionInput & {
   readonly handledInterruptTrigger?: BattleInterruptTrigger;
 };
 
-type SaveTurnTracking =
-  | { readonly kind: "appearance" }
-  | {
-      readonly kind: "trackForCurrentTurn";
-      readonly apply: (state: BattleState) => BattleState;
-    };
-
 type ParsedPersistentAreaSaveDamageProcedure =
   | {
       readonly kind: "insectPlague";
       readonly resolution: InsectPlagueResolutionInput;
       readonly target: BattleCreatureState;
       readonly effect: InsectPlagueAreaHazardEffect;
-      readonly saveHole: BattleInsectPlagueAreaHazardSavingThrowOutcomeHole;
-      readonly damageHole: BattleInsectPlagueAreaHazardDamageRollHole;
-      readonly turnTracking: SaveTurnTracking;
+      readonly trigger: BattleInsectPlagueAreaHazardTrigger;
     }
   | {
       readonly kind: "cloudkill";
       readonly resolution: CloudkillResolutionInput;
       readonly target: BattleCreatureState;
       readonly effect: CloudkillAreaHazardEffect;
+      readonly trigger: BattleCloudkillAreaHazardTrigger;
+    };
+
+type PersistentAreaSaveDamageProcedureCandidate =
+  | {
+      readonly kind: "insectPlague";
+      readonly resolution: InsectPlagueResolutionInput;
+      readonly target: BattleCreatureState | undefined;
+      readonly effect: InsectPlagueAreaHazardEffect | undefined;
+      readonly trigger: BattleInsectPlagueAreaHazardTrigger;
+    }
+  | {
+      readonly kind: "cloudkill";
+      readonly resolution: CloudkillResolutionInput;
+      readonly target: BattleCreatureState | undefined;
+      readonly effect: CloudkillAreaHazardEffect | undefined;
+      readonly trigger: BattleCloudkillAreaHazardTrigger;
+    };
+
+type PersistentAreaProcedureHoles =
+  | {
+      readonly saveHole: BattleInsectPlagueAreaHazardSavingThrowOutcomeHole;
+      readonly damageHole: BattleInsectPlagueAreaHazardDamageRollHole;
+    }
+  | {
       readonly saveHole: BattleCloudkillAreaHazardSavingThrowOutcomeHole;
       readonly damageHole: BattleCloudkillAreaHazardDamageRollHole;
-      readonly turnTracking: SaveTurnTracking;
     };
 
 type PersistentAreaProcedureParseResult =
@@ -133,7 +148,20 @@ export function resolveInsectPlagueAreaSaveDamage(
   if (allowedFillIssue !== null) {
     return allowedFillIssue;
   }
-  const parsed = parseInsectPlagueAreaSaveDamage(resolution);
+  const parsed = parsePersistentAreaSaveDamageProcedure({
+    kind: "insectPlague",
+    resolution,
+    target: resolution.state.combatants.get(resolution.subject.actorId),
+    effect: activeEffectForArea(
+      resolution.state,
+      resolution.subject.areaMembershipTrigger.areaId,
+      (candidate): candidate is InsectPlagueAreaHazardEffect =>
+        candidate.kind === "insectPlagueAreaHazard",
+    ),
+    trigger: persistentAreaTriggerFromMembershipFact(
+      resolution.subject.areaMembershipTrigger,
+    ),
+  });
   return parsed.tag === "invalid"
     ? parsed.result
     : resolveParsedPersistentAreaSaveDamage(parsed.procedure);
@@ -149,7 +177,20 @@ export function resolveCloudkillAreaSaveDamage(
   if (allowedFillIssue !== null) {
     return allowedFillIssue;
   }
-  const parsed = parseCloudkillAreaSaveDamage(resolution);
+  const parsed = parsePersistentAreaSaveDamageProcedure({
+    kind: "cloudkill",
+    resolution,
+    target: resolution.state.combatants.get(resolution.subject.actorId),
+    effect: activeEffectForArea(
+      resolution.state,
+      resolution.subject.areaMembershipTrigger.areaId,
+      (candidate): candidate is CloudkillAreaHazardEffect =>
+        candidate.kind === "cloudkillAreaHazard",
+    ),
+    trigger: persistentAreaTriggerFromMembershipFact(
+      resolution.subject.areaMembershipTrigger,
+    ),
+  });
   return parsed.tag === "invalid"
     ? parsed.result
     : resolveParsedPersistentAreaSaveDamage(parsed.procedure);
@@ -173,160 +214,70 @@ function persistentAreaAllowedFillIssue(
     : null;
 }
 
-function parseInsectPlagueAreaSaveDamage(
-  resolution: InsectPlagueResolutionInput,
+function parsePersistentAreaSaveDamageProcedure(
+  candidate: PersistentAreaSaveDamageProcedureCandidate,
 ): PersistentAreaProcedureParseResult {
-  const effect = activeEffectForArea(
-    resolution.state,
-    resolution.subject.areaMembershipTrigger.areaId,
-    (candidate): candidate is InsectPlagueAreaHazardEffect =>
-      candidate.kind === "insectPlagueAreaHazard",
-  );
-  const target = resolution.state.combatants.get(resolution.subject.actorId);
-  if (effect === undefined || target === undefined) {
+  if (candidate.effect === undefined) {
     return {
       tag: "invalid",
       result: invalidResult(
-        resolution.state,
+        candidate.resolution.state,
         "staleSubject",
-        "Insect Plague save is no longer available.",
+        `${persistentAreaProcedureName(candidate.kind)} save is no longer available.`,
       ),
     };
   }
-  const trigger = insectPlagueTriggerFromMembershipFact(
-    resolution.subject.areaMembershipTrigger,
-  );
+  if (candidate.target === undefined) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        candidate.resolution.state,
+        "staleSubject",
+        `${persistentAreaProcedureName(candidate.kind)} save target is no longer available.`,
+      ),
+    };
+  }
   if (
-    trigger !== "appearsInArea" &&
-    effect.savedThisTurn.includes(resolution.subject.actorId)
+    candidate.trigger !== "appearsInArea" &&
+    candidate.effect.savedThisTurn.includes(
+      candidate.resolution.subject.actorId,
+    )
   ) {
     return {
       tag: "invalid",
       result: invalidResult(
-        resolution.state,
+        candidate.resolution.state,
         "staleSubject",
-        "Insect Plague save was already resolved for this target this turn.",
+        `${persistentAreaProcedureName(candidate.kind)} save was already resolved for this target this turn.`,
       ),
     };
   }
   return {
     tag: "parsed",
-    procedure: {
-      kind: "insectPlague",
-      resolution,
-      target,
-      effect,
-      saveHole: insectPlagueAreaHazardSavingThrowOutcomeHole(
-        resolution.state,
-        resolution.subject.actorId,
-        effect,
-        trigger,
-      ),
-      damageHole: insectPlagueAreaHazardDamageRollHole(
-        resolution.subject.actorId,
-        effect,
-        trigger,
-      ),
-      turnTracking:
-        trigger === "appearsInArea"
-          ? { kind: "appearance" }
-          : {
-              kind: "trackForCurrentTurn",
-              apply: (state) =>
-                markInsectPlagueAreaHazardSavedThisTurn(
-                  state,
-                  resolution.subject.actorId,
-                  effect,
-                ),
-            },
-    },
-  };
-}
-
-function parseCloudkillAreaSaveDamage(
-  resolution: CloudkillResolutionInput,
-): PersistentAreaProcedureParseResult {
-  const effect = activeEffectForArea(
-    resolution.state,
-    resolution.subject.areaMembershipTrigger.areaId,
-    (candidate): candidate is CloudkillAreaHazardEffect =>
-      candidate.kind === "cloudkillAreaHazard",
-  );
-  if (effect === undefined) {
-    return {
-      tag: "invalid",
-      result: invalidResult(
-        resolution.state,
-        "staleSubject",
-        "Cloudkill save is no longer available.",
-      ),
-    };
-  }
-  const target = resolution.state.combatants.get(resolution.subject.actorId);
-  if (target === undefined) {
-    return {
-      tag: "invalid",
-      result: invalidResult(
-        resolution.state,
-        "staleSubject",
-        "Cloudkill save target is no longer available.",
-      ),
-    };
-  }
-  const trigger = cloudkillTriggerFromMembershipFact(
-    resolution.subject.areaMembershipTrigger,
-  );
-  if (
-    trigger !== "appearsInArea" &&
-    effect.savedThisTurn.includes(resolution.subject.actorId)
-  ) {
-    return {
-      tag: "invalid",
-      result: invalidResult(
-        resolution.state,
-        "staleSubject",
-        "Cloudkill save was already resolved for this target this turn.",
-      ),
-    };
-  }
-  return {
-    tag: "parsed",
-    procedure: {
-      kind: "cloudkill",
-      resolution,
-      target,
-      effect,
-      saveHole: cloudkillAreaHazardSavingThrowOutcomeHole(
-        resolution.state,
-        resolution.subject.actorId,
-        effect,
-        trigger,
-      ),
-      damageHole: cloudkillAreaHazardDamageRollHole(
-        resolution.subject.actorId,
-        effect,
-        trigger,
-      ),
-      turnTracking:
-        trigger === "appearsInArea"
-          ? { kind: "appearance" }
-          : {
-              kind: "trackForCurrentTurn",
-              apply: (state) =>
-                markCloudkillAreaHazardSavedThisTurn(
-                  state,
-                  resolution.subject.actorId,
-                  effect,
-                ),
-            },
-    },
+    procedure:
+      candidate.kind === "insectPlague"
+        ? {
+            kind: candidate.kind,
+            resolution: candidate.resolution,
+            target: candidate.target,
+            effect: candidate.effect,
+            trigger: candidate.trigger,
+          }
+        : {
+            kind: candidate.kind,
+            resolution: candidate.resolution,
+            target: candidate.target,
+            effect: candidate.effect,
+            trigger: candidate.trigger,
+          },
   };
 }
 
 function resolveParsedPersistentAreaSaveDamage(
   procedure: ParsedPersistentAreaSaveDamageProcedure,
 ): BattleResolutionResult {
-  const { resolution, target, effect, saveHole, damageHole } = procedure;
+  const { resolution, target, effect } = procedure;
+  const { saveHole, damageHole } = persistentAreaProcedureHoles(procedure);
   const procedureName = persistentAreaProcedureName(procedure.kind);
   const saveFills = resolution.fills.filter(
     (
@@ -465,15 +416,74 @@ function resolveParsedPersistentAreaSaveDamage(
       spatialFacts: [],
     },
   );
-  const nextState =
-    procedure.turnTracking.kind === "trackForCurrentTurn"
-      ? procedure.turnTracking.apply(afterDamage)
-      : afterDamage;
+  const nextState = stateAfterPersistentAreaSaveDamage(procedure, afterDamage);
   return {
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
   };
+}
+
+const byPersistentAreaProcedureKind = Match.discriminator("kind");
+
+function persistentAreaProcedureHoles(
+  procedure: ParsedPersistentAreaSaveDamageProcedure,
+): PersistentAreaProcedureHoles {
+  return Match.value(procedure).pipe(
+    byPersistentAreaProcedureKind("insectPlague", (insectPlague) => ({
+      saveHole: insectPlagueAreaHazardSavingThrowOutcomeHole(
+        insectPlague.resolution.state,
+        insectPlague.resolution.subject.actorId,
+        insectPlague.effect,
+        insectPlague.trigger,
+      ),
+      damageHole: insectPlagueAreaHazardDamageRollHole(
+        insectPlague.resolution.subject.actorId,
+        insectPlague.effect,
+        insectPlague.trigger,
+      ),
+    })),
+    byPersistentAreaProcedureKind("cloudkill", (cloudkill) => ({
+      saveHole: cloudkillAreaHazardSavingThrowOutcomeHole(
+        cloudkill.resolution.state,
+        cloudkill.resolution.subject.actorId,
+        cloudkill.effect,
+        cloudkill.trigger,
+      ),
+      damageHole: cloudkillAreaHazardDamageRollHole(
+        cloudkill.resolution.subject.actorId,
+        cloudkill.effect,
+        cloudkill.trigger,
+      ),
+    })),
+    Match.exhaustive,
+  );
+}
+
+function stateAfterPersistentAreaSaveDamage(
+  procedure: ParsedPersistentAreaSaveDamageProcedure,
+  state: BattleState,
+): BattleState {
+  if (procedure.trigger === "appearsInArea") {
+    return state;
+  }
+  return Match.value(procedure).pipe(
+    byPersistentAreaProcedureKind("insectPlague", (insectPlague) =>
+      markInsectPlagueAreaHazardSavedThisTurn(
+        state,
+        insectPlague.resolution.subject.actorId,
+        insectPlague.effect,
+      ),
+    ),
+    byPersistentAreaProcedureKind("cloudkill", (cloudkill) =>
+      markCloudkillAreaHazardSavedThisTurn(
+        state,
+        cloudkill.resolution.subject.actorId,
+        cloudkill.effect,
+      ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function persistentAreaProcedureName(
@@ -546,47 +556,31 @@ function activeEffectForArea<
   return undefined;
 }
 
-const byInsectPlagueAreaMembershipTriggerKind = Match.discriminator("kind");
-
-function insectPlagueTriggerFromMembershipFact(
+function persistentAreaTriggerFromMembershipFact(
   trigger: BattleInsectPlagueAreaMembershipTrigger,
-): BattleInsectPlagueAreaHazardTrigger {
-  return Match.value(trigger).pipe(
-    byInsectPlagueAreaMembershipTriggerKind(
-      "appearsInArea",
-      () => "appearsInArea" as const,
-    ),
-    byInsectPlagueAreaMembershipTriggerKind(
-      "firstEntryOnTurn",
-      () => "entersArea" as const,
-    ),
-    byInsectPlagueAreaMembershipTriggerKind(
-      "turnEndInArea",
-      () => "endsTurnInArea" as const,
-    ),
-    Match.exhaustive,
-  );
-}
-
-const byCloudkillAreaMembershipTriggerKind = Match.discriminator("kind");
-
-function cloudkillTriggerFromMembershipFact(
+): BattleInsectPlagueAreaHazardTrigger;
+function persistentAreaTriggerFromMembershipFact(
   trigger: BattleCloudkillAreaMembershipTrigger,
-): BattleCloudkillAreaHazardTrigger {
+): BattleCloudkillAreaHazardTrigger;
+function persistentAreaTriggerFromMembershipFact(
+  trigger:
+    | BattleInsectPlagueAreaMembershipTrigger
+    | BattleCloudkillAreaMembershipTrigger,
+): BattleInsectPlagueAreaHazardTrigger | BattleCloudkillAreaHazardTrigger {
   return Match.value(trigger).pipe(
-    byCloudkillAreaMembershipTriggerKind(
+    byPersistentAreaMembershipTriggerKind(
       "appearsInArea",
       () => "appearsInArea" as const,
     ),
-    byCloudkillAreaMembershipTriggerKind(
+    byPersistentAreaMembershipTriggerKind(
       "areaMovesIntoSpace",
       () => "movesIntoSpace" as const,
     ),
-    byCloudkillAreaMembershipTriggerKind(
+    byPersistentAreaMembershipTriggerKind(
       "firstEntryOnTurn",
       () => "entersArea" as const,
     ),
-    byCloudkillAreaMembershipTriggerKind(
+    byPersistentAreaMembershipTriggerKind(
       "turnEndInArea",
       () => "endsTurnInArea" as const,
     ),
@@ -594,26 +588,23 @@ function cloudkillTriggerFromMembershipFact(
   );
 }
 
-export function insectPlagueAreaHazardSavingThrowOutcomeHole(
+const byPersistentAreaMembershipTriggerKind = Match.discriminator("kind");
+
+type PersistentAreaHazardTriggerLabel =
+  | "appearance"
+  | "cloud-movement"
+  | "entry"
+  | "end-turn";
+
+function persistentAreaSavingThrowHoleFacts(
   state: BattleState,
   targetId: CombatantId,
-  effect: InsectPlagueAreaHazardEffect,
-  trigger: BattleInsectPlagueAreaHazardTrigger,
-): BattleInsectPlagueAreaHazardSavingThrowOutcomeHole {
-  const key = `battle:insect-plague-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  effect: InsectPlagueAreaHazardEffect | CloudkillAreaHazardEffect,
+): Pick<
+  BattleInsectPlagueAreaHazardSavingThrowOutcomeHole,
+  "ability" | "dc" | "areaChoices" | "targetRollModes" | "targetFlatBonuses"
+> {
   return {
-    kind: "savingThrowOutcome",
-    holeId: holeId(key),
-    holeInstanceKey: holeInstanceKey(key),
-    label: `${insectPlagueAreaHazardTriggerLabel(trigger)} CON save`,
-    insectPlagueAreaHazard: {
-      targetId,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      sourceCombatantId: effect.sourceCombatantId,
-      areaId: effect.areaId,
-      trigger,
-      save: effect.save,
-    },
     ability: effect.save.ability,
     dc: effect.save.dc,
     areaChoices: [],
@@ -628,6 +619,30 @@ export function insectPlagueAreaHazardSavingThrowOutcomeHole(
   };
 }
 
+export function insectPlagueAreaHazardSavingThrowOutcomeHole(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: InsectPlagueAreaHazardEffect,
+  trigger: BattleInsectPlagueAreaHazardTrigger,
+): BattleInsectPlagueAreaHazardSavingThrowOutcomeHole {
+  const key = `battle:insect-plague-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${persistentAreaHazardTriggerLabel(trigger)} CON save`,
+    insectPlagueAreaHazard: {
+      targetId,
+      sourceProcedureRef: effect.sourceProcedureRef,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      save: effect.save,
+    },
+    ...persistentAreaSavingThrowHoleFacts(state, targetId, effect),
+  };
+}
+
 function insectPlagueAreaHazardDamageRollHole(
   targetId: CombatantId,
   effect: InsectPlagueAreaHazardEffect,
@@ -639,7 +654,7 @@ function insectPlagueAreaHazardDamageRollHole(
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${insectPlagueAreaHazardTriggerLabel(trigger)} damage (${expr})`,
+    label: `${persistentAreaHazardTriggerLabel(trigger)} damage (${expr})`,
     insectPlagueAreaHazard: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -652,13 +667,22 @@ function insectPlagueAreaHazardDamageRollHole(
   };
 }
 
-function insectPlagueAreaHazardTriggerLabel(
+function persistentAreaHazardTriggerLabel(
   trigger: BattleInsectPlagueAreaHazardTrigger,
-): string {
+): PersistentAreaHazardTriggerLabel;
+function persistentAreaHazardTriggerLabel(
+  trigger: BattleCloudkillAreaHazardTrigger,
+): PersistentAreaHazardTriggerLabel;
+function persistentAreaHazardTriggerLabel(
+  trigger:
+    | BattleInsectPlagueAreaHazardTrigger
+    | BattleCloudkillAreaHazardTrigger,
+): PersistentAreaHazardTriggerLabel {
   return Match.value(trigger).pipe(
-    Match.when("appearsInArea", () => "appearance"),
-    Match.when("entersArea", () => "entry"),
-    Match.when("endsTurnInArea", () => "end-turn"),
+    Match.when("appearsInArea", () => "appearance" as const),
+    Match.when("movesIntoSpace", () => "cloud-movement" as const),
+    Match.when("entersArea", () => "entry" as const),
+    Match.when("endsTurnInArea", () => "end-turn" as const),
     Match.exhaustive,
   );
 }
@@ -674,7 +698,7 @@ export function cloudkillAreaHazardSavingThrowOutcomeHole(
     kind: "savingThrowOutcome",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${cloudkillAreaHazardTriggerLabel(trigger)} CON save`,
+    label: `${persistentAreaHazardTriggerLabel(trigger)} CON save`,
     cloudkillAreaHazard: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -683,17 +707,7 @@ export function cloudkillAreaHazardSavingThrowOutcomeHole(
       trigger,
       save: effect.save,
     },
-    ability: effect.save.ability,
-    dc: effect.save.dc,
-    areaChoices: [],
-    targetRollModes: savingThrowRollModeProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
-    targetFlatBonuses: savingThrowFlatBonusProjections(
-      state,
-      effect.save.ability,
-    ).filter((projection) => projection.targetId === targetId),
+    ...persistentAreaSavingThrowHoleFacts(state, targetId, effect),
   };
 }
 
@@ -708,7 +722,7 @@ function cloudkillAreaHazardDamageRollHole(
     kind: "rolledDice",
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
-    label: `${cloudkillAreaHazardTriggerLabel(trigger)} damage (${expr})`,
+    label: `${persistentAreaHazardTriggerLabel(trigger)} damage (${expr})`,
     cloudkillAreaHazard: {
       targetId,
       sourceProcedureRef: effect.sourceProcedureRef,
@@ -719,16 +733,4 @@ function cloudkillAreaHazardDamageRollHole(
     },
     critical: false,
   };
-}
-
-function cloudkillAreaHazardTriggerLabel(
-  trigger: BattleCloudkillAreaHazardTrigger,
-): string {
-  return Match.value(trigger).pipe(
-    Match.when("appearsInArea", () => "appearance"),
-    Match.when("movesIntoSpace", () => "cloud-movement"),
-    Match.when("entersArea", () => "entry"),
-    Match.when("endsTurnInArea", () => "end-turn"),
-    Match.exhaustive,
-  );
 }

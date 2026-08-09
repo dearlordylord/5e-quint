@@ -38,6 +38,7 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
+import { resolveCloudkillAreaSaveDamage } from "./battle-reducer/persistent-area-save-damage.ts";
 
 function castCloudkill() {
   const spell = cloudkillSpellRecord();
@@ -259,6 +260,29 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
       tag: "invalid",
       reason: "staleSubject",
       message: "Cloudkill save is no longer available.",
+    });
+  });
+
+  test("a discovered save becomes stale when its target leaves the battle state", () => {
+    const { targetTurn, session } = castCloudkill();
+    const saveAct = cloudkillAreaHazardSaveAct(
+      battleRuntimeSessionForTest({ ...session, state: targetTurn }),
+      spellTargetId,
+      "endsTurnInArea",
+    );
+    const combatants = new Map(targetTurn.combatants);
+    combatants.delete(spellTargetId);
+
+    expect(
+      resolveCloudkillAreaSaveDamage({
+        state: { ...targetTurn, combatants },
+        subject: saveAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Cloudkill save target is no longer available.",
     });
   });
 
