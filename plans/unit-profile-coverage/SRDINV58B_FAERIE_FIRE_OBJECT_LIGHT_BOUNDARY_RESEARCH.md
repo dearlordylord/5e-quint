@@ -126,13 +126,3 @@ Out of scope:
   SRDINV66 while its prerequisite is behind SRDINV70A.
 - SRDINV70A should retain Faerie Fire and Starry Wisp as inputs to the shared
   light and illumination boundary decision.
-
-## reviewer loop Convergence
-
-- Round 1: rejected a Faerie-specific Dim Light active effect. It would create
-  duplicate illumination state beside the future shared light model and would
-  not execute the full Lightly Obscured/Perception boundary.
-- Round 2: rejected storing Cube object membership or object visibility in
-  battle state. Object identities and sight facts should enter at the caller
-  supplied object-outline and object-attack boundaries, matching the existing
-  table-owned spatial fact pattern.

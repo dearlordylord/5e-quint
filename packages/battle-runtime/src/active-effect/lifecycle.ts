@@ -4,7 +4,6 @@
 // This module is a value-leaf — it depends only on effect types and the
 // conditions algebra, never on battle-reducer runtime. Spell-coupled
 // apply-from-invocation logic stays in battle-reducer/ and calls into here.
-// See plans/ACTIVE_EFFECT_DEEP_MODULE.md.
 import {
   applyCondition,
   removeCondition,

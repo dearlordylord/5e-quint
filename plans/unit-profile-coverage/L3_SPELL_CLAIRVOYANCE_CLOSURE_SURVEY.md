@@ -36,9 +36,8 @@ Current artifacts checked:
   V/S/M 100+ GP focus, Concentration up to 10 minutes, a familiar-or-obvious
   location hole, `create_sensor`, and `remote_perception`.
 - `packages/surface/content/clairvoyance.dhall` matches that JSON source shape.
-- `plans/unit-profile-coverage/L1K_DETECTION_COMMUNICATION_SPELL_CANDIDATE_INTAKE.md`
-  already classified Clairvoyance as runtime-detached remote sense and
-  information state.
+- Earlier intake research, preserved in git history, classified Clairvoyance
+  as runtime-detached remote sense and information state.
 - `plans/unit-profile-coverage/unit-matrix.json` and
   `plans/unit-profile-coverage/srd-unit-inventory.json` previously left the
   Bard, Cleric, Sorcerer, and Wizard spell-list rows as
@@ -69,29 +68,6 @@ The checker-visible owner is therefore:
 - `battleReadinessClosure.kind`: `table-perception-exploration`
 - `battleReadinessClosure.owner`: runtime-detached table/perception and
   remote-sensor owner
-
-## Reviewer Loop
-
-Round 1 RAW and ubiquitous-language pass:
-
-- Confirmed the RAW grants remote seeing or hearing through a sensor, not
-  ordinary caster sight from the caster's space.
-- Confirmed no RAW companion, autonomous control, attack, damage, condition,
-  movement, or target-selection behavior is introduced.
-- Kept the luminous-orb observer clause with table/perception presentation
-  ownership instead of creating battle reducer visibility state.
-
-Round 2 architecture and connascence pass:
-
-- Added one Unit claim rather than duplicating catalog state, profile evidence,
-  or runtime support gates.
-- The closure is keyed by the Unit claim boundary only; runtime code does not
-  dispatch on authored identity.
-- Strong remaining coupling is local to the claim text and this report: if
-  Clairvoyance later receives a remote-sensor owner, both documents and the
-  generated coverage artifacts must be updated together. The typed
-  `table-perception-exploration` closure keeps the SDK owner-boundary split
-  checker-visible without inferring it from prose.
 
 ## Verification For This Closure
 

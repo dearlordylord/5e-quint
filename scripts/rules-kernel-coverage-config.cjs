@@ -445,7 +445,6 @@ function coveragePaths(root) {
     kernelIrBoundaries: path.join(coverageDir, "kernel-ir-boundaries.jsonl"),
     matrix: path.join(coverageDir, "matrix.json"),
     report: path.join(coverageDir, "REPORT.md"),
-    stage3Plan: path.join(coverageDir, "STAGE3_CLOSURE_PLAN.md"),
     unitProfiles: path.join(
       root,
       "plans",

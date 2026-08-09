@@ -107,11 +107,3 @@ Out of scope for that slice:
   Falling hazard resolution;
 - Opportunity Attack derivation from falling movement, because RAW excludes
   falling past an enemy from provoking Opportunity Attacks.
-
-## reviewer loop Convergence
-
-- Round 1: rejected a prerequisite generic falling hazard runtime. Feather Fall
-  can be executed from table-supplied fall-start and landing events.
-- Round 2: rejected storing fall distance, per-round descent progress, or a
-  duplicate mutable descent-cap value in battle state. The spell effect should
-  carry duration/identity, while fall geometry remains caller/table-owned.

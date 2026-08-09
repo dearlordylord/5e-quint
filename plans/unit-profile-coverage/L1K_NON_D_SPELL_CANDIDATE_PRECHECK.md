@@ -47,16 +47,16 @@ Local RAW and ubiquitous-language anchors checked:
 
 ## Loop-Owned Groups
 
-| Task | Group | Candidates |
-| --- | --- | --- |
-| L1K-DAMAGE-SPELL-CANDIDATES | Damage spell candidates | `acid_arrow`, `scorching_ray`, `shatter`, `lightning_bolt`, `cone_of_cold`, `blight`, `mind_spike` |
-| L1K-CONDITION-CONTROL-CANDIDATES | Condition/control candidates | `blindness_deafness`, `hold_person`, `fear`, `hypnotic_pattern`, `ray_of_enfeeblement`, `dominate_person` |
-| L1K-PROTECTION-RESTORATION-CANDIDATES | Protection/restoration candidates | `aid`, `barkskin`, `death_ward`, `lesser_restoration`, `protection_from_poison`, `protection_from_energy` |
-| L1K-MOBILITY-TRANSFORMATION-CANDIDATES | Mobility/transformation candidates | `misty_step`, `fly`, `spider_climb`, `freedom_of_movement`, `alter_self`, `polymorph` |
-| L1K-ZONE-WALL-CANDIDATES | Zone/wall/emanation candidates | `web`, `moonbeam`, `spike_growth`, `wall_of_fire`, `wall_of_force`, `wall_of_stone`, `stinking_cloud`, `conjure_minor_elementals`, `conjure_woodland_beings` |
-| L1K-DETECTION-COMMUNICATION-CANDIDATES | Detection/communication candidates | `clairvoyance`, `arcane_eye`, `see_invisibility`, `tongues`, `true_seeing`, `water_breathing` |
-| L1K-COUNTER-DISPEL-CANDIDATES | Counter/dispel candidates | `counterspell`, `dispel_magic`, `antimagic_field`, `sequester` |
-| L1K-WEAPON-ITEM-HOSTED-CANDIDATES | Weapon/item-hosted candidates | `magic_weapon`, `flame_blade`, `spiritual_weapon`, `fire_shield`, `warding_bond` |
+| Task                                   | Group                              | Candidates                                                                                                                                                   |
+| -------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| L1K-DAMAGE-SPELL-CANDIDATES            | Damage spell candidates            | `acid_arrow`, `scorching_ray`, `shatter`, `lightning_bolt`, `cone_of_cold`, `blight`, `mind_spike`                                                           |
+| L1K-CONDITION-CONTROL-CANDIDATES       | Condition/control candidates       | `blindness_deafness`, `hold_person`, `fear`, `hypnotic_pattern`, `ray_of_enfeeblement`, `dominate_person`                                                    |
+| L1K-PROTECTION-RESTORATION-CANDIDATES  | Protection/restoration candidates  | `aid`, `barkskin`, `death_ward`, `lesser_restoration`, `protection_from_poison`, `protection_from_energy`                                                    |
+| L1K-MOBILITY-TRANSFORMATION-CANDIDATES | Mobility/transformation candidates | `misty_step`, `fly`, `spider_climb`, `freedom_of_movement`, `alter_self`, `polymorph`                                                                        |
+| L1K-ZONE-WALL-CANDIDATES               | Zone/wall/emanation candidates     | `web`, `moonbeam`, `spike_growth`, `wall_of_fire`, `wall_of_force`, `wall_of_stone`, `stinking_cloud`, `conjure_minor_elementals`, `conjure_woodland_beings` |
+| L1K-DETECTION-COMMUNICATION-CANDIDATES | Detection/communication candidates | `clairvoyance`, `arcane_eye`, `see_invisibility`, `tongues`, `true_seeing`, `water_breathing`                                                                |
+| L1K-COUNTER-DISPEL-CANDIDATES          | Counter/dispel candidates          | `counterspell`, `dispel_magic`, `antimagic_field`, `sequester`                                                                                               |
+| L1K-WEAPON-ITEM-HOSTED-CANDIDATES      | Weapon/item-hosted candidates      | `magic_weapon`, `flame_blade`, `spiritual_weapon`, `fire_shield`, `warding_bond`                                                                             |
 
 These groups are unblocked by this precheck as candidate-intake tasks. Each
 later task still has to read the local SRD spell text and classify the exact
@@ -80,12 +80,12 @@ Exclude the D-owned spell ids named by the loop plan:
 The true companion/stat-block lifecycle exclusions from the Task 10 seed list
 are:
 
-| Candidate | Exclusion reason |
-| --- | --- |
-| `animate_dead` | Creates Undead creatures from corpses or bones, with command/control duration and repeated control maintenance. |
+| Candidate         | Exclusion reason                                                                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `animate_dead`    | Creates Undead creatures from corpses or bones, with command/control duration and repeated control maintenance.                                  |
 | `animate_objects` | Turns objects into Construct creatures using the Animated Object stat block, with Initiative timing, command handling, HP, and object reversion. |
-| `find_steed` | Summons an Otherworldly Steed stat block with mount behavior, replacement, disappearance, and level-scaled statistics. |
-| `summon_dragon` | Summons a Draconic Spirit stat block with its own turn, command behavior, HP, disappearance, and level-scaled statistics. |
+| `find_steed`      | Summons an Otherworldly Steed stat block with mount behavior, replacement, disappearance, and level-scaled statistics.                           |
+| `summon_dragon`   | Summons a Draconic Spirit stat block with its own turn, command behavior, HP, disappearance, and level-scaled statistics.                        |
 
 Do not implement those lifecycles in Loop K. Record closure or hand them to the
 companion/summon owner.
@@ -125,19 +125,6 @@ not-in-catalog `srd-candidate` spell records:
 `wall_of_thorns`, `weird`, `wind_walk`, `wind_wall`.
 
 Those ids should stay out of Tasks 2-10 unless the decider revises the plan.
-
-## Reviewer Loop
-
-Round 1: RAW and domain-language pass found that
-`conjure_minor_elementals` and `conjure_woodland_beings` were conflated with
-companion/summon lifecycle candidates by name. The artifact now separates true
-stat-block companion lifecycles from self-origin Emanation spells.
-
-Round 2: architecture/connascence pass verified that the decision artifact does
-not add checker-visible state, Unit claims, generated inventory rows, runtime
-support gates, or duplicate executable evidence. Candidate ids are copied only
-as task planning boundaries, with generated artifacts cited as the source of
-truth.
 
 ## Verification For Implementation
 

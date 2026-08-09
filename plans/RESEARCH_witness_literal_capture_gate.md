@@ -2,10 +2,9 @@
 
 Date: 2026-06-10
 
-Status: research only — no implementation task is open. A PRD should be
-written only after the typed protocol-storage migration in
-`plans/RALPH_WITNESS_PROTOCOL_STORAGE_MIGRATION.md` lands (see "When to PRD"
-below).
+Status: research only — no implementation task is open. Typed protocol storage
+has landed. Write a PRD only when the remaining criteria under "When to PRD"
+are satisfied.
 
 ## Problem
 

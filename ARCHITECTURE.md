@@ -421,73 +421,19 @@ selected high-risk composition flow.
 
 ## Rules Kernel Coverage And Generator Readiness
 
-Rules-kernel coverage is the obligation ledger for reducer-owned semantics.
-Its denominator is TS-current reducer behavior after Surface admission, not raw
-code coverage, catalog breadth, parser failure coverage, or unsupported authored
-records. The active artifacts live in `plans/rules-kernel-coverage/`.
-Authored-content breadth remains in `plans/unit-profile-coverage/`; the join
-between the two lanes is `plans/rules-kernel-coverage/profile-obligations.jsonl`.
-Do not duplicate profile-to-obligation mappings in Unit claims, profile rows, or
-obligation rows.
+Rules-kernel coverage connects reducer-owned semantics to their QNT owners,
+production TypeScript owners, and executable parity witnesses. Authored-content
+breadth is a separate Unit-profile concern; Surface profiles join the two lanes
+through one checked mapping rather than duplicating obligation lists.
 
-A Surface-backed semantic obligation is covered only when the full chain exists:
-
-```text
-Surface record
-        |
-        v
-support profile
-        |
-        v
-semantic obligation id
-        |
-        v
-QNT owner
-        |
-        v
-production TypeScript runtime owner
-        |
-        v
-executable parity witness
-```
-
-Direct reducer-entrypoint obligations use the shorter chain:
-
-```text
-reducer entry point
-        |
-        v
-semantic obligation id
-        |
-        v
-QNT owner
-        |
-        v
-production TypeScript runtime owner
-        |
-        v
-executable parity witness
-```
-
-The parity witness must run current production TypeScript reducer code against a
-QNT-owned projection. A QNT owner without an executable TS witness is only a
-spec claim; a TS test without a QNT owner is only regression coverage. Boundary
-or unsupported behavior can be recorded outside the QNT denominator only when
-the boundary classification is explicit.
-
-Focused MBT with random traces is the default parity witness for reducer
-procedures, sequencing, holes, reactions, resources, active effects, and
-interleavings. Deterministic QNT replay is a replay witness, not MBT coverage;
-it is reserved for fixed projections or small finite fixtures with explicitly
-named cases. Index-gated replay is not a general MBT pattern and must not
-replace random MBT where branch interaction is the coverage risk.
-
-Generator readiness is a separate C-axis record. It asks whether the QNT owner
-is shaped like semantic core that a future QNT-to-Rust generator could consume.
-It does not make the generator part of the current runtime and it does not
-replace parity coverage. A generator-readiness row must distinguish semantic
-core QNT from proof-only QNT and name the small language subset the future
-generator would need.
+The executable registries and their workflow are owned by
+[`plans/rules-kernel-coverage/`](plans/rules-kernel-coverage/). Authored breadth
+and the generated joined view are owned by
+[`plans/unit-profile-coverage/`](plans/unit-profile-coverage/). Generator
+readiness is an independent assessment of QNT owner shape, not a runtime
+dependency or a substitute for parity. This architecture document owns only
+that separation and dependency relationship; status vocabulary, witness modes,
+coverage chains, and authoring steps belong to the registry documentation.
 
 ## Dependency Direction
 

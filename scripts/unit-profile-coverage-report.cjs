@@ -513,7 +513,7 @@ function notInCatalogDisposition(unit, duplicateCount) {
   if (unit.provenance?.kind !== "srd-5.2.1") {
     return {
       category: catalogAdmissionDispositionCategory.classicPrivatePressure,
-      planningLane: "QMBT17",
+      planningLane: "Classic non-SRD policy",
       reason:
         "Non-SRD authored mechanics pressure must enter through the Classic non-SRD policy lane before catalog admission.",
     };

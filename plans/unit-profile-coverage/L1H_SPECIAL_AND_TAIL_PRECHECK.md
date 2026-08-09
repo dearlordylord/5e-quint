@@ -18,11 +18,11 @@ this precheck.
 
 The generated coverage artifacts report:
 
-| Metric | Value |
-| --- | ---: |
-| Strict executable denominator | 93 |
-| Strict runtime/profile support | 67/93 (72%) |
-| Strict target closure | 82/93 (88.2%) |
+| Metric                            |         Value |
+| --------------------------------- | ------------: |
+| Strict executable denominator     |            93 |
+| Strict runtime/profile support    |   67/93 (72%) |
+| Strict target closure             | 82/93 (88.2%) |
 | Selected identity replay coverage | 47/93 (50.5%) |
 
 There are 46 supported-profile Unit ids still missing
@@ -34,28 +34,28 @@ Units in the level-1 report and 8 are outside the strict level-1 denominator.
 The five strict Loop H spell Units are still strict supported-profile Units and
 still lack selected identity replay evidence:
 
-| Task | Unit | Profile |
-| --- | --- | --- |
-| L1H-ANIMAL-FRIENDSHIP | `animal_friendship` | `spell.creature-type-protection-and-charm` |
-| L1H-PROTECTION-EVIL-GOOD | `protection_from_evil_and_good` | `spell.creature-type-protection-and-charm` |
-| L1H-ELDRITCH-BLAST | `eldritch_blast` | `spell.invocation-independent-attack-sequence` |
-| L1H-MAGE-ARMOR | `mage_armor` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
-| L1H-SANCTUARY | `sanctuary` | `spell.invocation-sanctuary-targeting-interdiction` |
+| Task                     | Unit                            | Profile                                                                     |
+| ------------------------ | ------------------------------- | --------------------------------------------------------------------------- |
+| L1H-ANIMAL-FRIENDSHIP    | `animal_friendship`             | `spell.creature-type-protection-and-charm`                                  |
+| L1H-PROTECTION-EVIL-GOOD | `protection_from_evil_and_good` | `spell.creature-type-protection-and-charm`                                  |
+| L1H-ELDRITCH-BLAST       | `eldritch_blast`                | `spell.invocation-independent-attack-sequence`                              |
+| L1H-MAGE-ARMOR           | `mage_armor`                    | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` |
+| L1H-SANCTUARY            | `sanctuary`                     | `spell.invocation-sanctuary-targeting-interdiction`                         |
 
 Keep those five strict tasks ahead of the non-strict tail tasks.
 
 The seven planned SRD tail tasks are all supported-profile Unit ids in the
 selected identity denominator and still lack selected identity replay evidence:
 
-| Task | Unit | Strict level-1 status | Profile |
-| --- | --- | --- | --- |
-| L1H-MASS-CURE-WOUNDS | `mass_cure_wounds` | outside strict denominator | `spell.hit-point-restoration` |
-| L1H-MASS-HEALING-WORD | `mass_healing_word` | outside strict denominator | `spell.hit-point-restoration` |
-| L1H-FIGHTER-TACTICAL-MIND | `fighter_tactical_mind` | outside strict denominator | `unit-feature.failed-ability-check-resource-boost` |
-| L1H-BOON-COMBAT-PROWESS | `feat_boon_of_combat_prowess` | outside strict denominator | `unit-feature.attack-roll-miss-to-hit-replacement` |
-| L1H-ORC-ADRENALINE-RUSH | `orc_adrenaline_rush` | outside strict denominator | `unit-feature.bonus-action-dash-temporary-hit-points` |
-| L1H-PALADIN-EXTRA-ATTACK | `paladin_extra_attack` | outside strict denominator | `unit-feature.attack-action-attack-count-scaling` |
-| L1H-RANGER-EXTRA-ATTACK | `ranger_extra_attack` | outside strict denominator | `unit-feature.attack-action-attack-count-scaling` |
+| Task                      | Unit                          | Strict level-1 status      | Profile                                               |
+| ------------------------- | ----------------------------- | -------------------------- | ----------------------------------------------------- |
+| L1H-MASS-CURE-WOUNDS      | `mass_cure_wounds`            | outside strict denominator | `spell.hit-point-restoration`                         |
+| L1H-MASS-HEALING-WORD     | `mass_healing_word`           | outside strict denominator | `spell.hit-point-restoration`                         |
+| L1H-FIGHTER-TACTICAL-MIND | `fighter_tactical_mind`       | outside strict denominator | `unit-feature.failed-ability-check-resource-boost`    |
+| L1H-BOON-COMBAT-PROWESS   | `feat_boon_of_combat_prowess` | outside strict denominator | `unit-feature.attack-roll-miss-to-hit-replacement`    |
+| L1H-ORC-ADRENALINE-RUSH   | `orc_adrenaline_rush`         | outside strict denominator | `unit-feature.bonus-action-dash-temporary-hit-points` |
+| L1H-PALADIN-EXTRA-ATTACK  | `paladin_extra_attack`        | outside strict denominator | `unit-feature.attack-action-attack-count-scaling`     |
+| L1H-RANGER-EXTRA-ATTACK   | `ranger_extra_attack`         | outside strict denominator | `unit-feature.attack-action-attack-count-scaling`     |
 
 These SRD tail tasks remain valid denominator work after the strict Loop H
 spell tasks, provided sibling strict loops keep their existing ownership.
@@ -88,14 +88,15 @@ identity replay evidence, and was not named by the original Loop H task list. It
 belongs to the `classic-2024-non-srd-mechanics` collection, not the SRD
 collection:
 
-| Unit | Collection | Profile |
-| --- | --- | --- |
+| Unit            | Collection                       | Profile                              |
+| --------------- | -------------------------------- | ------------------------------------ |
 | `mycelium_step` | `classic-2024-non-srd-mechanics` | `unit-feature.alternate-action-cost` |
 
 The source plan keeps this denominator work visible as
 `L1H-MYCELIUM-STEP`, ordered after the SRD tail tasks. That task must stay
-inside the QMBT17 Classic non-SRD mechanics-only policy boundary and must not
-add protected non-SRD source identity or SRD RAW claims.
+inside the Classic non-SRD mechanics-only policy boundary in
+[`docs/mushroom-playbook/AUTHORING.md`](../../docs/mushroom-playbook/AUTHORING.md)
+and must not add protected non-SRD source identity or SRD RAW claims.
 
 ## RAW And Vocabulary Check
 
@@ -110,15 +111,11 @@ against the local SRD 5.2.1 corpus:
 - `UBIQUITOUS_LANGUAGE.md`: Magic Action, Spell Invocation, Attack Roll,
   Saving Throw, Armor Class, Charmed, Frightened, and target terminology.
 
-The Classic non-SRD tail gap was checked against
-`plans/unit-profile-coverage/QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md`
-and `plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json`.
+The Classic non-SRD tail gap was checked against the standing
+`docs/mushroom-playbook/AUTHORING.md` policy and
+`plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json`.
 
 ## Verification Notes
 
 - This task made documentation-only reconciliation changes.
 - No MBT was run because no reducer, QNT, or selected replay behavior changed.
-- reviewer loop round 1: keep Tasks 2-6 first because they are strict supported
-  spell Units still missing selected identity evidence.
-- reviewer loop round 2: keep Tasks 7-13 as SRD tail denominator work and add
-  Task 14 for the Classic non-SRD denominator gap.

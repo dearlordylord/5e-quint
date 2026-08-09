@@ -40,9 +40,8 @@ Current artifacts checked:
 - `packages/surface/src/surface/schema-spell.ts` already has the
   `grant_language_understanding` atom with `spoken_or_signed` scope and
   outward intelligibility to language-knowers.
-- `plans/unit-profile-coverage/L1K_DETECTION_COMMUNICATION_SPELL_CANDIDATE_INTAKE.md`
-  already classified Tongues as runtime-detached language and communication
-  need.
+- Earlier intake research, preserved in git history, classified Tongues as
+  runtime-detached language and communication need.
 - Task 54 rechecks the same local RAW anchors for the level-5 SDK inventory
   rows and records the owner boundary as table-social communication closure
   rather than an unresolved spell-effect owner review.
@@ -74,28 +73,6 @@ The checker-visible owner is therefore:
 - `battleReadinessClosure.kind`: `social-knowledge-effect`
 - `battleReadinessClosure.owner`: runtime-detached language/communication
   owner
-
-## Reviewer Loop
-
-Round 1 RAW and ubiquitous-language pass:
-
-- Confirmed RAW grants language understanding and outward intelligibility, not
-  damage, conditions, movement, target control, companion behavior, or action
-  automation.
-- Confirmed hearing and sight gates are existing perception/table facts rather
-  than new spell-owned reducer state.
-- Kept the at-least-one-language audience gate with the communication owner
-  instead of duplicating language table state in battle runtime.
-
-Round 2 architecture and connascence pass:
-
-- Added one Unit claim rather than duplicating catalog state, profile evidence,
-  language tables, or runtime support gates.
-- The closure is keyed by the Unit claim boundary only; runtime code does not
-  dispatch on authored identity.
-- Strong remaining coupling is local to the claim text and this report: if
-  Tongues later receives a communication owner, both documents and the
-  generated coverage artifacts must be updated together.
 
 ## Verification For This Closure
 

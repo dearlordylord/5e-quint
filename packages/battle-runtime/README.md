@@ -244,12 +244,11 @@ If a new package/file needs allowlisting, update
 `scripts/check-authored-id-dispatch-boundary.cjs` with a narrow path rule and a
 boundary reason. Do not add broad wildcards.
 
-Issue #224 produced a one-time inventory of authored identity retained by
-Battle runtime in
-[`plans/224_BATTLE_RUNTIME_INERT_AUTHORED_IDENTITY_INVENTORY.md`](../../plans/224_BATTLE_RUNTIME_INERT_AUTHORED_IDENTITY_INVENTORY.md).
-That document is a work-record for #224, not a standing authority; future
-identity decisions belong in the owning boundary (package README, admission
-module docs, or a new work-record) rather than as updates to the #224 plan.
+Retained authored identity must have a package-owned composition, settlement,
+catalog-reference, or presentation consumer and must remain inert during
+execution. `pnpm check:authored-id-dispatch` and the owning boundary tests are
+the standing enforcement; completed inventories and issue work-records are not
+runtime authorities.
 
 ### Invocation Spell Access
 

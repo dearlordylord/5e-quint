@@ -55,15 +55,3 @@ Area ongoing Concentration hazards, area control Concentration, and
 single-creature active-effect Concentration remain with Tasks 33-35. Those
 families are not promoted here by relabeling area or target witnesses as
 harmful-object placement.
-
-## Reviewer Loop Notes
-
-- RAW traceability: the split rows map to the spell-glyph release sentence for
-  Hostile summons, harmful objects, close placement, attack target, and
-  full-duration Concentration.
-- Ubiquitous language: summoned creatures are modeled as Creatures or
-  Companions with explicit control/relationship facts, not as authored spell
-  identity.
-- Architecture and connascence: the Glyph owner keeps the already-promoted
-  Grease and Spiritual Weapon subjects local and refuses a generic placement
-  bypass until summon/object occurrence owners can carry the required state.

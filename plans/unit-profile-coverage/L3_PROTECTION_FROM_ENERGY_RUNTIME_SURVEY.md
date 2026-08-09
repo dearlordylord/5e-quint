@@ -102,30 +102,6 @@ cleanup, selected-identity evidence if required by the coverage lane, generated
 coverage artifacts, and promoted focused battle-runtime QNT
 parity without authored-identity dispatch.
 
-## Reviewer Loop
-
-Round 1 RAW and ubiquitous-language pass:
-
-- Kept the SRD damage-type set exact: Acid, Cold, Fire, Lightning, and Thunder.
-- Preserved the willing touched creature target and Concentration duration.
-- Split SRD Resistance from the Resistance cantrip because one halves matching
-  damage while the other reduces by a rolled d4 once per turn.
-
-Round 2 architecture and connascence pass:
-
-- Did not add a new runtime state field. The future profile should reuse the
-  existing `damageResistance` active effect and target-side damage adjustment
-  owner.
-- Added a Surface prerequisite for the missing willing-creature target shape so
-  runtime support does not have to recover target eligibility from authored
-  identity or prose.
-- Did not weaken Protection from Poison's composite profile to fit another
-  spell. Its Poisoned removal, Poison save Advantage, and Poison Resistance
-  facts must remain colocated.
-- The remaining strong coupling is local and intended: the future profile's
-  allowed damage-type choices must match the authored Surface choice hole and the
-  SRD spell text.
-
 ## Verification Notes
 
 This survey does not add or change Unit claims, Surface catalog admission,
