@@ -139,11 +139,11 @@ missing witness.
 
 ## Classic Non-SRD Authoring Lane
 
-The full QMBT17 intake contract is
-[QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md](QMBT17_CLASSIC_NON_SRD_MECHANICS_INTAKE_POLICY.md).
-It is the policy source for how non-SRD mechanics pressure becomes public
-mechanics-only records, matrix gaps, unsupported/widening dispositions, and
-evidence requirements.
+The standing identity and expression policy is
+[`docs/mushroom-playbook/AUTHORING.md`](../../docs/mushroom-playbook/AUTHORING.md).
+This lane owns only the executable mechanics-fixture classifications, matrix
+gaps, unsupported/widening dispositions, and evidence requirements described
+below and enforced by the coverage checker.
 
 Public documentation for this lane should describe it as synthetic mechanics
 fixture coverage. Do not describe a fixture as a renamed official Unit, do not
@@ -435,49 +435,6 @@ implementation plan promotes those gates. Regenerate these artifacts with:
 node scripts/unit-profile-coverage-check.cjs --write
 ```
 
-QMBT16 decided not to add selected spell identity replay rows for the currently
-supported spell Units. The rationale is recorded in
-[QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md](QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md):
-QMBT5 already replays the supported spell procedures with concrete spell ids,
-and QMBT14 covers catalog/access/invocation admission for those identities.
-
-QMBT23 decided that `fire_bolt` still needs an explicit object-target Spell
-Invocation and object-ignition Spell Effect projection before it can be counted
-as a supported spell Unit. The decision is recorded in
-[QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md](QMBT23_FIRE_BOLT_OBJECT_TARGET_BOUNDARY_DECISION.md).
-
-QMBT28 selected the next spell admission batch after Shield and Healing Word:
-direct Hit Point restoration for `cure_wounds` and `mass_healing_word`. The
-triage is recorded in
-[QMBT28_SPELL_ADMISSION_TRIAGE.md](QMBT28_SPELL_ADMISSION_TRIAGE.md), and
-keeps `fire_bolt` excluded until the QMBT23 object-target boundary lands.
-
-QMBT31 promoted `feat_savage_attacker` as
-`unit-feature.weapon-damage-dice-roll-choice`. QMBT32 promoted `cure_wounds`
-and `mass_healing_word` as `spell.hit-point-restoration`. QMBT33 reviewed
-those closeouts and appended QMBT34-QMBT36 because the matrix lane is not
-complete; the next spell implementation target is `mass_cure_wounds`, whose
-new boundary over QMBT32 is point-origin Sphere target selection.
-
-QMBT37 promoted level-5 Fighter, Paladin, and Ranger Extra Attack as
-`unit-feature.attack-action-attack-count-scaling`. QMBT38 selected
-`barbarian_fast_movement` as the next feature widening slice under
-`unit-feature.passive-speed-bonus`. QMBT39 reviewed those closeouts and
-appended QMBT40-QMBT42 because the matrix lane is not complete.
-
-QMBT40 promoted `barbarian_fast_movement` as
-`unit-feature.passive-speed-bonus`. QMBT41 selected `ranger_roving` as the next
-feature widening slice under `unit-feature.passive-speed-kind-grants`. QMBT42
-split Shield runtime behavior tests out of Unit profile admission. QMBT43
-reviewed those closeouts and appended QMBT44-QMBT46 because the matrix lane is
-not complete.
-
-QMBT44 promoted `ranger_roving` as
-`unit-feature.passive-speed-kind-grants`. QMBT45 selected
-`orc_relentless_endurance` as the next feature widening slice under
-`unit-feature.zero-hit-point-replacement`. QMBT46 reviewed those closeouts and
-appended QMBT47-QMBT49 because the matrix lane is not complete.
-
 Run:
 
 ```sh
@@ -523,18 +480,3 @@ separate from planning pressure:
 - `non-runtime-authored-data` for records without a mechanics payload.
 - `duplicate-content-issue` for repeated authored Surface Unit ids that should
   be cleaned up before admission planning.
-
-## Class Catalog Admission
-
-The broad content survey and this Unit profile matrix are intentionally not the
-same artifact. The survey inventories SRD pressure; this matrix tracks authored
-Surface Unit records, installed catalog admission, support profiles, and
-evidence. Class coverage therefore needs an explicit catalog-admission backlog,
-not a memory of having surveyed class text once.
-
-QMBT65 owns the next planning step:
-[QMBT65_SRD_CLASS_CATALOG_ADMISSION_PLAN.md](QMBT65_SRD_CLASS_CATALOG_ADMISSION_PLAN.md).
-That task should preserve generated `needs-surface-widening` and
-`unsupported-widening-pressure` rows, make all 12 SRD class containers
-trackable, attach class-feature gaps to class/level priority, and recommend
-coarse Ralph batches rather than one task per Unit id.

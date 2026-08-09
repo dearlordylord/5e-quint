@@ -41,17 +41,17 @@ All 51 records have SRD 5.2.1 provenance, point at `Equipment#Weapons` or
 
 ## Owned Rows By Follow-Up Task
 
-| Task | Rows | Decision |
-| --- | --- | --- |
-| L1J-LIGHT-MEDIUM-ARMOR-DATA | `armor_breastplate`, `armor_chain_shirt`, `armor_half_plate_armor`, `armor_hide_armor`, `armor_leather`, `armor_padded_armor`, `armor_scale_mail`, `armor_studded_leather_armor` | Close as authored armor data absent from the Unit catalog. |
-| L1J-HEAVY-ARMOR-DATA | `armor_plate`, `armor_ring_mail`, `armor_splint_armor` | Close as authored armor data absent from the Unit catalog. |
-| L1J-SIMPLE-MELEE-WEAPON-DATA | `weapon_greatclub`, `weapon_handaxe`, `weapon_light_hammer`, `weapon_mace`, `weapon_sickle` | Close as authored weapon data absent from the Unit catalog. |
-| L1J-MARTIAL-MELEE-WEAPON-DATA | `weapon_battleaxe`, `weapon_greatsword`, `weapon_maul`, `weapon_morningstar`, `weapon_rapier`, `weapon_scimitar`, `weapon_war_pick`, `weapon_warhammer` | Close as authored weapon data absent from the Unit catalog. |
-| L1J-POLEARM-REACH-WEAPON-DATA | `weapon_glaive`, `weapon_halberd`, `weapon_lance`, `weapon_pike`, `weapon_trident`, `weapon_whip` | Close as authored weapon data absent from the Unit catalog. Do not implement Reach or Mastery behavior. |
-| L1J-RANGED-WEAPON-DATA | `weapon_blowgun`, `weapon_hand_crossbow`, `weapon_heavy_crossbow`, `weapon_light_crossbow`, `weapon_longbow`, `weapon_sling` | Close as authored weapon data absent from the Unit catalog. |
-| L1J-THROWN-FINESSE-WEAPON-DATA | `weapon_dart`, `weapon_javelin` | Close as authored weapon data absent from the Unit catalog. Installed thrown/finesse weapons belong to the installed-row alignment task below. |
-| L1J-FIREARM-EXOTIC-WEAPON-DATA | `weapon_musket`, `weapon_pistol` | Close as authored weapon data absent from the Unit catalog. Do not introduce firearm combat behavior. |
-| L1J-INSTALLED-EQUIPMENT-ROW-ALIGNMENT | `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_flail`, `weapon_greataxe`, `weapon_longsword`, `weapon_quarterstaff`, `weapon_shortbow`, `weapon_shortsword`, `weapon_spear` | Align installed unsupported Unit claim wording with non-runtime authored-data closure if still needed. |
+| Task                                  | Rows                                                                                                                                                                                                         | Decision                                                                                                                                       |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| L1J-LIGHT-MEDIUM-ARMOR-DATA           | `armor_breastplate`, `armor_chain_shirt`, `armor_half_plate_armor`, `armor_hide_armor`, `armor_leather`, `armor_padded_armor`, `armor_scale_mail`, `armor_studded_leather_armor`                             | Close as authored armor data absent from the Unit catalog.                                                                                     |
+| L1J-HEAVY-ARMOR-DATA                  | `armor_plate`, `armor_ring_mail`, `armor_splint_armor`                                                                                                                                                       | Close as authored armor data absent from the Unit catalog.                                                                                     |
+| L1J-SIMPLE-MELEE-WEAPON-DATA          | `weapon_greatclub`, `weapon_handaxe`, `weapon_light_hammer`, `weapon_mace`, `weapon_sickle`                                                                                                                  | Close as authored weapon data absent from the Unit catalog.                                                                                    |
+| L1J-MARTIAL-MELEE-WEAPON-DATA         | `weapon_battleaxe`, `weapon_greatsword`, `weapon_maul`, `weapon_morningstar`, `weapon_rapier`, `weapon_scimitar`, `weapon_war_pick`, `weapon_warhammer`                                                      | Close as authored weapon data absent from the Unit catalog.                                                                                    |
+| L1J-POLEARM-REACH-WEAPON-DATA         | `weapon_glaive`, `weapon_halberd`, `weapon_lance`, `weapon_pike`, `weapon_trident`, `weapon_whip`                                                                                                            | Close as authored weapon data absent from the Unit catalog. Do not implement Reach or Mastery behavior.                                        |
+| L1J-RANGED-WEAPON-DATA                | `weapon_blowgun`, `weapon_hand_crossbow`, `weapon_heavy_crossbow`, `weapon_light_crossbow`, `weapon_longbow`, `weapon_sling`                                                                                 | Close as authored weapon data absent from the Unit catalog.                                                                                    |
+| L1J-THROWN-FINESSE-WEAPON-DATA        | `weapon_dart`, `weapon_javelin`                                                                                                                                                                              | Close as authored weapon data absent from the Unit catalog. Installed thrown/finesse weapons belong to the installed-row alignment task below. |
+| L1J-FIREARM-EXOTIC-WEAPON-DATA        | `weapon_musket`, `weapon_pistol`                                                                                                                                                                             | Close as authored weapon data absent from the Unit catalog. Do not introduce firearm combat behavior.                                          |
+| L1J-INSTALLED-EQUIPMENT-ROW-ALIGNMENT | `armor_chain_mail`, `equipment_shield`, `weapon_club`, `weapon_dagger`, `weapon_flail`, `weapon_greataxe`, `weapon_longsword`, `weapon_quarterstaff`, `weapon_shortbow`, `weapon_shortsword`, `weapon_spear` | Align installed unsupported Unit claim wording with non-runtime authored-data closure if still needed.                                         |
 
 ## Exclusions
 
@@ -83,22 +83,3 @@ Task 7 to carry a mixed absent/installed row set explicitly.
 The phrase "any thrown/finesse rows not closed by Tasks 4-7" should not sweep in
 installed rows such as `weapon_dagger` or `weapon_spear`; those belong to the
 installed-row alignment batch.
-
-## Reviewer Loop
-
-RAW/ubiquitous-language pass: the rows trace to SRD Equipment weapon and armor
-tables, and the artifact uses project terms for Armor Category, Weapon Property,
-Mastery Property, Weapon Mastery, Holding/Wielding, and Shield.
-
-Architecture/domain pass: this artifact adds no runtime state and does not
-duplicate equipment data into a new executable model. It references row
-identities already present in generated coverage artifacts and authored Surface
-records.
-
-Connascence pass: row names must change together with authored Surface Unit ids
-and generated coverage artifacts. The coupling is localized in the owned-row
-table above; later tasks should update the generated report rather than copying
-these rows into parallel runtime data.
-
-Code-review pass: no code, schema, generated JSON, or authored Dhall data was
-changed by this precheck artifact.

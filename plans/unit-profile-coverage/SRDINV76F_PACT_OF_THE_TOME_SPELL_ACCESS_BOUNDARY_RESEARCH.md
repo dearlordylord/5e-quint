@@ -168,13 +168,3 @@ Out of scope:
 - SRDINV78 should not classify Pact of the Tome as supported from the
   `pact_of_the_tome` invocation option alone, from one selected spell alone, or
   from generic prepared-spell support alone.
-
-## reviewer loop Convergence
-
-- Round 1: rejected copying selected Book of Shadows spell ids into ordinary
-  Warlock prepared spells. The book-on-person condition would then rely on a
-  separate cleanup convention and could represent stale prepared access.
-- Round 2: rejected reusing Wizard Ritual Adept as the direct runtime shape.
-  Wizard Ritual Adept grants ritual casting from spellbook Spell Access without
-  preparation; Pact of the Tome instead makes selected spells prepared while
-  the Book of Shadows is on the Warlock's person.

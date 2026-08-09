@@ -5,7 +5,7 @@ const root = process.cwd();
 const markdownDir = path.join(root, ".references/srd-5.2.1/Spells");
 const open5ePath = path.join(
   root,
-  ".references/inspirations/open5e-api/data/v2/wizards-of-the-coast/srd-2024/Spell.json",
+  ".references/structured-inputs/open5e-api/data/v2/wizards-of-the-coast/srd-2024/Spell.json",
 );
 const fiveToolsPath = path.join(
   root,
@@ -467,7 +467,7 @@ function buildAudit() {
     inputs: {
       markdownDir: ".references/srd-5.2.1/Spells",
       open5ePath:
-        ".references/inspirations/open5e-api/data/v2/wizards-of-the-coast/srd-2024/Spell.json",
+        ".references/structured-inputs/open5e-api/data/v2/wizards-of-the-coast/srd-2024/Spell.json",
       fiveToolsPath: ".references/5etools-src/data/spells/spells-xphb.json",
       pdfTextPath: fs.existsSync(pdfTextPath) ? pdfTextPath : null,
     },

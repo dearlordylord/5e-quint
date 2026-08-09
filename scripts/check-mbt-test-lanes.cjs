@@ -30,9 +30,6 @@ const SELECTED_IDENTITY_VOCABULARY_SCOPES = [
     include: /\.md$/,
   },
 ];
-const SELECTED_IDENTITY_VOCABULARY_EXCLUDED_PATHS = new Set([
-  "plans/unit-profile-coverage/SRDINV91D_SELECTED_IDENTITY_MBT_FRONTIER_BATCH.md",
-]);
 const SELECTED_IDENTITY_VOCABULARY_EXCLUDED_PREFIXES = [
   "plans/ralph-artifacts/",
 ];
@@ -235,7 +232,6 @@ function selectedIdentityVocabularyFailures() {
         .split(path.sep)
         .join("/");
       if (repoPath === "scripts/check-mbt-test-lanes.cjs") continue;
-      if (SELECTED_IDENTITY_VOCABULARY_EXCLUDED_PATHS.has(repoPath)) continue;
       if (
         SELECTED_IDENTITY_VOCABULARY_EXCLUDED_PREFIXES.some((prefix) =>
           repoPath.startsWith(prefix),

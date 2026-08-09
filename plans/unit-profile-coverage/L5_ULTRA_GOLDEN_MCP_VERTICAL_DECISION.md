@@ -64,7 +64,7 @@ The vertical depends on already-supported owners:
 - Character Sheet owns durable Spell Slot projection from finalized Wizard
   Spell Access and class table facts. Expected pre-battle `spellSlots`:
   `[{ spellLevel: 1, count: 4, expended: 0 }, { spellLevel: 2, count: 3,
-  expended: 0 }, { spellLevel: 3, count: 2, expended: 0 }]`.
+expended: 0 }, { spellLevel: 3, count: 2, expended: 0 }]`.
 - Character-battle handoff owns projection of the finalized character's Spell
   Slots into the battle combatant origin, with the same 4/3/2 counts before any
   spell is cast.
@@ -125,7 +125,7 @@ Task 7 should extend the same finalized character through battle:
 5. Assert the result spends one level-3 Spell Slot. Expected post-Fireball
    battle slot projection:
    `[{ spellLevel: 1, count: 4, expended: 0 }, { spellLevel: 2, count: 3,
-   expended: 0 }, { spellLevel: 3, count: 2, expended: 1 }]`.
+expended: 0 }, { spellLevel: 3, count: 2, expended: 1 }]`.
 
 ## Alternatives Rejected
 
@@ -164,19 +164,6 @@ Task 7 should extend the same finalized character through battle:
   spellbook, Evocation Savant, or object/spatial state.
 - No runtime, QNT, MBT, generated report, or scenario registry file changed in
   this task. `git diff --check` is the appropriate task verification.
-
-## Reviewer Loop Convergence
-
-- Round 1 RAW/ubiquitous-language pass: the selected Wizard 5 and Fireball
-  anchors trace to local SRD 5.2.1 text and project vocabulary. The review
-  rejected requiring Memorize Spell or the Evocation Savant later grant because
-  those are future-owner boundaries.
-- Round 1 architecture/connascence pass: the only strong couplings are the
-  level-5 Spell Slot counts, the Fireball Unit id, and the Fireball battle
-  hole sequence. They are localized in this artifact and point to existing
-  owners rather than duplicating state.
-- Round 2 code-review pass: fixed wording that implied `start_battle` returns
-  setup ids before the request. No remaining reasonable findings.
 
 ## Plan Impact
 

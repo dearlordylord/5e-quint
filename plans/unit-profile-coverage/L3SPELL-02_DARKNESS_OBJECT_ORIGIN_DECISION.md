@@ -86,19 +86,6 @@ No reducer code, QNT, MBT, or runtime tests were changed. A runtime promotion
 would require a general object-origin area lifecycle owner, not a Darkness-only
 field or adapter.
 
-## Reviewer Loop Convergence
-
-- Round 1 RAW/ubiquitous-language pass: the closure traces to Darkness,
-  Emanation, Darkness/Darkvision, Illumination, and Obscurement terminology in
-  the local SRD and ubiquitous language.
-- Round 1 architecture/connascence pass: rejected a Darkness-specific
-  object-origin area field because object identity, movement, cover, and area
-  membership would have to change together across table, map, and runtime
-  layers without a shared object-spatial owner.
-- Round 2 code-review pass: no reducer behavior changed; the claim ledger now
-  records the branch as a runtime-detached table-spatial closure instead of a
-  live follow-up split.
-
 ## Plan Impact
 
 - Task 2 can close as accepted runtime-detached closure.

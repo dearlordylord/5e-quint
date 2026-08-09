@@ -34,8 +34,8 @@ casting, Self range, Instantaneous duration, a self-origin Line with
 8d6 Lightning damage, half damage on successful saves, and slot scaling.
 
 Before this task, the active Unit matrix reported `lightning_bolt` as an
-`srd-candidate` with `not-in-unit-catalog` status. The earlier
-`L1K_DAMAGE_SPELL_CANDIDATE_INTAKE.md` correctly identified the missing owner:
+`srd-candidate` with `not-in-unit-catalog` status. Earlier intake research,
+preserved in git history, correctly identified the missing owner:
 the save-gated damage profile already handled the damage/save procedure, but
 did not admit a self-origin Line target-set boundary.
 
@@ -65,28 +65,6 @@ affected target set.
 No companion AI or autonomous-control behavior is involved. Runtime admission
 uses the structural Surface shape and typed support profile, not authored
 identity dispatch.
-
-## Reviewer Loop
-
-Round 1 RAW and ubiquitous-language pass:
-
-- Preserved the SRD Line dimensions as 100 feet long and 5 feet wide.
-- Kept Self range as a self-origin area with range 0 in the battle profile.
-- Kept the point-of-origin, direction choice, Total Cover blocking, and
-  affected-creature derivation with table/spatial witnesses.
-- Kept half damage on successful Dexterity Saving Throws and slot-scaled
-  Lightning damage.
-
-Round 2 architecture and connascence pass:
-
-- Reused the existing save-gated damage profile and `selfOriginLine` targeting
-  variant instead of adding a spell-specific reducer.
-- Added named Line dimension constants at the admission boundary so future
-  changes to the exact supported Line shape are localized.
-- Added codec support for `selfOriginLine` save-gated damage invocations so the
-  narrowed runtime shape remains serializable.
-- Added Quint profile facts for the concrete Lightning Bolt
-  invocation to keep runtime support and promoted profile modeling aligned.
 
 ## Verification Notes
 

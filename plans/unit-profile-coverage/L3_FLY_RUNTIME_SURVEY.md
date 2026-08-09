@@ -135,33 +135,6 @@ output: focused tests for Concentration break, duration expiration, recast or
 replacement cleanup, hover-relevant fall prevention, and handoff to the existing
 falling reaction/landing pipeline, plus promoted Quint/runtime parity.
 
-## Reviewer Loop
-
-Round 1 RAW and ubiquitous-language pass:
-
-- Kept the SRD target exact: touched willing creature, not arbitrary creature or
-  object.
-- Kept Fly Speed as Speed capacity rather than spent Movement.
-- Preserved the spell-end falling clause instead of burying it in prose-only
-  closure.
-- Left aloft state, can-stop-fall judgment, pathfinding, elevation, and landing
-  legality with caller/table witnesses.
-
-Round 2 architecture and connascence pass:
-
-- Did not add Unit claims or runtime support from catalog admission alone.
-- Split Surface target repair from runtime promotion so the reducer does not
-  infer willing-creature eligibility from authored identity.
-- Split fixed Fly Speed and hover from spell-end falling because the former is
-  an active movement projection and the latter is a falling witness/lifecycle
-  boundary.
-- Reused existing speed algebra and falling reaction concepts in the follow-up
-  shape rather than proposing a parallel position or elevation store.
-- The remaining strong coupling is intentional and should be made type-visible
-  in the follow-up: `BattleMovementSpeedKind`, `BattleSpecialSpeedKind`, codecs,
-  Quint `MovementSpeedKind`, and movement/Dash discovery must all
-  widen together when Fly Speed is promoted.
-
 ## Verification Notes
 
 This survey records a Unit claim only to make the follow-up split

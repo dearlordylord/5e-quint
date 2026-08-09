@@ -136,37 +136,6 @@ Quint/runtime parity for cast admission, Spell Slot spend, Concentration,
 Saving Throw outcomes, linked condition and Speed projection, damage cleanup,
 shake-awake cleanup, and duration cleanup.
 
-## Reviewer Loop
-
-Round 1 RAW and ubiquitous-language pass:
-
-- Kept the SRD target exact: creatures in the 30-foot Cube who can see the
-  pattern, not every creature in a Cube by default.
-- Kept Charmed as the source condition while preserving Incapacitated and Speed
-  0 as separate battle-visible projections.
-- Kept both target-specific exits: any damage to the affected target and
-  another creature spending an action to shake the target out of its stupor.
-- Left Cube placement, Total Cover, point-of-origin inclusion, area membership,
-  and sight derivation with caller/table witnesses.
-
-Round 2 architecture and connascence pass:
-
-- Did not add runtime support or Unit catalog admission from authored Surface
-  presence alone.
-- Split Surface escape/sight repair from runtime promotion so reducers do not
-  infer exact behavior from authored identity or prose.
-- Kept the linked condition plus Speed 0 effect as one future source-owned
-  target effect, avoiding duplicated state where Charmed, Incapacitated, and
-  Speed 0 could diverge for the same spell occurrence.
-- Reused existing condition, damage, action-resource, Concentration, and area
-  witness concepts in the follow-up shape rather than proposing a parallel
-  social-control or map-geometry store.
-- The remaining strong coupling is intentional and must be made type-visible in
-  the follow-up: Surface effect atoms, battle active-effect cleanup,
-  damage-lifecycle hooks, action-spend commands, codecs, Quint
-  state, and selected-identity replay projections must all change together when
-  the control lifecycle is promoted.
-
 ## Verification Notes
 
 This survey records a Unit claim only to make the follow-up split

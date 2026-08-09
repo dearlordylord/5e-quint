@@ -44,7 +44,7 @@ encode the SRD mechanics with typed `on_hit_trigger` mechanics:
   `once_per_turn` usage limit.
 - `mastery_topple` uses `weapon_hit`, optional `true`, a Constitution
   `save_gate`, `weapon_attack_dc` base 8, failed-save `apply_condition:
-  prone`, and success `none`.
+prone`, and success `none`.
 
 That means this is not currently a Surface shape gap. The missing work is the
 promoted runtime boundary: catalog admission/support profiles, Quint facts, runtime reducer/projection, character-battle projection from
@@ -148,13 +148,3 @@ Out of scope:
 - SRDINV74D is added as the Cleave implementation task.
 - SRDINV78 depends on SRDINV74C and SRDINV74D instead of treating SRDINV74B
   alone as the mastery closure point.
-
-## reviewer loop Convergence
-
-- Round 1: rejected a combined Cleave/Topple implementation slice. It would
-  couple save-gated condition application to an extra-attack flow with
-  once-per-turn and spatial facts, making the follow-up acceptance criteria too
-  broad.
-- Round 2: rejected adding new Surface fields. The current typed Surface
-  records already represent Cleave and Topple; the missing boundary is runtime
-  support/admission, not authored source shape.

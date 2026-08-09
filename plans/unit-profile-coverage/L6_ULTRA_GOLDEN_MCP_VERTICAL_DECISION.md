@@ -174,23 +174,6 @@ Broad `pnpm quality` is not necessary for this documentation-only decision file.
 Downstream implementation tasks should run their focused MCP acceptance tests and
 then the plan-specified verification lane for their code changes.
 
-## Reviewer Loop Convergence
-
-Round 1 findings:
-
-- `ranger_roving` has the cleanest visible battle projection, but current MCP
-  Character Creation cannot create a Ranger 6 sheet. Rejected for this task and
-  documented as future work.
-- `rogue_expertise` does not itself define a battle effect. Resolved by keeping
-  Expertise at the Character Sheet boundary and using `rogue_steady_aim` only as
-  the supported battle handoff procedure for the same Rogue 6 character.
-
-Round 2 findings:
-
-- No additional reasonable findings. The scenario uses SRD authored identities
-  only at catalog/selection boundaries and does not require new projections,
-  duplicated state, or unsupported runtime behavior.
-
 ## Plan Impact
 
 Status: applied

@@ -1,8 +1,7 @@
 // Active Effect lifecycle model: expiration, early-end, effect bases, and the
 // shared payload vocabulary that battle active effects are built from. This is
 // pure type vocabulary with leaf dependencies only; the BattleActiveEffect union
-// and its runtime depend on these types one-directionally. See
-// plans/ACTIVE_EFFECT_DEEP_MODULE.md.
+// and its runtime depend on these types one-directionally.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty

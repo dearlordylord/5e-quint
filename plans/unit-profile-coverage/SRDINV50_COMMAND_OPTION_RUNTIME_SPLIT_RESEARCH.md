@@ -162,12 +162,3 @@ Out of scope:
 - map collision, terrain, pathfinding, or route-selection policy;
 - treating "fastest available means" as permission to invent non-RAW movement
   modes.
-
-## reviewer loop Convergence
-
-- Round 1: rejected one omnibus Command runtime task. The route, held-object,
-  action suppression, and condition/end-turn clauses require different runtime
-  invariants.
-- Round 2: rejected storing route facts, held-object inventory, or duplicate
-  Movement/Speed facts in Command state. The split keeps those facts owned by
-  existing movement, loadout/object, and action-resource boundaries.

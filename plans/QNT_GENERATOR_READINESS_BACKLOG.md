@@ -77,13 +77,13 @@ The drained lane plans named below were deleted (repo precedent: per-task
 history lives in git; durable outputs live in checker-owned artifacts). Their
 only non-`done` rows are parked here.
 
-| Original task                                 | Source lane (deleted)                      | Output                                                                                                                                                       |
-| --------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `PDS-A09-KIT-GATE-AND-CLOSEOUT`               | `RALPH_LANE_PARITY_DRIVER_SEAM`            | Deferred PRD/03 gate, docs, and line-footprint closeout for the parity-driver kit.                                                                           |
-| `PDS-A24-CHARACTER-PACKAGE-MBT-CLEANUP-LANE`  | `RALPH_LANE_PARITY_DRIVER_SEAM`            | Open the character-package MBT cleanup lane; follow-up rationale now lives in `plans/RALPH_WITNESS_PROTOCOL_STORAGE_MIGRATION.md` (kit stays package-local). |
-| `BRQNT-SPLIT-14-COMPATIBILITY-WRAPPER-AUDIT`  | `RALPH_BATTLE_RUNTIME_QNT_SHELL_SPLIT`     | Audit remaining shell-split compatibility wrappers for deletion or adoption.                                                                                 |
-| `L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION`    | `RALPH_L3_MORNING_SPECIES_FEATURE_BATCH`   | Consolidation note for the species-feature morning batch.                                                                                                    |
-| `L3MWILD-14-MORNING-WILD-SHAPE-CONSOLIDATION` | `RALPH_L3_MORNING_WILD_SHAPE_OBJECT_BATCH` | Consolidation note for the wild-shape/object morning batch.                                                                                                  |
+| Original task                                 | Source lane (deleted)                      | Output                                                                                                                                                  |
+| --------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PDS-A09-KIT-GATE-AND-CLOSEOUT`               | `RALPH_LANE_PARITY_DRIVER_SEAM`            | Deferred PRD/03 gate, docs, and line-footprint closeout for the parity-driver kit.                                                                      |
+| `PDS-A24-CHARACTER-PACKAGE-MBT-CLEANUP-LANE`  | `RALPH_LANE_PARITY_DRIVER_SEAM`            | Reassess cleanup from the current package-local drivers; typed witness protocol storage has landed and its delivery record is preserved in git history. |
+| `BRQNT-SPLIT-14-COMPATIBILITY-WRAPPER-AUDIT`  | `RALPH_BATTLE_RUNTIME_QNT_SHELL_SPLIT`     | Audit remaining shell-split compatibility wrappers for deletion or adoption.                                                                            |
+| `L3MSPEC-12-SPECIES-FEATURE-CONSOLIDATION`    | `RALPH_L3_MORNING_SPECIES_FEATURE_BATCH`   | Consolidation note for the species-feature morning batch.                                                                                               |
+| `L3MWILD-14-MORNING-WILD-SHAPE-CONSOLIDATION` | `RALPH_L3_MORNING_WILD_SHAPE_OBJECT_BATCH` | Consolidation note for the wild-shape/object morning batch.                                                                                             |
 
 ## Reopen Checklist
 

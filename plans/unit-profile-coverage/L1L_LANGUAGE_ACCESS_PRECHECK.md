@@ -26,7 +26,7 @@ The residuals remain runtime-detached table adjudication:
 
 - `.references/srd-5.2.1/Classes/Druid.md:81`: Level 1 Druidic.
 - `.references/srd-5.2.1/Classes/Druid.md:83`: the Druid knows Druidic and
-  always has *Speak with Animals* prepared.
+  always has _Speak with Animals_ prepared.
 - `.references/srd-5.2.1/Classes/Druid.md:85`: hidden-message spotting and
   deciphering rules.
 - `.references/srd-5.2.1/Classes/Rogue.md:71`: Level 1 Thieves' Cant.
@@ -47,10 +47,10 @@ The residuals remain runtime-detached table adjudication:
 
 Surface content already separates the source facts:
 
-| Unit | Character-owned Surface grants | Runtime-detached residuals |
-| --- | --- | --- |
-| `druid_druidic` | `grant_language` with `languageId: "druidic"` and `grant_spell_access` with `mode: "prepared"` and `spellId: "speak_with_animals"` in `packages/surface/content/druid_druidic.json:10-18` | `grant_hidden_language_messages` in `packages/surface/content/druid_druidic.json:19-36` |
-| `rogue_thieves_cant` | `grant_language` with `languageId: "thieves_cant"` and `grant_language_choice` with source `character_creation_language_tables` in `packages/surface/content/rogue_thieves_cant.json:10-18` | no executable battle residual; Thieves' Cant communication remains table-adjudicated |
+| Unit                 | Character-owned Surface grants                                                                                                                                                              | Runtime-detached residuals                                                              |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `druid_druidic`      | `grant_language` with `languageId: "druidic"` and `grant_spell_access` with `mode: "prepared"` and `spellId: "speak_with_animals"` in `packages/surface/content/druid_druidic.json:10-18`   | `grant_hidden_language_messages` in `packages/surface/content/druid_druidic.json:19-36` |
+| `rogue_thieves_cant` | `grant_language` with `languageId: "thieves_cant"` and `grant_language_choice` with source `character_creation_language_tables` in `packages/surface/content/rogue_thieves_cant.json:10-18` | no executable battle residual; Thieves' Cant communication remains table-adjudicated    |
 
 The Surface schema accepts these atom shapes but leaves `languageId` as a
 non-empty string:
@@ -180,7 +180,7 @@ build's progression and Surface class `featureGrants` in
 Task 5 should add focused Character Sheet evidence for `druid_druidic` making
 `speak_with_animals` visible as always-prepared Spell Access, or identify the
 minimal owner fix if the spell catalog/admission path blocks that projection.
-The communication content of *Speak with Animals* remains runtime-detached table
+The communication content of _Speak with Animals_ remains runtime-detached table
 adjudication.
 
 ## Later Focused Tests
@@ -223,21 +223,3 @@ Task 6:
 - Coverage wording continues to classify `druid_druidic` and
   `rogue_thieves_cant` as character-owned facts plus runtime-detached residuals,
   with no battle-runtime profile promotion.
-
-## Reviewer Loop Notes
-
-RAW traceability: all modeled language and Spell Access facts above trace to
-the local SRD 5.2.1 corpus. Ubiquitous language uses Character Sheet and Spell
-Access terms rather than Stat Block or Spell Invocation terms.
-
-Architecture and connascence: the main strong coupling is between Surface
-snake-case language ids and shared `Language` display values. Later
-implementation should centralize that mapping in one parser/codec and make
-unsupported ids a typed issue. Do not duplicate the mapping in finalization,
-stored-build parsing, tests, and coverage wording.
-
-Code-review pass: this task intentionally makes no runtime code changes. The
-proposed field is required rather than optional, keeps origin and class-feature
-language facts distinct, and rejects duplicate/mismatched facts at the
-parse/finalization boundaries where authored Surface and stored CharacterBuild
-data meet.

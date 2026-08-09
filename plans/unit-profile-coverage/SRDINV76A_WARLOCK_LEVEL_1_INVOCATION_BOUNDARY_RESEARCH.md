@@ -71,13 +71,13 @@ claim invocation support:
 
 ## Classification
 
-| Invocation | Level-1 legal? | Primary boundary | Follow-up treatment |
-|---|---:|---|---|
-| Armor of Shadows | yes | Spell Access plus existing Mage Armor Spell Invocation/Spell Effect | Add a focused spell-access task for self-only no-slot Mage Armor through the existing persistent armor procedure. Do not duplicate Mage Armor AC/effect state. |
-| Eldritch Mind | yes | Battle runtime | Add a focused Concentration Saving Throw task: Advantage applies only to Constitution saving throws made to maintain Concentration. |
-| Pact of the Blade | yes | Battle runtime | SRDINV76B is a valid focused implementation slice for bonded weapon proficiency, focus, Charisma attack/damage choice, alternate damage type choice, and bond lifecycle gates. |
-| Pact of the Chain | yes | Spell Access plus companion runtime | Split after SRDINV76B: first model Find Familiar access/no-slot Magic action/special forms, then model forgoing one Attack action attack for familiar Reaction attack only when the companion boundary can own familiar actions. |
-| Pact of the Tome | yes | Character creation / Spell Access | Defer battle support until a Book of Shadows spell-access boundary exists for three selected cantrips and two selected level-1 Ritual spells from any class. Focus facts can be represented with that access record if needed. |
+| Invocation        | Level-1 legal? | Primary boundary                                                    | Follow-up treatment                                                                                                                                                                                                              |
+| ----------------- | -------------: | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Armor of Shadows  |            yes | Spell Access plus existing Mage Armor Spell Invocation/Spell Effect | Add a focused spell-access task for self-only no-slot Mage Armor through the existing persistent armor procedure. Do not duplicate Mage Armor AC/effect state.                                                                   |
+| Eldritch Mind     |            yes | Battle runtime                                                      | Add a focused Concentration Saving Throw task: Advantage applies only to Constitution saving throws made to maintain Concentration.                                                                                              |
+| Pact of the Blade |            yes | Battle runtime                                                      | SRDINV76B is a valid focused implementation slice for bonded weapon proficiency, focus, Charisma attack/damage choice, alternate damage type choice, and bond lifecycle gates.                                                   |
+| Pact of the Chain |            yes | Spell Access plus companion runtime                                 | Split after SRDINV76B: first model Find Familiar access/no-slot Magic action/special forms, then model forgoing one Attack action attack for familiar Reaction attack only when the companion boundary can own familiar actions. |
+| Pact of the Tome  |            yes | Character creation / Spell Access                                   | Defer battle support until a Book of Shadows spell-access boundary exists for three selected cantrips and two selected level-1 Ritual spells from any class. Focus facts can be represented with that access record if needed.   |
 
 ## Boundary Decision
 
@@ -217,14 +217,3 @@ Scope:
   requires all level-1 battle-relevant invocation options before review.
 - Keep Pact of the Chain and Pact of the Tome behind explicit companion and
   spell-access boundary research before any runtime promotion.
-
-## reviewer loop Convergence
-
-- Round 1: rejected treating Pact of the Blade as representative support for
-  `warlock_eldritch_invocations`. The container is a character-creation choice
-  source; option execution is split across weapon projection, spell access,
-  spell invocation, spell effect, Concentration save, and companion boundaries.
-- Round 2: rejected adding new Mage Armor or Find Familiar runtime state for
-  this research. Existing spell definitions and Mage Armor execution should be
-  reused by follow-up Spell Access work; Find Familiar needs companion boundary
-  research before runtime promotion.

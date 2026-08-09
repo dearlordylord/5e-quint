@@ -252,14 +252,3 @@ Out of scope:
 - Future implementation should preserve SRDINV81's Pact of the Chain Spell
   Access result and attach companion execution beneath Find Familiar
   invocation, not beneath Warlock invocation state.
-
-## reviewer loop Convergence
-
-- Round 1: split the Find Familiar gap into form catalog, lifecycle,
-  independent familiar turn/action ownership, telepathy/touch delivery, and
-  Pact of the Chain attack exception. This rejected a single broad "summon pet"
-  task because most required facts are Find-Familiar-specific.
-- Round 2: rejected storing familiar state in Spell Access or Warlock feature
-  state. Spell Access only explains how the caster may invoke Find Familiar;
-  the familiar itself is a companion creature with its own stat source,
-  Initiative, turn, action resources, Reaction, presence state, and lifecycle.

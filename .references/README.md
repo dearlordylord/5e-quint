@@ -9,6 +9,11 @@ The local SRD 5.2.1 corpus is the working RAW authority for rules-facing work.
 Other tracked research inputs are non-runtime references and must retain their
 own license and source constraints.
 
+The spell-markdown audit requires an untracked Open5e API checkout at
+`.references/structured-inputs/open5e-api/`. Its expected input is
+`data/v2/wizards-of-the-coast/srd-2024/Spell.json`. This is structured input for
+normalization and cross-checking only; it is not provenance or RAW authority.
+
 PHB+ structured input, Mechanical Correspondence, and non-public authoring or
 review evidence are owned exclusively by the access-controlled Private
 Authoring Repository. They must not be copied into this directory, linked as a

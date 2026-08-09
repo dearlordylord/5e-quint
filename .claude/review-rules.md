@@ -66,16 +66,34 @@ because it is in support code.
 
 ## Quint And Runtime Parity
 
-Review combat behavior against the active package-local Quint authority:
-`packages/battle-runtime/battle-runtime.qnt`, the relevant package-local QNT
-slices it uses, and the reusable rule-core slices in
-`packages/shared-algebras/proofs/rule-core/`. Deleted root QNT files are
-historical restoration material recoverable from git history only when a task
-explicitly asks for archive restoration work; they are not active parity gates.
+There is no whole-battle or package-local aggregation spec. Locate the Quint
+authority through the executable rules-kernel mapping instead of guessing from
+a filename:
+
+1. Find the changed runtime path or semantic obligation in
+   [`plans/rules-kernel-coverage/obligations.jsonl`](../plans/rules-kernel-coverage/obligations.jsonl).
+2. Review every path in that row's `qntOwners`; `parityWitnesses` names the
+   executable TypeScript connection. For Surface-backed behavior, follow the
+   profile join in
+   [`profile-obligations.jsonl`](../plans/rules-kernel-coverage/profile-obligations.jsonl).
+3. Use
+   [`qnt-owner-roles.jsonl`](../plans/rules-kernel-coverage/qnt-owner-roles.jsonl)
+   to distinguish semantic-core owners from bridges, fixtures, and proof-only
+   modules. If changed reducer semantics have no obligation row, that missing
+   mapping is itself a review finding.
+
+Only owners classified as `semantic-core` are rule authorities. Bridges,
+fixtures, selected-identity traces, and proof-only modules are required
+projection, parity, or proof evidence for the mapped obligation, not alternate
+semantic sources. Deleted root QNT files are available from git history only
+for explicitly requested restoration work; they are not parity gates. The
+structural map in
+[`plans/BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md`](../plans/BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md)
+is orientation, not a second owner registry.
 
 Flag:
 
-- XState or TypeScript behavior that diverges from the relevant package-local QNT or rule-core authority without a corresponding spec change;
+- TypeScript behavior that diverges from the mapped package-local QNT or rule-core authority without a corresponding spec change;
 - changes to fields mapped by MBT bridges without checking the relevant parity tests;
 - duplicated rule logic between Quint, TS, bridge code, and UI that should be shared, derived, or explicitly projected;
 - exploratory battle MBT runs that violate the repo's MBT cost rules.

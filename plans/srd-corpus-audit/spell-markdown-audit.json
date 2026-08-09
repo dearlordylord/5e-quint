@@ -3,7 +3,7 @@
   "scope": "SRD 5.2.1 spell markdown cross-check against local Open5e SRD-2024 structured data and local 5e-tools SRD aliases; PDF text line hints are provenance-review anchors, not automated replacement text.",
   "inputs": {
     "markdownDir": ".references/srd-5.2.1/Spells",
-    "open5ePath": ".references/inspirations/open5e-api/data/v2/wizards-of-the-coast/srd-2024/Spell.json",
+    "open5ePath": ".references/structured-inputs/open5e-api/data/v2/wizards-of-the-coast/srd-2024/Spell.json",
     "fiveToolsPath": ".references/5etools-src/data/spells/spells-xphb.json",
     "pdfTextPath": "/tmp/dnd-srd-audit/srd521.txt"
   },
@@ -66,9 +66,7 @@
       "fiveToolsReferenceCoverage": 0.9884,
       "fiveToolsMarkdownCoverage": 0.9884,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Aid",
@@ -82,9 +80,7 @@
       "fiveToolsReferenceCoverage": 0.9762,
       "fiveToolsMarkdownCoverage": 0.9762,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Animate Dead",
@@ -98,9 +94,7 @@
       "fiveToolsReferenceCoverage": 1,
       "fiveToolsMarkdownCoverage": 0.9774,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Animate Objects",
@@ -207,9 +201,7 @@
       "open5eMarkdownCoverage": 1,
       "fiveToolsReferenceCoverage": 0.9875,
       "fiveToolsMarkdownCoverage": 0.7596,
-      "missingReferenceWords": [
-        "table"
-      ],
+      "missingReferenceWords": ["table"],
       "extraMarkdownWords": []
     },
     {
@@ -224,9 +216,7 @@
       "fiveToolsReferenceCoverage": 0.9917,
       "fiveToolsMarkdownCoverage": 0.9917,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Blade Barrier",
@@ -239,12 +229,8 @@
       "open5eMarkdownCoverage": 0.9917,
       "fiveToolsReferenceCoverage": 0.9917,
       "fiveToolsMarkdownCoverage": 0.9917,
-      "missingReferenceWords": [
-        "it"
-      ],
-      "extraMarkdownWords": [
-        "its"
-      ]
+      "missingReferenceWords": ["it"],
+      "extraMarkdownWords": ["its"]
     },
     {
       "name": "Blight",
@@ -258,9 +244,7 @@
       "fiveToolsReferenceCoverage": 0.9875,
       "fiveToolsMarkdownCoverage": 0.9875,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ],
+      "extraMarkdownWords": ["a"],
       "pdfTextLine": 6889
     },
     {
@@ -275,9 +259,7 @@
       "fiveToolsReferenceCoverage": 0.9067,
       "fiveToolsMarkdownCoverage": 0.9855,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Call Lightning",
@@ -291,9 +273,7 @@
       "fiveToolsReferenceCoverage": 0.976,
       "fiveToolsMarkdownCoverage": 0.9939,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Chromatic Orb",
@@ -307,9 +287,7 @@
       "fiveToolsReferenceCoverage": 0.9936,
       "fiveToolsMarkdownCoverage": 0.9936,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Circle of Death",
@@ -323,9 +301,7 @@
       "fiveToolsReferenceCoverage": 0.9385,
       "fiveToolsMarkdownCoverage": 0.9839,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ],
+      "extraMarkdownWords": ["a"],
       "pdfTextLine": 7030
     },
     {
@@ -340,9 +316,7 @@
       "fiveToolsReferenceCoverage": 0.8974,
       "fiveToolsMarkdownCoverage": 0.9929,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Cone of Cold",
@@ -356,9 +330,7 @@
       "fiveToolsReferenceCoverage": 0.9452,
       "fiveToolsMarkdownCoverage": 0.9857,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Confusion",
@@ -379,9 +351,7 @@
         "the",
         "for"
       ],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Conjure Animals",
@@ -395,9 +365,7 @@
       "fiveToolsReferenceCoverage": 0.9939,
       "fiveToolsMarkdownCoverage": 0.9939,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Conjure Celestial",
@@ -450,9 +418,7 @@
       "fiveToolsReferenceCoverage": 0.9937,
       "fiveToolsMarkdownCoverage": 0.9937,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ],
+      "extraMarkdownWords": ["a"],
       "pdfTextLine": 7269
     },
     {
@@ -467,9 +433,7 @@
       "fiveToolsReferenceCoverage": 0.9934,
       "fiveToolsMarkdownCoverage": 0.9934,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ],
+      "extraMarkdownWords": ["a"],
       "pdfTextLine": 7233
     },
     {
@@ -484,9 +448,7 @@
       "fiveToolsReferenceCoverage": 0.8947,
       "fiveToolsMarkdownCoverage": 0.9884,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Conjure Woodland Beings",
@@ -500,9 +462,7 @@
       "fiveToolsReferenceCoverage": 0.92,
       "fiveToolsMarkdownCoverage": 0.9914,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Contact Other Plane",
@@ -515,13 +475,8 @@
       "open5eMarkdownCoverage": 0.9855,
       "fiveToolsReferenceCoverage": 0.9854,
       "fiveToolsMarkdownCoverage": 0.9783,
-      "missingReferenceWords": [
-        "longdead"
-      ],
-      "extraMarkdownWords": [
-        "dead",
-        "long"
-      ]
+      "missingReferenceWords": ["longdead"],
+      "extraMarkdownWords": ["dead", "long"]
     },
     {
       "name": "Control Weather",
@@ -534,9 +489,7 @@
       "open5eMarkdownCoverage": 1,
       "fiveToolsReferenceCoverage": 0.9916,
       "fiveToolsMarkdownCoverage": 0.6743,
-      "missingReferenceWords": [
-        "table"
-      ],
+      "missingReferenceWords": ["table"],
       "extraMarkdownWords": []
     },
     {
@@ -551,9 +504,7 @@
       "fiveToolsReferenceCoverage": 0.9525,
       "fiveToolsMarkdownCoverage": 0.9656,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Creation",
@@ -566,12 +517,8 @@
       "open5eMarkdownCoverage": 0.9603,
       "fiveToolsReferenceCoverage": 0.9549,
       "fiveToolsMarkdownCoverage": 0.8411,
-      "missingReferenceWords": [
-        "table"
-      ],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "missingReferenceWords": ["table"],
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Delayed Blast Fireball",
@@ -585,9 +532,7 @@
       "fiveToolsReferenceCoverage": 0.9797,
       "fiveToolsMarkdownCoverage": 0.9948,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Disintegrate",
@@ -601,9 +546,7 @@
       "fiveToolsReferenceCoverage": 0.961,
       "fiveToolsMarkdownCoverage": 0.9933,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Dispel Magic",
@@ -617,9 +560,7 @@
       "fiveToolsReferenceCoverage": 1,
       "fiveToolsMarkdownCoverage": 0.9884,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Dissonant Whispers",
@@ -658,9 +599,7 @@
       "fiveToolsReferenceCoverage": 0.9767,
       "fiveToolsMarkdownCoverage": 0.9767,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Divine Word",
@@ -673,14 +612,8 @@
       "open5eMarkdownCoverage": 0.9801,
       "fiveToolsReferenceCoverage": 0.9903,
       "fiveToolsMarkdownCoverage": 0.6755,
-      "missingReferenceWords": [
-        "target"
-      ],
-      "extraMarkdownWords": [
-        "divine",
-        "word",
-        "effects"
-      ]
+      "missingReferenceWords": ["target"],
+      "extraMarkdownWords": ["divine", "word", "effects"]
     },
     {
       "name": "Dragon's Breath",
@@ -694,9 +627,7 @@
       "fiveToolsReferenceCoverage": 0.9506,
       "fiveToolsMarkdownCoverage": 0.9872,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Find Steed",
@@ -749,9 +680,7 @@
       "fiveToolsReferenceCoverage": 0.9565,
       "fiveToolsMarkdownCoverage": 0.9888,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Flame Blade",
@@ -765,9 +694,7 @@
       "fiveToolsReferenceCoverage": 0.9912,
       "fiveToolsMarkdownCoverage": 0.9912,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ],
+      "extraMarkdownWords": ["a"],
       "pdfTextLine": 8260
     },
     {
@@ -781,13 +708,8 @@
       "open5eMarkdownCoverage": 0.8947,
       "fiveToolsReferenceCoverage": 0.9494,
       "fiveToolsMarkdownCoverage": 0.9868,
-      "missingReferenceWords": [
-        "foothigh"
-      ],
-      "extraMarkdownWords": [
-        "high",
-        "a"
-      ]
+      "missingReferenceWords": ["foothigh"],
+      "extraMarkdownWords": ["high", "a"]
     },
     {
       "name": "Flaming Sphere",
@@ -801,9 +723,7 @@
       "fiveToolsReferenceCoverage": 0.9944,
       "fiveToolsMarkdownCoverage": 0.9944,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Giant Insect",
@@ -857,9 +777,7 @@
       "fiveToolsReferenceCoverage": 0.9839,
       "fiveToolsMarkdownCoverage": 0.9839,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Heal",
@@ -873,9 +791,7 @@
       "fiveToolsReferenceCoverage": 0.98,
       "fiveToolsMarkdownCoverage": 0.98,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Heat Metal",
@@ -889,9 +805,7 @@
       "fiveToolsReferenceCoverage": 0.9932,
       "fiveToolsMarkdownCoverage": 0.9932,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ],
+      "extraMarkdownWords": ["a"],
       "pdfTextLine": 8751
     },
     {
@@ -906,9 +820,7 @@
       "fiveToolsReferenceCoverage": 0.9808,
       "fiveToolsMarkdownCoverage": 0.9808,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Ice Knife",
@@ -922,9 +834,7 @@
       "fiveToolsReferenceCoverage": 0.9873,
       "fiveToolsMarkdownCoverage": 0.9873,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Ice Storm",
@@ -938,9 +848,7 @@
       "fiveToolsReferenceCoverage": 0.8936,
       "fiveToolsMarkdownCoverage": 0.9882,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Inflict Wounds",
@@ -954,9 +862,7 @@
       "fiveToolsReferenceCoverage": 0.9773,
       "fiveToolsMarkdownCoverage": 0.9773,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Insect Plague",
@@ -970,9 +876,7 @@
       "fiveToolsReferenceCoverage": 0.9407,
       "fiveToolsMarkdownCoverage": 0.9911,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Lightning Bolt",
@@ -986,9 +890,7 @@
       "fiveToolsReferenceCoverage": 0.9041,
       "fiveToolsMarkdownCoverage": 0.9851,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Mass Cure Wounds",
@@ -1002,9 +904,7 @@
       "fiveToolsReferenceCoverage": 0.9375,
       "fiveToolsMarkdownCoverage": 0.9836,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Mass Healing Word",
@@ -1018,9 +918,7 @@
       "fiveToolsReferenceCoverage": 0.9762,
       "fiveToolsMarkdownCoverage": 0.9762,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Mind Spike",
@@ -1034,9 +932,7 @@
       "fiveToolsReferenceCoverage": 0.9915,
       "fiveToolsMarkdownCoverage": 0.9915,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Moonbeam",
@@ -1089,9 +985,7 @@
       "fiveToolsReferenceCoverage": 0.9919,
       "fiveToolsMarkdownCoverage": 0.9919,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Prayer of Healing",
@@ -1105,9 +999,7 @@
       "fiveToolsReferenceCoverage": 0.9841,
       "fiveToolsMarkdownCoverage": 0.9841,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Prismatic Spray",
@@ -1121,10 +1013,7 @@
       "fiveToolsReferenceCoverage": 0.8667,
       "fiveToolsMarkdownCoverage": 0.1598,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "prismatic",
-        "rays"
-      ]
+      "extraMarkdownWords": ["prismatic", "rays"]
     },
     {
       "name": "Ray of Sickness",
@@ -1138,9 +1027,7 @@
       "fiveToolsReferenceCoverage": 0.9825,
       "fiveToolsMarkdownCoverage": 0.9825,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Reincarnate",
@@ -1154,10 +1041,7 @@
       "fiveToolsReferenceCoverage": 0.9901,
       "fiveToolsMarkdownCoverage": 0.7937,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "1d10",
-        "species"
-      ]
+      "extraMarkdownWords": ["1d10", "species"]
     },
     {
       "name": "Shatter",
@@ -1171,9 +1055,7 @@
       "fiveToolsReferenceCoverage": 0.956,
       "fiveToolsMarkdownCoverage": 0.9886,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Shining Smite",
@@ -1187,9 +1069,7 @@
       "fiveToolsReferenceCoverage": 0.9836,
       "fiveToolsMarkdownCoverage": 0.9836,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Shocking Grasp",
@@ -1231,9 +1111,7 @@
       "fiveToolsReferenceCoverage": 0.9187,
       "fiveToolsMarkdownCoverage": 0.9932,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Summon Dragon",
@@ -1351,9 +1229,7 @@
       "fiveToolsReferenceCoverage": 0.9314,
       "fiveToolsMarkdownCoverage": 0.9896,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Vampiric Touch",
@@ -1367,9 +1243,7 @@
       "fiveToolsReferenceCoverage": 0.9895,
       "fiveToolsMarkdownCoverage": 0.9895,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ],
+      "extraMarkdownWords": ["a"],
       "pdfTextLine": 10925
     },
     {
@@ -1384,9 +1258,7 @@
       "fiveToolsReferenceCoverage": 0.9565,
       "fiveToolsMarkdownCoverage": 0.9888,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Wall of Fire",
@@ -1400,9 +1272,7 @@
       "fiveToolsReferenceCoverage": 0.9941,
       "fiveToolsMarkdownCoverage": 0.9941,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Wall of Force",
@@ -1415,16 +1285,8 @@
       "open5eMarkdownCoverage": 0.9767,
       "fiveToolsReferenceCoverage": 0.9882,
       "fiveToolsMarkdownCoverage": 0.9767,
-      "missingReferenceWords": [
-        "instantly",
-        "however"
-      ],
-      "extraMarkdownWords": [
-        "without",
-        "harming",
-        "anything",
-        "inside"
-      ]
+      "missingReferenceWords": ["instantly", "however"],
+      "extraMarkdownWords": ["without", "harming", "anything", "inside"]
     },
     {
       "name": "Wall of Ice",
@@ -1438,9 +1300,7 @@
       "fiveToolsReferenceCoverage": 0.9922,
       "fiveToolsMarkdownCoverage": 0.9922,
       "missingReferenceWords": [],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "extraMarkdownWords": ["a"]
     },
     {
       "name": "Wall of Thorns",
@@ -1453,14 +1313,8 @@
       "open5eMarkdownCoverage": 0.9698,
       "fiveToolsReferenceCoverage": 0.9802,
       "fiveToolsMarkdownCoverage": 0.995,
-      "missingReferenceWords": [
-        "within",
-        "range",
-        "damage"
-      ],
-      "extraMarkdownWords": [
-        "a"
-      ]
+      "missingReferenceWords": ["within", "range", "damage"],
+      "extraMarkdownWords": ["a"]
     }
   ]
 }

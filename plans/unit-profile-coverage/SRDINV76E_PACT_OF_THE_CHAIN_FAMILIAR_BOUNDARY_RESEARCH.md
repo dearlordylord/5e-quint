@@ -189,12 +189,3 @@ Out of scope:
   eligibility slice before a full companion runtime exists.
 - Add SRDINV76E2 only after a companion owner can represent familiar turns,
   present/dismissed state, Reaction availability, and stat-block attacks.
-
-## reviewer loop Convergence
-
-- Round 1: rejected treating Surface `find_familiar` catalog admission as Pact
-  of the Chain support. Pact of the Chain changes Spell Access, casting
-  resource, form eligibility, and the attack boundary.
-- Round 2: rejected storing familiar runtime facts in Warlock feature state.
-  Familiar identity, form stats, Initiative, actions, Reaction, disappearance,
-  and one-familiar replacement must live in the companion owner.
