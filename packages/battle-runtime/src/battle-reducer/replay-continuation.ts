@@ -24,6 +24,7 @@ import { needsHolesResult } from "./needs-holes-result.ts";
 import { admitBattleResolutionInput } from "./resolution-admission.ts";
 import { invalidResult } from "./result-helpers.ts";
 import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
+import { mergeObjectOutcomeResult } from "./object-outcome-accumulation.ts";
 
 const admittedReplayContinuationSubject = Symbol(
   "AdmittedReplayContinuationSubject",
@@ -239,7 +240,9 @@ export function resolveReplayContinuationFromState(
     result.tag !== "needsHoles" ||
     replayChangedInterruptStackDepth(input.state, result.state)
   ) {
-    return result;
+    return result.tag === "resolved"
+      ? mergeObjectOutcomeResult(result, input.continuation.objectOutcomes)
+      : result;
   }
   const interruptCheckpoint = currentInterruptCheckpoint(result.state);
   const activeInterrupt = interruptCheckpoint?.activeInterrupt;
@@ -339,11 +342,14 @@ function resolveGlyphStoredSpellReplayContinuationFromState(
     handledInterruptTrigger: input.handledInterruptTrigger,
   });
   if (result.tag === "released") {
-    return {
-      tag: "resolved",
-      state: result.state,
-      snapshot: snapshotBattle(result.state),
-    };
+    return mergeObjectOutcomeResult(
+      {
+        tag: "resolved",
+        state: result.state,
+        snapshot: snapshotBattle(result.state),
+      },
+      input.continuation.objectOutcomes,
+    );
   }
   if (result.tag === "needsHoles") {
     if (replayChangedInterruptStackDepth(input.state, result.state)) {

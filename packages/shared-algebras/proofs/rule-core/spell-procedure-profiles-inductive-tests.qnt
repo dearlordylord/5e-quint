@@ -15,6 +15,7 @@ module spellProcedureProfilesInductiveTests {
   import spellHitPointRestorationCore.* from "./spell-hit-point-restoration-core"
   import spellDefensiveEffectCore.* from "./spell-defensive-effect-core"
   import spellReadiedSpellResponseCore.* from "./spell-readied-spell-response-core"
+  import spellReadiedTargetDomain.* from "./spell-readied-target-domain"
   import spellProcedureProfiles.* from "./spell-procedure-profiles"
 
   run healing_word_invocation_reaches_bonus_action_slot_spend = {
@@ -58,6 +59,17 @@ module spellProcedureProfilesInductiveTests {
       assert(not(release.readiedSpell.reaction.reactor.turn.reactionAvailable)),
       assert(legalReadiedSpellProcedureState(release.readiedSpell)),
       assert(legalReadiedSpellRelease(release.released)),
+    }
+  }
+
+  run readied_spell_creature_or_object_release_chooses_one_domain = {
+    all {
+      assert(readiedSpellTargetSelection(true, false) == ReadiedSpellTargetSelected({ domain: ReadiedSpellCreatureTarget })),
+      assert(readiedSpellTargetSelection(false, true) == ReadiedSpellTargetSelected({ domain: ReadiedSpellObjectTarget })),
+      assert(readiedSpellTargetSelection(true, true) == ConflictingReadiedSpellTargetSelection),
+      assert(readiedSpellTargetSelection(false, false) == NoReadiedSpellTargetSelection),
+      assert(readiedSpellTargetSelectionIsLegal(ReadiedSpellTargetSelected({ domain: ReadiedSpellCreatureTarget }))),
+      assert(not(readiedSpellTargetSelectionIsLegal(ConflictingReadiedSpellTargetSelection))),
     }
   }
 }

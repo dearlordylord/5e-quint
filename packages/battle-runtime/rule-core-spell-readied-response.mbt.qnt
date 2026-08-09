@@ -3,6 +3,7 @@
 module ruleCoreSpellReadiedResponseMbt {
   import ruleCoreComponentRoute.* from "./rule-core-component-route"
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import spellReadiedTargetDomain.* from "../shared-algebras/proofs/rule-core/spell-readied-target-domain"
 
   // Literal projection witness for the QCORE10 Readied Spell Response
   // procedure family and same-turn second slot-spell rejection.
@@ -27,6 +28,9 @@ module ruleCoreSpellReadiedResponseMbt {
   var qReadiedHeld: bool
   var qReadiedReleased: bool
   var qConcentrationActive: bool
+  var qReadiedTargetSelectionKind: str
+  var qReadiedObjectDamageCount: int
+  var qReadiedObjectIgnitionCount: int
   var qProtocol: WitnessProtocol[str]
   var qComponentRoute: List[RuleCoreComponentRouteEvent]
 
@@ -61,6 +65,9 @@ module ruleCoreSpellReadiedResponseMbt {
     readiedHeld: bool,
     readiedReleased: bool,
     concentrationActive: bool,
+    readiedTargetSelectionKind: str,
+    readiedObjectDamageCount: int,
+    readiedObjectIgnitionCount: int,
     holes: Set[str],
     result: WitnessResult,
   ): bool = all {
@@ -79,33 +86,72 @@ module ruleCoreSpellReadiedResponseMbt {
     qReadiedHeld' = readiedHeld,
     qReadiedReleased' = readiedReleased,
     qConcentrationActive' = concentrationActive,
+    qReadiedTargetSelectionKind' = readiedTargetSelectionKind,
+    qReadiedObjectDamageCount' = readiedObjectDamageCount,
+    qReadiedObjectIgnitionCount' = readiedObjectIgnitionCount,
     qProtocol' = witnessProtocolForProjection(holes, result),
     qComponentRoute' = componentRouteEvidence,
   }
 
   action init = recordProjection(
     true, true, true, initialCasterHp, initialTargetHp, initialTargetHp, false,
-    0, 0, false, 2, noEffect, false, false, false, Set(), WInit
+    0, 0, false, 2, noEffect, false, false, false, "none", 0, 0, Set(), WInit
   )
 
   action doRejectSecondSlotSpell = recordProjection(
     false, true, true, initialCasterHp, 4, initialTargetHp, false,
-    0, 0, true, 1, noEffect, false, false, false, Set(), WInvalid(WStaleSubject)
+    0, 0, true, 1, noEffect, false, false, false, "none", 0, 0, Set(), WInvalid(WStaleSubject)
   )
 
   action doReadySpellHold = recordProjection(
     false, true, true, initialCasterHp, initialTargetHp, initialTargetHp,
-    false, 0, 0, true, 1, noEffect, true, false, true, Set(), WResolved
+    false, 0, 0, true, 1, noEffect, true, false, true, "none", 0, 0, Set(), WResolved
   )
 
   action doReleaseReadiedSpell = recordProjection(
     false, true, false, initialCasterHp - 1, 4, initialTargetHp, false,
-    0, 0, false, 1, noEffect, false, true, false, Set(), WResolved
+    0, 0, false, 1, noEffect, false, true, false, "none", 0, 0, Set(), WResolved
+  )
+
+  action doReadiedSpellCreatureTarget = recordProjection(
+    true, true, true, initialCasterHp, initialTargetHp, initialTargetHp,
+    false, 0, 0, false, 2, noEffect, false, false, false,
+    readiedSpellTargetSelectionLabel(
+      readiedSpellTargetSelection(true, false)
+    ), 0, 0, Set(), WResolved
+  )
+
+  action doReadiedSpellObjectTarget = recordProjection(
+    true, true, true, initialCasterHp, initialTargetHp, initialTargetHp,
+    false, 0, 0, false, 2, noEffect, false, false, false,
+    readiedSpellTargetSelectionLabel(
+      readiedSpellTargetSelection(false, true)
+    ), 0, 0, Set(), WResolved
+  )
+
+  action doReadiedSpellObjectOutcomeReplay = recordProjection(
+    true, true, true, initialCasterHp, initialTargetHp, initialTargetHp,
+    false, 0, 0, false, 2, noEffect, false, true, false,
+    readiedSpellTargetSelectionLabel(
+      readiedSpellTargetSelection(false, true)
+    ), 1, 1, Set(), WResolved
+  )
+
+  action doRejectReadiedSpellCreatureAndObjectTargets = recordProjection(
+    true, true, true, initialCasterHp, initialTargetHp, initialTargetHp,
+    false, 0, 0, false, 2, noEffect, false, false, false,
+    readiedSpellTargetSelectionLabel(
+      readiedSpellTargetSelection(true, true)
+    ), 0, 0, Set(), WInvalid(WInvalidFill)
   )
 
   action step = any {
     doRejectSecondSlotSpell,
     doReadySpellHold,
     doReleaseReadiedSpell,
+    doReadiedSpellCreatureTarget,
+    doReadiedSpellObjectTarget,
+    doReadiedSpellObjectOutcomeReplay,
+    doRejectReadiedSpellCreatureAndObjectTargets,
   }
 }

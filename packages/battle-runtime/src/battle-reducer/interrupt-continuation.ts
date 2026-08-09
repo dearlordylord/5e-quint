@@ -53,6 +53,7 @@ import {
   resolveReplayContinuation,
   resolveReplayContinuationFromState,
 } from "./replay-continuation.ts";
+import { mergeObjectOutcomeResult } from "./object-outcome-accumulation.ts";
 
 export function resumeInterruptedProcedure(
   state: BattleState,
@@ -64,11 +65,14 @@ export function resumeInterruptedProcedure(
   attackResolvers: BattleAttackResolvers,
 ): BattleResolutionResult {
   if (continuation.kind === "resolved") {
-    return {
-      tag: "resolved",
-      state,
-      snapshot: snapshotBattle(state),
-    };
+    return mergeObjectOutcomeResult(
+      {
+        tag: "resolved",
+        state,
+        snapshot: snapshotBattle(state),
+      },
+      continuation.objectOutcomes,
+    );
   }
   if (continuation.kind === "afterDamageSequence") {
     return openAfterDamageSequenceInterruptWindow({

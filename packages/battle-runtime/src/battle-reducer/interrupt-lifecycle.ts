@@ -43,6 +43,7 @@ import {
 import { admitBattleResolutionInput } from "./resolution-admission.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { releasePendingSpellSlotUseThisTurn } from "./spell-turn-resources.ts";
+import { appendObjectOutcomeAccumulation } from "./object-outcome-accumulation.ts";
 
 const admittedActiveInterruptProcedure = Symbol(
   "AdmittedActiveInterruptProcedure",
@@ -112,6 +113,11 @@ type InterruptLifecycleDecisionOutcome =
       readonly tag: "withInterruptRoute";
       readonly result: BattleResolutionResult;
     };
+
+type ResolvedObjectOutcomeSource = Pick<
+  Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
+  "objectDamages" | "objectIgnitions"
+>;
 
 export function resolveInterruptLifecycleDecision(input: {
   readonly state: BattleState;
@@ -243,6 +249,7 @@ export function resolveInterruptLifecycleDecision(input: {
       fills: admittedChoice.selection.fills,
     },
   };
+
   const stateWithActiveInterrupt: BattleState = {
     ...input.state,
     interruptStack: [
@@ -442,13 +449,37 @@ function advanceInterruptCheckpointAfterResponder(input: {
   readonly frame: BattleInterruptCheckpoint;
   readonly responderId: CombatantId;
   readonly execution: InterruptLifecycleExecution;
+  readonly objectOutcomes?: ResolvedObjectOutcomeSource;
 }): BattleResolutionResult {
-  const { activeInterrupt: _completedInterrupt, ...inactiveFrame } =
-    input.frame;
-  const completedFrame: BattleInterruptCheckpoint = {
-    ...inactiveFrame,
-    offeredResponders: [...input.frame.offeredResponders, input.responderId],
-  };
+  const completedFrame: BattleInterruptCheckpoint =
+    input.frame.trigger === "attackDamage"
+      ? (() => {
+          const { activeInterrupt: _completedInterrupt, ...inactiveFrame } =
+            input.frame;
+          return {
+            ...inactiveFrame,
+            offeredResponders: [
+              ...input.frame.offeredResponders,
+              input.responderId,
+            ],
+          };
+        })()
+      : (() => {
+          const { activeInterrupt: _completedInterrupt, ...inactiveFrame } =
+            input.frame;
+          const continuation = appendObjectOutcomesToContinuation(
+            inactiveFrame.continuation,
+            input.objectOutcomes,
+          );
+          return {
+            ...inactiveFrame,
+            continuation,
+            offeredResponders: [
+              ...input.frame.offeredResponders,
+              input.responderId,
+            ],
+          };
+        })();
   const remainingResponders = unofferedEligibleResponders(completedFrame);
   const stackWithoutCurrent = input.state.interruptStack.slice(0, -1);
   if (remainingResponders.length !== 0) {
@@ -499,12 +530,52 @@ function completeResolvedActiveInterruptIfPending(
   }
   return currentInterruptCheckpoint(result.state)?.activeInterrupt === undefined
     ? result
-    : completeActiveInterruptProcedure(result.state, execution);
+    : completeActiveInterruptProcedure(result.state, execution, result);
+}
+
+function appendObjectOutcomesToContinuation(
+  continuation: BattleInterruptedProcedure,
+  source: ResolvedObjectOutcomeSource | undefined,
+): BattleInterruptedProcedure {
+  if (source === undefined) {
+    return continuation;
+  }
+  if (continuation.kind === "replay" || continuation.kind === "resolved") {
+    const objectOutcomes = appendObjectOutcomeAccumulation(
+      continuation.objectOutcomes,
+      source,
+    );
+    return objectOutcomes === undefined
+      ? continuation
+      : { ...continuation, objectOutcomes };
+  }
+  if (
+    continuation.kind === "afterDamageSequence" ||
+    continuation.kind === "afterDamageSequenceWithPrimaryAttackFollowUp" ||
+    continuation.kind === "movementThenAfterDamageSequence"
+  ) {
+    return {
+      ...continuation,
+      objectDamages: [
+        ...continuation.objectDamages,
+        ...(source.objectDamages ?? []),
+      ],
+      objectIgnitions: [
+        ...continuation.objectIgnitions,
+        ...(source.objectIgnitions ?? []),
+      ],
+    };
+  }
+  // Readied spells are not offered for attack-damage, movement, or command
+  // continuations, so those variants have no legal object outcome payload to
+  // carry here.
+  return continuation;
 }
 
 function completeActiveInterruptProcedure(
   state: BattleState,
   execution: InterruptLifecycleExecution,
+  objectOutcomes?: ResolvedObjectOutcomeSource,
 ): BattleResolutionResult {
   const frame = currentInterruptCheckpoint(state);
   const activeInterrupt = frame?.activeInterrupt;
@@ -520,6 +591,7 @@ function completeActiveInterruptProcedure(
     frame,
     responderId: activeInterrupt.responderId,
     execution,
+    ...optionalProperty("objectOutcomes", objectOutcomes),
   });
 }
 

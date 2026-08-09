@@ -743,6 +743,7 @@ export type BattleInterruptedProcedure =
       readonly glyphStoredSpellReleaseReplay?: never;
       readonly attackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
       readonly attackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
+      readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
     }
   | {
       readonly kind: "replay";
@@ -751,10 +752,12 @@ export type BattleInterruptedProcedure =
       readonly glyphStoredSpellReleaseReplay: GlyphStoredSpellReleaseReplayContext;
       readonly attackDamageReductions?: never;
       readonly attackDamageAdditions?: never;
+      readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
     }
   | {
       readonly kind: "resolved";
       readonly subject: BattleSubject;
+      readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
     }
   | {
       readonly kind: "afterDamageSequence";
@@ -4575,6 +4578,15 @@ export type BattleObjectIgnitionOutcome = {
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
 };
+export type BattleObjectOutcomeAccumulation =
+  | {
+      readonly objectDamages: ReadonlyNonEmptyArray<BattleObjectDamageOutcome>;
+      readonly objectIgnitions?: ReadonlyNonEmptyArray<BattleObjectIgnitionOutcome>;
+    }
+  | {
+      readonly objectDamages?: ReadonlyNonEmptyArray<BattleObjectDamageOutcome>;
+      readonly objectIgnitions: ReadonlyNonEmptyArray<BattleObjectIgnitionOutcome>;
+    };
 export type BattleFireballObjectIgnitionFact = {
   readonly objectId: BattleObjectId;
   readonly disposition: BattleObjectIgnitionDisposition;

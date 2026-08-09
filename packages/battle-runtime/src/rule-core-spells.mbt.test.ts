@@ -18,6 +18,12 @@ import {
   characterAttackSubjectForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
+import { resolveReadiedFireBoltObjectScenario } from "./readied-object-spell.test-support.ts";
+import {
+  READIED_SPELL_TARGET_SELECTION_KINDS,
+  readiedSpellTargetSelectionKind,
+  type ReadiedSpellTargetSelectionKind,
+} from "./battle-reducer/spells-resolve-readied-target.ts";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 import {
@@ -104,7 +110,11 @@ const ruleCoreSpellResults = [
   "invalid",
 ] as const;
 type RuleCoreSpellResult = (typeof ruleCoreSpellResults)[number];
-const ruleCoreSpellInvalidReasons = ["none", "staleSubject"] as const;
+const ruleCoreSpellInvalidReasons = [
+  "none",
+  "staleSubject",
+  "invalidFill",
+] as const;
 type RuleCoreSpellInvalidReason = (typeof ruleCoreSpellInvalidReasons)[number];
 const spellActiveEffectKinds = [
   "none",
@@ -112,7 +122,6 @@ const spellActiveEffectKinds = [
   "spellBaseArmorClass",
 ] as const;
 type SpellActiveEffectKind = (typeof spellActiveEffectKinds)[number];
-
 type RuleCoreSpellProjection = RuleCoreComponentRoutedProjection & {
   readonly actionAvailable: boolean;
   readonly bonusActionAvailable: boolean;
@@ -129,6 +138,9 @@ type RuleCoreSpellProjection = RuleCoreComponentRoutedProjection & {
   readonly readiedHeld: boolean;
   readonly readiedReleased: boolean;
   readonly concentrationActive: boolean;
+  readonly readiedTargetSelectionKind: ReadiedSpellTargetSelectionKind;
+  readonly readiedObjectDamageCount: number;
+  readonly readiedObjectIgnitionCount: number;
   readonly holes: readonly RuleCoreSpellMbtHole[];
   readonly lastResult: RuleCoreSpellResult;
   readonly lastInvalidReason: RuleCoreSpellInvalidReason;
@@ -184,6 +196,10 @@ const driverSchema = {
   doRejectSecondSlotSpell: {},
   doReadySpellHold: {},
   doReleaseReadiedSpell: {},
+  doReadiedSpellCreatureTarget: {},
+  doReadiedSpellObjectTarget: {},
+  doReadiedSpellObjectOutcomeReplay: {},
+  doRejectReadiedSpellCreatureAndObjectTargets: {},
   step: {},
 } as const;
 type RuleCoreSpellDriverAction = Exclude<
@@ -580,6 +596,9 @@ function expectedSpellProjection(
     readiedHeld: false,
     readiedReleased: false,
     concentrationActive: false,
+    readiedTargetSelectionKind: "none",
+    readiedObjectDamageCount: 0,
+    readiedObjectIgnitionCount: 0,
     holes: [],
     lastResult: "init",
     lastInvalidReason: "none",
@@ -618,6 +637,9 @@ function createRuleCoreSpellDriver() {
     let lastInvalidReason: RuleCoreSpellProjection["lastInvalidReason"] =
       "none";
     let readiedReleased = false;
+    let readiedTargetSelectionKind: ReadiedSpellTargetSelectionKind = "none";
+    let readiedObjectDamageCount = 0;
+    let readiedObjectIgnitionCount = 0;
 
     function reset(): void {
       state = spellBattle();
@@ -625,6 +647,9 @@ function createRuleCoreSpellDriver() {
       lastResult = "init";
       lastInvalidReason = "none";
       readiedReleased = false;
+      readiedTargetSelectionKind = "none";
+      readiedObjectDamageCount = 0;
+      readiedObjectIgnitionCount = 0;
     }
 
     function recordResult(result: BattleResolutionResult): void {
@@ -633,6 +658,8 @@ function createRuleCoreSpellDriver() {
         holes = [];
         lastResult = "resolved";
         lastInvalidReason = "none";
+        readiedObjectDamageCount = result.objectDamages?.length ?? 0;
+        readiedObjectIgnitionCount = result.objectIgnitions?.length ?? 0;
         return;
       }
       if (result.tag === "needsHoles") {
@@ -885,6 +912,12 @@ function createRuleCoreSpellDriver() {
           resolveBattleSubject({ state, subject, fills: [allocation] }),
           "rolledDice",
         );
+        const secondSlotSpellSubject = healingSpellSubject(
+          state,
+          "healing_word",
+          "bonusActionSpell",
+          1,
+        );
         const first = resolveBattleSubject({
           state,
           subject,
@@ -898,12 +931,7 @@ function createRuleCoreSpellDriver() {
         recordResult(
           resolveBattleSubject({
             state,
-            subject: healingSpellSubject(
-              state,
-              "healing_word",
-              "bonusActionSpell",
-              1,
-            ),
+            subject: secondSlotSpellSubject,
             fills: [],
           }),
         );
@@ -1028,12 +1056,40 @@ function createRuleCoreSpellDriver() {
         readiedReleased =
           lastResult === "resolved" || lastResult === "needsHoles";
       },
+      doReadiedSpellCreatureTarget: () =>
+        recordReadiedSpellTargetSelectionKind(true, false),
+      doReadiedSpellObjectTarget: () =>
+        recordReadiedSpellTargetSelectionKind(false, true),
+      doReadiedSpellObjectOutcomeReplay: () => {
+        const completed = resolveReadiedFireBoltObjectScenario({
+          battleIdValue: battleId("rule-core-readied-fire-bolt-object"),
+        }).completed;
+        const objectDamageCount = completed.objectDamages?.length ?? 0;
+        const objectIgnitionCount = completed.objectIgnitions?.length ?? 0;
+        if (objectDamageCount !== 1 || objectIgnitionCount !== 1) {
+          throw new Error(
+            `Expected exactly one readied object damage and ignition outcome, got ${objectDamageCount}/${objectIgnitionCount}.`,
+          );
+        }
+        state = spellBattle();
+        resetProjection();
+        readiedTargetSelectionKind = "object";
+        readiedReleased = true;
+        readiedObjectDamageCount = objectDamageCount;
+        readiedObjectIgnitionCount = objectIgnitionCount;
+        lastResult = "resolved";
+      },
+      doRejectReadiedSpellCreatureAndObjectTargets: () =>
+        recordReadiedSpellTargetSelectionKind(true, true),
       step: () => {},
       getState: () =>
         projectRuleCoreSpellState({
           state,
           holes,
           readiedReleased,
+          readiedTargetSelectionKind,
+          readiedObjectDamageCount,
+          readiedObjectIgnitionCount,
           lastResult,
           lastInvalidReason,
         }),
@@ -1044,6 +1100,25 @@ function createRuleCoreSpellDriver() {
       lastResult = "init";
       lastInvalidReason = "none";
       readiedReleased = false;
+      readiedTargetSelectionKind = "none";
+      readiedObjectDamageCount = 0;
+      readiedObjectIgnitionCount = 0;
+    }
+
+    function recordReadiedSpellTargetSelectionKind(
+      creatureTargetSelected: boolean,
+      objectTargetSelected: boolean,
+    ): void {
+      state = spellBattle();
+      resetProjection();
+      readiedTargetSelectionKind = readiedSpellTargetSelectionKind(
+        creatureTargetSelected,
+        objectTargetSelected,
+      );
+      lastResult =
+        readiedTargetSelectionKind === "invalid" ? "invalid" : "resolved";
+      lastInvalidReason =
+        readiedTargetSelectionKind === "invalid" ? "invalidFill" : "none";
     }
 
     function resolveRayOfFrost(input: {
@@ -2138,6 +2213,9 @@ function projectRuleCoreSpellState(input: {
   readonly state: BattleState;
   readonly holes: readonly BattleHole[];
   readonly readiedReleased: boolean;
+  readonly readiedTargetSelectionKind: ReadiedSpellTargetSelectionKind;
+  readonly readiedObjectDamageCount: number;
+  readonly readiedObjectIgnitionCount: number;
   readonly lastResult: RuleCoreSpellProjection["lastResult"];
   readonly lastInvalidReason: RuleCoreSpellProjection["lastInvalidReason"];
 }): RuleCoreSpellProjection {
@@ -2181,6 +2259,9 @@ function projectRuleCoreSpellState(input: {
     ),
     readiedReleased: input.readiedReleased,
     concentrationActive: caster.concentrating,
+    readiedTargetSelectionKind: input.readiedTargetSelectionKind,
+    readiedObjectDamageCount: input.readiedObjectDamageCount,
+    readiedObjectIgnitionCount: input.readiedObjectIgnitionCount,
     holes: input.holes.map(projectSpellHole),
     lastResult: input.lastResult,
     lastInvalidReason: input.lastInvalidReason,
@@ -2267,6 +2348,17 @@ function normalizeRuleCoreSpellQuintState(
     readiedHeld: booleanField(state, "qReadiedHeld"),
     readiedReleased: booleanField(state, "qReadiedReleased"),
     concentrationActive: booleanField(state, "qConcentrationActive"),
+    readiedTargetSelectionKind: readiedSpellTargetSelectionKindName(
+      state["qReadiedTargetSelectionKind"],
+    ),
+    readiedObjectDamageCount: numberFromQuintInt(
+      state["qReadiedObjectDamageCount"],
+      "qReadiedObjectDamageCount",
+    ),
+    readiedObjectIgnitionCount: numberFromQuintInt(
+      state["qReadiedObjectIgnitionCount"],
+      "qReadiedObjectIgnitionCount",
+    ),
     holes: protocol.holes,
     lastResult: spellResult(protocol.lastResult),
     lastInvalidReason: spellInvalidReason(protocol.lastInvalidReason),
@@ -2345,6 +2437,20 @@ function spellActiveEffectKindName(value: unknown): SpellActiveEffectKind {
     return value;
   }
   throw new Error(`Unexpected rule-core Spell effect kind ${String(value)}.`);
+}
+
+function readiedSpellTargetSelectionKindName(
+  value: unknown,
+): ReadiedSpellTargetSelectionKind {
+  if (
+    typeof value === "string" &&
+    isMember(READIED_SPELL_TARGET_SELECTION_KINDS, value)
+  ) {
+    return value;
+  }
+  throw new Error(
+    `Unexpected readied Spell target selection kind ${String(value)}.`,
+  );
 }
 
 function isRuleCoreSpellInvalidReason(

@@ -15,7 +15,7 @@ import {
   attackRollHits,
   attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
-import { Either } from "effect";
+import { Either, Match } from "effect";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActiveEffect,
@@ -91,6 +91,7 @@ import {
   applySpellLightEmitterEffects,
   applySpellDamage,
   spellAttackRollHole,
+  spellObjectTargetHole,
   spellDamageByTypeForTarget,
   spellDamageHole,
   selectedSpellAttackDamageProcedure,
@@ -112,6 +113,8 @@ import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
 import { resolvePreparedSlotSpellRelease } from "./spells-resolve-prepared-slot.ts";
 import { resolveSaveGateDamageSpellRelease } from "./spells-resolve-save-gates.ts";
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
+import { resolveReadiedSpellObjectTarget } from "./spells-resolve-object-target.ts";
+import { readiedSpellTargetSelection } from "./spells-resolve-readied-target.ts";
 import { fillsBelongToSpellCastHoles } from "./fill-hole-protocol.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import {
@@ -836,15 +839,49 @@ export function resolveSpellRelease(
     });
   }
 
-  if (fillSet.targetId == null) {
+  const targetResolution =
+    invocation.procedure === "spellAttackDamage"
+      ? Match.value(readiedSpellTargetSelection(fillSet, invocation)).pipe(
+          Match.discriminatorsExhaustive("tag")({
+            invalid: (selection) =>
+              invalidResult(input.state, "invalidFill", selection.message),
+            none: () =>
+              needsHolesResult(input.state, input.subject, [
+                spellTargetHole(input.state, input.subject.actorId, invocation),
+                ...(invocation.targeting.kind === "singleCreatureOrObject"
+                  ? [spellObjectTargetHole(invocation)]
+                  : []),
+              ]),
+            creature: (selection) => ({
+              tag: "continue" as const,
+              fillSet: selection.fillSet,
+            }),
+            object: (selection) =>
+              resolveReadiedSpellObjectTarget({
+                input,
+                actorId: input.subject.actorId,
+                invocation,
+                fillSet: selection.fillSet,
+              }),
+          }),
+        )
+      : null;
+  if (targetResolution !== null && targetResolution.tag !== "continue") {
+    return targetResolution;
+  }
+  const targetId =
+    targetResolution?.tag === "continue"
+      ? targetResolution.fillSet.targetId
+      : fillSet.targetId;
+  if (targetId == null) {
     return needsHolesResult(input.state, input.subject, [
       spellTargetHole(input.state, input.subject.actorId, invocation),
     ]);
   }
-  const target = input.state.combatants.get(fillSet.targetId);
+  const target = input.state.combatants.get(targetId);
   const storedGlyphRetargetingMatches =
     options.storedGlyphTriggeringCreatureTargetId !== undefined &&
-    fillSet.targetId === options.storedGlyphTriggeringCreatureTargetId;
+    targetId === options.storedGlyphTriggeringCreatureTargetId;
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     target == null ||

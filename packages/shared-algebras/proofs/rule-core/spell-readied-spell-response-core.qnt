@@ -9,6 +9,7 @@ module spellReadiedSpellResponseCore {
   import spellDefinitionProfiles.* from "./spell-definition-profiles"
   import spellInvocationActionSlotCore.* from "./spell-invocation-action-slot-core"
   import spellInvocationResourceCore.* from "./spell-invocation-resource-core"
+  import spellReadiedTargetDomain.* from "./spell-readied-target-domain"
 
   // RAW anchors:
   // - Rules-Glossary.md: Ready, Reaction, Concentration, and Magic.
@@ -16,6 +17,10 @@ module spellReadiedSpellResponseCore {
   //   and spell resource expenditure.
   // - UBIQUITOUS_LANGUAGE.md: Readied Spell Response, Reaction,
   //   Concentration, Reserve, and Spend.
+
+  pure def readiedSpellTargetSelectionIsLegal(
+    selection: ReadiedSpellTargetSelection,
+  ): bool = selection != ConflictingReadiedSpellTargetSelection
 
   type ReadiedSpellHeldEffect =
     | NoReadiedSpellHeldEffect
