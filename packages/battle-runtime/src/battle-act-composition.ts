@@ -40,7 +40,6 @@ import {
   characterSpellProcedureExecution,
   spellInvocationMatchesExecution,
   type BattleSpellProcedureExecution,
-  type SpellProcedureExecution,
 } from "./character-execution-admission.ts";
 import { characterUnitProcedureRefsForAuthoredSelection } from "./battle-composition-admission.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
@@ -926,153 +925,91 @@ function dynamicSpellPresentationInvocation(
   procedureRef: BattleProcedureExecutionRef,
   execution: DynamicSpellPresentationExecution,
 ): AuthoredSelectedSpellInvocation | undefined {
+  const spell = dynamicSpellPresentationSourceSpell(actor, context, execution);
+  return spell === undefined
+    ? undefined
+    : { ...execution, spell, sourceProcedureRef: procedureRef };
+}
+
+function dynamicSpellPresentationSourceSpell(
+  actor: CharacterBattleCreatureState,
+  context: BattleRuntimeContext,
+  execution: DynamicSpellPresentationExecution,
+): AuthoredSelectedSpellInvocation["spell"] | undefined {
   return Match.value(execution).pipe(
     Match.discriminatorsExhaustive("procedure")({
-      heldLightHurl: (value) => {
-        const sourceExecution = characterSpellProcedureExecution(
-          actor.origin.execution,
-          value.sourceHeldLightProcedureRef,
-        );
-        if (sourceExecution?.procedure !== "heldLight") return undefined;
-        const source = spellPresentationSourceForCharacter(
+      heldLightHurl: (value) =>
+        spellPresentationSourceSpell(
           actor,
           context,
           value.sourceHeldLightProcedureRef,
-        );
-        if (source?.invocation.procedure !== "heldLight") return undefined;
-        return {
-          ...value,
-          spell: source.invocation.spell,
-          sourceProcedureRef: procedureRef,
-        };
-      },
-      dancingLightsReposition: (value) => {
-        const sourceExecution = characterSpellProcedureExecution(
-          actor.origin.execution,
-          value.sourceDancingLightsProcedureRef,
-        );
-        if (
-          sourceExecution?.procedure !== "dancingLightsCombinedCast" &&
-          sourceExecution?.procedure !== "dancingLightsSeparateCast"
-        ) {
-          return undefined;
-        }
-        const source = spellPresentationSourceForCharacter(
+          (source) => source.procedure === "heldLight",
+        ),
+      dancingLightsReposition: (value) =>
+        spellPresentationSourceSpell(
           actor,
           context,
           value.sourceDancingLightsProcedureRef,
-        );
-        if (
-          source?.invocation.procedure !== "dancingLightsCombinedCast" &&
-          source?.invocation.procedure !== "dancingLightsSeparateCast"
-        ) {
-          return undefined;
-        }
-        return {
-          ...value,
-          spell: source.invocation.spell,
-          sourceProcedureRef: procedureRef,
-        };
-      },
+          (source) =>
+            source.procedure === "dancingLightsCombinedCast" ||
+            source.procedure === "dancingLightsSeparateCast",
+        ),
       spellCreatedHeldObjectAttack: (value) =>
-        spellCreatedHeldObjectPresentationInvocation(
+        spellPresentationSourceSpell(
           actor,
           context,
-          procedureRef,
-          value,
+          value.sourceHeldObjectProcedureRef,
+          (source) => source.procedure === "spellCreatedHeldObject",
         ),
       spellCreatedHeldObjectReEvoke: (value) =>
-        spellCreatedHeldObjectPresentationInvocation(
+        spellPresentationSourceSpell(
           actor,
           context,
-          procedureRef,
-          value,
+          value.sourceHeldObjectProcedureRef,
+          (source) => source.procedure === "spellCreatedHeldObject",
         ),
-      spiritualWeaponRepeatAttack: (value) => {
-        const source = spellPresentationSourceForCharacter(
+      spiritualWeaponRepeatAttack: (value) =>
+        spellPresentationSourceSpell(
           actor,
           context,
           value.activeEffect.sourceProcedureRef,
-        );
-        if (source?.invocation.procedure !== "spiritualWeaponAttackProxy") {
-          return undefined;
-        }
-        return {
-          ...value,
-          spell: source.invocation.spell,
-          sourceProcedureRef: procedureRef,
-        };
-      },
-      objectContactDamageRepeat: (value) => {
-        const source = spellPresentationSourceForCharacter(
+          (source) => source.procedure === "spiritualWeaponAttackProxy",
+        ),
+      objectContactDamageRepeat: (value) =>
+        spellPresentationSourceSpell(
           actor,
           context,
           value.activeEffect.sourceProcedureRef,
-        );
-        if (source?.invocation.procedure !== "objectContactDamage") {
-          return undefined;
-        }
-        return {
-          ...value,
-          spell: source.invocation.spell,
-          sourceProcedureRef: procedureRef,
-        };
-      },
-      markedDamageRider: (value) => {
-        const source = spellPresentationSourceForCharacter(
+          (source) => source.procedure === "objectContactDamage",
+        ),
+      markedDamageRider: (value) =>
+        spellPresentationSourceSpell(
           actor,
           context,
           value.activeEffect.sourceProcedureRef,
-        );
-        if (
-          source?.invocation.procedure !== "markedDamageRider" ||
-          source.invocation.action !== "cast"
-        ) {
-          return undefined;
-        }
-        return {
-          ...value,
-          spell: source.invocation.spell,
-          sourceProcedureRef: procedureRef,
-        };
-      },
+          (source) =>
+            source.procedure === "markedDamageRider" &&
+            source.action === "cast",
+        ),
     }),
   );
 }
 
-function spellCreatedHeldObjectPresentationInvocation(
+function spellPresentationSourceSpell(
   actor: CharacterBattleCreatureState,
   context: BattleRuntimeContext,
-  procedureRef: BattleProcedureExecutionRef,
-  execution: Extract<
-    SpellProcedureExecution,
-    {
-      readonly procedure:
-        | "spellCreatedHeldObjectAttack"
-        | "spellCreatedHeldObjectReEvoke";
-    }
-  >,
-): AuthoredSelectedSpellInvocation | undefined {
-  const sourceExecution = characterSpellProcedureExecution(
-    actor.origin.execution,
-    execution.sourceHeldObjectProcedureRef,
-  );
-  if (sourceExecution?.procedure !== "spellCreatedHeldObject") {
-    return undefined;
-  }
+  sourceProcedureRef: BattleProcedureExecutionRef,
+  sourceMatches: (source: AuthoredSelectedSpellInvocation) => boolean,
+): AuthoredSelectedSpellInvocation["spell"] | undefined {
   const source = spellPresentationSourceForCharacter(
     actor,
     context,
-    execution.sourceHeldObjectProcedureRef,
+    sourceProcedureRef,
   );
-  if (source?.invocation.procedure !== "spellCreatedHeldObject") {
+  if (source === undefined || !sourceMatches(source.invocation)) {
     return undefined;
   }
-  return {
-    ...execution,
-    spell: source.invocation.spell,
-    sourceProcedureRef: procedureRef,
-  };
+  return source.invocation.spell;
 }
 
 function unitForProcedureRef(
