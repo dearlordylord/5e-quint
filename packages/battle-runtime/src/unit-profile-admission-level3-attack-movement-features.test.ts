@@ -1470,33 +1470,42 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     });
   });
 
-  test("feature profile readers reject malformed mechanics and ignore unrelated Units", () => {
+  test("Remarkable Athlete reader rejects malformed Athletics mechanics", () => {
     const remarkableAthlete = unitLibrary.requireUnit(
       fighterRemarkableAthleteUnitId,
     );
+    if (
+      remarkableAthlete.kind !== "class_feature" ||
+      remarkableAthlete.mechanics.family !== "remarkable_athlete"
+    ) {
+      throw new Error("Expected Remarkable Athlete mechanics.");
+    }
+    expect(
+      battleRemarkableAthleteSupportForUnit(
+        unitMechanicsVariant(remarkableAthlete, {
+          id: "fighter_remarkable_athlete_wrong_skill",
+          mechanics: {
+            ...remarkableAthlete.mechanics,
+            abilityCheck: {
+              ...remarkableAthlete.mechanics.abilityCheck,
+              skill: "acrobatics",
+            },
+          },
+        }),
+      ),
+    ).toBe("unsupported");
+  });
+
+  test("Open Hand Technique reader is order-independent and rejects a wrong Push distance", () => {
     const openHandTechnique = unitLibrary.requireUnit(
       monkOpenHandTechniqueUnitId,
     );
-    const sacredWeapon = unitLibrary.requireUnit(paladinSacredWeaponUnitId);
-    const steadyAim = unitLibrary.requireUnit(rogueSteadyAimUnitId);
-    const potentCantrip = unitLibrary.requireUnit(wizardPotentCantripUnitId);
     if (
-      remarkableAthlete.kind !== "class_feature" ||
-      remarkableAthlete.mechanics.family !== "remarkable_athlete" ||
       openHandTechnique.kind !== "class_feature" ||
-      openHandTechnique.mechanics.family !== "open_hand_technique" ||
-      sacredWeapon.kind !== "class_feature" ||
-      sacredWeapon.mechanics.family !== "sacred_weapon" ||
-      steadyAim.kind !== "class_feature" ||
-      steadyAim.mechanics.family !== "steady_aim" ||
-      potentCantrip.kind !== "class_feature" ||
-      potentCantrip.mechanics.family !== "potent_cantrip"
+      openHandTechnique.mechanics.family !== "open_hand_technique"
     ) {
-      throw new Error("Expected Task 18 level-3 feature mechanics.");
+      throw new Error("Expected Open Hand Technique mechanics.");
     }
-    const sacredWeaponMechanics = sacredWeapon.mechanics;
-    const steadyAimMechanics = steadyAim.mechanics;
-    const potentCantripMechanics = potentCantrip.mechanics;
     const openHandDenyOpportunityAttacks =
       openHandTechnique.mechanics.choices.find(
         (choice) =>
@@ -1528,20 +1537,6 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       throw new Error("Expected Open Hand Technique push failed-save effect.");
     }
 
-    expect(
-      battleRemarkableAthleteSupportForUnit(
-        unitMechanicsVariant(remarkableAthlete, {
-          id: "fighter_remarkable_athlete_wrong_skill",
-          mechanics: {
-            ...remarkableAthlete.mechanics,
-            abilityCheck: {
-              ...remarkableAthlete.mechanics.abilityCheck,
-              skill: "acrobatics",
-            },
-          },
-        }),
-      ),
-    ).toBe("unsupported");
     expect(
       battleOpenHandTechniqueSupportForUnit(
         unitMechanicsVariant(openHandTechnique, {
@@ -1578,6 +1573,17 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         }),
       ),
     ).toBe("unsupported");
+  });
+
+  test("Sacred Weapon schema rejects a mismatched resource owner", () => {
+    const sacredWeapon = unitLibrary.requireUnit(paladinSacredWeaponUnitId);
+    if (
+      sacredWeapon.kind !== "class_feature" ||
+      sacredWeapon.mechanics.family !== "sacred_weapon"
+    ) {
+      throw new Error("Expected Sacred Weapon mechanics.");
+    }
+    const sacredWeaponMechanics = sacredWeapon.mechanics;
     expect(() =>
       decodeUnitRecordSync({
         ...sacredWeapon,
@@ -1591,6 +1597,9 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         },
       }),
     ).toThrow();
+  });
+
+  test("Hunter's Prey readers reject an unsupported damage die", () => {
     const unsupportedHuntersPrey = huntersPreyUnsupportedDamageDieUnit();
     expect(battleHuntersPreySupportForUnit(unsupportedHuntersPrey)).toBe(
       "unsupported",
@@ -1603,6 +1612,17 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         message: `Unsupported battle Hunter's Prey Unit hook: ${unsupportedHuntersPrey.id}.`,
       }),
     );
+  });
+
+  test("Steady Aim schema rejects a mismatched speed duration", () => {
+    const steadyAim = unitLibrary.requireUnit(rogueSteadyAimUnitId);
+    if (
+      steadyAim.kind !== "class_feature" ||
+      steadyAim.mechanics.family !== "steady_aim"
+    ) {
+      throw new Error("Expected Steady Aim mechanics.");
+    }
+    const steadyAimMechanics = steadyAim.mechanics;
     expect(() =>
       decodeUnitRecordSync({
         ...steadyAim,
@@ -1616,6 +1636,17 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         },
       }),
     ).toThrow();
+  });
+
+  test("Potent Cantrip schema rejects a mismatched cantrip target", () => {
+    const potentCantrip = unitLibrary.requireUnit(wizardPotentCantripUnitId);
+    if (
+      potentCantrip.kind !== "class_feature" ||
+      potentCantrip.mechanics.family !== "potent_cantrip"
+    ) {
+      throw new Error("Expected Potent Cantrip mechanics.");
+    }
+    const potentCantripMechanics = potentCantrip.mechanics;
     expect(() =>
       decodeUnitRecordSync({
         ...potentCantrip,
@@ -1629,7 +1660,9 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         },
       }),
     ).toThrow();
+  });
 
+  test("level-3 feature readers ignore an unrelated Unit", () => {
     const unrelatedUnit = unitLibrary.requireUnit(fighterSecondWindUnitId);
     for (const { supportForUnit } of admissionCases) {
       expect(supportForUnit(unrelatedUnit)).toBeNull();
