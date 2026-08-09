@@ -50,10 +50,9 @@ is not required for every Unit.
 
 The source artifacts for implementation detail are:
 
-- [plans/unit-profile-coverage/README.md](/workspace/typescript/dnd/plans/unit-profile-coverage/README.md)
-- [plans/unit-profile-coverage/UNIT_REPORT.md](/workspace/typescript/dnd/plans/unit-profile-coverage/UNIT_REPORT.md)
-- [plans/UNIT_PROFILE_COVERAGE_MATRIX_PLAN.md](/workspace/typescript/dnd/plans/UNIT_PROFILE_COVERAGE_MATRIX_PLAN.md)
-- [plans/ACTIVE_PLAN.md](/workspace/typescript/dnd/plans/ACTIVE_PLAN.md)
+- [Unit profile coverage](../plans/unit-profile-coverage/README.md)
+- [Generated Unit report](../plans/unit-profile-coverage/UNIT_REPORT.md)
+- [Coverage matrix plan](../plans/UNIT_PROFILE_COVERAGE_MATRIX_PLAN.md)
 
 The durable coverage lane spans these ownership layers, but the work can move
 through them in either direction depending on what already exists.

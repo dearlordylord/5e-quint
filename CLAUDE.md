@@ -156,30 +156,10 @@ link to detailed evidence over a wall of acceptance jargon.
 
 Do not write to the memory system unless explicitly asked.
 
-## Ralph tooling architecture boundary (CRITICAL)
+## Scoped agent instructions
 
-Follow the
-[Dalph relocation and historical-harness boundary](docs/tooling/ralph/README.md#historical-harness-boundary).
-Do not promote a historical-harness observation into a Ralph orchestrator
-requirement without an explicit owning decision or specification.
-
-## Ralph task-base check
-
-Ralph task worktrees are based on the task Base SHA, not necessarily on
-`master`. When launching or reviewing a Ralph task agent, include the
-task-provided base check: log the declared base ref, log `HEAD`, and run
-`git merge-base --is-ancestor <Base SHA> HEAD`. If the ancestor check fails,
-the agent must stop and report the branch-base mismatch; the orchestrator owns
-branch repair. Do not ask task agents to repair branch state by
-rebasing against `master`.
-
-## MBT tests are nondeterministic
-
-MBT traces are generated with random seeds. Failures may not reproduce on the
-next run. When an MBT test fails, the error includes the seed (e.g.,
-`seed: 0xfa2124eb`). **Always reproduce before fixing** with the same package
-test and `QUINT_SEED`. Do not dismiss MBT failures as flaky; reproduce with the
-seed, diagnose, and fix unless the user explicitly says otherwise.
+- For Quint proofs, focused QNT specifications, or battle-runtime MBT, read `docs/agents/QNT-MBT.md`.
+- For local Ralph harness work, read `docs/tooling/ralph/README.md`.
 
 ## Resource-bounded verification (CRITICAL)
 
@@ -226,109 +206,15 @@ TypeScript rather than Quint. Immediately stop launching verification and:
    remove the demonstrated resource cause.
 5. Report the emergency and the evidence. A partial run is not verification.
 
-## MBT runs are expensive
-
-Battle-runtime MBT is selective. Archived restore-source MBT is not an active
-verification lane. **Treat MBT runs as a scarce resource.**
-
-- Never run battle MBT for exploratory questions (checking a variable shape, confirming a format). Answer those by reading source code, quint-connect internals, ITF docs, or writing a focused unit test.
-- Only run battle MBT for actual end-to-end validation after code changes are complete.
-- One MBT run at a time, always. Never launch a second instance without confirming the first is dead (`ps aux | grep vitest`). **Also check for zombie evaluators:** `ps aux | grep quint_evaluator | grep -v grep` — kill with `killall -9 quint_evaluator` if any exist from prior runs.
-- If a command gets backgrounded, wait for the task completion notification — do not re-issue.
-- **MBT run observation protocol (MANDATORY):** Always run MBT with `run_in_background`. Wrap the command in a timing shell: `START=$(date +%s); <cmd> 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"`. For runs expected >60s, add a 1-minute progress reporter alongside it.
-- **Debug without re-running when possible:** Once you have a failing trace (seed + action sequence), prefer these over re-running MBT:
-  1. Write a focused TS unit test that replays the specific event sequence against package runtime reducers directly (milliseconds, no Quint).
-  2. Read the ITF trace JSON offline to inspect Quint state at each step.
-  3. Trace through the relevant Quint spec logic manually by reading the code.
-- **Battle-runtime MBT:** run the focused MBT file for the changed behavior.
-  For the retired grouped fixture set, use
-  `cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/weapon-attack-skeleton.mbt.test.ts src/magic-missile-allocation.mbt.test.ts src/extra-attack-count.mbt.test.ts src/adrenaline-rush.mbt.test.ts src/scalar-buff.mbt.test.ts`.
-- **Archived MBT/fuzz tiers:** root fuzz and overnight scripts are not active
-  verification gates.
-  - **Coverage lever is `MBT_TRACES`, not `MBT_MAX_SAMPLES`.** `MBT_TRACES=N` generates N distinct random walks per vitest call. `MBT_MAX_SAMPLES` is a search budget for invariant checking — irrelevant for MBT trace generation (first walk always succeeds). Do not escalate `MBT_MAX_SAMPLES` expecting more coverage.
-- **If a seed is slow**, re-run without `QUINT_SEED` for a fresh one. Slow-seed rate measured at ~49% for invariant fuzzer (5 samples × 5 steps, 120s timeout) and 0% for battle MBT Tier 1 (10 seeds). Slow seeds are caused by branch count (Finding 14), not nondet range sizes.
-- **Slow evaluator? Try different seeds first.** Slow seeds are caused by branch count (Finding 14), not nondet range sizes. Re-run with fresh seeds before considering range narrowing. If narrowing is truly necessary, keep domain-correct ranges as comments and document the narrowing rationale in the code.
-
-## QNT proof lane (run consciously, CRITICAL)
-
-The package-local Quint proofs (`run`-block tests in
-`packages/battle-runtime/*.qnt`) are the SRD-parity gate, but any single proof
-can regress into a forever-running state-explosion search. That hazard is
-invisible if it hides inside a slow default test run, so the lane is structured
-to surface it instead:
-
-- **Not in `pnpm test`.** The proof lane is opt-in: `pnpm --filter
-@dnd/battle-runtime test:qnt-proofs` (sets `RUN_QNT_PROOFS=1`). A normal
-  `pnpm test` runs only a fast reminder test and renders the proof modules as
-  skipped — that standing skip is the nag to run the lane consciously. Do not
-  fold the proofs back into the default lane.
-- **Bounded + attributable per module.** Each `.qnt` with `run` blocks runs as
-  its own `quint test <file>`, hard-killed at `proofModuleTimeoutMs`
-  (`src/battle-runtime-qnt-proofs.ts`). A runaway proof fails that one module
-  rather than hanging the suite, so a "fast → forever" regression is caught and
-  named, not silently absorbed into a week of work.
-- **Observable progress.** The shared proof harness emits `QNT_PROOF_EVENT`
-  JSON lines on stderr for every module start, heartbeat, pass, fail, and
-  timeout. Use those events as the authoritative progress signal for long proof
-  lanes; do not infer task state from disappearing `ps` entries alone.
-- **Self-discovering.** The corpus is globbed by `run`-block presence, never a
-  hand-maintained import list, so a new proof slice cannot drift into being
-  unrun (the retired `battle-runtime-self-tests.qnt` aggregator had).
-- Run it before merging proof/spec changes and in a dedicated CI job.
-
-## MBT driver closure discipline (CRITICAL)
-
-The Quint evaluator instantiates a simulated spec's **entire transitive `import` closure on every generated trace**, so a `*.mbt.qnt` driver's per-trace cost scales with the size of everything it imports — not with its own state width, branch count, or step depth. This is the dominant MBT performance factor. Measured: an _unused_ `import battle-runtime-model` took a 0.6s spec to 85s; a driver importing the full battle-runtime closure ran ~100× slower than an equivalent one importing only leaf modules. See `docs/adr/0001-forest-of-qnt-slices.md`.
-
-- **Simulated drivers import leaves only.** A `*.mbt.qnt` driver may import only small, pure **leaf** modules (type/tag definitions and `pure def` facts). It must never import a barrel/aggregation module (e.g. `battle-runtime-model`) or a behavioural rule module (e.g. `battle-runtime-movement`, `battle-runtime-concentration`). `scripts/check-mbt-driver-closure.cjs` enforces this (transitive import file-count ≤ 8) and runs in `pnpm quality`. New drivers must pass; shrink its allowlist, never grow it.
-- **Keep type-vocabulary modules free of behavioural imports.** `battle-runtime-model` is the type vocabulary imported by ~84 files; it must not `import` the behavioural bridges. When it needs a type a bridge defines, that type goes in a leaf both import (see `battle-runtime-reaction-kinds.qnt`). Importing a behavioural module for one type re-attaches its whole closure to every importer.
-- **Two driver shapes, choose deliberately:**
-  - **Literal projection witness** — self-contained; asserts the SRD outcome as literal facts. Fast. Preferred for deterministic scenarios; most drivers are this shape.
-  - **Computed-oracle driver** — imports the rule reducer to _derive_ the expected projection. Justified only when the projection genuinely depends on mutable state the reducer computes (the reducer is then the SRD oracle). Expensive by nature; keep them few. Do **not** convert one to a witness by reimplementing the rule inside the driver — that duplicates rule logic and weakens parity.
-- **Converting a deterministic computed driver to a witness:** capture exact reducer values via the REPL — `printf 'import <module>.*\n<expr>\n.exit\n' | quint -r <spec>.qnt` (the heavy import can take ~90s to load; do not set a short timeout) — assert them as literals, inline only the `Hole` tags the driver uses, drop the imports, and validate with the now-fast filtered test (`pnpm exec vitest run … -t "<name>"`).
-
-## Quint gotchas
-
-Things that cause non-obvious errors, not discoverable by reading code.
-
-- **Reserved names:** `size` is a built-in operator — use `creatureSize` for parameters.
-- **Integer division:** Quint `/` truncates toward zero, NOT floor — matters for negative numbers.
-- **Cross-file imports:** Must use `from` clause: `import dnd.* from "./dnd"` (bare `import dnd.*` fails silently with "unknown module").
-- **Test syntax:** Multiple assertions use `all { assert(x), assert(y) }` — `and { }` causes parse errors in `run` blocks.
-- **Verbose test output:** `quint test --match "pattern"` for per-test output (default only shows module name).
-- **Rust evaluator GLIBC mismatch:** If MBT tests fail with `EPIPE`, run `./scripts/build-quint-evaluator.sh` (re-run after `pnpm install`).
-- **Fresh worktree battle MBT module resolution:** In a worktree without a primed `.quint-cache`, focused battle MBT files can fail with quint `QNT404` name-resolution errors (e.g. `damageAfterAdjustments`) even though those names exist in the corpus. Suspected missing cache-priming step in worktree setup; reproduce in the main checkout first before treating it as a code regression.
-- **Apalache / Java:** JDK 17 is installed at `~/.local/java/jdk-17.0.18+8-jre/`. The Bash tool doesn't source `.zshrc`, so prefix Apalache commands with: `export PATH="$HOME/.local/java/jdk-17.0.18+8-jre/bin:$PATH" &&`
-- **Nondet must be bare `oneOf()`:** `nondet x = if (cond) A.oneOf() else B.oneOf()` is a parse error (QNT204). The outermost expression must be `oneOf()` or `apalache::generate` — no wrapping `if`, `val`, or function calls. If you need conditional narrowing, accept the wider set and let the guard filter.
-- **Apalache record sets:** Apalache needs `var.in(Set)` for record-typed vars before field access. Quint's only way to express record sets is nested `map().flatten()` which enumerates the Cartesian product. This works for small records (~7K elements for FighterState) but is infeasible for large records (CreatureState, TurnState). Don't attempt to build VALID\_\*\_STATES for records with 10+ fields or wide integer ranges.
-- **Frame condition verification recipe (historical root-QNT restoration only):** The deleted root `creature.qnt` restore source remains recoverable from git history. If an explicit restoration task revives it, the old frame-condition straggler check was: `grep -n "barbarianLevel' = barbarianLevel" creature.qnt | grep -v "newClassState'"`. This is not used by active package-local specs.
-- **Rust backend `mbt::actionTaken` bug:** Bare actions inside `match` arms report the composite name (e.g., `"battleStep"`) instead of the leaf name. Only `any { }` branches get leaf-level tracking. Workaround: wrap every single-action `match` arm in `any { action, }`. Upstream Quint bug — not yet filed.
-- **ITF variant format:** Parameterized Quint variants (e.g., `RCounterspell(false)`) arrive in ITF as `{tag: "RCounterspell", value: false}`, NOT `{"RCounterspell": false}`. Use `v.value` to access the parameter — `Object.values(v)[0]` returns the tag string. See `ITFVariantWithValue` in `mbt-shared.ts`.
-
 ## SRD feature parity (CRITICAL)
 
-The Quint specs are a **direct formalization of the SRD** — nothing more, nothing less. The QNT corpus is a forest of small slices (see `docs/adr/0001-forest-of-qnt-slices.md`): reusable rule-core slices in `packages/shared-algebras/proofs/rule-core/`, focused QNT with bridge modules into rule-core, and focused `*.mbt.qnt` / `*.mbt.test.ts` parity drivers per obligation or profile. Deleted root `.qnt` files are historical restore material recoverable from git history, not active authority for any runtime and not behavior gates. Every modeled rule must trace to a specific SRD passage. Do not invent mechanics, add interpretive extensions, or go beyond what the SRD text says. The only sanctioned deviations from RAW (Rules As Written) are documented in `ASSUMPTIONS.md`, curated by the project owner.
+The Quint specs are a **direct formalization of the SRD** — nothing more, nothing less. The QNT corpus is a forest of small slices (see `docs/adr/0001-forest-of-qnt-slices.md`): reusable rule-core slices in `packages/shared-algebras/proofs/rule-core/`, focused QNT with bridge modules into rule-core, and focused `*.mbt.qnt` / `*.mbt.test.ts` parity drivers per obligation or profile. Every modeled rule must trace to a specific SRD passage. Do not invent mechanics, add interpretive extensions, or go beyond what the SRD text says. The only sanctioned deviations from RAW (Rules As Written) are documented in `ASSUMPTIONS.md`, curated by the project owner.
 
 - **Model what the SRD says.** If the SRD doesn't define it, don't model it.
 - **No homebrew, no "reasonable extensions."** If a rule is ambiguous or the formalization requires a choice the SRD doesn't prescribe, document it in `ASSUMPTIONS.md` — don't silently pick an interpretation.
 - **ASSUMPTIONS.md is the sole record of modeling decisions** where the spec makes explicit what the SRD leaves implicit (e.g., turn boundaries, implied constraints, architecture-driven choices). Curated by the project owner, kept minimal and close to RAW.
 - **Always consult RAW and ubiquitous language.** Before implementing any rule, read the relevant SRD passage in `.references/srd-5.2.1/` and check `UBIQUITOUS_LANGUAGE.md` for precise terminology. Do not rely on memory or paraphrased understanding of the rules.
 - **Local rules corpus first.** `.references/srd-5.2.1/` is the working RAW corpus for this repo. If the needed rule text is missing or insufficient there, stop and tell the user so they can adjust the corpus or direct the source of truth. Do not silently browse external rules sources.
-
-## Quint parity (CRITICAL)
-
-Unit/StatBlock-backed battle behavior MUST maintain parity with
-focused battle-runtime QNT slices, the rule-core slices they bridge
-into (`packages/shared-algebras/proofs/rule-core/`), and the
-`@dnd/battle-runtime` parity tests (`packages/battle-runtime/src/*.mbt.test.ts`).
-Reusable mechanics live in rule-core; focused QNT slices own runtime
-integration. Deleted root QNT files are historical restore material recoverable
-from git history and not a parity gate.
-
-- **Never** add logic to the runtime commit layer that diverges from the relevant Quint model without updating the spec first.
-- **Never** "fix" runtime behavior that the relevant authoritative Quint model handles differently — update the spec or accept it as spec-level intentional.
-- **Never** remove or rename context fields that an MBT bridge maps without checking the relevant parity test first.
-- If a refactor changes behavior, the relevant MBT tests MUST still pass. If they don't, the refactor is wrong.
 
 ## TypeScript conventions
 
@@ -394,31 +280,12 @@ Every plan's **Verification** section must include:
 
 After significant changes, run the normal reviewer loop repeatedly until it converges. The loop must include RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks. Each round should produce fewer reasonable findings; if a round still finds real issues, fix them and run another round. Convergence means no reasonable findings remain, with any rejected notes documented alongside the reason they were rejected. A single round is enough only for trivially small changesets (< ~20 lines); otherwise use at least two rounds to catch both obvious and subtler issues.
 
-## Invariant scenario tests
-
-The deleted root `dndTest.qnt` restore source is historical only. Use
-runtime tests and active Quint specs for verification.
-
-## Fuzzing
-
-The old root-QNT fuzz script was removed with the archived root specs. Root fuzz
-is not an active verification gate.
-
-## QA pipeline
-
-Community Q&A corpus tooling is research-only unless a future task rewires it to
-active QNT authority. Full docs: `scripts/qa/QA_README.md`. The old
-root-QNT generated assertion artifact was removed from the worktree and is not
-part of development verification.
-
 ## Rules reference
 
-**Current edition: SRD 5.2.1 (2024).** Archived: SRD 5.1 (2014) in `.references/srd/`.
+**Current edition: SRD 5.2.1 (2024).**
 
 `.references/srd-5.2.1/` — SRD 5.2.1 full text (Playing-the-Game.md, Rules-Glossary.md, Equipment.md, Classes/, Spells/, etc.)
 `.references/srd-5.2.1-conversion/` — official 5.1→5.2.1 conversion guide (delta manifest)
-`.references/srd/` — SRD 5.1 (2014, archived)
-`.references/rules/` — D&D 5e PHB chapters as markdown (5.1 era)
 
 ## Agent skills
 

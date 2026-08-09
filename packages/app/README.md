@@ -3,6 +3,10 @@
 React application package for local character-creation, battle, and admin
 mirror experiences.
 
+The battle scene uses SVG-in-React with Motion. Scene components derive their
+rendered state from runtime snapshots and remain inspectable through ordinary
+DOM-based Vitest tests; the app does not own a second battle-state model.
+
 Character Sheet state in app components follows the runtime boundary:
 stored inputs keep mutable play state and selections, while display summaries
 derive capacities through `@dnd/character-sheet-runtime` projections. Hit Point

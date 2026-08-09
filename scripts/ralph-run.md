@@ -82,8 +82,9 @@ runs intentionally keep both open until the branch is merged. After acceptance,
 verify ancestry and synchronize the tracker with:
 
 ```bash
+github_plan=/absolute/path/to/github-backed-plan.md
 pnpm exec tsx scripts/ralph-issue-context.ts complete \
-  --plan plans/CLEANROOM_SDK_DELIVERY_RALPH.md \
+  --plan "$github_plan" \
   --task 1 \
   --run-id cleanroom-gh41 \
   --owner-token "$(<.ralph/runs/cleanroom-gh41/owner-token)" \
@@ -328,7 +329,8 @@ To prove issue hydration and prompt construction without claiming or executing
 a task, use a frontier task with `--smoke-task`:
 
 ```bash
-scripts/ralph-run.sh plans/CLEANROOM_SDK_DELIVERY_RALPH.md \
+github_plan=/absolute/path/to/github-backed-plan.md
+scripts/ralph-run.sh "$github_plan" \
   --base master \
   --run-id cleanroom-launch-smoke \
   --smoke-task 1

@@ -16,7 +16,6 @@ Every function, type, constant, and export must have a current call site or cons
 
 - Do not write tests that only verify compile-time guarantees. If the compiler checks it, a test adds nothing.
 - Tests must exercise runtime behavior, projection behavior, parity behavior, or boundary decoding.
-- Do not update `qa_generated.qnt` during normal development review.
 
 ## Scenario Plausibility
 
