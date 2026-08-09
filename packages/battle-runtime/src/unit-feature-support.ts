@@ -33,6 +33,7 @@ import type {
   AreaShapeSpec,
   ClassName,
   DiceAmount,
+  DiceDelta,
   DiceExpr,
   EffectAtom,
   EquipmentPredicate,
@@ -5757,17 +5758,8 @@ function parseMartialArtsAttackProjectionUnitFeatureProfile(
   return martialArtsAttackProjectionProfileForUnit(unit, classLevels);
 }
 
-function fixedDiceDeltaValue(delta: {
-  readonly kind: string;
-  readonly dice?: number;
-  readonly dieSize?: number;
-  readonly sign?: string;
-}): number | null {
-  if (
-    delta.kind !== "fixed_dice" ||
-    delta.dice === undefined ||
-    delta.dieSize === undefined
-  ) {
+function fixedDiceDeltaValue(delta: DiceDelta): number | null {
+  if (delta.kind !== "fixed_dice") {
     return null;
   }
   const value = delta.dice * delta.dieSize;

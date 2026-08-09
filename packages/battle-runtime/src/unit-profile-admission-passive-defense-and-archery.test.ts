@@ -1,4 +1,6 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import type { DiceDelta } from "@dnd/surface/surface/types";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT27 feat_archery
 import { describe, expect, test } from "vitest";
@@ -200,7 +202,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
     }
   });
 
-  test("passive numeric support rejects larger fixed magnitudes", () => {
+  test("passive numeric support rejects alternate encodings, penalties, and larger bonuses", () => {
     const defense = unitLibrary.requireUnit(defenseUnitId);
     const archery = archeryFeatureUnit();
     if (
@@ -227,6 +229,38 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
     const passiveDefense = defense;
     const defenseDelta = defenseEffect.delta;
     const archeryDelta = archeryEffect.delta;
+    const decodedSyntheticDefenseWithDelta = (
+      id: string,
+      name: string,
+      delta: DiceDelta,
+    ) =>
+      decodeUnitRecordSync({
+        ...passiveDefense,
+        id,
+        name,
+        provenance: { kind: "synthetic-test", section: name },
+        mechanics: {
+          ...passiveDefense.mechanics,
+          grants: [{ ...defenseEffect, delta }],
+        },
+      });
+    const negativeDefense = decodedSyntheticDefenseWithDelta(
+      "synthetic_defense_minus_1",
+      "Synthetic Defense -1",
+      { ...defenseDelta, sign: "-" },
+    );
+    const fixedNumberDefense = decodedSyntheticDefenseWithDelta(
+      "synthetic_defense_fixed_number",
+      "Synthetic Defense Fixed Number",
+      { kind: "fixed_number", amount: 1, sign: "+" },
+    );
+
+    expect(battlePassiveArmorClassBonusSupportForUnit(negativeDefense)).toBe(
+      "unsupported",
+    );
+    expect(battlePassiveArmorClassBonusSupportForUnit(fixedNumberDefense)).toBe(
+      "unsupported",
+    );
 
     for (let defenseMagnitude = 2; defenseMagnitude <= 20; defenseMagnitude++) {
       const adjacentDefense = {
