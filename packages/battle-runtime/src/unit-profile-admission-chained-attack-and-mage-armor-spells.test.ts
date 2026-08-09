@@ -25,7 +25,10 @@ import {
   spellHoleInvocation,
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   cantripSpellInvocationRef,
   discoverBattleActs,
@@ -332,5 +335,43 @@ describe("QMBT14 deterministic chained attack and Mage Armor admission", () => {
         choices: [spellCasterId, spellTargetId],
       }),
     ]);
+  });
+  test("mage_armor admission rejects a creature target without willing disposition", () => {
+    const mageArmor = spellRecord(mageArmorUnitId);
+    if (
+      mageArmor.mechanics.family !== "ongoing_effect" ||
+      mageArmor.mechanics.attachment.kind !== "hole" ||
+      mageArmor.mechanics.attachment.value.kind !== "target"
+    ) {
+      throw new Error("Expected Mage Armor to have an ongoing target hole.");
+    }
+    const synthetic = decodeSpellRecordForTest({
+      ...mageArmor,
+      id: "synthetic_mage_armor_missing_willing",
+      name: "Synthetic Mage Armor missing willingness",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic_mage_armor_missing_willing",
+      },
+      mechanics: {
+        ...mageArmor.mechanics,
+        attachment: {
+          ...mageArmor.mechanics.attachment,
+          value: {
+            ...mageArmor.mechanics.attachment.value,
+            selection: { mode: "one", targetKinds: ["creature"] },
+          },
+        },
+      },
+    });
+    const session = spellBattle({ preparedSpells: [synthetic] });
+
+    expect(
+      discoverBattleActs(session).some(
+        (candidate) =>
+          String(battleActSpellPresentation(candidate)?.invocation.spellId) ===
+          String(synthetic.id),
+      ),
+    ).toBe(false);
   });
 });

@@ -45,6 +45,7 @@ import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { spellTargetHole, spellTargetIsLegal } from "../spells-targeting.ts";
+import { willingCreatureTargetSelection } from "../spells-profiles-support.ts";
 import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
@@ -128,10 +129,27 @@ function buildPersistentArmorEffectInvocation(
   };
 }
 
+function persistentArmorEffectHasWillingCreatureTarget(
+  spell: Pick<BattleSpellAdmissionSource, "mechanics">,
+): boolean {
+  if (spell.mechanics.family !== "ongoing_effect") {
+    return false;
+  }
+  const attachment = spell.mechanics.attachment;
+  return (
+    attachment.kind === "hole" &&
+    attachment.value.kind === "target" &&
+    willingCreatureTargetSelection(attachment.value.selection)
+  );
+}
+
 function admitPersistentArmorEffect(
   spell: BattleSpellAdmissionSource,
   ctx: SpellAdmissionContext,
 ): readonly PersistentArmorInvocation[] {
+  if (!persistentArmorEffectHasWillingCreatureTarget(spell)) {
+    return [];
+  }
   const executionFacts = persistentArmorEffectExecutionFactsForSpell(spell);
   return executionFacts === null
     ? []
@@ -158,6 +176,9 @@ export function admitPersistentArmorEffectInvocationSpellAccess(
     readonly executionFacts: PersistentArmorEffectExecutionFacts;
   },
 ): readonly PersistentArmorInvocation[] {
+  if (!persistentArmorEffectHasWillingCreatureTarget(access.spell)) {
+    return [];
+  }
   return [
     buildPersistentArmorEffectInvocation(
       actorId,
