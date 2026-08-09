@@ -5,6 +5,8 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { requireCharacterSpellProcedureRefForTest } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
+import cureWoundsInput from "../../surface/content/cure_wounds.json";
+import massCureWoundsInput from "../../surface/content/mass_cure_wounds.json";
 import {
   cureWoundsUnitId,
   healingWordUnitId,
@@ -21,12 +23,16 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
+  maybeSpellAct,
   spellAct,
   spellHoleInvocation,
   spellTargetFill,
   spellTargetListFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   applyBattleHitPointDamage,
   battleAreaId,
@@ -35,6 +41,36 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
+
+function syntheticHealingSpellWithTargetSelection(
+  input: typeof cureWoundsInput | typeof massCureWoundsInput,
+  id: string,
+  targetKinds: readonly string[],
+) {
+  const freshInput = structuredClone(input);
+  return decodeSpellRecordForTest({
+    ...freshInput,
+    id,
+    name: id,
+    provenance: { kind: "synthetic-test", section: id },
+    mechanics: {
+      ...freshInput.mechanics,
+      phases: freshInput.mechanics.phases.map((phase) => ({
+        ...phase,
+        attachment: {
+          ...phase.attachment,
+          value: {
+            ...phase.attachment.value,
+            selection: {
+              ...phase.attachment.value.selection,
+              targetKinds,
+            },
+          },
+        },
+      })),
+    },
+  });
+}
 
 describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
   test("healing_word is admitted through catalog spell access and projected as a Bonus Action healing spell", () => {
@@ -154,6 +190,41 @@ describe("QMBT25 deterministic Spell Unit admission re-triage", () => {
 });
 
 describe("QMBT32 deterministic direct Hit Point restoration spell admission", () => {
+  test("direct and area healing admission requires creature-only target selections", () => {
+    const mutations = [
+      {
+        id: "synthetic_cure_wounds_object_targets",
+        input: cureWoundsInput,
+        targetKinds: ["object"],
+        spellLevel: 1 as const,
+      },
+      {
+        id: "synthetic_mass_cure_wounds_creature_object_targets",
+        input: massCureWoundsInput,
+        targetKinds: ["creature", "object"],
+        spellLevel: 5 as const,
+      },
+    ] as const;
+
+    for (const mutation of mutations) {
+      const spell = syntheticHealingSpellWithTargetSelection(
+        mutation.input,
+        mutation.id,
+        mutation.targetKinds,
+      );
+
+      expect(
+        maybeSpellAct({
+          session: spellBattle({
+            preparedSpells: [spell],
+            spellSlots: [{ spellLevel: mutation.spellLevel, count: 1 }],
+          }),
+          spellId: mutation.id,
+        }),
+      ).toBeUndefined();
+    }
+  });
+
   test("cure_wounds is admitted through catalog spell access and projected as a Magic Action healing spell", () => {
     const spell = spellRecord(cureWoundsUnitId);
     const state = spellBattle({ preparedSpells: [spell] });

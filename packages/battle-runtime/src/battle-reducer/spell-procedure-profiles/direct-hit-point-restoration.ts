@@ -67,6 +67,7 @@ import {
 } from "../spells-discovery.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import { healingSpellTargetSelection } from "../spells-resolve-target-selection.ts";
+import { creatureTargetSelection } from "../spells-profiles-support.ts";
 import {
   spellTargetHole,
   spellTargetListHole,
@@ -226,6 +227,9 @@ function hitPointRestorationActionCost(
 function hitPointRestorationTargetBounds(
   selection: TargetSelection,
 ): { readonly maxTargets: number } | null {
+  if (!creatureTargetSelection(selection)) {
+    return null;
+  }
   if (selection.mode === "one") {
     return { maxTargets: 1 };
   }

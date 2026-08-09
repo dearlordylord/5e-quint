@@ -27,7 +27,10 @@ import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { ATTACK_TARGET_HOLE_ID } from "../battle-runtime-protocol.ts";
 import { battleCreatureAfterConditionRemoval } from "../spell-condition-effects-helpers.ts";
 import { sameStringSet } from "../spells-execution-facts.ts";
-import { scalarBuffActiveEffectExpiration } from "../spells-profiles-support.ts";
+import {
+  creatureTargetSelection,
+  scalarBuffActiveEffectExpiration,
+} from "../spells-profiles-support.ts";
 import { spellTargetHole } from "../spells-holes-fills.ts";
 import {
   spellSingleTargetSelection,
@@ -113,6 +116,7 @@ function conditionRemovalProtectionSpellProjection(
     phase.attachment.kind !== "hole" ||
     phase.attachment.value.kind !== "target" ||
     phase.attachment.value.selection.mode !== "one" ||
+    !creatureTargetSelection(phase.attachment.value.selection) ||
     composite === null ||
     effects.length !== 3 ||
     conditionRemoval?.kind !== "remove_condition" ||

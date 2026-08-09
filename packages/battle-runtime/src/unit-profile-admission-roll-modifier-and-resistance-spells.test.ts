@@ -25,6 +25,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import guidanceInput from "../../surface/content/guidance.json";
 import protectionFromEnergyInput from "../../surface/content/protection_from_energy.json";
+import protectionFromPoisonInput from "../../surface/content/protection_from_poison.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { DamageType } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -1894,7 +1895,63 @@ function resistanceBattle(): BattleRuntimeSession {
   });
 }
 
+function syntheticProtectionFromPoisonWithTargetSelection(
+  id: string,
+  targetKinds: readonly string[],
+) {
+  const input = structuredClone(protectionFromPoisonInput);
+  return decodeSpellRecordForTest({
+    ...input,
+    id,
+    name: id,
+    provenance: { kind: "synthetic-test", section: id },
+    mechanics: {
+      ...input.mechanics,
+      phases: input.mechanics.phases.map((phase) => ({
+        ...phase,
+        attachment: {
+          ...phase.attachment,
+          value: {
+            ...phase.attachment.value,
+            selection: {
+              ...phase.attachment.value.selection,
+              targetKinds,
+            },
+          },
+        },
+      })),
+    },
+  });
+}
+
 describe("L12G Protection from Poison deterministic Spell Unit admission", () => {
+  test("condition-removal protection admission requires a creature-only target selection", () => {
+    const mutations = [
+      {
+        id: "synthetic_protection_from_poison_object_target",
+        targetKinds: ["object"],
+      },
+    ] as const;
+
+    for (const mutation of mutations) {
+      const spell = syntheticProtectionFromPoisonWithTargetSelection(
+        mutation.id,
+        mutation.targetKinds,
+      );
+
+      expect(
+        maybeSpellAct({
+          session: spellBattle({
+            preparedSpells: [spell],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
+          spellId: mutation.id,
+          slotLevel: 2,
+        }),
+      ).toBeUndefined();
+    }
+  });
+
   test("protection_from_poison removes Poisoned and stores condition-save Advantage plus poison Resistance", () => {
     const spell = spellRecord(protectionFromPoisonUnitId);
     const baseSession = spellBattle({

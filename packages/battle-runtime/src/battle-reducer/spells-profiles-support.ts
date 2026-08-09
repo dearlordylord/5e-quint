@@ -211,7 +211,7 @@ export function scalarBuffSpellTargeting(
       };
 }
 
-function creatureTargetSelection(selection: TargetSelection): boolean {
+export function creatureTargetSelection(selection: TargetSelection): boolean {
   return (
     selection.targetKinds === undefined ||
     sameStringSet(selection.targetKinds, ["creature"])
