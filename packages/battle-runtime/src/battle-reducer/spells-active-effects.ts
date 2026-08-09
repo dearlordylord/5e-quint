@@ -2964,34 +2964,23 @@ export function applyFailedSaveAttackRollAdvantageEffects(
       continue;
     }
     /* v8 ignore stop */
-    const nextEffect = {
-      ...invocation.effect,
-      sourceProcedureRef: invocation.sourceProcedureRef,
-      sourceCombatantId: actorId,
-    };
-    const activeEffects = [
-      ...target.activeEffects.filter(
-        (effect) =>
-          !(
-            effect.kind === "faerieFireOutline" &&
-            activeEffectSourceMatches(effect, nextEffect)
-          ),
-      ),
-      nextEffect,
-    ];
-    combatants.set(targetId, { ...target, activeEffects });
+    combatants.set(targetId, {
+      ...target,
+      activeEffects: [
+        ...target.activeEffects,
+        {
+          ...invocation.effect,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          sourceCombatantId: actorId,
+        },
+      ],
+    });
   }
   return {
     ...state,
     combatants,
     objectOutlines: [
-      ...state.objectOutlines.filter(
-        (outline) =>
-          !(
-            outline.sourceProcedureRef === invocation.sourceProcedureRef &&
-            outline.sourceCombatantId === actorId
-          ),
-      ),
+      ...state.objectOutlines,
       ...faerieFireObjectOutlines(actorId, area, invocation),
     ],
   };
