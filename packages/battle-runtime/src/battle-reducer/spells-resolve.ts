@@ -3794,6 +3794,20 @@ function resolveSpellAttackDamageObjectTarget(input: {
     return spellCastReactionWindow;
   }
 
+  const spendObjectTargetSpellResources = (state: BattleState) =>
+    spendSpellCastResources({
+      state: stateAfterResolvedHeldLightHurl(
+        state,
+        input.actorId,
+        input.invocation,
+      ),
+      actorId: input.actorId,
+      invocation: input.invocation,
+      errorState: input.input.state,
+      ...optionalProperty("actionCostOverride", input.actionCostOverride),
+      ...optionalProperty("metamagicApplications", input.metamagicApplications),
+    });
+
   const requiredRollMode = requiredSpellObjectTargetAttackRollMode(
     input.input.state,
     input.actorId,
@@ -3934,18 +3948,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
   }
   /* v8 ignore stop */
   if (!hit) {
-    return spendSpellCastResources({
-      state: stateAfterResolvedHeldLightHurl(
-        postRemarkableAthleteMovementState,
-        input.actorId,
-        input.invocation,
-      ),
-      actorId: input.actorId,
-      invocation: input.invocation,
-      errorState: input.input.state,
-      ...optionalProperty("actionCostOverride", input.actionCostOverride),
-      ...optionalProperty("metamagicApplications", input.metamagicApplications),
-    });
+    return spendObjectTargetSpellResources(postRemarkableAthleteMovementState);
   }
   if (input.fillSet.damageRoll == null) {
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -4066,18 +4069,7 @@ function resolveSpellAttackDamageObjectTarget(input: {
     { kind: "object", objectId: input.fillSet.objectTarget.objectId },
     input.invocation,
   );
-  const spentResources = spendSpellCastResources({
-    state: stateAfterResolvedHeldLightHurl(
-      lit,
-      input.actorId,
-      input.invocation,
-    ),
-    actorId: input.actorId,
-    invocation: input.invocation,
-    errorState: input.input.state,
-    ...optionalProperty("actionCostOverride", input.actionCostOverride),
-    ...optionalProperty("metamagicApplications", input.metamagicApplications),
-  });
+  const spentResources = spendObjectTargetSpellResources(lit);
   if (spentResources.tag !== "resolved") {
     return spentResources;
   }
