@@ -82,8 +82,6 @@ import {
   type BattleCommandOption,
   type BattleCreatureState,
   type BattleDancingLight,
-  type BattleDancingLightList,
-  type BattleDancingLightsPlacementValue,
   type BattleIllumination,
   type BattleLightEmitter,
   type BattleLightEmitterAttachment,
@@ -1366,64 +1364,6 @@ export function repositionDancingLightsSpellEffect(
       }),
     }),
   };
-}
-
-export function dancingLightsForReposition(
-  effect: Extract<BattleActiveEffect, { readonly kind: "dancingLights" }>,
-  placement: Extract<
-    BattleDancingLightsPlacementValue,
-    { readonly mode: "reposition" }
-  >,
-  inRange: readonly BattleDancingLight[],
-): DancingLightsEffectShape | null {
-  if (
-    effect.form === "combinedMediumForm" &&
-    placement.form === "combinedMediumForm"
-  ) {
-    if (inRange.length === 0) {
-      return null;
-    }
-    return {
-      form: "combinedMediumForm",
-      light: {
-        lightId: effect.light.lightId,
-        positionId: placement.light.positionId,
-      },
-    };
-  }
-  if (effect.form !== "separateLights" || placement.form !== "separateLights") {
-    return null;
-  }
-  const currentDancingLightById = new Map(
-    effect.lights.map((dancingLight) => [dancingLight.lightId, dancingLight]),
-  );
-  const lights = inRange.flatMap((candidate) => {
-    const current = currentDancingLightById.get(candidate.lightId);
-    return current === undefined
-      ? []
-      : [{ lightId: current.lightId, positionId: candidate.positionId }];
-  });
-  const narrowedLights = dancingLightListFromArray(lights);
-  return narrowedLights === null
-    ? null
-    : { form: "separateLights", lights: narrowedLights };
-}
-
-export function dancingLightListFromArray(
-  lights: readonly BattleDancingLight[],
-): BattleDancingLightList | null {
-  if (new Set(lights.map((light) => light.lightId)).size !== lights.length) {
-    return null;
-  }
-  return lights.length === 1
-    ? [lights[0]!]
-    : lights.length === 2
-      ? [lights[0]!, lights[1]!]
-      : lights.length === 3
-        ? [lights[0]!, lights[1]!, lights[2]!]
-        : lights.length === 4
-          ? [lights[0]!, lights[1]!, lights[2]!, lights[3]!]
-          : null;
 }
 
 export function dancingLightsFromEffect(

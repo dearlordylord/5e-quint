@@ -6,6 +6,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
   dancingLightsUnitId,
+  longstriderUnitId,
   rayOfFrostUnitId,
   spellCasterId,
   spellTargetId,
@@ -32,11 +33,13 @@ import {
   elapsedTimeTicks,
   endTurn,
   holeId,
+  movementDeltaFeet,
   movementFeet,
   proficiencyBonus,
   resolveBattleInterrupt,
   resolveBattleSubject,
   snapshotBattle,
+  spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
 import type { ActionSpellAct } from "./unit-profile-admission-catalog.test-support.ts";
 import type {
@@ -298,7 +301,11 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
   });
   test("dancing_lights supports combined Medium-form choice, Bonus Action movement, Concentration cleanup, and duration cleanup", () => {
     const spell = spellRecord(dancingLightsUnitId);
-    const session = spellBattle({ cantrips: [spell] });
+    const session = spellBattle({
+      cantrips: [spell],
+      preparedSpells: [spellRecord(longstriderUnitId)],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
     const combinedAct = discoverBattleActs(session).find(
       (candidate): candidate is ActionSpellAct =>
         candidate.subject.tag === "actionSpell" &&
@@ -464,8 +471,33 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
         }),
       ],
     });
+    const resolvedCaster = resolved.state.combatants.get(spellCasterId);
+    if (resolvedCaster === undefined) {
+      throw new Error("Expected Dancing Lights caster before repositioning.");
+    }
+    const unrelatedEffect = {
+      kind: "speedDelta",
+      sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+        session,
+        spellCasterId,
+        spellSlotInvocationRef(longstriderUnitId, 1, "scalarBuff"),
+      ),
+      sourceCombatantId: spellCasterId,
+      deltaFeet: movementDeltaFeet(10),
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(600),
+      },
+    } as const;
+    const repositionState: BattleState = {
+      ...resolved.state,
+      combatants: new Map(resolved.state.combatants).set(spellCasterId, {
+        ...resolvedCaster,
+        activeEffects: [...resolvedCaster.activeEffects, unrelatedEffect],
+      }),
+    };
     const moved = resolveBattleSubject({
-      state: resolved.state,
+      state: repositionState,
       subject: moveAct.subject,
       fills: [
         {
@@ -505,6 +537,9 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
         : null;
     expect(afterMovePosition).not.toBe(beforeMovePosition);
     expect(moved.state.currentTurnResources.currentHasBonusAction).toBe(false);
+    expect(
+      moved.state.combatants.get(spellCasterId)?.activeEffects,
+    ).toContainEqual(unrelatedEffect);
 
     const concentrationBroken = breakBattleConcentration(
       moved.state,

@@ -50,8 +50,6 @@ import {
 } from "./attack-roll.ts";
 import { activeEffectArmorClass } from "./creature-state-execution.ts";
 import {
-  dancingLightListFromArray,
-  dancingLightsForReposition,
   type DancingLightsCastPlan,
   type DancingLightsRepositionPlan,
 } from "./spells-active-effects.ts";
@@ -363,41 +361,42 @@ function dancingLightsCastPlacementPlan(
       "Dancing Lights placement does not match the selected form.",
     );
   }
-  const placementError =
-    placement.form === "combinedMediumForm"
-      ? placement.light.distanceFromCasterFeet > invocation.rangeFeet
-        ? "Dancing Lights placement must be within the spell range."
-        : null
-      : dancingLightsSeparatePlacementError(
-          placement.lights,
-          invocation.rangeFeet,
-          invocation.spacingFeet,
-        );
+  if (placement.form === "combinedMediumForm") {
+    return placement.light.distanceFromCasterFeet > invocation.rangeFeet
+      ? Either.left("Dancing Lights placement must be within the spell range.")
+      : Either.right({
+          form: "combinedMediumForm",
+          light: {
+            lightId: battleDancingLightId(
+              `${actorId}:${invocation.sourceProcedureRef}:combinedMediumForm:1`,
+            ),
+            positionId: placement.light.positionId,
+          },
+        });
+  }
+  const placements = oneToFourFromArray(placement.lights);
+  if (placements === null) {
+    return Either.left(
+      "Dancing Lights separate form requires one to four lights.",
+    );
+  }
+  const placementError = dancingLightsSeparatePlacementError(
+    placements,
+    invocation.rangeFeet,
+    invocation.spacingFeet,
+  );
   if (placementError !== null) {
     return Either.left(placementError);
   }
-  if (placement.form === "combinedMediumForm") {
-    return Either.right({
-      form: "combinedMediumForm",
-      light: {
-        lightId: battleDancingLightId(
-          `${actorId}:${invocation.sourceProcedureRef}:combinedMediumForm:1`,
-        ),
-        positionId: placement.light.positionId,
-      },
-    });
-  }
-  const lights = dancingLightListFromArray(
-    placement.lights.map((light, index) => ({
+  return Either.right({
+    form: "separateLights",
+    lights: mapOneToFour(placements, (light, index) => ({
       lightId: battleDancingLightId(
         `${actorId}:${invocation.sourceProcedureRef}:separateLights:${index + 1}`,
       ),
       positionId: light.positionId,
     })),
-  );
-  return lights === null
-    ? Either.left("Dancing Lights separate form requires one to four lights.")
-    : Either.right({ form: "separateLights", lights });
+  });
 }
 
 function dancingLightsRepositionPlacementPlan(
@@ -454,7 +453,9 @@ function dancingLightsRepositionPlacementPlan(
     (dancingLight) => dancingLight.lightId,
   );
   const placedLightIds = placements.map((candidate) => candidate.lightId);
+  const narrowedPlacements = oneToFourFromArray(placements);
   if (
+    narrowedPlacements === null ||
     placedLightIds.length !== new Set(placedLightIds).size ||
     placedLightIds.length !== currentDancingLightIds.length ||
     placedLightIds.some((lightId) => !currentDancingLightIds.includes(lightId))
@@ -463,22 +464,18 @@ function dancingLightsRepositionPlacementPlan(
       "Dancing Lights movement must place each active light identity.",
     );
   }
-  const inRange =
-    placement.form === "combinedMediumForm"
-      ? placement.light.distanceFromCasterFeet <= invocation.rangeFeet
-        ? [placement.light]
-        : []
-      : placement.lights.filter(
-          (candidate) =>
-            candidate.distanceFromCasterFeet <= invocation.rangeFeet,
-        );
+  const inRange = oneToFourFromArray(
+    narrowedPlacements.filter(
+      (candidate) => candidate.distanceFromCasterFeet <= invocation.rangeFeet,
+    ),
+  );
+  if (inRange === null) {
+    return Either.right({
+      kind: "removeEffect",
+      effect,
+    });
+  }
   if (placement.form === "separateLights") {
-    if (inRange.length === 0) {
-      return Either.right({
-        kind: "removeEffect",
-        effect,
-      });
-    }
     const placementError = dancingLightsSeparatePlacementError(
       inRange,
       invocation.rangeFeet,
@@ -487,15 +484,28 @@ function dancingLightsRepositionPlacementPlan(
     if (placementError !== null) {
       return Either.left(placementError);
     }
-  }
-  const effectShape = dancingLightsForReposition(effect, placement, inRange);
-  if (effectShape === null) {
-    return Either.right({ kind: "removeEffect", effect });
+    return Either.right({
+      kind: "replaceEffect",
+      effect,
+      effectShape: {
+        form: "separateLights",
+        lights: mapOneToFour(inRange, ({ lightId, positionId }) => ({
+          lightId,
+          positionId,
+        })),
+      },
+    });
   }
   return Either.right({
     kind: "replaceEffect",
     effect,
-    effectShape,
+    effectShape: {
+      form: "combinedMediumForm",
+      light: {
+        lightId: placement.light.lightId,
+        positionId: placement.light.positionId,
+      },
+    },
   });
 }
 
@@ -533,17 +543,40 @@ function dancingLightsFillSetHasUnrelatedFills(
   );
 }
 
+type OneToFour<T> =
+  | readonly [T]
+  | readonly [T, T]
+  | readonly [T, T, T]
+  | readonly [T, T, T, T];
+
+function oneToFourFromArray<T>(values: readonly T[]): OneToFour<T> | null {
+  return values.length === 1
+    ? [values[0]!]
+    : values.length === 2
+      ? [values[0]!, values[1]!]
+      : values.length === 3
+        ? [values[0]!, values[1]!, values[2]!]
+        : values.length === 4
+          ? [values[0]!, values[1]!, values[2]!, values[3]!]
+          : null;
+}
+
+function mapOneToFour<T, U>(
+  values: OneToFour<T>,
+  mapValue: (value: T, index: number) => U,
+): OneToFour<U> {
+  // Array.map preserves the parsed tuple's cardinality and order; the cast restores only those facts that the standard library signature forgets.
+  return values.map(mapValue) as unknown as OneToFour<U>;
+}
+
 function dancingLightsSeparatePlacementError(
-  placements: readonly {
+  placements: OneToFour<{
     readonly distanceFromCasterFeet: number;
     readonly nearestSiblingDistanceFeet?: number;
-  }[],
+  }>,
   rangeFeet: number,
   spacingFeet: number,
 ): string | null {
-  if (placements.length === 0 || placements.length > 4) {
-    return "Dancing Lights separate form requires one to four lights.";
-  }
   if (
     placements.some((candidate) => candidate.distanceFromCasterFeet > rangeFeet)
   ) {
