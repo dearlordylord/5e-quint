@@ -475,12 +475,59 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     ) {
       return resolveEndConcentrationCommand({ ...input, subject });
     }
-    if (subject.tag === "action" && subject.action === "attack") {
-      return options.attackResolvers.resolveAttack({
-        ...input,
-        subject,
-        ...interruptRouteOptions,
-      });
+    if (subject.tag === "action") {
+      if (subject.action === "attack") {
+        return options.attackResolvers.resolveAttack({
+          ...input,
+          subject,
+          ...interruptRouteOptions,
+        });
+      }
+      if (subject.action === "dash") {
+        return resolveDash({ ...input, subject });
+      }
+      if (subject.action === "disengage") {
+        return resolveDisengage(input);
+      }
+      if (subject.action === "dodge") {
+        return resolveDodge(input);
+      }
+      if (subject.action === "helpAttack") {
+        return resolveHelpAttack({ ...input, subject });
+      }
+      if (subject.action === "hide") {
+        return resolveHide({ ...input, subject: actionHideSubject(subject) });
+      }
+      if (subject.action === "multiattack") {
+        return resolveMultiattack({ ...input, subject });
+      }
+      if (subject.action === "ready") {
+        return resolveReady({ ...input, subject });
+      }
+      if (subject.action === "search") {
+        return resolveSearch({
+          ...input,
+          subject: actionSearchSubject(subject),
+        });
+      }
+      if (subject.action === "grapple") {
+        return resolveGrapple({ ...input, subject });
+      }
+      if (subject.action === "shove") {
+        return resolveShove({ ...input, subject });
+      }
+      if (subject.action === "escapeGrapple") {
+        return resolveEscapeGrapple({ ...input, subject });
+      }
+      if (subject.action === "escapeSpellRestraint") {
+        return resolveEscapeSpellRestraint({ ...input, subject });
+      }
+      if (subject.action === "shakeAwakeFromSleep") {
+        return resolveShakeAwakeFromSleep({ ...input, subject });
+      }
+      if (subject.action === "shakeAwakeFromHypnoticPattern") {
+        return resolveShakeAwakeFromHypnoticPattern({ ...input, subject });
+      }
     }
     if (subject.tag === "pactOfTheChainFamiliarAttack") {
       return options.attackResolvers.resolvePactOfTheChainFamiliarReactionAttack(
@@ -493,51 +540,6 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     }
     if (subject.tag === "creatureAttack") {
       return resolveCreatureAttack({ ...input, subject });
-    }
-    if (subject.tag === "action" && subject.action === "dash") {
-      return resolveDash({ ...input, subject });
-    }
-    if (subject.tag === "action" && subject.action === "disengage") {
-      return resolveDisengage(input);
-    }
-    if (subject.tag === "action" && subject.action === "dodge") {
-      return resolveDodge(input);
-    }
-    if (subject.tag === "action" && subject.action === "helpAttack") {
-      return resolveHelpAttack({ ...input, subject });
-    }
-    if (subject.tag === "action" && subject.action === "hide") {
-      return resolveHide({ ...input, subject: actionHideSubject(subject) });
-    }
-    if (subject.tag === "action" && subject.action === "multiattack") {
-      return resolveMultiattack({ ...input, subject });
-    }
-    if (subject.tag === "action" && subject.action === "ready") {
-      return resolveReady({ ...input, subject });
-    }
-    if (subject.tag === "action" && subject.action === "search") {
-      return resolveSearch({ ...input, subject: actionSearchSubject(subject) });
-    }
-    if (subject.tag === "action" && subject.action === "grapple") {
-      return resolveGrapple({ ...input, subject });
-    }
-    if (subject.tag === "action" && subject.action === "shove") {
-      return resolveShove({ ...input, subject });
-    }
-    if (subject.tag === "action" && subject.action === "escapeGrapple") {
-      return resolveEscapeGrapple({ ...input, subject });
-    }
-    if (subject.tag === "action" && subject.action === "escapeSpellRestraint") {
-      return resolveEscapeSpellRestraint({ ...input, subject });
-    }
-    if (subject.tag === "action" && subject.action === "shakeAwakeFromSleep") {
-      return resolveShakeAwakeFromSleep({ ...input, subject });
-    }
-    if (
-      subject.tag === "action" &&
-      subject.action === "shakeAwakeFromHypnoticPattern"
-    ) {
-      return resolveShakeAwakeFromHypnoticPattern({ ...input, subject });
     }
     if (subject.tag === "bonusAction" && subject.action === "offHandAttack") {
       return resolveOffHandAttack({
@@ -666,143 +668,105 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         ...handledInterruptRouteOption,
       });
     }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "protectionRelevantEffectSave"
-    ) {
-      return resolveProtectionRelevantEffectSaveCommand({
-        ...input,
-        subject,
-      });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "creatureTypeProtectionConditionAttempt"
-    ) {
-      return resolveCreatureTypeProtectionConditionAttemptCommand({
-        ...input,
-        subject,
-      });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "creatureTypeProtectionPossessionAttempt"
-    ) {
-      return resolveCreatureTypeProtectionPossessionAttemptCommand({
-        ...input,
-        subject,
-      });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "disperseFogCloud"
-    ) {
-      return resolveDisperseFogCloudCommand({ ...input, subject });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "disperseCloudkill"
-    ) {
-      return resolveDisperseCloudkillCommand({ ...input, subject });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "wardingBondSeparation"
-    ) {
-      return resolveWardingBondSeparationCommand({ ...input, subject });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "releaseReadiedSpell"
-    ) {
-      return resolveReleaseReadiedSpellCommand(
-        { ...input, subject },
-        {
-          ...handledInterruptRouteOption,
-        },
-      );
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "releaseReadiedMovement"
-    ) {
-      return resolveReleaseReadiedMovementCommand({ ...input, subject });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "releaseSpellCreatedHeldObject"
-    ) {
-      return resolveReleaseSpellCreatedHeldObjectCommand({ ...input, subject });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "castTriggeredReactionSpell"
-    ) {
-      return resolveCastTriggeredReactionSpellCommand(
-        {
+    if (subject.tag === "runtimeCommand") {
+      if (subject.command === "protectionRelevantEffectSave") {
+        return resolveProtectionRelevantEffectSaveCommand({
+          ...input,
+          subject,
+        });
+      }
+      if (subject.command === "creatureTypeProtectionConditionAttempt") {
+        return resolveCreatureTypeProtectionConditionAttemptCommand({
+          ...input,
+          subject,
+        });
+      }
+      if (subject.command === "creatureTypeProtectionPossessionAttempt") {
+        return resolveCreatureTypeProtectionPossessionAttemptCommand({
+          ...input,
+          subject,
+        });
+      }
+      if (subject.command === "disperseFogCloud") {
+        return resolveDisperseFogCloudCommand({ ...input, subject });
+      }
+      if (subject.command === "disperseCloudkill") {
+        return resolveDisperseCloudkillCommand({ ...input, subject });
+      }
+      if (subject.command === "wardingBondSeparation") {
+        return resolveWardingBondSeparationCommand({ ...input, subject });
+      }
+      if (subject.command === "releaseReadiedSpell") {
+        return resolveReleaseReadiedSpellCommand(
+          { ...input, subject },
+          {
+            ...handledInterruptRouteOption,
+          },
+        );
+      }
+      if (subject.command === "releaseReadiedMovement") {
+        return resolveReleaseReadiedMovementCommand({ ...input, subject });
+      }
+      if (subject.command === "releaseSpellCreatedHeldObject") {
+        return resolveReleaseSpellCreatedHeldObjectCommand({
+          ...input,
+          subject,
+        });
+      }
+      if (subject.command === "castTriggeredReactionSpell") {
+        return resolveCastTriggeredReactionSpellCommand(
+          {
+            ...input,
+            subject,
+            ...handledInterruptRouteOption,
+          },
+          options.executionRegistry,
+        );
+      }
+      if (subject.command === "castAttackHitBonusActionSpell") {
+        return resolveCastAttackHitBonusActionSpellCommand(
+          {
+            ...input,
+            subject,
+            ...handledInterruptRouteOption,
+          },
+          options.executionRegistry,
+        );
+      }
+      if (subject.command === "releaseGrapple") {
+        return resolveReleaseGrappleCommand({ ...input, subject });
+      }
+      if (
+        subject.command === "opportunityAttack" ||
+        subject.command === "retaliationAttack"
+      ) {
+        return resolveOpportunityAttackCommand({
           ...input,
           subject,
           ...handledInterruptRouteOption,
-        },
-        options.executionRegistry,
-      );
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "castAttackHitBonusActionSpell"
-    ) {
-      return resolveCastAttackHitBonusActionSpellCommand(
-        {
+          ...(interruptRouteOptions.pendingAttackDamageReductions === undefined
+            ? {}
+            : {
+                pendingAttackDamageReductions:
+                  interruptRouteOptions.pendingAttackDamageReductions,
+              }),
+        });
+      }
+      /* v8 ignore start -- Exhaustive continuation marker: creature-fall interrupt frames store this subject under a `resolved` continuation, and resumeInterruptedProcedure returns that state before dispatching the marker. Only a forged direct resolution request reaches this arm. */
+      if (subject.command === "creatureFalls") {
+        return {
+          tag: "resolved" as const,
+          state: input.state,
+          snapshot: snapshotBattle(input.state),
+        };
+      }
+      /* v8 ignore stop */
+      if (subject.command === "dragonsBreathExhale") {
+        return resolveDragonsBreathExhaleCommand({
           ...input,
           subject,
-          ...handledInterruptRouteOption,
-        },
-        options.executionRegistry,
-      );
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "releaseGrapple"
-    ) {
-      return resolveReleaseGrappleCommand({ ...input, subject });
-    }
-    if (
-      subject.tag === "runtimeCommand" &&
-      (subject.command === "opportunityAttack" ||
-        subject.command === "retaliationAttack")
-    ) {
-      return resolveOpportunityAttackCommand({
-        ...input,
-        subject,
-        ...handledInterruptRouteOption,
-        ...(interruptRouteOptions.pendingAttackDamageReductions === undefined
-          ? {}
-          : {
-              pendingAttackDamageReductions:
-                interruptRouteOptions.pendingAttackDamageReductions,
-            }),
-      });
-    }
-    /* v8 ignore start -- Exhaustive continuation marker: creature-fall interrupt frames store this subject under a `resolved` continuation, and resumeInterruptedProcedure returns that state before dispatching the marker. Only a forged direct resolution request reaches this arm. */
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "creatureFalls"
-    ) {
-      return {
-        tag: "resolved" as const,
-        state: input.state,
-        snapshot: snapshotBattle(input.state),
-      };
-    }
-    /* v8 ignore stop */
-    if (
-      subject.tag === "runtimeCommand" &&
-      subject.command === "dragonsBreathExhale"
-    ) {
-      return resolveDragonsBreathExhaleCommand({
-        ...input,
-        subject,
-      });
+        });
+      }
     }
     /* v8 ignore start -- The subject union is exhausted above; this emitted tail is reachable only if a new variant is added without a dispatcher arm, which fails compilation at this assignment. */
     const exhaustive: never = subject;
