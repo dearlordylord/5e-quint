@@ -3335,8 +3335,6 @@ export function applyDragonsBreathInitialSpellEffect(
     owner: target,
   });
   const allocatedTarget = allocation.owner;
-  const sourceProcedureRef = invocation.sourceProcedureRef;
-  const sourceCombatantId = actorId;
   const nextEffect: BattleActiveEffect = {
     ...invocation.activeEffect,
     sourceProcedureRef: procedureRef,
@@ -3345,16 +3343,7 @@ export function applyDragonsBreathInitialSpellEffect(
     spellSaveDc,
     effectRef: allocation.effectRef,
   };
-  const activeEffects = [
-    ...allocatedTarget.activeEffects.filter(
-      (effect) =>
-        !(
-          effect.kind === "dragonsBreath" &&
-          sourceRefsMatch(effect, sourceProcedureRef, sourceCombatantId)
-        ),
-    ),
-    nextEffect,
-  ];
+  const activeEffects = [...allocatedTarget.activeEffects, nextEffect];
   return {
     ...state,
     combatants: new Map(state.combatants).set(targetId, {
