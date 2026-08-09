@@ -31,23 +31,24 @@ totals, and comparison below are the self-contained durable evidence.
 ## Current authoritative diagnostic
 
 - Date: 2026-08-09
-- Git HEAD: `927107abb4d035795acff00aedad2b7c17bd8560`
+- Git HEAD: `85869fc2f74f839a23118ad5ccdd35a7c4462dd3`
 - Command: `pnpm coverage`
 - Result: exit `0`
-- Total wall duration: approximately 554 seconds
-- Battle-runtime tests: 204/204 files passed; 2,164 tests passed and 53
-  skipped (2,217 total)
+- Total wall duration: approximately 370 seconds
+- Battle-runtime tests: 204/204 files passed; 2,166 tests passed and 53
+  skipped (2,219 total)
 
-| Metric     |                `765158cb1` |                `927107abb` | Covered / total change |     Uncovered change |   Delta |
+| Metric     |                `927107abb` |                `85869fc2f` | Covered / total change |     Uncovered change |   Delta |
 | ---------- | -------------------------: | -------------------------: | ---------------------: | -------------------: | ------: |
-| Statements | 120,126 / 124,537 (96.45%) | 120,229 / 124,601 (96.49%) |               103 / 64 | 4,411 -> 4,372 (-39) | +0.04pp |
-| Branches   |   29,995 / 32,163 (93.25%) |   29,977 / 32,144 (93.25%) |              -18 / -19 |  2,168 -> 2,167 (-1) | +0.00pp |
-| Functions  |       4,796 / 4,796 (100%) |       4,792 / 4,792 (100%) |                -4 / -4 |               0 -> 0 |       0 |
-| Lines      | 120,126 / 124,537 (96.45%) | 120,229 / 124,601 (96.49%) |               103 / 64 | 4,411 -> 4,372 (-39) | +0.04pp |
+| Statements | 120,229 / 124,601 (96.49%) | 120,221 / 124,616 (96.47%) |                -8 / 15 | 4,372 -> 4,395 (+23) | -0.02pp |
+| Branches   |   29,977 / 32,144 (93.25%) |   29,979 / 32,143 (93.26%) |                 2 / -1 |  2,167 -> 2,164 (-3) | +0.01pp |
+| Functions  |       4,792 / 4,792 (100%) |       4,795 / 4,795 (100%) |                  3 / 3 |               0 -> 0 |       0 |
+| Lines      | 120,229 / 124,601 (96.49%) | 120,221 / 124,616 (96.47%) |                -8 / 15 | 4,372 -> 4,395 (+23) | -0.02pp |
 
-An intermediate public run at `7233982d4` reported 4,792 / 4,795 functions.
-That was a corrected dead-function regression, not authoritative evidence; the
-authoritative HEAD above restores 4,792 / 4,792 functions (100%).
+The statement/line percentage regressed by 0.02 percentage points. This is not
+numeric progress toward 99%: the battle milestone improved correctness while
+adding a net 13 production lines, and the resulting denominator and execution
+changes increased uncovered statements/lines by 23.
 
 ## Remaining static 99% gaps
 
@@ -56,30 +57,38 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 120,229 | 124,601 |                  123,355 |         3,126 |
-| Branches   |  29,977 |  32,144 |                   31,823 |         1,846 |
-| Functions  |   4,792 |   4,792 |                    4,745 |             0 |
-| Lines      | 120,229 | 124,601 |                  123,355 |         3,126 |
+| Statements | 120,221 | 124,616 |                  123,370 |         3,149 |
+| Branches   |  29,979 |  32,143 |                   31,822 |         1,843 |
+| Functions  |   4,795 |   4,795 |                    4,748 |             0 |
+| Lines      | 120,221 | 124,616 |                  123,370 |         3,149 |
 
 ## Milestone context
 
-Since `765158cb1`, issue #227 added the chained zero-Hit-Point replay scenario;
-made stored-glyph releases parse once into correlated execution variants and
-removed the obsolete downstream guards; introduced typed Dancing Lights plans
-with one route-enrichment owner; and used correctness review to fix the route
-witness and the dead-function regression.
+Since the prior authoritative checkpoint, `39fb9b632` made save-damage
+application correlated and sequentially safe. Its review and regression tests
+preserved earlier Warding Bond damage when a later direct target is the bond's
+caster, and preserved once-per-turn spell-damage-reduction consumption. That
+battle milestone improved correctness but produced a net 13-line production
+increase and did not improve the statement/line percentage.
 
-The public checkpoint records 39 fewer uncovered statements/lines and one fewer
-uncovered branch. Focused cohort uncovered counts remain regression and
-navigation evidence, not a forecast of the global public delta, because other
-public tests may already cover those arms. Only the full public totals establish
-global movement. Continue from the current public report, preserve behavior and
-Quint parity, and remeasure only after the next coherent increment.
+Commits `a86678455` and `85869fc2f` removed redundant real-catalog decoding and
+per-test composition-graph loading from the MCP failure test, then isolated its
+mocked catalog modules so they cannot leak into later MCP test files. Parallel
+merge `8e4f55b7f` is part of the measured current HEAD context only; it is not
+counted as issue #227 progress.
+
+The public checkpoint records 23 more uncovered statements/lines and three
+fewer uncovered branches than `927107abb`. Focused cohort uncovered counts
+remain regression and navigation evidence, not a forecast of the global public
+delta, because other public tests may already cover those arms. Only the full
+public totals establish global movement. Continue from the current public
+report, preserve behavior and Quint parity, and remeasure only after the next
+coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting public metric at 93.25%, with a static 99% gap of
-1,846. Select one branch-heavy checked-in battle-runtime owner from the public
+Branches remain the limiting public metric at 93.26%, with a static 99% gap of
+1,843. Select one branch-heavy checked-in battle-runtime owner from the public
 report, audit its uncovered alternatives for schema-impossible or duplicated
 logic, cover only behaviorally reachable alternatives with focused tests, and
 then remeasure with the public root diagnostic.
