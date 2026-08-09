@@ -36,8 +36,10 @@ import {
 } from "./index.ts";
 import {
   declineTargetReadiedSpellAfterFailedSave,
+  endCasterTurnAndReadyTargetRayOfFrost,
   spellBattle,
   spellBattleWithTargetReadiedRay,
+  spellBattleWithTargetRayOfFrost,
 } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   greaseGroundHazardEndTurnAct,
@@ -198,6 +200,57 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
         areaId: greaseAreaId,
       }),
     ]);
+  });
+  test("Grease end-turn failure resumes End Turn after a declined readied-spell Reaction", () => {
+    const spell = spellRecord(greaseUnitId);
+    const session = spellBattleWithTargetRayOfFrost({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const castAct = spellAct({
+      session,
+      spellId: greaseUnitId,
+      slotLevel: 1,
+    });
+    const castSave = requireHole(castAct.initialHoles, "savingThrowOutcome");
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: castAct.subject,
+      fills: [greaseSavingThrowOutcomeFill(castSave, [])],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Grease cast to resolve.");
+    }
+    const readied = endCasterTurnAndReadyTargetRayOfFrost({
+      session: battleRuntimeSessionForTest({ ...session, state: cast.state }),
+      casterId: spellCasterId,
+    });
+
+    const endTurnAct = greaseGroundHazardEndTurnAct(readied, spellTargetId);
+    const endTurnSave = requireHole(
+      endTurnAct.initialHoles,
+      "savingThrowOutcome",
+    );
+    const endTurnReaction = resolveBattleSubject({
+      state: readied.state,
+      subject: endTurnAct.subject,
+      fills: [
+        singleTargetSavingThrowOutcomeFill(endTurnSave, spellTargetId, false),
+      ],
+    });
+    expect(endTurnReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+    });
+    const afterDecline =
+      declineTargetReadiedSpellAfterFailedSave(endTurnReaction);
+    expect(requireCombatant(afterDecline.state, spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ prone: true }),
+    });
+    expect(afterDecline.snapshot).toMatchObject({
+      currentActorId: spellCasterId,
+      pendingInterrupt: null,
+    });
   });
   test("Heightened Grease requires its selected target before save resolution", () => {
     const { session, act, heightenedTarget } = heightenedGreaseCastSetup();

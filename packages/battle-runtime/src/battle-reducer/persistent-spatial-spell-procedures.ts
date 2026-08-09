@@ -18,7 +18,11 @@ import type {
   BattleSubject,
 } from "../battle-subjects.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
-import { type BattleAreaId, CombatantId } from "../identity.ts";
+import {
+  type BattleAreaId,
+  type BattleProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import type {
   BattleActiveEffect,
   BattleCreatureState,
@@ -34,6 +38,7 @@ import type {
   BattleResolutionInput,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
+  BattleSavingThrowOutcome,
   BattleSavingThrowOutcomeValue,
   BattleSpellAreaChoice,
   BattleSleetStormAreaHazardSavingThrowOutcomeHole,
@@ -159,6 +164,46 @@ type MoonbeamSaveSubject = Extract<
   MovableZoneSaveSubject,
   { readonly trigger: BattleMoonbeamSaveTrigger }
 >;
+
+type PersistentSpatialSaveFailedReplaySubject = Extract<
+  PersistentSpatialSpellProcedureSubject,
+  {
+    readonly command:
+      | "greaseGroundHazardSave"
+      | "webRestraintSave"
+      | "sleetStormAreaHazardSave"
+      | "gustOfWindLineSave"
+      | "movableZoneSave"
+      | "movableZoneRam";
+  }
+>;
+
+function maybeOpenPersistentSpatialSaveFailedReplayInterrupt(input: {
+  readonly state: BattleState;
+  readonly outcome: BattleSavingThrowOutcome;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly replaySubject: PersistentSpatialSaveFailedReplaySubject;
+  readonly replayFills: readonly BattleFill[];
+  readonly handledInterruptTrigger: BattleInterruptTrigger | undefined;
+}): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
+  if (input.outcome.succeeded) {
+    return null;
+  }
+  return maybeOpenInterruptWindow(
+    input.state,
+    {
+      trigger: "saveFailed",
+      targetId: input.outcome.targetId,
+      sourceProcedureRef: input.sourceProcedureRef,
+      continuation: {
+        kind: "replay",
+        subject: input.replaySubject,
+        fills: input.replayFills,
+      },
+    },
+    input.handledInterruptTrigger,
+  );
+}
 
 export function isPersistentSpatialSpellProcedureSubject(
   subject: BattleSubject,
@@ -384,24 +429,17 @@ function resolveGreaseGroundHazardEntrySaveCommand(
   }
   /* v8 ignore stop */
   const outcome = savingThrowFill.value.outcomes[0]!;
-  if (!outcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.state,
-      {
-        trigger: "saveFailed",
-        targetId: input.subject.actorId,
-        sourceProcedureRef: effect.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: input.subject,
-          fills: input.fills,
-        },
-      },
-      input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow =
+    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
+      state: input.state,
+      outcome,
+      sourceProcedureRef: effect.sourceProcedureRef,
+      replaySubject: input.subject,
+      replayFills: input.fills,
+      handledInterruptTrigger: input.handledInterruptTrigger,
+    });
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
   const nextState = outcome.succeeded
     ? input.state
@@ -541,24 +579,17 @@ function resolveWebRestraintSaveCommand(
   }
   /* v8 ignore stop */
   const outcome = savingThrowFill.value.outcomes[0]!;
-  if (!outcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.state,
-      {
-        trigger: "saveFailed",
-        targetId: input.subject.actorId,
-        sourceProcedureRef: effect.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: input.subject,
-          fills: input.fills,
-        },
-      },
-      input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow =
+    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
+      state: input.state,
+      outcome,
+      sourceProcedureRef: effect.sourceProcedureRef,
+      replaySubject: input.subject,
+      replayFills: input.fills,
+      handledInterruptTrigger: input.handledInterruptTrigger,
+    });
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
   const marked = markWebSavedThisTurn(
     input.state,
@@ -749,24 +780,17 @@ function resolveSleetStormAreaHazardSaveCommand(
   }
   /* v8 ignore stop */
   const outcome = savingThrowFill.value.outcomes[0]!;
-  if (!outcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.state,
-      {
-        trigger: "saveFailed",
-        targetId: input.subject.actorId,
-        sourceProcedureRef: effect.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: input.subject,
-          fills: input.fills,
-        },
-      },
-      input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow =
+    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
+      state: input.state,
+      outcome,
+      sourceProcedureRef: effect.sourceProcedureRef,
+      replaySubject: input.subject,
+      replayFills: input.fills,
+      handledInterruptTrigger: input.handledInterruptTrigger,
+    });
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
   const marked = markSleetStormAreaHazardSavedThisTurn(
     input.state,
@@ -1043,24 +1067,17 @@ function resolveGustOfWindLineSaveCommand(
     return pendingEndTurn;
   }
   const outcome = matchingGustFill.value.outcomes[0]!;
-  if (!outcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.state,
-      {
-        trigger: "saveFailed",
-        targetId: input.subject.actorId,
-        sourceProcedureRef: effect.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: input.subject,
-          fills: input.fills,
-        },
-      },
-      input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow =
+    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
+      state: input.state,
+      outcome,
+      sourceProcedureRef: effect.sourceProcedureRef,
+      replaySubject: input.subject,
+      replayFills: input.fills,
+      handledInterruptTrigger: input.handledInterruptTrigger,
+    });
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
   const endTurnResult = resolveEndTurnCommand({
     state: input.state,
@@ -1442,24 +1459,17 @@ function resolveFlamingSphereSaveCommand(
   }
   /* v8 ignore stop */
   const saveOutcome = saveFill.value.outcomes[0]!;
-  if (!saveOutcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.state,
-      {
-        trigger: "saveFailed",
-        targetId: input.subject.actorId,
-        sourceProcedureRef: effect.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: input.subject,
-          fills: input.fills,
-        },
-      },
-      input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow =
+    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
+      state: input.state,
+      outcome: saveOutcome,
+      sourceProcedureRef: effect.sourceProcedureRef,
+      replaySubject: input.subject,
+      replayFills: input.fills,
+      handledInterruptTrigger: input.handledInterruptTrigger,
+    });
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
   const damageFill = rolledDiceFillForHole(damageFills, damageHole);
   if (damageFill === undefined) {
@@ -1850,24 +1860,17 @@ function resolveFlamingSphereRamCommand(
     concentrationHole === null
       ? undefined
       : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
-  if (!saveOutcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.state,
-      {
-        trigger: "saveFailed",
-        targetId: input.subject.targetId,
-        sourceProcedureRef: effect.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: input.subject,
-          fills: input.fills,
-        },
-      },
-      input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow =
+    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
+      state: input.state,
+      outcome: saveOutcome,
+      sourceProcedureRef: effect.sourceProcedureRef,
+      replaySubject: input.subject,
+      replayFills: input.fills,
+      handledInterruptTrigger: input.handledInterruptTrigger,
+    });
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
   if (damageFill === undefined) {
     return needsHolesResult(input.state, input.subject, [damageHole]);
@@ -2196,24 +2199,17 @@ function resolveMoonbeamSaveCommand(
   }
   /* v8 ignore stop */
   const saveOutcome = saveFill.value.outcomes[0]!;
-  if (!saveOutcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.state,
-      {
-        trigger: "saveFailed",
-        targetId: input.subject.actorId,
-        sourceProcedureRef: effect.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: input.subject,
-          fills: input.fills,
-        },
-      },
-      input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow =
+    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
+      state: input.state,
+      outcome: saveOutcome,
+      sourceProcedureRef: effect.sourceProcedureRef,
+      replaySubject: input.subject,
+      replayFills: input.fills,
+      handledInterruptTrigger: input.handledInterruptTrigger,
+    });
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
   const damageFill = rolledDiceFillForHole(damageFills, damageHole);
   if (damageFill === undefined) {
@@ -2577,24 +2573,17 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
     return pendingEndTurn;
   }
   const outcome = matchingGreaseFill.value.outcomes[0]!;
-  if (!outcome.succeeded) {
-    const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      input.state,
-      {
-        trigger: "saveFailed",
-        targetId: input.subject.actorId,
-        sourceProcedureRef: effect.sourceProcedureRef,
-        continuation: {
-          kind: "replay",
-          subject: input.subject,
-          fills: input.fills,
-        },
-      },
-      input.handledInterruptTrigger,
-    );
-    if (saveFailedReactionWindow !== null) {
-      return saveFailedReactionWindow;
-    }
+  const saveFailedReactionWindow =
+    maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
+      state: input.state,
+      outcome,
+      sourceProcedureRef: effect.sourceProcedureRef,
+      replaySubject: input.subject,
+      replayFills: input.fills,
+      handledInterruptTrigger: input.handledInterruptTrigger,
+    });
+  if (saveFailedReactionWindow !== null) {
+    return saveFailedReactionWindow;
   }
   const nextState = outcome.succeeded
     ? input.state

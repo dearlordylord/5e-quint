@@ -31,6 +31,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import {
   animalFriendshipUnitId,
+  rayOfFrostUnitId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
@@ -243,37 +244,36 @@ export function spellBattle(input: {
   return result.right;
 }
 
-export function spellBattleWithTargetReadiedRay(
-  input: Parameters<typeof spellBattle>[0] = {},
+type SpellBattleWithTargetRayOfFrostInput = Omit<
+  Parameters<typeof spellBattle>[0],
+  "targetId" | "targetSpellcasting"
+>;
+
+export function spellBattleWithTargetRayOfFrost(
+  input: SpellBattleWithTargetRayOfFrostInput = {},
 ): BattleRuntimeSession {
-  const rayOfFrost = spellRecord("ray_of_frost");
-  const session = spellBattle({
+  const rayOfFrost = spellRecord(rayOfFrostUnitId);
+  return spellBattle({
     ...input,
-    targetSpellcasting:
-      input.targetSpellcasting ??
-      wizardSpellcasting({ cantrips: [rayOfFrost], preparedSpells: [] }),
+    targetSpellcasting: wizardSpellcasting({
+      cantrips: [rayOfFrost],
+      preparedSpells: [],
+    }),
   });
-  const casterId = input.casterId ?? spellCasterId;
-  const afterCasterTurn = endTurn({
-    state: session.state,
-    actorId: casterId,
-  });
-  if (afterCasterTurn.tag !== "resolved") {
-    throw new Error("Expected caster End Turn before Ready setup.");
-  }
-  const targetTurnSession = battleRuntimeSessionForTest({
-    ...session,
-    state: afterCasterTurn.state,
-  });
+}
+
+export function readyTargetRayOfFrost(
+  session: BattleRuntimeSession,
+): BattleRuntimeSession {
   const readied = resolveBattleSubject({
-    state: afterCasterTurn.state,
+    state: session.state,
     subject: {
       tag: "actionSpell",
       actorId: spellTargetId,
       procedureRef: requireCharacterSpellProcedureRefForTest(
-        targetTurnSession,
+        session,
         spellTargetId,
-        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+        cantripSpellInvocationRef(rayOfFrostUnitId, "spellAttackDamage"),
       ),
       mode: { tag: "ready", trigger: "saveFailed" },
     },
@@ -285,6 +285,37 @@ export function spellBattleWithTargetReadiedRay(
   if (readied.state.readiedSpells.get(spellTargetId) === undefined) {
     throw new Error("Expected target to hold the readied Ray of Frost.");
   }
+  return battleRuntimeSessionForTest({ ...session, state: readied.state });
+}
+
+export function endCasterTurnAndReadyTargetRayOfFrost(input: {
+  readonly session: BattleRuntimeSession;
+  readonly casterId: Parameters<typeof endTurn>[0]["actorId"];
+}): BattleRuntimeSession {
+  const targetTurn = endTurn({
+    state: input.session.state,
+    actorId: input.casterId,
+  });
+  if (targetTurn.tag !== "resolved") {
+    throw new Error("Expected caster End Turn before Ready setup.");
+  }
+  return readyTargetRayOfFrost(
+    battleRuntimeSessionForTest({
+      ...input.session,
+      state: targetTurn.state,
+    }),
+  );
+}
+
+export function spellBattleWithTargetReadiedRay(
+  input: SpellBattleWithTargetRayOfFrostInput = {},
+): BattleRuntimeSession {
+  const session = spellBattleWithTargetRayOfFrost(input);
+  const casterId = input.casterId ?? spellCasterId;
+  const readied = endCasterTurnAndReadyTargetRayOfFrost({
+    session,
+    casterId,
+  });
   const afterTargetTurn = endTurn({
     state: readied.state,
     actorId: spellTargetId,

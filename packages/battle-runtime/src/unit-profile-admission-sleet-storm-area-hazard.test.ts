@@ -7,6 +7,7 @@ import {
   battleActSpellSlotPresentation,
   battleActSpellPresentation,
 } from "./battle-act-composition.ts";
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { describe, expect, test } from "vitest";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { spellId } from "./identity.ts";
@@ -16,7 +17,12 @@ import {
   requireResultHole,
   movementFill,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import {
+  declineTargetReadiedSpellAfterFailedSave,
+  readyTargetRayOfFrost,
+  spellBattle,
+  spellBattleWithTargetRayOfFrost,
+} from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   singleTargetSavingThrowOutcomeFill,
   sleetStormAreaFill,
@@ -63,8 +69,22 @@ type OngoingSpellRecord = SpellRecord & {
 type OngoingOperation = OngoingSpellRecord["mechanics"]["operations"][number];
 
 function castSleetStorm() {
+  return castSleetStormForTargetTurn("withoutReadiedSpell");
+}
+
+function castSleetStormWithTargetReadiedRay() {
+  return castSleetStormForTargetTurn("withReadiedRayOfFrost");
+}
+
+function castSleetStormForTargetTurn(
+  targetTurnSetup: "withoutReadiedSpell" | "withReadiedRayOfFrost",
+) {
   const spell = spellRecord(sleetStormUnitId);
-  const state = spellBattle({
+  const state = (
+    targetTurnSetup === "withReadiedRayOfFrost"
+      ? spellBattleWithTargetRayOfFrost
+      : spellBattle
+  )({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 3, count: 1 }],
   });
@@ -86,7 +106,19 @@ function castSleetStorm() {
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Sleet Storm caster End Turn to resolve.");
   }
-  return { spell, act, cast: cast.state, targetTurn: targetTurn.state };
+  const targetTurnSession = battleRuntimeSessionForTest({
+    ...state,
+    state: targetTurn.state,
+  });
+  return {
+    spell,
+    act,
+    cast: cast.state,
+    targetTurn:
+      targetTurnSetup === "withReadiedRayOfFrost"
+        ? readyTargetRayOfFrost(targetTurnSession).state
+        : targetTurn.state,
+  };
 }
 
 function stateWithTargetConcentration(state: BattleState): BattleState {
@@ -451,6 +483,42 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
           act.subject.command === "sleetStormAreaHazardSave",
       ),
     ).toBe(false);
+  });
+
+  test("entry failure replays after a declined readied-spell Reaction and breaks the held spell", () => {
+    const { targetTurn } = castSleetStormWithTargetReadiedRay();
+    const entryAct = sleetStormAreaHazardSaveAct(
+      targetTurn,
+      spellTargetId,
+      "entersArea",
+    );
+    const entrySave = requireHole(entryAct.initialHoles, "savingThrowOutcome");
+    const awaitingReaction = resolveBattleSubject({
+      state: targetTurn,
+      subject: entryAct.subject,
+      fills: [
+        singleTargetSavingThrowOutcomeFill(entrySave, spellTargetId, false),
+      ],
+    });
+
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+    });
+    const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
+    expect(requireCombatant(declined.state, spellTargetId)).toMatchObject({
+      concentration: null,
+      conditions: expect.objectContaining({ prone: true }),
+    });
+    expect(declined.state.readiedSpells.has(spellTargetId)).toBe(false);
+    expect(
+      requireCombatant(declined.state, spellCasterId).activeEffects,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "sleetStormAreaHazard",
+        savedThisTurn: [spellTargetId],
+      }),
+    ]);
   });
 
   test("save resolution rejects a fill from the other Sleet Storm trigger hole", () => {

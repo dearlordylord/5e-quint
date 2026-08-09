@@ -16,7 +16,12 @@ import {
   abilityCheckFill,
   movementFill,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import {
+  declineTargetReadiedSpellAfterFailedSave,
+  readyTargetRayOfFrost,
+  spellBattle,
+  spellBattleWithTargetRayOfFrost,
+} from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   singleTargetSavingThrowOutcomeFill,
   spellAct,
@@ -51,8 +56,23 @@ import { discoverBattleActs, snapshotBattle } from "./index.ts";
 function castWeb(
   input: { readonly extraTargetIds?: readonly CombatantId[] } = {},
 ) {
+  return castWebForTargetTurn(input, "withoutReadiedSpell");
+}
+
+function castWebWithTargetReadiedRay() {
+  return castWebForTargetTurn({}, "withReadiedRayOfFrost");
+}
+
+function castWebForTargetTurn(
+  input: { readonly extraTargetIds?: readonly CombatantId[] },
+  targetTurnSetup: "withoutReadiedSpell" | "withReadiedRayOfFrost",
+) {
   const spell = spellRecord(webUnitId);
-  const session = spellBattle({
+  const session = (
+    targetTurnSetup === "withReadiedRayOfFrost"
+      ? spellBattleWithTargetRayOfFrost
+      : spellBattle
+  )({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 2, count: 1 }],
     ...(input.extraTargetIds === undefined
@@ -80,13 +100,17 @@ function castWeb(
   if (targetTurn.tag !== "resolved") {
     throw new Error("Expected Web caster End Turn to resolve.");
   }
+  const targetTurnSession = battleRuntimeSessionForTest({
+    ...castSession,
+    state: targetTurn.state,
+  });
   return {
     spell,
     cast: castSession,
-    targetTurn: battleRuntimeSessionForTest({
-      ...castSession,
-      state: targetTurn.state,
-    }),
+    targetTurn:
+      targetTurnSetup === "withReadiedRayOfFrost"
+        ? readyTargetRayOfFrost(targetTurnSession)
+        : targetTurnSession,
   };
 }
 
@@ -323,6 +347,43 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
           act.subject.trigger === "entersArea",
       ),
     ).toBe(false);
+  });
+
+  test("entry failure replays after a declined readied-spell Reaction", () => {
+    const { targetTurn } = castWebWithTargetReadiedRay();
+    const entryAct = webRestraintSaveAct(
+      targetTurn,
+      spellTargetId,
+      "entersArea",
+    );
+    const entrySave = requireHole(entryAct.initialHoles, "savingThrowOutcome");
+    const awaitingReaction = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: entryAct.subject,
+      fills: [
+        singleTargetSavingThrowOutcomeFill(entrySave, spellTargetId, false),
+      ],
+    });
+
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+    });
+    const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
+    const target = requireCombatant(declined.state, spellTargetId);
+    expect(target).toMatchObject({
+      conditions: expect.objectContaining({ restrained: true }),
+    });
+    expect(target.concentration).not.toBeNull();
+    expect(declined.state.readiedSpells.has(spellTargetId)).toBe(true);
+    expect(
+      requireCombatant(declined.state, spellCasterId).activeEffects,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "webRestraintHazard",
+        entrySavedThisTurn: [spellTargetId],
+      }),
+    ]);
   });
 
   test("save resolution rejects a wrong hole and a repeated entry save", () => {
