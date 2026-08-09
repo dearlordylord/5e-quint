@@ -748,7 +748,6 @@ export {
   type BattleBonusActionStandardActionSupport,
   type BattleDruidWildShapeKnownFormSupport,
   type BattleDruidWildShapeKnownFormSupportProfile,
-  type SupportedDruidWildShapeKnownFormProfile,
   type BattleFailedAbilityCheckResourceBoostSupport,
   type BattleFailedAbilityCheckResourceBoostSupportProfile,
   type BattleInitiativeProficiencyAndSwapSupport,

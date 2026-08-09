@@ -43,8 +43,8 @@ import type {
 import { isEffectAtom } from "@dnd/surface/surface/types";
 import {
   druidWildShapeKnownFormRosterFromPhase,
+  type DruidWildShapeFeatureRecord,
   isDruidWildShapeFeatureRecord,
-  type DruidWildShapeActivationPhase,
   type DruidWildShapeKnownFormsRoster,
 } from "@dnd/surface/surface/druid-wild-shape-readers";
 import type { BattleUnitRef } from "./battle-init.ts";
@@ -1048,10 +1048,6 @@ export type BattleMonkFocusBattleOptionsSupportProfile = {
     };
   };
 };
-export type SupportedDruidWildShapeKnownFormProfile =
-  BattleDruidWildShapeKnownFormSupportProfile & {
-    readonly unit: AuthoredUnitSource;
-  };
 export type BattleTacticalMasterReplacementSupportProfile = {
   readonly kind: typeof TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE;
   readonly replacementProperties: typeof TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES;
@@ -7186,9 +7182,14 @@ export function battleBardicInspirationGrantSupportForUnit(
     : null;
 }
 
-export function battleDruidWildShapeKnownFormSupportForUnit(
+type DruidWildShapeKnownFormAdmission = {
+  readonly unit: DruidWildShapeFeatureRecord;
+  readonly knownFormRoster: DruidWildShapeKnownFormsRoster;
+};
+
+function druidWildShapeKnownFormAdmissionForUnit(
   unit: AuthoredUnitSource,
-): BattleDruidWildShapeKnownFormSupport {
+): DruidWildShapeKnownFormAdmission | "unsupported" | null {
   if (
     unit.kind !== "class_feature" ||
     unit.className !== "druid" ||
@@ -7196,20 +7197,33 @@ export function battleDruidWildShapeKnownFormSupportForUnit(
   ) {
     return null;
   }
-  if (
-    !unit.mechanics.phases.some((phase) => phaseHasWildShapeTransform(phase))
-  ) {
+  let knownFormRoster: DruidWildShapeKnownFormsRoster | undefined;
+  for (const phase of unit.mechanics.phases) {
+    knownFormRoster = druidWildShapeKnownFormRosterFromPhase(phase);
+    if (knownFormRoster !== undefined) break;
+  }
+  if (knownFormRoster === undefined) {
     return null;
   }
-  /* v8 ignore start -- Malformed Wild Shape activation mechanics are rejected at profile admission; canonical known-form projection is covered. */
+  if (!isDruidWildShapeFeatureRecord(unit)) {
+    return "unsupported";
+  }
+  return { unit, knownFormRoster };
+}
+
+export function battleDruidWildShapeKnownFormSupportForUnit(
+  unit: AuthoredUnitSource,
+): BattleDruidWildShapeKnownFormSupport {
+  const admission = druidWildShapeKnownFormAdmissionForUnit(unit);
+  if (admission === null || admission === "unsupported") {
+    return admission;
+  }
   return (
-    druidWildShapeKnownFormSupportProfile(
-      parseDruidWildShapeKnownFormUnitFeatureProfile(unit, [
-        { className: "druid", level: classLevel(unit.acquiredAtLevel) },
-      ]),
+    druidWildShapeKnownFormProfileForAdmission(
+      admission,
+      classLevel(admission.unit.acquiredAtLevel),
     ) ?? "unsupported"
   );
-  /* v8 ignore stop */
 }
 
 export function battleDruidWildCompanionSpellCastSupportForUnit(
@@ -7246,33 +7260,24 @@ function battleDruidWildShapeKnownFormSupportForUnitAtClassLevels(
   unit: AuthoredUnitSource,
   classLevels: readonly CharacterBattleClassLevel[],
 ): BattleDruidWildShapeKnownFormSupport {
-  if (
-    unit.kind !== "class_feature" ||
-    unit.className !== "druid" ||
-    unit.mechanics.family !== "activation"
-  ) {
-    return null;
+  const admission = druidWildShapeKnownFormAdmissionForUnit(unit);
+  if (admission === null || admission === "unsupported") {
+    return admission;
   }
-  if (
-    !unit.mechanics.phases.some((phase) => phaseHasWildShapeTransform(phase))
-  ) {
-    return null;
-  }
-  const profile = parseDruidWildShapeKnownFormUnitFeatureProfile(
-    unit,
+  const actualClassLevel = findCharacterClassLevel(
     classLevels,
+    admission.unit.className,
   );
-  if (profile !== null) {
-    return druidWildShapeKnownFormSupportProfile(profile);
-  }
-  const actualClassLevel = findCharacterClassLevel(classLevels, unit.className);
   if (
-    isDruidWildShapeFeatureRecord(unit) &&
-    (actualClassLevel === undefined || actualClassLevel < unit.acquiredAtLevel)
+    actualClassLevel === undefined ||
+    actualClassLevel < admission.unit.acquiredAtLevel
   ) {
     return null;
   }
-  return "unsupported";
+  return (
+    druidWildShapeKnownFormProfileForAdmission(admission, actualClassLevel) ??
+    "unsupported"
+  );
 }
 
 function battleTacticalMasterReplacementSupportForUnitAtClassLevels(
@@ -7336,26 +7341,34 @@ function parseBattleUnitSupportClassLevels(
 function parseDruidWildShapeKnownFormUnitFeatureProfile(
   unit: AuthoredUnitSource,
   classLevels: readonly CharacterBattleClassLevel[],
-): SupportedDruidWildShapeKnownFormProfile | null {
-  if (!isDruidWildShapeFeatureRecord(unit)) {
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "druidWildShapeKnownForm" }
+> | null {
+  const support = battleDruidWildShapeKnownFormSupportForUnitAtClassLevels(
+    unit,
+    classLevels,
+  );
+  if (support === null || support === "unsupported") {
     return null;
   }
-  const classLevel = findCharacterClassLevel(classLevels, unit.className);
-  if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
-    return null;
-  }
-  const phase = unit.mechanics.phases[0];
-  const knownFormRoster = druidWildShapeKnownFormRosterFromPhase(phase);
-  const knownFormCount =
-    knownFormRoster === undefined
-      ? undefined
-      : classLevelTotalChoicesAtLevel(knownFormRoster.knownForms, classLevel);
-  if (knownFormRoster === undefined || knownFormCount == null) {
+  return { ...support, unit };
+}
+
+function druidWildShapeKnownFormProfileForAdmission(
+  admission: DruidWildShapeKnownFormAdmission,
+  classLevel: ClassLevel,
+): BattleDruidWildShapeKnownFormSupportProfile | null {
+  const knownFormRoster = admission.knownFormRoster;
+  const knownFormCount = classLevelTotalChoicesAtLevel(
+    knownFormRoster.knownForms,
+    classLevel,
+  );
+  if (knownFormCount === null) {
     return null;
   }
   return {
     kind: DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
-    unit,
     classLevel,
     knownFormRoster: {
       creatureType: knownFormRoster.creatureType,
@@ -7371,24 +7384,6 @@ function parseDruidWildShapeKnownFormUnitFeatureProfile(
           : "forbidden",
     },
   };
-}
-
-function druidWildShapeKnownFormSupportProfile(
-  profile: SupportedDruidWildShapeKnownFormProfile | null,
-): BattleDruidWildShapeKnownFormSupportProfile | null {
-  return profile === null
-    ? null
-    : {
-        kind: profile.kind,
-        classLevel: profile.classLevel,
-        knownFormRoster: profile.knownFormRoster,
-      };
-}
-
-function phaseHasWildShapeTransform(
-  phase: DruidWildShapeActivationPhase,
-): boolean {
-  return druidWildShapeKnownFormRosterFromPhase(phase) !== undefined;
 }
 
 function classLevelTotalChoicesAtLevel(

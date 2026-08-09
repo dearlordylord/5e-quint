@@ -29,6 +29,8 @@ import {
   Hp,
 } from "@dnd/shared/types";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import druidWildShapeInput from "../../surface/content/druid_wild_shape.json";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { expect, test } from "vitest";
@@ -37,6 +39,7 @@ import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
 } from "./character-battle-resource-execution.ts";
+import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import { spellDefinitionHasPricedOrConsumedMaterialComponent } from "./battle-reducer/spells-invocation-guards.ts";
 
 type CharacterSeedInput = Parameters<typeof characterSeed>[0];
@@ -82,6 +85,7 @@ import {
   activeDruidWildShapeEffect,
   activeDruidWildShapeForm,
   applyBattleHeldWeaponPickup,
+  battleDruidWildShapeKnownFormSupportForUnit,
   battleStateWithGroundObjects,
   battleAvailableDruidWildShapeKnownForms,
   BattleFillSchema,
@@ -123,6 +127,25 @@ const ratId = "stat_block_rat";
 const ridingHorseId = "stat_block_riding_horse";
 const lizardId = "stat_block_lizard";
 const catId = "stat_block_cat";
+
+type DruidWildShapeInputPhase =
+  (typeof druidWildShapeInput.mechanics.phases)[number];
+
+function syntheticDruidWildShapeUnit(
+  id: string,
+  mutatePhase: (phase: DruidWildShapeInputPhase) => unknown,
+) {
+  return decodeUnitRecordSync({
+    ...druidWildShapeInput,
+    id,
+    name: id,
+    provenance: { kind: "synthetic-test", section: id },
+    mechanics: {
+      ...druidWildShapeInput.mechanics,
+      phases: druidWildShapeInput.mechanics.phases.map(mutatePhase),
+    },
+  });
+}
 const wolfId = "stat_block_wolf";
 const spiderId = "stat_block_spider";
 const syntheticCoordinatedShapeId = "synthetic_coordinated_shape";
@@ -2288,6 +2311,99 @@ test("rejects ineligible known Beast forms before battle initialization", () => 
       "Druid Wild Shape battle forms require eligible Beast Stat Blocks.",
     );
   }
+});
+
+test("projects canonical level-2 Wild Shape access and rejects a transform-free synthetic record", () => {
+  const wildShape = unitLibrary.requireUnit("druid_wild_shape");
+  const levelTwo = [
+    { className: "druid", level: ClassLevel.make(2) },
+  ] as const satisfies readonly CharacterBattleClassLevel[];
+  const withoutTransform = syntheticDruidWildShapeUnit(
+    "synthetic_druid_wild_shape_without_transform",
+    (phase) => ({
+      ...phase,
+      effects: phase.effects.filter(
+        (effect) => effect.kind !== "transform_target",
+      ),
+    }),
+  );
+
+  expect(parseSupportedUnitFeatureProfile(wildShape, levelTwo)).toEqual({
+    kind: "druidWildShapeKnownForm",
+    unit: wildShape,
+    classLevel: 2,
+    knownFormRoster: {
+      creatureType: "beast",
+      count: 4,
+      maxChallengeRating: 0.25,
+      flySpeed: "forbidden",
+    },
+  });
+  expect(
+    parseSupportedUnitFeatureProfile(withoutTransform, levelTwo),
+  ).toBeNull();
+});
+
+test("rejects decoded synthetic Wild Shape mechanics outside the admitted support profile", () => {
+  const classLevels = [
+    { className: "druid", level: ClassLevel.make(2) },
+  ] as const satisfies readonly CharacterBattleClassLevel[];
+  const unsupportedTemporaryHitPoints = syntheticDruidWildShapeUnit(
+    "synthetic_druid_wild_shape_temp_hp",
+    (phase) => ({
+      ...phase,
+      effects: phase.effects.map((effect) =>
+        "amount" in effect && effect.kind === "grant_temp_hp"
+          ? {
+              ...effect,
+              amount: {
+                ...effect.amount,
+                base: { ...effect.amount.base, flat: 2 },
+              },
+            }
+          : effect,
+      ),
+    }),
+  );
+  const additionalChoiceEncoding = syntheticDruidWildShapeUnit(
+    "synthetic_druid_wild_shape_additional_choices",
+    (phase) => ({
+      ...phase,
+      effects: phase.effects.map((effect) =>
+        "newForm" in effect &&
+        effect.kind === "transform_target" &&
+        effect.newForm.kind === "known_forms_roster"
+          ? {
+              ...effect,
+              newForm: {
+                ...effect.newForm,
+                knownForms: {
+                  kind: "class_level_additional_choices",
+                  initial: 1,
+                  increases: [{ atLevel: 3, choose: 1 }],
+                },
+              },
+            }
+          : effect,
+      ),
+    }),
+  );
+
+  expect(
+    battleDruidWildShapeKnownFormSupportForUnit(unsupportedTemporaryHitPoints),
+  ).toBe("unsupported");
+  expect(
+    parseSupportedUnitFeatureProfile(
+      unsupportedTemporaryHitPoints,
+      classLevels,
+    ),
+  ).toBeNull();
+  expect(
+    battleDruidWildShapeKnownFormSupportForUnit(additionalChoiceEncoding),
+  ).toBe("unsupported");
+  expect(
+    parseSupportedUnitFeatureProfile(additionalChoiceEncoding, classLevels),
+  ).toBeNull();
 });
 
 test("rejects duplicate supplied Wild Shape form records before battle initialization", () => {
