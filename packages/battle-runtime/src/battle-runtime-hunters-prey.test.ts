@@ -1,7 +1,7 @@
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.hunters-prey
 import { describe, expect, test } from "vitest";
-import { classLevel, Hp, movementFeet } from "@dnd/shared/types";
+import { attackBonus, classLevel, Hp, movementFeet } from "@dnd/shared/types";
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   battleUnitRefWithSupportProfiles,
@@ -15,6 +15,7 @@ import {
   attackTargetFill,
   attackExecutionSelectionForSubjectForTest,
   attackTargetSpatialFact,
+  battleAbilityModifier,
   battleId,
   battleProcedureExecutionRefForSpellHoleForTest,
   characterBattleFeatureInitForTest,
@@ -1014,14 +1015,19 @@ describe("battle runtime: Hunter's Prey", () => {
     ).toEqual([expect.objectContaining({ attackerId: fighterId })]);
   });
 
-  test("Horde Breaker resumes its follow-up after declining primary damage Reaction", () => {
+  test("Horde Breaker resumes a zero-damage extra attack through primary and follow-up damage Reactions", () => {
     const baseState = startBattleRight({
       battleId: battleId("battle-hunters-prey-primary-damage-resume"),
       combatants: [
         characterSeed({
           initiative: 20,
           characterUnitRefs: [huntersPreyUnitRef("hordeBreaker")],
-          attack: testLongswordAttack(),
+          attack: {
+            ...testLongswordAttack(),
+            abilityModifier: battleAbilityModifier(-1),
+            attackBonus: attackBonus(1),
+            damageAbilityModifier: battleAbilityModifier(-1),
+          },
         }),
         statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
         statBlockCreatureInit({
@@ -1050,7 +1056,7 @@ describe("battle runtime: Hunter's Prey", () => {
       state,
       primaryTarget,
       primaryRoll,
-      { total: 15, naturalD20: 10 },
+      { total: 15, naturalD20: 14 },
       subject,
       goblinId,
     );
@@ -1061,8 +1067,8 @@ describe("battle runtime: Hunter's Prey", () => {
         goblinId,
         attackExecutionSelectionForSubjectForTest(subject),
       ),
-      attackRollFill(primaryRoll, { total: 15, naturalD20: 10 }),
-      damageRollFillWithGroups(primaryDamage, [[1]]),
+      attackRollFill(primaryRoll, { total: 15, naturalD20: 14 }),
+      damageRollFillWithGroups(primaryDamage, [[4]]),
     ];
     const awaitingDamageReaction = resolveBattleSubject({
       state,
@@ -1080,6 +1086,25 @@ describe("battle runtime: Hunter's Prey", () => {
     if (pendingInterrupt === null) {
       throw new Error("Expected a pending primary attack-damage interrupt.");
     }
+    const primaryCheckpoint =
+      awaitingDamageReaction.state.interruptStack.at(-1);
+    if (
+      primaryCheckpoint?.kind !== "interruptCheckpoint" ||
+      primaryCheckpoint.frame.trigger !== "attackDamage"
+    ) {
+      throw new Error(
+        "Expected a primary attack-damage interruption checkpoint.",
+      );
+    }
+    expect(primaryCheckpoint.frame.continuation).toMatchObject({
+      kind: "attackDamage",
+      target: { combatantId: goblinId },
+      attackResult: { total: 15, naturalD20: 14 },
+      damageInput: {
+        kind: "rolledDamage",
+        damageRollByType: [{ damageType: "slashing", amount: 3 }],
+      },
+    });
     const declined = resolveBattleInterrupt({
       state: awaitingDamageReaction.state,
       fill: interruptDecisionFill(pendingInterrupt.decisionHole, {
@@ -1096,11 +1121,128 @@ describe("battle runtime: Hunter's Prey", () => {
         "Expected Horde Breaker decision after declining damage Reaction.",
       );
     }
-    expect(declined.state.combatants.get(goblinId)?.hp).toBe(Hp(6));
+    expect(declined.state.combatants.get(goblinId)?.hp).toBe(Hp(7));
     expect(declined.state.combatants.get(skeletonId)?.hp).toBe(Hp(10));
     expect(
       declined.state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn,
     ).toEqual([]);
+
+    const decision = requireHole(declined, "unitFeatureDecision");
+    const attack = attackActionOptionForSubject(declined.state, subject);
+    if (attack === undefined) {
+      throw new Error("Expected Horde Breaker weapon attack option.");
+    }
+    const decisionFill = unitFeatureDecisionFill(decision, "use");
+    const target = requireHole(
+      resolveHuntersPreyHordeBreakerContinuation({
+        state: declined.state,
+        subject,
+        firstTargetId: goblinId,
+        attack,
+        fills: [decisionFill],
+        handledInterruptTrigger: undefined,
+      }),
+      "targetChoice",
+    );
+    const secondTargetFill = targetFill(target, skeletonId, [
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
+      {
+        kind: "hordeBreakerSecondTargetEligible",
+        attackerId: fighterId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(target),
+        originalTargetId: goblinId,
+        secondTargetId: skeletonId,
+      },
+    ]);
+    const followupFills = [decisionFill, secondTargetFill];
+    const hordeRoll = requireHole(
+      resolveHuntersPreyHordeBreakerContinuation({
+        state: declined.state,
+        subject,
+        firstTargetId: goblinId,
+        attack,
+        fills: followupFills,
+        handledInterruptTrigger: undefined,
+      }),
+      "attackRoll",
+    );
+    const fillsThroughRoll = [
+      ...followupFills,
+      attackRollFill(hordeRoll, { total: 15, naturalD20: 14 }),
+    ];
+    const hordeDamage = requireHole(
+      resolveHuntersPreyHordeBreakerContinuation({
+        state: declined.state,
+        subject,
+        firstTargetId: goblinId,
+        attack,
+        fills: fillsThroughRoll,
+        handledInterruptTrigger: undefined,
+      }),
+      "rolledDice",
+    );
+    const awaitingFollowupDamageReaction =
+      resolveHuntersPreyHordeBreakerContinuation({
+        state: declined.state,
+        subject,
+        firstTargetId: goblinId,
+        attack,
+        fills: [
+          ...fillsThroughRoll,
+          damageRollFillWithGroups(hordeDamage, [[1]]),
+        ],
+        handledInterruptTrigger: undefined,
+      });
+    expect(awaitingFollowupDamageReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "attackDamage" }],
+    });
+    if (awaitingFollowupDamageReaction.tag !== "needsHoles") {
+      throw new Error("Expected Horde Breaker attack-damage Reaction window.");
+    }
+    const followupInterrupt =
+      awaitingFollowupDamageReaction.snapshot.pendingInterrupt;
+    if (followupInterrupt === null) {
+      throw new Error("Expected a pending Horde Breaker damage interrupt.");
+    }
+    const followupCheckpoint =
+      awaitingFollowupDamageReaction.state.interruptStack.at(-1);
+    if (
+      followupCheckpoint?.kind !== "interruptCheckpoint" ||
+      followupCheckpoint.frame.trigger !== "attackDamage"
+    ) {
+      throw new Error(
+        "Expected a procedure-bound attack-damage interruption checkpoint.",
+      );
+    }
+    expect(followupCheckpoint.frame.continuation).toMatchObject({
+      kind: "attackDamage",
+      target: { combatantId: skeletonId },
+      attackResult: { total: 15, naturalD20: 14 },
+      damageInput: {
+        kind: "rolledDamage",
+        damageRollByType: [{ damageType: "slashing", amount: 0 }],
+      },
+    });
+    const resolved = requireResolved(
+      resolveBattleInterrupt({
+        state: awaitingFollowupDamageReaction.state,
+        fill: interruptDecisionFill(followupInterrupt.decisionHole, {
+          kind: "decline",
+          responderId: goblinId,
+        }),
+      }),
+    );
+    expect(resolved.state.combatants.get(goblinId)?.hp).toBe(Hp(7));
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(Hp(10));
+    expect(
+      resolved.state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn,
+    ).toEqual([expect.objectContaining({ attackerId: fighterId })]);
   });
 
   test("Horde Breaker can be used after the original weapon attack misses", () => {

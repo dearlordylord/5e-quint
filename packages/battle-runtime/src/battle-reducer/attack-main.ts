@@ -220,8 +220,12 @@ import {
 } from "./spell-reroll-issues.ts";
 import type {
   AttackBattleResolutionInput,
+  BattleAttackDamageDisposition,
+  BattleAttackDamageDispositionHole,
   BattleAttackHostSubject,
   BattleAttackDamageEvent,
+  BattleAttackRollHole,
+  BattleAttackRollResult,
   BattleAfterDamageEvent,
   AttackDamageRider,
   BattleCreatureState,
@@ -3218,6 +3222,633 @@ function weaponMasteryCleaveAfterPrimaryDamageContinuation(input: {
       };
 }
 
+type ParsedAttackFillSet = Extract<AttackFillSet, { readonly tag: "ok" }>;
+
+type WeaponMasteryTurnAdditionalWeaponAttackFills = {
+  readonly decision: ParsedAttackFillSet["weaponMasteryCleaveDecision"];
+  readonly target: ParsedAttackFillSet["weaponMasteryCleaveTarget"];
+  readonly attackRoll: ParsedAttackFillSet["weaponMasteryCleaveAttackRoll"];
+  readonly damageRoll: ParsedAttackFillSet["weaponMasteryCleaveDamageRoll"];
+  readonly damageDispositionFilled: boolean;
+};
+
+type ProcedureExecutionAdditionalWeaponAttackFills = {
+  readonly decision: ParsedAttackFillSet["huntersPreyHordeBreakerDecision"];
+  readonly target: ParsedAttackFillSet["huntersPreyHordeBreakerTarget"];
+  readonly attackRoll: ParsedAttackFillSet["huntersPreyHordeBreakerAttackRoll"];
+  readonly damageRoll: ParsedAttackFillSet["huntersPreyHordeBreakerDamageRoll"];
+  readonly damageDispositionFilled: boolean;
+};
+
+type AdditionalWeaponAttackFills =
+  | WeaponMasteryTurnAdditionalWeaponAttackFills
+  | ProcedureExecutionAdditionalWeaponAttackFills;
+
+type AdditionalWeaponAttackActiveFills<
+  Fills extends AdditionalWeaponAttackFills,
+> = Pick<
+  Fills,
+  "target" | "attackRoll" | "damageRoll" | "damageDispositionFilled"
+>;
+
+type WeaponMasteryTurnAdditionalWeaponAttackFamily = {
+  readonly kind: "weaponMasteryTurn";
+  readonly fills: AdditionalWeaponAttackActiveFills<WeaponMasteryTurnAdditionalWeaponAttackFills>;
+};
+
+type ProcedureExecutionAdditionalWeaponAttackFamily = {
+  readonly kind: "procedureExecution";
+  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly fills: AdditionalWeaponAttackActiveFills<ProcedureExecutionAdditionalWeaponAttackFills>;
+};
+
+type AdditionalWeaponAttackFamily =
+  | WeaponMasteryTurnAdditionalWeaponAttackFamily
+  | ProcedureExecutionAdditionalWeaponAttackFamily;
+
+type AdditionalWeaponAttackDecisionCommon = {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly decisionHole: BattleUnitFeatureDecisionHole | null;
+  readonly attack: SupportedAttackActionOption;
+};
+
+type WeaponMasteryTurnAdditionalWeaponAttackDecisionInput =
+  AdditionalWeaponAttackDecisionCommon & {
+    readonly kind: "weaponMasteryTurn";
+    readonly fills: WeaponMasteryTurnAdditionalWeaponAttackFills;
+  };
+
+type ProcedureExecutionAdditionalWeaponAttackDecisionInput =
+  AdditionalWeaponAttackDecisionCommon & {
+    readonly kind: "procedureExecution";
+    readonly fills: ProcedureExecutionAdditionalWeaponAttackFills;
+    readonly selection: ReturnType<typeof huntersPreyHordeBreakerSelection>;
+  };
+
+type AdditionalWeaponAttackDecisionFamily =
+  | {
+      readonly kind: "weaponMasteryTurn";
+      readonly fills: WeaponMasteryTurnAdditionalWeaponAttackFills;
+    }
+  | {
+      readonly kind: "procedureExecution";
+      readonly procedureRef: BattleProcedureExecutionRef;
+      readonly fills: ProcedureExecutionAdditionalWeaponAttackFills;
+    };
+
+type AdditionalWeaponAttackDecisionResolution<
+  Family extends AdditionalWeaponAttackFamily,
+> =
+  | { readonly tag: "ok"; readonly state: BattleState }
+  | { readonly tag: "result"; readonly result: BattleResolutionResult }
+  | {
+      readonly tag: "use";
+      readonly attack: Extract<
+        SupportedAttackActionOption,
+        { readonly kind: "weapon" }
+      >;
+      readonly family: Family;
+    };
+
+type AdditionalWeaponAttackMessages = {
+  readonly name: string;
+  readonly invalidEligibility: string;
+  readonly wrongDecisionHole: string;
+  readonly fillsRequireUse: string;
+  readonly requiresWeapon: string;
+  readonly damageAfterMiss: string;
+};
+
+function additionalWeaponAttackMessages(
+  kind: AdditionalWeaponAttackFamily["kind"],
+): AdditionalWeaponAttackMessages {
+  return Match.value(kind).pipe(
+    Match.when("weaponMasteryTurn", () => ({
+      name: "Weapon Mastery additional weapon attack",
+      invalidEligibility:
+        "Weapon Mastery additional weapon attack is only valid after an eligible weapon hit.",
+      wrongDecisionHole:
+        "Weapon Mastery additional weapon attack decision uses the wrong hole.",
+      fillsRequireUse:
+        "Weapon Mastery additional weapon attack fills require using the attack.",
+      requiresWeapon:
+        "Weapon Mastery additional weapon attack requires a weapon attack.",
+      damageAfterMiss:
+        "Weapon Mastery additional weapon attack damage can only be filled after a hit.",
+    })),
+    Match.when("procedureExecution", () => ({
+      name: "Procedure-bound additional weapon attack",
+      invalidEligibility:
+        "Procedure-bound additional weapon attack is only valid after an eligible selected weapon attack.",
+      wrongDecisionHole:
+        "Procedure-bound additional weapon attack decision uses the wrong hole.",
+      fillsRequireUse:
+        "Procedure-bound additional weapon attack fills require using the attack.",
+      requiresWeapon:
+        "Procedure-bound additional weapon attack requires a weapon attack.",
+      damageAfterMiss:
+        "Procedure-bound additional weapon attack damage can only be filled after a hit.",
+    })),
+    Match.exhaustive,
+  );
+}
+
+function weaponMasteryCleaveAdditionalWeaponAttackFills(
+  fillSet: ParsedAttackFillSet,
+): WeaponMasteryTurnAdditionalWeaponAttackFills {
+  return {
+    decision: fillSet.weaponMasteryCleaveDecision,
+    target: fillSet.weaponMasteryCleaveTarget,
+    attackRoll: fillSet.weaponMasteryCleaveAttackRoll,
+    damageRoll: fillSet.weaponMasteryCleaveDamageRoll,
+    damageDispositionFilled: fillSet.weaponMasteryCleaveDamageDispositionFilled,
+  };
+}
+
+function huntersPreyHordeBreakerAdditionalWeaponAttackFills(
+  fillSet: ParsedAttackFillSet,
+): ProcedureExecutionAdditionalWeaponAttackFills {
+  return {
+    decision: fillSet.huntersPreyHordeBreakerDecision,
+    target: fillSet.huntersPreyHordeBreakerTarget,
+    attackRoll: fillSet.huntersPreyHordeBreakerAttackRoll,
+    damageRoll: fillSet.huntersPreyHordeBreakerDamageRoll,
+    damageDispositionFilled:
+      fillSet.huntersPreyHordeBreakerDamageDispositionFilled,
+  };
+}
+
+function additionalWeaponAttackFillsAreAbsent(
+  fills: AdditionalWeaponAttackFills,
+): boolean {
+  return (
+    fills.decision === undefined &&
+    additionalWeaponAttackFillsAfterDecisionAreAbsent(fills)
+  );
+}
+
+function additionalWeaponAttackFillsAfterDecisionAreAbsent(
+  fills: AdditionalWeaponAttackFills,
+): boolean {
+  return (
+    fills.target === undefined &&
+    fills.attackRoll === undefined &&
+    fills.damageRoll === undefined &&
+    !fills.damageDispositionFilled
+  );
+}
+
+function resolveAdditionalWeaponAttackDecision(
+  input: WeaponMasteryTurnAdditionalWeaponAttackDecisionInput,
+): AdditionalWeaponAttackDecisionResolution<WeaponMasteryTurnAdditionalWeaponAttackFamily>;
+function resolveAdditionalWeaponAttackDecision(
+  input: ProcedureExecutionAdditionalWeaponAttackDecisionInput,
+): AdditionalWeaponAttackDecisionResolution<ProcedureExecutionAdditionalWeaponAttackFamily>;
+function resolveAdditionalWeaponAttackDecision(
+  input:
+    | WeaponMasteryTurnAdditionalWeaponAttackDecisionInput
+    | ProcedureExecutionAdditionalWeaponAttackDecisionInput,
+): AdditionalWeaponAttackDecisionResolution<AdditionalWeaponAttackFamily> {
+  const messages = additionalWeaponAttackMessages(input.kind);
+  if (input.decisionHole === null) {
+    /* v8 ignore start -- Malformed fill set: additional-weapon-attack fills cannot exist when the completed primary attack is ineligible. */
+    if (!additionalWeaponAttackFillsAreAbsent(input.fills)) {
+      return {
+        tag: "result",
+        result: invalidResult(
+          input.state,
+          "invalidFill",
+          messages.invalidEligibility,
+        ),
+      };
+    }
+    /* v8 ignore stop */
+    return { tag: "ok", state: input.state };
+  }
+  const decisionHole = input.decisionHole;
+  return Match.value(input).pipe(
+    byKind("weaponMasteryTurn", (weaponMasteryInput) =>
+      resolveAdditionalWeaponAttackDecisionForFamily({
+        state: weaponMasteryInput.state,
+        subject: weaponMasteryInput.subject,
+        attack: weaponMasteryInput.attack,
+        decisionHole,
+        family: {
+          kind: "weaponMasteryTurn",
+          fills: weaponMasteryInput.fills,
+        },
+      }),
+    ),
+    byKind("procedureExecution", (procedureInput) => {
+      /* v8 ignore start -- Stale subject: an emitted Horde Breaker decision may be replayed only while its execution binding remains active. */
+      if (procedureInput.selection === null) {
+        return {
+          tag: "result" as const,
+          result: invalidResult(
+            procedureInput.state,
+            "staleSubject",
+            "Procedure-bound additional weapon attack execution binding is no longer available.",
+          ),
+        };
+      }
+      /* v8 ignore stop */
+      return resolveAdditionalWeaponAttackDecisionForFamily({
+        state: procedureInput.state,
+        subject: procedureInput.subject,
+        attack: procedureInput.attack,
+        decisionHole,
+        family: {
+          kind: "procedureExecution",
+          procedureRef: procedureInput.selection.procedureRef,
+          fills: procedureInput.fills,
+        },
+      });
+    }),
+    Match.exhaustive,
+  );
+}
+
+function resolveAdditionalWeaponAttackDecisionForFamily(
+  input: Omit<AdditionalWeaponAttackDecisionCommon, "decisionHole"> & {
+    readonly decisionHole: BattleUnitFeatureDecisionHole;
+    readonly family: AdditionalWeaponAttackDecisionFamily;
+  },
+): AdditionalWeaponAttackDecisionResolution<AdditionalWeaponAttackFamily> {
+  const { fills } = input.family;
+  const messages = additionalWeaponAttackMessages(input.family.kind);
+  if (fills.decision === undefined) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [
+        input.decisionHole,
+      ]),
+    };
+  }
+  /* v8 ignore start -- Malformed fill: an additional-weapon-attack decision must answer the exact emitted decision hole. */
+  if (fills.decision.holeId !== input.decisionHole.holeId) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        messages.wrongDecisionHole,
+      ),
+    };
+  }
+  /* v8 ignore stop */
+  if (fills.decision.value === "decline") {
+    /* v8 ignore start -- Malformed fill set: declining an additional weapon attack exposes none of its target, attack-roll, or damage holes. */
+    if (!additionalWeaponAttackFillsAfterDecisionAreAbsent(fills)) {
+      return {
+        tag: "result",
+        result: invalidResult(
+          input.state,
+          "invalidFill",
+          messages.fillsRequireUse,
+        ),
+      };
+    }
+    /* v8 ignore stop */
+    return { tag: "ok", state: input.state };
+  }
+  /* v8 ignore start -- Internal eligibility invariant: only a weapon attack can emit either additional-weapon-attack decision. */
+  if (input.attack.kind !== "weapon") {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        messages.requiresWeapon,
+      ),
+    };
+  }
+  /* v8 ignore stop */
+  const family = Match.value(input.family).pipe(
+    byKind("weaponMasteryTurn", (weaponMasteryFamily) => ({
+      kind: "weaponMasteryTurn" as const,
+      fills: additionalWeaponAttackActiveFills(weaponMasteryFamily.fills),
+    })),
+    byKind("procedureExecution", (procedureFamily) => ({
+      kind: "procedureExecution" as const,
+      procedureRef: procedureFamily.procedureRef,
+      fills: additionalWeaponAttackActiveFills(procedureFamily.fills),
+    })),
+    Match.exhaustive,
+  );
+  return { tag: "use", attack: input.attack, family };
+}
+
+function additionalWeaponAttackActiveFills<
+  Fills extends AdditionalWeaponAttackFills,
+>(fills: Fills): AdditionalWeaponAttackActiveFills<Fills> {
+  return {
+    target: fills.target,
+    attackRoll: fills.attackRoll,
+    damageRoll: fills.damageRoll,
+    damageDispositionFilled: fills.damageDispositionFilled,
+  };
+}
+
+type AdditionalWeaponAttackRollFill = NonNullable<
+  AdditionalWeaponAttackFills["attackRoll"]
+>;
+
+type AdditionalWeaponAttackRollResolution =
+  | { readonly tag: "result"; readonly result: BattleResolutionResult }
+  | {
+      readonly tag: "ok";
+      readonly fill: AdditionalWeaponAttackRollFill;
+      readonly attackRoll: BattleAttackRollResult;
+    };
+
+function resolveAdditionalWeaponAttackRoll(input: {
+  readonly state: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly attack: Extract<
+    SupportedAttackActionOption,
+    { readonly kind: "weapon" }
+  >;
+  readonly family: AdditionalWeaponAttackFamily;
+  readonly targetId: CombatantId;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+  readonly attackRollHole: BattleAttackRollHole;
+}): AdditionalWeaponAttackRollResolution {
+  const { attackRoll } = input.family.fills;
+  if (attackRoll === undefined) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [
+        input.attackRollHole,
+      ]),
+    };
+  }
+  const requiredRollMode = requiredAttackRollMode(
+    input.state,
+    input.subject.actorId,
+    input.targetId,
+    input.attack,
+    input.targetSpatialFacts,
+  );
+  const { name } = additionalWeaponAttackMessages(input.family.kind);
+  /* v8 ignore start -- Malformed fill: an additional-weapon-attack roll must satisfy the admitted d20 result schema. */
+  if (!attackRollResultIsValid(attackRoll.value)) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        `${name} attack roll must be a valid attack roll.`,
+      ),
+    };
+  }
+  /* v8 ignore stop */
+  const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
+    attackRoll.value,
+  );
+  /* v8 ignore start -- Malformed fill: an additional weapon attack cannot carry a spell-attack reroll selection. */
+  if (spellAttackRerollIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(input.state, "invalidFill", spellAttackRerollIssue),
+    };
+  }
+  /* v8 ignore stop */
+  /* v8 ignore start -- Malformed fill: roll mode must match the Advantage and Disadvantage facts used to emit this additional-attack hole. */
+  if (!attackRollModeMatches(attackRoll.value, requiredRollMode)) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        `${name} attack roll mode does not match current Advantage and Disadvantage sources.`,
+      ),
+    };
+  }
+  /* v8 ignore stop */
+  const attacker = input.state.combatants.get(input.subject.actorId);
+  if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor: attacker,
+      originalNaturalD20: Number(attackRoll.value.naturalD20),
+      rollMode: attackRoll.value.rollMode,
+      rolledD20s: attackRoll.value.rolledD20s,
+      decision: attackRoll.value.d20TestNaturalOneReroll,
+    })
+  ) {
+    return {
+      tag: "result",
+      result: needsHolesResult(input.state, input.subject, [
+        attackRollHoleWithD20TestNaturalOneRerollOption(input.attackRollHole),
+      ]),
+    };
+  }
+  const naturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
+    actor: attacker,
+    total: attackRoll.value.total,
+    originalNaturalD20: Number(attackRoll.value.naturalD20),
+    rollMode: attackRoll.value.rollMode,
+    rolledD20s: attackRoll.value.rolledD20s,
+    decision: attackRoll.value.d20TestNaturalOneReroll,
+    requiredRollMode,
+  });
+  /* v8 ignore start -- Malformed fill: a natural-one reroll decision must match the option attached to this exact additional-attack roll. */
+  if (naturalOneRerollIssue !== null) {
+    return {
+      tag: "result",
+      result: invalidResult(input.state, "invalidFill", naturalOneRerollIssue),
+    };
+  }
+  /* v8 ignore stop */
+  return {
+    tag: "ok",
+    fill: attackRoll,
+    attackRoll: effectiveD20TestNaturalOneRerollAttackRoll(attackRoll.value),
+  };
+}
+
+function additionalWeaponAttackTargetSpatialFacts(
+  target: NonNullable<AdditionalWeaponAttackFills["target"]>,
+): readonly BattleTargetSpatialFact[] {
+  return target.spatialFacts ?? [];
+}
+
+function recordAdditionalWeaponAttackUsed(
+  state: BattleState,
+  attackerId: CombatantId,
+  family: AdditionalWeaponAttackFamily,
+): BattleState {
+  return Match.value(family).pipe(
+    byKind("weaponMasteryTurn", () =>
+      recordWeaponMasteryCleaveUsed(state, attackerId),
+    ),
+    byKind("procedureExecution", ({ procedureRef }) =>
+      recordHuntersPreyHordeBreakerUsed(state, attackerId, procedureRef),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function resolveMissedAdditionalWeaponAttack(input: {
+  readonly state: BattleState;
+  readonly invalidFillState: BattleState;
+  readonly attackerId: CombatantId;
+  readonly hit: boolean;
+  readonly family: AdditionalWeaponAttackFamily;
+}):
+  | { readonly tag: "hit" }
+  | { readonly tag: "ok"; readonly state: BattleState }
+  | { readonly tag: "result"; readonly result: BattleResolutionResult } {
+  if (!input.hit) {
+    /* v8 ignore start -- Malformed fill set: a missed additional weapon attack exposes no damage-roll hole. */
+    if (input.family.fills.damageRoll !== undefined) {
+      return {
+        tag: "result",
+        result: invalidResult(
+          input.invalidFillState,
+          "invalidFill",
+          additionalWeaponAttackMessages(input.family.kind).damageAfterMiss,
+        ),
+      };
+    }
+    /* v8 ignore stop */
+    return {
+      tag: "ok",
+      state: recordAdditionalWeaponAttackUsed(
+        input.state,
+        input.attackerId,
+        input.family,
+      ),
+    };
+  }
+  return { tag: "hit" };
+}
+
+type AdditionalWeaponAttackDamageFamily<
+  Family extends AdditionalWeaponAttackFamily = AdditionalWeaponAttackFamily,
+> = Family extends AdditionalWeaponAttackFamily
+  ? Omit<Family, "fills"> & {
+      readonly fills: Family["fills"] & {
+        readonly damageRoll: NonNullable<Family["fills"]["damageRoll"]>;
+      };
+    }
+  : never;
+
+type AdditionalWeaponAttackDamageInput = {
+  readonly family: AdditionalWeaponAttackDamageFamily;
+  readonly state: BattleState;
+  readonly invalidFillState: BattleState;
+  readonly subject: BattleAttackHostSubject;
+  readonly target: BattleCreatureState;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+  readonly attackRoll: BattleAttackRollResult;
+  readonly damageEvent: BattleAttackDamageEvent;
+  readonly damageDispositionHole: BattleAttackDamageDispositionHole | null;
+  readonly damageDispositionFilled: boolean;
+  readonly damageDisposition: BattleAttackDamageDisposition;
+  readonly concentrationSavingThrows: ParsedAttackFillSet["concentrationSavingThrows"];
+  readonly relationshipDecisions: ParsedAttackFillSet["damageRelationshipDecisions"];
+  readonly attackDamageRiders: readonly AttackDamageRider[];
+  readonly critical: boolean;
+  readonly handledInterruptTrigger: AttackProcedureResolutionInput["handledInterruptTrigger"];
+};
+
+function resolveAdditionalWeaponAttackDamage(
+  input: AdditionalWeaponAttackDamageInput,
+): BattleResolutionResult {
+  const damageDispositionValidation = damageDispositionFillValidation({
+    hole: input.damageDispositionHole,
+    filled: input.damageDispositionFilled,
+    value: input.damageDisposition,
+  });
+  /* v8 ignore start -- Malformed fill: damage disposition must answer the exact additional-attack damage-disposition hole when one exists. */
+  if (damageDispositionValidation !== null) {
+    return invalidResult(
+      input.invalidFillState,
+      "invalidFill",
+      damageDispositionValidation,
+    );
+  }
+  /* v8 ignore stop */
+  if (input.damageDispositionHole !== null && !input.damageDispositionFilled) {
+    return needsHolesResult(input.state, input.subject, [
+      input.damageDispositionHole,
+    ]);
+  }
+  const damageAmount = attackDamageEventAmountForTarget(
+    input.state,
+    input.target,
+    input.damageEvent,
+  );
+  const relationshipCheck = damageRelationshipDecisionFillCheck({
+    state: input.state,
+    damageEventHoleId: input.family.fills.damageRoll.holeId,
+    damageSourceId: input.subject.actorId,
+    targets:
+      Number(damageAmount) <= 0
+        ? []
+        : [
+            {
+              targetId: input.target.combatantId,
+              damageAmount: toDamageAmount(Number(damageAmount)),
+              damageDisposition: input.damageDisposition,
+            },
+          ],
+    spatialFacts: input.targetSpatialFacts,
+    decisionsByRelationshipHole: input.relationshipDecisions,
+  });
+  if (relationshipCheck.tag === "needsHoles") {
+    return needsHolesResult(
+      input.state,
+      input.subject,
+      relationshipCheck.holes,
+    );
+  }
+  /* v8 ignore start -- Malformed fill: relationship decisions must answer only holes derived from this additional-attack damage event. */
+  if (relationshipCheck.tag === "invalid") {
+    return invalidResult(
+      input.invalidFillState,
+      "invalidFill",
+      relationshipCheck.message,
+    );
+  }
+  /* v8 ignore stop */
+  const usedState = recordAdditionalWeaponAttackUsed(
+    input.state,
+    input.subject.actorId,
+    input.family,
+  );
+  const continuation = attackDamageInterruptionFrame({
+    participant: input.subject,
+    targetId: input.target.combatantId,
+    targetSpatialFacts: input.targetSpatialFacts,
+    attackResult: input.attackRoll,
+    damageInput: input.damageEvent,
+    critical: input.critical,
+    continuation: {
+      kind: "damageOnly",
+      concentrationSavingThrows: input.concentrationSavingThrows,
+      damageDisposition: input.damageDisposition,
+      attackDamageRiders: input.attackDamageRiders,
+      ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
+    },
+  });
+  const attackDamageReactionWindow = maybeOpenInterruptWindow(
+    usedState,
+    { trigger: "attackDamage", continuation },
+    input.handledInterruptTrigger,
+  );
+  return (
+    attackDamageReactionWindow ??
+    resumeInterruptedProcedure(
+      usedState,
+      continuation,
+      input.handledInterruptTrigger ?? "attackDamage",
+      ATTACK_RESOLVERS,
+    )
+  );
+}
+
 function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
@@ -3235,69 +3866,17 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     input.firstTargetId,
     input.attack,
   );
-  if (decisionHole === null) {
-    /* v8 ignore start -- Malformed fill set: no Cleave holes exist when the completed primary hit is not eligible for Cleave. */
-    if (!cleaveFillIsAbsent(input.fillSet)) {
-      return {
-        tag: "result",
-        result: invalidResult(
-          input.state,
-          "invalidFill",
-          "Weapon Mastery Cleave is only valid for an eligible Cleave weapon hit.",
-        ),
-      };
-    }
-    /* v8 ignore stop */
-    return { tag: "ok", state: input.state };
-  }
-  if (input.fillSet.weaponMasteryCleaveDecision === undefined) {
-    return {
-      tag: "result",
-      result: needsHolesResult(input.state, input.subject, [decisionHole]),
-    };
-  }
-  /* v8 ignore start -- Malformed fill: the Cleave decision must answer the exact decision hole emitted for this primary hit. */
-  if (
-    input.fillSet.weaponMasteryCleaveDecision.holeId !== decisionHole.holeId
-  ) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Weapon Mastery Cleave decision uses the wrong hole.",
-      ),
-    };
-  }
-  /* v8 ignore stop */
-  if (input.fillSet.weaponMasteryCleaveDecision.value === "decline") {
-    /* v8 ignore start -- Malformed fill set: declining Cleave exposes none of its target, attack-roll, or damage holes. */
-    if (!cleaveAttackFillIsAbsent(input.fillSet)) {
-      return {
-        tag: "result",
-        result: invalidResult(
-          input.state,
-          "invalidFill",
-          "Weapon Mastery Cleave attack fills require using Cleave.",
-        ),
-      };
-    }
-    /* v8 ignore stop */
-    return { tag: "ok", state: input.state };
-  }
-  /* v8 ignore start -- Internal eligibility invariant: a non-weapon attack cannot produce a Weapon Mastery Cleave decision hole. */
-  if (input.attack.kind !== "weapon") {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Weapon Mastery Cleave requires a weapon attack.",
-      ),
-    };
-  }
-  /* v8 ignore stop */
-  const cleaveAttack = weaponMasteryCleaveExtraAttack(input.attack);
+  const decision = resolveAdditionalWeaponAttackDecision({
+    kind: "weaponMasteryTurn",
+    state: input.state,
+    subject: input.subject,
+    decisionHole,
+    attack: input.attack,
+    fills: weaponMasteryCleaveAdditionalWeaponAttackFills(input.fillSet),
+  });
+  if (decision.tag !== "use") return decision;
+  const primaryAttack = decision.attack;
+  const cleaveAttack = weaponMasteryCleaveExtraAttack(primaryAttack);
   if (input.fillSet.weaponMasteryCleaveTarget === undefined) {
     return {
       tag: "result",
@@ -3311,8 +3890,9 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     };
   }
   const secondTargetId = input.fillSet.weaponMasteryCleaveTarget.value;
-  const cleaveTargetFacts =
-    input.fillSet.weaponMasteryCleaveTarget.spatialFacts ?? [];
+  const cleaveTargetFacts = additionalWeaponAttackTargetSpatialFacts(
+    input.fillSet.weaponMasteryCleaveTarget,
+  );
   /* v8 ignore start -- Malformed fill: the selected second target must satisfy the spatial constraints encoded by the emitted Cleave target hole. */
   if (
     !weaponMasteryCleaveTargetIsLegal({
@@ -3334,129 +3914,23 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     };
   }
   /* v8 ignore stop */
-  if (input.fillSet.weaponMasteryCleaveAttackRoll === undefined) {
-    return {
-      tag: "result",
-      result: needsHolesResult(input.state, input.subject, [
-        weaponMasteryCleaveAttackRollHole(
-          input.state,
-          input.subject.actorId,
-          secondTargetId,
-          cleaveAttack,
-          cleaveTargetFacts,
-        ),
-      ]),
-    };
-  }
-  const requiredRollMode = requiredAttackRollMode(
-    input.state,
-    input.subject.actorId,
-    secondTargetId,
-    cleaveAttack,
-    cleaveTargetFacts,
-  );
-  /* v8 ignore start -- Malformed fill: a Cleave attack-roll value must satisfy the runtime d20 result schema. */
-  if (
-    !attackRollResultIsValid(input.fillSet.weaponMasteryCleaveAttackRoll.value)
-  ) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Weapon Mastery Cleave attack roll must be a valid attack roll.",
-      ),
-    };
-  }
-  /* v8 ignore stop */
-  const cleaveSpellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
-    input.fillSet.weaponMasteryCleaveAttackRoll.value,
-  );
-  /* v8 ignore start -- Malformed fill: Cleave is a weapon attack and cannot carry a spell-attack reroll selection. */
-  if (cleaveSpellAttackRerollIssue !== null) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        cleaveSpellAttackRerollIssue,
-      ),
-    };
-  }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed fill: the roll mode must match the Advantage/Disadvantage facts used to construct the Cleave attack-roll hole. */
-  if (
-    !attackRollModeMatches(
-      input.fillSet.weaponMasteryCleaveAttackRoll.value,
-      requiredRollMode,
-    )
-  ) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Weapon Mastery Cleave attack roll mode does not match current Advantage and Disadvantage sources.",
-      ),
-    };
-  }
-  /* v8 ignore stop */
-  const attacker = input.state.combatants.get(input.subject.actorId);
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor: attacker,
-      originalNaturalD20: Number(
-        input.fillSet.weaponMasteryCleaveAttackRoll.value.naturalD20,
-      ),
-      rollMode: input.fillSet.weaponMasteryCleaveAttackRoll.value.rollMode,
-      rolledD20s: input.fillSet.weaponMasteryCleaveAttackRoll.value.rolledD20s,
-      decision:
-        input.fillSet.weaponMasteryCleaveAttackRoll.value
-          .d20TestNaturalOneReroll,
-    })
-  ) {
-    return {
-      tag: "result",
-      result: needsHolesResult(input.state, input.subject, [
-        attackRollHoleWithD20TestNaturalOneRerollOption(
-          weaponMasteryCleaveAttackRollHole(
-            input.state,
-            input.subject.actorId,
-            secondTargetId,
-            cleaveAttack,
-            cleaveTargetFacts,
-          ),
-        ),
-      ]),
-    };
-  }
-  const cleaveD20TestNaturalOneRerollIssue = d20TestNaturalOneRerollRollIssue({
-    actor: attacker,
-    total: input.fillSet.weaponMasteryCleaveAttackRoll.value.total,
-    originalNaturalD20: Number(
-      input.fillSet.weaponMasteryCleaveAttackRoll.value.naturalD20,
+  const cleaveAttackRoll = resolveAdditionalWeaponAttackRoll({
+    state: input.state,
+    subject: input.subject,
+    attack: cleaveAttack,
+    family: decision.family,
+    targetId: secondTargetId,
+    targetSpatialFacts: cleaveTargetFacts,
+    attackRollHole: weaponMasteryCleaveAttackRollHole(
+      input.state,
+      input.subject.actorId,
+      secondTargetId,
+      cleaveAttack,
+      cleaveTargetFacts,
     ),
-    rollMode: input.fillSet.weaponMasteryCleaveAttackRoll.value.rollMode,
-    rolledD20s: input.fillSet.weaponMasteryCleaveAttackRoll.value.rolledD20s,
-    decision:
-      input.fillSet.weaponMasteryCleaveAttackRoll.value.d20TestNaturalOneReroll,
-    requiredRollMode,
   });
-  /* v8 ignore start -- Malformed fill: natural-one reroll decisions must match the option attached to this exact Cleave roll. */
-  if (cleaveD20TestNaturalOneRerollIssue !== null) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        cleaveD20TestNaturalOneRerollIssue,
-      ),
-    };
-  }
-  /* v8 ignore stop */
-  const effectiveCleaveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
-    input.fillSet.weaponMasteryCleaveAttackRoll.value,
-  );
+  if (cleaveAttackRoll.tag === "result") return cleaveAttackRoll;
+  const effectiveCleaveAttackRoll = cleaveAttackRoll.attackRoll;
   const secondTarget = input.state.combatants.get(secondTargetId);
   /* v8 ignore start -- Stale subject: the target choice was admitted from the battle roster but may be replayed only after that target was removed. */
   if (secondTarget === undefined) {
@@ -3489,8 +3963,8 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
   });
   /* v8 ignore start -- Malformed fill: a miss-to-hit replacement ref is accepted only when the current missed roll exposes that exact replacement. */
   if (
-    input.fillSet.weaponMasteryCleaveAttackRoll.value
-      .missToHitReplacementProcedureRef !== undefined &&
+    cleaveAttackRoll.fill.value.missToHitReplacementProcedureRef !==
+      undefined &&
     cleaveMissToHitReplacement === null
   ) {
     return {
@@ -3552,7 +4026,7 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
           kind: "weaponMasteryCleave",
           subject: input.subject,
           firstTargetId: input.firstTargetId,
-          attack: input.attack,
+          attack: primaryAttack,
           fills: cleaveFillsThroughAttackRoll(input.fills, input.fillSet),
         },
       },
@@ -3588,27 +4062,14 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
       cleaveAttack,
       input.subject.procedureRef,
     );
-  if (!cleaveHit) {
-    /* v8 ignore start -- Malformed fill set: a missed Cleave attack exposes no damage-roll hole. */
-    if (input.fillSet.weaponMasteryCleaveDamageRoll !== undefined) {
-      return {
-        tag: "result",
-        result: invalidResult(
-          input.state,
-          "invalidFill",
-          "Weapon Mastery Cleave damage can only be filled after a hit.",
-        ),
-      };
-    }
-    /* v8 ignore stop */
-    return {
-      tag: "ok",
-      state: recordWeaponMasteryCleaveUsed(
-        cleaveAttackRolledState,
-        input.subject.actorId,
-      ),
-    };
-  }
+  const cleaveMiss = resolveMissedAdditionalWeaponAttack({
+    state: cleaveAttackRolledState,
+    invalidFillState: input.state,
+    attackerId: input.subject.actorId,
+    hit: cleaveHit,
+    family: decision.family,
+  });
+  if (cleaveMiss.tag !== "hit") return cleaveMiss;
   if (input.fillSet.weaponMasteryCleaveDamageRoll === undefined) {
     return {
       tag: "result",
@@ -3743,122 +4204,41 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
     target: secondTarget,
     damageAmount: cleaveDamageAmount,
   });
-  const cleaveDamageDispositionValidation = damageDispositionFillValidation({
-    hole: cleaveDamageDispositionHole,
-    filled: input.fillSet.weaponMasteryCleaveDamageDispositionFilled,
-    value: input.fillSet.weaponMasteryCleaveDamageDisposition,
-  });
-  /* v8 ignore start -- Malformed fill: damage disposition must answer the exact Cleave damage-disposition hole when one exists. */
-  if (cleaveDamageDispositionValidation !== null) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        cleaveDamageDispositionValidation,
-      ),
-    };
-  }
-  /* v8 ignore stop */
-  if (
-    cleaveDamageDispositionHole !== null &&
-    !input.fillSet.weaponMasteryCleaveDamageDispositionFilled
-  ) {
-    return {
-      tag: "result",
-      result: needsHolesResult(cleaveAttackRolledState, input.subject, [
-        cleaveDamageDispositionHole,
-      ]),
-    };
-  }
-  const relationshipCheck = damageRelationshipDecisionFillCheck({
-    state: cleaveAttackRolledState,
-    damageEventHoleId: input.fillSet.weaponMasteryCleaveDamageRoll.holeId,
-    damageSourceId: input.subject.actorId,
-    targets:
-      Number(cleaveDamageAmount) <= 0
-        ? []
-        : [
-            {
-              targetId: secondTargetId,
-              damageAmount: toDamageAmount(Number(cleaveDamageAmount)),
-              damageDisposition:
-                input.fillSet.weaponMasteryCleaveDamageDisposition,
-            },
-          ],
-    spatialFacts: input.fillSet.weaponMasteryCleaveTarget.spatialFacts ?? [],
-    decisionsByRelationshipHole: input.fillSet.damageRelationshipDecisions,
-  });
-  if (relationshipCheck.tag === "needsHoles") {
-    return {
-      tag: "result",
-      result: needsHolesResult(
-        cleaveAttackRolledState,
-        input.subject,
-        relationshipCheck.holes,
-      ),
-    };
-  }
-  /* v8 ignore start -- Malformed fill: relationship decisions must answer only the holes derived from this Cleave damage event. */
-  if (relationshipCheck.tag === "invalid") {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        relationshipCheck.message,
-      ),
-    };
-  }
-  /* v8 ignore stop */
-  const cleaveUsedState = recordWeaponMasteryCleaveUsed(
-    cleaveAttackRolledState,
-    input.subject.actorId,
-  );
-  const continuation = attackDamageInterruptionFrame({
-    participant: input.subject,
-    targetId: secondTargetId,
-    targetSpatialFacts:
-      input.fillSet.weaponMasteryCleaveTarget.spatialFacts ?? [],
-    attackResult: effectiveCleaveAttackRoll,
-    damageInput: damageEvent,
-    critical: cleaveCritical,
-    continuation: {
-      kind: "damageOnly",
-      concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
-      damageDisposition: input.fillSet.weaponMasteryCleaveDamageDisposition,
-      attackDamageRiders: [],
-      ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
-    },
-  });
-  const attackDamageReactionWindow = maybeOpenInterruptWindow(
-    cleaveUsedState,
-    {
-      trigger: "attackDamage",
-      continuation,
-    },
-    input.handledInterruptTrigger,
-  );
-  if (attackDamageReactionWindow !== null) {
-    return { tag: "result", result: attackDamageReactionWindow };
-  }
   return {
     tag: "result",
-    result: resumeInterruptedProcedure(
-      cleaveUsedState,
-      continuation,
-      input.handledInterruptTrigger ?? "attackDamage",
-      ATTACK_RESOLVERS,
-    ),
+    result: resolveAdditionalWeaponAttackDamage({
+      state: cleaveAttackRolledState,
+      invalidFillState: input.state,
+      subject: input.subject,
+      target: secondTarget,
+      targetSpatialFacts: cleaveTargetFacts,
+      attackRoll: effectiveCleaveAttackRoll,
+      damageEvent,
+      family: {
+        ...decision.family,
+        fills: {
+          ...decision.family.fills,
+          damageRoll: input.fillSet.weaponMasteryCleaveDamageRoll,
+        },
+      },
+      damageDispositionHole: cleaveDamageDispositionHole,
+      damageDispositionFilled:
+        input.fillSet.weaponMasteryCleaveDamageDispositionFilled,
+      damageDisposition: input.fillSet.weaponMasteryCleaveDamageDisposition,
+      concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
+      relationshipDecisions: input.fillSet.damageRelationshipDecisions,
+      attackDamageRiders: [],
+      critical: cleaveCritical,
+      handledInterruptTrigger: input.handledInterruptTrigger,
+    }),
   };
 }
 
 function cleaveFillIsAbsent(
   fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
 ): boolean {
-  return (
-    fillSet.weaponMasteryCleaveDecision === undefined &&
-    cleaveAttackFillIsAbsent(fillSet)
+  return additionalWeaponAttackFillsAreAbsent(
+    weaponMasteryCleaveAdditionalWeaponAttackFills(fillSet),
   );
 }
 
@@ -3938,17 +4318,6 @@ function primaryAttackConcentrationSavingThrows(
       BattleFill,
       { readonly kind: "concentrationSavingThrow" }
     > => fill.kind === "concentrationSavingThrow",
-  );
-}
-
-function cleaveAttackFillIsAbsent(
-  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
-): boolean {
-  return (
-    fillSet.weaponMasteryCleaveTarget === undefined &&
-    fillSet.weaponMasteryCleaveAttackRoll === undefined &&
-    fillSet.weaponMasteryCleaveDamageRoll === undefined &&
-    !fillSet.weaponMasteryCleaveDamageDispositionFilled
   );
 }
 
@@ -4032,87 +4401,23 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     input.firstTargetId,
     input.attack,
   );
-  if (decisionHole === null) {
-    if (hordeBreakerFillIsAbsent(input.fillSet)) {
-      return { tag: "ok", state: input.state };
-    }
-    /* v8 ignore start -- Malformed fill set: no Horde Breaker holes exist when the completed primary hit is not eligible for Horde Breaker. */
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Hunter's Prey Horde Breaker is only valid for an eligible selected weapon attack.",
-      ),
-    };
-    /* v8 ignore stop */
-  }
-  const selection = huntersPreyHordeBreakerSelection(
-    input.state,
-    input.subject.actorId,
-    input.firstTargetId,
-    input.attack,
-  );
-  /* v8 ignore start -- Stale subject: the emitted Horde Breaker decision may be replayed only while its execution binding remains active. */
-  if (selection === null) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "staleSubject",
-        "Hunter's Prey Horde Breaker execution binding is no longer available.",
-      ),
-    };
-  }
-  /* v8 ignore stop */
-  const { procedureRef } = selection;
-  if (input.fillSet.huntersPreyHordeBreakerDecision === undefined) {
-    return {
-      tag: "result",
-      result: needsHolesResult(input.state, input.subject, [decisionHole]),
-    };
-  }
-  if (
-    input.fillSet.huntersPreyHordeBreakerDecision.holeId !== decisionHole.holeId
-  ) {
-    /* v8 ignore start -- Malformed fill: the Horde Breaker decision must answer the exact decision hole emitted for this primary hit. */
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Hunter's Prey Horde Breaker decision uses the wrong hole.",
-      ),
-    };
-    /* v8 ignore stop */
-  }
-  if (input.fillSet.huntersPreyHordeBreakerDecision.value === "decline") {
-    if (hordeBreakerAttackFillIsAbsent(input.fillSet)) {
-      return { tag: "ok", state: input.state };
-    }
-    /* v8 ignore start -- Malformed fill set: declining Horde Breaker exposes none of its target, attack-roll, or damage holes. */
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Hunter's Prey Horde Breaker attack fills require using Horde Breaker.",
-      ),
-    };
-    /* v8 ignore stop */
-  }
-  /* v8 ignore start -- Internal eligibility invariant: a non-weapon attack cannot produce a Hunter's Prey Horde Breaker decision hole. */
-  if (input.attack.kind !== "weapon") {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Hunter's Prey Horde Breaker requires a weapon attack.",
-      ),
-    };
-  }
-  /* v8 ignore stop */
+  const decision = resolveAdditionalWeaponAttackDecision({
+    kind: "procedureExecution",
+    state: input.state,
+    subject: input.subject,
+    decisionHole,
+    attack: input.attack,
+    fills: huntersPreyHordeBreakerAdditionalWeaponAttackFills(input.fillSet),
+    selection: huntersPreyHordeBreakerSelection(
+      input.state,
+      input.subject.actorId,
+      input.firstTargetId,
+      input.attack,
+    ),
+  });
+  if (decision.tag !== "use") return decision;
+  const hordeBreakerAttack = decision.attack;
+  const { procedureRef } = decision.family;
   if (input.fillSet.huntersPreyHordeBreakerTarget === undefined) {
     return {
       tag: "result",
@@ -4121,22 +4426,23 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
           input.state,
           input.subject.actorId,
           input.firstTargetId,
-          selection.procedureRef,
+          procedureRef,
         ),
       ]),
     };
   }
   const secondTargetId = input.fillSet.huntersPreyHordeBreakerTarget.value;
-  const targetFacts =
-    input.fillSet.huntersPreyHordeBreakerTarget.spatialFacts ?? [];
+  const targetFacts = additionalWeaponAttackTargetSpatialFacts(
+    input.fillSet.huntersPreyHordeBreakerTarget,
+  );
   if (
     !huntersPreyHordeBreakerTargetIsLegal({
       state: input.state,
       attackerId: input.subject.actorId,
-      sourceProcedureRef: selection.procedureRef,
+      sourceProcedureRef: procedureRef,
       firstTargetId: input.firstTargetId,
       secondTargetId,
-      attack: input.attack,
+      attack: hordeBreakerAttack,
       targetSpatialFacts: targetFacts,
     })
   ) {
@@ -4151,136 +4457,25 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     };
     /* v8 ignore stop */
   }
-  if (input.fillSet.huntersPreyHordeBreakerAttackRoll === undefined) {
-    return {
-      tag: "result",
-      result: needsHolesResult(input.state, input.subject, [
-        huntersPreyHordeBreakerAttackRollHole(
-          input.state,
-          input.subject.actorId,
-          secondTargetId,
-          input.attack,
-          targetFacts,
-        ),
-      ]),
-    };
+  const hordeBreakerAttackRoll = resolveAdditionalWeaponAttackRoll({
+    state: input.state,
+    subject: input.subject,
+    attack: hordeBreakerAttack,
+    family: decision.family,
+    targetId: secondTargetId,
+    targetSpatialFacts: targetFacts,
+    attackRollHole: huntersPreyHordeBreakerAttackRollHole(
+      input.state,
+      input.subject.actorId,
+      secondTargetId,
+      hordeBreakerAttack,
+      targetFacts,
+    ),
+  });
+  if (hordeBreakerAttackRoll.tag === "result") {
+    return hordeBreakerAttackRoll;
   }
-  const requiredRollMode = requiredAttackRollMode(
-    input.state,
-    input.subject.actorId,
-    secondTargetId,
-    input.attack,
-    targetFacts,
-  );
-  if (
-    !attackRollResultIsValid(
-      input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
-    )
-  ) {
-    /* v8 ignore start -- Malformed fill: a Horde Breaker attack-roll value must satisfy the runtime d20 result schema. */
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Hunter's Prey Horde Breaker attack roll must be a valid attack roll.",
-      ),
-    };
-    /* v8 ignore stop */
-  }
-  const hordeBreakerSpellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
-    input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
-  );
-  /* v8 ignore start -- Malformed fill: Horde Breaker is a weapon attack and cannot carry a spell-attack reroll selection. */
-  if (hordeBreakerSpellAttackRerollIssue !== null) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        hordeBreakerSpellAttackRerollIssue,
-      ),
-    };
-  }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed fill: the roll mode must match the Advantage/Disadvantage facts used to construct the Horde Breaker attack-roll hole. */
-  if (
-    !attackRollModeMatches(
-      input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
-      requiredRollMode,
-    )
-  ) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Hunter's Prey Horde Breaker attack roll mode does not match current Advantage and Disadvantage sources.",
-      ),
-    };
-  }
-  /* v8 ignore stop */
-  const attacker = input.state.combatants.get(input.subject.actorId);
-  if (
-    d20TestNaturalOneRerollRollDecisionRequired({
-      actor: attacker,
-      originalNaturalD20: Number(
-        input.fillSet.huntersPreyHordeBreakerAttackRoll.value.naturalD20,
-      ),
-      rollMode: input.fillSet.huntersPreyHordeBreakerAttackRoll.value.rollMode,
-      rolledD20s:
-        input.fillSet.huntersPreyHordeBreakerAttackRoll.value.rolledD20s,
-      decision:
-        input.fillSet.huntersPreyHordeBreakerAttackRoll.value
-          .d20TestNaturalOneReroll,
-    })
-  ) {
-    return {
-      tag: "result",
-      result: needsHolesResult(input.state, input.subject, [
-        attackRollHoleWithD20TestNaturalOneRerollOption(
-          huntersPreyHordeBreakerAttackRollHole(
-            input.state,
-            input.subject.actorId,
-            secondTargetId,
-            input.attack,
-            targetFacts,
-          ),
-        ),
-      ]),
-    };
-  }
-  const hordeBreakerD20TestNaturalOneRerollIssue =
-    d20TestNaturalOneRerollRollIssue({
-      actor: attacker,
-      total: input.fillSet.huntersPreyHordeBreakerAttackRoll.value.total,
-      originalNaturalD20: Number(
-        input.fillSet.huntersPreyHordeBreakerAttackRoll.value.naturalD20,
-      ),
-      rollMode: input.fillSet.huntersPreyHordeBreakerAttackRoll.value.rollMode,
-      rolledD20s:
-        input.fillSet.huntersPreyHordeBreakerAttackRoll.value.rolledD20s,
-      decision:
-        input.fillSet.huntersPreyHordeBreakerAttackRoll.value
-          .d20TestNaturalOneReroll,
-      requiredRollMode,
-    });
-  /* v8 ignore start -- Malformed fill: natural-one reroll decisions must match the option attached to this exact Horde Breaker roll. */
-  if (hordeBreakerD20TestNaturalOneRerollIssue !== null) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        hordeBreakerD20TestNaturalOneRerollIssue,
-      ),
-    };
-  }
-  /* v8 ignore stop */
-  const effectiveHordeBreakerAttackRoll =
-    effectiveD20TestNaturalOneRerollAttackRoll(
-      input.fillSet.huntersPreyHordeBreakerAttackRoll.value,
-    );
+  const effectiveHordeBreakerAttackRoll = hordeBreakerAttackRoll.attackRoll;
   const secondTarget = input.state.combatants.get(secondTargetId);
   /* v8 ignore start -- Stale subject: the target choice was admitted from the battle roster but may be replayed only after that target was removed. */
   if (secondTarget === undefined) {
@@ -4296,7 +4491,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   /* v8 ignore stop */
   const criticalThreshold = criticalThresholdForAttack(
     input.state.combatants.get(input.subject.actorId),
-    input.attack,
+    hordeBreakerAttack,
   );
   const hit = attackRollHitsWithCriticalThreshold(
     effectiveHordeBreakerAttackRoll,
@@ -4321,7 +4516,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   const hordeBreakerSpellWeaponDamageRiders = hit
     ? activeSpellWeaponDamageRiders(
         rolledState.combatants.get(input.subject.actorId),
-        input.attack,
+        hordeBreakerAttack,
       )
     : [];
   const hordeBreakerSpellMarkedDamageRiders = hit
@@ -4333,7 +4528,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   const frenzyDamageType = frenzyDamageTypeDecision({
     state: rolledState,
     attackerId: input.subject.actorId,
-    attack: input.attack,
+    attack: hordeBreakerAttack,
     hitWithAttackRoll: hit,
     selectedDamageType: input.fillSet.frenzyDamageTypeChoice?.value,
   });
@@ -4362,7 +4557,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         rolledState,
         input.subject.actorId,
         secondTargetId,
-        input.attack,
+        hordeBreakerAttack,
         effectiveHordeBreakerAttackRoll,
         targetFacts,
         frenzyDamageType,
@@ -4371,7 +4566,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   const hordeBreakerOngoingDamageModifier = ongoingFeatureDamageModifier(
     rolledState,
     rolledState.combatants.get(input.subject.actorId),
-    input.attack,
+    hordeBreakerAttack,
   );
   if (hit && input.handledInterruptTrigger !== "attackHit") {
     const attackHitReactionWindow = maybeOpenInterruptWindow(
@@ -4381,10 +4576,10 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         attackerId: input.subject.actorId,
         targetId: secondTargetId,
         attackRoll: effectiveHordeBreakerAttackRoll,
-        attackKind: attackKindForDeflectRedirect(input.attack),
-        attackHitTriggerKind: attackHitTriggerKind(input.attack),
+        attackKind: attackKindForDeflectRedirect(hordeBreakerAttack),
+        attackHitTriggerKind: attackHitTriggerKind(hordeBreakerAttack),
         damageTypes: attackPotentialDamageTypes(
-          input.attack,
+          hordeBreakerAttack,
           critical,
           effectiveHordeBreakerAttackRoll,
           hordeBreakerEligibleDamageRiders,
@@ -4395,7 +4590,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
           kind: "huntersPreyHordeBreaker",
           subject: input.subject,
           firstTargetId: input.firstTargetId,
-          attack: input.attack,
+          attack: hordeBreakerAttack,
           fills: hordeBreakerFillsThroughAttackRoll(input.fills, input.fillSet),
         },
       },
@@ -4405,33 +4600,19 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       return { tag: "result", result: attackHitReactionWindow };
     }
   }
-  if (!hit) {
-    if (input.fillSet.huntersPreyHordeBreakerDamageRoll === undefined) {
-      return {
-        tag: "ok",
-        state: recordHuntersPreyHordeBreakerUsed(
-          rolledState,
-          input.subject.actorId,
-          procedureRef,
-        ),
-      };
-    }
-    /* v8 ignore start -- Malformed fill set: a missed Horde Breaker attack exposes no damage-roll hole. */
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        "Hunter's Prey Horde Breaker damage can only be filled after a hit.",
-      ),
-    };
-    /* v8 ignore stop */
-  }
+  const hordeBreakerMiss = resolveMissedAdditionalWeaponAttack({
+    state: rolledState,
+    invalidFillState: input.state,
+    attackerId: input.subject.actorId,
+    hit,
+    family: decision.family,
+  });
+  if (hordeBreakerMiss.tag !== "hit") return hordeBreakerMiss;
   const hordeBreakerDamageDieFloorChoiceUnitIds =
     eligibleAttackDamageDieFloorProcedureRefs(
       rolledState,
       input.subject.actorId,
-      input.attack,
+      hordeBreakerAttack,
       input.subject.procedureRef,
     );
   if (input.fillSet.huntersPreyHordeBreakerDamageRoll === undefined) {
@@ -4439,7 +4620,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
       tag: "result",
       result: needsHolesResult(rolledState, input.subject, [
         huntersPreyHordeBreakerDamageHole(
-          input.attack,
+          hordeBreakerAttack,
           critical,
           effectiveHordeBreakerAttackRoll,
           hordeBreakerEligibleDamageRiders,
@@ -4497,7 +4678,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   /* v8 ignore stop */
   const damageValidation = validateRolledDiceForWeaponAttack(
     input.fillSet.huntersPreyHordeBreakerDamageRoll.value,
-    input.attack,
+    hordeBreakerAttack,
     critical,
     effectiveHordeBreakerAttackRoll,
     hordeBreakerSelectedDamageRiders,
@@ -4515,7 +4696,7 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
   const damageByType = attackDamageByTypeEntries(
     rolledState,
     rolledState.combatants.get(input.subject.actorId),
-    input.attack,
+    hordeBreakerAttack,
     input.subject.procedureRef,
     input.fillSet.huntersPreyHordeBreakerDamageRoll,
     critical,
@@ -4536,120 +4717,38 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     damageEvent,
   );
   const damageDispositionHole = huntersPreyHordeBreakerDamageDispositionHole({
-    attack: input.attack,
+    attack: hordeBreakerAttack,
     attackerId: input.subject.actorId,
     target: secondTarget,
     damageAmount,
   });
-  const damageDispositionValidation = damageDispositionFillValidation({
-    hole: damageDispositionHole,
-    filled: input.fillSet.huntersPreyHordeBreakerDamageDispositionFilled,
-    value: input.fillSet.huntersPreyHordeBreakerDamageDisposition,
-  });
-  /* v8 ignore start -- Malformed fill: damage disposition must answer the exact Horde Breaker damage-disposition hole when one exists. */
-  if (damageDispositionValidation !== null) {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        damageDispositionValidation,
-      ),
-    };
-  }
-  /* v8 ignore stop */
-  if (
-    damageDispositionHole !== null &&
-    !input.fillSet.huntersPreyHordeBreakerDamageDispositionFilled
-  ) {
-    return {
-      tag: "result",
-      result: needsHolesResult(rolledState, input.subject, [
-        damageDispositionHole,
-      ]),
-    };
-  }
-  const relationshipCheck = damageRelationshipDecisionFillCheck({
-    state: rolledState,
-    damageEventHoleId: input.fillSet.huntersPreyHordeBreakerDamageRoll.holeId,
-    damageSourceId: input.subject.actorId,
-    targets:
-      Number(damageAmount) <= 0
-        ? []
-        : [
-            {
-              targetId: secondTargetId,
-              damageAmount: toDamageAmount(Number(damageAmount)),
-              damageDisposition:
-                input.fillSet.huntersPreyHordeBreakerDamageDisposition,
-            },
-          ],
-    spatialFacts:
-      input.fillSet.huntersPreyHordeBreakerTarget.spatialFacts ?? [],
-    decisionsByRelationshipHole: input.fillSet.damageRelationshipDecisions,
-  });
-  if (relationshipCheck.tag === "needsHoles") {
-    return {
-      tag: "result",
-      result: needsHolesResult(
-        rolledState,
-        input.subject,
-        relationshipCheck.holes,
-      ),
-    };
-  }
-  /* v8 ignore start -- Malformed fill: relationship decisions must answer only the holes derived from this Horde Breaker damage event. */
-  if (relationshipCheck.tag === "invalid") {
-    return {
-      tag: "result",
-      result: invalidResult(
-        input.state,
-        "invalidFill",
-        relationshipCheck.message,
-      ),
-    };
-  }
-  /* v8 ignore stop */
-  const usedState = recordHuntersPreyHordeBreakerUsed(
-    rolledState,
-    input.subject.actorId,
-    procedureRef,
-  );
-  const continuation = attackDamageInterruptionFrame({
-    participant: input.subject,
-    targetId: secondTargetId,
-    targetSpatialFacts:
-      input.fillSet.huntersPreyHordeBreakerTarget.spatialFacts ?? [],
-    attackResult: effectiveHordeBreakerAttackRoll,
-    damageInput: damageEvent,
-    critical,
-    continuation: {
-      kind: "damageOnly",
-      concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
-      damageDisposition: input.fillSet.huntersPreyHordeBreakerDamageDisposition,
-      attackDamageRiders: hordeBreakerSelectedDamageRiders,
-      ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
-    },
-  });
-  const attackDamageReactionWindow = maybeOpenInterruptWindow(
-    usedState,
-    {
-      trigger: "attackDamage",
-      continuation,
-    },
-    input.handledInterruptTrigger,
-  );
-  if (attackDamageReactionWindow !== null) {
-    return { tag: "result", result: attackDamageReactionWindow };
-  }
   return {
     tag: "result",
-    result: resumeInterruptedProcedure(
-      usedState,
-      continuation,
-      input.handledInterruptTrigger ?? "attackDamage",
-      ATTACK_RESOLVERS,
-    ),
+    result: resolveAdditionalWeaponAttackDamage({
+      state: rolledState,
+      invalidFillState: input.state,
+      subject: input.subject,
+      target: secondTarget,
+      targetSpatialFacts: targetFacts,
+      attackRoll: effectiveHordeBreakerAttackRoll,
+      damageEvent,
+      family: {
+        ...decision.family,
+        fills: {
+          ...decision.family.fills,
+          damageRoll: input.fillSet.huntersPreyHordeBreakerDamageRoll,
+        },
+      },
+      damageDispositionHole,
+      damageDispositionFilled:
+        input.fillSet.huntersPreyHordeBreakerDamageDispositionFilled,
+      damageDisposition: input.fillSet.huntersPreyHordeBreakerDamageDisposition,
+      concentrationSavingThrows: input.fillSet.concentrationSavingThrows,
+      relationshipDecisions: input.fillSet.damageRelationshipDecisions,
+      attackDamageRiders: hordeBreakerSelectedDamageRiders,
+      critical,
+      handledInterruptTrigger: input.handledInterruptTrigger,
+    }),
   };
 }
 
@@ -4687,19 +4786,7 @@ function hordeBreakerFillsThroughAttackRoll(
 function hordeBreakerFillIsAbsent(
   fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
 ): boolean {
-  return (
-    fillSet.huntersPreyHordeBreakerDecision === undefined &&
-    hordeBreakerAttackFillIsAbsent(fillSet)
-  );
-}
-
-function hordeBreakerAttackFillIsAbsent(
-  fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>,
-): boolean {
-  return (
-    fillSet.huntersPreyHordeBreakerTarget === undefined &&
-    fillSet.huntersPreyHordeBreakerAttackRoll === undefined &&
-    fillSet.huntersPreyHordeBreakerDamageRoll === undefined &&
-    !fillSet.huntersPreyHordeBreakerDamageDispositionFilled
+  return additionalWeaponAttackFillsAreAbsent(
+    huntersPreyHordeBreakerAdditionalWeaponAttackFills(fillSet),
   );
 }

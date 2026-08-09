@@ -2695,7 +2695,7 @@ describe("battle runtime: Weapon Mastery", () => {
     expect(noSelection).toMatchObject({
       tag: "invalid",
       message:
-        "Weapon Mastery Cleave is only valid for an eligible Cleave weapon hit.",
+        "Weapon Mastery additional weapon attack is only valid after an eligible weapon hit.",
     });
     const noCleaveSupport = resolveBattleSubject({
       state: startBattleRight({
@@ -2715,7 +2715,7 @@ describe("battle runtime: Weapon Mastery", () => {
     expect(noCleaveSupport).toMatchObject({
       tag: "invalid",
       message:
-        "Weapon Mastery Cleave is only valid for an eligible Cleave weapon hit.",
+        "Weapon Mastery additional weapon attack is only valid after an eligible weapon hit.",
     });
 
     const rangedCleaveState = startBattleRight({
@@ -2777,7 +2777,7 @@ describe("battle runtime: Weapon Mastery", () => {
     expect(alreadyUsed).toMatchObject({
       tag: "invalid",
       message:
-        "Weapon Mastery Cleave is only valid for an eligible Cleave weapon hit.",
+        "Weapon Mastery additional weapon attack is only valid after an eligible weapon hit.",
     });
   });
 });
