@@ -61,6 +61,10 @@ import {
   damageLifecycleHideousLaughterDamageRepeatSaveHoles,
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
+import {
+  battleDamageTargets,
+  type BattleDamageTarget,
+} from "./damage-target-projection.ts";
 import { damageRelationshipDecisionFillCheck } from "./damage-relationship-decisions.ts";
 import { deduplicateBattleHolesById } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
@@ -128,11 +132,6 @@ type ObjectContactTargetSelection = {
     ObjectContactHoldingOrWearingRelation
   >;
 };
-type DamagedHoldingOrWearingTarget = {
-  readonly targetId: CombatantId;
-  readonly target: BattleCreatureState;
-};
-
 export function resolveObjectContactDamageSpellAct(input: {
   readonly input: ActionSpellBattleResolutionInput;
   readonly actorId: CombatantId;
@@ -657,13 +656,14 @@ function resolveObjectContactDamage(input: {
       droppedObjects: [],
     };
   }
-  if (input.fillSet.damageRoll === undefined) {
+  const damageRoll = input.fillSet.damageRoll;
+  if (damageRoll === undefined) {
     return needsHolesResult(needsHolesState, input.subject, [
       spellDamageHole(input.invocation),
     ]);
   }
   const damageValidation = validateSpellDamageFill(
-    input.fillSet.damageRoll,
+    damageRoll,
     input.invocation,
     false,
   );
@@ -674,23 +674,22 @@ function resolveObjectContactDamage(input: {
   }
   /* v8 ignore stop */
   const sourceCombatant = input.state.combatants.get(input.actorId);
-  const expectedSourcePenaltyHoles = input.targetIds.flatMap((targetId) => {
-    const target = input.state.combatants.get(targetId);
-    if (target === undefined || input.fillSet.damageRoll === undefined) {
-      return [];
-    }
-    const damageByType = spellDamageByTypeForTarget(
-      target,
-      input.invocation,
-      input.fillSet.damageRoll,
-    );
-    const hole = sourceDamageRollPenaltyRollHoleForDamageRoll(
-      sourceCombatant,
-      damageByType,
-      input.fillSet.damageRoll.holeId,
-    );
-    return hole === null ? [] : [hole];
+  const damageTargets = battleDamageTargets({
+    state: input.state,
+    targetIds: input.targetIds,
+    damageForTarget: (target) =>
+      spellDamageByTypeForTarget(target, input.invocation, damageRoll),
   });
+  const expectedSourcePenaltyHoles = damageTargets.flatMap(
+    ({ damage: damageByType }) => {
+      const hole = sourceDamageRollPenaltyRollHoleForDamageRoll(
+        sourceCombatant,
+        damageByType,
+        damageRoll.holeId,
+      );
+      return hole === null ? [] : [hole];
+    },
+  );
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     unexpectedSourceDamageRollPenaltyRoll(
@@ -706,30 +705,22 @@ function resolveObjectContactDamage(input: {
     );
   }
   /* v8 ignore stop */
-  const sourcePenaltyChecks = input.targetIds.map((targetId) => {
-    const target = input.state.combatants.get(targetId);
-    if (target === undefined || input.fillSet.damageRoll === undefined) {
-      return { tag: "ok" as const, damageByType: new Map() };
-    }
-    const damageByType = spellDamageByTypeForTarget(
-      target,
-      input.invocation,
-      input.fillSet.damageRoll,
-    );
-    return applyAvailableSourceDamageRollPenalty(
+  const sourcePenaltyChecks = damageTargets.map((damageTarget) => ({
+    damageTarget,
+    check: applyAvailableSourceDamageRollPenalty(
       sourceCombatant,
-      damageByType,
-      input.fillSet.damageRoll.holeId,
+      damageTarget.damage,
+      damageRoll.holeId,
       sourceDamageRollPenaltyRollForDamageRoll(
         input.fillSet.sourceDamageRollPenaltyRolls,
         sourceCombatant,
-        damageByType,
-        input.fillSet.damageRoll.holeId,
+        damageTarget.damage,
+        damageRoll.holeId,
       ),
-    );
-  });
+    ),
+  }));
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (sourcePenaltyChecks.some((check) => check.tag === "invalid")) {
+  if (sourcePenaltyChecks.some(({ check }) => check.tag === "invalid")) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
       input.errorState,
@@ -739,7 +730,7 @@ function resolveObjectContactDamage(input: {
   }
   /* v8 ignore stop */
   const missingSourcePenaltyHoles = deduplicateBattleHolesById(
-    sourcePenaltyChecks.flatMap((check) =>
+    sourcePenaltyChecks.flatMap(({ check }) =>
       check.tag === "needsHoles" ? [...check.holes] : [],
     ),
   );
@@ -748,54 +739,29 @@ function resolveObjectContactDamage(input: {
       ...missingSourcePenaltyHoles,
     ]);
   }
-  const damageAmountByTargetId = new Map(
-    input.targetIds.flatMap((targetId): readonly [CombatantId, number][] => {
-      const target = input.state.combatants.get(targetId);
-      if (target === undefined || input.fillSet.damageRoll === undefined) {
-        return [];
-      }
-      const damageByType = spellDamageByTypeForTarget(
-        target,
-        input.invocation,
-        input.fillSet.damageRoll,
-      );
-      const sourcePenalty = applyAvailableSourceDamageRollPenalty(
-        input.state.combatants.get(input.actorId),
-        damageByType,
-        input.fillSet.damageRoll.holeId,
-        sourceDamageRollPenaltyRollForDamageRoll(
-          input.fillSet.sourceDamageRollPenaltyRolls,
-          input.state.combatants.get(input.actorId),
-          damageByType,
-          input.fillSet.damageRoll.holeId,
-        ),
-      );
-      return sourcePenalty.tag === "ok"
+  const resolvedDamageTargets: readonly BattleDamageTarget<number>[] =
+    sourcePenaltyChecks.flatMap(({ damageTarget, check }) =>
+      check.tag === "ok"
         ? [
-            [
-              targetId,
-              damageAmountByTypeAfterTargetAdjustments(
+            {
+              target: damageTarget.target,
+              damage: damageAmountByTypeAfterTargetAdjustments(
                 input.state,
-                target,
-                sourcePenalty.damageByType,
+                damageTarget.target,
+                check.damageByType,
               ),
-            ],
+            },
           ]
-        : [];
-    }),
+        : [],
+    );
+  const concentrationSaves = resolvedDamageTargets.flatMap(
+    ({ target, damage }) =>
+      damageLifecycleConcentrationSavingThrowHoles({
+        state: input.state,
+        target,
+        damageAmount: damage,
+      }),
   );
-  const concentrationSaves = input.targetIds.flatMap((targetId) => {
-    const target = input.state.combatants.get(targetId);
-    const damageAmount = damageAmountByTargetId.get(targetId);
-    if (target === undefined || damageAmount === undefined) {
-      return [];
-    }
-    return damageLifecycleConcentrationSavingThrowHoles({
-      state: input.state,
-      target,
-      damageAmount,
-    });
-  });
   const missingConcentrationSaves = concentrationSaves.filter(
     (concentrationSave) =>
       concentrationSavingThrowFillFor(
@@ -827,19 +793,16 @@ function resolveObjectContactDamage(input: {
     );
   }
   /* v8 ignore stop */
-  const damageDispositionHoles = input.targetIds.flatMap((targetId) => {
-    const target = input.state.combatants.get(targetId);
-    const damageAmount = damageAmountByTargetId.get(targetId);
-    if (target === undefined || damageAmount === undefined) {
-      return [];
-    }
-    const hole = zeroHitPointReplacementDispositionHole({
-      damageSourceId: input.actorId,
-      target,
-      damageAmount,
-    });
-    return hole === null ? [] : [hole];
-  });
+  const damageDispositionHoles = resolvedDamageTargets.flatMap(
+    ({ target, damage }) => {
+      const hole = zeroHitPointReplacementDispositionHole({
+        damageSourceId: input.actorId,
+        target,
+        damageAmount: damage,
+      });
+      return hole === null ? [] : [hole];
+    },
+  );
   const damageDispositionValidation = damageDispositionFillsValidation({
     holes: damageDispositionHoles,
     fills: input.fillSet.damageDispositions,
@@ -864,27 +827,24 @@ function resolveObjectContactDamage(input: {
       ...missingDamageDispositionHoles,
     ]);
   }
-  const hideousLaughterSaveChecks = input.targetIds.map((targetId) => {
-    const target = input.state.combatants.get(targetId);
-    const damageAmount = damageAmountByTargetId.get(targetId);
-    if (target === undefined || damageAmount === undefined) {
-      return { tag: "ok" as const, holes: [] };
-    }
-    const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-      state: input.state,
-      target,
-      damageAmount,
-    });
-    return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-      state: input.state,
-      target,
-      damageAmount,
-      fills: fillsMatchingHoleIds(
-        input.fillSet.hideousLaughterDamageRepeatSaves,
-        holes,
-      ),
-    });
-  });
+  const hideousLaughterSaveChecks = resolvedDamageTargets.map(
+    ({ target, damage }) => {
+      const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+        state: input.state,
+        target,
+        damageAmount: damage,
+      });
+      return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
+        state: input.state,
+        target,
+        damageAmount: damage,
+        fills: fillsMatchingHoleIds(
+          input.fillSet.hideousLaughterDamageRepeatSaves,
+          holes,
+        ),
+      });
+    },
+  );
   const invalidHideousLaughterSaveCheck = hideousLaughterSaveChecks.find(
     (check) => check.tag === "invalid",
   );
@@ -927,8 +887,8 @@ function resolveObjectContactDamage(input: {
   /* v8 ignore stop */
   const damagedHoldingOrWearingTargets =
     objectContactDamagedHoldingOrWearingTargets({
-      ...input,
-      damageAmountByTargetId,
+      damageTargets: resolvedDamageTargets,
+      holdingOrWearingByTarget: input.holdingOrWearingByTarget,
     });
   const objectContactSaveHole = objectContactSavingThrowOutcomeHole({
     state: input.state,
@@ -1048,27 +1008,28 @@ function resolveObjectContactDamage(input: {
         outcome.result.kind === "notDropped" ? [outcome.targetId] : [],
     ) ?? [];
   const damageDispositionByTargetId = new Map(
-    input.targetIds.map((targetId) => [
-      targetId,
+    resolvedDamageTargets.map(({ target }) => [
+      target.combatantId,
       damageDispositionForTarget(
         damageDispositionHoles,
         input.fillSet.damageDispositions,
-        targetId,
+        target.combatantId,
       ),
     ]),
   );
   const relationshipCheck = damageRelationshipDecisionFillCheck({
     state: input.state,
-    damageEventHoleId: input.fillSet.damageRoll.holeId,
+    damageEventHoleId: damageRoll.holeId,
     damageSourceId: input.actorId,
-    targets: input.targetIds.flatMap((targetId) => {
-      const damageAmount = damageAmountByTargetId.get(targetId) ?? 0;
-      return damageAmount > 0
+    targets: resolvedDamageTargets.flatMap(({ target, damage }) => {
+      return damage > 0
         ? [
             {
-              targetId,
-              damageAmount: toDamageAmount(damageAmount),
-              damageDisposition: damageDispositionByTargetId.get(targetId),
+              targetId: target.combatantId,
+              damageAmount: toDamageAmount(damage),
+              damageDisposition: damageDispositionByTargetId.get(
+                target.combatantId,
+              ),
             },
           ]
         : [];
@@ -1093,10 +1054,11 @@ function resolveObjectContactDamage(input: {
     );
   }
   /* v8 ignore stop */
-  const damaged = input.targetIds.reduce((state, targetId) => {
+  const damaged = resolvedDamageTargets.reduce((state, damageTarget) => {
+    const targetId = damageTarget.target.combatantId;
+    const damageAmount = damageTarget.damage;
     const target = state.combatants.get(targetId);
-    const damageAmount = damageAmountByTargetId.get(targetId);
-    if (target === undefined || damageAmount === undefined) {
+    if (target === undefined) {
       return state;
     }
     const concentrationSave = concentrationSavingThrowHole(
@@ -1151,53 +1113,32 @@ function resolveObjectContactDamage(input: {
     tag: "resolved",
     state: penalized,
     droppedObjects,
-    events: input.targetIds.flatMap(
-      (targetId): readonly BattleAfterDamageEvent[] => {
-        const target = input.state.combatants.get(targetId);
-        const damageAmount = damageAmountByTargetId.get(targetId);
-        if (target === undefined || damageAmount === undefined) {
-          return [];
-        }
-        return [
-          {
-            damageSourceId: input.actorId,
-            damagedId: targetId,
-            damageAmount: toDamageAmount(damageAmount),
-            reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
-              facts: input.contactFacts,
-              damagedId: targetId,
-              damageSourceId: input.actorId,
-            }),
-          },
-        ];
-      },
-    ),
+    events: resolvedDamageTargets.map(({ target, damage }) => ({
+      damageSourceId: input.actorId,
+      damagedId: target.combatantId,
+      damageAmount: toDamageAmount(damage),
+      reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
+        facts: input.contactFacts,
+        damagedId: target.combatantId,
+        damageSourceId: input.actorId,
+      }),
+    })),
   };
 }
 
 function objectContactDamagedHoldingOrWearingTargets(input: {
-  readonly state: BattleState;
-  readonly fillSet: OkSpellFillSet;
-  readonly invocation: BattleExecutableSpellInvocation<ObjectContactDamageAnyInvocation>;
-  readonly targetIds: readonly CombatantId[];
-  readonly damageAmountByTargetId: ReadonlyMap<CombatantId, number>;
+  readonly damageTargets: readonly BattleDamageTarget<number>[];
   readonly holdingOrWearingByTarget: ReadonlyMap<
     CombatantId,
     ObjectContactHoldingOrWearingRelation
   >;
-}): readonly DamagedHoldingOrWearingTarget[] {
-  return input.targetIds.flatMap((targetId) => {
-    const relation = input.holdingOrWearingByTarget.get(targetId);
-    const target = input.state.combatants.get(targetId);
-    if (
-      relation === undefined ||
-      target === undefined ||
-      input.fillSet.damageRoll === undefined
-    ) {
+}): readonly BattleCreatureState[] {
+  return input.damageTargets.flatMap(({ target, damage }) => {
+    const relation = input.holdingOrWearingByTarget.get(target.combatantId);
+    if (relation === undefined) {
       return [];
     }
-    const damageAmount = input.damageAmountByTargetId.get(targetId) ?? 0;
-    return damageAmount <= 0 ? [] : [{ targetId, target }];
+    return damage <= 0 ? [] : [target];
   });
 }
 
@@ -1206,7 +1147,7 @@ function objectContactSavingThrowOutcomeHole(input: {
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation<ObjectContactDamageAnyInvocation>;
   readonly objectId: BattleObjectId;
-  readonly targets: readonly DamagedHoldingOrWearingTarget[];
+  readonly targets: readonly BattleCreatureState[];
 }): BattleObjectContactSavingThrowOutcomeHole | null {
   if (input.targets.length === 0) {
     return null;
@@ -1228,14 +1169,14 @@ function objectContactSavingThrowOutcomeHole(input: {
         input.invocation,
       ),
       objectId: input.objectId,
-      targetIds: input.targets.map((target) => target.targetId),
+      targetIds: input.targets.map((target) => target.combatantId),
     },
     ability: "con",
     dc: { kind: "caster_spell_save_dc" },
     areaChoices: [],
     targetRollModes: savingThrowRollModeProjections(input.state, "con"),
-    targetFlatBonuses: input.targets.flatMap((target) =>
-      wardingBondSavingThrowFlatBonusProjectionsForTarget(target.target),
+    targetFlatBonuses: input.targets.flatMap(
+      wardingBondSavingThrowFlatBonusProjectionsForTarget,
     ),
   };
 }

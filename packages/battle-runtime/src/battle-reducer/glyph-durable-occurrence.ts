@@ -125,6 +125,10 @@ import {
   fillsMatchingHoleIds,
 } from "./damage-apply.ts";
 import {
+  battleDamageTargets,
+  type BattleDamageTarget,
+} from "./damage-target-projection.ts";
+import {
   damageDispositionFillFor,
   damageDispositionFillsValidation,
   damageDispositionForTarget,
@@ -487,15 +491,13 @@ type GlyphExplosiveRuneReleaseWitnessValidationFailure =
   | "hideousLaughterDamageRepeatSaveMismatch";
 type GlyphExplosiveRuneDamageLifecycle = {
   readonly damageRollTotal: number;
-  readonly damageByTypeByTargetId: ReadonlyMap<
-    CombatantId,
-    ReadonlyMap<DamageType, number>
-  >;
-  readonly damageAmountByTargetId: ReadonlyMap<CombatantId, number>;
-  readonly spellDamageReductionRollsByTargetId: ReadonlyMap<
-    CombatantId,
-    GlyphExplosiveRuneSpellDamageReductionRollFill
-  >;
+  readonly damageTargets: readonly {
+    readonly targetId: CombatantId;
+    readonly damageByType: ReadonlyMap<DamageType, number>;
+    readonly spellDamageReductionRoll:
+      | GlyphExplosiveRuneSpellDamageReductionRollFill
+      | undefined;
+  }[];
   readonly concentrationSavingThrowHoles: readonly BattleConcentrationSavingThrowHole[];
   readonly damageDispositionHoles: readonly BattleAttackDamageDispositionHole[];
   readonly hideousLaughterDamageRepeatSaveHoles: readonly BattleHideousLaughterRepeatSavingThrowOutcomeHole[];
@@ -2505,9 +2507,7 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
       tag: "ok",
       lifecycle: {
         damageRollTotal: 0,
-        damageByTypeByTargetId: new Map(),
-        damageAmountByTargetId: new Map(),
-        spellDamageReductionRollsByTargetId: new Map(),
+        damageTargets: [],
         concentrationSavingThrowHoles: [],
         damageDispositionHoles: [],
         hideousLaughterDamageRepeatSaveHoles: [],
@@ -2522,7 +2522,7 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
     return { tag: "needsHoles", holes: [damageRollHole] };
   }
   const damageRollTotal = rolledDiceTotal(areaMembership.damageRoll.value);
-  const damageByTypeByTargetId = glyphExplosiveRuneDamageByTypeByTargetId({
+  const damageTargets = glyphExplosiveRuneDamageTargets({
     state: input.state,
     effect: input.effect,
     witness: input.witness,
@@ -2531,8 +2531,7 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
   });
   const spellDamageReductionHoles = glyphExplosiveRuneSpellDamageReductionHoles(
     {
-      state: input.state,
-      damageByTypeByTargetId,
+      damageTargets,
     },
   );
   if (
@@ -2552,20 +2551,16 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
   if (missingSpellDamageReductionHoles.length > 0) {
     return { tag: "needsHoles", holes: missingSpellDamageReductionHoles };
   }
-  const damageAmountByTargetId = new Map<CombatantId, number>();
-  const damageLifecycleTargetByTargetId = new Map<
-    CombatantId,
-    BattleCreatureState
-  >();
-  const spellDamageReductionRollsByTargetId = new Map<
-    CombatantId,
-    GlyphExplosiveRuneSpellDamageReductionRollFill
-  >();
-  for (const [targetId, damageByType] of damageByTypeByTargetId) {
-    const target = input.state.combatants.get(targetId);
-    if (target === undefined) {
-      continue;
-    }
+  const damageLifecycleTargets: Array<
+    BattleDamageTarget<{
+      readonly damageByType: ReadonlyMap<DamageType, number>;
+      readonly damageAmount: number;
+      readonly spellDamageReductionRoll:
+        | GlyphExplosiveRuneSpellDamageReductionRollFill
+        | undefined;
+    }>
+  > = [];
+  for (const { target, damage: damageByType } of damageTargets) {
     const spellDamageReductionRoll = spellDamageReductionRollForTarget(
       areaMembership.spellDamageReductionRolls,
       target,
@@ -2581,52 +2576,38 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
     if (spellReduction.tag === "needsHoles") {
       return { tag: "invalid", reason: "spellDamageReductionMismatch" };
     }
-    if (spellDamageReductionRoll !== undefined) {
-      spellDamageReductionRollsByTargetId.set(
-        targetId,
+    damageLifecycleTargets.push({
+      target: spellReduction.target,
+      damage: {
+        damageByType,
+        damageAmount: damageAmountByTypeAfterTargetAdjustments(
+          input.state,
+          spellReduction.target,
+          spellReduction.damageByType,
+        ),
         spellDamageReductionRoll,
-      );
-    }
-    damageLifecycleTargetByTargetId.set(targetId, spellReduction.target);
-    damageAmountByTargetId.set(
-      targetId,
-      damageAmountByTypeAfterTargetAdjustments(
-        input.state,
-        spellReduction.target,
-        spellReduction.damageByType,
-      ),
-    );
-  }
-  const concentrationSavingThrowHoles =
-    areaMembership.affectedTargetIds.flatMap((targetId) => {
-      const target = damageLifecycleTargetByTargetId.get(targetId);
-      const damageAmount = damageAmountByTargetId.get(targetId);
-      return target === undefined || damageAmount === undefined
-        ? []
-        : [
-            ...damageLifecycleConcentrationSavingThrowHoles({
-              state: input.state,
-              target,
-              damageAmount,
-            }),
-          ];
+      },
     });
-  const invalidConcentrationCheck = areaMembership.affectedTargetIds
-    .map((targetId) => {
-      const target = damageLifecycleTargetByTargetId.get(targetId);
-      const damageAmount = damageAmountByTargetId.get(targetId);
-      if (target === undefined || damageAmount === undefined) {
-        return { tag: "ok" as const, holes: [] };
-      }
+  }
+  const concentrationSavingThrowHoles = damageLifecycleTargets.flatMap(
+    ({ target, damage }) =>
+      damageLifecycleConcentrationSavingThrowHoles({
+        state: input.state,
+        target,
+        damageAmount: damage.damageAmount,
+      }),
+  );
+  const invalidConcentrationCheck = damageLifecycleTargets
+    .map(({ target, damage }) => {
       const holes = damageLifecycleConcentrationSavingThrowHoles({
         state: input.state,
         target,
-        damageAmount,
+        damageAmount: damage.damageAmount,
       });
       return damageLifecycleConcentrationSavingThrowFillCheck({
         state: input.state,
         target,
-        damageAmount,
+        damageAmount: damage.damageAmount,
         fills: fillsMatchingHoleIds(
           areaMembership.concentrationSavingThrows,
           holes,
@@ -2646,18 +2627,13 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
     return { tag: "invalid", reason: "concentrationSavingThrowMismatch" };
   }
 
-  const damageDispositionHoles = areaMembership.affectedTargetIds.flatMap(
-    (targetId) => {
-      const target = damageLifecycleTargetByTargetId.get(targetId);
-      const damageAmount = damageAmountByTargetId.get(targetId);
-      const hole =
-        target === undefined || damageAmount === undefined
-          ? null
-          : zeroHitPointReplacementDispositionHole({
-              damageSourceId: input.effect.sourceCombatantId,
-              target,
-              damageAmount,
-            });
+  const damageDispositionHoles = damageLifecycleTargets.flatMap(
+    ({ target, damage }) => {
+      const hole = zeroHitPointReplacementDispositionHole({
+        damageSourceId: input.effect.sourceCombatantId,
+        target,
+        damageAmount: damage.damageAmount,
+      });
       return hole === null ? [] : [hole];
     },
   );
@@ -2675,36 +2651,25 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
     return { tag: "invalid", reason: "damageDispositionMismatch" };
   }
 
-  const hideousLaughterDamageRepeatSaveHoles =
-    areaMembership.affectedTargetIds.flatMap((targetId) => {
-      const target = damageLifecycleTargetByTargetId.get(targetId);
-      const damageAmount = damageAmountByTargetId.get(targetId);
-      return target === undefined || damageAmount === undefined
-        ? []
-        : [
-            ...damageLifecycleHideousLaughterDamageRepeatSaveHoles({
-              state: input.state,
-              target,
-              damageAmount,
-            }),
-          ];
-    });
-  const invalidHideousLaughterRepeatSaveCheck = areaMembership.affectedTargetIds
-    .map((targetId) => {
-      const target = damageLifecycleTargetByTargetId.get(targetId);
-      const damageAmount = damageAmountByTargetId.get(targetId);
-      if (target === undefined || damageAmount === undefined) {
-        return { tag: "ok" as const, holes: [] };
-      }
+  const hideousLaughterDamageRepeatSaveHoles = damageLifecycleTargets.flatMap(
+    ({ target, damage }) =>
+      damageLifecycleHideousLaughterDamageRepeatSaveHoles({
+        state: input.state,
+        target,
+        damageAmount: damage.damageAmount,
+      }),
+  );
+  const invalidHideousLaughterRepeatSaveCheck = damageLifecycleTargets
+    .map(({ target, damage }) => {
       const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
         state: input.state,
         target,
-        damageAmount,
+        damageAmount: damage.damageAmount,
       });
       return damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
         state: input.state,
         target,
-        damageAmount,
+        damageAmount: damage.damageAmount,
         fills: fillsMatchingHoleIds(
           areaMembership.hideousLaughterDamageRepeatSaves,
           holes,
@@ -2756,9 +2721,11 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
     tag: "ok",
     lifecycle: {
       damageRollTotal,
-      damageByTypeByTargetId,
-      damageAmountByTargetId,
-      spellDamageReductionRollsByTargetId,
+      damageTargets: damageLifecycleTargets.map(({ target, damage }) => ({
+        targetId: target.combatantId,
+        damageByType: damage.damageByType,
+        spellDamageReductionRoll: damage.spellDamageReductionRoll,
+      })),
       concentrationSavingThrowHoles,
       damageDispositionHoles,
       hideousLaughterDamageRepeatSaveHoles,
@@ -2766,59 +2733,48 @@ function glyphExplosiveRuneDamageLifecycleCheck(input: {
   };
 }
 
-function glyphExplosiveRuneDamageByTypeByTargetId(input: {
+function glyphExplosiveRuneDamageTargets(input: {
   readonly state: BattleState;
   readonly effect: GlyphDurableOccurrenceActiveEffect;
   readonly witness: GlyphExplosiveRuneReleaseWitness;
   readonly damageRollTotal: number;
   readonly savingThrowOutcomes: GlyphExplosiveRuneSavingThrowOutcomes;
-}): ReadonlyMap<CombatantId, ReadonlyMap<DamageType, number>> {
+}): readonly BattleDamageTarget<ReadonlyMap<DamageType, number>>[] {
   if (input.witness.areaMembership.kind === "noCreaturesInArea") {
-    return new Map();
+    return [];
   }
   if (input.effect.release.kind !== "explosiveRune") {
-    return new Map();
+    return [];
   }
   const release = input.effect.release;
-  return new Map(
-    input.witness.areaMembership.affectedTargetIds.flatMap((targetId) => {
-      const target = input.state.combatants.get(targetId);
-      const savingThrowOutcome = input.savingThrowOutcomes.find(
-        (outcome) => outcome.targetId === targetId,
-      );
-      if (target === undefined || savingThrowOutcome === undefined) {
-        return [];
-      }
-      const saveDamageResult = savingThrowOutcome.succeeded ? "half" : "full";
-      const damageByType = addDamageAmountForType(
-        new Map(),
-        release.damageType,
-        applySaveDamageResult(input.damageRollTotal, saveDamageResult),
-      );
-      return [[targetId, damageByType]];
-    }),
-  );
+  return battleDamageTargets({
+    state: input.state,
+    targetIds: input.witness.areaMembership.affectedTargetIds,
+    damageForTarget: (target) =>
+      input.savingThrowOutcomes.find(
+        (outcome) => outcome.targetId === target.combatantId,
+      ),
+  }).flatMap(({ target, damage: savingThrowOutcome }) => {
+    if (savingThrowOutcome === undefined) return [];
+    const saveDamageResult = savingThrowOutcome.succeeded ? "half" : "full";
+    const damageByType = addDamageAmountForType(
+      new Map(),
+      release.damageType,
+      applySaveDamageResult(input.damageRollTotal, saveDamageResult),
+    );
+    return [{ target, damage: damageByType }];
+  });
 }
 
 function glyphExplosiveRuneSpellDamageReductionHoles(input: {
-  readonly state: BattleState;
-  readonly damageByTypeByTargetId: ReadonlyMap<
-    CombatantId,
+  readonly damageTargets: readonly BattleDamageTarget<
     ReadonlyMap<DamageType, number>
-  >;
+  >[];
 }): readonly BattleSpellDamageReductionRollHole[] {
-  return [...input.damageByTypeByTargetId].flatMap(
-    ([targetId, damageByType]) => {
-      const target = input.state.combatants.get(targetId);
-      if (target === undefined) {
-        return [];
-      }
-      const reduction = availableSpellDamageReduction(target, damageByType);
-      return reduction === null
-        ? []
-        : [spellDamageReductionRollHole(reduction)];
-    },
-  );
+  return input.damageTargets.flatMap(({ target, damage }) => {
+    const reduction = availableSpellDamageReduction(target, damage);
+    return reduction === null ? [] : [spellDamageReductionRollHole(reduction)];
+  });
 }
 
 function hasUnexpectedOrDuplicateFills(
@@ -2875,16 +2831,16 @@ function applyGlyphExplosiveRuneDamage(input: {
     };
   }
   let state = input.state;
-  for (const targetId of areaMembership.affectedTargetIds) {
+  for (const damageTarget of input.lifecycle.damageTargets) {
+    const { targetId, damageByType, spellDamageReductionRoll } = damageTarget;
     const target = state.combatants.get(targetId);
-    const damageByType = input.lifecycle.damageByTypeByTargetId.get(targetId);
-    if (target === undefined || damageByType === undefined) {
+    if (target === undefined) {
       continue;
     }
     const spellReduction = applyAvailableSpellDamageReduction(
       target,
       damageByType,
-      input.lifecycle.spellDamageReductionRollsByTargetId.get(targetId),
+      spellDamageReductionRoll,
     );
     if (spellReduction.tag !== "ok") {
       return { tag: "invalid", reason: "spellDamageReductionMismatch" };
