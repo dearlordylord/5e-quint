@@ -26,19 +26,19 @@ totals, and comparison below are the self-contained durable evidence.
 ## Current authoritative diagnostic
 
 - Date: 2026-08-09
-- Git HEAD: `d63d8ec1a72c8a62cbdbff4ea953caa393f5b8d1`
+- Git HEAD: `765158cb126b3f1a3be28e8926927ba64388814f`
 - Command: `pnpm coverage`
 - Result: exit `0`
-- Total wall duration: 308 seconds
+- Total wall duration: 386 seconds
 - Battle-runtime tests: 204/204 files passed; 2,163 tests passed and 53
   skipped (2,216 total)
 
-| Metric     |                `3badb984d` |                `d63d8ec1a` | Covered / total change |    Uncovered change |   Delta |
-| ---------- | -------------------------: | -------------------------: | ---------------------: | ------------------: | ------: |
-| Statements | 120,226 / 124,676 (96.43%) | 120,166 / 124,610 (96.43%) |              -60 / -66 | 4,450 -> 4,444 (-6) |  0.00pp |
-| Branches   |   30,028 / 32,213 (93.21%) |   30,011 / 32,189 (93.23%) |              -17 / -24 | 2,185 -> 2,178 (-7) | +0.02pp |
-| Functions  |       4,795 / 4,795 (100%) |       4,795 / 4,795 (100%) |                  0 / 0 |              0 -> 0 |       0 |
-| Lines      | 120,226 / 124,676 (96.43%) | 120,166 / 124,610 (96.43%) |              -60 / -66 | 4,450 -> 4,444 (-6) |  0.00pp |
+| Metric     |                `d63d8ec1a` |                `765158cb1` | Covered / total change |     Uncovered change |   Delta |
+| ---------- | -------------------------: | -------------------------: | ---------------------: | -------------------: | ------: |
+| Statements | 120,166 / 124,610 (96.43%) | 120,126 / 124,537 (96.45%) |              -40 / -73 | 4,444 -> 4,411 (-33) | +0.02pp |
+| Branches   |   30,011 / 32,189 (93.23%) |   29,995 / 32,163 (93.25%) |              -16 / -26 | 2,178 -> 2,168 (-10) | +0.02pp |
+| Functions  |       4,795 / 4,795 (100%) |       4,796 / 4,796 (100%) |                  1 / 1 |               0 -> 0 |       0 |
+| Lines      | 120,166 / 124,610 (96.43%) | 120,126 / 124,537 (96.45%) |              -40 / -73 | 4,444 -> 4,411 (-33) | +0.02pp |
 
 ## Remaining static 99% gaps
 
@@ -47,28 +47,29 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 120,166 | 124,610 |                  123,364 |         3,198 |
-| Branches   |  30,011 |  32,189 |                   31,868 |         1,857 |
-| Functions  |   4,795 |   4,795 |                    4,748 |             0 |
-| Lines      | 120,166 | 124,610 |                  123,364 |         3,198 |
+| Statements | 120,126 | 124,537 |                  123,292 |         3,166 |
+| Branches   |  29,995 |  32,163 |                   31,842 |         1,847 |
+| Functions  |   4,796 |   4,796 |                    4,749 |             0 |
+| Lines      | 120,126 | 124,537 |                  123,292 |         3,166 |
 
 ## Milestone context
 
-Since `3badb984d`, issue #227 correlated save-gated damage discovery through one
-canonical target projection and narrowed dispatcher branches by Action and
-Runtime Command family while preserving route precedence and exhaustiveness.
+Since `d63d8ec1a`, issue #227 made `battleSubjectKey` family matching exhaustive,
+replaced weak object-contact penalty parsing with typed projections, and made
+reaction-attack damage resolution one typed transaction while correcting its
+reaction/Concentration QNT parity.
 
-The public checkpoint records 6 fewer uncovered statements/lines and 7 fewer
-uncovered branches. Raw predicate or denominator deletion is not an
-uncovered-gap forecast; plan only from authoritative public or focused
-instrumented uncovered counts. Continue from the current public report,
-preserve behavior and Quint parity, and remeasure only after the next coherent
-increment.
+The public checkpoint records 33 fewer uncovered statements/lines and 10 fewer
+uncovered branches. Focused cohort uncovered counts are regression and
+navigation evidence, not a forecast of the global public delta, because other
+public tests may already cover those arms. Only the full public totals establish
+global movement. Continue from the current public report, preserve behavior and
+Quint parity, and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting public metric at 93.23%, with a static 99% gap of
-1,857. Select one branch-heavy checked-in battle-runtime owner from the public
+Branches remain the limiting public metric at 93.25%, with a static 99% gap of
+1,847. Select one branch-heavy checked-in battle-runtime owner from the public
 report, audit its uncovered alternatives for schema-impossible or duplicated
 logic, cover only behaviorally reachable alternatives with focused tests, and
 then remeasure with the public root diagnostic.
