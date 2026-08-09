@@ -1,3 +1,5 @@
+import { Match } from "effect";
+import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 // Opportunity attack resolution owns the movement-triggered Reaction procedure.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
@@ -81,6 +83,7 @@ import {
   eligibleCunningStrikeContexts,
   resolveCunningStrikeAfterAttackDamage,
   selectedCunningStrikeContext,
+  type CunningStrikeContext,
 } from "./cunning-strike.ts";
 import {
   attackHitTriggerKind,
@@ -103,27 +106,62 @@ import {
 } from "./statblock-attacks.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import type {
+  AttackDamageRider,
   BattleAttackDamageEvent,
+  BattleAttackRollResult,
+  BattleCreatureState,
+  BattleHoleId,
   BattlePendingAttackDamageReduction,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
+  BattleState,
+  WeaponDamageDiceRollChoiceFill,
 } from "../battle-state-execution.ts";
-import { ATTACK_ROLL_HOLE_ID } from "./battle-runtime-protocol.ts";
+import {
+  ATTACK_ROLL_HOLE_ID,
+  type AttackFillSet,
+} from "./battle-runtime-protocol.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
 
+const byReactionAttackDamagePathKind = Match.discriminator("kind");
+
+type OpportunityAttackResolutionInput = BattleResolutionInputForSubject<
+  Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "opportunityAttack" | "retaliationAttack";
+    }
+  >
+> & {
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
+};
+
+type ResolvedAttackFillSet = Extract<AttackFillSet, { readonly tag: "ok" }>;
+
+type ReactionAttackDamagePath =
+  | {
+      readonly kind: "fixed";
+      readonly damageByTypeBeforeTargetAdjustments: Extract<
+        BattleAttackDamageEvent,
+        { readonly kind: "aggregateDamage" }
+      >["damageByTypeBeforeTargetAdjustments"];
+    }
+  | {
+      readonly kind: "rolled";
+      readonly damageRollByType: Extract<
+        BattleAttackDamageEvent,
+        { readonly kind: "rolledDamage" }
+      >["damageRollByType"];
+      readonly damageEventHoleId: BattleHoleId;
+      readonly attackDamageRiders: readonly AttackDamageRider[];
+      readonly weaponDamageDiceRollChoice: WeaponDamageDiceRollChoiceFill | null;
+      readonly cunningStrike: CunningStrikeContext | null;
+    };
+
 export function resolveOpportunityAttackCommand(
-  input: BattleResolutionInputForSubject<
-    Extract<
-      BattleSubject,
-      {
-        readonly tag: "runtimeCommand";
-        readonly command: "opportunityAttack" | "retaliationAttack";
-      }
-    >
-  > & {
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-    readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
-  },
+  input: OpportunityAttackResolutionInput,
 ): BattleResolutionResult {
   const pendingAttackDamageReductions =
     input.pendingAttackDamageReductions ?? [];
@@ -423,9 +461,6 @@ export function resolveOpportunityAttackCommand(
     eligibleCunningStrikeDamageOptions,
     fillSet.damageRoll?.cunningStrikeOption,
   );
-  const selectedCunningStrikeContinuation = cunningStrikeDamageContinuation(
-    selectedCunningStrike,
-  );
   const selectedDamageRidersAfterCunningStrikeCost =
     attackDamageRidersAfterCunningStrikeCost(
       selectedDamageRiders,
@@ -544,241 +579,21 @@ export function resolveOpportunityAttackCommand(
       );
     }
     /* v8 ignore stop */
-    const damageEvent = {
-      kind: "aggregateDamage" as const,
-      damageByTypeBeforeTargetAdjustments:
-        fixedDamageByTypeBeforeTargetAdjustments,
-    } satisfies BattleAttackDamageEvent;
-    const reducedDamageEvent = attackDamageEventAfterPendingReductions(
-      damageEvent,
-      pendingAttackDamageReductions,
-    );
-    const spellReduction = applyAvailableSpellDamageReduction(
+    return resolveReactionAttackDamageTransaction({
+      resolutionInput: input,
+      fillSet,
+      preConsumptionState: attackRolledState,
       target,
-      damageAmountByTypeEntriesToMap(
-        attackDamageEventEntries(reducedDamageEvent),
-      ),
-      fillSet.spellDamageReductionRoll,
-    );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (spellReduction.tag === "invalid") {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Spell damage reduction roll does not match an unused matching damage-reduction spell effect.",
-      );
-    }
-    /* v8 ignore stop */
-    if (spellReduction.tag === "needsHoles") {
-      return needsHolesResult(attackRolledState, input.subject, [
-        ...spellReduction.holes,
-      ]);
-    }
-    const reducedDamageEventAfterSpellReduction = attackDamageEventWithEntries(
-      reducedDamageEvent,
-      damageAmountByTypeMapEntries(spellReduction.damageByType),
-    );
-    const spellReducedState = {
-      ...attackRolledState,
-      combatants: new Map(attackRolledState.combatants).set(
-        target.combatantId,
-        spellReduction.target,
-      ),
-    };
-    const reducedFixedDamageAmount = attackDamageEventAmountForTarget(
-      spellReducedState,
-      spellReduction.target,
-      reducedDamageEventAfterSpellReduction,
-    );
-    const damageDispositionHole = attackDamageDispositionHole({
       attack,
-      attackerId: subject.reactorId,
-      target: spellReduction.target,
-      damageAmount: reducedFixedDamageAmount,
-    });
-    const damageDispositionValidation = damageDispositionFillValidation({
-      hole: damageDispositionHole,
-      filled: fillSet.damageDispositionFilled,
-      value: fillSet.damageDisposition,
-    });
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (damageDispositionValidation !== null) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        damageDispositionValidation,
-      );
-    }
-    /* v8 ignore stop */
-    if (damageDispositionHole !== null) {
-      if (!fillSet.damageDispositionFilled) {
-        return needsHolesResult(attackRolledState, input.subject, [
-          damageDispositionHole,
-        ]);
-      }
-    }
-    const relationshipCheck = damageRelationshipDecisionFillCheck({
-      state: spellReducedState,
-      damageEventHoleId: ATTACK_ROLL_HOLE_ID,
-      damageSourceId: subject.reactorId,
-      targets:
-        Number(reducedFixedDamageAmount) <= 0
-          ? []
-          : [
-              {
-                targetId: subject.targetId,
-                damageAmount: toDamageAmount(Number(reducedFixedDamageAmount)),
-                damageDisposition: fillSet.damageDisposition,
-              },
-            ],
-      spatialFacts: fillSet.targetSpatialFacts,
-      decisionsByRelationshipHole: fillSet.damageRelationshipDecisions,
-    });
-    if (relationshipCheck.tag === "needsHoles") {
-      return needsHolesResult(
-        spellReducedState,
-        input.subject,
-        relationshipCheck.holes,
-      );
-    }
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (relationshipCheck.tag === "invalid") {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        relationshipCheck.message,
-      );
-    }
-    /* v8 ignore stop */
-    const attackDamageReactionWindow = maybeOpenInterruptWindow(
-      spellReducedState,
-      {
-        trigger: "attackDamage",
-        continuation: attackDamageInterruptionFrame({
-          participant: input.subject,
-          targetId: subject.targetId,
-          targetSpatialFacts: fillSet.targetSpatialFacts,
-          attackResult: effectiveAttackRoll,
-          damageInput: reducedDamageEventAfterSpellReduction,
-          critical,
-          continuation: {
-            kind: "damageOnly",
-            concentrationSavingThrows: fillSet.concentrationSavingThrows,
-            damageDisposition: fillSet.damageDisposition,
-            attackDamageRiders: [],
-            ...optionalProperty(
-              "relationshipDecisions",
-              relationshipCheck.decisions,
-            ),
-          },
-        }),
+      effectiveAttackRoll,
+      critical,
+      pendingAttackDamageReductions,
+      path: {
+        kind: "fixed",
+        damageByTypeBeforeTargetAdjustments:
+          fixedDamageByTypeBeforeTargetAdjustments,
       },
-      input.handledInterruptTrigger,
-    );
-    if (attackDamageReactionWindow !== null) {
-      return attackDamageReactionWindow;
-    }
-    const concentrationSave = concentrationSavingThrowHole(
-      spellReduction.target,
-      reducedFixedDamageAmount,
-    );
-    const primaryConcentrationSavingThrow =
-      concentrationSave === null
-        ? undefined
-        : concentrationSavingThrowFillFor(
-            fillSet.concentrationSavingThrows,
-            concentrationSave,
-          );
-    const concentrationSaveCheck =
-      damageLifecycleConcentrationSavingThrowFillCheck({
-        state: spellReducedState,
-        target: spellReduction.target,
-        damageAmount: reducedFixedDamageAmount,
-        fills: fillSet.concentrationSavingThrows,
-      });
-    if (concentrationSaveCheck.tag === "needsHoles") {
-      return needsHolesResult(spellReducedState, input.subject, [
-        ...concentrationSaveCheck.holes,
-      ]);
-    }
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (concentrationSaveCheck.tag === "invalid") {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        concentrationSaveCheck.message,
-      );
-    }
-    /* v8 ignore stop */
-    const hideousLaughterSaveCheck =
-      damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
-        state: spellReducedState,
-        target: spellReduction.target,
-        damageAmount: reducedFixedDamageAmount,
-        fills: fillSet.hideousLaughterDamageRepeatSaves,
-      });
-    if (hideousLaughterSaveCheck.tag === "needsHoles") {
-      return needsHolesResult(spellReducedState, input.subject, [
-        ...hideousLaughterSaveCheck.holes,
-      ]);
-    }
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (hideousLaughterSaveCheck.tag === "invalid") {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        hideousLaughterSaveCheck.message,
-      );
-    }
-    /* v8 ignore stop */
-    const nextState = applyAttackDamageAmount({
-      state: spellReducedState,
-      attackerId: subject.reactorId,
-      targetId: subject.targetId,
-      damageAmount: reducedFixedDamageAmount,
-      deathFailuresAtZeroHp: critical ? 2 : 1,
-      damageDisposition: fillSet.damageDisposition,
-      attackDamageRiders: [],
-      concentrationSavingThrow: primaryConcentrationSavingThrow,
-      hideousLaughterDamageRepeatSaves:
-        fillSet.hideousLaughterDamageRepeatSaves,
-      wardingBondDamageShareConcentrationSavingThrows:
-        fillSet.concentrationSavingThrows,
-      spatialFacts: fillSet.targetSpatialFacts,
-      relationshipDecisions: relationshipCheck.decisions,
     });
-    const reactionWindow = maybeOpenInterruptWindow(
-      nextState,
-      {
-        trigger: "afterDamage",
-        damageSourceId: subject.reactorId,
-        damagedId: subject.targetId,
-        damageAmount: reducedFixedDamageAmount,
-        reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
-          facts: fillSet.targetSpatialFacts,
-          damagedId: subject.targetId,
-          damageSourceId: subject.reactorId,
-        }),
-        continuation: {
-          kind: "resolved",
-          subject: input.subject,
-        },
-      },
-      input.handledInterruptTrigger,
-    );
-    if (reactionWindow !== null) {
-      return reactionWindow;
-    }
-    return {
-      tag: "resolved",
-      state: nextState,
-      snapshot: snapshotBattle(nextState),
-    };
   }
   if (fillSet.damageRoll == null) {
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -897,10 +712,63 @@ export function resolveOpportunityAttackCommand(
       ...sourcePenalty.holes,
     ]);
   }
-  const damageEvent = {
-    kind: "rolledDamage" as const,
-    damageRollByType: damageAmountByTypeMapEntries(sourcePenalty.damageByType),
-  } satisfies BattleAttackDamageEvent;
+  return resolveReactionAttackDamageTransaction({
+    resolutionInput: input,
+    fillSet,
+    preConsumptionState: attackRolledState,
+    target,
+    attack,
+    effectiveAttackRoll,
+    critical,
+    pendingAttackDamageReductions,
+    path: {
+      kind: "rolled",
+      damageRollByType: damageAmountByTypeMapEntries(
+        sourcePenalty.damageByType,
+      ),
+      damageEventHoleId: fillSet.damageRoll.holeId,
+      attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
+      weaponDamageDiceRollChoice: selectedDamageDiceChoice,
+      cunningStrike: selectedCunningStrike,
+    },
+  });
+}
+function resolveReactionAttackDamageTransaction(input: {
+  readonly resolutionInput: OpportunityAttackResolutionInput;
+  readonly fillSet: ResolvedAttackFillSet;
+  readonly preConsumptionState: BattleState;
+  readonly target: BattleCreatureState;
+  readonly attack: SupportedAttackActionOption;
+  readonly effectiveAttackRoll: BattleAttackRollResult;
+  readonly critical: boolean;
+  readonly pendingAttackDamageReductions: readonly BattlePendingAttackDamageReduction[];
+  readonly path: ReactionAttackDamagePath;
+}): BattleResolutionResult {
+  const {
+    resolutionInput,
+    fillSet,
+    preConsumptionState,
+    target,
+    attack,
+    effectiveAttackRoll,
+    critical,
+    pendingAttackDamageReductions,
+    path,
+  } = input;
+  const subject = resolutionInput.subject;
+
+  const damageEvent: BattleAttackDamageEvent = Match.value(path).pipe(
+    byReactionAttackDamagePathKind("fixed", (fixed) => ({
+      kind: "aggregateDamage" as const,
+      damageByTypeBeforeTargetAdjustments:
+        fixed.damageByTypeBeforeTargetAdjustments,
+    })),
+    byReactionAttackDamagePathKind("rolled", (rolled) => ({
+      kind: "rolledDamage" as const,
+      damageRollByType: rolled.damageRollByType,
+    })),
+    Match.exhaustive,
+  );
   const reducedDamageEvent = attackDamageEventAfterPendingReductions(
     damageEvent,
     pendingAttackDamageReductions,
@@ -912,28 +780,33 @@ export function resolveOpportunityAttackCommand(
     ),
     fillSet.spellDamageReductionRoll,
   );
+
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (spellReduction.tag === "invalid") {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
-      input.state,
+      resolutionInput.state,
       "invalidFill",
       "Spell damage reduction roll does not match an unused matching damage-reduction spell effect.",
     );
   }
   /* v8 ignore stop */
+
   if (spellReduction.tag === "needsHoles") {
-    return needsHolesResult(attackRolledState, input.subject, [
-      ...spellReduction.holes,
-    ]);
+    return needsHolesResult(
+      preConsumptionState,
+      resolutionInput.subject,
+      spellReduction.holes,
+    );
   }
+
   const reducedDamageEventAfterSpellReduction = attackDamageEventWithEntries(
     reducedDamageEvent,
     damageAmountByTypeMapEntries(spellReduction.damageByType),
   );
   const spellReducedState = {
-    ...attackRolledState,
-    combatants: new Map(attackRolledState.combatants).set(
+    ...preConsumptionState,
+    combatants: new Map(preConsumptionState.combatants).set(
       target.combatantId,
       spellReduction.target,
     ),
@@ -943,6 +816,7 @@ export function resolveOpportunityAttackCommand(
     spellReduction.target,
     reducedDamageEventAfterSpellReduction,
   );
+
   const damageDispositionHole = attackDamageDispositionHole({
     attack,
     attackerId: subject.reactorId,
@@ -954,26 +828,35 @@ export function resolveOpportunityAttackCommand(
     filled: fillSet.damageDispositionFilled,
     value: fillSet.damageDisposition,
   });
+
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (damageDispositionValidation !== null) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
-      input.state,
+      resolutionInput.state,
       "invalidFill",
       damageDispositionValidation,
     );
   }
   /* v8 ignore stop */
-  if (damageDispositionHole !== null) {
-    if (!fillSet.damageDispositionFilled) {
-      return needsHolesResult(attackRolledState, input.subject, [
-        damageDispositionHole,
-      ]);
-    }
+
+  if (damageDispositionHole !== null && !fillSet.damageDispositionFilled) {
+    return needsHolesResult(preConsumptionState, resolutionInput.subject, [
+      damageDispositionHole,
+    ]);
   }
+
+  const damageEventHoleId = Match.value(path).pipe(
+    byReactionAttackDamagePathKind("fixed", () => ATTACK_ROLL_HOLE_ID),
+    byReactionAttackDamagePathKind(
+      "rolled",
+      (rolled) => rolled.damageEventHoleId,
+    ),
+    Match.exhaustive,
+  );
   const relationshipCheck = damageRelationshipDecisionFillCheck({
     state: spellReducedState,
-    damageEventHoleId: fillSet.damageRoll.holeId,
+    damageEventHoleId,
     damageSourceId: subject.reactorId,
     targets:
       Number(reducedDamageAmount) <= 0
@@ -988,54 +871,71 @@ export function resolveOpportunityAttackCommand(
     spatialFacts: fillSet.targetSpatialFacts,
     decisionsByRelationshipHole: fillSet.damageRelationshipDecisions,
   });
+
   if (relationshipCheck.tag === "needsHoles") {
     return needsHolesResult(
-      spellReducedState,
-      input.subject,
+      preConsumptionState,
+      resolutionInput.subject,
       relationshipCheck.holes,
     );
   }
+
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (relationshipCheck.tag === "invalid") {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", relationshipCheck.message);
+    return invalidResult(
+      resolutionInput.state,
+      "invalidFill",
+      relationshipCheck.message,
+    );
   }
   /* v8 ignore stop */
+
+  const sharedContinuationFacts = {
+    kind: "damageOnly" as const,
+    concentrationSavingThrows: fillSet.concentrationSavingThrows,
+    damageDisposition: fillSet.damageDisposition,
+    ...optionalProperty("relationshipDecisions", relationshipCheck.decisions),
+  };
+  const attackDamageContinuation = Match.value(path).pipe(
+    byReactionAttackDamagePathKind("fixed", () => ({
+      ...sharedContinuationFacts,
+      attackDamageRiders: [],
+    })),
+    byReactionAttackDamagePathKind("rolled", (rolled) => ({
+      ...sharedContinuationFacts,
+      attackDamageRiders: rolled.attackDamageRiders,
+      ...(rolled.weaponDamageDiceRollChoice === null
+        ? {}
+        : { weaponDamageDiceRollChoice: rolled.weaponDamageDiceRollChoice }),
+      ...optionalProperty(
+        "cunningStrike",
+        cunningStrikeDamageContinuation(rolled.cunningStrike),
+      ),
+    })),
+    Match.exhaustive,
+  );
+
   const attackDamageReactionWindow = maybeOpenInterruptWindow(
     spellReducedState,
     {
       trigger: "attackDamage",
       continuation: attackDamageInterruptionFrame({
-        participant: input.subject,
+        participant: resolutionInput.subject,
         targetId: subject.targetId,
         targetSpatialFacts: fillSet.targetSpatialFacts,
         attackResult: effectiveAttackRoll,
         damageInput: reducedDamageEventAfterSpellReduction,
         critical,
-        continuation: {
-          kind: "damageOnly",
-          concentrationSavingThrows: fillSet.concentrationSavingThrows,
-          damageDisposition: fillSet.damageDisposition,
-          attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
-          ...optionalProperty(
-            "relationshipDecisions",
-            relationshipCheck.decisions,
-          ),
-          ...(selectedDamageDiceChoice === null
-            ? {}
-            : { weaponDamageDiceRollChoice: selectedDamageDiceChoice }),
-          ...optionalProperty(
-            "cunningStrike",
-            selectedCunningStrikeContinuation,
-          ),
-        },
+        continuation: attackDamageContinuation,
       }),
     },
-    input.handledInterruptTrigger,
+    resolutionInput.handledInterruptTrigger,
   );
   if (attackDamageReactionWindow !== null) {
     return attackDamageReactionWindow;
   }
+
   const concentrationSave = concentrationSavingThrowHole(
     spellReduction.target,
     reducedDamageAmount,
@@ -1054,21 +954,26 @@ export function resolveOpportunityAttackCommand(
       damageAmount: reducedDamageAmount,
       fills: fillSet.concentrationSavingThrows,
     });
+
   if (concentrationSaveCheck.tag === "needsHoles") {
-    return needsHolesResult(spellReducedState, input.subject, [
-      ...concentrationSaveCheck.holes,
-    ]);
+    return needsHolesResult(
+      preConsumptionState,
+      resolutionInput.subject,
+      concentrationSaveCheck.holes,
+    );
   }
+
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (concentrationSaveCheck.tag === "invalid") {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
-      input.state,
+      resolutionInput.state,
       "invalidFill",
       concentrationSaveCheck.message,
     );
   }
   /* v8 ignore stop */
+
   const hideousLaughterSaveCheck =
     damageLifecycleHideousLaughterDamageRepeatSaveFillCheck({
       state: spellReducedState,
@@ -1076,30 +981,46 @@ export function resolveOpportunityAttackCommand(
       damageAmount: reducedDamageAmount,
       fills: fillSet.hideousLaughterDamageRepeatSaves,
     });
+
   if (hideousLaughterSaveCheck.tag === "needsHoles") {
-    return needsHolesResult(spellReducedState, input.subject, [
-      ...hideousLaughterSaveCheck.holes,
-    ]);
+    return needsHolesResult(
+      preConsumptionState,
+      resolutionInput.subject,
+      hideousLaughterSaveCheck.holes,
+    );
   }
+
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (hideousLaughterSaveCheck.tag === "invalid") {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(
-      input.state,
+      resolutionInput.state,
       "invalidFill",
       hideousLaughterSaveCheck.message,
     );
   }
   /* v8 ignore stop */
-  const nextState = applyAttackDamageAmount({
+
+  const pathDamageApplication = Match.value(path).pipe(
+    byReactionAttackDamagePathKind("fixed", () => ({
+      attackDamageRiders: [] as const,
+    })),
+    byReactionAttackDamagePathKind("rolled", (rolled) => ({
+      attackDamageRiders: rolled.attackDamageRiders,
+      ...(rolled.weaponDamageDiceRollChoice === null
+        ? {}
+        : { weaponDamageDiceRollChoice: rolled.weaponDamageDiceRollChoice }),
+    })),
+    Match.exhaustive,
+  );
+  const damagedState = applyAttackDamageAmount({
     state: spellReducedState,
     attackerId: subject.reactorId,
     targetId: subject.targetId,
     damageAmount: reducedDamageAmount,
     deathFailuresAtZeroHp: critical ? 2 : 1,
     damageDisposition: fillSet.damageDisposition,
-    attackDamageRiders: selectedDamageRidersAfterCunningStrikeCost,
-    weaponDamageDiceRollChoice: selectedDamageDiceChoice ?? undefined,
+    ...pathDamageApplication,
     concentrationSavingThrow: primaryConcentrationSavingThrow,
     hideousLaughterDamageRepeatSaves: fillSet.hideousLaughterDamageRepeatSaves,
     wardingBondDamageShareConcentrationSavingThrows:
@@ -1107,27 +1028,46 @@ export function resolveOpportunityAttackCommand(
     spatialFacts: fillSet.targetSpatialFacts,
     relationshipDecisions: relationshipCheck.decisions,
   });
-  const cunningStrike = resolveCunningStrikeAfterAttackDamage({
-    state: nextState,
-    selected: selectedCunningStrike,
-    savingThrow: fillSet.cunningStrikeSavingThrow,
-    movement: fillSet.cunningStrikeMovement,
-    toolPossession: fillSet.cunningStrikeToolPossession,
-    endTurnCover: fillSet.cunningStrikeEndTurnCover,
-  });
-  if (cunningStrike.tag === "needsHoles") {
-    return needsHolesResult(spellReducedState, input.subject, [
-      ...cunningStrike.holes,
-    ]);
+
+  const afterDamagePath = Match.value(path).pipe(
+    byReactionAttackDamagePathKind("fixed", () => ({
+      tag: "ok" as const,
+      state: damagedState,
+    })),
+    byReactionAttackDamagePathKind("rolled", (rolled) =>
+      resolveCunningStrikeAfterAttackDamage({
+        state: damagedState,
+        selected: rolled.cunningStrike,
+        savingThrow: fillSet.cunningStrikeSavingThrow,
+        movement: fillSet.cunningStrikeMovement,
+        toolPossession: fillSet.cunningStrikeToolPossession,
+        endTurnCover: fillSet.cunningStrikeEndTurnCover,
+      }),
+    ),
+    Match.exhaustive,
+  );
+
+  if (afterDamagePath.tag === "needsHoles") {
+    return needsHolesResult(
+      preConsumptionState,
+      resolutionInput.subject,
+      afterDamagePath.holes,
+    );
   }
+
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (cunningStrike.tag === "invalid") {
+  if (afterDamagePath.tag === "invalid") {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", cunningStrike.message);
+    return invalidResult(
+      resolutionInput.state,
+      "invalidFill",
+      afterDamagePath.message,
+    );
   }
   /* v8 ignore stop */
-  const reactionWindow = maybeOpenInterruptWindow(
-    cunningStrike.state,
+
+  const afterDamageReactionWindow = maybeOpenInterruptWindow(
+    afterDamagePath.state,
     {
       trigger: "afterDamage",
       damageSourceId: subject.reactorId,
@@ -1140,17 +1080,18 @@ export function resolveOpportunityAttackCommand(
       }),
       continuation: {
         kind: "resolved",
-        subject: input.subject,
+        subject: resolutionInput.subject,
       },
     },
-    input.handledInterruptTrigger,
+    resolutionInput.handledInterruptTrigger,
   );
-  if (reactionWindow !== null) {
-    return reactionWindow;
+  if (afterDamageReactionWindow !== null) {
+    return afterDamageReactionWindow;
   }
+
   return {
     tag: "resolved",
-    state: cunningStrike.state,
-    snapshot: snapshotBattle(cunningStrike.state),
+    state: afterDamagePath.state,
+    snapshot: snapshotBattle(afterDamagePath.state),
   };
 }

@@ -13,6 +13,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  concentrationSavingThrowFill,
   testCharacterD20Statistics,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -1729,12 +1730,25 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       targetHp: 1,
       targetMaxHp: 10,
     });
-    const state = withResistanceEffect(
+    const resistanceState = withResistanceEffect(
       baseState.state,
       spellTargetId,
       "slashing",
       false,
     );
+    const target = requireCombatant(resistanceState, spellTargetId);
+    const state: BattleState = {
+      ...resistanceState,
+      combatants: new Map(resistanceState.combatants).set(spellTargetId, {
+        ...target,
+        concentration: {
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            "synthetic_opportunity_attack_target_concentration",
+          ),
+          effectKind: "spellEffect",
+        },
+      }),
+    };
     const subject: Extract<
       BattleSubject,
       { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
@@ -1773,7 +1787,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     const reduction = requireSpellDamageReductionHole(needsReduction.holes);
     const reductionFill = damageRollFillWithGroups(reduction, [[3]]);
     const needsDisposition = resolveBattleSubject({
-      state,
+      state: needsReduction.state,
       subject,
       fills: [attackFill, damageFill, reductionFill],
     });
@@ -1786,14 +1800,33 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       "attackDamageDisposition",
     );
 
+    const dispositionFill = attackDamageDispositionFill(disposition, {
+      kind: "ordinaryDamage",
+    });
+    const needsConcentration = resolveBattleSubject({
+      state: needsDisposition.state,
+      subject,
+      fills: [attackFill, damageFill, reductionFill, dispositionFill],
+    });
+    expect(needsConcentration).toMatchObject({ tag: "needsHoles" });
+    if (needsConcentration.tag !== "needsHoles") {
+      throw new Error("Expected Opportunity Attack Concentration save hole.");
+    }
+    const concentration = requireHole(
+      needsConcentration.holes,
+      "concentrationSavingThrow",
+    );
+    expect(concentration).toMatchObject({ damageAmount: 1 });
+
     const resolved = resolveBattleSubject({
-      state,
+      state: needsConcentration.state,
       subject,
       fills: [
         attackFill,
         damageFill,
         reductionFill,
-        attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
+        dispositionFill,
+        concentrationSavingThrowFill(concentration, false),
       ],
     });
 
@@ -1803,12 +1836,8 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     }
     const damaged = requireCombatant(resolved.state, spellTargetId);
     expect(damaged.hp).toBe(Hp(0));
-    expect(damaged.activeEffects).toContainEqual(
-      expect.objectContaining({
-        kind: "spellDamageReduction",
-        usedThisTurn: true,
-      }),
-    );
+    expect(damaged.concentration).toBeNull();
+    expect(damaged.activeEffects).toEqual([]);
   });
 });
 

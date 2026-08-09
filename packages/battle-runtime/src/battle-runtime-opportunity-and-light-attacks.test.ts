@@ -56,6 +56,10 @@ import {
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 import { resolvedAnimalFriendshipState } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
+  requireSpellDamageReductionHole,
+  withResistanceEffect,
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import {
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
@@ -1962,9 +1966,9 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     });
   });
 
-  test("Opportunity Attack opens attack-damage Reaction windows before movement resumes", () => {
+  test("Opportunity Attack preserves Resistance reduction through an attack-damage Reaction", () => {
     const cuttingWordsDamageOnly = cuttingWordsDamageOnlyUnit();
-    const state = startBattleRight({
+    const baseState = startBattleRight({
       battleId: battleId("battle-opportunity-attack-damage-reaction"),
       combatants: [
         characterSeed({
@@ -1986,6 +1990,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
+    const state = withResistanceEffect(baseState, fighterId, "slashing", false);
     const moveSubject: BattleSubject = {
       tag: "runtimeCommand",
       actorId: fighterId,
@@ -2035,12 +2040,31 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       "rolledDice",
     );
 
-    const awaitingDamageReaction = resolveBattleSubject({
+    const needsResistanceReduction = resolveBattleSubject({
       state: startedReaction.state,
       subject: choice.subject,
       fills: [
         attackRollFill(attackRoll, { total: 20, naturalD20: 18 }),
         damageRollFill(damage, 6),
+      ],
+    });
+    if (needsResistanceReduction.tag !== "needsHoles") {
+      throw new Error("Expected Resistance reduction roll.");
+    }
+    const resistanceReduction = requireSpellDamageReductionHole(
+      needsResistanceReduction.holes,
+    );
+    const resistanceReductionFill = damageRollFillWithGroups(
+      resistanceReduction,
+      [[3]],
+    );
+    const awaitingDamageReaction = resolveBattleSubject({
+      state: needsResistanceReduction.state,
+      subject: choice.subject,
+      fills: [
+        attackRollFill(attackRoll, { total: 20, naturalD20: 18 }),
+        damageRollFill(damage, 6),
+        resistanceReductionFill,
       ],
     });
     if (awaitingDamageReaction.tag !== "needsHoles") {
@@ -2086,7 +2110,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       expect.arrayContaining([
         expect.objectContaining({
           combatantId: fighterId,
-          hp: 7,
+          hp: 10,
           reactionAvailable: false,
           movement: expect.objectContaining({
             spentFeet: 5,
@@ -2098,6 +2122,14 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           reactionAvailable: false,
         }),
       ]),
+    );
+    expect(
+      completed.state.combatants.get(fighterId)?.activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "spellDamageReduction",
+        usedThisTurn: true,
+      }),
     );
   });
 

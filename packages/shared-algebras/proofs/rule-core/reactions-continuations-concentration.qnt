@@ -63,12 +63,30 @@ module reactionsContinuationsConcentration {
     saveDc: int,
   }
 
+  type ConcentrationDamageContinuation = {
+    actor: ReactionProtocolActor,
+    damageAmount: int,
+  }
+
   type ReactionProtocolState = {
     interruptedActor: MovementGrappleState,
     reactor: MovementGrappleState,
     reactionWindow: ReactionWindowState,
     concentration: ActorConcentrationState,
   }
+
+  type ConcentrationDamageInterruptionOffer =
+    | NoConcentrationDamageInterruption({
+        state: ReactionProtocolState,
+      })
+    | ConcentrationDamageInterruptionUnavailable({
+        state: ReactionProtocolState,
+        continuation: ConcentrationDamageContinuation,
+      })
+    | ConcentrationDamageInterruptionOffered({
+        state: ReactionProtocolState,
+        continuation: ConcentrationDamageContinuation,
+      })
 
   pure def maximumReactionWindowDepth: int = 2
 
@@ -416,43 +434,60 @@ module reactionsContinuationsConcentration {
     }
   }
 
-  pure def applyDamageTargetWithConcentrationInterruption(
+  pure def offerDamageTargetWithConcentrationInterruption(
     state: ReactionProtocolState,
     target: ConcentrationDamageTarget,
-    effectiveDamage: int,
+    effectiveDamage: int
+  ): ConcentrationDamageInterruptionOffer = {
+    if (not(canApplyResolvedDamageToPositiveHitPoints(target.vitals)))
+      NoConcentrationDamageInterruption({ state: state })
+    else {
+      if (effectiveDamage <= 0)
+        NoConcentrationDamageInterruption({ state: state })
+      else {
+        val continuation = {
+          actor: target.actor,
+          damageAmount: effectiveDamage,
+        }
+        val offeredWindow = offerReactionWindow(
+          state.reactionWindow,
+          DamageInterruptionReactionWindow
+        )
+        if (offeredWindow == state.reactionWindow)
+          ConcentrationDamageInterruptionUnavailable({
+            state: state,
+            continuation: continuation,
+          })
+        else
+          ConcentrationDamageInterruptionOffered({
+            state: state.with("reactionWindow", offeredWindow),
+            continuation: continuation,
+          })
+      }
+    }
+  }
+
+  pure def resumeDamageTargetAfterConcentrationInterruption(
+    stateAfterReaction: ReactionProtocolState,
+    continuation: ConcentrationDamageContinuation,
     concentrationSaveSucceeded: bool
   ): ReactionProtocolState = {
-    if (not(canApplyResolvedDamageToPositiveHitPoints(target.vitals))) state
-    else {
-    val damaged = applyResolvedDamageToPositiveHitPoints(target.vitals, effectiveDamage)
-    val afterDamageConcentration = resolveConcentrationAfterDamage(
-      concentrationForActor(state.concentration, target.actor),
-      damaged.damageToHitPoints,
+    val resolved = resolveConcentrationAfterDamage(
+      concentrationForActor(
+        stateAfterReaction.concentration,
+        continuation.actor
+      ),
+      continuation.damageAmount,
       concentrationSaveSucceeded
     )
-    val afterDamage = {
-      interruptedActor: state.interruptedActor,
-      reactor: state.reactor,
-      reactionWindow: state.reactionWindow,
-      concentration: setConcentrationForActor(
-        state.concentration,
-        target.actor,
-        afterDamageConcentration.concentration
-      ),
-    }
-    val opensInterruption = damaged.damageToHitPoints > 0
-    if (not(opensInterruption)) afterDamage
-    else
-    {
-      interruptedActor: afterDamage.interruptedActor,
-      reactor: afterDamage.reactor,
-      reactionWindow: offerReactionWindow(
-        afterDamage.reactionWindow,
-        DamageInterruptionReactionWindow
-      ),
-      concentration: afterDamage.concentration,
-    }
-    }
+    stateAfterReaction.with(
+      "concentration",
+      setConcentrationForActor(
+        stateAfterReaction.concentration,
+        continuation.actor,
+        resolved.concentration
+      )
+    )
   }
 
 }

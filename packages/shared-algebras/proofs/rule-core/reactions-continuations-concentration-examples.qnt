@@ -132,7 +132,7 @@ module reactionsContinuationsConcentrationExamples {
   }
 
   run test_damage_integration_opens_interruption_and_breaks_concentration = {
-    val result = applyDamageTargetWithConcentrationInterruption(
+    val offered = offerDamageTargetWithConcentrationInterruption(
       initialReactionProtocolState.with("concentration", {
         interruptedActor: Concentrating,
         reactor: Concentrating,
@@ -148,21 +148,40 @@ module reactionsContinuationsConcentrationExamples {
           unconscious: false,
         },
       },
-      12,
-      false
+      12
     )
-    all {
-      assert(result.concentration.interruptedActor == NoConcentration),
-      assert(result.concentration.reactor == Concentrating),
-      assert(result.reactionWindow == OfferedDamageInterruptionWindow({
-        suspended: NoSuspendedReactionWindow,
-      })),
-      assert(legalReactionProtocolState(result)),
+    match offered {
+      | NoConcentrationDamageInterruption(_) => false
+      | ConcentrationDamageInterruptionUnavailable(_) => false
+      | ConcentrationDamageInterruptionOffered(data) => {
+          val stateAfterReaction = data.state.with(
+            "reactionWindow",
+            advanceContinuation(data.state.reactionWindow)
+          )
+          val resumed = resumeDamageTargetAfterConcentrationInterruption(
+            stateAfterReaction,
+            data.continuation,
+            false
+          )
+          all {
+            assert(data.state.concentration.interruptedActor == Concentrating),
+            assert(data.state.concentration.reactor == Concentrating),
+            assert(data.state.reactionWindow == OfferedDamageInterruptionWindow({
+              suspended: NoSuspendedReactionWindow,
+            })),
+            assert(data.continuation.actor == InterruptedActor),
+            assert(data.continuation.damageAmount == 12),
+            assert(resumed.concentration.interruptedActor == NoConcentration),
+            assert(resumed.concentration.reactor == Concentrating),
+            assert(resumed.reactionWindow == NoReactionWindow),
+            assert(legalReactionProtocolState(resumed)),
+          }
+        }
     }
   }
 
   run test_damage_integration_breaks_only_target_actor_concentration = {
-    val result = applyDamageTargetWithConcentrationInterruption(
+    val offered = offerDamageTargetWithConcentrationInterruption(
       initialReactionProtocolState.with("concentration", {
         interruptedActor: Concentrating,
         reactor: Concentrating,
@@ -178,13 +197,30 @@ module reactionsContinuationsConcentrationExamples {
           unconscious: false,
         },
       },
-      12,
-      false
+      12
     )
-    all {
-      assert(result.concentration.interruptedActor == Concentrating),
-      assert(result.concentration.reactor == NoConcentration),
-      assert(legalReactionProtocolState(result)),
+    match offered {
+      | NoConcentrationDamageInterruption(_) => false
+      | ConcentrationDamageInterruptionUnavailable(_) => false
+      | ConcentrationDamageInterruptionOffered(data) => {
+          val stateAfterReaction = data.state.with(
+            "reactionWindow",
+            advanceContinuation(data.state.reactionWindow)
+          )
+          val resumed = resumeDamageTargetAfterConcentrationInterruption(
+            stateAfterReaction,
+            data.continuation,
+            false
+          )
+          all {
+            assert(data.state.concentration.interruptedActor == Concentrating),
+            assert(data.state.concentration.reactor == Concentrating),
+            assert(data.continuation.actor == Reactor),
+            assert(resumed.concentration.interruptedActor == Concentrating),
+            assert(resumed.concentration.reactor == NoConcentration),
+            assert(legalReactionProtocolState(resumed)),
+          }
+        }
     }
   }
 
@@ -200,18 +236,131 @@ module reactionsContinuationsConcentrationExamples {
         unconscious: true,
       },
     }
-    assert(applyDamageTargetWithConcentrationInterruption(
+    assert(offerDamageTargetWithConcentrationInterruption(
       initialReactionProtocolState.with("concentration", {
         interruptedActor: Concentrating,
         reactor: Concentrating,
       }),
       invalidPositiveHpTarget,
-      12,
-      false
-    ) == initialReactionProtocolState.with("concentration", {
+      12
+    ) == NoConcentrationDamageInterruption({
+      state: initialReactionProtocolState.with("concentration", {
+        interruptedActor: Concentrating,
+        reactor: Concentrating,
+      }),
+    }))
+  }
+
+  run test_zero_damage_does_not_open_interruption_or_change_concentration = {
+    val state = initialReactionProtocolState.with("concentration", {
       interruptedActor: Concentrating,
       reactor: Concentrating,
-    }))
+    })
+    val offered = offerDamageTargetWithConcentrationInterruption(
+      state,
+      {
+        actor: InterruptedActor,
+        vitals: {
+          kind: PlayerCharacter,
+          hitPoints: 20,
+          hitPointMaximum: 20,
+          temporaryHitPoints: 0,
+          dead: false,
+          unconscious: false,
+        },
+      },
+      0
+    )
+    assert(offered == NoConcentrationDamageInterruption({ state: state }))
+  }
+
+  run test_temporary_hit_points_do_not_prevent_damage_interruption_or_concentration = {
+    val state = initialReactionProtocolState.with("concentration", {
+      interruptedActor: Concentrating,
+      reactor: Concentrating,
+    })
+    val offered = offerDamageTargetWithConcentrationInterruption(
+      state,
+      {
+        actor: InterruptedActor,
+        vitals: {
+          kind: PlayerCharacter,
+          hitPoints: 20,
+          hitPointMaximum: 20,
+          temporaryHitPoints: 12,
+          dead: false,
+          unconscious: false,
+        },
+      },
+      8
+    )
+    match offered {
+      | NoConcentrationDamageInterruption(_) => false
+      | ConcentrationDamageInterruptionUnavailable(_) => false
+      | ConcentrationDamageInterruptionOffered(data) => {
+          val resumed = resumeDamageTargetAfterConcentrationInterruption(
+            data.state.with(
+              "reactionWindow",
+              advanceContinuation(data.state.reactionWindow)
+            ),
+            data.continuation,
+            false
+          )
+          all {
+            assert(data.continuation.damageAmount == 8),
+            assert(resumed.concentration.interruptedActor == NoConcentration),
+          }
+        }
+    }
+  }
+
+  run test_maximum_depth_resumes_damage_without_advancing_existing_window = {
+    val depthOne = offerReactionWindow(
+      NoReactionWindow,
+      OpportunityAttackReactionWindow
+    )
+    val depthTwo = offerReactionWindow(
+      depthOne,
+      DamageInterruptionReactionWindow
+    )
+    val state = initialReactionProtocolState
+      .with("reactionWindow", depthTwo)
+      .with("concentration", {
+        interruptedActor: Concentrating,
+        reactor: Concentrating,
+      })
+    val offered = offerDamageTargetWithConcentrationInterruption(
+      state,
+      {
+        actor: InterruptedActor,
+        vitals: {
+          kind: PlayerCharacter,
+          hitPoints: 20,
+          hitPointMaximum: 20,
+          temporaryHitPoints: 0,
+          dead: false,
+          unconscious: false,
+        },
+      },
+      12
+    )
+    match offered {
+      | NoConcentrationDamageInterruption(_) => false
+      | ConcentrationDamageInterruptionOffered(_) => false
+      | ConcentrationDamageInterruptionUnavailable(data) => {
+          val resumed = resumeDamageTargetAfterConcentrationInterruption(
+            data.state,
+            data.continuation,
+            false
+          )
+          all {
+            assert(resumed.reactionWindow == depthTwo),
+            assert(resumed.concentration.interruptedActor == NoConcentration),
+            assert(resumed.concentration.reactor == Concentrating),
+            assert(legalReactionProtocolState(resumed)),
+          }
+        }
+    }
   }
 
   run test_concentration_start_replace_end_and_prevent = {

@@ -304,19 +304,41 @@ module reactionsContinuationsConcentrationInductive {
       }
     ).oneOf()
     nondet effectiveDamage = Set(0, 8, 22).oneOf()
-    nondet saveSucceeded = Set(true, false).oneOf()
-    nondet targetActor = Set(InterruptedActor, Reactor).oneOf()
-    all {
-      recordReactionProtocolState(applyDamageTargetWithConcentrationInterruption(
-        qReactionProtocolState,
+      nondet saveSucceeded = Set(true, false).oneOf()
+      nondet targetActor = Set(InterruptedActor, Reactor).oneOf()
+      all {
+        val offered = offerDamageTargetWithConcentrationInterruption(
+          qReactionProtocolState,
         {
           actor: targetActor,
           vitals: targetVitals,
         },
-        effectiveDamage,
-        saveSucceeded
-      )),
-    }
+          effectiveDamage
+        )
+        match offered {
+          | NoConcentrationDamageInterruption(data) =>
+              recordReactionProtocolState(data.state)
+          | ConcentrationDamageInterruptionUnavailable(data) =>
+              recordReactionProtocolState(
+                resumeDamageTargetAfterConcentrationInterruption(
+                  data.state,
+                  data.continuation,
+                  saveSucceeded
+                )
+              )
+          | ConcentrationDamageInterruptionOffered(data) =>
+              recordReactionProtocolState(
+                resumeDamageTargetAfterConcentrationInterruption(
+                  data.state.with(
+                    "reactionWindow",
+                    advanceContinuation(data.state.reactionWindow)
+                  ),
+                  data.continuation,
+                  saveSucceeded
+                )
+              )
+        },
+      }
   }
 
   action doStartReactorTurn = all {
