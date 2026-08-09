@@ -7,7 +7,10 @@ import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-appl
 import {
   abilityModifier,
   attackBonus,
+  battleLightEmitterProjection,
+  combatantId,
   discoverBattleActs,
+  movementFeet,
   resolveBattleSubject,
   snapshotBattle,
   type AvailableBattleAct,
@@ -256,6 +259,28 @@ describe("Sacred Weapon activation", () => {
       }),
     ]);
     assertBattleSnapshotCodecRoundTripForTest(snapshot);
+
+    const emitter = snapshot.lightEmitters[0];
+    if (
+      emitter?.kind !== "unitFeatureLightEmitter" ||
+      emitter.attachment.kind !== "combatant"
+    ) {
+      throw new Error("Expected Sacred Weapon unit-feature light emitter.");
+    }
+    const matchingFact = {
+      ...emitter.attachment,
+      distanceFeet: movementFeet(20),
+    };
+    expect(battleLightEmitterProjection(emitter, matchingFact)).toEqual({
+      emitter,
+      illumination: "brightLight",
+    });
+    expect(
+      battleLightEmitterProjection(emitter, {
+        ...matchingFact,
+        combatantId: combatantId("sacred-weapon-other-observer"),
+      }),
+    ).toBeNull();
   });
 
   test("dismissal and no-longer-carried cleanup end the active binding and light", () => {

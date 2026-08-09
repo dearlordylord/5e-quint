@@ -36,6 +36,7 @@ import {
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 import type { BattleSubject } from "./battle-runtime.test-support.ts";
+import { battleLightEmitterProjection } from "./battle-reducer/spells-active-effects.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: Starry Wisp", () => {
@@ -770,6 +771,26 @@ describe("battle runtime: Starry Wisp", () => {
         objectId,
       }),
     ]);
+    const emitter = hit.state.lightEmitters[0];
+    if (emitter?.kind !== "objectInvisibleRevealLightEmitter") {
+      throw new Error("Expected Starry Wisp object light emitter.");
+    }
+    const matchingFact = {
+      kind: "object" as const,
+      objectId,
+      distanceFeet: movementFeet(5),
+      opaqueCover: true,
+    };
+    expect(battleLightEmitterProjection(emitter, matchingFact)).toEqual({
+      emitter,
+      illumination: "dimLight",
+    });
+    expect(
+      battleLightEmitterProjection(emitter, {
+        ...matchingFact,
+        objectId: battleObjectId("different-invisible-training-crystal"),
+      }),
+    ).toBeNull();
 
     const afterWizardTurn = requireResolved(
       endTurn({ state: hit.state, actorId: wizardId }),
