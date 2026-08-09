@@ -31,24 +31,23 @@ totals, and comparison below are the self-contained durable evidence.
 ## Current authoritative diagnostic
 
 - Date: 2026-08-09
-- Git HEAD: `85869fc2f74f839a23118ad5ccdd35a7c4462dd3`
+- Git HEAD: `07e9580b55dc8aa1edffae22ab7d8314184d6059`
 - Command: `pnpm coverage`
 - Result: exit `0`
-- Total wall duration: approximately 370 seconds
+- Total wall duration: approximately 342 seconds
 - Battle-runtime tests: 204/204 files passed; 2,166 tests passed and 53
   skipped (2,219 total)
 
-| Metric     |                `927107abb` |                `85869fc2f` | Covered / total change |     Uncovered change |   Delta |
+| Metric     |                 `85869fc2` |                `07e9580b5` | Covered / total change |     Uncovered change |   Delta |
 | ---------- | -------------------------: | -------------------------: | ---------------------: | -------------------: | ------: |
-| Statements | 120,229 / 124,601 (96.49%) | 120,221 / 124,616 (96.47%) |                -8 / 15 | 4,372 -> 4,395 (+23) | -0.02pp |
-| Branches   |   29,977 / 32,144 (93.25%) |   29,979 / 32,143 (93.26%) |                 2 / -1 |  2,167 -> 2,164 (-3) | +0.01pp |
-| Functions  |       4,792 / 4,792 (100%) |       4,795 / 4,795 (100%) |                  3 / 3 |               0 -> 0 |       0 |
-| Lines      | 120,229 / 124,601 (96.49%) | 120,221 / 124,616 (96.47%) |                -8 / 15 | 4,372 -> 4,395 (+23) | -0.02pp |
+| Statements | 120,221 / 124,616 (96.47%) | 120,175 / 124,554 (96.48%) |              -46 / -62 | 4,395 -> 4,379 (-16) | +0.01pp |
+| Branches   |   29,979 / 32,143 (93.26%) |   29,966 / 32,121 (93.29%) |              -13 / -22 |  2,164 -> 2,155 (-9) | +0.03pp |
+| Functions  |       4,795 / 4,795 (100%) |       4,793 / 4,793 (100%) |                -2 / -2 |               0 -> 0 |       0 |
+| Lines      | 120,221 / 124,616 (96.47%) | 120,175 / 124,554 (96.48%) |              -46 / -62 | 4,395 -> 4,379 (-16) | +0.01pp |
 
-The statement/line percentage regressed by 0.02 percentage points. This is not
-numeric progress toward 99%: the battle milestone improved correctness while
-adding a net 13 production lines, and the resulting denominator and execution
-changes increased uncovered statements/lines by 23.
+The statement/line percentage improved by 0.01 percentage points and the branch
+percentage improved by 0.03 percentage points. These are measured deltas from
+the authoritative public run, not a forecast toward 99%.
 
 ## Remaining static 99% gaps
 
@@ -57,38 +56,32 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 120,221 | 124,616 |                  123,370 |         3,149 |
-| Branches   |  29,979 |  32,143 |                   31,822 |         1,843 |
-| Functions  |   4,795 |   4,795 |                    4,748 |             0 |
-| Lines      | 120,221 | 124,616 |                  123,370 |         3,149 |
+| Statements | 120,175 | 124,554 |                  123,309 |         3,134 |
+| Branches   |  29,966 |  32,121 |                   31,800 |         1,834 |
+| Functions  |   4,793 |   4,793 |                    4,746 |             0 |
+| Lines      | 120,175 | 124,554 |                  123,309 |         3,134 |
 
 ## Milestone context
 
-Since the prior authoritative checkpoint, `39fb9b632` made save-damage
-application correlated and sequentially safe. Its review and regression tests
-preserved earlier Warding Bond damage when a later direct target is the bond's
-caster, and preserved once-per-turn spell-damage-reduction consumption. That
-battle milestone improved correctness but produced a net 13-line production
-increase and did not improve the statement/line percentage.
+Since the prior authoritative checkpoint, `14a70bcf6` narrowed Dancing Lights
+reposition plans and made correlated form/cardinality states explicit. Commit
+`07e9580b5` unified duplicated light-emitter target identity matching. The
+first milestone was production net -29 with focused 5/5 plus typecheck; the
+second was production net -37 with focused illumination 5 files/71 tests plus
+typecheck. Combined, they produced production net -66 and test net +35. The
+public checkpoint records 16 fewer
+uncovered statements/lines and nine fewer uncovered branches than `85869fc2`.
 
-Commits `a86678455` and `85869fc2f` removed redundant real-catalog decoding and
-per-test composition-graph loading from the MCP failure test, then isolated its
-mocked catalog modules so they cannot leak into later MCP test files. Parallel
-merge `8e4f55b7f` is part of the measured current HEAD context only; it is not
-counted as issue #227 progress.
-
-The public checkpoint records 23 more uncovered statements/lines and three
-fewer uncovered branches than `927107abb`. Focused cohort uncovered counts
-remain regression and navigation evidence, not a forecast of the global public
-delta, because other public tests may already cover those arms. Only the full
-public totals establish global movement. Continue from the current public
-report, preserve behavior and Quint parity, and remeasure only after the next
-coherent increment.
+Focused cohort uncovered counts remain regression and navigation evidence, not a
+forecast of the global public delta, because other public tests may already
+cover those arms. Only the full public totals establish global movement.
+Continue from the current public report, preserve behavior and Quint parity,
+and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting public metric at 93.26%, with a static 99% gap of
-1,843. Select one branch-heavy checked-in battle-runtime owner from the public
+Branches remain the limiting public metric at 93.29%, with a static 99% gap of
+1,834. Select one branch-heavy checked-in battle-runtime owner from the public
 report, audit its uncovered alternatives for schema-impossible or duplicated
 logic, cover only behaviorally reachable alternatives with focused tests, and
 then remeasure with the public root diagnostic.
