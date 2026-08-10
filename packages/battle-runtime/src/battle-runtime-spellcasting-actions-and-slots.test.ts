@@ -10,8 +10,10 @@ import {
   resolveBonusActionSpellAct,
   resolveSpellAct,
 } from "./battle-reducer/spells-resolve.ts";
+import { spendSpellCastResources } from "./battle-reducer/spells-resolve-resources.ts";
 import { characterExecutionWithSpellInvocations } from "./character-execution-admission.ts";
-import type { BattleCreatureState } from "./index.ts";
+import { characterSpellProcedure } from "./character-execution-queries.ts";
+import type { BattleActiveEffect, BattleCreatureState } from "./index.ts";
 import type {
   BattleState,
   BattleSubject,
@@ -53,12 +55,247 @@ import {
   startBattleSessionRight,
   statBlockCreatureInit,
   targetFill,
+  rangerFavoredEnemyResource,
   wizardId,
   wizardSpellcasting,
   wizardVsSkeletonBattle,
 } from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: spellcasting actions and slots", () => {
+  test("resource spending reports a stale Magic action after admission", () => {
+    const session = wizardVsSkeletonBattle();
+    const act = discoverBattleActs(session).find(
+      (candidate) =>
+        candidate.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "magic_missile",
+    );
+    if (act === undefined) {
+      throw new Error("Expected Magic Missile action spell.");
+    }
+    if (act.subject.tag !== "actionSpell") {
+      throw new Error("Expected Magic Missile Action spell subject.");
+    }
+    const actor = session.state.combatants.get(wizardId);
+    if (actor?.origin.kind !== "character") {
+      throw new Error("Expected character Wizard caster.");
+    }
+    const invocation = characterSpellProcedure(
+      actor.origin.execution,
+      act.subject.procedureRef,
+      actor,
+    );
+    if (invocation === undefined) {
+      throw new Error("Expected Magic Missile invocation.");
+    }
+    const staleState: BattleState = {
+      ...session.state,
+      currentTurnResources: {
+        ...session.state.currentTurnResources,
+        actionResources: [],
+      },
+    };
+    expect(
+      spendSpellCastResources({
+        state: staleState,
+        actorId: wizardId,
+        invocation,
+        errorState: staleState,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Magic action is no longer available for the current actor.",
+    });
+  });
+
+  test("resource spending reports a stale Spell Slot after admission", () => {
+    const session = wizardVsSkeletonBattle();
+    const act = discoverBattleActs(session).find(
+      (candidate) =>
+        candidate.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "magic_missile",
+    );
+    if (act === undefined) {
+      throw new Error("Expected Magic Missile action spell.");
+    }
+    if (act.subject.tag !== "actionSpell") {
+      throw new Error("Expected Magic Missile Action spell subject.");
+    }
+    const actor = session.state.combatants.get(wizardId);
+    if (actor?.origin.kind !== "character") {
+      throw new Error("Expected character Wizard caster.");
+    }
+    const invocation = characterSpellProcedure(
+      actor.origin.execution,
+      act.subject.procedureRef,
+      actor,
+    );
+    if (invocation === undefined) {
+      throw new Error("Expected Magic Missile invocation.");
+    }
+    const staleState: BattleState = {
+      ...session.state,
+      currentTurnResources: {
+        ...session.state.currentTurnResources,
+        spellSlotUsesThisTurn: [{ kind: "committed", combatantId: wizardId }],
+      },
+    };
+    expect(
+      spendSpellCastResources({
+        state: staleState,
+        actorId: wizardId,
+        invocation,
+        errorState: staleState,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "This turn has already expended a Spell Slot.",
+    });
+  });
+
+  test("generic spell resource spending rejects class-feature free casts", () => {
+    const favoredEnemy = rangerFavoredEnemyResource();
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-resource-class-feature-free-cast"),
+      combatants: [
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Ranger",
+          initiative: 20,
+          attack: null,
+          classLevels: [{ className: "ranger", level: 1 }],
+          resources: [favoredEnemy],
+          spellcasting: {
+            ...wizardSpellcasting({ preparedSpells: [] }),
+            featurePreparedSpells: [
+              {
+                sourceUnitId: favoredEnemy.unit.id,
+                spell: spellRecord("hunters_mark"),
+              },
+            ],
+            sourceClassName: "ranger",
+          },
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const act = discoverBattleActs(session).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "hunters_mark",
+    );
+    if (act?.subject.tag !== "bonusActionSpell") {
+      throw new Error("Expected Hunter's Mark bonus-action spell.");
+    }
+    const actor = session.state.combatants.get(fighterId);
+    if (actor?.origin.kind !== "character") {
+      throw new Error("Expected character Ranger caster.");
+    }
+    const invocation = characterSpellProcedure(
+      actor.origin.execution,
+      act.subject.procedureRef,
+      actor,
+    );
+    if (
+      invocation === undefined ||
+      invocation.resource.tag !== "classFeatureFreeCast"
+    ) {
+      throw new Error("Expected Hunter's Mark class-feature invocation.");
+    }
+    expect(
+      spendSpellCastResources({
+        state: session.state,
+        actorId: fighterId,
+        invocation,
+        errorState: session.state,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedSubject",
+      message:
+        "Class feature free spell casts require procedure-specific resource spending.",
+    });
+  });
+
+  test("prepared Magic Missile asks for an active source damage penalty roll", () => {
+    const baseSession = wizardVsSkeletonBattle();
+    const caster = baseSession.state.combatants.get(wizardId);
+    if (caster === undefined) {
+      throw new Error("Expected Wizard caster.");
+    }
+    const sourceDamageRollPenalty = {
+      kind: "sourceDamageRollPenalty" as const,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic_source_damage_penalty",
+      ),
+      sourceCombatantId: skeletonId,
+      amount: { dice: 1, dieSize: 8 },
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: skeletonId,
+      },
+    } satisfies Extract<
+      BattleActiveEffect,
+      { readonly kind: "sourceDamageRollPenalty" }
+    >;
+    const state: BattleState = {
+      ...baseSession.state,
+      combatants: new Map(baseSession.state.combatants).set(wizardId, {
+        ...caster,
+        activeEffects: [...caster.activeEffects, sourceDamageRollPenalty],
+      }),
+    };
+    const session = battleRuntimeSessionForTest({
+      ...baseSession,
+      state,
+    });
+    const subject = magicSubject("magic_missile");
+    const allocation = requireHole(
+      resolveBattleSubject({ session, subject, fills: [] }),
+      "spellTargetAllocation",
+    );
+    const allocationFill = spellTargetAllocationFill(allocation, [
+      { targetId: skeletonId, count: 3 },
+    ]);
+    const damage = requireHole(
+      resolveBattleSubject({
+        session,
+        subject,
+        fills: [allocationFill],
+      }),
+      "rolledDice",
+    );
+    const damageFill = damageRollFillWithGroups(damage, [[1, 1, 1]]);
+    const needsPenalty = resolveBattleSubject({
+      session,
+      subject,
+      fills: [allocationFill, damageFill],
+    });
+    const penalty = requireHole(needsPenalty, "rolledDice");
+    expect(penalty).toMatchObject({
+      label: "Source damage roll penalty (1d8)",
+      sourceDamageRollPenalty: {
+        damageRollHoleId: `${damage.holeId}:allocation:0`,
+      },
+    });
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        session,
+        subject,
+        fills: [
+          allocationFill,
+          damageFill,
+          damageRollFillWithGroups(penalty, [[1]]),
+        ],
+      }),
+    );
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(8);
+  });
+
   test("admitted Action and Bonus Action spell subjects reject depleted spell resources", () => {
     const actionSession = wizardVsSkeletonBattle();
     const actionAct = discoverBattleActs(actionSession).find(

@@ -955,5 +955,53 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       ],
     });
     expect(badSpacing).toMatchObject({ tag: "invalid" });
+
+    const fourMoveAct = bonusSpellAct({
+      session: battleRuntimeSessionForTest({
+        state: fourLightCast.state,
+        context: session.context,
+      }),
+      spellId: dancingLightsUnitId,
+    });
+    const fourMoveHole = requireHole(
+      fourMoveAct.initialHoles,
+      "dancingLightsPlacement",
+    );
+    const fourLightIds = fourLightCast.snapshot.lightEmitters.flatMap(
+      (emitter) =>
+        emitter.kind === "spellLightEmitter" &&
+        emitter.attachment.kind === "dancingLight"
+          ? [emitter.attachment.lightId]
+          : [],
+    );
+    expect(fourLightIds).toHaveLength(4);
+    const badReposition = resolveBattleSubject({
+      state: fourLightCast.state,
+      subject: fourMoveAct.subject,
+      fills: [
+        {
+          kind: "dancingLightsPlacement",
+          holeId: fourMoveHole.holeId,
+          value: {
+            mode: "reposition",
+            form: "separateLights",
+            lights: fourLightIds.map((lightId, index) => ({
+              lightId,
+              positionId: battleTablePositionId(
+                `dancing-lights-bad-reposition-${index}`,
+              ),
+              distanceFromCasterFeet: movementFeet(40 + index * 5),
+              moveDistanceFeet: movementFeet(10),
+              nearestSiblingDistanceFeet: movementFeet(25),
+            })),
+          },
+        } satisfies BattleFill,
+      ],
+    });
+    expect(badReposition).toMatchObject({
+      tag: "invalid",
+      message:
+        "Dancing Lights separate lights must stay within 20 feet of another light.",
+    });
   });
 });

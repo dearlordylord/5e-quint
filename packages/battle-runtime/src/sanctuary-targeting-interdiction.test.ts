@@ -47,6 +47,7 @@ import { targetChoiceFillAfterSanctuaryAttackRollReplacement } from "./battle-re
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  damageRollFillWithGroups,
   resolveBattleSubject,
   attackExecutionSelectionForSubjectForTest,
 } from "./battle-runtime.test-support.ts";
@@ -590,6 +591,158 @@ describe("Sanctuary targeting interdiction", () => {
       throw new Error("Expected lost spell to resolve.");
     }
     expect(combatant(lost.state, wardedId).hp).toBe(Hp(12));
+  });
+
+  test("successful Sanctuary save preserves Magic Missile allocation", () => {
+    const warded = advanceRoundToCaster(
+      castSanctuary(battleWithSanctuary(), wardedId),
+    );
+    const act = discoverBattleActs(warded).find(
+      (candidate) =>
+        candidate.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          magicMissileUnitId,
+    );
+    if (act === undefined || act.subject.tag !== "actionSpell") {
+      throw new Error("Expected Magic Missile action spell.");
+    }
+    const allocationHole = requireHole(
+      act.initialHoles,
+      "spellTargetAllocation",
+    );
+    const allocationFill = spellTargetAllocationFill(
+      allocationHole,
+      magicMissileUnitId,
+      wardedId,
+      allocationHole.allocationCount,
+    );
+    const needsSanctuary = resolveBattleSubject({
+      state: warded.state,
+      subject: act.subject,
+      fills: [allocationFill],
+    });
+    if (needsSanctuary.tag !== "needsHoles") {
+      throw new Error("Expected Sanctuary interdiction hole.");
+    }
+    const sanctuaryHole = requireHole(
+      needsSanctuary.holes,
+      "sanctuaryInterdictionOutcome",
+    );
+    const needsDamage = resolveBattleSubject({
+      state: warded.state,
+      subject: act.subject,
+      fills: [
+        allocationFill,
+        sanctuaryOutcomeFill(sanctuaryHole, { saveSucceeded: true }),
+      ],
+    });
+    if (needsDamage.tag !== "needsHoles") {
+      throw new Error("Expected Magic Missile damage hole.");
+    }
+    const damage = requireHole(needsDamage.holes, "rolledDice");
+    const resolved = resolveBattleSubject({
+      state: warded.state,
+      subject: act.subject,
+      fills: [
+        allocationFill,
+        sanctuaryOutcomeFill(sanctuaryHole, { saveSucceeded: true }),
+        rolledDiceFill(
+          damage,
+          Array.from({ length: allocationHole.allocationCount }, () => 1),
+        ),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        "Expected Magic Missile after a successful Sanctuary save.",
+      );
+    }
+    expect(combatant(resolved.state, wardedId).hp).toBe(
+      Hp(12 - allocationHole.allocationCount * 2),
+    );
+  });
+
+  test("Sanctuary retargets only the warded Magic Missile allocation", () => {
+    const warded = advanceRoundToCaster(
+      castSanctuary(battleWithSanctuary(), wardedId),
+    );
+    const act = discoverBattleActs(warded).find(
+      (candidate) =>
+        candidate.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          magicMissileUnitId,
+    );
+    if (act === undefined || act.subject.tag !== "actionSpell") {
+      throw new Error("Expected Magic Missile action spell.");
+    }
+    const allocationHole = requireHole(
+      act.initialHoles,
+      "spellTargetAllocation",
+    );
+    const allocationFill = spellTargetAllocationFill(
+      allocationHole,
+      magicMissileUnitId,
+      [
+        { targetId: wardedId, count: 2 },
+        { targetId: attackerId, count: 1 },
+      ],
+    );
+    const originalTargetFact = allocationFill.spatialFacts.find(
+      (fact) => fact.kind === "spellTarget" && fact.targetId === wardedId,
+    );
+    if (
+      originalTargetFact === undefined ||
+      originalTargetFact.kind !== "spellTarget"
+    ) {
+      throw new Error("Expected the warded allocation's target fact.");
+    }
+    const needsSanctuary = resolveBattleSubject({
+      state: warded.state,
+      subject: act.subject,
+      fills: [allocationFill],
+    });
+    if (needsSanctuary.tag !== "needsHoles") {
+      throw new Error("Expected Sanctuary interdiction hole.");
+    }
+    const sanctuaryHole = requireHole(
+      needsSanctuary.holes,
+      "sanctuaryInterdictionOutcome",
+    );
+    const sanctuaryFill = sanctuaryOutcomeFill(sanctuaryHole, {
+      saveSucceeded: false,
+      outcome: {
+        kind: "newTarget",
+        targetId: replacementId,
+        replacementTargetKind: "nonAttack",
+        spatialFacts: [{ ...originalTargetFact, targetId: replacementId }],
+      },
+    });
+    const needsDamage = resolveBattleSubject({
+      state: warded.state,
+      subject: act.subject,
+      fills: [allocationFill, sanctuaryFill],
+    });
+    if (needsDamage.tag !== "needsHoles") {
+      throw new Error("Expected Magic Missile damage hole.");
+    }
+    const damage = requireHole(needsDamage.holes, "rolledDice");
+    const resolved = resolveBattleSubject({
+      state: warded.state,
+      subject: act.subject,
+      fills: [
+        allocationFill,
+        sanctuaryFill,
+        damageRollFillWithGroups(damage, [[1, 1], [1]]),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected mixed Magic Missile Sanctuary resolution.");
+    }
+    expect(combatant(resolved.state, wardedId).hp).toBe(Hp(12));
+    expect(combatant(resolved.state, replacementId).hp).toBe(Hp(8));
+    expect(combatant(resolved.state, attackerId).hp).toBe(Hp(10));
   });
 
   test("failed save can move a Magic Missile allocation to a new target", () => {
@@ -1605,20 +1758,45 @@ function spellTargetAllocationFill(
   _spellId: string,
   targetId: CombatantId,
   count: number,
+): Extract<BattleFill, { readonly kind: "spellTargetAllocation" }>;
+function spellTargetAllocationFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>,
+  _spellId: string,
+  allocations: readonly {
+    readonly targetId: CombatantId;
+    readonly count: number;
+  }[],
+): Extract<BattleFill, { readonly kind: "spellTargetAllocation" }>;
+function spellTargetAllocationFill(
+  hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>,
+  _spellId: string,
+  targetIdOrAllocations:
+    | CombatantId
+    | readonly { readonly targetId: CombatantId; readonly count: number }[],
+  count?: number,
 ): Extract<BattleFill, { readonly kind: "spellTargetAllocation" }> {
+  let allocations: readonly {
+    readonly targetId: CombatantId;
+    readonly count: number;
+  }[];
+  if (typeof targetIdOrAllocations === "string") {
+    if (count === undefined) {
+      throw new Error("Expected allocation count for a single target.");
+    }
+    allocations = [{ targetId: targetIdOrAllocations, count }];
+  } else {
+    allocations = targetIdOrAllocations;
+  }
   return {
     kind: "spellTargetAllocation",
     holeId: hole.holeId,
-    value: { allocations: [{ targetId, count }] },
-    spatialFacts: [
-      {
-        kind: "spellTarget",
-        casterId,
-        targetId,
-        sourceProcedureRef:
-          battleProcedureExecutionRefForSpellHoleForTest(hole),
-      },
-    ],
+    value: { allocations },
+    spatialFacts: allocations.map(({ targetId }) => ({
+      kind: "spellTarget" as const,
+      casterId,
+      targetId,
+      sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(hole),
+    })),
   };
 }
 

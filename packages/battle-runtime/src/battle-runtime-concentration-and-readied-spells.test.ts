@@ -3,6 +3,7 @@ import type {
   BattleState,
   BattleSubject,
 } from "./battle-runtime.test-support.ts";
+import type { BattleActiveEffect } from "./index.ts";
 import { describe, expect, test } from "vitest";
 import {
   attackDamageDispositionFill,
@@ -34,6 +35,7 @@ import {
   requireResolved,
   resolveBattleConcentrationDamage,
   resolveBattleSubject,
+  savingThrowOutcomeFill,
   secondWizardId,
   skeletonId,
   snapshotBattle,
@@ -776,6 +778,198 @@ describe("battle runtime: Concentration and readied spells", () => {
     ).toMatchObject({
       activeEffects: [{ kind: "speedDelta" }],
     });
+  });
+
+  test("readied spell release threads source penalties and linked damage saves", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-readied-release-damage-lifecycle"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Wizard",
+          initiative: 20,
+          attack: null,
+          spellcasting: wizardSpellcasting(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const caster = session.state.combatants.get(wizardId);
+    const target = session.state.combatants.get(goblinId);
+    if (caster === undefined || target === undefined) {
+      throw new Error("Expected readied spell caster and target.");
+    }
+    const hideousLaughter = {
+      kind: "hideousLaughter",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic_readied_release_hideous_laughter",
+      ),
+      sourceCombatantId: wizardId,
+      conditionHadNonSpellProneSource: false,
+      conditionHadNonSpellIncapacitatedSource: false,
+      repeatSaveRollMode: null,
+      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+      expiresAt: { kind: "concentration", combatantId: wizardId },
+    } satisfies Extract<
+      BattleActiveEffect,
+      { readonly kind: "hideousLaughter" }
+    >;
+    const sourceDamageRollPenalty = {
+      kind: "sourceDamageRollPenalty" as const,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic_readied_release_source_penalty",
+      ),
+      sourceCombatantId: goblinId,
+      amount: { dice: 1, dieSize: 8 },
+      expiresAt: { kind: "concentration" as const, combatantId: goblinId },
+    } satisfies Extract<
+      BattleActiveEffect,
+      { readonly kind: "sourceDamageRollPenalty" }
+    >;
+    const enrichedState: BattleState = {
+      ...session.state,
+      combatants: new Map(session.state.combatants)
+        .set(wizardId, {
+          ...caster,
+          activeEffects: [...caster.activeEffects, sourceDamageRollPenalty],
+        })
+        .set(goblinId, {
+          ...target,
+          concentration: {
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              "synthetic_target_concentration",
+            ),
+            effectKind: "spellEffect",
+          },
+          activeEffects: [...target.activeEffects, hideousLaughter],
+        }),
+    };
+    const enrichedSession = battleRuntimeSessionForTest({
+      ...session,
+      state: enrichedState,
+    });
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state: enrichedState,
+        subject: {
+          tag: "actionSpell",
+          actorId: wizardId,
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            enrichedSession,
+            wizardId,
+            cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+          ),
+          mode: { tag: "ready", trigger: "attackHit" },
+        },
+        fills: [],
+      }),
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state: readied.state, actorId: wizardId }),
+    );
+    const releaseSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: goblinId,
+      command: "releaseReadiedSpell" as const,
+      readiedSpellCasterId: wizardId,
+      procedureRef: readiedSpellProcedureRef(goblinTurn.state),
+    };
+    const targetHole = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject: releaseSubject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const targetFillValue = targetFill(targetHole, goblinId);
+    const attackHole = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject: releaseSubject,
+        fills: [targetFillValue],
+      }),
+      "attackRoll",
+    );
+    const attackFillValue = attackRollFill(attackHole, {
+      total: 15,
+      naturalD20: 10,
+    });
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject: releaseSubject,
+        fills: [targetFillValue, attackFillValue],
+      }),
+      "rolledDice",
+    );
+    const damageFillValue = damageRollFill(damageHole, 4);
+    const penaltyHole = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject: releaseSubject,
+        fills: [targetFillValue, attackFillValue, damageFillValue],
+      }),
+      "rolledDice",
+    );
+    const penaltyFillValue = damageRollFillWithGroups(penaltyHole, [[1]]);
+    const concentrationHole = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject: releaseSubject,
+        fills: [
+          targetFillValue,
+          attackFillValue,
+          damageFillValue,
+          penaltyFillValue,
+        ],
+      }),
+      "concentrationSavingThrow",
+    );
+    const laughterHole = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject: releaseSubject,
+        fills: [
+          targetFillValue,
+          attackFillValue,
+          damageFillValue,
+          penaltyFillValue,
+          concentrationSavingThrowFill(concentrationHole, true),
+        ],
+      }),
+      "savingThrowOutcome",
+    );
+    expect(laughterHole).toMatchObject({
+      hideousLaughterRepeatSave: { targetId: goblinId, trigger: "damage" },
+    });
+    const released = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn.state,
+        subject: releaseSubject,
+        fills: [
+          targetFillValue,
+          attackFillValue,
+          damageFillValue,
+          penaltyFillValue,
+          concentrationSavingThrowFill(concentrationHole, true),
+          savingThrowOutcomeFill(laughterHole, [
+            { targetId: goblinId, succeeded: true },
+          ]),
+        ],
+      }),
+    );
+
+    expect(released.state.combatants.get(goblinId)?.hp).toBe(7);
+    expect(
+      released.state.combatants.get(goblinId)?.concentration,
+    ).not.toBeNull();
+    expect(
+      released.state.combatants
+        .get(goblinId)
+        ?.activeEffects.some((effect) => effect.kind === "hideousLaughter"),
+    ).toBe(false);
+    expect(released.state.combatants.get(wizardId)?.concentration).toBeNull();
   });
 
   test("rejects a stale release command when no spell is held", () => {

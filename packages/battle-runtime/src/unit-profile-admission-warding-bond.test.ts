@@ -2,10 +2,15 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME warding_bond
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  requireCharacterUnitProcedureRefForTest,
+  unitLibrary,
+  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
+} from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
-import { damageAmount, DieRollResult } from "@dnd/shared/types";
+import { damageAmount, DieRollResult, Hp } from "@dnd/shared/types";
 import {
   damageLifecycleConcentrationSavingThrowHoles,
   wardingBondSharedDamageConcentrationSavingThrowHoles,
@@ -39,6 +44,7 @@ import {
   requireCombatant,
   requireHole,
   requireResultHole,
+  attackDamageDispositionFill,
   attackRollFill,
   attackTargetFill,
   damageRollFillWithGroups,
@@ -626,6 +632,168 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     expect(
       requireCombatant(resolved.state, spellCasterId).concentration,
     ).toBeNull();
+  });
+
+  test("repeated allocation spell damage asks for a zero-hit-point disposition", () => {
+    const relentlessEndurance = unitLibrary.requireUnit(
+      "orc_relentless_endurance",
+    );
+    const baseSession = spellBattle({
+      preparedSpells: [
+        spellRecord(wardingBondUnitId),
+        spellRecord(magicMissileUnitId),
+      ],
+      spellSlots: [
+        { spellLevel: 2, count: 1 },
+        { spellLevel: 1, count: 1 },
+      ],
+      targetHp: 3,
+      targetMaxHp: 12,
+      targetResources: [{ unit: relentlessEndurance }],
+      targetUnitRefs: [
+        {
+          unit: relentlessEndurance,
+          supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
+        },
+      ],
+    });
+    const state = advanceRound(castWardingBond(baseSession), [
+      spellCasterId,
+      spellTargetId,
+    ]);
+    const actionSession = battleRuntimeSessionForTest({
+      ...baseSession,
+      state,
+    });
+    const act = spellAct({
+      session: actionSession,
+      spellId: magicMissileUnitId,
+      slotLevel: 1,
+    });
+    const allocationHole = requireHole(
+      act.initialHoles,
+      "spellTargetAllocation",
+    );
+    const allocationFill = spellTargetAllocationFill(
+      allocationHole,
+      [{ targetId: spellTargetId, count: 3 }],
+      act.subject.procedureRef,
+    );
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [allocationFill],
+      }),
+      "rolledDice",
+    );
+    const damageFill = damageRollFillWithGroups(damage, [[1, 1, 1]]);
+    const awaitingDisposition = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [allocationFill, damageFill],
+    });
+    const disposition = requireResultHole(
+      awaitingDisposition,
+      "attackDamageDisposition",
+    );
+    expect(disposition).toMatchObject({
+      targetId: spellTargetId,
+      choices: expect.arrayContaining([
+        expect.objectContaining({ kind: "zeroHitPointReplacement" }),
+      ]),
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        allocationFill,
+        damageFill,
+        attackDamageDispositionFill(disposition, {
+          kind: "zeroHitPointReplacement",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            actionSession,
+            spellTargetId,
+            "orc_relentless_endurance",
+          ),
+        }),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Magic Missile zero-hit-point resolution.");
+    }
+    expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(1));
+  });
+
+  test("repeated allocation spell damage requests a Hideous Laughter repeat save", () => {
+    const session = damageSpellTurnSession(magicMissileUnitId, [
+      { spellLevel: 2, count: 1 },
+      { spellLevel: 1, count: 1 },
+    ]);
+    const state = withHideousLaughterOnCaster(session.state);
+    const actionSession = battleRuntimeSessionForTest({ ...session, state });
+    const act = spellAct({
+      session: actionSession,
+      spellId: magicMissileUnitId,
+      slotLevel: 1,
+    });
+    const allocationHole = requireHole(
+      act.initialHoles,
+      "spellTargetAllocation",
+    );
+    const allocationFill = spellTargetAllocationFill(
+      allocationHole,
+      [{ targetId: spellCasterId, count: 3 }],
+      act.subject.procedureRef,
+    );
+    const damage = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [allocationFill],
+      }),
+      "rolledDice",
+    );
+    const damageFill = damageRollFillWithGroups(damage, [[1, 1, 1]]);
+    const awaitingRepeatSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [allocationFill, damageFill],
+    });
+    const repeatSave = requireResultHole(
+      awaitingRepeatSave,
+      "savingThrowOutcome",
+    );
+    expect(repeatSave).toMatchObject({
+      hideousLaughterRepeatSave: {
+        targetId: spellCasterId,
+        trigger: "damage",
+      },
+      targetRollModes: [{ targetId: spellCasterId, rollMode: "advantage" }],
+    });
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        allocationFill,
+        damageFill,
+        savingThrowOutcomeFill(repeatSave, [
+          { targetId: spellCasterId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Magic Missile repeat-save resolution.");
+    }
+    expect(
+      requireCombatant(resolved.state, spellCasterId).activeEffects.some(
+        (effect) => effect.kind === "hideousLaughter",
+      ),
+    ).toBe(false);
   });
 
   test("save-gated spell damage requests the linked caster Concentration save", () => {
