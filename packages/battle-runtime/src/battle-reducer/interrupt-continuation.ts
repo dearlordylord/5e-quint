@@ -586,9 +586,11 @@ function attackDamageContinuationAmount(
   >,
 ): DamageAmount | null {
   const target = state.combatants.get(continuation.target.combatantId);
+  /* v8 ignore start -- The admitted attack-damage continuation retains the target combatant in the suspended frame. */
   return target === undefined
     ? null
     : attackDamageEventAmountForTarget(state, target, continuation.damageInput);
+  /* v8 ignore stop */
 }
 
 function attackDamageContinuationConcentrationHole(
@@ -599,9 +601,11 @@ function attackDamageContinuationConcentrationHole(
   >,
 ): BattleConcentrationSavingThrowHole | null {
   const target = state.combatants.get(continuation.target.combatantId);
+  /* v8 ignore start -- The admitted continuation's target is retained by the same committed Battle state. */
   if (target === undefined) {
     return null;
   }
+  /* v8 ignore stop */
   const damageAmount = Number(
     attackDamageEventAmountForTarget(state, target, continuation.damageInput),
   );
@@ -626,9 +630,11 @@ function attackDamageContinuationTargetConcentrationFill(
   | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
   | undefined {
   const target = state.combatants.get(continuation.target.combatantId);
+  /* v8 ignore start -- The admitted continuation's target is retained by the same committed Battle state. */
   if (target === undefined) {
     return undefined;
   }
+  /* v8 ignore stop */
   const hole = concentrationSavingThrowHole(
     target,
     Number(

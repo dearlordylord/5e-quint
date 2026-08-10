@@ -70,25 +70,16 @@ export function readiedSpellTargetSelection(
     { readonly procedure: "spellAttackDamage" }
   >,
 ): ReadiedSpellTargetSelection {
-  const selectionKind = readiedSpellTargetSelectionKind(
-    fillSet.targetId !== undefined,
-    fillSet.objectTarget !== undefined,
-  );
-  if (selectionKind === "invalid") {
+  if (fillSet.targetId !== undefined && fillSet.objectTarget !== undefined) {
     return {
       tag: "invalid",
       message:
         "Readied spell target must choose either one combatant or one object, not both.",
     };
   }
-  if (selectionKind === "object") {
+  if (fillSet.objectTarget !== undefined) {
     const objectTarget = fillSet.objectTarget;
-    if (objectTarget === undefined) {
-      return {
-        tag: "invalid",
-        message: "Readied spell object target selection is missing its object.",
-      };
-    }
+    /* v8 ignore start -- Object-target holes are admitted only for the single-creature-or-object targeting shape. */
     if (invocation.targeting.kind !== "singleCreatureOrObject") {
       return {
         tag: "invalid",
@@ -96,6 +87,7 @@ export function readiedSpellTargetSelection(
           "Readied spell object target does not match the selected spell's targeting.",
       };
     }
+    /* v8 ignore stop */
     return {
       tag: "object",
       fillSet: {
@@ -105,15 +97,8 @@ export function readiedSpellTargetSelection(
       },
     };
   }
-  if (selectionKind === "creature") {
+  if (fillSet.targetId !== undefined) {
     const targetId = fillSet.targetId;
-    if (targetId === undefined) {
-      return {
-        tag: "invalid",
-        message:
-          "Readied spell creature target selection is missing its target.",
-      };
-    }
     return {
       tag: "creature",
       fillSet: {

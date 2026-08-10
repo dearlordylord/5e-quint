@@ -496,6 +496,146 @@ describe("battle runtime: Cunning Strike", () => {
     expect(target.concentration).not.toBeNull();
   });
 
+  test("Withdraw continues through Concentration before requesting movement", () => {
+    const window = cunningStrikeDamageWindow("withdraw", {
+      targetConcentrating: true,
+    });
+    const needsConcentration = resolveBattleSubject({
+      state: window.state,
+      subject: window.subject,
+      fills: window.damageAppliedFills,
+    });
+    const concentration = requireHole(
+      needsConcentration,
+      "concentrationSavingThrow",
+    );
+    if (needsConcentration.tag !== "needsHoles") {
+      throw new Error("Expected Withdraw to request Concentration.");
+    }
+
+    const needsMovement = resolveBattleSubject({
+      state: needsConcentration.state,
+      subject: window.subject,
+      fills: [
+        ...window.damageAppliedFills,
+        concentrationSavingThrowFill(concentration, true),
+      ],
+    });
+    const movement = requireHole(needsMovement, "movement");
+    expect(movement).toMatchObject({ actorId: fighterId });
+    if (needsMovement.tag !== "needsHoles") {
+      throw new Error("Expected Withdraw to request movement.");
+    }
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: needsMovement.state,
+        subject: window.subject,
+        fills: [
+          ...window.damageAppliedFills,
+          concentrationSavingThrowFill(concentration, true),
+          movementFill(movement, {
+            movementCostFeet: 15,
+            provokedOpportunityAttacks: [],
+          }),
+        ],
+      }),
+    );
+    expect(resolved.state.combatants.get(fighterId)).toMatchObject({
+      movementSpentFeet: movementFeet(0),
+    });
+  });
+
+  test("Poison continues through Concentration before requesting tool possession", () => {
+    const window = cunningStrikeDamageWindow("poison", {
+      targetConcentrating: true,
+    });
+    const needsConcentration = resolveBattleSubject({
+      state: window.state,
+      subject: window.subject,
+      fills: window.damageAppliedFills,
+    });
+    const concentration = requireHole(
+      needsConcentration,
+      "concentrationSavingThrow",
+    );
+    if (needsConcentration.tag !== "needsHoles") {
+      throw new Error("Expected Poison to request Concentration.");
+    }
+
+    const needsKit = resolveBattleSubject({
+      state: needsConcentration.state,
+      subject: window.subject,
+      fills: [
+        ...window.damageAppliedFills,
+        concentrationSavingThrowFill(concentration, true),
+      ],
+    });
+    const kit = requireHole(needsKit, "toolPossessionFacts");
+    expect(kit).toMatchObject({ actorId: fighterId });
+    if (needsKit.tag !== "needsHoles") {
+      throw new Error("Expected Poison to request tool possession.");
+    }
+
+    const needsSave = resolveBattleSubject({
+      state: needsKit.state,
+      subject: window.subject,
+      fills: [
+        ...window.damageAppliedFills,
+        concentrationSavingThrowFill(concentration, true),
+        toolPossessionFactsFill(kit, ["poisoners_kit"]),
+      ],
+    });
+    expect(needsSave).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+    });
+  });
+
+  test("Stealth Attack continues through Concentration before requesting cover", () => {
+    const window = cunningStrikeDamageWindow("stealth_attack", {
+      targetConcentrating: true,
+      withSupremeSneak: true,
+    });
+    const needsConcentration = resolveBattleSubject({
+      state: window.state,
+      subject: window.subject,
+      fills: window.damageAppliedFills,
+    });
+    const concentration = requireHole(
+      needsConcentration,
+      "concentrationSavingThrow",
+    );
+    if (needsConcentration.tag !== "needsHoles") {
+      throw new Error("Expected Stealth Attack to request Concentration.");
+    }
+
+    const needsCover = resolveBattleSubject({
+      state: needsConcentration.state,
+      subject: window.subject,
+      fills: [
+        ...window.damageAppliedFills,
+        concentrationSavingThrowFill(concentration, true),
+      ],
+    });
+    const cover = requireHole(needsCover, "cunningStrikeEndTurnCoverFacts");
+    expect(cover).toMatchObject({ actorId: fighterId });
+    if (needsCover.tag !== "needsHoles") {
+      throw new Error("Expected Stealth Attack to request cover.");
+    }
+    expect(
+      resolveBattleSubject({
+        state: needsCover.state,
+        subject: window.subject,
+        fills: [
+          ...window.damageAppliedFills,
+          concentrationSavingThrowFill(concentration, true),
+          cunningStrikeEndTurnCoverFactsFill(cover, "total"),
+        ],
+      }),
+    ).toMatchObject({ tag: "resolved" });
+  });
+
   test("Trip eligibility uses effective target size", () => {
     const damage = requireAttackDamageHole(
       cunningStrikeDamagePreview({

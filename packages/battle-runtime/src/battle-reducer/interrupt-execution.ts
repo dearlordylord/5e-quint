@@ -58,7 +58,7 @@ import type {
   BattleAttackDamageContinuationWithoutConcentration,
   BattleAttackHitTriggerKind,
   BattleDroppedObjectOutcome,
-  BattleCreatureState,
+  CharacterBattleCreatureState,
   BattleInterruptedProcedure,
   BattleHole,
   BattleObjectDamageOutcome,
@@ -716,7 +716,7 @@ export function attackHitBonusActionSpellReactionChoices(
       ? state.combatants.get(frame.targetId)
       : undefined;
   if (
-    actor?.origin.kind !== "character" ||
+    !isCharacterBattleCreatureState(actor) ||
     target === undefined ||
     !combatantCanTakeActions(actor) ||
     !canSpendBonusAction(state.currentTurnResources) ||
@@ -747,7 +747,6 @@ export function attackHitBonusActionSpellReactionChoices(
       ) {
         return [];
       }
-      if (!isCharacterBattleCreatureState(actor)) return [];
       const procedureRef = invocation.sourceProcedureRef;
       const initialHoles =
         invocation.procedure === "afterHitSaveGatedCondition"
@@ -780,9 +779,8 @@ export function attackHitBonusActionSpellReactionChoices(
 
 function executableSpellProceduresForActor(
   state: BattleState,
-  actor: BattleCreatureState,
+  actor: CharacterBattleCreatureState,
 ): readonly BattleSpellProcedureExecution[] {
-  if (!isCharacterBattleCreatureState(actor)) return [];
   return actor.origin.execution.procedureBindings.flatMap((binding) => {
     if (binding.procedure.kind !== "spellInvocation") return [];
     const invocation = characterSpellProcedure(

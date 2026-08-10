@@ -195,6 +195,7 @@ function stateWithoutCommandPendingEffect(
   effect: CommandPendingEffect,
 ): BattleState {
   const target = state.combatants.get(actorId);
+  /* v8 ignore start -- Command subjects are admitted from an actor present in the committed Battle state. */
   return target === undefined
     ? state
     : {
@@ -206,6 +207,7 @@ function stateWithoutCommandPendingEffect(
           ),
         }),
       };
+  /* v8 ignore stop */
 }
 
 function resolveCommandGrovelCommand(

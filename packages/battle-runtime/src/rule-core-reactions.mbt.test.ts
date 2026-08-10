@@ -60,7 +60,6 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { zeroAbilityWeaponAttack } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const ruleCoreReactionMbtHoles = ["ReactionDecision", "DamageRoll"] as const;
@@ -104,7 +103,7 @@ const movementResumeCostFeet = 10;
 const readiedMovementShortCostFeet = 5;
 const readiedMovementFillCostFeet = 10;
 const concentrationSpellId = "rule_core_concentration_fixture";
-const ruleCoreReactionAttackName = "Longsword";
+const ruleCoreReactionAttackName = "Unarmed Strike";
 const componentOwner = "RuleCoreReactionContinuationConcentrationOwner";
 
 const driverSchema = {
@@ -463,7 +462,7 @@ function reactionCreature(input: {
       maxHp: Hp(12),
       tempHp: Hp(0),
       selectedLoadout: {},
-      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+      attack: null,
       unarmedStrike: {
         kind: "unarmedStrike",
         effect: {

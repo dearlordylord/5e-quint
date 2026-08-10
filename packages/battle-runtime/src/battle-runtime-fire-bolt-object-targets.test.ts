@@ -30,8 +30,23 @@ import {
   targetFill,
 } from "./battle-runtime.test-support.ts";
 import { resolveReadiedFireBoltObjectScenario } from "./readied-object-spell.test-support.ts";
+import { readiedSpellTargetSelectionKind } from "./battle-reducer/spells-resolve-readied-target.ts";
 
 describe("battle runtime: Fire Bolt object targets", () => {
+  test.each([
+    [false, false, "none"],
+    [true, false, "creature"],
+    [false, true, "object"],
+    [true, true, "invalid"],
+  ] as const)(
+    "classifies readied target domains (%s, %s)",
+    (creatureSelected, objectSelected, expected) => {
+      expect(
+        readiedSpellTargetSelectionKind(creatureSelected, objectSelected),
+      ).toBe(expected);
+    },
+  );
+
   test("a readied Fire Bolt exposes both creature and object target holes on release", () => {
     const { skeletonTurn } = resolveReadiedFireBoltObjectScenario({
       battleIdValue: battleId("battle-readied-fire-bolt-object-targets"),
@@ -129,6 +144,25 @@ describe("battle runtime: Fire Bolt object targets", () => {
     expect(
       resumedAttack.state.currentTurnResources.spellSlotUsesThisTurn,
     ).toEqual([]);
+  });
+
+  test("a readied Fire Bolt narrows a creature target before its attack roll", () => {
+    const { releaseStart, releaseSubject } =
+      resolveReadiedFireBoltObjectScenario({
+        battleIdValue: battleId("battle-readied-fire-bolt-creature-target"),
+      });
+    const creatureTarget = findHole(releaseStart.holes, "targetChoice");
+
+    expect(
+      resolveBattleSubject({
+        state: releaseStart.state,
+        subject: releaseSubject,
+        fills: [targetFill(creatureTarget, skeletonId)],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "attackRoll" })],
+    });
   });
 
   test("a readied single-target save spell exposes its target-selection hole on release", () => {

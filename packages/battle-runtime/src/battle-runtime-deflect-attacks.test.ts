@@ -31,6 +31,7 @@ import {
   unitLibrary,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
   battleId,
+  battleProcedureExecutionRefForTest,
   battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitSupportProfilesForUnit,
   Either,
@@ -39,10 +40,62 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
-import { classLevel } from "@dnd/shared/types";
+import { classLevel, damageAmount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
+import type { BattleReactionModifierChoice } from "./battle-state-execution.ts";
+import {
+  attackDamageReductionOriginalDamageType,
+  reactionModifierReductionRoll,
+  reactionReductionResourceDieRollTotal,
+} from "./battle-reducer/reaction-modifiers.ts";
 
 describe("battle runtime: Deflect Attacks", () => {
+  test("reaction reduction helpers preserve typed half/flat and die boundaries", () => {
+    const halfDamage = {
+      kind: "attackDamageReduction",
+      procedureRef: battleProcedureExecutionRefForTest("half-damage"),
+      reduction: { kind: "halfDamage" },
+    } satisfies BattleReactionModifierChoice;
+    const fallDamage = {
+      kind: "fallDamageReduction",
+      procedureRef: battleProcedureExecutionRefForTest("fall-damage"),
+      reduction: { kind: "flat", amount: damageAmount(7) },
+    } satisfies BattleReactionModifierChoice;
+
+    expect(reactionModifierReductionRoll(halfDamage, [])).toEqual({
+      tag: "ok",
+      value: 0,
+    });
+    expect(reactionModifierReductionRoll(fallDamage, [])).toEqual({
+      tag: "ok",
+      value: 7,
+    });
+    expect(
+      reactionReductionResourceDieRollTotal({
+        reduction: { dice: 1, dieSize: 6, flatModifier: 2 },
+        rollTotal: 1,
+      }),
+    ).toEqual({ tag: "ok", value: 3 });
+    expect(
+      reactionReductionResourceDieRollTotal({
+        reduction: { dice: 1, dieSize: 6, flatModifier: 2 },
+        rollTotal: 0,
+      }),
+    ).toMatchObject({ tag: "invalid" });
+    expect(
+      attackDamageReductionOriginalDamageType(
+        ["fire"],
+        "sameTypeDealtByAttack",
+      ),
+    ).toBe("bludgeoning");
+    expect(
+      attackDamageReductionOriginalDamageType(
+        ["slashing", "fire"],
+        "sameTypeDealtByAttack",
+      ),
+    ).toBe("slashing");
+  });
+
   test("Deflect Attacks redirect support comes from authored mechanics", () => {
     const unit = unitLibrary.requireUnit("monk_deflect_attacks");
 

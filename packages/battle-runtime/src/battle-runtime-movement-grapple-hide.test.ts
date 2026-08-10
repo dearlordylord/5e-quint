@@ -105,6 +105,32 @@ import {
 } from "./battle-runtime.test-support.ts";
 
 describe("battle runtime: movement, Grapple, and Hide", () => {
+  test("rejects a stale Move subject after the action economy blocks Movement", () => {
+    const state = fighterVsGoblinBattle();
+    const staleState = {
+      ...state,
+      currentTurnResources: {
+        ...state.currentTurnResources,
+        movementActionBonusActionExclusion: {
+          kind: "restricted" as const,
+          choice: "action" as const,
+        },
+      },
+    } satisfies BattleState;
+
+    expect(
+      resolveBattleSubject({
+        state: staleState,
+        subject: { tag: "runtimeCommand", actorId: fighterId, command: "move" },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Movement is no longer available for the current actor.",
+    });
+  });
+
   test("Surface rejects malformed same-family Grappler mechanics", () => {
     const unit = unitLibrary.requireUnit("feat_grappler");
     if (unit.kind !== "feat" || unit.mechanics.family !== "grappler") {

@@ -115,6 +115,7 @@ export function resolveCastTriggeredReactionSpellCommand(
       "Triggered Reaction spell casting requires an active matching interrupt checkpoint.",
     );
   }
+  /* v8 ignore next -- The interrupt choice admission already narrows this command to a supported triggered-reaction invocation. */
   if (
     reactor?.origin.kind !== "character" ||
     invocation === undefined ||
@@ -176,6 +177,7 @@ export function resolveCastTriggeredReactionSpellCommand(
   }
 
   if (invocation.procedure === "saveGatedDamage") {
+    /* v8 ignore next -- Triggered save-gated Reaction spells are admitted only from prepared spell-slot bindings. */
     if (!isPreparedSlottedSaveGatedDamageInvocation(invocation)) {
       return invalidResult(
         input.state,
@@ -306,6 +308,7 @@ function triggeredReactionSpellCastTargetIds(input: {
   if (input.invocation.procedure === "shieldReaction") {
     return [input.reactorId];
   }
+  /* v8 ignore next -- The selected Reaction choice was discovered from a matching after-damage frame. */
   if (
     input.invocation.procedure === "saveGatedDamage" &&
     input.frame.trigger === "afterDamage"

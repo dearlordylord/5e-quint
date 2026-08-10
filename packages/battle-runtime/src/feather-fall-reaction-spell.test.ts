@@ -65,6 +65,27 @@ const fallingEId = combatantId("feather-fall-target-e");
 const fallingFId = combatantId("feather-fall-target-f");
 
 describe("Feather Fall Reaction spell", () => {
+  test("ignores unrelated spatial facts while discovering falling reactors", () => {
+    const session = battleWithFeatherFall();
+    const result = openCreatureFallsRuntimeInterruptWindow({
+      session,
+      fallingCreatureId: fallingAId,
+      reactionSpellTargetFacts: [
+        ...featherFallTriggerFacts(session, fallingAId, true),
+        {
+          kind: "retaliationDamagerWithinFiveFeet",
+          damagedId: fallingAId,
+          damageSourceId: casterId,
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingInterrupt: { trigger: "creatureFalls" } },
+    });
+  });
+
   test("rejects landing resolution for a combatant outside the battle", () => {
     const state = battleWithFeatherFall().state;
 

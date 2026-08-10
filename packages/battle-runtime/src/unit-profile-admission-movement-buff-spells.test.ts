@@ -432,6 +432,48 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
     });
   });
 
+  test("rejects a stale Jump movement-replacement subject after its effect ends", () => {
+    const spell = spellRecord(jumpUnitId);
+    const session = spellBattle({ preparedSpells: [spell] });
+    const castAct = bonusSpellAct({ session, spellId: jumpUnitId });
+    const targetHole = requireHole(castAct.initialHoles, "spellTargetList");
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: castAct.subject,
+      fills: [
+        jumpSpellTargetListFill(targetHole, spellCasterId, jumpUnitId, [
+          spellCasterId,
+        ]),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Jump to resolve.");
+    }
+
+    const jumpAct = jumpMovementReplacementAct(cast.state);
+    const caster = requireCombatant(cast.state, spellCasterId);
+    const staleState = {
+      ...cast.state,
+      combatants: new Map(cast.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: caster.activeEffects.filter(
+          (effect) => effect.kind !== "jumpMovementReplacement",
+        ),
+      }),
+    };
+    expect(
+      resolveBattleSubject({
+        state: staleState,
+        subject: jumpAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Jump movement replacement is not available.",
+    });
+  });
+
   test("jump installs a one-minute per-target movement replacement and spends 10 Movement for up to 30 feet", () => {
     const spell = spellRecord(jumpUnitId);
     const session = spellBattle({

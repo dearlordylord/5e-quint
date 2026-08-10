@@ -55,6 +55,7 @@ export function battleReducerRouteForInterrupt(
       holes,
       owner,
     );
+  /* v8 ignore start -- Every admitted interrupt that adds a spell Armor Class effect is the Shield payload route handled above. */
   if (
     result.tag === "resolved" &&
     interruptResolutionAddedArmorClassEffect(before, result)
@@ -65,6 +66,7 @@ export function battleReducerRouteForInterrupt(
       eventForOwner("battleInterruptStack"),
     ];
   }
+  /* v8 ignore stop */
   return [eventForOwner("battleInterruptStack")];
 }
 

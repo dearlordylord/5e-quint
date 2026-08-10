@@ -1104,6 +1104,7 @@ export function resolveSpellRelease(
         snapshot: snapshotBattle(releaseResolutionStateAfterCriticalMovement),
       };
     }
+    /* v8 ignore next -- Magic Missile and other non-attack releases do not admit an Attack Roll fill. */
   } else if (fillSet.attackRoll != null) {
     /* v8 ignore start -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(

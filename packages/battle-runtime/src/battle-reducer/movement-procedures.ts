@@ -360,9 +360,11 @@ function jumpMovementReplacementEffectForSubject(
   >,
 ): JumpMovementReplacementEffect | null {
   const actor = state.combatants.get(subject.actorId);
+  /* v8 ignore start -- Discovery creates the replacement subject from this actor's active effect. */
   if (actor === undefined) {
     return null;
   }
+  /* v8 ignore stop */
   return (
     actor.activeEffects.find(
       (effect): effect is JumpMovementReplacementEffect =>
@@ -379,9 +381,11 @@ function markJumpMovementReplacementUsed(
   consumedEffect: JumpMovementReplacementEffect,
 ): BattleState {
   const actor = state.combatants.get(actorId);
+  /* v8 ignore start -- The subject is admitted from the same combatant map that supplied the consumed Jump effect. */
   if (actor === undefined) {
     return state;
   }
+  /* v8 ignore stop */
   const activeEffects = actor.activeEffects.map((effect) =>
     effect.kind === "jumpMovementReplacement" &&
     effect.sourceCombatantId === consumedEffect.sourceCombatantId &&
@@ -433,11 +437,9 @@ function resolveStandFromProneCommand(
   const nextState = {
     ...input.state,
     currentTurnResources:
-      input.subject.actorId === currentActorId(input.state)
-        ? markMovementSpentForMovementActionBonusActionExclusion(
-            input.state.currentTurnResources,
-          )
-        : input.state.currentTurnResources,
+      markMovementSpentForMovementActionBonusActionExclusion(
+        input.state.currentTurnResources,
+      ),
     combatants: new Map(input.state.combatants).set(
       actor.combatantId,
       nextActor,
@@ -831,9 +833,11 @@ function validateSpikeGrowthMovementDamageRoll(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   hole: BattleSpikeGrowthMovementDamageRollHole,
 ): string | null {
+  /* v8 ignore start -- The selected Movement damage hole is the only hole admitted for this fill. */
   if (fill.holeId !== hole.holeId) {
     return "Spike Growth movement damage must use the selected damage hole.";
   }
+  /* v8 ignore stop */
   return validateRolledDiceFillForDiceExpr(
     fill,
     hole.spikeGrowthMovement.damage.expr,
@@ -1623,9 +1627,11 @@ function validateMovementCostFacts(
   const allCosts =
     grappleDrag.tag === "ok" ? [...areaCosts, grappleDrag] : areaCosts;
   const firstCost = allCosts[0];
+  /* v8 ignore start -- The preceding area/Grapple admission guards prove that a non-empty cost list reaches this point. */
   if (firstCost === undefined) {
     return null;
   }
+  /* v8 ignore stop */
   const remainingAreaCosts = areaCosts.slice(1);
   /* v8 ignore start -- Contradictory area witnesses: table-derived Difficult Terrain and Gust facts share one movement path and therefore one total distance. */
   if (
