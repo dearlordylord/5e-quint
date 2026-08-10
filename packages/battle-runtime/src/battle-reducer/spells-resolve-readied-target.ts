@@ -70,15 +70,27 @@ export function readiedSpellTargetSelection(
     { readonly procedure: "spellAttackDamage" }
   >,
 ): ReadiedSpellTargetSelection {
-  if (fillSet.targetId !== undefined && fillSet.objectTarget !== undefined) {
+  const selectionKind = readiedSpellTargetSelectionKind(
+    fillSet.targetId !== undefined,
+    fillSet.objectTarget !== undefined,
+  );
+  if (selectionKind === "invalid") {
     return {
       tag: "invalid",
       message:
         "Readied spell target must choose either one combatant or one object, not both.",
     };
   }
-  if (fillSet.objectTarget !== undefined) {
+  if (selectionKind === "object") {
     const objectTarget = fillSet.objectTarget;
+    /* v8 ignore start -- The shared target-domain classifier proves that an object selection carries its object. */
+    if (objectTarget === undefined) {
+      return {
+        tag: "invalid",
+        message: "Readied spell object target selection is missing its object.",
+      };
+    }
+    /* v8 ignore stop */
     /* v8 ignore start -- Object-target holes are admitted only for the single-creature-or-object targeting shape. */
     if (invocation.targeting.kind !== "singleCreatureOrObject") {
       return {
@@ -97,8 +109,17 @@ export function readiedSpellTargetSelection(
       },
     };
   }
-  if (fillSet.targetId !== undefined) {
+  if (selectionKind === "creature") {
     const targetId = fillSet.targetId;
+    /* v8 ignore start -- The shared target-domain classifier proves that a creature selection carries its target. */
+    if (targetId === undefined) {
+      return {
+        tag: "invalid",
+        message:
+          "Readied spell creature target selection is missing its target.",
+      };
+    }
+    /* v8 ignore stop */
     return {
       tag: "creature",
       fillSet: {

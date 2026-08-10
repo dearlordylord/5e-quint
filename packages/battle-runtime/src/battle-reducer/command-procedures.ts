@@ -196,18 +196,19 @@ function stateWithoutCommandPendingEffect(
 ): BattleState {
   const target = state.combatants.get(actorId);
   /* v8 ignore start -- Command subjects are admitted from an actor present in the committed Battle state. */
-  return target === undefined
-    ? state
-    : {
-        ...state,
-        combatants: new Map(state.combatants).set(actorId, {
-          ...target,
-          activeEffects: target.activeEffects.filter(
-            (candidate) => candidate !== effect,
-          ),
-        }),
-      };
+  if (target === undefined) {
+    return state;
+  }
   /* v8 ignore stop */
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(actorId, {
+      ...target,
+      activeEffects: target.activeEffects.filter(
+        (candidate) => candidate !== effect,
+      ),
+    }),
+  };
 }
 
 function resolveCommandGrovelCommand(

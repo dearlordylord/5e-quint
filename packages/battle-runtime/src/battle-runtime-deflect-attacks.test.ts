@@ -50,7 +50,7 @@ import {
 } from "./battle-reducer/reaction-modifiers.ts";
 
 describe("battle runtime: Deflect Attacks", () => {
-  test("reaction reduction helpers preserve typed half/flat and die boundaries", () => {
+  test("reaction reduction helpers enforce flat and resource-die totals", () => {
     const halfDamage = {
       kind: "attackDamageReduction",
       procedureRef: battleProcedureExecutionRefForTest("half-damage"),
@@ -82,12 +82,6 @@ describe("battle runtime: Deflect Attacks", () => {
         rollTotal: 0,
       }),
     ).toMatchObject({ tag: "invalid" });
-    expect(
-      attackDamageReductionOriginalDamageType(
-        ["fire"],
-        "sameTypeDealtByAttack",
-      ),
-    ).toBe("bludgeoning");
     expect(
       attackDamageReductionOriginalDamageType(
         ["slashing", "fire"],

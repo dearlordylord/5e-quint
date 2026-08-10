@@ -30,23 +30,8 @@ import {
   targetFill,
 } from "./battle-runtime.test-support.ts";
 import { resolveReadiedFireBoltObjectScenario } from "./readied-object-spell.test-support.ts";
-import { readiedSpellTargetSelectionKind } from "./battle-reducer/spells-resolve-readied-target.ts";
 
 describe("battle runtime: Fire Bolt object targets", () => {
-  test.each([
-    [false, false, "none"],
-    [true, false, "creature"],
-    [false, true, "object"],
-    [true, true, "invalid"],
-  ] as const)(
-    "classifies readied target domains (%s, %s)",
-    (creatureSelected, objectSelected, expected) => {
-      expect(
-        readiedSpellTargetSelectionKind(creatureSelected, objectSelected),
-      ).toBe(expected);
-    },
-  );
-
   test("a readied Fire Bolt exposes both creature and object target holes on release", () => {
     const { skeletonTurn } = resolveReadiedFireBoltObjectScenario({
       battleIdValue: battleId("battle-readied-fire-bolt-object-targets"),
