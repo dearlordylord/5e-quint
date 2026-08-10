@@ -31,27 +31,28 @@ totals, and comparison below are the self-contained durable evidence.
 ## Current authoritative diagnostic
 
 - Date: 2026-08-09
-- Git HEAD: `8d879df10171de33b94f195936743d0e93747e82`
+- Git HEAD: `27e6c76f5838968fbe8382982dc5de45b622db8b`
 - Command: `pnpm coverage`
 - Result: exit 0; all workspace coverage packages complete and green
-- Total wall duration: approximately 311 seconds
-- Battle-runtime tests: 204/204 files passed; 2,174 tests passed and 53
-  skipped (2,227 total)
+- Total wall duration: approximately 309 seconds
+- Battle-runtime tests: 204/204 files passed; 2,175 tests passed and 53
+  skipped (2,228 total)
 
-| Metric     |                `962fa8462` |                `51c201581` |                `8d879df10` | `51c` -> `8d8` covered / total |     Uncovered change |   Delta |
+| Metric     |                `51c201581` |                `8d879df10` |                `27e6c76f5` | `8d8` -> `27e` covered / total |     Uncovered change |   Delta |
 | ---------- | -------------------------: | -------------------------: | -------------------------: | -----------------------------: | -------------------: | ------: |
-| Statements | 120,173 / 124,545 (96.48%) | 120,172 / 124,529 (96.50%) | 120,472 / 124,876 (96.47%) |                    +300 / +347 | 4,357 -> 4,404 (+47) | -0.03pp |
-| Branches   |   29,977 / 32,131 (93.29%) |   29,981 / 32,135 (93.29%) |   30,020 / 32,181 (93.28%) |                      +39 / +46 |  2,154 -> 2,161 (+7) | -0.01pp |
-| Functions  |       4,794 / 4,794 (100%) |       4,794 / 4,794 (100%) |       4,811 / 4,811 (100%) |                      +17 / +17 |               0 -> 0 |       0 |
-| Lines      | 120,173 / 124,545 (96.48%) | 120,172 / 124,529 (96.50%) | 120,472 / 124,876 (96.47%) |                    +300 / +347 | 4,357 -> 4,404 (+47) | -0.03pp |
+| Statements | 120,172 / 124,529 (96.50%) | 120,472 / 124,876 (96.47%) | 120,487 / 124,878 (96.48%) |                       +15 / +2 | 4,404 -> 4,391 (-13) | +0.01pp |
+| Branches   |   29,981 / 32,135 (93.29%) |   30,020 / 32,181 (93.28%) |   30,035 / 32,192 (93.29%) |                      +15 / +11 |  2,161 -> 2,157 (-4) | +0.01pp |
+| Functions  |       4,794 / 4,794 (100%) |       4,811 / 4,811 (100%) |       4,819 / 4,819 (100%) |                        +8 / +8 |               0 -> 0 |       0 |
+| Lines      | 120,172 / 124,529 (96.50%) | 120,472 / 124,876 (96.47%) | 120,487 / 124,878 (96.48%) |                       +15 / +2 | 4,404 -> 4,391 (-13) | +0.01pp |
 
-The Vitest statement/line percentage fell to 96.47% and branches fell to
-93.28%; uncovered statements/lines increased by 47 and uncovered branches by 7. These are measured deltas from the authoritative public run, not a forecast
+The Vitest statement/line percentage rose to 96.48% and branches rose to
+93.29%; uncovered statements/lines fell by 13 and uncovered branches by 4.
+These are measured deltas from the authoritative public run, not a forecast
 toward 99%. Denominator changes are shown explicitly because production code
-changed between checkpoints. The existing integer ratchets were preserved and
-no threshold was lowered. Every other executable package in this root run met
-all 99% metric thresholds; battle-runtime is the only remaining package below
-acceptance.
+changed between checkpoints. The branch ratchet rose from 92% to 93%; the
+other ratchets were preserved and no threshold was lowered. Every other
+executable package in this root run met all 99% metric thresholds;
+battle-runtime is the only remaining package below acceptance.
 
 ## Remaining static 99% gaps
 
@@ -60,26 +61,21 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 120,472 | 124,876 |                  123,628 |         3,156 |
-| Branches   |  30,020 |  32,181 |                   31,860 |         1,840 |
-| Functions  |   4,811 |   4,811 |                    4,763 |             0 |
-| Lines      | 120,472 | 124,876 |                  123,628 |         3,156 |
+| Statements | 120,487 | 124,878 |                  123,630 |         3,143 |
+| Branches   |  30,035 |  32,192 |                   31,871 |         1,836 |
+| Functions  |   4,819 |   4,819 |                    4,771 |             0 |
+| Lines      | 120,487 | 124,878 |                  123,630 |         3,143 |
 
 ## Milestone context
 
-Since the prior authoritative checkpoint, `4702e762f` corrected readied spell
-release against object targets and consolidated the corresponding public and
-MBT scenario sequence. `982115d69` narrowed validated Grease and Sleep area
-outcomes, centralized nine failed-save target projections, and added successful
-and mixed-target Grease appearance-save witnesses. Root review in `8d879df10`
-moved that projection to one saving-throw outcome owner and reused it across
-the remaining exact production copies in spell, feature, and route reducers.
-The readied-object milestone received focused QNT and MBT evidence; the
-save-gate milestone received the save-ordering and condition-saving-throw MBT
-lanes. Both received focused tests, package typecheck, and reviewer-loop
-convergence. The authoritative totals above show that the combined unmeasured
-interval did not produce numeric progress toward 99% despite preserving the
-configured ratchets.
+Since the prior authoritative checkpoint, `27e6c76f5` centralized caster-owned
+active-effect writes and duplicate-free per-turn marker updates across
+Moonbeam, Web, Sleet Storm, Insect Plague, and Cloudkill. It added a validated
+Moonbeam marker-replay idempotence witness and raised the battle-runtime branch
+ratchet from 92% to 93%. Focused lifecycle tests, package typecheck, the
+Moonbeam/Web/Sleet Storm MBT lanes, Luna self-review, and an independent root
+review all converged cleanly before the public run. The authoritative totals
+above confirm numeric progress in both limiting metrics.
 
 Focused cohort uncovered counts remain regression and navigation evidence, not
 a forecast of the global public delta, because other public tests may already
@@ -89,14 +85,13 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting public metric at 93.28%, with a static 99% gap of
-1,840. Do not continue the just-measured save-gate campaign without fresh
-file-level evidence: its focused diagnostic improved while the authoritative
-aggregate regressed over the wider interval. Clone the public harness arguments
-for a fresh package-local diagnostic, select a different branch-heavy owner or
-cohesive subsystem, audit its uncovered alternatives for schema-impossible or
-duplicated logic, cover only behaviorally reachable alternatives with focused
-tests, and then remeasure with the public root diagnostic.
+Branches remain the limiting public metric at 93.29%, with a static 99% gap of
+1,836. Clone the public harness arguments for a fresh package-local diagnostic,
+select a different branch-heavy owner or cohesive subsystem from the completed
+active-effect ledger campaign, audit its uncovered alternatives for
+schema-impossible or duplicated logic, cover only behaviorally reachable
+alternatives with focused tests, and then remeasure with the public root
+diagnostic.
 
 ## Verification and completion
 
