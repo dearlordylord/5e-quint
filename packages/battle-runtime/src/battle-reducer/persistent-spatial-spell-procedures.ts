@@ -597,11 +597,9 @@ function resolveWebRestraintSaveCommand(
     effect,
     input.subject.trigger,
   );
-  const nextEffect = webRestraintHazardEffectFor(marked, input.subject);
-  const nextState =
-    !outcome.succeeded && nextEffect !== undefined
-      ? applyWebRestrainedCondition(marked, input.subject.actorId, nextEffect)
-      : marked;
+  const nextState = !outcome.succeeded
+    ? applyWebRestrainedCondition(marked, input.subject.actorId, effect)
+    : marked;
   return {
     tag: "resolved",
     state: nextState,
@@ -1323,7 +1321,7 @@ function flamingSphereAdjustedDamage(input: {
 
 function applyFlamingSphereDamage(input: {
   readonly state: BattleState;
-  readonly targetId: CombatantId;
+  readonly target: BattleCreatureState;
   readonly effect: FlamingSphereEffect;
   readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
   readonly saveSucceeded: boolean;
@@ -1331,16 +1329,12 @@ function applyFlamingSphereDamage(input: {
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
 }): BattleState {
-  const target = input.state.combatants.get(input.targetId);
-  if (target === undefined) {
-    return input.state;
-  }
   return applyPreparedSlotSpellDamage(
     input.state,
-    input.targetId,
+    input.target.combatantId,
     flamingSphereAdjustedDamage({
       state: input.state,
-      target,
+      target: input.target,
       effect: input.effect,
       damageFill: input.damageFill,
       saveSucceeded: input.saveSucceeded,
@@ -1543,7 +1537,7 @@ function resolveFlamingSphereSaveCommand(
   }
   const damaged = applyFlamingSphereDamage({
     state: input.state,
-    targetId: input.subject.actorId,
+    target,
     effect,
     damageFill,
     saveSucceeded: saveOutcome.succeeded,
@@ -1880,7 +1874,7 @@ function resolveFlamingSphereRamCommand(
   }
   const damaged = applyFlamingSphereDamage({
     state: input.state,
-    targetId: input.subject.targetId,
+    target,
     effect,
     damageFill,
     saveSucceeded: saveOutcome.succeeded,
@@ -2023,7 +2017,7 @@ function moonbeamAdjustedDamage(input: {
 
 function applyMoonbeamDamage(input: {
   readonly state: BattleState;
-  readonly targetId: CombatantId;
+  readonly target: BattleCreatureState;
   readonly effect: MoonbeamEffect;
   readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
   readonly saveSucceeded: boolean;
@@ -2031,16 +2025,12 @@ function applyMoonbeamDamage(input: {
     | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
     | undefined;
 }): BattleState {
-  const target = input.state.combatants.get(input.targetId);
-  if (target === undefined) {
-    return input.state;
-  }
   return applyPreparedSlotSpellDamage(
     input.state,
-    input.targetId,
+    input.target.combatantId,
     moonbeamAdjustedDamage({
       state: input.state,
-      target,
+      target: input.target,
       effect: input.effect,
       damageFill: input.damageFill,
       saveSucceeded: input.saveSucceeded,
@@ -2280,7 +2270,7 @@ function resolveMoonbeamSaveCommand(
   }
   const afterDamage = applyMoonbeamDamage({
     state: input.state,
-    targetId: input.subject.actorId,
+    target,
     effect,
     damageFill,
     saveSucceeded: saveOutcome.succeeded,
