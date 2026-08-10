@@ -1,14 +1,36 @@
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  DieRollResult,
+  NonNegativeInteger,
+  difficultyClass,
+  movementDeltaFeet,
+} from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import {
   battleProcedureExecutionRefForTest,
+  combatantId,
   fighterId,
   fighterVsGoblinBattle,
+  goblinTurnBattle,
   goblinId,
+  savingThrowOutcomeFill,
 } from "../battle-runtime.test-support.ts";
-import type { BattleActiveEffect } from "../battle-state-execution.ts";
+import {
+  battleCharacterExecutionScopeRef,
+  battleExecutionScopeOrdinal,
+  battleId,
+  battleResourcePoolExecutionRef,
+} from "../identity.ts";
+import type {
+  BattleActiveEffect,
+  BattleState,
+} from "../battle-state-execution.ts";
 import {
   afterActiveEffectOccurrenceUpdate,
+  isEndTurnFillKind,
+  resolveEndTurnCommand,
+  statBlockRechargeRollFillMatchesHole,
+  tickDurationEffects,
   updateCombatantWithActiveEffectOccurrence,
 } from "./turn-boundary-lifecycle.ts";
 
@@ -65,5 +87,166 @@ describe("turn-boundary active-effect occurrence updates", () => {
     expect(update.tag).toBe("unchanged");
     expect(afterTeardown.get(fighterId)?.concentration).toEqual(concentration);
     expect(afterTeardown.get(goblinId)?.activeEffects).toEqual([ownedEffect]);
+  });
+
+  test("ticks duration effects and tears down an expired concentration source", () => {
+    const state = fighterVsGoblinBattle();
+    const fighter = state.combatants.get(fighterId);
+    const goblin = state.combatants.get(goblinId);
+    if (fighter === undefined || goblin === undefined) {
+      throw new Error("Expected the fighter and goblin combatants.");
+    }
+    const sourceProcedureRef =
+      battleProcedureExecutionRefForTest("duration-source");
+    const tickingEffect = {
+      kind: "nextAttackRollBySelf" as const,
+      sourceProcedureRef,
+      sourceCombatantId: fighterId,
+      mode: "advantage" as const,
+      expiresAt: {
+        kind: "duration" as const,
+        durationTicks: elapsedTimeTicks(2),
+      },
+    } as const satisfies BattleActiveEffect;
+    const expiringConcentrationEffect = {
+      kind: "speedDelta" as const,
+      sourceProcedureRef,
+      sourceCombatantId: fighterId,
+      deltaFeet: movementDeltaFeet(10),
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: fighterId,
+        durationTicks: elapsedTimeTicks(1),
+      },
+    } as const satisfies BattleActiveEffect;
+    const stateWithEffects: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants)
+        .set(fighterId, {
+          ...fighter,
+          concentration: { sourceProcedureRef, effectKind: "spellEffect" },
+        })
+        .set(goblinId, {
+          ...goblin,
+          activeEffects: [tickingEffect, expiringConcentrationEffect],
+        }),
+    };
+    const ticked = tickDurationEffects(stateWithEffects.combatants);
+    expect(ticked.value.get(goblinId)?.activeEffects).toEqual([
+      {
+        ...tickingEffect,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(1),
+        },
+      },
+    ]);
+    expect(ticked.value.get(fighterId)?.concentration).toBeNull();
+    expect(ticked.flySpeedGrantEndFallCleanupFrames).toEqual([]);
+  });
+
+  test("resolves a reachable sleep repeat-save frontier at turn end", () => {
+    const state = goblinTurnBattle();
+    const goblin = state.combatants.get(goblinId);
+    if (goblin === undefined) {
+      throw new Error("Expected the current goblin actor.");
+    }
+    const pendingSleep = {
+      kind: "sleepPendingRepeatSave" as const,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "sleep-repeat-source",
+      ),
+      sourceCombatantId: fighterId,
+      conditionHadNonSpellSource: false,
+      save: {
+        ability: "wis" as const,
+        dc: { kind: "fixed" as const, dc: difficultyClass(12) },
+      },
+      repeatAt: {
+        kind: "endOfTurn" as const,
+        combatantId: goblinId,
+        round: state.initiative.round,
+      },
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: fighterId,
+      },
+    } as const satisfies BattleActiveEffect;
+    const sleepingState: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(goblinId, {
+        ...goblin,
+        activeEffects: [pendingSleep],
+      }),
+    };
+    const subject = {
+      tag: "runtimeCommand" as const,
+      actorId: goblinId,
+      command: "endTurn" as const,
+    };
+    const frontier = resolveEndTurnCommand({
+      state: sleepingState,
+      subject,
+      fills: [],
+    });
+    expect(frontier.tag).toBe("needsHoles");
+    if (frontier.tag !== "needsHoles") return;
+    const saveHole = frontier.holes.find(
+      (hole) => hole.kind === "savingThrowOutcome" && "sleepRepeatSave" in hole,
+    );
+    if (saveHole === undefined) {
+      throw new Error("Expected the sleep repeat-save hole.");
+    }
+    const succeeded = resolveEndTurnCommand({
+      state: sleepingState,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(saveHole, [
+          { targetId: goblinId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(succeeded.tag).toBe("resolved");
+    if (succeeded.tag !== "resolved") return;
+    expect(succeeded.state.combatants.get(goblinId)?.activeEffects).toEqual([]);
+
+    const failed = resolveEndTurnCommand({
+      state: sleepingState,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(saveHole, [
+          { targetId: goblinId, succeeded: false },
+        ]),
+      ],
+    });
+    expect(failed.tag).toBe("resolved");
+    if (failed.tag !== "resolved") return;
+    expect(failed.state.combatants.get(goblinId)?.activeEffects).toEqual([
+      expect.objectContaining({ kind: "sleepUnconscious" }),
+    ]);
+  });
+
+  test("keeps turn-boundary fill vocabulary and recharge matching total", () => {
+    expect(isEndTurnFillKind("savingThrowOutcome")).toBe(true);
+    expect(isEndTurnFillKind("targetChoice")).toBe(false);
+    expect(statBlockRechargeRollFillMatchesHole([], null)).toBe(true);
+    expect(
+      statBlockRechargeRollFillMatchesHole(
+        [
+          {
+            target: battleResourcePoolExecutionRef(
+              battleCharacterExecutionScopeRef(
+                battleId("synthetic-recharge"),
+                combatantId("synthetic-recharge"),
+                battleExecutionScopeOrdinal(0),
+              ),
+              NonNegativeInteger(0),
+            ),
+            roll: DieRollResult(6),
+          },
+        ],
+        null,
+      ),
+    ).toBe(false);
   });
 });
