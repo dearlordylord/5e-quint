@@ -27,6 +27,7 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import { spellId } from "./identity.ts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   DieRollResult,
   Hp,
@@ -46,10 +47,21 @@ import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
+  characterBattleFeatureInitForTest,
+  characterSpellInvocationForProcedureRefForTest,
   requireCharacterUnitProcedureRefForTest,
   resolveBattleSubject,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 } from "./battle-runtime.test-support.ts";
+import { D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
+import { battleD20TestNaturalOneRerollSupportForUnit } from "./unit-feature-support.ts";
+import { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
+import {
+  chainedSpellFillSet,
+  chainedSpellLaterStepsAreEmpty,
+  emptyChainedSpellStepFills,
+} from "./battle-reducer/spells-resolve-chained.ts";
+import { damageRelationshipQuestionId } from "./battle-reducer/damage-relationship-question-id.ts";
 
 const spellCasterId = combatantId("chromatic-orb-caster");
 const firstTargetId = combatantId("chromatic-orb-first-target");
@@ -65,6 +77,22 @@ if (statBlockCatalogResult.tag !== "ok") {
 
 const statBlockCatalog = statBlockCatalogResult.catalog;
 const chromaticOrb = decodeSpellRecord(chromaticOrbInput);
+const syntheticD20TestNaturalOneReroll = decodeUnitRecordSync({
+  id: "synthetic_d20_test_natural_one_reroll_fixture",
+  kind: "species_trait",
+  mechanics: {
+    family: "d20_test_natural_one_reroll",
+    optional: true,
+    reroll: { kind: "reroll_triggering_d20", use: "new_roll" },
+    trigger: { dieFace: 1, kind: "d20_test_roll_is" },
+  },
+  name: "Synthetic Natural-One Reroll Fixture",
+  provenance: {
+    kind: "synthetic-test",
+    section: "battle-runtime synthetic chained spell reroll fixture",
+  },
+  species: "synthetic_fixture_species",
+});
 const syntheticZeroHitPointReplacement = decodeUnitRecordSync({
   id: "synthetic_zero_hit_point_replacement",
   kind: "species_trait",
@@ -151,6 +179,200 @@ describe("Chromatic Orb chained spell attack", () => {
     expect(requireHole(awaitingAttack.holes, "attackRoll").holeId).not.toEqual(
       targetHole.holeId,
     );
+  });
+
+  test("offers the D20 Test natural-one reroll before advancing the chain", () => {
+    const state = chromaticOrbBattle({
+      spellLevel: 1,
+      casterNaturalOneRerollUnit: syntheticD20TestNaturalOneReroll,
+    });
+    const attack = chromaticOrbAttackFills(state, {
+      damageType: "fire",
+      targetId: firstTargetId,
+      attackTotal: 3,
+      naturalD20: 1,
+    });
+    const awaitingDecision = resolveNeedsHoles(
+      state,
+      attack.subject,
+      attack.fills,
+    );
+    const decisionHole = requireHole(awaitingDecision.holes, "attackRoll");
+
+    expect(decisionHole).toMatchObject({
+      d20TestNaturalOneRerolls: [
+        { effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND },
+      ],
+    });
+
+    const rerolledAttack = {
+      kind: "attackRoll" as const,
+      holeId: decisionHole.holeId,
+      value: {
+        total: 3,
+        naturalD20: DieRollResult(1),
+        d20TestNaturalOneReroll: {
+          kind: "reroll" as const,
+          effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+          replacement: { total: 18, naturalD20: DieRollResult(12) },
+        },
+      },
+    } satisfies Extract<BattleFill, { readonly kind: "attackRoll" }>;
+    const awaitingDamage = resolveNeedsHoles(state, attack.subject, [
+      ...attack.fills.slice(0, -1),
+      rerolledAttack,
+    ]);
+    expect(requireHole(awaitingDamage.holes, "rolledDice").label).toContain(
+      "3d8",
+    );
+
+    const declinedAttack = {
+      ...rerolledAttack,
+      value: {
+        ...rerolledAttack.value,
+        d20TestNaturalOneReroll: {
+          kind: "decline" as const,
+          effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
+        },
+      },
+    } satisfies Extract<BattleFill, { readonly kind: "attackRoll" }>;
+    const declined = resolveResolved(state, attack.subject, [
+      ...attack.fills.slice(0, -1),
+      declinedAttack,
+    ]);
+    expect(declined.state.combatants.get(firstTargetId)?.hp).toBe(12);
+  });
+
+  test("classifies chained replay side-channel fills and rejects duplicate sight facts", () => {
+    const session = chromaticOrbSession({ spellLevel: 1 });
+    const act = chromaticOrbAct(session.state);
+    const invocation = characterSpellInvocationForProcedureRefForTest(
+      session,
+      spellCasterId,
+      act.subject.procedureRef,
+    );
+    if (invocation.procedure !== "chainedSpellAttackDamage") {
+      throw new Error("Expected the Chromatic Orb chained-spell invocation.");
+    }
+
+    const reactionFactsFill = {
+      kind: "targetSpatialFacts" as const,
+      holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+      spatialFacts: [],
+    } satisfies Extract<BattleFill, { readonly kind: "targetSpatialFacts" }>;
+    const slowSomaticFailureFill = {
+      kind: "slowSomaticSpellFailureOutcome" as const,
+      holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+      value: { spellFailed: false },
+    } satisfies Extract<
+      BattleFill,
+      { readonly kind: "slowSomaticSpellFailureOutcome" }
+    >;
+    const sanctuaryOutcomeFill = {
+      kind: "sanctuaryInterdictionOutcome" as const,
+      holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+      value: { saveSucceeded: true },
+    } satisfies Extract<
+      BattleFill,
+      { readonly kind: "sanctuaryInterdictionOutcome" }
+    >;
+    const sourcePenaltyFill = {
+      kind: "rolledDice" as const,
+      holeId: holeId(
+        "battle:source-damage-roll-penalty-roll:synthetic-chained-spell",
+      ),
+      value: [{ results: [DieRollResult(1)] }],
+    } satisfies Extract<BattleFill, { readonly kind: "rolledDice" }>;
+    const sideChannelParse = chainedSpellFillSet(
+      [
+        reactionFactsFill,
+        slowSomaticFailureFill,
+        sanctuaryOutcomeFill,
+        sourcePenaltyFill,
+      ],
+      invocation,
+      spellCasterId,
+      session.state,
+    );
+    expect(sideChannelParse).toMatchObject({
+      tag: "ok",
+      reactionSpellTargetFacts: [],
+      sourceDamageRollPenaltyRolls: [sourcePenaltyFill],
+    });
+
+    const relationshipFill = {
+      kind: "damageRelationshipDecisions" as const,
+      holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+      answers: [
+        {
+          questionId: damageRelationshipQuestionId(["synthetic-chained-spell"]),
+          answer: false,
+        },
+      ],
+    } satisfies Extract<
+      BattleFill,
+      { readonly kind: "damageRelationshipDecisions" }
+    >;
+    expect(
+      chainedSpellFillSet(
+        [relationshipFill],
+        invocation,
+        spellCasterId,
+        session.state,
+      ),
+    ).toMatchObject({ tag: "invalid" });
+
+    const typeFill = damageTypeFill(
+      requireHole(act.initialHoles, "damageTypeChoice"),
+      "fire",
+    );
+    const targetHole = requireHole(
+      resolveNeedsHoles(session.state, act.subject, [typeFill]).holes,
+      "targetChoice",
+    );
+    const targetFill = spellTargetFill(targetHole, firstTargetId);
+    const duplicateSightFact = {
+      kind: "attackAttackerCannotSeeTarget" as const,
+      attackerId: spellCasterId,
+      targetId: firstTargetId,
+    };
+    const duplicateSightFill = {
+      ...targetFill,
+      spatialFacts: [duplicateSightFact, duplicateSightFact],
+    } satisfies Extract<BattleFill, { readonly kind: "targetChoice" }>;
+    expect(
+      chainedSpellFillSet(
+        [duplicateSightFill],
+        invocation,
+        spellCasterId,
+        session.state,
+      ),
+    ).toMatchObject({ tag: "invalid" });
+  });
+
+  test("treats only later chained steps as continuation payload", () => {
+    expect(
+      chainedSpellLaterStepsAreEmpty(
+        [emptyChainedSpellStepFills(), emptyChainedSpellStepFills()],
+        0,
+      ),
+    ).toBe(true);
+    expect(
+      chainedSpellLaterStepsAreEmpty(
+        [
+          emptyChainedSpellStepFills(),
+          {
+            ...emptyChainedSpellStepFills(),
+            attackRoll: {
+              kind: "attackRoll",
+              holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+              value: { total: 10, naturalD20: DieRollResult(10) },
+            },
+          },
+        ],
+        0,
+      ),
+    ).toBe(false);
   });
 
   test("resolves without a leap when the damage d8 faces are not duplicated", () => {
@@ -382,6 +604,31 @@ describe("Chromatic Orb chained spell attack", () => {
     ).toBeNull();
   });
 
+  test("requests an active source damage penalty roll before applying chained damage", () => {
+    const state = withSourceDamageRollPenalty(
+      chromaticOrbBattle({ spellLevel: 1 }),
+    );
+    const damage = chromaticOrbDamageFills(state, {
+      damageType: "fire",
+      targetId: firstTargetId,
+      attackTotal: 18,
+      naturalD20: 12,
+      damageFaces: [1, 2, 3],
+    });
+    const awaitingPenalty = resolveNeedsHoles(
+      state,
+      damage.subject,
+      damage.fills,
+    );
+    const penaltyHole = requireHole(awaitingPenalty.holes, "rolledDice");
+    expect(penaltyHole).toMatchObject({
+      label: "Source damage roll penalty (1d8)",
+      sourceDamageRollPenalty: {
+        damageRollHoleId: damage.fills.at(-1)?.holeId,
+      },
+    });
+  });
+
   test("Warding Bond shared damage from chained spells uses the caster damage lifecycle", () => {
     const state = withWardingBondSharedCasterLifecycle(
       chromaticOrbBattle({ spellLevel: 1 }),
@@ -597,6 +844,7 @@ function chromaticOrbBattle(input: {
   readonly spellLevel: 1 | 2;
   readonly firstTargetHp?: number;
   readonly firstTargetZeroHitPointReplacementUnit?: UnitRecord;
+  readonly casterNaturalOneRerollUnit?: UnitRecord;
   readonly secondTargetKind?: "character" | "poisonImmuneSkeleton";
   readonly spell?: SpellRecord;
 }): BattleState {
@@ -607,9 +855,22 @@ function chromaticOrbSession(input: {
   readonly spellLevel: 1 | 2;
   readonly firstTargetHp?: number;
   readonly firstTargetZeroHitPointReplacementUnit?: UnitRecord;
+  readonly casterNaturalOneRerollUnit?: UnitRecord;
   readonly secondTargetKind?: "character" | "poisonImmuneSkeleton";
   readonly spell?: SpellRecord;
 }): BattleRuntimeSession {
+  const casterNaturalOneRerollSupport =
+    input.casterNaturalOneRerollUnit === undefined
+      ? undefined
+      : battleD20TestNaturalOneRerollSupportForUnit(
+          input.casterNaturalOneRerollUnit,
+        );
+  if (
+    casterNaturalOneRerollSupport === "unsupported" ||
+    casterNaturalOneRerollSupport === null
+  ) {
+    throw new Error("Expected a supported natural-one reroll fixture.");
+  }
   const result = startBattle({
     battleId: battleId(`chromatic-orb-${input.spellLevel}`),
     combatants: [
@@ -629,6 +890,22 @@ function chromaticOrbSession(input: {
           invocationSpellAccesses: [],
           spellSlots: [{ spellLevel: input.spellLevel, count: 1 }],
         },
+        ...(input.casterNaturalOneRerollUnit === undefined ||
+        casterNaturalOneRerollSupport === undefined
+          ? {}
+          : {
+              characterUnitRefs: [
+                {
+                  unit: input.casterNaturalOneRerollUnit,
+                  supportProfiles: [casterNaturalOneRerollSupport],
+                },
+              ],
+              unitFeatures: [
+                characterBattleFeatureInitForTest(
+                  input.casterNaturalOneRerollUnit,
+                ),
+              ],
+            }),
       }),
       characterCreature({
         combatantId: firstTargetId,
@@ -825,6 +1102,35 @@ function withTargetConcentration(state: BattleState): BattleState {
         ),
         effectKind: "spellEffect",
       },
+    }),
+  };
+}
+
+function withSourceDamageRollPenalty(state: BattleState): BattleState {
+  const caster = state.combatants.get(spellCasterId);
+  if (caster === undefined) {
+    throw new Error("Expected spell caster.");
+  }
+  const sourceDamageRollPenalty = {
+    kind: "sourceDamageRollPenalty",
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      "synthetic_source_damage_penalty",
+    ),
+    sourceCombatantId: firstTargetId,
+    amount: { dice: 1, dieSize: 8 },
+    expiresAt: {
+      kind: "concentration",
+      combatantId: firstTargetId,
+    },
+  } satisfies Extract<
+    BattleActiveEffect,
+    { readonly kind: "sourceDamageRollPenalty" }
+  >;
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(spellCasterId, {
+      ...caster,
+      activeEffects: [...caster.activeEffects, sourceDamageRollPenalty],
     }),
   };
 }
@@ -1059,6 +1365,14 @@ function characterCreature(input: {
     { readonly kind: "character" }
   >["spellcasting"];
   readonly hp?: number;
+  readonly unitFeatures?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["unitFeatures"];
+  readonly characterUnitRefs?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["characterUnitRefs"];
   readonly zeroHitPointReplacementUnit?: UnitRecord;
 }): BattleCreatureInit {
   const hp = Hp(input.hp ?? 12);
@@ -1069,15 +1383,19 @@ function characterCreature(input: {
     creatureInit: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
-      characterUnitRefs:
-        input.zeroHitPointReplacementUnit === undefined
+      characterUnitRefs: [
+        ...(input.characterUnitRefs ?? []),
+        ...(input.zeroHitPointReplacementUnit === undefined
           ? []
           : [
               {
                 unit: input.zeroHitPointReplacementUnit,
-                supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
+                supportProfiles: [
+                  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
+                ] as const,
               },
-            ],
+            ]),
+      ],
       classLevels: [{ className: "wizard", level: 1 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
@@ -1107,6 +1425,9 @@ function characterCreature(input: {
       ...(input.spellcasting === undefined
         ? {}
         : { spellcasting: input.spellcasting }),
+      ...(input.unitFeatures === undefined
+        ? {}
+        : { unitFeatures: input.unitFeatures }),
     },
   };
 }
