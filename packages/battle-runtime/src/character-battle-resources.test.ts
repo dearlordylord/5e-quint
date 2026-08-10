@@ -3,6 +3,7 @@ import { Either } from "effect";
 
 import type { CharacterBattleClassLevels } from "./character-class-level.ts";
 import {
+  type CharacterBattleMetamagicInit,
   characterBattleMetamagicState,
   characterBattleResourceMaxPoints,
   characterBattleResourceMaxUses,
@@ -38,6 +39,7 @@ import {
   unitLibrary,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { spellRecord } from "./battle-runtime.test-support.ts";
+import { DISTANT_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
 
 function classLevelsFor(
   className: ClassName,
@@ -183,17 +185,21 @@ describe("character battle resource projections", () => {
     expect(explicitlySpent.pointsRemaining).toBe(resourceCount(2));
   });
 
-  test("keeps metamagic state absent until its owned point-pool resource is present", () => {
+  test("projects metamagic state from its owned point-pool resource", () => {
     const unit = unitLibrary.requireUnit("sorcerer_font_of_magic");
     const classLevels = classLevelsFor("sorcerer", 5);
     const resourcePoolRef = resourcePoolRefFor("sorcery-points");
-    const metamagic = {
+    const metamagic: CharacterBattleMetamagicInit = {
       sorceryPointResourceUnitId: unit.id,
-      spellUseLimit: "one_per_spell_unless_option_allows_stacking" as const,
-      knownOptions: [],
+      spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+      knownOptions: [
+        {
+          effectKind: DISTANT_METAMAGIC_EFFECT_KIND,
+          stackingMode: "one_per_spell",
+          sorceryPointCost: resourceCount(1),
+        },
+      ],
     };
-
-    expect(characterBattleMetamagicState(metamagic, [], [])).toBeUndefined();
 
     const resource = characterResourceState(
       { unit },
@@ -209,7 +215,7 @@ describe("character battle resource projections", () => {
     ).toEqual({
       sorceryPointResourcePoolRef: resourcePoolRef,
       spellUseLimit: "one_per_spell_unless_option_allows_stacking",
-      knownOptions: [],
+      knownOptions: metamagic.knownOptions,
     });
   });
 
