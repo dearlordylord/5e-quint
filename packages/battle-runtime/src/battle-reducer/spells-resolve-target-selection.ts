@@ -30,6 +30,7 @@ import {
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 
 import { type SpellFillSet } from "./spells-resolve-fill-set.ts";
+import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
 
 export type HealingSpellTargetSelection =
   | { readonly tag: "ok"; readonly targetIds: readonly CombatantId[] }
@@ -473,8 +474,8 @@ export function rollModifierSpellAffectedTargets(input: {
   /* v8 ignore stop */
   return {
     tag: "ok",
-    targetIds: input.fillSet.savingThrowOutcomes.outcomes.flatMap((outcome) =>
-      outcome.succeeded ? [] : [outcome.targetId],
+    targetIds: failedSavingThrowTargetIds(
+      input.fillSet.savingThrowOutcomes.outcomes,
     ),
   };
 }

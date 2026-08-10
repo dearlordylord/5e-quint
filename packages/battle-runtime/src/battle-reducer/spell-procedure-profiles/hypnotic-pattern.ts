@@ -76,6 +76,7 @@ import {
   spellMetamagicApplications,
 } from "../metamagic-support.ts";
 import { spellSavingThrowOutcomeHole } from "../spells-holes-fills.ts";
+import { failedSavingThrowTargetIds } from "../saving-throw-outcomes.ts";
 
 type HypnoticPatternSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -395,8 +396,8 @@ function resolveHypnoticPattern(
   const affectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
-  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
-    outcome.succeeded ? [] : [outcome.targetId],
+  const failedTargets = failedSavingThrowTargetIds(
+    savingThrowOutcomes.outcomes,
   );
   if (failedTargets.length > 0) {
     const continuation: BattleInterruptedProcedure = spellReplayContinuation(

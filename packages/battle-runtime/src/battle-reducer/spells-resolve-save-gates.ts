@@ -110,6 +110,7 @@ import {
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 import type { CharacterBattleMetamagicOptionFact } from "../character-battle-resource-execution.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
+import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
 import { parseBattleMovement } from "./movement-procedures.ts";
 import {
   readiedMovementBudgetForActor,
@@ -196,14 +197,6 @@ function assertGreaseSavingThrowOutcomes(
     );
   }
   /* v8 ignore stop */
-}
-
-function failedSavingThrowTargetIds(
-  value: BattleSpellSavingThrowOutcomeValue,
-): readonly CombatantId[] {
-  return value.outcomes.flatMap((outcome) =>
-    outcome.succeeded ? [] : [outcome.targetId],
-  );
 }
 
 function maybeOpenSpellSaveFailedInterruptWindow(
@@ -698,7 +691,9 @@ export function resolveGreaseGroundHazardSpellAct(input: {
   assertGreaseSavingThrowOutcomes(savingThrowOutcomes);
   const area = savingThrowOutcomes.area;
 
-  const failedTargets = failedSavingThrowTargetIds(savingThrowOutcomes);
+  const failedTargets = failedSavingThrowTargetIds(
+    savingThrowOutcomes.outcomes,
+  );
   const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
     input.input,
     input.invocation.sourceProcedureRef,
@@ -810,7 +805,7 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
   const selectedTargetIds =
     input.fillSet.savingThrowOutcomes.area.affectedTargetIds;
   const failedTargets = failedSavingThrowTargetIds(
-    input.fillSet.savingThrowOutcomes,
+    input.fillSet.savingThrowOutcomes.outcomes,
   );
   const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
     input.input,
@@ -954,7 +949,7 @@ export function resolveHideousLaughterSpellAct(input: {
   }
   /* v8 ignore stop */
   const failedTargets = failedSavingThrowTargetIds(
-    input.fillSet.savingThrowOutcomes,
+    input.fillSet.savingThrowOutcomes.outcomes,
   );
   const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
     input.input,
@@ -1072,7 +1067,7 @@ export function resolveAbilityD20TestRollModeSaveGateSpellAct(input: {
   }
   /* v8 ignore stop */
   const failedTargets = failedSavingThrowTargetIds(
-    input.fillSet.savingThrowOutcomes,
+    input.fillSet.savingThrowOutcomes.outcomes,
   );
   const successfulTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
     (outcome) => (outcome.succeeded ? [outcome.targetId] : []),
@@ -1478,7 +1473,9 @@ export function resolveSaveGateDamageSpellAct(input: {
     input.invocation,
     input.metamagicApplications,
   );
-  const failedTargets = failedSavingThrowTargetIds(savingThrowOutcomes);
+  const failedTargets = failedSavingThrowTargetIds(
+    savingThrowOutcomes.outcomes,
+  );
   const saveGatedDamageSpellRequiresConcentration = spellRequiresConcentration(
     input.invocation,
   );
@@ -2678,7 +2675,9 @@ export function resolveSaveGateConditionSpellAct(input: {
   const selectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
-  const failedTargets = failedSavingThrowTargetIds(savingThrowOutcomes);
+  const failedTargets = failedSavingThrowTargetIds(
+    savingThrowOutcomes.outcomes,
+  );
   const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
     input.input,
     input.invocation.sourceProcedureRef,
@@ -2844,7 +2843,9 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
   const selectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
-  const failedTargets = failedSavingThrowTargetIds(savingThrowOutcomes);
+  const failedTargets = failedSavingThrowTargetIds(
+    savingThrowOutcomes.outcomes,
+  );
   const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
     input.input,
     input.invocation.sourceProcedureRef,
@@ -3033,7 +3034,9 @@ export function resolveCommandSpellAct(input: {
   const selectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
-  const failedTargets = failedSavingThrowTargetIds(savingThrowOutcomes);
+  const failedTargets = failedSavingThrowTargetIds(
+    savingThrowOutcomes.outcomes,
+  );
   const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
     input.input,
     input.invocation.sourceProcedureRef,
@@ -3169,7 +3172,9 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
   const selectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
-  const failedTargets = failedSavingThrowTargetIds(savingThrowOutcomes);
+  const failedTargets = failedSavingThrowTargetIds(
+    savingThrowOutcomes.outcomes,
+  );
   const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
     input.input,
     input.invocation.sourceProcedureRef,

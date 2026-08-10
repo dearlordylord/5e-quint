@@ -128,6 +128,7 @@ import type {
 import type { UnitFeatureRolledDiceFill } from "./battle-runtime-protocol.ts";
 import { validateRolledDiceFillForDiceExpr } from "../battle-state-execution.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
+import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
 import {
   attackActionAreaSaveDamageReplacementProtocolId,
   attackActionAreaSaveDamageReplacementSavingThrowHole,
@@ -948,9 +949,7 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
     savingThrowTargetIds,
     relationshipFacts,
   );
-  const failedTargetIds = validation.outcomes.flatMap((outcome) =>
-    outcome.succeeded ? [] : [outcome.targetId],
-  );
+  const failedTargetIds = failedSavingThrowTargetIds(validation.outcomes);
   const stateAfterConditions = applyMagicActionSaveGatedConditionFailures(
     stateAfterSpend,
     actor.combatantId,

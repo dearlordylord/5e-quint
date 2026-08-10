@@ -106,6 +106,7 @@ import {
   spendSpellCastResources,
 } from "./spells-resolve-resources.ts";
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
+import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
 import { spellFillSet, type SpellFillSet } from "./spells-resolve-fill-set.ts";
 export function resolveAttackBurstSaveDamageSpellAct(input: {
@@ -794,8 +795,8 @@ export function resolveAttackBurstSaveDamageSpellAct(input: {
   }
   /* v8 ignore stop */
 
-  const failedTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
-    (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
+  const failedTargets = failedSavingThrowTargetIds(
+    input.fillSet.savingThrowOutcomes.outcomes,
   );
   if (failedTargets.length > 0) {
     const saveFailedReactionWindow = maybeOpenInterruptWindow(

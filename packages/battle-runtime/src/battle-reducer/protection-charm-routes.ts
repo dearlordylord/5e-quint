@@ -27,6 +27,7 @@ import type {
   BattleReducerRouteOwnerGroup,
 } from "./reducer-route-protocol.ts";
 import { spellInvocationForRouteSubject } from "./reducer-route-spell-query.ts";
+import { failedSavingThrowTargetIds } from "./saving-throw-outcomes.ts";
 import {
   combatantConcentrationChanged,
   combatantsActiveEffectsChanged,
@@ -358,11 +359,9 @@ function saveGatedConditionFailedTargetIds(
     ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
       fill.kind === "savingThrowOutcome",
   );
-  return (
-    saveFill?.value.outcomes.flatMap((outcome) =>
-      outcome.succeeded ? [] : [outcome.targetId],
-    ) ?? []
-  );
+  return saveFill === undefined
+    ? []
+    : failedSavingThrowTargetIds(saveFill.value.outcomes);
 }
 
 function protectionCharmDiscover(

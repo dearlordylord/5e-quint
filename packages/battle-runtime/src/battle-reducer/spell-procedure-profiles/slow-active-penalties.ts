@@ -64,6 +64,7 @@ import {
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
 import { currentActorId } from "../creature-state-leaves.ts";
+import { failedSavingThrowTargetIds } from "../saving-throw-outcomes.ts";
 import { slowActionOrBonusActionTurnResources } from "../slow-active-penalties-runtime.ts";
 import type {
   SpellAdmissionContext,
@@ -351,8 +352,8 @@ function resolveSlowActivePenalties(
   const affectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
-  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
-    outcome.succeeded ? [] : [outcome.targetId],
+  const failedTargets = failedSavingThrowTargetIds(
+    savingThrowOutcomes.outcomes,
   );
   if (failedTargets.length > 0) {
     const saveFailedReactionWindow = maybeOpenInterruptWindow(
