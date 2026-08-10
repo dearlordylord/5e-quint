@@ -5,7 +5,6 @@ import { describe, expect, test } from "vitest";
 import { battleId, battleObjectId, combatantId } from "../identity.ts";
 import {
   characterSeed,
-  endTurn,
   startBattleRight,
   statBlockCreatureInit,
   testCharacterWeaponAttackForUnit,
@@ -290,7 +289,13 @@ describe("battle lifecycle admission issue aggregation", () => {
       battleId: battleId("empty-initial-setup"),
       combatants: [],
     });
-    expect(Either.isLeft(emptySetup)).toBe(true);
+    expect(emptySetup).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "battleStateInitIssue",
+        message: "startBattle requires at least one combatant.",
+      },
+    });
 
     const statBlock = statBlockCreatureInit({
       combatantId: combatantId("lifecycle-stat-block"),
@@ -324,84 +329,84 @@ describe("battle lifecycle admission issue aggregation", () => {
     ).toBeUndefined();
 
     expect(
-      Either.isLeft(
-        applyInitiativeSwap({
-          setup,
-          sourceId: baseCombatant.combatantId,
-          candidateId: baseCombatant.combatantId,
-          candidateWitness: { tag: "willingAlly" },
-        }),
-      ),
-    ).toBe(true);
-    expect(
-      Either.isLeft(
-        applyInitiativeSwap({
-          setup,
-          sourceId: combatantId("missing-initiative-source"),
-          candidateId: statBlock.combatantId,
-          candidateWitness: { tag: "willingAlly" },
-        }),
-      ),
-    ).toBe(true);
-    expect(
-      Either.isLeft(
-        applyInitiativeSwap({
-          setup,
-          sourceId: baseCombatant.combatantId,
-          candidateId: combatantId("missing-initiative-candidate"),
-          candidateWitness: { tag: "willingAlly" },
-        }),
-      ),
-    ).toBe(true);
-    expect(
-      Either.isLeft(
-        applyInitiativeSwap({
-          setup,
-          sourceId: baseCombatant.combatantId,
-          candidateId: statBlock.combatantId,
-          candidateWitness: { tag: "willingAlly" },
-        }),
-      ),
-    ).toBe(true);
-
-    const acted = endTurn({
-      state: setup.state,
-      actorId: baseCombatant.combatantId,
+      applyInitiativeSwap({
+        setup,
+        sourceId: baseCombatant.combatantId,
+        candidateId: baseCombatant.combatantId,
+        candidateWitness: { tag: "willingAlly" },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Initiative Swap requires a distinct willing ally.",
+      },
     });
-    expect(acted.tag).toBe("resolved");
-    if (acted.tag !== "resolved") return;
-    setup.consumeInitiativeSwap(combatantId("other-source"), acted.state);
     expect(
-      Either.isLeft(
-        applyInitiativeSwap({
-          setup,
-          sourceId: baseCombatant.combatantId,
-          candidateId: statBlock.combatantId,
-          candidateWitness: { tag: "willingAlly" },
-        }),
-      ),
-    ).toBe(true);
+      applyInitiativeSwap({
+        setup,
+        sourceId: combatantId("missing-initiative-source"),
+        candidateId: statBlock.combatantId,
+        candidateWitness: { tag: "willingAlly" },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: "Initiative Swap source must be a combatant in this battle.",
+      },
+    });
+    expect(
+      applyInitiativeSwap({
+        setup,
+        sourceId: baseCombatant.combatantId,
+        candidateId: combatantId("missing-initiative-candidate"),
+        candidateWitness: { tag: "willingAlly" },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Initiative Swap candidate must be a combatant in this battle.",
+      },
+    });
+    expect(
+      applyInitiativeSwap({
+        setup,
+        sourceId: baseCombatant.combatantId,
+        candidateId: statBlock.combatantId,
+        candidateWitness: { tag: "willingAlly" },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Initiative Swap source lacks an admitted Initiative swap support profile.",
+      },
+    });
 
     const finished = finishInitialInitiativeSetupFromApi(setup);
-    expect(finished.state.initiative.alreadyActed.length).toBeGreaterThan(0);
+    expect(finished.state).toBe(setup.state);
     expect(
-      Either.isLeft(
-        applyInitiativeSwap({
-          setup,
-          sourceId: baseCombatant.combatantId,
-          candidateId: statBlock.combatantId,
-          candidateWitness: { tag: "willingAlly" },
-        }),
-      ),
-    ).toBe(true);
+      applyInitiativeSwap({
+        setup,
+        sourceId: baseCombatant.combatantId,
+        candidateId: statBlock.combatantId,
+        candidateWitness: { tag: "willingAlly" },
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: "Initial Initiative setup is already complete." },
+    });
 
     expect(
-      Either.isLeft(
-        addBattleRuntimeCombatant({
-          session: finished,
-          combatant: baseCombatant,
-        }),
-      ),
-    ).toBe(true);
+      addBattleRuntimeCombatant({
+        session: finished,
+        combatant: baseCombatant,
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message: `Duplicate combatant id: ${baseCombatant.combatantId}`,
+      },
+    });
   });
 });

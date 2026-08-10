@@ -105,6 +105,18 @@ export function battleStateInitIssueFromAdmissionIssues(
 const InitialInitiativeSetupBrand: unique symbol = Symbol(
   "InitialInitiativeSetup",
 );
+const InitialInitiativeSetupOpen: unique symbol = Symbol(
+  "InitialInitiativeSetupOpen",
+);
+const InitialInitiativeSetupHasConsumedSwap: unique symbol = Symbol(
+  "InitialInitiativeSetupHasConsumedSwap",
+);
+const InitialInitiativeSetupConsumeSwap: unique symbol = Symbol(
+  "InitialInitiativeSetupConsumeSwap",
+);
+const InitialInitiativeSetupFinish: unique symbol = Symbol(
+  "InitialInitiativeSetupFinish",
+);
 
 class InitialInitiativeSetupWorkflow {
   readonly [InitialInitiativeSetupBrand] = true;
@@ -122,20 +134,23 @@ class InitialInitiativeSetupWorkflow {
     return this.#state;
   }
 
-  get setupOpen(): boolean {
+  get [InitialInitiativeSetupOpen](): boolean {
     return this.#setupOpen;
   }
 
-  hasConsumedInitiativeSwapSource(sourceId: CombatantId): boolean {
+  [InitialInitiativeSetupHasConsumedSwap](sourceId: CombatantId): boolean {
     return this.#consumedInitiativeSwapSources.has(sourceId);
   }
 
-  consumeInitiativeSwap(sourceId: CombatantId, state: BattleState): void {
+  [InitialInitiativeSetupConsumeSwap](
+    sourceId: CombatantId,
+    state: BattleState,
+  ): void {
     this.#consumedInitiativeSwapSources.add(sourceId);
     this.#state = state;
   }
 
-  finish(): BattleRuntimeSession {
+  [InitialInitiativeSetupFinish](): BattleRuntimeSession {
     this.#setupOpen = false;
     return battleRuntimeSessionFromAdmittedContext(this.#state, this.#context);
   }
@@ -161,7 +176,7 @@ export function startBattleWithInitialInitiativeSetup(
 export function finishInitialInitiativeSetup(
   setup: InitialInitiativeSetup,
 ): BattleRuntimeSession {
-  return setup.finish();
+  return setup[InitialInitiativeSetupFinish]();
 }
 
 function initialInitiativeSetupState(
@@ -390,7 +405,7 @@ export function applyInitiativeSwap(input: {
   readonly candidateWitness: InitiativeSwapCandidateWitness;
 }): Either.Either<InitialInitiativeSetup, BattleStateInitIssue> {
   const state = input.setup.state;
-  if (!input.setup.setupOpen) {
+  if (!input.setup[InitialInitiativeSetupOpen]) {
     return battleStateInitIssue(
       "Initial Initiative setup is already complete.",
     );
@@ -400,16 +415,18 @@ export function applyInitiativeSwap(input: {
       "Initiative Swap requires a distinct willing ally.",
     );
   }
-  if (input.setup.hasConsumedInitiativeSwapSource(input.sourceId)) {
+  if (input.setup[InitialInitiativeSetupHasConsumedSwap](input.sourceId)) {
     return battleStateInitIssue(
       "Initiative Swap source has already used its post-roll swap opportunity.",
     );
   }
+  /* v8 ignore start -- An open setup workflow can only change state through Initiative Swap, which preserves the initial empty already-acted collection. */
   if (state.initiative.alreadyActed.length > 0) {
     return battleStateInitIssue(
       "Initiative Swap is only available immediately after rolling Initiative.",
     );
   }
+  /* v8 ignore stop */
   const source = state.combatants.get(input.sourceId);
   if (source === undefined) {
     return battleStateInitIssue(
@@ -469,7 +486,7 @@ export function applyInitiativeSwap(input: {
     ...candidate,
     initiative: source.initiative,
   });
-  input.setup.consumeInitiativeSwap(input.sourceId, {
+  input.setup[InitialInitiativeSetupConsumeSwap](input.sourceId, {
     ...state,
     combatants,
     initiative: initiative.value,

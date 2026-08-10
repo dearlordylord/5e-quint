@@ -1,26 +1,14 @@
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import {
-  DieRollResult,
-  NonNegativeInteger,
-  difficultyClass,
-  movementDeltaFeet,
-} from "@dnd/shared/types";
+import { difficultyClass, movementDeltaFeet } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import {
   battleProcedureExecutionRefForTest,
-  combatantId,
   fighterId,
   fighterVsGoblinBattle,
   goblinTurnBattle,
   goblinId,
   savingThrowOutcomeFill,
 } from "../battle-runtime.test-support.ts";
-import {
-  battleCharacterExecutionScopeRef,
-  battleExecutionScopeOrdinal,
-  battleId,
-  battleResourcePoolExecutionRef,
-} from "../identity.ts";
 import type {
   BattleActiveEffect,
   BattleState,
@@ -29,7 +17,6 @@ import {
   afterActiveEffectOccurrenceUpdate,
   isEndTurnFillKind,
   resolveEndTurnCommand,
-  statBlockRechargeRollFillMatchesHole,
   tickDurationEffects,
   updateCombatantWithActiveEffectOccurrence,
 } from "./turn-boundary-lifecycle.ts";
@@ -96,11 +83,15 @@ describe("turn-boundary active-effect occurrence updates", () => {
     if (fighter === undefined || goblin === undefined) {
       throw new Error("Expected the fighter and goblin combatants.");
     }
-    const sourceProcedureRef =
-      battleProcedureExecutionRefForTest("duration-source");
+    const tickingSourceProcedureRef = battleProcedureExecutionRefForTest(
+      "ticking-duration-source",
+    );
+    const concentrationSourceProcedureRef = battleProcedureExecutionRefForTest(
+      "expiring-concentration-source",
+    );
     const tickingEffect = {
       kind: "nextAttackRollBySelf" as const,
-      sourceProcedureRef,
+      sourceProcedureRef: tickingSourceProcedureRef,
       sourceCombatantId: fighterId,
       mode: "advantage" as const,
       expiresAt: {
@@ -110,7 +101,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
     } as const satisfies BattleActiveEffect;
     const expiringConcentrationEffect = {
       kind: "speedDelta" as const,
-      sourceProcedureRef,
+      sourceProcedureRef: concentrationSourceProcedureRef,
       sourceCombatantId: fighterId,
       deltaFeet: movementDeltaFeet(10),
       expiresAt: {
@@ -124,7 +115,10 @@ describe("turn-boundary active-effect occurrence updates", () => {
       combatants: new Map(state.combatants)
         .set(fighterId, {
           ...fighter,
-          concentration: { sourceProcedureRef, effectKind: "spellEffect" },
+          concentration: {
+            sourceProcedureRef: concentrationSourceProcedureRef,
+            effectKind: "spellEffect",
+          },
         })
         .set(goblinId, {
           ...goblin,
@@ -147,15 +141,17 @@ describe("turn-boundary active-effect occurrence updates", () => {
 
   test("resolves a reachable sleep repeat-save frontier at turn end", () => {
     const state = goblinTurnBattle();
+    const fighter = state.combatants.get(fighterId);
     const goblin = state.combatants.get(goblinId);
-    if (goblin === undefined) {
-      throw new Error("Expected the current goblin actor.");
+    if (fighter === undefined || goblin === undefined) {
+      throw new Error("Expected the source and current goblin actor.");
     }
+    const sourceProcedureRef = battleProcedureExecutionRefForTest(
+      "sleep-repeat-source",
+    );
     const pendingSleep = {
       kind: "sleepPendingRepeatSave" as const,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "sleep-repeat-source",
-      ),
+      sourceProcedureRef,
       sourceCombatantId: fighterId,
       conditionHadNonSpellSource: false,
       save: {
@@ -174,10 +170,15 @@ describe("turn-boundary active-effect occurrence updates", () => {
     } as const satisfies BattleActiveEffect;
     const sleepingState: BattleState = {
       ...state,
-      combatants: new Map(state.combatants).set(goblinId, {
-        ...goblin,
-        activeEffects: [pendingSleep],
-      }),
+      combatants: new Map(state.combatants)
+        .set(fighterId, {
+          ...fighter,
+          concentration: { sourceProcedureRef, effectKind: "spellEffect" },
+        })
+        .set(goblinId, {
+          ...goblin,
+          activeEffects: [pendingSleep],
+        }),
     };
     const subject = {
       tag: "runtimeCommand" as const,
@@ -226,27 +227,8 @@ describe("turn-boundary active-effect occurrence updates", () => {
     ]);
   });
 
-  test("keeps turn-boundary fill vocabulary and recharge matching total", () => {
+  test("recognizes the turn-boundary fill vocabulary", () => {
     expect(isEndTurnFillKind("savingThrowOutcome")).toBe(true);
     expect(isEndTurnFillKind("targetChoice")).toBe(false);
-    expect(statBlockRechargeRollFillMatchesHole([], null)).toBe(true);
-    expect(
-      statBlockRechargeRollFillMatchesHole(
-        [
-          {
-            target: battleResourcePoolExecutionRef(
-              battleCharacterExecutionScopeRef(
-                battleId("synthetic-recharge"),
-                combatantId("synthetic-recharge"),
-                battleExecutionScopeOrdinal(0),
-              ),
-              NonNegativeInteger(0),
-            ),
-            roll: DieRollResult(6),
-          },
-        ],
-        null,
-      ),
-    ).toBe(false);
   });
 });

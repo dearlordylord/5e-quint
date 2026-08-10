@@ -59,9 +59,9 @@ function admitted(input: BattleResolutionInput) {
 
 describe("combatant lifecycle route boundary", () => {
   test("routes Spare the Dying through the zero-Hit-Point stabilization owner", () => {
-    const downedAllyId = combatantId("m15-stabilization-ally");
+    const downedAllyId = combatantId("stabilization-route-ally");
     const session = startBattleSessionRight({
-      battleId: battleId("m15-stabilization-route"),
+      battleId: battleId("stabilization-route"),
       combatants: [
         characterSeed({
           combatantId: wizardId,
@@ -124,9 +124,9 @@ describe("combatant lifecycle route boundary", () => {
   });
 
   test("routes death-saving-throw discovery and completion at End Turn", () => {
-    const downedAllyId = combatantId("m15-death-save-target");
+    const downedAllyId = combatantId("death-save-route-target");
     const state = startBattleRight({
-      battleId: battleId("m15-death-save-route"),
+      battleId: battleId("death-save-route"),
       combatants: [
         characterSeed({
           combatantId: fighterId,
@@ -254,7 +254,7 @@ describe("combatant lifecycle route boundary", () => {
     );
 
     const blurSession = startBattleSessionRight({
-      battleId: battleId("m15-blur-concentration-route"),
+      battleId: battleId("blur-concentration-route"),
       combatants: [
         characterSeed({
           combatantId: wizardId,

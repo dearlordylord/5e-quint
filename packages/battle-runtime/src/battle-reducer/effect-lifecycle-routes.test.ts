@@ -513,15 +513,14 @@ describe("effect lifecycle route boundary", () => {
     if (armorEffect === undefined) {
       throw new Error("Expected duration Mage Armor effect.");
     }
-    // The guard above proves the duration/target-dons-armor branch; keep
-    // that correlated union while shortening only its duration for expiry.
     const shortenedArmorEffect = {
       ...armorEffect,
+      earlyEnds: [{ kind: "targetDonsArmor" }],
       expiresAt: {
-        ...armorEffect.expiresAt,
+        kind: "duration",
         durationTicks: elapsedTimeTicks(1),
       },
-    } as typeof armorEffect;
+    } satisfies BattleActiveEffect;
     const shortened = wizard.activeEffects.map((effect) =>
       effect === armorEffect ? shortenedArmorEffect : effect,
     );
