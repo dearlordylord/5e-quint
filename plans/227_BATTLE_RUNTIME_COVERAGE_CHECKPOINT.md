@@ -31,22 +31,22 @@ totals, and comparison below are the self-contained durable evidence.
 ## Current authoritative diagnostic
 
 - Date: 2026-08-09
-- Git HEAD: `edac64ff3282176a8176c6bf6b5ec724402f7734`
+- Git HEAD: `a716a9a562608f82069b12a397c20af0876f0615`
 - Command: `pnpm coverage`
 - Result: exit 0; all workspace coverage packages complete and green
-- Total wall duration: approximately 302 seconds
-- Battle-runtime tests: 205/205 files passed; 2,185 tests passed and 53
-  skipped (2,238 total)
+- Total wall duration: approximately 321 seconds
+- Battle-runtime tests: 205/205 files passed; 2,188 tests passed and 53
+  skipped (2,241 total)
 
-| Metric     |                `7c1e26306` |                `bb023036e` |                `edac64ff3` | `bb0` -> `eda` covered / total |     Uncovered change |   Delta |
-| ---------- | -------------------------: | -------------------------: | -------------------------: | -----------------------------: | -------------------: | ------: |
-| Statements | 120,483 / 124,868 (96.48%) | 120,462 / 124,843 (96.49%) | 120,493 / 124,843 (96.51%) |                         31 / 0 | 4,381 -> 4,350 (-31) | +0.02pp |
-| Branches   |   30,027 / 32,181 (93.30%) |   30,035 / 32,184 (93.32%) |   30,097 / 32,225 (93.39%) |                        62 / 41 | 2,149 -> 2,128 (-21) | +0.07pp |
-| Functions  |       4,819 / 4,819 (100%) |       4,817 / 4,817 (100%) |       4,817 / 4,817 (100%) |                          0 / 0 |               0 -> 0 |       0 |
-| Lines      | 120,483 / 124,868 (96.48%) | 120,462 / 124,843 (96.49%) | 120,493 / 124,843 (96.51%) |                         31 / 0 | 4,381 -> 4,350 (-31) | +0.02pp |
+| Metric     |                `bb023036e` |                `edac64ff3` |                `a716a9a56` | `eda` -> `a71` covered / total |    Uncovered change |   Delta |
+| ---------- | -------------------------: | -------------------------: | -------------------------: | -----------------------------: | ------------------: | ------: |
+| Statements | 120,462 / 124,843 (96.49%) | 120,493 / 124,843 (96.51%) | 120,498 / 124,843 (96.51%) |                          5 / 0 | 4,350 -> 4,345 (-5) | +0.00pp |
+| Branches   |   30,035 / 32,184 (93.32%) |   30,097 / 32,225 (93.39%) |   30,100 / 32,224 (93.40%) |                         3 / -1 | 2,128 -> 2,124 (-4) | +0.01pp |
+| Functions  |       4,817 / 4,817 (100%) |       4,817 / 4,817 (100%) |       4,817 / 4,817 (100%) |                          0 / 0 |              0 -> 0 |       0 |
+| Lines      | 120,462 / 124,843 (96.49%) | 120,493 / 124,843 (96.51%) | 120,498 / 124,843 (96.51%) |                          5 / 0 | 4,350 -> 4,345 (-5) | +0.00pp |
 
-The Vitest statement/line percentage rose to 96.51% and branches rose to
-93.39%; uncovered statements/lines fell by 31 and uncovered branches by 21.
+The Vitest statement/line percentage remained at 96.51% and branches rose to
+93.40%; uncovered statements/lines fell by 5 and uncovered branches by 4.
 These are measured deltas from the authoritative public run, not a forecast
 toward 99%. Denominator changes are shown explicitly because production code
 changed between checkpoints. The 93% branch ratchet and all other ratchets
@@ -61,24 +61,23 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 120,493 | 124,843 |                  123,595 |         3,102 |
-| Branches   |  30,097 |  32,225 |                   31,903 |         1,806 |
+| Statements | 120,498 | 124,843 |                  123,595 |         3,097 |
+| Branches   |  30,100 |  32,224 |                   31,902 |         1,802 |
 | Functions  |   4,817 |   4,817 |                    4,769 |             0 |
-| Lines      | 120,493 | 124,843 |                  123,595 |         3,102 |
+| Lines      | 120,498 | 124,843 |                  123,595 |         3,097 |
 
 ## Milestone context
 
-Since the prior authoritative checkpoint, `4ce64a914` added seven focused
-session-level witnesses for the act-composition and presentation boundary:
-intrinsic and spell helpers, interrupt spell-owner projection, stale procedure
-joins, Monk unit presentation, intrinsic label variants, missing actors, and
-missing character context. Luna's review rejected an attempted ally-help escape
-witness because local RAW did not support it. Root review then replaced a
-non-null assertion with a compiler-visible guard and made the intentionally
-route-independent boundary scenarios explicit in `edac64ff3`. Package tests,
-typecheck, four Luna review rounds, and the repeated independent root review all
-converged cleanly before the public run. The authoritative totals above confirm
-the largest numeric improvement so far in both limiting metrics.
+Since the prior authoritative checkpoint, `20cb58091` added three focused
+witnesses for attack damage projection, mandatory and optional damage-rider
+selection, and Frenzy damage-type selection. Luna's review replaced a merely
+legal critical-hit scenario with a natural 20 rolled with Advantage. Root review
+then moved the generic attack tests out of the Stat Block action suite and the
+Frenzy test beside its class-feature owner in `a716a9a56`, avoiding deeper test
+ownership conflation. Focused tests, package typecheck, four Luna review rounds,
+and the repeated independent root review all converged cleanly before the public
+run. The authoritative totals above confirm smaller but positive global progress
+after overlap with existing public tests.
 
 Focused cohort uncovered counts remain regression and navigation evidence, not
 a forecast of the global public delta, because other public tests may already
@@ -88,8 +87,8 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting public metric at 93.39%, with a static 99% gap of
-1,806. Clone the public harness arguments for a fresh package-local diagnostic,
+Branches remain the limiting public metric at 93.40%, with a static 99% gap of
+1,802. Clone the public harness arguments for a fresh package-local diagnostic,
 select a different branch-heavy owner or cohesive subsystem from the completed
 save-gate, active-effect-ledger, and persistent-spatial campaigns, audit its
 uncovered alternatives for schema-impossible or duplicated logic, cover only
