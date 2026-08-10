@@ -28,6 +28,8 @@ import {
   testShortswordAttack,
 } from "./battle-runtime.test-support.ts";
 import { combatantId } from "./identity.ts";
+import { spellTargetId } from "./unit-profile-admission-catalog.test-support.ts";
+import { relentlessEnduranceBattle } from "./unit-profile-admission-feature-fixture.test-support.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 import {
   attackDamageDispositionHole,
@@ -141,20 +143,26 @@ describe("battle runtime: attack pipeline boundaries", () => {
   });
 
   test("zero-hit-point replacement choices suppress positive, zero, massive, and non-character targets", () => {
-    const state = fighterVsGoblinBattle();
-    const fighter = state.combatants.get(fighterId);
-    const goblin = state.combatants.get(goblinId);
-    if (fighter === undefined || goblin === undefined) {
-      throw new Error("Expected the fighter and goblin fixtures.");
+    const replacementSession = relentlessEnduranceBattle({ targetHp: 3 });
+    const target = replacementSession.state.combatants.get(spellTargetId);
+    const goblin = fighterVsGoblinBattle().combatants.get(goblinId);
+    if (target === undefined || goblin === undefined) {
+      throw new Error("Expected the replacement target and goblin fixtures.");
     }
 
-    expect(zeroHitPointReplacementChoices(fighter, 1)).toEqual([]);
-    const zeroHpFighter = applyHpDamage(fighter, Number(fighter.hp), {
+    expect(zeroHitPointReplacementChoices(target, 1)).toEqual([]);
+    expect(zeroHitPointReplacementChoices(target, Number(target.hp))).toEqual([
+      expect.objectContaining({ kind: "zeroHitPointReplacement" }),
+    ]);
+    const zeroHpTarget = applyHpDamage(target, Number(target.hp), {
       deathFailuresAtZeroHp: 1,
     });
-    expect(zeroHitPointReplacementChoices(zeroHpFighter, 1)).toEqual([]);
+    expect(zeroHitPointReplacementChoices(zeroHpTarget, 1)).toEqual([]);
     expect(
-      zeroHitPointReplacementChoices(fighter, Number(fighter.maxHp) + 1),
+      zeroHitPointReplacementChoices(
+        target,
+        Number(target.hp) + Number(target.maxHp),
+      ),
     ).toEqual([]);
     expect(zeroHitPointReplacementChoices(goblin, 1)).toEqual([]);
   });
@@ -202,7 +210,16 @@ describe("battle runtime: attack pipeline boundaries", () => {
       tag: "resolved",
       snapshot: {
         combatants: expect.arrayContaining([
-          expect.objectContaining({ combatantId: goblinId, hp: 0 }),
+          expect.objectContaining({
+            combatantId: goblinId,
+            hp: 0,
+            zeroHpLifecycle: {
+              policy: "usesDeathSavingThrows",
+              deathSaves: { successes: 0, failures: 1 },
+              stable: false,
+              dead: false,
+            },
+          }),
         ]),
       },
     });
@@ -437,6 +454,9 @@ describe("battle runtime: attack pipeline boundaries", () => {
       resource: extraAttack,
       index: 1,
     });
+    expect(
+      compatibleAttackActionResource([turn, restricted, extraAttack]),
+    ).toMatchObject({ resource: extraAttack, index: 2 });
 
     const state = fighterVsGoblinBattle();
     const noResourceState = {
@@ -444,7 +464,7 @@ describe("battle runtime: attack pipeline boundaries", () => {
       actionResources: [],
     };
     const unavailable = spendAttackActionResource(noResourceState);
-    expect(Either.isLeft(unavailable)).toBe(true);
+    expect(unavailable).toEqual(Either.left("no action resource available"));
 
     const spent = spendAttackActionResource({
       ...state.currentTurnResources,
