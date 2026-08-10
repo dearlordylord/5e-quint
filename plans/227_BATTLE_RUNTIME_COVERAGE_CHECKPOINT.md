@@ -31,22 +31,22 @@ totals, and comparison below are the self-contained durable evidence.
 ## Current authoritative diagnostic
 
 - Date: 2026-08-09
-- Git HEAD: `a675443cdc40af8eda08e7be38265ab4dc51f19f`
+- Git HEAD: `4ed231376006ef609a2d2a4fb9be0b3cb885484c`
 - Command: `pnpm coverage`
 - Result: exit 0; all workspace coverage packages complete and green
-- Total wall duration: approximately 302 seconds
-- Battle-runtime tests: 208/208 files passed; 2,230 tests passed and 53
-  skipped (2,283 total)
+- Total wall duration: approximately 425 seconds
+- Battle-runtime tests: 210/210 files passed; 2,237 tests passed and 53
+  skipped (2,290 total)
 
-| Metric     |                `eecbac3e5` |                `27d66ecc5` |                `a675443cd` | `27d6` -> `a675` covered / total |     Uncovered change |   Delta |
+| Metric     |                `27d66ecc5` |                `a675443cd` |                `4ed231376` | `a675` -> `4ed2` covered / total |     Uncovered change |   Delta |
 | ---------- | -------------------------: | -------------------------: | -------------------------: | -------------------------------: | -------------------: | ------: |
-| Statements | 120,609 / 124,841 (96.61%) | 120,658 / 124,841 (96.64%) | 120,669 / 124,823 (96.67%) |                         11 / -18 | 4,183 -> 4,154 (-29) | +0.03pp |
-| Branches   |   30,221 / 32,300 (93.56%) |   30,247 / 32,314 (93.60%) |   30,275 / 32,333 (93.63%) |                          28 / 19 |  2,067 -> 2,058 (-9) | +0.03pp |
+| Statements | 120,658 / 124,841 (96.64%) | 120,669 / 124,823 (96.67%) | 120,719 / 124,820 (96.71%) |                          50 / -3 | 4,154 -> 4,101 (-53) | +0.04pp |
+| Branches   |   30,247 / 32,314 (93.60%) |   30,275 / 32,333 (93.63%) |   30,327 / 32,362 (93.71%) |                          52 / 29 | 2,058 -> 2,035 (-23) | +0.08pp |
 | Functions  |       4,817 / 4,817 (100%) |       4,817 / 4,817 (100%) |       4,817 / 4,817 (100%) |                            0 / 0 |               0 -> 0 |       0 |
-| Lines      | 120,609 / 124,841 (96.61%) | 120,658 / 124,841 (96.64%) | 120,669 / 124,823 (96.67%) |                         11 / -18 | 4,183 -> 4,154 (-29) | +0.03pp |
+| Lines      | 120,658 / 124,841 (96.64%) | 120,669 / 124,823 (96.67%) | 120,719 / 124,820 (96.71%) |                          50 / -3 | 4,154 -> 4,101 (-53) | +0.04pp |
 
-The Vitest statement/line percentage rose to 96.67% and branches rose to
-93.63%; uncovered statements/lines fell by 29 and uncovered branches by 9.
+The Vitest statement/line percentage rose to 96.71% and branches rose to
+93.71%; uncovered statements/lines fell by 53 and uncovered branches by 23.
 These are measured deltas from the authoritative public run, not a forecast
 toward 99%. Denominator changes are shown explicitly because production code
 changed between checkpoints. The 93% branch ratchet and all other ratchets
@@ -61,21 +61,21 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 120,669 | 124,823 |                  123,575 |         2,906 |
-| Branches   |  30,275 |  32,333 |                   32,010 |         1,735 |
+| Statements | 120,719 | 124,820 |                  123,572 |         2,853 |
+| Branches   |  30,327 |  32,362 |                   32,039 |         1,712 |
 | Functions  |   4,817 |   4,817 |                    4,769 |             0 |
-| Lines      | 120,669 | 124,823 |                  123,575 |         2,906 |
+| Lines      | 120,719 | 124,820 |                  123,572 |         2,853 |
 
 ## Milestone context
 
-Since the prior authoritative checkpoint, `06d4c7bc0` added a cohesive
-area/object spell-resolution cohort covering hazard and object frontiers,
-tracked-light overlap validation, Dancing Lights cast/reposition races, and
-stale slot or Bonus Action replay across six spells. Luna completed two review
-rounds. Root review then made the light geometry plausible, strengthened stale
-resource assertions, and fixed Dancing Lights so an ended effect consistently
-returns `staleSubject` before or after a discovered placement fill in
-`a675443cd`. The mapped spatial MBT, focused tests, package typecheck, two Luna
+Since the prior authoritative checkpoint, `04e56e3ae` added a cohesive
+damage/condition lifecycle cohort covering HP transitions, concentration and
+condition cleanup, damage-relationship decisions, and damage helper
+alternatives. Luna completed two review rounds. Root review removed forged
+extra-dice, absent-caster, and absent-target states; documented the upstream
+weapon-damage cardinality invariant; and replaced an impossible knocked-out
+concentrator with a valid concentrating caster whose effect expires from a
+knocked-out target in `4ed231376`. Focused tests, package typecheck, two Luna
 review rounds, and the repeated independent root review all converged cleanly
 before the public run.
 
@@ -87,12 +87,13 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting public metric at 93.63%, with a static 99% gap of
-1,735. Clone the public harness arguments for a fresh package-local diagnostic,
+Branches remain the limiting public metric at 93.71%, with a static 99% gap of
+1,712. Clone the public harness arguments for a fresh package-local diagnostic,
 select a different branch-heavy owner or cohesive subsystem from the completed
 save-gate, active-effect-ledger, persistent-spatial, ongoing-feature admission,
 act-composition, attack-projection, attack-pipeline, and spell-damage-fill
-campaigns, plus character battle resources and the Chained Spell resolver.
+campaigns, plus character battle resources, the Chained Spell resolver, and
+the damage/condition lifecycle cohort.
 Audit its uncovered alternatives for schema-impossible or duplicated logic,
 cover only behaviorally reachable alternatives with focused tests, and then
 remeasure with the public root diagnostic.
