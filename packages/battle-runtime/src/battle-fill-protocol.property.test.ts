@@ -95,7 +95,7 @@ import type { BattleUnitRef } from "./index.ts";
 import type { RuntimeDamageSpellProcedure } from "./battle-reducer/spells-damage-fills.ts";
 import { combatantId, type CombatantId } from "./identity.ts";
 
-const PROPERTY_OPTIONS = { numRuns: 8, seed: 0x5eed18 } as const;
+const PROPERTY_OPTIONS = { numRuns: 64, seed: 0x5eed18 } as const;
 
 function expectInvalid(
   result: ReturnType<typeof resolveBattleSubject>,
@@ -317,15 +317,47 @@ describe("battle fill protocol boundary owners", () => {
 
     fc.assert(
       fc.property(
-        fc.constantFrom(attackFact, { ...attackFact, targetId: otherTarget }),
-        (fact) => {
-          const parsed = parseAttackRollRelationshipFacts(
-            [fact],
-            attacker,
-            target,
-            true,
+        fc.integer({ min: 0, max: 10_000 }),
+        fc.boolean(),
+        (caseId, targetIsEnemy) => {
+          const generatedAttacker = combatantId(
+            `relationship-attacker-${caseId}`,
           );
-          expect(parsed).toEqual(fact.targetId === target ? [fact] : null);
+          const generatedTarget = combatantId(`relationship-target-${caseId}`);
+          const differentTarget = combatantId(
+            `relationship-other-target-${caseId}`,
+          );
+          const matchingFact = {
+            kind: "attackRollTargetIsEnemy" as const,
+            attackerId: generatedAttacker,
+            targetId: generatedTarget,
+            targetIsEnemy,
+          };
+
+          expect(
+            parseAttackRollRelationshipFacts(
+              [matchingFact],
+              generatedAttacker,
+              generatedTarget,
+              true,
+            ),
+          ).toEqual([matchingFact]);
+          expect(
+            parseAttackRollRelationshipFacts(
+              [{ ...matchingFact, targetId: differentTarget }],
+              generatedAttacker,
+              generatedTarget,
+              true,
+            ),
+          ).toBeNull();
+          expect(
+            parseAttackRollRelationshipFacts(
+              [matchingFact, matchingFact],
+              generatedAttacker,
+              generatedTarget,
+              true,
+            ),
+          ).toBeNull();
         },
       ),
       PROPERTY_OPTIONS,
@@ -1161,22 +1193,23 @@ describe("battle fill protocol boundary owners", () => {
       slowAct,
       wizardId,
     );
-    if (slowInvocation !== undefined) {
-      const ignoredFill = {
-        kind: "slowSomaticSpellFailureOutcome" as const,
-        holeId: holeId("boundary-slow-failure"),
-        value: { spellFailed: false },
-      };
-      expect(
-        spellFillSet(
-          [ignoredFill],
-          slowInvocation,
-          slowInvocation.sourceProcedureRef,
-          wizardId,
-          slowSession.state,
-        ),
-      ).toMatchObject({ tag: "ok" });
+    if (slowInvocation === undefined) {
+      throw new Error("Expected canonical Slow invocation.");
     }
+    const ignoredFill = {
+      kind: "slowSomaticSpellFailureOutcome" as const,
+      holeId: holeId("boundary-slow-failure"),
+      value: { spellFailed: false },
+    };
+    expect(
+      spellFillSet(
+        [ignoredFill],
+        slowInvocation,
+        slowInvocation.sourceProcedureRef,
+        wizardId,
+        slowSession.state,
+      ),
+    ).toMatchObject({ tag: "ok" });
 
     const blindnessSession = startBattleSessionRight({
       battleId: battleId("boundary-spell-condition-choice"),
@@ -1244,30 +1277,31 @@ describe("battle fill protocol boundary owners", () => {
       rollModifierAct,
       wizardId,
     );
-    if (rollModifierInvocation?.procedure === "rollModifier") {
-      expect(spellSavingThrowAbility(rollModifierInvocation)).toBe(
-        rollModifierInvocation.saveGate?.ability ?? "cha",
-      );
-      const targetAbilityFill = {
-        kind: "targetAbilityChoices" as const,
-        holeId: spellRollModifierTargetAbilityChoicesHoleId(
-          rollModifierInvocation,
-        ),
-        value: { choices: [{ targetId: skeletonId, ability: "str" as const }] },
-      };
-      expect(
-        spellFillSet(
-          [targetAbilityFill],
-          rollModifierInvocation,
-          rollModifierInvocation.sourceProcedureRef,
-          wizardId,
-          rollModifierSession.state,
-        ),
-      ).toMatchObject({
-        tag: "invalid",
-        message: "Spell target ability choices do not match this spell act.",
-      });
+    if (rollModifierInvocation?.procedure !== "rollModifier") {
+      throw new Error("Expected canonical roll-modifier invocation.");
     }
+    expect(spellSavingThrowAbility(rollModifierInvocation)).toBe(
+      rollModifierInvocation.saveGate?.ability ?? "cha",
+    );
+    const targetAbilityFill = {
+      kind: "targetAbilityChoices" as const,
+      holeId: spellRollModifierTargetAbilityChoicesHoleId(
+        rollModifierInvocation,
+      ),
+      value: { choices: [{ targetId: skeletonId, ability: "str" as const }] },
+    };
+    expect(
+      spellFillSet(
+        [targetAbilityFill],
+        rollModifierInvocation,
+        rollModifierInvocation.sourceProcedureRef,
+        wizardId,
+        rollModifierSession.state,
+      ),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Spell target ability choices do not match this spell act.",
+    });
 
     const commandSession = startBattleSessionRight({
       battleId: battleId("boundary-spell-target-list-relationship"),
@@ -1362,7 +1396,9 @@ describe("battle fill protocol boundary owners", () => {
       fills: [],
     });
     expect(first.tag).toBe("needsHoles");
-    if (first.tag !== "needsHoles") return;
+    if (first.tag !== "needsHoles") {
+      throw new Error("Expected Acid Splash saving-throw frontier.");
+    }
     const target = first.holes.find(
       (hole) => hole.kind === "savingThrowOutcome",
     );
@@ -1380,7 +1416,6 @@ describe("battle fill protocol boundary owners", () => {
     });
     expectInvalid(duplicate, "Spell saving throw outcomes were filled twice.");
     expect(stateSnapshot(session.state)).toEqual(before);
-    expect(spellSavingThrowAbility).toBeTypeOf("function");
 
     const sacredSession = startBattleSessionRight({
       battleId: battleId("boundary-sacred-flame-single-target"),
@@ -1570,18 +1605,19 @@ describe("battle fill protocol boundary owners", () => {
       iceAct,
       wizardId,
     );
-    if (iceInvocation?.procedure === "attackBurstSaveDamage") {
-      expect(
-        validateSpellBurstDamageFill(burstDamageFill, iceInvocation),
-      ).toBeNull();
-      const wrongBurst = {
-        ...burstDamageFill,
-        holeId: directDamage.holeId,
-      } as Extract<BattleFill, { readonly kind: "rolledDice" }>;
-      expect(validateSpellBurstDamageFill(wrongBurst, iceInvocation)).toBe(
-        "Ice Knife burst damage must use the burst damage hole.",
-      );
+    if (iceInvocation?.procedure !== "attackBurstSaveDamage") {
+      throw new Error("Expected canonical Ice Knife invocation.");
     }
+    expect(
+      validateSpellBurstDamageFill(burstDamageFill, iceInvocation),
+    ).toBeNull();
+    const wrongBurst = {
+      ...burstDamageFill,
+      holeId: directDamage.holeId,
+    } as Extract<BattleFill, { readonly kind: "rolledDice" }>;
+    expect(validateSpellBurstDamageFill(wrongBurst, iceInvocation)).toBe(
+      "Ice Knife burst damage must use the burst damage hole.",
+    );
 
     const cureAct = findAct(session, magicSubject("cure_wounds"));
     const cureInvocation = characterSpellProcedureFromAct(
@@ -1589,45 +1625,45 @@ describe("battle fill protocol boundary owners", () => {
       cureAct,
       wizardId,
     );
-    if (cureInvocation?.procedure === "directHitPointRestoration") {
-      const cureInitial = resolveBattleSubject({
+    if (cureInvocation?.procedure !== "directHitPointRestoration") {
+      throw new Error("Expected canonical Cure Wounds invocation.");
+    }
+    const cureInitial = resolveBattleSubject({
+      state: session.state,
+      subject: cureAct.subject,
+      fills: [],
+    });
+    if (cureInitial.tag !== "needsHoles")
+      throw new Error("Expected Cure Wounds frontier.");
+    const cureTarget = cureInitial.holes.find(
+      (candidate) => candidate.kind === "targetChoice",
+    );
+    const cureFills =
+      cureTarget === undefined
+        ? []
+        : [targetFill(cureTarget, cureTarget.choices[0] ?? wizardId)];
+    const hole = requireHole(
+      resolveBattleSubject({
         state: session.state,
         subject: cureAct.subject,
-        fills: [],
-      });
-      if (cureInitial.tag !== "needsHoles")
-        throw new Error("Expected Cure Wounds frontier.");
-      const cureTarget = cureInitial.holes.find(
-        (candidate) => candidate.kind === "targetChoice",
-      );
-      const cureFills =
-        cureTarget === undefined
-          ? []
-          : [targetFill(cureTarget, cureTarget.choices[0] ?? wizardId)];
-      const hole = requireHole(
-        resolveBattleSubject({
-          state: session.state,
-          subject: cureAct.subject,
-          fills: cureFills,
-        }),
-        "rolledDice",
-      );
-      const valid = damageRollFillWithGroups(hole, [[4, 4]]) as Extract<
-        BattleFill,
-        { readonly kind: "rolledDice" }
-      >;
-      expect(validateSpellHealingFill(valid, cureInvocation)).toBeNull();
-      expect(
-        validateSpellHealingFill(
-          { ...valid, holeId: burstDamage.holeId },
-          cureInvocation,
-        ),
-      ).toBe("Spell healing must use the selected spell act healing hole.");
-    }
+        fills: cureFills,
+      }),
+      "rolledDice",
+    );
+    const valid = damageRollFillWithGroups(hole, [[4, 4]]) as Extract<
+      BattleFill,
+      { readonly kind: "rolledDice" }
+    >;
+    expect(validateSpellHealingFill(valid, cureInvocation)).toBeNull();
+    expect(
+      validateSpellHealingFill(
+        { ...valid, holeId: burstDamage.holeId },
+        cureInvocation,
+      ),
+    ).toBe("Spell healing must use the selected spell act healing hole.");
   });
 
   test("canonical invocation projections cover damage-type choice and prepared-slot group boundaries", () => {
-    const state = fighterVsGoblinBattle();
     const session = startBattleSessionRight({
       battleId: battleId("boundary-projections"),
       combatants: [
@@ -1650,46 +1686,37 @@ describe("battle fill protocol boundary owners", () => {
       act,
       wizardId,
     );
-    if (invocation?.procedure === "spellAttackDamage") {
-      expect(spellDamageTypeChoiceHole(invocation).choices).toEqual([]);
-      expect(spellDamageTypes(invocation)).toEqual(["cold"]);
-      const selected = selectedSpellAttackDamageProcedure(
-        invocation,
-        undefined,
-      );
-      expect(selected.tag).toBe("ok");
-      if (selected.tag !== "ok")
-        throw new Error("Expected Ray of Frost damage selection.");
-      const runtimeInvocation =
-        selected.invocation as RuntimeDamageSpellProcedure;
-      const missingTarget = combatantId("boundary-missing-spell-target");
-      const missingTargetDamage = damageRollFillWithGroups(
-        { kind: "rolledDice", holeId: holeId("boundary-missing-spell-damage") },
-        [[1]],
-      );
-      expect(
-        applySpellDamage(
-          session.state,
-          missingTarget,
-          runtimeInvocation,
-          missingTargetDamage,
-          false,
-          { spatialFacts: [] },
-        ),
-      ).toBe(session.state);
-      expect(
-        applyPreparedSlotSpellDamage(session.state, missingTarget, 1, {
-          spatialFacts: [],
-        }),
-      ).toBe(session.state);
-      if (invocation.damage.kind === "sorcerousBurstDamageTypeChoice") {
-        expect(
-          selectedSpellAttackDamageProcedure(invocation, undefined).tag,
-        ).toBe("needsHoles");
-      }
-      // The selected invocation is canonical; the damage validator's public
-      // boundary is exercised by the concrete roll validators above.
+    if (invocation?.procedure !== "spellAttackDamage") {
+      throw new Error("Expected canonical Ray of Frost invocation.");
     }
+    expect(spellDamageTypeChoiceHole(invocation).choices).toEqual([]);
+    expect(spellDamageTypes(invocation)).toEqual(["cold"]);
+    const selected = selectedSpellAttackDamageProcedure(invocation, undefined);
+    expect(selected.tag).toBe("ok");
+    if (selected.tag !== "ok")
+      throw new Error("Expected Ray of Frost damage selection.");
+    const runtimeInvocation =
+      selected.invocation as RuntimeDamageSpellProcedure;
+    const missingTarget = combatantId("boundary-missing-spell-target");
+    const missingTargetDamage = damageRollFillWithGroups(
+      { kind: "rolledDice", holeId: holeId("boundary-missing-spell-damage") },
+      [[1]],
+    );
+    expect(
+      applySpellDamage(
+        session.state,
+        missingTarget,
+        runtimeInvocation,
+        missingTargetDamage,
+        false,
+        { spatialFacts: [] },
+      ),
+    ).toBe(session.state);
+    expect(
+      applyPreparedSlotSpellDamage(session.state, missingTarget, 1, {
+        spatialFacts: [],
+      }),
+    ).toBe(session.state);
     const allocation = [
       { targetId: goblinId, count: 2 },
       { targetId: fighterId, count: 1 },
@@ -1748,10 +1775,6 @@ describe("battle fill protocol boundary owners", () => {
     ).toBe(
       "Each repeated spell damage dice group must match that target's allocated effect count.",
     );
-    expect(state.combatants.size).toBeGreaterThan(0);
-    expect(spellDamageTypeChoiceHole).toBeTypeOf("function");
-    expect(spellDamageByTypeForTarget).toBeTypeOf("function");
-
     const flameSession = startBattleSessionRight({
       battleId: battleId("boundary-flame-strike-components"),
       combatants: [

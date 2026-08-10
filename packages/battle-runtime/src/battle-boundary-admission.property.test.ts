@@ -180,7 +180,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { castResolvedFindFamiliar } from "./find-familiar-lifecycle.ts";
 
-const PROPERTY_OPTIONS = { numRuns: 8, seed: 0x5eed18 } as const;
+const PROPERTY_OPTIONS = { numRuns: 64, seed: 0x5eed18 } as const;
 
 function moveHole(state: BattleState, actorId: CombatantId): BattleHole {
   return requireHole(
@@ -550,14 +550,44 @@ describe("battle boundary admission owners", () => {
     ).toEqual({ tag: "noOccupiedCreatureSpaceTraversal" });
 
     fc.assert(
-      fc.property(fc.boolean(), (duplicate) => {
-        const result = deriveCreatureSpaceTraversalMovementFactFromTableRoute({
-          ...base,
-          occupiedCreatureFootprints: duplicate
-            ? [...base.occupiedCreatureFootprints, largerFootprint]
-            : base.occupiedCreatureFootprints,
+      fc.property(fc.integer({ min: 0, max: 10_000 }), (caseId) => {
+        const generatedPosition = battleTablePositionId(
+          `boundary-route-${caseId}`,
+        );
+        const generatedFootprint = {
+          occupantId: combatantId(`boundary-occupant-${caseId}`),
+          creatureSizeRelationToMover: "larger" as const,
+          occupiedPositions: [generatedPosition] as const,
+        };
+        const generatedInput: BattleCreatureSpaceTableRouteDerivationInput = {
+          moverId: combatantId(`boundary-mover-${caseId}`),
+          route: {
+            positionsEnteredBeforeDestination: [generatedPosition],
+            destination: {
+              positionId: battleTablePositionId(
+                `boundary-destination-${caseId}`,
+              ),
+            },
+          },
+          occupiedCreatureFootprints: [generatedFootprint],
+        };
+
+        expect(
+          deriveCreatureSpaceTraversalMovementFactFromTableRoute(generatedInput)
+            .tag,
+        ).toBe("movementFact");
+        expect(
+          deriveCreatureSpaceTraversalMovementFactFromTableRoute({
+            ...generatedInput,
+            occupiedCreatureFootprints: [
+              generatedFootprint,
+              generatedFootprint,
+            ],
+          }),
+        ).toMatchObject({
+          tag: "invalid",
+          reason: "duplicateCreatureFootprint",
         });
-        expect(result.tag).toBe(duplicate ? "invalid" : "movementFact");
       }),
       PROPERTY_OPTIONS,
     );
@@ -830,7 +860,9 @@ describe("battle boundary admission owners", () => {
       }),
     );
     expect(setup.result.tag).toBe("needsHoles");
-    if (setup.result.tag !== "needsHoles") return;
+    if (setup.result.tag !== "needsHoles") {
+      throw new Error("Expected reaction roll frontier.");
+    }
     const pendingInterrupt = setup.result.snapshot.pendingInterrupt;
     if (pendingInterrupt === null) {
       throw new Error("Expected reaction interrupt choices.");
@@ -1310,13 +1342,20 @@ describe("battle boundary admission owners", () => {
       fighterId,
       goblinId,
     )[0];
-    if (meleeSelection !== undefined) {
-      expect(
-        opportunityAttackReactionChoices(setup.result.state, fighterId, [
-          { reactorId: fighterId, ...meleeSelection },
-        ]),
-      ).toEqual(expect.any(Array));
+    if (meleeSelection === undefined) {
+      throw new Error("Expected canonical melee opportunity selection.");
     }
+    expect(
+      opportunityAttackReactionChoices(setup.result.state, goblinId, [
+        { reactorId: fighterId, ...meleeSelection },
+      ]),
+    ).toMatchObject([
+      {
+        kind: "opportunityAttack",
+        reactorId: fighterId,
+        subject: { targetId: goblinId },
+      },
+    ]);
     expect(
       retaliationReactionAttackChoices(setup.result.state, {
         trigger: "afterDamage",
@@ -1450,47 +1489,53 @@ describe("battle boundary admission owners", () => {
     );
     expect(sectionAdmissions.admissions).toHaveLength(3);
     for (const sectionAdmission of sectionAdmissions.admissions) {
-      expect(statBlockPresentationAllocation(sectionAdmission)).toMatchObject({
-        occurrences: expect.any(Object),
-      });
+      const allocation = statBlockPresentationAllocation(sectionAdmission);
+      expect(allocation.procedureRefs.size).toBe(
+        sectionAdmission.execution.procedureBindings.length,
+      );
+      expect(
+        allocation.occurrences.attacks.length +
+          allocation.occurrences.multiattacks.length +
+          allocation.occurrences.bonusActions.length,
+      ).toBeGreaterThan(0);
     }
     const resourcePool = snapshot.resourcePools[0];
-    if (resourcePool !== undefined) {
-      expect(
-        restoreStatBlockExecutionAdmission(
-          battleId("boundary-stat-execution"),
-          combatantId("boundary-stat-execution"),
-          executionSource,
-          {
-            ...snapshot,
-            resourcePools: [
-              {
-                ...resourcePool,
-                ...(resourcePool.kind === "daily" ||
-                resourcePool.kind === "legendaryActions"
-                  ? {
-                      usesRemaining: (Number(resourcePool.usesMax) +
-                        1) as never,
-                    }
-                  : {}),
-              },
-              ...snapshot.resourcePools.slice(1),
-            ],
-          },
-        ),
-      ).toMatchObject({ _tag: "Left" });
-      expect(
-        restoreStatBlockExecutionAdmission(
-          battleId("boundary-stat-execution"),
-          combatantId("boundary-stat-execution"),
-          executionSource,
-          {
-            ...snapshot,
-            resourcePools: snapshot.resourcePools.slice(1),
-          },
-        ),
-      ).toMatchObject({ _tag: "Left" });
+    if (resourcePool === undefined) {
+      throw new Error("Expected Stat Block resource pool snapshot.");
     }
+    expect(
+      restoreStatBlockExecutionAdmission(
+        battleId("boundary-stat-execution"),
+        combatantId("boundary-stat-execution"),
+        executionSource,
+        {
+          ...snapshot,
+          resourcePools: [
+            {
+              ...resourcePool,
+              ...(resourcePool.kind === "daily" ||
+              resourcePool.kind === "legendaryActions"
+                ? {
+                    usesRemaining: (Number(resourcePool.usesMax) + 1) as never,
+                  }
+                : {}),
+            },
+            ...snapshot.resourcePools.slice(1),
+          ],
+        },
+      ),
+    ).toMatchObject({ _tag: "Left" });
+    expect(
+      restoreStatBlockExecutionAdmission(
+        battleId("boundary-stat-execution"),
+        combatantId("boundary-stat-execution"),
+        executionSource,
+        {
+          ...snapshot,
+          resourcePools: snapshot.resourcePools.slice(1),
+        },
+      ),
+    ).toMatchObject({ _tag: "Left" });
     expect(
       restoreStatBlockExecutionAdmission(
         battleId("boundary-stat-other-battle"),
@@ -1564,18 +1609,20 @@ describe("battle boundary admission owners", () => {
       unit: tacticalMind,
       classLevels: fighterLevels,
     });
-    if (
-      Either.isRight(supportProfiles) &&
-      supportProfiles.right[0] !== undefined
-    ) {
-      expect(
-        unitSupportProcedureExecution(supportProfiles.right[0], {
-          resourcePoolRefsByUnitId: new Map(),
-          unitFeatureProcedureRefsByUnitId: new Map(),
-          supportProcedureRefsByUnitId: new Map(),
-        }),
-      ).toBeUndefined();
+    if (Either.isLeft(supportProfiles)) {
+      throw new Error("Expected Tactical Mind support profile admission.");
     }
+    const supportProfile = supportProfiles.right[0];
+    if (supportProfile === undefined) {
+      throw new Error("Expected Tactical Mind support profile.");
+    }
+    expect(
+      unitSupportProcedureExecution(supportProfile, {
+        resourcePoolRefsByUnitId: new Map(),
+        unitFeatureProcedureRefsByUnitId: new Map(),
+        supportProcedureRefsByUnitId: new Map(),
+      }),
+    ).toBeUndefined();
   });
 
   test("invocation guards and fill equality are discriminant/oracle based", () => {
@@ -1861,19 +1908,20 @@ describe("battle boundary admission owners", () => {
       fighterId,
       goblinId,
     )[0];
-    if (meleeThreat !== undefined) {
-      const threat = { reactorId: fighterId, ...meleeThreat };
-      const withThreat = simpleMovementFill(movementHoleValue, {
-        provokedOpportunityAttacks: [threat],
-      });
-      expect(battleContinuationFillEquals(withThreat, withThreat)).toBe(true);
-      expect(
-        battleContinuationFillEquals(withThreat, {
-          ...withThreat,
-          value: { ...withThreat.value, provokedOpportunityAttacks: [] },
-        } as never),
-      ).toBe(false);
+    if (meleeThreat === undefined) {
+      throw new Error("Expected canonical melee opportunity threat.");
     }
+    const threat = { reactorId: fighterId, ...meleeThreat };
+    const withThreat = simpleMovementFill(movementHoleValue, {
+      provokedOpportunityAttacks: [threat],
+    });
+    expect(battleContinuationFillEquals(withThreat, withThreat)).toBe(true);
+    expect(
+      battleContinuationFillEquals(withThreat, {
+        ...withThreat,
+        value: { ...withThreat.value, provokedOpportunityAttacks: [] },
+      } as never),
+    ).toBe(false);
 
     const comparableFill = (kind: string, value: unknown, holeId: string) =>
       ({ kind, holeId: holeId as never, value }) as never;
