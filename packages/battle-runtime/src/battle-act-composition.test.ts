@@ -69,7 +69,7 @@ function syntheticStatBlockProcedureRef(
 }
 
 describe("battle act composition presentations", () => {
-  test("projects ordinary intrinsic acts and unit/spell presentation variants", () => {
+  test("projects ordinary intrinsic acts and spell presentation helpers", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-act-composition-projections"),
       combatants: [
@@ -120,7 +120,7 @@ describe("battle act composition presentations", () => {
     expect(battleActDruidWildShapePresentation(spell)).toBeUndefined();
   });
 
-  test("renders all interrupt spell command owner projections", () => {
+  test("maps typed interrupt spell owners independently of route eligibility", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-act-composition-interrupts"),
       combatants: [
@@ -146,6 +146,8 @@ describe("battle act composition presentations", () => {
       throw new Error("Expected a cast spell act.");
     }
 
+    // Route discovery proves each interrupt's eligibility; this presentation
+    // boundary selects its command-specific spell owner from the typed subject.
     const interruptSubjects = [
       {
         tag: "runtimeCommand",
@@ -323,7 +325,7 @@ describe("battle act composition presentations", () => {
     ).toBeUndefined();
   });
 
-  test("covers monk unit projection and intrinsic label families", () => {
+  test("projects monk units and maps typed intrinsic presentation variants", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-act-composition-label-families"),
       combatants: [
@@ -351,11 +353,18 @@ describe("battle act composition presentations", () => {
         "Monk's Focus: Disengage and Dash",
       ]),
     );
-    expect(battleActUnitPresentation(focusActs[0]!)).toMatchObject({
+    const firstFocusAct = focusActs[0];
+    if (firstFocusAct === undefined) {
+      throw new Error("Expected at least one Monk Focus act.");
+    }
+    expect(battleActUnitPresentation(firstFocusAct)).toMatchObject({
       kind: "unit",
       unitId: "monk_monks_focus",
     });
 
+    // These variants exercise the intrinsic presentation algebra directly;
+    // unlike joined attack or feature presentations, it does not inspect actor
+    // procedure state after route discovery has produced a typed subject.
     const procedureRef = syntheticAttackProcedureRef("label-family", goblinId);
     const intrinsicSubjects = [
       {
