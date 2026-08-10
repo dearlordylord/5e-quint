@@ -31,22 +31,22 @@ totals, and comparison below are the self-contained durable evidence.
 ## Current authoritative diagnostic
 
 - Date: 2026-08-09
-- Git HEAD: `7c1e26306c3382c4122a40850e67b7fdb381db82`
+- Git HEAD: `bb023036e05d602b48e143d944a2b23e481892c2`
 - Command: `pnpm coverage`
 - Result: exit 0; all workspace coverage packages complete and green
-- Total wall duration: approximately 322 seconds
-- Battle-runtime tests: 204/204 files passed; 2,175 tests passed and 53
-  skipped (2,228 total)
+- Total wall duration: approximately 309 seconds
+- Battle-runtime tests: 204/204 files passed; 2,178 tests passed and 53
+  skipped (2,231 total)
 
-| Metric     |                `8d879df10` |                `27e6c76f5` |                `7c1e26306` | `27e` -> `7c1` covered / total |    Uncovered change |   Delta |
+| Metric     |                `27e6c76f5` |                `7c1e26306` |                `bb023036e` | `7c1` -> `bb0` covered / total |    Uncovered change |   Delta |
 | ---------- | -------------------------: | -------------------------: | -------------------------: | -----------------------------: | ------------------: | ------: |
-| Statements | 120,472 / 124,876 (96.47%) | 120,487 / 124,878 (96.48%) | 120,483 / 124,868 (96.48%) |                       -4 / -10 | 4,391 -> 4,385 (-6) | +0.00pp |
-| Branches   |   30,020 / 32,181 (93.28%) |   30,035 / 32,192 (93.29%) |   30,027 / 32,181 (93.30%) |                       -8 / -11 | 2,157 -> 2,154 (-3) | +0.01pp |
-| Functions  |       4,811 / 4,811 (100%) |       4,819 / 4,819 (100%) |       4,819 / 4,819 (100%) |                          0 / 0 |              0 -> 0 |       0 |
-| Lines      | 120,472 / 124,876 (96.47%) | 120,487 / 124,878 (96.48%) | 120,483 / 124,868 (96.48%) |                       -4 / -10 | 4,391 -> 4,385 (-6) | +0.00pp |
+| Statements | 120,487 / 124,878 (96.48%) | 120,483 / 124,868 (96.48%) | 120,462 / 124,843 (96.49%) |                      -21 / -25 | 4,385 -> 4,381 (-4) | +0.01pp |
+| Branches   |   30,035 / 32,192 (93.29%) |   30,027 / 32,181 (93.30%) |   30,035 / 32,184 (93.32%) |                          8 / 3 | 2,154 -> 2,149 (-5) | +0.02pp |
+| Functions  |       4,819 / 4,819 (100%) |       4,819 / 4,819 (100%) |       4,817 / 4,817 (100%) |                        -2 / -2 |              0 -> 0 |       0 |
+| Lines      | 120,487 / 124,878 (96.48%) | 120,483 / 124,868 (96.48%) | 120,462 / 124,843 (96.49%) |                      -21 / -25 | 4,385 -> 4,381 (-4) | +0.01pp |
 
-The Vitest statement/line percentage remained at 96.48% and branches rose to
-93.30%; uncovered statements/lines fell by 6 and uncovered branches by 3.
+The Vitest statement/line percentage rose to 96.49% and branches rose to
+93.32%; uncovered statements/lines fell by 4 and uncovered branches by 5.
 These are measured deltas from the authoritative public run, not a forecast
 toward 99%. Denominator changes are shown explicitly because production code
 changed between checkpoints. The 93% branch ratchet and all other ratchets
@@ -61,22 +61,22 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 120,483 | 124,868 |                  123,620 |         3,137 |
-| Branches   |  30,027 |  32,181 |                   31,860 |         1,833 |
-| Functions  |   4,819 |   4,819 |                    4,771 |             0 |
-| Lines      | 120,487 | 124,878 |                  123,630 |         3,143 |
+| Statements | 120,462 | 124,843 |                  123,595 |         3,133 |
+| Branches   |  30,035 |  32,184 |                   31,863 |         1,828 |
+| Functions  |   4,817 |   4,817 |                    4,769 |             0 |
+| Lines      | 120,462 | 124,843 |                  123,595 |         3,133 |
 
 ## Milestone context
 
-Since the prior authoritative checkpoint, `7c1e26306` passed already-proved
-`BattleCreatureState` targets into Flaming Sphere and Moonbeam damage
-application and reused the admitted Web effect after marking it. This removed
-impossible second lookups and their fallback branches without changing rule or
-hole/fill semantics. Focused runtime tests, package typecheck, the mapped
-Flaming Sphere/Moonbeam/Web MBT lanes, four Luna review rounds, and an
-independent root review all converged cleanly before the public run. The
-authoritative totals above confirm further numeric progress in both limiting
-metrics.
+Since the prior authoritative checkpoint, `bb023036e` made the owning
+`ClassLevel` an explicit ongoing-feature admission fact, removed the numeric
+zero sentinel, threaded the admitted level through damage scaling and level
+overrides, rejected area-scoped atoms before self-effect projection, and
+removed an expiration alternative that the Surface schema cannot represent.
+Focused runtime tests, package typecheck, the mapped action-economy MBT lane,
+four Luna review rounds, and an independent root review all converged cleanly
+before the public run. The authoritative totals above confirm further numeric
+progress in both limiting metrics.
 
 Focused cohort uncovered counts remain regression and navigation evidence, not
 a forecast of the global public delta, because other public tests may already
@@ -86,8 +86,8 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting public metric at 93.30%, with a static 99% gap of
-1,833. Clone the public harness arguments for a fresh package-local diagnostic,
+Branches remain the limiting public metric at 93.32%, with a static 99% gap of
+1,828. Clone the public harness arguments for a fresh package-local diagnostic,
 select a different branch-heavy owner or cohesive subsystem from the completed
 save-gate, active-effect-ledger, and persistent-spatial campaigns, audit its
 uncovered alternatives for schema-impossible or duplicated logic, cover only
