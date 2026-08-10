@@ -11,6 +11,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-magical-darkness-point-origin
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { Round } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -297,6 +298,152 @@ describe("battle runtime: Darkness", () => {
       }),
       untrackedLevelTwo,
     ]);
+  });
+
+  test("Darkness rejects unknown and over-level spell-light overlaps", () => {
+    const unknownOverlapSession = darknessBattle(
+      "battle-darkness-unknown-overlap",
+    );
+    const unknownSubject = findAct(
+      unknownOverlapSession,
+      magicSubject(darknessUnitId),
+    ).subject;
+    const unknownArea = requireHole(
+      resolveBattleSubject({
+        state: unknownOverlapSession.state,
+        subject: unknownSubject,
+        fills: [],
+      }),
+      "spellAreaChoice",
+    );
+    expect(
+      resolveBattleSubject({
+        state: unknownOverlapSession.state,
+        subject: unknownSubject,
+        fills: [
+          magicalDarknessAreaFill(
+            unknownArea,
+            battleAreaId("darkness-unknown-overlap-area"),
+            [
+              {
+                kind: "spellCreatedLightOverlapsArea",
+                sourceEffectId: battleSpellEffectOccurrenceId(
+                  "darkness-missing-light",
+                ),
+              },
+            ],
+          ),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Darkness spell-light overlap must reference a tracked ongoing spell light.",
+    });
+
+    const overLevelSession = darknessBattle("battle-darkness-over-level");
+    const overLevelEffectId = battleSpellEffectOccurrenceId(
+      "darkness-over-level-light",
+    );
+    const overLevelState: BattleState = {
+      ...overLevelSession.state,
+      lightEmitters: [
+        trackedObjectSpellLightEmitter({
+          sourceEffectId: overLevelEffectId,
+          sourceSpellLevel: 3,
+          objectId: "darkness-over-level-object",
+        }),
+      ],
+    };
+    const overLevelSubject = findAct(
+      battleRuntimeSessionForTest({
+        ...overLevelSession,
+        state: overLevelState,
+      }),
+      magicSubject(darknessUnitId),
+    ).subject;
+    const overLevelArea = requireHole(
+      resolveBattleSubject({
+        state: overLevelState,
+        subject: overLevelSubject,
+        fills: [],
+      }),
+      "spellAreaChoice",
+    );
+    expect(
+      resolveBattleSubject({
+        state: overLevelState,
+        subject: overLevelSubject,
+        fills: [
+          magicalDarknessAreaFill(
+            overLevelArea,
+            battleAreaId("darkness-over-level-area"),
+            [
+              {
+                kind: "spellCreatedLightOverlapsArea",
+                sourceEffectId: overLevelEffectId,
+              },
+            ],
+          ),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Darkness can only dispel overlapping spell-created light at or below its supported spell level limit.",
+    });
+  });
+
+  test("Darkness ignores non-tracked light emitters and rejects stale slot resources", () => {
+    const session = darknessBattle("battle-darkness-untracked-light");
+    const nonTrackedEmitter = {
+      kind: "objectInvisibleRevealLightEmitter" as const,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "darkness-untracked-emitter",
+      ),
+      sourceCombatantId: wizardId,
+      objectId: battleObjectId("darkness-untracked-object"),
+      emission: { kind: "dim" as const, radiusFeet: movementFeet(5) },
+      expiresAt: {
+        kind: "endOfTurn" as const,
+        combatantId: wizardId,
+        round: Round(1),
+      },
+    };
+    const state: BattleState = {
+      ...session.state,
+      lightEmitters: [nonTrackedEmitter],
+    };
+    const subject = findAct(
+      battleRuntimeSessionForTest({ ...session, state }),
+      magicSubject(darknessUnitId),
+    ).subject;
+    const area = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "spellAreaChoice",
+    );
+    const areaFill = magicalDarknessAreaFill(
+      area,
+      battleAreaId("darkness-untracked-area"),
+    );
+    const cast = requireResolved(
+      resolveBattleSubject({ state, subject, fills: [areaFill] }),
+    );
+    expect(cast.state.lightEmitters).toContainEqual(nonTrackedEmitter);
+
+    const resetResourcesState: BattleState = {
+      ...cast.state,
+      currentTurnResources: session.state.currentTurnResources,
+    };
+    expect(
+      resolveBattleSubject({
+        state: resetResourcesState,
+        subject,
+        fills: [areaFill],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 });
 

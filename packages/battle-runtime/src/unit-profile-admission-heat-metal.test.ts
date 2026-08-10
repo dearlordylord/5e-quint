@@ -92,6 +92,16 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
         requiresTableSpatialFact: true,
       }),
     ]);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "objectTargetChoice" })],
+    });
     const objectFill = spellManufacturedMetalObjectTargetFill({
       hole: requireHole(act.initialHoles, "objectTargetChoice"),
       objectId: battleObjectId("heat-metal-admission-object"),
@@ -280,6 +290,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
       throw new Error("Expected Heat Metal to request its damage roll.");
     }
     expect(needsDamage.holes).toHaveLength(1);
+    const damageHole = requireResultHole(needsDamage, "rolledDice");
 
     const resolved = resolveBattleSubject({
       state,
@@ -345,6 +356,20 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
         spellId: heatMetalUnitId,
       }),
     ).toBeUndefined();
+    expect(
+      resolveBattleSubject({
+        state: {
+          ...resolved.state,
+          currentTurnResources: state.currentTurnResources,
+        },
+        subject: act.subject,
+        fills: [
+          objectFill,
+          contactFill,
+          damageRollFillWithGroups(damageHole, [[3, 4]]),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
   test("initial self-contact damage can break the newly started concentration", () => {
@@ -773,6 +798,21 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     ).toEqual({
       sourceProcedureRef: act.subject.procedureRef,
       effectKind: "spellEffect",
+    });
+    expect(
+      resolveBattleSubject({
+        state: repeated.state,
+        subject: repeat.subject,
+        fills: [
+          repeatFill,
+          damageRollFillWithGroups(repeatDamage, [[1, 2, 3]]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Bonus Action spell is no longer available for the current actor.",
     });
   });
 

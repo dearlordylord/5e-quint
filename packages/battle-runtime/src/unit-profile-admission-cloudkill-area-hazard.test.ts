@@ -133,6 +133,17 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
   test("cloudkill is admitted as a ten-minute point-origin Sphere hazard", () => {
     const { session, act } = castCloudkill();
 
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "spellAreaChoice" })],
+    });
+
     expect({
       ...act.subject,
       invocation: battleActSpellPresentation(act)?.invocation,
@@ -170,7 +181,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
   });
 
   test("cast records the active hazard and projects a Heavily Obscured sphere", () => {
-    const { act, cast } = castCloudkill();
+    const { act, cast, session } = castCloudkill();
 
     expect(requireCombatant(cast, spellCasterId)).toMatchObject({
       concentration: {
@@ -208,6 +219,18 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
         },
       }),
     ]);
+    expect(
+      resolveBattleSubject({
+        state: {
+          ...cast,
+          currentTurnResources: session.state.currentTurnResources,
+        },
+        subject: act.subject,
+        fills: [
+          cloudkillAreaFill(requireHole(act.initialHoles, "spellAreaChoice")),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
   test("appearance save applies full or half Poison damage through the active hazard", () => {

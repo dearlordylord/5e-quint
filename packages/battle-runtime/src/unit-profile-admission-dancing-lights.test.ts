@@ -1004,4 +1004,148 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
         "Dancing Lights separate lights must stay within 20 feet of another light.",
     });
   });
+
+  test("dancing_lights rejects placement mode mismatches and inactive effects", () => {
+    const spell = spellRecord(dancingLightsUnitId);
+    const session = spellBattle({ cantrips: [spell] });
+    const separateAct = spellAct({
+      session,
+      spellId: dancingLightsUnitId,
+    });
+    const placementHole = requireHole(
+      separateAct.initialHoles,
+      "dancingLightsPlacement",
+    );
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: separateAct.subject,
+        fills: [
+          {
+            kind: "dancingLightsPlacement",
+            holeId: placementHole.holeId,
+            value: {
+              mode: "reposition",
+              form: "separateLights",
+              lights: [],
+            },
+          } satisfies BattleFill,
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Dancing Lights placement does not match the selected form.",
+    });
+
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: separateAct.subject,
+      fills: [
+        {
+          kind: "dancingLightsPlacement",
+          holeId: placementHole.holeId,
+          value: {
+            mode: "cast",
+            form: "separateLights",
+            lights: [
+              {
+                positionId: battleTablePositionId(
+                  "dancing-lights-form-mismatch",
+                ),
+                distanceFromCasterFeet: movementFeet(30),
+                nearestSiblingDistanceFeet: movementFeet(10),
+              },
+            ],
+          },
+        } satisfies BattleFill,
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Dancing Lights cast before form checks.");
+    }
+    const moveAct = bonusSpellAct({
+      session: battleRuntimeSessionForTest({
+        state: cast.state,
+        context: session.context,
+      }),
+      spellId: dancingLightsUnitId,
+    });
+    const moveFrontier = resolveBattleSubject({
+      state: cast.state,
+      subject: moveAct.subject,
+      fills: [],
+    });
+    if (moveFrontier.tag !== "needsHoles") {
+      throw new Error("Expected Dancing Lights reposition placement.");
+    }
+    const moveHole = requireHole(moveFrontier.holes, "dancingLightsPlacement");
+    const lightId = cast.snapshot.lightEmitters.flatMap((emitter) =>
+      emitter.kind === "spellLightEmitter" &&
+      emitter.attachment.kind === "dancingLight"
+        ? [emitter.attachment.lightId]
+        : [],
+    )[0];
+    if (lightId === undefined) {
+      throw new Error("Expected a Dancing Lights light identity.");
+    }
+    const validMovePlacement = {
+      kind: "dancingLightsPlacement",
+      holeId: moveHole.holeId,
+      value: {
+        mode: "reposition",
+        form: "separateLights",
+        lights: [
+          {
+            lightId,
+            positionId: battleTablePositionId("dancing-lights-valid-move"),
+            distanceFromCasterFeet: movementFeet(35),
+            moveDistanceFeet: movementFeet(5),
+            nearestSiblingDistanceFeet: movementFeet(10),
+          },
+        ],
+      },
+    } satisfies BattleFill;
+    expect(
+      resolveBattleSubject({
+        state: cast.state,
+        subject: moveAct.subject,
+        fills: [
+          {
+            kind: "dancingLightsPlacement",
+            holeId: moveHole.holeId,
+            value: {
+              mode: "cast",
+              form: "separateLights",
+              lights: [
+                {
+                  positionId: battleTablePositionId(
+                    "dancing-lights-cast-mode-move",
+                  ),
+                  distanceFromCasterFeet: movementFeet(35),
+                  nearestSiblingDistanceFeet: movementFeet(10),
+                },
+              ],
+            },
+          } satisfies BattleFill,
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Dancing Lights movement requires reposition placement.",
+    });
+    expect(
+      resolveBattleSubject({
+        state: breakBattleConcentration(cast.state, spellCasterId),
+        subject: moveAct.subject,
+        fills: [validMovePlacement],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Dancing Lights movement requires active lights from this spell.",
+    });
+  });
 });

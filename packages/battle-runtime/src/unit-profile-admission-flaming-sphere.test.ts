@@ -162,6 +162,16 @@ describe("L12G deterministic Flaming Sphere admission", () => {
         },
       }),
     ]);
+    expect(
+      resolveBattleSubject({
+        state: {
+          ...resolved.state,
+          currentTurnResources: session.state.currentTurnResources,
+        },
+        subject: act.subject,
+        fills: [flamingSphereAreaFill(area)],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
   });
 
   test("end-within-5-feet save applies failed-save fire damage before ending the turn", () => {

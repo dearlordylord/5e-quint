@@ -155,6 +155,17 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
   test("insect plague is admitted as a ten-minute point-origin Sphere hazard", () => {
     const { session, act } = castInsectPlague();
 
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "spellAreaChoice" })],
+    });
+
     expect({
       ...act.subject,
       invocation: battleActSpellPresentation(act)?.invocation,
@@ -192,7 +203,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
   });
 
   test("cast records the active hazard and projects Lightly Obscured and Difficult Terrain facts", () => {
-    const { act, cast, targetTurn } = castInsectPlague();
+    const { act, cast, session, targetTurn } = castInsectPlague();
 
     expect(requireCombatant(cast, spellCasterId)).toMatchObject({
       concentration: {
@@ -230,6 +241,20 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
         },
       }),
     ]);
+    expect(
+      resolveBattleSubject({
+        state: {
+          ...cast,
+          currentTurnResources: session.state.currentTurnResources,
+        },
+        subject: act.subject,
+        fills: [
+          insectPlagueAreaFill(
+            requireHole(act.initialHoles, "spellAreaChoice"),
+          ),
+        ],
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
 
     const moveSubject: BattleSubject = {
       tag: "runtimeCommand",
