@@ -31,22 +31,22 @@ totals, and comparison below are the self-contained durable evidence.
 ## Current authoritative diagnostic
 
 - Date: 2026-08-09
-- Git HEAD: `5cf7f45c6`
+- Git HEAD: `4eeecad28`
 - Command: `pnpm coverage`
 - Result: exit 0; all workspace coverage packages complete and green
-- Total wall duration: approximately 325 seconds
-- Battle-runtime tests: 214/214 files passed; 2,284 tests passed and 53
-  skipped (2,337 total)
+- Total wall duration: approximately 329 seconds
+- Battle-runtime tests: 214/214 files passed; 2,292 tests passed and 53
+  skipped (2,345 total)
 
-| Metric     |                `6ffe81bd4` |                `67d41be16` |                `5cf7f45c6` | `67d4` -> `5cf7` covered / total |      Uncovered change |   Delta |
-| ---------- | -------------------------: | -------------------------: | -------------------------: | -------------------------------: | --------------------: | ------: |
-| Statements | 120,763 / 124,805 (96.76%) | 120,761 / 124,749 (96.80%) | 120,910 / 124,749 (96.92%) |                          149 / 0 | 3,988 -> 3,839 (-149) | +0.12pp |
-| Branches   |   30,408 / 32,421 (93.79%) |   30,449 / 32,440 (93.86%) |   30,708 / 32,624 (94.12%) |                        259 / 184 |  1,991 -> 1,916 (-75) | +0.26pp |
-| Functions  |       4,813 / 4,813 (100%) |       4,813 / 4,813 (100%) |       4,813 / 4,813 (100%) |                            0 / 0 |                0 -> 0 |       0 |
-| Lines      | 120,763 / 124,805 (96.76%) | 120,761 / 124,749 (96.80%) | 120,910 / 124,749 (96.92%) |                          149 / 0 | 3,988 -> 3,839 (-149) | +0.12pp |
+| Metric     |                `67d41be16` |                `5cf7f45c6` |                `4eeecad28` | `5cf7` -> `4eee` covered / total |     Uncovered change |   Delta |
+| ---------- | -------------------------: | -------------------------: | -------------------------: | -------------------------------: | -------------------: | ------: |
+| Statements | 120,761 / 124,749 (96.80%) | 120,910 / 124,749 (96.92%) | 120,978 / 124,745 (96.98%) |                          68 / -4 | 3,839 -> 3,767 (-72) | +0.06pp |
+| Branches   |   30,449 / 32,440 (93.86%) |   30,708 / 32,624 (94.12%) |   30,757 / 32,651 (94.19%) |                          49 / 27 | 1,916 -> 1,894 (-22) | +0.07pp |
+| Functions  |       4,813 / 4,813 (100%) |       4,813 / 4,813 (100%) |       4,813 / 4,813 (100%) |                            0 / 0 |               0 -> 0 |       0 |
+| Lines      | 120,761 / 124,749 (96.80%) | 120,910 / 124,749 (96.92%) | 120,978 / 124,745 (96.98%) |                          68 / -4 | 3,839 -> 3,767 (-72) | +0.06pp |
 
-The Vitest statement/line percentage rose to 96.92% and branches rose to
-94.12%; uncovered statements/lines fell by 149 and uncovered branches by 75.
+The Vitest statement/line percentage rose to 96.98% and branches rose to
+94.19%; uncovered statements/lines fell by 72 and uncovered branches by 22.
 These are measured deltas from the authoritative public run, not a forecast
 toward 99%. Denominator changes are shown explicitly because production code
 changed between checkpoints. The 93% branch ratchet and all other ratchets
@@ -61,31 +61,34 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 120,910 | 124,749 |                  123,502 |         2,592 |
-| Branches   |  30,708 |  32,624 |                   32,298 |         1,590 |
+| Statements | 120,978 | 124,745 |                  123,498 |         2,520 |
+| Branches   |  30,757 |  32,651 |                   32,325 |         1,568 |
 | Functions  |   4,813 |   4,813 |                    4,765 |             0 |
-| Lines      | 120,910 | 124,749 |                  123,502 |         2,592 |
+| Lines      | 120,978 | 124,745 |                  123,498 |         2,520 |
 
 ## Milestone context
 
-Since the prior authoritative checkpoint, `1e9ac9410` added a cohesive public
-protocol-boundary campaign spanning fill parsers and frontiers, codecs,
-movement and creature-space routes, reaction/interrupt/redirect boundaries,
-execution admission, invocation guards, spell-defense projections, discovery,
-and stat-block attack/resource routes. It added no production state or authored
-identity. Luna completed two self-review rounds and measured the exact detached
-parent delta before committing. The 29-file mapped MBT batch retained the same
-five reaction-casting-time and reaction-spell-identity fixture failures as the
-exact parent; they are not attributable to this milestone.
+Since the prior authoritative checkpoint, `450850a90` covered the cohesive Unit
+Feature action dispatch and discovery owner: Rage-aware enemy saving-throw
+relationships for Breath Weapon, Land's Aid, and Abjure Foes; valid unrelated
+resource-map alternatives; active Wild Shape and off-hand Sacred Weapon
+projection; dice-expression labels; Abjure Foes restriction/effect lifecycle;
+and stale or empty area-action alternatives. Production now accepts an already
+admitted Character actor for healing-pool sizing and threads one non-null spell
+save DifficultyClass witness through discovery/resolution instead of repeating
+impossible actor/DC guards. No modeled rule changed.
 
-Independent root review used the property-based-testing review criteria and
-found silent fixture exits, two randomized checks that merely replayed already
-enumerated cases, and weak existence/type assertions. `5cf7f45c6` made every
-claimed fixture branch fail loudly, replaced the randomized checks with stable,
-unfiltered metamorphic properties over generated identities and routes, raised
-their deterministic run count from 8 to 64, and strengthened or removed the
-weak assertions. Two review passes then converged with 24/24 focused tests,
-package typecheck, lint, formatting, and the public coverage run green.
+An earlier spell-release candidate was rejected after the public run showed
+only 21 fewer uncovered statements and 8 fewer uncovered branches; `dca1cf8c4`
+restored its three files exactly to M18 content. For the replacement campaign,
+Luna used full-suite rather than selected-cohort measurement, completed two
+self-review passes, and captured green exits for the Dragon Breath, feature
+save/reaction, and Wild Shape lifecycle MBTs. Independent root review removed
+forged same-turn Steady Aim and turn-resource witnesses, converted Abjure Foes
+effect replacement into a real later-turn second use, and replaced a Fighter 1
+Action Surge resource with its valid Second Wind resource in `4eeecad28`.
+Repeated review then converged with 153 focused tests, package typecheck, lint,
+formatting, and the public coverage run green.
 
 Focused cohort uncovered counts remain regression and navigation evidence, not
 a forecast of the global public delta, because other public tests may already
@@ -95,8 +98,8 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting public metric at 94.12%, with a static 99% gap of
-1,590. Clone the public harness arguments for a fresh package-local diagnostic,
+Branches remain the limiting public metric at 94.19%, with a static 99% gap of
+1,568. Clone the public harness arguments for a fresh package-local diagnostic,
 select a different branch-heavy owner or cohesive subsystem from the completed
 save-gate, active-effect-ledger, persistent-spatial, ongoing-feature admission,
 act-composition, attack-projection, attack-pipeline, and spell-damage-fill
