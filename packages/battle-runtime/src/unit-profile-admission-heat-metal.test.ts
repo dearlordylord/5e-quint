@@ -8,7 +8,14 @@ import { requiredAttackRollMode } from "./battle-reducer/attack-roll.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type { BattleActiveEffect } from "./index.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
+import { characterSpellProcedure } from "./character-execution-queries.ts";
 import {
+  resolveObjectContactDamageSpellAct,
+  resolveObjectContactDamageRepeatSpellAct,
+} from "./battle-reducer/spells-resolve-object-contact-damage.ts";
+import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
+import {
+  battleProcedureExecutionRefForTest,
   concentrationSavingThrowFill,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -25,7 +32,10 @@ import {
   resolveWeaponAttackMiss,
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import {
+  spellBattle,
+  spellBattleWithTargetRayOfFrost,
+} from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
   maybeBonusSpellAct,
@@ -41,6 +51,7 @@ import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleObjectId,
   breakBattleConcentration,
+  cantripSpellInvocationRef,
   elapsedTimeTicks,
   endTurn,
   Hp,
@@ -291,17 +302,90 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     }
     expect(needsDamage.holes).toHaveLength(1);
     const damageHole = requireResultHole(needsDamage, "rolledDice");
+    const casterBeforeCast = requireCombatant(state, spellCasterId);
+    if (casterBeforeCast.origin.kind !== "character") {
+      throw new Error("Expected Heat Metal caster to be a character.");
+    }
+    const invocation = characterSpellProcedure(
+      casterBeforeCast.origin.execution,
+      act.subject.procedureRef,
+      casterBeforeCast,
+    );
+    if (invocation?.procedure !== "objectContactDamage") {
+      throw new Error("Expected Heat Metal object-contact invocation.");
+    }
+    const damageFill = damageRollFillWithGroups(damageHole, [[3, 4]]);
+    const directFills = [objectFill, contactFill, damageFill];
+    const directFillSet = spellFillSet(
+      directFills,
+      invocation,
+      act.subject.procedureRef,
+      spellCasterId,
+      state,
+    );
+    if (directFillSet.tag !== "ok") {
+      throw new Error("Expected Heat Metal direct fill set.");
+    }
+    const actionUnavailableState = {
+      ...state,
+      currentTurnResources: {
+        ...state.currentTurnResources,
+        actionResources: [],
+      },
+    };
+    expect(
+      resolveObjectContactDamageSpellAct({
+        input: {
+          state: actionUnavailableState,
+          subject: act.subject,
+          fills: directFills,
+        },
+        actorId: spellCasterId,
+        invocation,
+        fillSet: directFillSet,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Magic action is no longer available for the current actor.",
+    });
+
+    const emptyContactFill = spellObjectContactTargetsFill({
+      hole: contactTarget,
+      targetIds: [],
+    });
+    const emptyContactFills = [objectFill, emptyContactFill];
+    const emptyContactFillSet = spellFillSet(
+      emptyContactFills,
+      invocation,
+      act.subject.procedureRef,
+      spellCasterId,
+      state,
+    );
+    if (emptyContactFillSet.tag !== "ok") {
+      throw new Error("Expected Heat Metal empty-contact fill set.");
+    }
+    expect(
+      resolveObjectContactDamageSpellAct({
+        input: {
+          state: actionUnavailableState,
+          subject: act.subject,
+          fills: emptyContactFills,
+        },
+        actorId: spellCasterId,
+        invocation,
+        fillSet: emptyContactFillSet,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Magic action is no longer available for the current actor.",
+    });
 
     const resolved = resolveBattleSubject({
       state,
       subject: act.subject,
-      fills: [
-        objectFill,
-        contactFill,
-        damageRollFillWithGroups(requireHole(needsDamage.holes, "rolledDice"), [
-          [3, 4],
-        ]),
-      ],
+      fills: [objectFill, contactFill, damageFill],
     });
 
     expect(resolved).toMatchObject({
@@ -478,6 +562,207 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
         expect.objectContaining({ spellLevel: 2, expended: 1 }),
       ]),
     );
+  });
+
+  test("contact damage opens a readied after-damage reaction before cleanup", () => {
+    const spell = spellRecord(heatMetalUnitId);
+    const session = spellBattleWithTargetRayOfFrost({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 20,
+      targetMaxHp: 20,
+    });
+    const targetTurn = endTurn({
+      state: session.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected Heat Metal target turn to begin.");
+    }
+    const readiedRay = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "actionSpell",
+        actorId: spellTargetId,
+        procedureRef: requireCharacterSpellProcedureRefForTest(
+          session,
+          spellTargetId,
+          cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+        ),
+        mode: { tag: "ready", trigger: "afterDamage" },
+      },
+      fills: [],
+    });
+    if (readiedRay.tag !== "resolved") {
+      throw new Error("Expected Heat Metal target to ready Ray of Frost.");
+    }
+    const casterTurn = endTurn({
+      state: readiedRay.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected Heat Metal caster turn to resume.");
+    }
+    const castSession = battleRuntimeSessionForTest({
+      state: casterTurn.state,
+      context: session.context,
+    });
+    const act = spellAct({
+      session: castSession,
+      spellId: heatMetalUnitId,
+      slotLevel: 2,
+    });
+    const objectFill = spellManufacturedMetalObjectTargetFill({
+      hole: requireHole(act.initialHoles, "objectTargetChoice"),
+      objectId: battleObjectId("heat-metal-after-damage-reaction"),
+      spellId: heatMetalUnitId,
+      casterId: spellCasterId,
+    });
+    const contactHole = requireResultHole(
+      resolveBattleSubject({
+        state: casterTurn.state,
+        subject: act.subject,
+        fills: [objectFill],
+      }),
+      "objectContactTargets",
+    );
+    const contactFill = spellObjectContactTargetsFill({
+      hole: contactHole,
+      targetIds: [spellTargetId],
+    });
+    const damageHole = requireResultHole(
+      resolveBattleSubject({
+        state: casterTurn.state,
+        subject: act.subject,
+        fills: [objectFill, contactFill],
+      }),
+      "rolledDice",
+    );
+    const needsConcentration = resolveBattleSubject({
+      state: casterTurn.state,
+      subject: act.subject,
+      fills: [
+        objectFill,
+        contactFill,
+        damageRollFillWithGroups(damageHole, [[3, 4]]),
+      ],
+    });
+    const concentrationHole = requireResultHole(
+      needsConcentration,
+      "concentrationSavingThrow",
+    );
+    const afterDamage = resolveBattleSubject({
+      state: casterTurn.state,
+      subject: act.subject,
+      fills: [
+        objectFill,
+        contactFill,
+        damageRollFillWithGroups(damageHole, [[3, 4]]),
+        concentrationSavingThrowFill(concentrationHole, true),
+      ],
+    });
+
+    expect(afterDamage).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+      snapshot: { pendingInterrupt: { trigger: "afterDamage" } },
+    });
+  });
+
+  test("contact damage requests a Hideous Laughter repeat save before cleanup", () => {
+    const spell = spellRecord(heatMetalUnitId);
+    const baseSession = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 20,
+      targetMaxHp: 20,
+    });
+    const target = requireCombatant(baseSession.state, spellTargetId);
+    const withLaughter = {
+      ...baseSession.state,
+      combatants: new Map(baseSession.state.combatants).set(spellTargetId, {
+        ...target,
+        activeEffects: [
+          ...target.activeEffects,
+          {
+            kind: "hideousLaughter" as const,
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              "synthetic_heat_metal_laughter",
+            ),
+            sourceCombatantId: spellCasterId,
+            conditionHadNonSpellProneSource: false,
+            conditionHadNonSpellIncapacitatedSource: false,
+            repeatSaveRollMode: null,
+            save: {
+              ability: "wis" as const,
+              dc: { kind: "caster_spell_save_dc" as const },
+            },
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: spellCasterId,
+              durationTicks: elapsedTimeTicks(60),
+            },
+          },
+        ],
+      }),
+    };
+    const session = battleRuntimeSessionForTest({
+      state: withLaughter,
+      context: baseSession.context,
+    });
+    const act = spellAct({
+      session,
+      spellId: heatMetalUnitId,
+      slotLevel: 2,
+    });
+    const objectFill = spellManufacturedMetalObjectTargetFill({
+      hole: requireHole(act.initialHoles, "objectTargetChoice"),
+      objectId: battleObjectId("heat-metal-hideous-laughter"),
+      spellId: heatMetalUnitId,
+      casterId: spellCasterId,
+    });
+    const contactHole = requireResultHole(
+      resolveBattleSubject({
+        state: withLaughter,
+        subject: act.subject,
+        fills: [objectFill],
+      }),
+      "objectContactTargets",
+    );
+    const contactFill = spellObjectContactTargetsFill({
+      hole: contactHole,
+      targetIds: [spellTargetId],
+    });
+    const damageHole = requireResultHole(
+      resolveBattleSubject({
+        state: withLaughter,
+        subject: act.subject,
+        fills: [objectFill, contactFill],
+      }),
+      "rolledDice",
+    );
+    const pendingRepeatSave = resolveBattleSubject({
+      state: withLaughter,
+      subject: act.subject,
+      fills: [
+        objectFill,
+        contactFill,
+        damageRollFillWithGroups(damageHole, [[3, 4]]),
+      ],
+    });
+
+    expect(pendingRepeatSave).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "savingThrowOutcome",
+          hideousLaughterRepeatSave: {
+            targetId: spellTargetId,
+            trigger: "damage",
+          },
+        },
+      ],
+    });
   });
 
   test("self-contact failed no-drop save does not apply the penalty after same-occurrence Concentration breaks", () => {
@@ -803,6 +1088,81 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     ).toEqual({
       sourceProcedureRef: act.subject.procedureRef,
       effectKind: "spellEffect",
+    });
+    const repeatCaster = requireCombatant(casterTurn.state, spellCasterId);
+    if (repeatCaster.origin.kind !== "character") {
+      throw new Error("Expected Heat Metal repeat caster to be a character.");
+    }
+    const repeatInvocation = characterSpellProcedure(
+      repeatCaster.origin.execution,
+      repeat.subject.procedureRef,
+      repeatCaster,
+    );
+    if (repeatInvocation?.procedure !== "objectContactDamageRepeat") {
+      throw new Error("Expected Heat Metal object-contact repeat invocation.");
+    }
+    const repeatDamageFill = damageRollFillWithGroups(repeatDamage, [
+      [1, 2, 3],
+    ]);
+    const repeatFills = [repeatFill, repeatDamageFill];
+    const repeatFillSet = spellFillSet(
+      repeatFills,
+      repeatInvocation,
+      repeat.subject.procedureRef,
+      spellCasterId,
+      casterTurn.state,
+    );
+    if (repeatFillSet.tag !== "ok") {
+      throw new Error("Expected Heat Metal repeat direct fill set.");
+    }
+    const emptyRepeatFillSet = spellFillSet(
+      [],
+      repeatInvocation,
+      repeat.subject.procedureRef,
+      spellCasterId,
+      casterTurn.state,
+    );
+    if (emptyRepeatFillSet.tag !== "ok") {
+      throw new Error("Expected Heat Metal empty repeat fill set.");
+    }
+    expect(
+      resolveObjectContactDamageRepeatSpellAct({
+        input: {
+          state: casterTurn.state,
+          subject: repeat.subject,
+          fills: [],
+        },
+        actorId: spellCasterId,
+        invocation: repeatInvocation,
+        fillSet: emptyRepeatFillSet,
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "objectContactTargets" }],
+    });
+    const bonusActionUnavailableState = {
+      ...casterTurn.state,
+      currentTurnResources: {
+        ...casterTurn.state.currentTurnResources,
+        currentHasBonusAction: false,
+      },
+    };
+    expect(
+      resolveObjectContactDamageRepeatSpellAct({
+        input: {
+          state: bonusActionUnavailableState,
+          subject: repeat.subject,
+          fills: repeatFills,
+        },
+        actorId: spellCasterId,
+        invocation: repeatInvocation,
+        fillSet: repeatFillSet,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Bonus Action spell is no longer available for the current actor.",
     });
     expect(
       resolveBattleSubject({
