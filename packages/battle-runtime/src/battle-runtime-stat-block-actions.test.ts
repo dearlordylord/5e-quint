@@ -79,6 +79,16 @@ import {
 } from "./statblock-action-support.ts";
 import { supportedStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-support.ts";
 import { statBlockRechargeRollFillMatchesHole } from "./battle-reducer/turn-boundary-lifecycle.ts";
+import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import {
+  attackDamageComponents,
+  attackPotentialDamageTypes,
+  frenzyDamageTypeSelection,
+  selectedAttackDamageRiders,
+  weaponDamageComponent,
+} from "./battle-reducer/statblock-attacks.ts";
+import type { AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
+import type { AttackDamageRider } from "./battle-state-execution.ts";
 
 function discoverStatBlockActs(state: BattleState) {
   return discoverBattleActs(
@@ -91,6 +101,154 @@ function discoverStatBlockActs(state: BattleState) {
 
 test("an empty Stat Block action section is executable", () => {
   expect(creatureActionSectionIsSupported({})).toBe(true);
+});
+
+test("Stat Block attack damage projections preserve critical, advantage, and character branches", () => {
+  const statBlockState = goblinTurnBattle();
+  const goblin = statBlockState.combatants.get(goblinId);
+  if (goblin?.origin.kind !== "statBlock") {
+    throw new Error("Expected Goblin Warrior Stat Block actor.");
+  }
+  const statBlockOptions = statBlockAttackActionOptions(
+    goblin.origin.execution,
+  );
+  const scimitar = statBlockOptions.find(
+    (option) =>
+      option.attack.attackType === "melee" &&
+      option.damageNotation === "rolled",
+  );
+  const scimitarStatic = statBlockOptions.find(
+    (option) =>
+      option.attack.attackType === "melee" &&
+      option.damageNotation === "static",
+  );
+  if (scimitar === undefined || scimitarStatic === undefined) {
+    throw new Error("Expected rolled and static Scimitar options.");
+  }
+
+  const ordinaryRoll: AttackRollResult = {
+    total: 14,
+    naturalD20: DieRollResult(10),
+  };
+  const advantageRoll: AttackRollResult = {
+    total: 14,
+    naturalD20: DieRollResult(10),
+    rollMode: "advantage",
+  };
+  const criticalAdvantageRoll: AttackRollResult = {
+    total: 24,
+    naturalD20: DieRollResult(20),
+    rollMode: "advantage",
+  };
+
+  expect(attackDamageComponents(scimitar, false, ordinaryRoll)).toEqual([
+    { expr: { dice: 1, dieSize: 6, flat: 2 }, damageType: "slashing" },
+  ]);
+  expect(attackDamageComponents(scimitar, true, criticalAdvantageRoll)).toEqual(
+    [
+      { expr: { dice: 2, dieSize: 6, flat: 2 }, damageType: "slashing" },
+      { expr: { dice: 2, dieSize: 4 }, damageType: "slashing" },
+    ],
+  );
+  expect(
+    attackPotentialDamageTypes(scimitar, false, advantageRoll, []),
+  ).toEqual(["slashing"]);
+  expect(attackDamageComponents(scimitarStatic, false, ordinaryRoll)).toEqual(
+    [],
+  );
+  expect(attackDamageComponents(scimitarStatic, false, advantageRoll)).toEqual(
+    [],
+  );
+
+  const fighter = statBlockState.combatants.get(fighterId);
+  if (fighter?.origin.kind !== "character" || fighter.origin.attack === null) {
+    throw new Error("Expected a character weapon attack.");
+  }
+  expect(
+    attackDamageComponents(fighter.origin.attack, false, ordinaryRoll),
+  ).toEqual([{ expr: { dice: 1, dieSize: 8 }, damageType: "slashing" }]);
+  expect(weaponDamageComponent(fighter.origin.attack, true)).toEqual({
+    expr: { dice: 2, dieSize: 8 },
+    damageType: "slashing",
+  });
+  expect(weaponDamageComponent(scimitar, false)).toBeNull();
+});
+
+test("Stat Block attack rider selection keeps mandatory riders and rejects contradictory choices", () => {
+  const mandatory: AttackDamageRider = {
+    attackerId: goblinId,
+    procedureRef: battleProcedureExecutionRefForTest(
+      "stat-block-mandatory-rider",
+    ),
+    optional: false,
+    damage: { dice: 1, dieSize: 6, damageType: "slashing" },
+  };
+  const optional: AttackDamageRider = {
+    attackerId: goblinId,
+    procedureRef: battleProcedureExecutionRefForTest(
+      "stat-block-optional-rider",
+    ),
+    optional: true,
+    damage: { dice: 1, dieSize: 4, damageType: "fire" },
+  };
+
+  expect(selectedAttackDamageRiders([mandatory, optional], undefined)).toEqual([
+    mandatory,
+  ]);
+  expect(selectedAttackDamageRiders([mandatory, optional], [])).toEqual([
+    mandatory,
+  ]);
+  expect(
+    selectedAttackDamageRiders([mandatory, optional], [optional.procedureRef]),
+  ).toEqual([mandatory, optional]);
+  expect(
+    selectedAttackDamageRiders(
+      [mandatory, optional],
+      [optional.procedureRef, optional.procedureRef],
+    ),
+  ).toBeNull();
+  expect(
+    selectedAttackDamageRiders(
+      [mandatory, optional],
+      [battleProcedureExecutionRefForTest("stat-block-unknown-rider")],
+    ),
+  ).toBeNull();
+});
+
+test("Frenzy damage-type selection exposes automatic, choice, and invalid outcomes", () => {
+  expect(
+    frenzyDamageTypeSelection({
+      authoredDamageTypes: ["bludgeoning", "bludgeoning"],
+      selectedDamageType: undefined,
+    }),
+  ).toEqual({ tag: "automatic", damageType: "bludgeoning" });
+  expect(
+    frenzyDamageTypeSelection({
+      authoredDamageTypes: ["bludgeoning"],
+      selectedDamageType: "fire",
+    }),
+  ).toEqual({ tag: "invalid", reason: "selectionForAutomaticType" });
+  expect(
+    frenzyDamageTypeSelection({
+      authoredDamageTypes: ["bludgeoning", "fire", "piercing"],
+      selectedDamageType: undefined,
+    }),
+  ).toEqual({
+    tag: "decisionRequired",
+    choices: ["bludgeoning", "fire", "piercing"],
+  });
+  expect(
+    frenzyDamageTypeSelection({
+      authoredDamageTypes: ["bludgeoning", "fire"],
+      selectedDamageType: "fire",
+    }),
+  ).toEqual({ tag: "selected", damageType: "fire" });
+  expect(
+    frenzyDamageTypeSelection({
+      authoredDamageTypes: ["bludgeoning", "fire"],
+      selectedDamageType: "cold",
+    }),
+  ).toEqual({ tag: "invalid", reason: "outsideOfferedTypes" });
 });
 
 function discoveredMultiattackSubject(state: BattleState): BattleSubject {
