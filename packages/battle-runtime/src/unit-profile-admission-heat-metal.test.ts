@@ -226,7 +226,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     }
   });
 
-  test("initial cast damages creatures in physical contact and starts the durable object effect", () => {
+  test("initial cast damages contacts, starts the object effect, and rejects slot replay", () => {
     const spell = spellRecord(heatMetalUnitId);
     const objectId = battleObjectId("heat-metal-chain");
     const session = spellBattle({
@@ -369,7 +369,12 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
           damageRollFillWithGroups(damageHole, [[3, 4]]),
         ],
       }),
-    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Action-time spell act no longer has its required runtime spell resource.",
+    });
   });
 
   test("initial self-contact damage can break the newly started concentration", () => {

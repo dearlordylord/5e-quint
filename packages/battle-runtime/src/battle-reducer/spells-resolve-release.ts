@@ -275,30 +275,30 @@ export function resolveDancingLightsRepositionSpellAct(input: {
     );
   }
   /* v8 ignore stop */
+  const activeEffect = input.input.state.combatants
+    .get(input.actorId)
+    ?.activeEffects.find(
+      (
+        candidate,
+      ): candidate is Extract<
+        BattleActiveEffect,
+        { readonly kind: "dancingLights" }
+      > =>
+        candidate.kind === "dancingLights" &&
+        candidate.effectRef === input.invocation.activeEffectRef &&
+        candidate.sourceProcedureRef ===
+          input.invocation.sourceDancingLightsProcedureRef &&
+        candidate.sourceCombatantId === input.actorId,
+    );
+  if (activeEffect === undefined) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Dancing Lights movement requires active lights from this spell.",
+    );
+  }
   const placement = input.fillSet.dancingLightsPlacement?.value;
   if (placement === undefined) {
-    const activeEffect = input.input.state.combatants
-      .get(input.actorId)
-      ?.activeEffects.find(
-        (
-          candidate,
-        ): candidate is Extract<
-          BattleActiveEffect,
-          { readonly kind: "dancingLights" }
-        > =>
-          candidate.kind === "dancingLights" &&
-          candidate.effectRef === input.invocation.activeEffectRef &&
-          candidate.sourceProcedureRef ===
-            input.invocation.sourceDancingLightsProcedureRef &&
-          candidate.sourceCombatantId === input.actorId,
-      );
-    if (activeEffect === undefined) {
-      return invalidResult(
-        input.input.state,
-        "staleSubject",
-        "Dancing Lights movement requires active lights from this spell.",
-      );
-    }
     return needsHolesResult(input.input.state, input.input.subject, [
       spellDancingLightsPlacementHole(
         input.invocation,
@@ -308,9 +308,8 @@ export function resolveDancingLightsRepositionSpellAct(input: {
     ]);
   }
   const placementPlan = dancingLightsRepositionPlacementPlan(
-    input.input.state,
-    input.actorId,
     input.invocation,
+    activeEffect,
     placement,
   );
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -403,37 +402,16 @@ function dancingLightsCastPlacementPlan(
 }
 
 function dancingLightsRepositionPlacementPlan(
-  state: BattleState,
-  actorId: CombatantId,
   invocation: Extract<
     BattleExecutableSpellInvocation,
     { readonly procedure: "dancingLightsReposition" }
   >,
+  effect: Extract<BattleActiveEffect, { readonly kind: "dancingLights" }>,
   placement: BattleDancingLightsPlacementValue,
 ): Either.Either<DancingLightsRepositionPlan, string> {
   if (placement.mode !== "reposition") {
     return Either.left(
       "Dancing Lights movement requires reposition placement.",
-    );
-  }
-  const effect = state.combatants
-    .get(actorId)
-    ?.activeEffects.find(
-      (
-        candidate,
-      ): candidate is Extract<
-        BattleActiveEffect,
-        { readonly kind: "dancingLights" }
-      > =>
-        candidate.kind === "dancingLights" &&
-        candidate.effectRef === invocation.activeEffectRef &&
-        candidate.sourceProcedureRef ===
-          invocation.sourceDancingLightsProcedureRef &&
-        candidate.sourceCombatantId === actorId,
-    );
-  if (effect === undefined) {
-    return Either.left(
-      "Dancing Lights movement requires active lights from this spell.",
     );
   }
   if (placement.form !== effect.form) {

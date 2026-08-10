@@ -1051,9 +1051,16 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
             lights: [
               {
                 positionId: battleTablePositionId(
-                  "dancing-lights-form-mismatch",
+                  "dancing-lights-form-mismatch-a",
                 ),
                 distanceFromCasterFeet: movementFeet(30),
+                nearestSiblingDistanceFeet: movementFeet(10),
+              },
+              {
+                positionId: battleTablePositionId(
+                  "dancing-lights-form-mismatch-b",
+                ),
+                distanceFromCasterFeet: movementFeet(35),
                 nearestSiblingDistanceFeet: movementFeet(10),
               },
             ],
@@ -1080,15 +1087,19 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       throw new Error("Expected Dancing Lights reposition placement.");
     }
     const moveHole = requireHole(moveFrontier.holes, "dancingLightsPlacement");
-    const lightId = cast.snapshot.lightEmitters.flatMap((emitter) =>
-      emitter.kind === "spellLightEmitter" &&
-      emitter.attachment.kind === "dancingLight"
-        ? [emitter.attachment.lightId]
-        : [],
-    )[0];
-    if (lightId === undefined) {
+    const lightEmitter = cast.snapshot.lightEmitters.find(
+      (emitter) =>
+        emitter.kind === "spellLightEmitter" &&
+        emitter.attachment.kind === "dancingLight",
+    );
+    if (
+      lightEmitter === undefined ||
+      lightEmitter.kind !== "spellLightEmitter" ||
+      lightEmitter.attachment.kind !== "dancingLight"
+    ) {
       throw new Error("Expected a Dancing Lights light identity.");
     }
+    const lightId = lightEmitter.attachment.lightId;
     const validMovePlacement = {
       kind: "dancingLightsPlacement",
       holeId: moveHole.holeId,
@@ -1135,15 +1146,31 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
       reason: "invalidFill",
       message: "Dancing Lights movement requires reposition placement.",
     });
+    const inactiveLightsState = breakBattleConcentration(
+      cast.state,
+      spellCasterId,
+    );
     expect(
       resolveBattleSubject({
-        state: breakBattleConcentration(cast.state, spellCasterId),
+        state: inactiveLightsState,
+        subject: moveAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Dancing Lights movement requires active lights from this spell.",
+    });
+    expect(
+      resolveBattleSubject({
+        state: inactiveLightsState,
         subject: moveAct.subject,
         fills: [validMovePlacement],
       }),
     ).toMatchObject({
       tag: "invalid",
-      reason: "invalidFill",
+      reason: "staleSubject",
       message:
         "Dancing Lights movement requires active lights from this spell.",
     });

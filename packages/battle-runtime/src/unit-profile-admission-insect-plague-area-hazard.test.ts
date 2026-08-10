@@ -202,7 +202,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     );
   });
 
-  test("cast records the active hazard and projects Lightly Obscured and Difficult Terrain facts", () => {
+  test("cast projects its obscured difficult-terrain hazard and rejects replay after slot spend", () => {
     const { act, cast, session, targetTurn } = castInsectPlague();
 
     expect(requireCombatant(cast, spellCasterId)).toMatchObject({
@@ -254,7 +254,12 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
           ),
         ],
       }),
-    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Action-time spell act no longer has its required runtime spell resource.",
+    });
 
     const moveSubject: BattleSubject = {
       tag: "runtimeCommand",

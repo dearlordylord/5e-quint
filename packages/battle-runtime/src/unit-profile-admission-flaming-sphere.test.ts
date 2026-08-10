@@ -121,7 +121,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     );
   });
 
-  test("cast records the source-owned sphere hazard", () => {
+  test("cast records the source-owned sphere hazard and rejects replay after slot spend", () => {
     const spell = spellRecord(flamingSphereUnitId);
     const session = spellBattle({
       preparedSpells: [spell],
@@ -171,7 +171,12 @@ describe("L12G deterministic Flaming Sphere admission", () => {
         subject: act.subject,
         fills: [flamingSphereAreaFill(area)],
       }),
-    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Action-time spell act no longer has its required runtime spell resource.",
+    });
   });
 
   test("end-within-5-feet save applies failed-save fire damage before ending the turn", () => {

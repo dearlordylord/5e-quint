@@ -180,7 +180,7 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     );
   });
 
-  test("cast records the active hazard and projects a Heavily Obscured sphere", () => {
+  test("cast projects a Heavily Obscured hazard and rejects replay after slot spend", () => {
     const { act, cast, session } = castCloudkill();
 
     expect(requireCombatant(cast, spellCasterId)).toMatchObject({
@@ -230,7 +230,12 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
           cloudkillAreaFill(requireHole(act.initialHoles, "spellAreaChoice")),
         ],
       }),
-    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Action-time spell act no longer has its required runtime spell resource.",
+    });
   });
 
   test("appearance save applies full or half Poison damage through the active hazard", () => {

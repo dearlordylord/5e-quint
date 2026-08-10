@@ -25,6 +25,7 @@ import {
   type BattleSpellAreaOriginAnchor,
   type BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
+import type { BattleObjectInvisibleRevealLightEmitter } from "./battle-state-execution.ts";
 import {
   battleAreaId,
   battleId,
@@ -399,19 +400,19 @@ describe("battle runtime: Darkness", () => {
   test("Darkness ignores non-tracked light emitters and rejects stale slot resources", () => {
     const session = darknessBattle("battle-darkness-untracked-light");
     const nonTrackedEmitter = {
-      kind: "objectInvisibleRevealLightEmitter" as const,
+      kind: "objectInvisibleRevealLightEmitter",
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "darkness-untracked-emitter",
       ),
       sourceCombatantId: wizardId,
       objectId: battleObjectId("darkness-untracked-object"),
-      emission: { kind: "dim" as const, radiusFeet: movementFeet(5) },
+      emission: { kind: "dim", radiusFeet: movementFeet(5) },
       expiresAt: {
-        kind: "endOfTurn" as const,
+        kind: "endOfTurn",
         combatantId: wizardId,
         round: Round(1),
       },
-    };
+    } satisfies BattleObjectInvisibleRevealLightEmitter;
     const state: BattleState = {
       ...session.state,
       lightEmitters: [nonTrackedEmitter],
@@ -443,7 +444,12 @@ describe("battle runtime: Darkness", () => {
         subject,
         fills: [areaFill],
       }),
-    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Action-time spell act no longer has its required runtime spell resource.",
+    });
   });
 });
 
