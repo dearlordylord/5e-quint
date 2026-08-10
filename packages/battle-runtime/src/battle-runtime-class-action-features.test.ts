@@ -95,6 +95,7 @@ import { activeFeatureSpellSaveDcRouteEvents } from "./battle-reducer/active-fea
 import {
   eligibleAttackDamageRiders,
   frenzyDamageTypeDecision,
+  frenzyDamageTypeSelection,
 } from "./battle-reducer/statblock-attacks.ts";
 import { creatureNamedAttackRollIsSupported } from "./statblock-action-support.ts";
 import type {
@@ -2528,6 +2529,42 @@ describe("battle runtime: class action features", () => {
     expect(
       barbarianTurn.combatants.get(fighterId)?.activeOngoingFeatureOccurrences,
     ).toEqual(new Map());
+  });
+
+  test("Frenzy damage-type selection exposes automatic, choice, and invalid outcomes", () => {
+    expect(
+      frenzyDamageTypeSelection({
+        authoredDamageTypes: ["bludgeoning", "bludgeoning"],
+        selectedDamageType: undefined,
+      }),
+    ).toEqual({ tag: "automatic", damageType: "bludgeoning" });
+    expect(
+      frenzyDamageTypeSelection({
+        authoredDamageTypes: ["bludgeoning"],
+        selectedDamageType: "fire",
+      }),
+    ).toEqual({ tag: "invalid", reason: "selectionForAutomaticType" });
+    expect(
+      frenzyDamageTypeSelection({
+        authoredDamageTypes: ["bludgeoning", "fire", "piercing"],
+        selectedDamageType: undefined,
+      }),
+    ).toEqual({
+      tag: "decisionRequired",
+      choices: ["bludgeoning", "fire", "piercing"],
+    });
+    expect(
+      frenzyDamageTypeSelection({
+        authoredDamageTypes: ["bludgeoning", "fire"],
+        selectedDamageType: "fire",
+      }),
+    ).toEqual({ tag: "selected", damageType: "fire" });
+    expect(
+      frenzyDamageTypeSelection({
+        authoredDamageTypes: ["bludgeoning", "fire"],
+        selectedDamageType: "cold",
+      }),
+    ).toEqual({ tag: "invalid", reason: "outsideOfferedTypes" });
   });
 
   test("Frenzy applies mandatory Rage Damage dice to the first Reckless Strength hit", () => {

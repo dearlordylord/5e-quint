@@ -38,7 +38,9 @@ import {
   unitLibrary,
   battleId,
   defaultArmorClassState,
+  DieRollResult,
   discoverBattleActs,
+  goblinTurnBattle,
   resolveBattleSubject,
   snapshotBattle,
 } from "./battle-runtime.test-support.ts";
@@ -46,9 +48,132 @@ import type {
   BattleState,
   BattleSubject,
 } from "./battle-runtime.test-support.ts";
+import type { AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
+import type { AttackDamageRider } from "./battle-state-execution.ts";
+import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import {
+  attackDamageComponents,
+  attackPotentialDamageTypes,
+  selectedAttackDamageRiders,
+  weaponDamageComponent,
+} from "./battle-reducer/statblock-attacks.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: attack rolls and damage", () => {
+  test("attack damage projections preserve Stat Block critical, advantage, and character branches", () => {
+    const state = goblinTurnBattle();
+    const goblin = state.combatants.get(goblinId);
+    if (goblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Goblin Warrior Stat Block actor.");
+    }
+    const statBlockOptions = statBlockAttackActionOptions(
+      goblin.origin.execution,
+    );
+    const scimitar = statBlockOptions.find(
+      (option) =>
+        option.attack.attackType === "melee" &&
+        option.damageNotation === "rolled",
+    );
+    const scimitarStatic = statBlockOptions.find(
+      (option) =>
+        option.attack.attackType === "melee" &&
+        option.damageNotation === "static",
+    );
+    if (scimitar === undefined || scimitarStatic === undefined) {
+      throw new Error("Expected rolled and static Scimitar options.");
+    }
+
+    const ordinaryRoll: AttackRollResult = {
+      total: 14,
+      naturalD20: DieRollResult(10),
+    };
+    const advantageRoll: AttackRollResult = {
+      total: 14,
+      naturalD20: DieRollResult(10),
+      rollMode: "advantage",
+    };
+    const criticalAdvantageRoll: AttackRollResult = {
+      total: 24,
+      naturalD20: DieRollResult(20),
+      rollMode: "advantage",
+    };
+
+    expect(attackDamageComponents(scimitar, false, ordinaryRoll)).toEqual([
+      { expr: { dice: 1, dieSize: 6, flat: 2 }, damageType: "slashing" },
+    ]);
+    expect(
+      attackDamageComponents(scimitar, true, criticalAdvantageRoll),
+    ).toEqual([
+      { expr: { dice: 2, dieSize: 6, flat: 2 }, damageType: "slashing" },
+      { expr: { dice: 2, dieSize: 4 }, damageType: "slashing" },
+    ]);
+    expect(
+      attackPotentialDamageTypes(scimitar, false, advantageRoll, []),
+    ).toEqual(["slashing"]);
+    expect(attackDamageComponents(scimitarStatic, false, ordinaryRoll)).toEqual(
+      [],
+    );
+    expect(
+      attackDamageComponents(scimitarStatic, false, advantageRoll),
+    ).toEqual([]);
+
+    const fighter = state.combatants.get(fighterId);
+    if (
+      fighter?.origin.kind !== "character" ||
+      fighter.origin.attack === null
+    ) {
+      throw new Error("Expected a character weapon attack.");
+    }
+    expect(
+      attackDamageComponents(fighter.origin.attack, false, ordinaryRoll),
+    ).toEqual([{ expr: { dice: 1, dieSize: 8 }, damageType: "slashing" }]);
+    expect(weaponDamageComponent(fighter.origin.attack, true)).toEqual({
+      expr: { dice: 2, dieSize: 8 },
+      damageType: "slashing",
+    });
+    expect(weaponDamageComponent(scimitar, false)).toBeNull();
+  });
+
+  test("attack rider selection keeps mandatory riders and rejects contradictory choices", () => {
+    const mandatory: AttackDamageRider = {
+      attackerId: goblinId,
+      procedureRef: battleProcedureExecutionRefForTest("mandatory-rider"),
+      optional: false,
+      damage: { dice: 1, dieSize: 6, damageType: "slashing" },
+    };
+    const optional: AttackDamageRider = {
+      attackerId: goblinId,
+      procedureRef: battleProcedureExecutionRefForTest("optional-rider"),
+      optional: true,
+      damage: { dice: 1, dieSize: 4, damageType: "fire" },
+    };
+
+    expect(
+      selectedAttackDamageRiders([mandatory, optional], undefined),
+    ).toEqual([mandatory]);
+    expect(selectedAttackDamageRiders([mandatory, optional], [])).toEqual([
+      mandatory,
+    ]);
+    expect(
+      selectedAttackDamageRiders(
+        [mandatory, optional],
+        [optional.procedureRef],
+      ),
+    ).toEqual([mandatory, optional]);
+    expect(
+      selectedAttackDamageRiders(
+        [mandatory, optional],
+        [optional.procedureRef, optional.procedureRef],
+      ),
+    ).toBeNull();
+    expect(
+      selectedAttackDamageRiders(
+        [mandatory, optional],
+        [battleProcedureExecutionRefForTest("unknown-rider")],
+      ),
+    ).toBeNull();
+  });
+
   test("attack miss spends the action without asking for weapon damage", () => {
     const state = fighterVsGoblinBattle();
     const subject = fighterAttackSubject(state, "Longsword");
