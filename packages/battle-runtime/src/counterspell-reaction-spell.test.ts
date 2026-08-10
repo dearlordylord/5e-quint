@@ -807,25 +807,28 @@ describe("Counterspell Reaction spell", () => {
       ...castSubject,
       mode: { tag: "ready" as const, trigger: "spellCast" as const },
     };
-    expect(
-      resolveBattleSubject({
-        state: session.state,
-        subject: readySubject,
-        fills: [
-          spellCastReactionFactsFill([
-            counterspellTriggerFact({
-              session,
-              reactorId: counterspellerId,
-              casterId,
-            }),
-          ]),
-        ],
-      }),
-    ).toMatchObject({
+    const awaitingReaction = resolveBattleSubject({
+      state: session.state,
+      subject: readySubject,
+      fills: [
+        spellCastReactionFactsFill([
+          counterspellTriggerFact({
+            session,
+            reactorId: counterspellerId,
+            casterId,
+          }),
+        ]),
+      ],
+    });
+    expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
       snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Counterspell to interrupt readied Mind Spike.");
+    }
+    requireCounterspellChoice(awaitingReaction, counterspellerId, 3, session);
   });
 
   test("opens Counterspell for a spell-created held object cast", () => {
@@ -1048,6 +1051,10 @@ describe("Counterspell Reaction spell", () => {
       holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
       snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Counterspell to interrupt Heat Metal.");
+    }
+    requireCounterspellChoice(awaitingReaction, counterspellerId, 3, session);
   });
 });
 

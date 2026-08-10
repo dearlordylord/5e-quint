@@ -1302,7 +1302,15 @@ describe("battle runtime: Concentration and readied spells", () => {
       expect.arrayContaining([
         expect.objectContaining({
           kind: "spellConditionCountedEndTurnSave",
+          sourceCombatantId: wizardId,
           condition: "poisoned",
+          save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
+          successes: 0,
+          failures: 0,
+          successThreshold: 3,
+          failureThreshold: 3,
+          savingThrowDisadvantageAbility: "wis",
+          lockedIn: false,
         }),
       ]),
     );
