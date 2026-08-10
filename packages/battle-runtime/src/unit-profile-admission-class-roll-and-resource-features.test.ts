@@ -363,6 +363,62 @@ describe("QMBT7 deterministic Unit profile admission", () => {
     );
   });
 
+  test("ongoing feature admission requires its owning class level", () => {
+    const unit = unitLibrary.requireUnit(barbarianRecklessAttackUnitId);
+
+    expect(parseSupportedUnitFeatureProfile(unit, [])).toBeNull();
+  });
+
+  test("ongoing feature admission rejects a class level below acquisition", () => {
+    const unit = unitLibrary.requireUnit(barbarianRecklessAttackUnitId);
+
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
+        { className: "barbarian", level: classLevel(1) },
+      ]),
+    ).toBeNull();
+  });
+
+  test("ongoing feature admission rejects area-scoped effects in a self phase", () => {
+    const unit = unitLibrary.requireUnit(barbarianRecklessAttackUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "activation"
+    ) {
+      throw new Error("Expected Reckless Attack activation mechanics.");
+    }
+    const [phase] = unit.mechanics.phases;
+    if (phase?.kind !== "direct" || phase.effects === undefined) {
+      throw new Error("Expected Reckless Attack direct effects.");
+    }
+    const syntheticUnit = unitMechanicsVariant(unit, {
+      id: "synthetic_reckless_area_scoped_effect",
+      mechanics: {
+        ...unit.mechanics,
+        phases: [
+          {
+            ...phase,
+            effects: [
+              ...phase.effects,
+              {
+                kind: "push_unsecured_objects",
+                objectLocation: "entirely_within_area",
+                originDirection: "away_from_caster",
+                distanceFeet: 10,
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    expect(
+      parseSupportedUnitFeatureProfile(syntheticUnit, [
+        { className: "barbarian", level: classLevel(2) },
+      ]),
+    ).toBeNull();
+  });
+
   test("ongoing feature admission rejects an unsupported turn-boundary armor end", () => {
     const unit = unitLibrary.requireUnit(barbarianRecklessAttackUnitId);
     if (

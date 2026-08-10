@@ -7929,25 +7929,26 @@ function parseOngoingFeatureUnitFeatureProfile(
     return null;
   }
   /* v8 ignore stop */
+  const classLevel = findCharacterClassLevel(classLevels, unit.className);
+  if (classLevel === undefined || classLevel < unit.acquiredAtLevel) {
+    return null;
+  }
   const effects = phase.effects.flatMap((effect): readonly EffectAtom[] =>
     isEffectAtom(effect) ? [effect] : [],
   );
+  if (effects.length !== phase.effects.length) {
+    return null;
+  }
   const parsedEffects =
-    effects.length === phase.effects.length
-      ? (parseOngoingFeatureEffects(effects, classLevels, unit) ??
-        parseSpellBenefitActivationProjectionEffects(phase.effects))
-      : parseSpellBenefitActivationProjectionEffects(phase.effects);
+    parseOngoingFeatureEffects(effects, classLevel) ??
+    parseSpellBenefitActivationProjectionEffects(effects);
   /* v8 ignore start -- Unsupported structured input: neither the ongoing-effect parser nor the spell-benefit activation parser admitted this effect list. */
   if (parsedEffects === null) {
     return null;
   }
   /* v8 ignore stop */
   const override = mechanics.ongoingFeature.levelOverrides
-    ?.filter(
-      (candidate) =>
-        classLevelForClass(classLevels, unit.className) >=
-        candidate.atClassLevel,
-    )
+    ?.filter((candidate) => classLevel >= candidate.atClassLevel)
     .at(-1);
   const support = mechanics.ongoingFeature;
   const lifecycle = override?.lifecycle ?? support.lifecycle;
@@ -8343,16 +8344,6 @@ export function requireCharacterClassLevel(
   return classLevel;
 }
 
-function classLevelForClass(
-  classLevels: readonly CharacterBattleClassLevel[],
-  className: ClassName,
-): number {
-  return Number(
-    classLevels.find((candidate) => candidate.className === className)?.level ??
-      0,
-  );
-}
-
 type OngoingFeatureActivationMechanics = Extract<
   ActivatedAbilityMechanics,
   { readonly ongoingFeature: { readonly activationTiming: string } }
@@ -8376,9 +8367,7 @@ function parseOngoingFeatureLifecycle(
         ? null
         : {
             kind: "turnBoundary" as const,
-            initialExpiration: parseOngoingFeatureInitialExpiration(
-              turnBoundary.initialExpiration,
-            ),
+            initialExpiration: "startOfNextTurn" as const,
             earlyEndConditions,
             earlyEndArmorCategories,
             extensionTriggers: [] as const,
@@ -8443,13 +8432,6 @@ function parseOngoingFeatureLifecycle(
   );
 }
 
-function parseOngoingFeatureInitialExpiration(
-  expiration: "start_of_next_turn" | "end_of_next_turn",
-): "startOfNextTurn" | "endOfNextTurn" {
-  if (expiration === "start_of_next_turn") return "startOfNextTurn";
-  return "endOfNextTurn";
-}
-
 function parseOngoingFeatureExtensionTrigger(
   trigger: "attack_roll_against_enemy" | "bonus_action" | "enemy_saving_throw",
 ): "attackRollAgainstEnemy" | "bonusAction" | "enemySavingThrow" {
@@ -8496,8 +8478,7 @@ function durationToRounds(duration: {
 
 function parseOngoingFeatureEffects(
   effects: readonly EffectAtom[],
-  classLevels: readonly CharacterBattleClassLevel[],
-  unit: Extract<AuthoredUnitSource, { readonly kind: "class_feature" }>,
+  classLevel: ClassLevel,
 ): Pick<
   Extract<SupportedUnitFeatureProfile, { readonly kind: "ongoingFeature" }>,
   "rollModifiers" | "spellModifiers" | "damageModifiers" | "resistances"
@@ -8574,10 +8555,7 @@ function parseOngoingFeatureEffects(
         return null;
       }
       /* v8 ignore stop */
-      const amount = numericDeltaForClassLevel(
-        effect.delta,
-        classLevelForClass(classLevels, unit.className),
-      );
+      const amount = numericDeltaForClassLevel(effect.delta, classLevel);
       /* v8 ignore start -- Unsupported structured input: numericDeltaForClassLevel admits only the fixed-number and class-threshold shapes projected by this profile. */
       if (amount === null) {
         return null;
@@ -8603,7 +8581,7 @@ function parseOngoingFeatureEffects(
 }
 
 function parseSpellBenefitActivationProjectionEffects(
-  effects: readonly { readonly kind: string }[],
+  effects: readonly EffectAtom[],
 ): Pick<
   Extract<SupportedUnitFeatureProfile, { readonly kind: "ongoingFeature" }>,
   "rollModifiers" | "spellModifiers" | "damageModifiers" | "resistances"
@@ -8769,28 +8747,13 @@ function isClassName(value: string): value is ClassName {
 }
 
 function numericDeltaForClassLevel(
-  delta: {
-    readonly kind: string;
-    readonly amount?: number;
-    readonly axis?: string;
-    readonly base?: number;
-    readonly tiers?: readonly {
-      readonly atLevel: number;
-      readonly value: number;
-    }[];
-    readonly sign?: string;
-  },
-  classLevel: number,
+  delta: DiceDelta,
+  classLevel: ClassLevel,
 ): number | null {
-  if (delta.kind === "fixed_number" && delta.amount !== undefined) {
+  if (delta.kind === "fixed_number") {
     return delta.sign === "-" ? -delta.amount : delta.amount;
   }
-  if (
-    delta.kind === "threshold_tiers" &&
-    delta.axis === "class" &&
-    delta.base !== undefined &&
-    delta.tiers !== undefined
-  ) {
+  if (delta.kind === "threshold_tiers" && delta.axis === "class") {
     const value = delta.tiers.reduce(
       (current, tier) => (classLevel >= tier.atLevel ? tier.value : current),
       delta.base,
