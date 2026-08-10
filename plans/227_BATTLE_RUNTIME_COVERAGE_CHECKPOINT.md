@@ -31,22 +31,22 @@ totals, and comparison below are the self-contained durable evidence.
 ## Current authoritative diagnostic
 
 - Date: 2026-08-09
-- Git HEAD: `bb023036e05d602b48e143d944a2b23e481892c2`
+- Git HEAD: `edac64ff3282176a8176c6bf6b5ec724402f7734`
 - Command: `pnpm coverage`
 - Result: exit 0; all workspace coverage packages complete and green
-- Total wall duration: approximately 309 seconds
-- Battle-runtime tests: 204/204 files passed; 2,178 tests passed and 53
-  skipped (2,231 total)
+- Total wall duration: approximately 302 seconds
+- Battle-runtime tests: 205/205 files passed; 2,185 tests passed and 53
+  skipped (2,238 total)
 
-| Metric     |                `27e6c76f5` |                `7c1e26306` |                `bb023036e` | `7c1` -> `bb0` covered / total |    Uncovered change |   Delta |
-| ---------- | -------------------------: | -------------------------: | -------------------------: | -----------------------------: | ------------------: | ------: |
-| Statements | 120,487 / 124,878 (96.48%) | 120,483 / 124,868 (96.48%) | 120,462 / 124,843 (96.49%) |                      -21 / -25 | 4,385 -> 4,381 (-4) | +0.01pp |
-| Branches   |   30,035 / 32,192 (93.29%) |   30,027 / 32,181 (93.30%) |   30,035 / 32,184 (93.32%) |                          8 / 3 | 2,154 -> 2,149 (-5) | +0.02pp |
-| Functions  |       4,819 / 4,819 (100%) |       4,819 / 4,819 (100%) |       4,817 / 4,817 (100%) |                        -2 / -2 |              0 -> 0 |       0 |
-| Lines      | 120,487 / 124,878 (96.48%) | 120,483 / 124,868 (96.48%) | 120,462 / 124,843 (96.49%) |                      -21 / -25 | 4,385 -> 4,381 (-4) | +0.01pp |
+| Metric     |                `7c1e26306` |                `bb023036e` |                `edac64ff3` | `bb0` -> `eda` covered / total |     Uncovered change |   Delta |
+| ---------- | -------------------------: | -------------------------: | -------------------------: | -----------------------------: | -------------------: | ------: |
+| Statements | 120,483 / 124,868 (96.48%) | 120,462 / 124,843 (96.49%) | 120,493 / 124,843 (96.51%) |                         31 / 0 | 4,381 -> 4,350 (-31) | +0.02pp |
+| Branches   |   30,027 / 32,181 (93.30%) |   30,035 / 32,184 (93.32%) |   30,097 / 32,225 (93.39%) |                        62 / 41 | 2,149 -> 2,128 (-21) | +0.07pp |
+| Functions  |       4,819 / 4,819 (100%) |       4,817 / 4,817 (100%) |       4,817 / 4,817 (100%) |                          0 / 0 |               0 -> 0 |       0 |
+| Lines      | 120,483 / 124,868 (96.48%) | 120,462 / 124,843 (96.49%) | 120,493 / 124,843 (96.51%) |                         31 / 0 | 4,381 -> 4,350 (-31) | +0.02pp |
 
-The Vitest statement/line percentage rose to 96.49% and branches rose to
-93.32%; uncovered statements/lines fell by 4 and uncovered branches by 5.
+The Vitest statement/line percentage rose to 96.51% and branches rose to
+93.39%; uncovered statements/lines fell by 31 and uncovered branches by 21.
 These are measured deltas from the authoritative public run, not a forecast
 toward 99%. Denominator changes are shown explicitly because production code
 changed between checkpoints. The 93% branch ratchet and all other ratchets
@@ -61,22 +61,24 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 120,462 | 124,843 |                  123,595 |         3,133 |
-| Branches   |  30,035 |  32,184 |                   31,863 |         1,828 |
+| Statements | 120,493 | 124,843 |                  123,595 |         3,102 |
+| Branches   |  30,097 |  32,225 |                   31,903 |         1,806 |
 | Functions  |   4,817 |   4,817 |                    4,769 |             0 |
-| Lines      | 120,462 | 124,843 |                  123,595 |         3,133 |
+| Lines      | 120,493 | 124,843 |                  123,595 |         3,102 |
 
 ## Milestone context
 
-Since the prior authoritative checkpoint, `bb023036e` made the owning
-`ClassLevel` an explicit ongoing-feature admission fact, removed the numeric
-zero sentinel, threaded the admitted level through damage scaling and level
-overrides, rejected area-scoped atoms before self-effect projection, and
-removed an expiration alternative that the Surface schema cannot represent.
-Focused runtime tests, package typecheck, the mapped action-economy MBT lane,
-four Luna review rounds, and an independent root review all converged cleanly
-before the public run. The authoritative totals above confirm further numeric
-progress in both limiting metrics.
+Since the prior authoritative checkpoint, `4ce64a914` added seven focused
+session-level witnesses for the act-composition and presentation boundary:
+intrinsic and spell helpers, interrupt spell-owner projection, stale procedure
+joins, Monk unit presentation, intrinsic label variants, missing actors, and
+missing character context. Luna's review rejected an attempted ally-help escape
+witness because local RAW did not support it. Root review then replaced a
+non-null assertion with a compiler-visible guard and made the intentionally
+route-independent boundary scenarios explicit in `edac64ff3`. Package tests,
+typecheck, four Luna review rounds, and the repeated independent root review all
+converged cleanly before the public run. The authoritative totals above confirm
+the largest numeric improvement so far in both limiting metrics.
 
 Focused cohort uncovered counts remain regression and navigation evidence, not
 a forecast of the global public delta, because other public tests may already
@@ -86,8 +88,8 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting public metric at 93.32%, with a static 99% gap of
-1,828. Clone the public harness arguments for a fresh package-local diagnostic,
+Branches remain the limiting public metric at 93.39%, with a static 99% gap of
+1,806. Clone the public harness arguments for a fresh package-local diagnostic,
 select a different branch-heavy owner or cohesive subsystem from the completed
 save-gate, active-effect-ledger, and persistent-spatial campaigns, audit its
 uncovered alternatives for schema-impossible or duplicated logic, cover only
