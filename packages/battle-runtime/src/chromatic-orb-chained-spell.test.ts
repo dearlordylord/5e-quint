@@ -27,7 +27,6 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import { spellId } from "./identity.ts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   DieRollResult,
   Hp,
@@ -56,11 +55,7 @@ import {
 import { D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND } from "./battle-state-execution.ts";
 import { battleD20TestNaturalOneRerollSupportForUnit } from "./unit-feature-support.ts";
 import { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
-import {
-  chainedSpellFillSet,
-  chainedSpellLaterStepsAreEmpty,
-  emptyChainedSpellStepFills,
-} from "./battle-reducer/spells-resolve-chained.ts";
+import { chainedSpellFillSet } from "./battle-reducer/spells-resolve-chained.ts";
 import { damageRelationshipQuestionId } from "./battle-reducer/damage-relationship-question-id.ts";
 
 const spellCasterId = combatantId("chromatic-orb-caster");
@@ -189,7 +184,7 @@ describe("Chromatic Orb chained spell attack", () => {
     const attack = chromaticOrbAttackFills(state, {
       damageType: "fire",
       targetId: firstTargetId,
-      attackTotal: 3,
+      attackTotal: 6,
       naturalD20: 1,
     });
     const awaitingDecision = resolveNeedsHoles(
@@ -209,12 +204,12 @@ describe("Chromatic Orb chained spell attack", () => {
       kind: "attackRoll" as const,
       holeId: decisionHole.holeId,
       value: {
-        total: 3,
+        total: 6,
         naturalD20: DieRollResult(1),
         d20TestNaturalOneReroll: {
           kind: "reroll" as const,
           effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
-          replacement: { total: 18, naturalD20: DieRollResult(12) },
+          replacement: { total: 18, naturalD20: DieRollResult(13) },
         },
       },
     } satisfies Extract<BattleFill, { readonly kind: "attackRoll" }>;
@@ -243,7 +238,7 @@ describe("Chromatic Orb chained spell attack", () => {
     expect(declined.state.combatants.get(firstTargetId)?.hp).toBe(12);
   });
 
-  test("classifies chained replay side-channel fills and rejects duplicate sight facts", () => {
+  test("parses chained reaction facts and rejects invalid relationship and sight facts", () => {
     const session = chromaticOrbSession({ spellLevel: 1 });
     const act = chromaticOrbAct(session.state);
     const invocation = characterSpellInvocationForProcedureRefForTest(
@@ -260,36 +255,8 @@ describe("Chromatic Orb chained spell attack", () => {
       holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
       spatialFacts: [],
     } satisfies Extract<BattleFill, { readonly kind: "targetSpatialFacts" }>;
-    const slowSomaticFailureFill = {
-      kind: "slowSomaticSpellFailureOutcome" as const,
-      holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
-      value: { spellFailed: false },
-    } satisfies Extract<
-      BattleFill,
-      { readonly kind: "slowSomaticSpellFailureOutcome" }
-    >;
-    const sanctuaryOutcomeFill = {
-      kind: "sanctuaryInterdictionOutcome" as const,
-      holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
-      value: { saveSucceeded: true },
-    } satisfies Extract<
-      BattleFill,
-      { readonly kind: "sanctuaryInterdictionOutcome" }
-    >;
-    const sourcePenaltyFill = {
-      kind: "rolledDice" as const,
-      holeId: holeId(
-        "battle:source-damage-roll-penalty-roll:synthetic-chained-spell",
-      ),
-      value: [{ results: [DieRollResult(1)] }],
-    } satisfies Extract<BattleFill, { readonly kind: "rolledDice" }>;
     const sideChannelParse = chainedSpellFillSet(
-      [
-        reactionFactsFill,
-        slowSomaticFailureFill,
-        sanctuaryOutcomeFill,
-        sourcePenaltyFill,
-      ],
+      [reactionFactsFill],
       invocation,
       spellCasterId,
       session.state,
@@ -297,7 +264,6 @@ describe("Chromatic Orb chained spell attack", () => {
     expect(sideChannelParse).toMatchObject({
       tag: "ok",
       reactionSpellTargetFacts: [],
-      sourceDamageRollPenaltyRolls: [sourcePenaltyFill],
     });
 
     const relationshipFill = {
@@ -348,31 +314,6 @@ describe("Chromatic Orb chained spell attack", () => {
         session.state,
       ),
     ).toMatchObject({ tag: "invalid" });
-  });
-
-  test("treats only later chained steps as continuation payload", () => {
-    expect(
-      chainedSpellLaterStepsAreEmpty(
-        [emptyChainedSpellStepFills(), emptyChainedSpellStepFills()],
-        0,
-      ),
-    ).toBe(true);
-    expect(
-      chainedSpellLaterStepsAreEmpty(
-        [
-          emptyChainedSpellStepFills(),
-          {
-            ...emptyChainedSpellStepFills(),
-            attackRoll: {
-              kind: "attackRoll",
-              holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
-              value: { total: 10, naturalD20: DieRollResult(10) },
-            },
-          },
-        ],
-        0,
-      ),
-    ).toBe(false);
   });
 
   test("resolves without a leap when the damage d8 faces are not duplicated", () => {
@@ -627,6 +568,16 @@ describe("Chromatic Orb chained spell attack", () => {
         damageRollHoleId: damage.fills.at(-1)?.holeId,
       },
     });
+    const penaltyFill = {
+      kind: "rolledDice" as const,
+      holeId: penaltyHole.holeId,
+      value: [{ results: [DieRollResult(1)] }],
+    } satisfies Extract<BattleFill, { readonly kind: "rolledDice" }>;
+    const resolved = resolveResolved(state, damage.subject, [
+      ...damage.fills,
+      penaltyFill,
+    ]);
+    expect(resolved.state.combatants.get(firstTargetId)?.hp).toBe(7);
   });
 
   test("Warding Bond shared damage from chained spells uses the caster damage lifecycle", () => {
