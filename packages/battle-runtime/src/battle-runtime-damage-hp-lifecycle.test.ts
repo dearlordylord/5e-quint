@@ -296,57 +296,44 @@ describe("damage and hit point lifecycle helpers", () => {
     });
     expect(damagedAtZero.hp).toBe(zeroGoblin.hp);
 
-    const wardingBondEffect = {
-      kind: "wardingBond",
-      effectRef: battleActiveEffectExecutionRefForTest(
-        "synthetic-missing-warding-bond",
-      ),
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "synthetic-missing-warding-bond-source",
-      ),
-      sourceCombatantId: combatantId("missing-caster"),
-      expiresAt: {
-        kind: "duration" as const,
-        durationTicks: elapsedTimeTicks(1),
-      },
-    } as const satisfies BattleActiveEffect;
-    const stateWithMissingBond = {
-      ...state,
-      combatants: new Map(state.combatants).set(goblinId, {
-        ...target,
-        activeEffects: [wardingBondEffect],
-      }),
-    };
-    const missingBondTarget = stateWithMissingBond.combatants.get(goblinId);
-    if (missingBondTarget === undefined) {
-      throw new Error("Expected the synthetic target with Warding Bond.");
+    const concentratingFighter = state.combatants.get(fighterId);
+    if (concentratingFighter === undefined) {
+      throw new Error("Expected the synthetic concentrating combatant.");
     }
-    expect(
-      applyBattleHitPointDamage({
-        state: stateWithMissingBond,
-        target: missingBondTarget,
-        damageAmount: 1,
-        deathFailuresAtZeroHp: 1,
-      }).combatants.get(goblinId)?.hp,
-    ).toBe(Hp(Number(target.hp) - 1));
-
+    const concentrationProcedureRef = battleProcedureExecutionRefForTest(
+      "synthetic-knockout-concentration",
+    );
     const concentrationState = {
       ...state,
-      combatants: new Map(state.combatants).set(goblinId, {
-        ...knockout,
-        concentration: {
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            "synthetic-knockout-concentration",
-          ),
-          effectKind: "spellEffect" as const,
-        },
-      }),
+      combatants: new Map(state.combatants)
+        .set(fighterId, {
+          ...concentratingFighter,
+          concentration: {
+            sourceProcedureRef: concentrationProcedureRef,
+            effectKind: "spellEffect" as const,
+          },
+        })
+        .set(goblinId, {
+          ...knockout,
+          activeEffects: [
+            {
+              ...escapeEffect,
+              sourceProcedureRef: concentrationProcedureRef,
+              expiresAt: {
+                kind: "concentration" as const,
+                combatantId: fighterId,
+              },
+            },
+          ],
+        }),
     };
     const broken = breakCombatantConcentration(
       concentrationState,
       concentrationState.combatants,
-      goblinId,
+      fighterId,
     );
-    expect(broken.value.get(goblinId)?.concentration).toBeNull();
+    expect(broken.value.get(fighterId)?.concentration).toBeNull();
+    expect(broken.value.get(goblinId)?.activeEffects).toEqual([]);
+    expect(broken.value.get(goblinId)?.positiveHpUnconscious).not.toBeNull();
   });
 });

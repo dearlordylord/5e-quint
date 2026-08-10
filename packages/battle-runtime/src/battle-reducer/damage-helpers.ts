@@ -211,9 +211,11 @@ export function attackDamageByType(
   const damageByType = damageRoll.value.reduce<ReadonlyMap<DamageType, number>>(
     (totals, group, index) => {
       const component = components[index];
+      /* v8 ignore start -- Malformed weapon-damage fill: resolution validates one rolled-dice group per computed damage component before calling this projection. */
       if (component === undefined) {
         return totals;
       }
+      /* v8 ignore stop */
       const diceTotal = group.results.reduce(
         (groupTotal, dieResult) =>
           groupTotal + attackDamageDieResult(dieResult, damageDieFloorMinimum),

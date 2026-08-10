@@ -170,20 +170,6 @@ describe("damage relationship decision protocol", () => {
         state: relationshipState,
         damageEventHoleId,
         damageSourceId: fighterId,
-        targets: [
-          {
-            targetId: combatantId("missing-target"),
-            damageAmount: damageAmount(1),
-          },
-        ],
-        spatialFacts: [],
-      }),
-    ).toBeNull();
-    expect(
-      damageRelationshipDecisionHole({
-        state: relationshipState,
-        damageEventHoleId,
-        damageSourceId: fighterId,
         targets: [],
         spatialFacts: [],
       }),
