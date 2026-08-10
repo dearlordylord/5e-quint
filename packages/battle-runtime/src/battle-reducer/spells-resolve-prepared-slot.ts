@@ -345,9 +345,11 @@ export function resolvePreparedSlotSpellAct(input: {
   const expectedSourcePenaltyHoles = targetAllocation.allocations.flatMap(
     (allocation, allocationIndex) => {
       const target = input.input.state.combatants.get(allocation.targetId);
+      /* v8 ignore start -- Validated allocation IDs come from the current combatant map; resolver state transitions replace combatant values without deleting keys. */
       if (target === undefined) {
         return [];
       }
+      /* v8 ignore stop */
       const damageByType = repeatedDamageAllocationSpellDamageByType(
         target,
         input.invocation,
@@ -386,9 +388,11 @@ export function resolvePreparedSlotSpellAct(input: {
     allocation,
   ] of targetAllocation.allocations.entries()) {
     const target = input.input.state.combatants.get(allocation.targetId);
+    /* v8 ignore start -- Validated allocation IDs come from the current combatant map; resolver state transitions replace combatant values without deleting keys. */
     if (target === undefined) {
       continue;
     }
+    /* v8 ignore stop */
     const damageByType = repeatedDamageAllocationSpellDamageByType(
       target,
       input.invocation,
@@ -439,9 +443,11 @@ export function resolvePreparedSlotSpellAct(input: {
   const allocationTargetDamageAmounts = targetAllocation.allocations.flatMap(
     (allocation, allocationIndex) => {
       const target = input.input.state.combatants.get(allocation.targetId);
+      /* v8 ignore start -- Validated allocation IDs come from the current combatant map; resolver state transitions replace combatant values without deleting keys. */
       if (target === undefined) {
         return [];
       }
+      /* v8 ignore stop */
       const damageAmount =
         damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
       return [{ target, damageAmount }];
@@ -522,9 +528,11 @@ export function resolvePreparedSlotSpellAct(input: {
   const hideousLaughterSaveChecks = targetAllocation.allocations.map(
     (allocation, allocationIndex) => {
       const target = input.input.state.combatants.get(allocation.targetId);
+      /* v8 ignore start -- Validated allocation IDs come from the current combatant map; resolver state transitions replace combatant values without deleting keys. */
       if (target === undefined) {
         return { tag: "ok" as const, holes: [] };
       }
+      /* v8 ignore stop */
       const damageAmount =
         damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
       const holes = damageLifecycleHideousLaughterDamageRepeatSaveHoles({
@@ -634,9 +642,11 @@ export function resolvePreparedSlotSpellAct(input: {
   const damaged = targetAllocation.allocations.reduce(
     (state, allocation, allocationIndex) => {
       const target = state.combatants.get(allocation.targetId);
+      /* v8 ignore start -- Validated allocation IDs remain map members while damage application replaces values in place. */
       if (target === undefined) {
         return state;
       }
+      /* v8 ignore stop */
       const damageAmount =
         damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
       const concentrationSave = concentrationSavingThrowHole(
@@ -745,9 +755,11 @@ export function resolvePreparedSlotSpellAct(input: {
     const afterDamageEvents = targetAllocation.allocations.flatMap(
       (allocation, allocationIndex): readonly BattleAfterDamageEvent[] => {
         const target = input.input.state.combatants.get(allocation.targetId);
+        /* v8 ignore start -- Validated allocation IDs come from the current combatant map and the after-damage projection reads that unchanged map. */
         if (target === undefined) {
           return [];
         }
+        /* v8 ignore stop */
         const damageAmount =
           damageAmountByAllocationIndex.get(allocationIndex) ?? 0;
         return [
@@ -817,11 +829,15 @@ function repeatedDamageAllocationSpellDamageByType(
     return new Map();
   }
   const group = damageRoll.value[allocationIndex];
-  const diceTotal =
-    group?.results.reduce(
-      (groupTotal, dieResult): number => groupTotal + Number(dieResult),
-      0,
-    ) ?? 0;
+  /* v8 ignore start -- validatePreparedSlotSpellDamageGroups proves one dense dice group per validated allocation entry before this helper is called. */
+  if (group === undefined) {
+    return new Map();
+  }
+  /* v8 ignore stop */
+  const diceTotal = group.results.reduce(
+    (groupTotal, dieResult): number => groupTotal + Number(dieResult),
+    0,
+  );
   const flat = (invocation.damage.expr.flat ?? 0) * repeatedEffectCount;
   return addDamageAmountForType(
     new Map(),
