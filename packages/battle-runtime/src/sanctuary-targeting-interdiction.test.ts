@@ -553,7 +553,6 @@ describe("Sanctuary targeting interdiction", () => {
     );
     const allocationFill = spellTargetAllocationFill(
       allocationHole,
-      magicMissileUnitId,
       wardedId,
       allocationHole.allocationCount,
     );
@@ -612,7 +611,6 @@ describe("Sanctuary targeting interdiction", () => {
     );
     const allocationFill = spellTargetAllocationFill(
       allocationHole,
-      magicMissileUnitId,
       wardedId,
       allocationHole.allocationCount,
     );
@@ -680,14 +678,10 @@ describe("Sanctuary targeting interdiction", () => {
       act.initialHoles,
       "spellTargetAllocation",
     );
-    const allocationFill = spellTargetAllocationFill(
-      allocationHole,
-      magicMissileUnitId,
-      [
-        { targetId: wardedId, count: 2 },
-        { targetId: attackerId, count: 1 },
-      ],
-    );
+    const allocationFill = spellTargetAllocationFill(allocationHole, [
+      { targetId: wardedId, count: 2 },
+      { targetId: attackerId, count: 1 },
+    ]);
     const originalTargetFact = allocationFill.spatialFacts.find(
       (fact) => fact.kind === "spellTarget" && fact.targetId === wardedId,
     );
@@ -764,7 +758,6 @@ describe("Sanctuary targeting interdiction", () => {
     );
     const allocationFill = spellTargetAllocationFill(
       allocationHole,
-      magicMissileUnitId,
       wardedId,
       allocationHole.allocationCount,
     );
@@ -1755,13 +1748,11 @@ function spellLeapTargetFill(
 
 function spellTargetAllocationFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>,
-  _spellId: string,
   targetId: CombatantId,
   count: number,
 ): Extract<BattleFill, { readonly kind: "spellTargetAllocation" }>;
 function spellTargetAllocationFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>,
-  _spellId: string,
   allocations: readonly {
     readonly targetId: CombatantId;
     readonly count: number;
@@ -1769,7 +1760,6 @@ function spellTargetAllocationFill(
 ): Extract<BattleFill, { readonly kind: "spellTargetAllocation" }>;
 function spellTargetAllocationFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetAllocation" }>,
-  _spellId: string,
   targetIdOrAllocations:
     | CombatantId
     | readonly { readonly targetId: CombatantId; readonly count: number }[],

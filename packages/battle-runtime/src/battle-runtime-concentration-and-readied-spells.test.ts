@@ -4,7 +4,9 @@ import type {
   BattleSubject,
 } from "./battle-runtime.test-support.ts";
 import type { BattleActiveEffect } from "./index.ts";
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { describe, expect, test } from "vitest";
+import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 import {
   attackDamageDispositionFill,
   armorClass,
@@ -780,7 +782,7 @@ describe("battle runtime: Concentration and readied spells", () => {
     });
   });
 
-  test("readied spell release threads source penalties and linked damage saves", () => {
+  test("readied spell release threads source penalties and damage repeat saves", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-readied-release-damage-lifecycle"),
       combatants: [
@@ -791,12 +793,33 @@ describe("battle runtime: Concentration and readied spells", () => {
           attack: null,
           spellcasting: wizardSpellcasting(),
         }),
+        characterSeed({
+          combatantId: secondWizardId,
+          displayName: "Second Wizard",
+          initiative: 5,
+          attack: null,
+          spellcasting: wizardSpellcasting(),
+        }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Penalty Caster",
+          initiative: 0,
+          attack: null,
+          spellcasting: wizardSpellcasting(),
+        }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
     const caster = session.state.combatants.get(wizardId);
+    const laughterCaster = session.state.combatants.get(secondWizardId);
+    const penaltyCaster = session.state.combatants.get(fighterId);
     const target = session.state.combatants.get(goblinId);
-    if (caster === undefined || target === undefined) {
+    if (
+      caster === undefined ||
+      laughterCaster === undefined ||
+      penaltyCaster === undefined ||
+      target === undefined
+    ) {
       throw new Error("Expected readied spell caster and target.");
     }
     const hideousLaughter = {
@@ -804,12 +827,12 @@ describe("battle runtime: Concentration and readied spells", () => {
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "synthetic_readied_release_hideous_laughter",
       ),
-      sourceCombatantId: wizardId,
+      sourceCombatantId: secondWizardId,
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,
       repeatSaveRollMode: null,
       save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-      expiresAt: { kind: "concentration", combatantId: wizardId },
+      expiresAt: { kind: "concentration", combatantId: secondWizardId },
     } satisfies Extract<
       BattleActiveEffect,
       { readonly kind: "hideousLaughter" }
@@ -819,9 +842,9 @@ describe("battle runtime: Concentration and readied spells", () => {
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "synthetic_readied_release_source_penalty",
       ),
-      sourceCombatantId: goblinId,
+      sourceCombatantId: fighterId,
       amount: { dice: 1, dieSize: 8 },
-      expiresAt: { kind: "concentration" as const, combatantId: goblinId },
+      expiresAt: { kind: "concentration" as const, combatantId: fighterId },
     } satisfies Extract<
       BattleActiveEffect,
       { readonly kind: "sourceDamageRollPenalty" }
@@ -833,14 +856,28 @@ describe("battle runtime: Concentration and readied spells", () => {
           ...caster,
           activeEffects: [...caster.activeEffects, sourceDamageRollPenalty],
         })
-        .set(goblinId, {
-          ...target,
+        .set(secondWizardId, {
+          ...laughterCaster,
           concentration: {
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              "synthetic_target_concentration",
-            ),
+            sourceProcedureRef: hideousLaughter.sourceProcedureRef,
             effectKind: "spellEffect",
           },
+        })
+        .set(fighterId, {
+          ...penaltyCaster,
+          concentration: {
+            sourceProcedureRef: sourceDamageRollPenalty.sourceProcedureRef,
+            effectKind: "spellEffect",
+          },
+        })
+        .set(goblinId, {
+          ...battleCreatureStateWithKnockOutPreservedConditions(
+            target,
+            applyCondition(
+              applyCondition(target.conditions, "prone"),
+              "incapacitated",
+            ),
+          ),
           activeEffects: [...target.activeEffects, hideousLaughter],
         }),
     };
@@ -913,19 +950,6 @@ describe("battle runtime: Concentration and readied spells", () => {
       "rolledDice",
     );
     const penaltyFillValue = damageRollFillWithGroups(penaltyHole, [[1]]);
-    const concentrationHole = requireHole(
-      resolveBattleSubject({
-        state: goblinTurn.state,
-        subject: releaseSubject,
-        fills: [
-          targetFillValue,
-          attackFillValue,
-          damageFillValue,
-          penaltyFillValue,
-        ],
-      }),
-      "concentrationSavingThrow",
-    );
     const laughterHole = requireHole(
       resolveBattleSubject({
         state: goblinTurn.state,
@@ -935,7 +959,6 @@ describe("battle runtime: Concentration and readied spells", () => {
           attackFillValue,
           damageFillValue,
           penaltyFillValue,
-          concentrationSavingThrowFill(concentrationHole, true),
         ],
       }),
       "savingThrowOutcome",
@@ -952,7 +975,6 @@ describe("battle runtime: Concentration and readied spells", () => {
           attackFillValue,
           damageFillValue,
           penaltyFillValue,
-          concentrationSavingThrowFill(concentrationHole, true),
           savingThrowOutcomeFill(laughterHole, [
             { targetId: goblinId, succeeded: true },
           ]),
@@ -961,9 +983,6 @@ describe("battle runtime: Concentration and readied spells", () => {
     );
 
     expect(released.state.combatants.get(goblinId)?.hp).toBe(7);
-    expect(
-      released.state.combatants.get(goblinId)?.concentration,
-    ).not.toBeNull();
     expect(
       released.state.combatants
         .get(goblinId)
