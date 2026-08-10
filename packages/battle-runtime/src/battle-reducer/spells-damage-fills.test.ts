@@ -24,10 +24,8 @@ import {
   characterSpellInvocationForProcedureRefForTest,
   slotAttackDamageSpell,
 } from "../battle-runtime.test-support.ts";
-import { battleObjectId } from "../unit-profile-admission.test-support.ts";
 import {
   spellDamageByTypeForTarget,
-  spellObjectDamageOutcomeFromDamageByType,
   spellDamageHole,
   applySpellDamage,
   saveDamageReplacementForInvocation,
@@ -283,36 +281,5 @@ describe("spell damage fill projections", () => {
         saveDamageInvocation,
       ),
     ).toBeNull();
-  });
-
-  test("uses the first damage type for object outcomes when the caller omits an explicit type", () => {
-    const damageByType = new Map<DamageType, number>([["fire", 7]]);
-    expect(
-      spellObjectDamageOutcomeFromDamageByType({
-        objectId: battleObjectId("damage-object"),
-        damageByType,
-        disposition: { kind: "tableResolved" },
-      }),
-    ).toEqual({
-      kind: "tableResolved",
-      objectId: "damage-object",
-      damageType: "fire",
-      rolledDamage: 7,
-    });
-  });
-
-  test("falls back to force for an empty object damage map without an explicit type", () => {
-    expect(
-      spellObjectDamageOutcomeFromDamageByType({
-        objectId: battleObjectId("empty-damage-object"),
-        damageByType: new Map<DamageType, number>(),
-        disposition: { kind: "tableResolved" },
-      }),
-    ).toEqual({
-      kind: "tableResolved",
-      objectId: "empty-damage-object",
-      damageType: "force",
-      rolledDamage: 0,
-    });
   });
 });

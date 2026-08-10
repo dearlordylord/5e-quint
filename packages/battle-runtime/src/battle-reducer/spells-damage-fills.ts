@@ -2321,13 +2321,11 @@ export function spellObjectDamageByType(
 
 export function spellObjectDamageOutcomeFromDamageByType(input: {
   readonly objectId: BattleObjectId;
-  readonly damageType?: DamageType | undefined;
+  readonly damageType: DamageType;
   readonly damageByType: ReadonlyMap<DamageType, number>;
   readonly disposition: BattleObjectDamageDisposition;
 }): BattleObjectDamageOutcome {
   const entries = damageAmountByTypeMapEntries(input.damageByType);
-  const [firstEntry] = entries;
-  const damageType = input.damageType ?? firstEntry?.damageType ?? "force";
   const rolledDamage = entries.reduce(
     (total, entry) => total + entry.amount,
     0,
@@ -2336,13 +2334,13 @@ export function spellObjectDamageOutcomeFromDamageByType(input: {
     Match.when({ kind: "tableResolved" }, () => ({
       kind: "tableResolved" as const,
       objectId: input.objectId,
-      damageType,
+      damageType: input.damageType,
       rolledDamage: damageAmount(rolledDamage),
     })),
     Match.when({ kind: "hitPoints" }, (disposition) =>
       objectHitPointDamageOutcome({
         objectId: input.objectId,
-        damageType,
+        damageType: input.damageType,
         rolledDamage,
         priorHitPoints: disposition.hitPoints,
         damageThreshold: null,
@@ -2351,7 +2349,7 @@ export function spellObjectDamageOutcomeFromDamageByType(input: {
     Match.when({ kind: "hitPointsWithDamageThreshold" }, (disposition) =>
       objectHitPointDamageOutcome({
         objectId: input.objectId,
-        damageType,
+        damageType: input.damageType,
         rolledDamage,
         priorHitPoints: disposition.hitPoints,
         damageThreshold: disposition.damageThreshold,
