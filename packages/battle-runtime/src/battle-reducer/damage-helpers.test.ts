@@ -1,5 +1,8 @@
 import { DAMAGE_TYPES, type DamageType } from "@dnd/shared/types";
-import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
+import {
+  holeId,
+  holeInstanceKey,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
 import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
@@ -22,6 +25,7 @@ import { combatantId } from "../identity.ts";
 import type { BattleActiveEffect } from "../battle-state-execution.ts";
 import {
   activeSpellWeaponDamageRiders,
+  attackDamageByTypeEntries,
   applyAvailableSpellDamageReduction,
   applySpellDamageReductionConsumption,
   applyAvailableSourceDamageRollPenalty,
@@ -361,6 +365,38 @@ describe("attack damage modifier applicability", () => {
         unarmedStrike,
       ),
     ).toBe(false);
+  });
+
+  test("ignores rolled damage groups without a corresponding component", () => {
+    const session = spellBattle({
+      spellSlots: [],
+      attack: testLongswordAttack(),
+    });
+    const caster = requireCombatant(session.state, spellCasterId);
+    if (caster.origin.kind !== "character" || caster.origin.attack === null) {
+      throw new Error("Expected the spellcaster's default weapon attack.");
+    }
+    const damageRoll = damageRollFillWithGroups(
+      {
+        kind: "rolledDice",
+        holeId: holeId("battle:test:extra-damage-group"),
+        holeInstanceKey: holeInstanceKey("battle:test:extra-damage-group"),
+        label: "Synthetic damage roll",
+      },
+      [[4], [6]],
+    );
+    if (damageRoll.kind !== "rolledDice") {
+      throw new Error("Expected a rolled damage fill.");
+    }
+    const entries = attackDamageByTypeEntries(
+      session.state,
+      caster,
+      caster.origin.attack,
+      caster.origin.attack.procedureRef,
+      damageRoll,
+      false,
+    );
+    expect(entries.length).toBeGreaterThan(0);
   });
 });
 
