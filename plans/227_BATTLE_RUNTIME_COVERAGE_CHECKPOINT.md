@@ -31,22 +31,22 @@ totals, and comparison below are the self-contained durable evidence.
 ## Current authoritative diagnostic
 
 - Date: 2026-08-09
-- Git HEAD: `6ffe81bd4936103f9f822fd46d60e28cbaccdfe4`
+- Git HEAD: `67d41be161d0d14551a0d1c023bc99447ef5892e`
 - Command: `pnpm coverage`
 - Result: exit 0; all workspace coverage packages complete and green
-- Total wall duration: approximately 343 seconds
-- Battle-runtime tests: 212/212 files passed; 2,252 tests passed and 53
-  skipped (2,305 total)
+- Total wall duration: approximately 311 seconds
+- Battle-runtime tests: 212/212 files passed; 2,260 tests passed and 53
+  skipped (2,313 total)
 
-| Metric     |                `4ed231376` |                `02141cc63` |                `6ffe81bd4` | `0214` -> `6ffe` covered / total |     Uncovered change |   Delta |
+| Metric     |                `02141cc63` |                `6ffe81bd4` |                `67d41be16` | `6ffe` -> `67d4` covered / total |     Uncovered change |   Delta |
 | ---------- | -------------------------: | -------------------------: | -------------------------: | -------------------------------: | -------------------: | ------: |
-| Statements | 120,719 / 124,820 (96.71%) | 120,755 / 124,830 (96.73%) | 120,763 / 124,805 (96.76%) |                          8 / -25 | 4,075 -> 4,042 (-33) | +0.03pp |
-| Branches   |   30,327 / 32,362 (93.71%) |   30,380 / 32,406 (93.74%) |   30,408 / 32,421 (93.79%) |                          28 / 15 | 2,026 -> 2,013 (-13) | +0.05pp |
-| Functions  |       4,817 / 4,817 (100%) |       4,813 / 4,813 (100%) |       4,813 / 4,813 (100%) |                            0 / 0 |               0 -> 0 |       0 |
-| Lines      | 120,719 / 124,820 (96.71%) | 120,755 / 124,830 (96.73%) | 120,763 / 124,805 (96.76%) |                          8 / -25 | 4,075 -> 4,042 (-33) | +0.03pp |
+| Statements | 120,755 / 124,830 (96.73%) | 120,763 / 124,805 (96.76%) | 120,761 / 124,749 (96.80%) |                         -2 / -56 | 4,042 -> 3,988 (-54) | +0.04pp |
+| Branches   |   30,380 / 32,406 (93.74%) |   30,408 / 32,421 (93.79%) |   30,449 / 32,440 (93.86%) |                          41 / 19 | 2,013 -> 1,991 (-22) | +0.07pp |
+| Functions  |       4,813 / 4,813 (100%) |       4,813 / 4,813 (100%) |       4,813 / 4,813 (100%) |                            0 / 0 |               0 -> 0 |       0 |
+| Lines      | 120,755 / 124,830 (96.73%) | 120,763 / 124,805 (96.76%) | 120,761 / 124,749 (96.80%) |                         -2 / -56 | 4,042 -> 3,988 (-54) | +0.04pp |
 
-The Vitest statement/line percentage rose to 96.76% and branches rose to
-93.79%; uncovered statements/lines fell by 33 and uncovered branches by 13.
+The Vitest statement/line percentage rose to 96.80% and branches rose to
+93.86%; uncovered statements/lines fell by 54 and uncovered branches by 22.
 These are measured deltas from the authoritative public run, not a forecast
 toward 99%. Denominator changes are shown explicitly because production code
 changed between checkpoints. The 93% branch ratchet and all other ratchets
@@ -61,24 +61,27 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 120,763 | 124,805 |                  123,557 |         2,794 |
-| Branches   |  30,408 |  32,421 |                   32,097 |         1,689 |
+| Statements | 120,761 | 124,749 |                  123,502 |         2,741 |
+| Branches   |  30,449 |  32,440 |                   32,116 |         1,667 |
 | Functions  |   4,813 |   4,813 |                    4,765 |             0 |
-| Lines      | 120,763 | 124,805 |                  123,557 |         2,794 |
+| Lines      | 120,761 | 124,749 |                  123,502 |         2,741 |
 
 ## Milestone context
 
-Since the prior authoritative checkpoint, `5ccb00051` added a cohesive spell
-damage lifecycle invariant cohort covering Magic Missile, Sanctuary, readied
-spell loss, stale resource rejection, and safe removal of impossible lookup
-fallbacks in the prepared-slot and object-contact resolvers. Luna completed two
-review rounds. Root review restored the reachable object-contact penalty-target
-fallback, narrowed the unique-target invariant comments, and corrected the
-test fixtures so charm provenance, active effects, and concentration ownership
-were internally valid in `6ffe81bd4`. Focused spell lifecycle, Sanctuary, and
-Heat Metal tests, package typecheck, formatting, two Luna review rounds, and
-the repeated independent root review all converged cleanly before the public
-run.
+Since the prior authoritative checkpoint, `0e49a94a5` audited the cohesive
+interrupt-stack, readied-release, and reaction-continuation boundary. It added
+public workflows for Cunning Strike continuations, stale Movement and Jump
+subjects, readied creature targets, reaction modifiers, and falling-reaction
+facts; narrowed character spell procedure input; removed impossible branches;
+and repaired the stale synthetic reaction MBT weapon fixture. Luna completed
+two review rounds. Root review kept reachable success paths instrumented,
+restored reachable missing-target continuation arms, reunited production and
+MBT readied-target classification, and removed an admission-impossible helper
+scenario in `67d41be16`. Six focused MBT lanes, 102 repeated focused runtime
+tests, package typecheck, formatting, Luna's reviews, and repeated independent
+root review converged before the public run. The reaction-casting-time MBT's
+three fixture failures reproduce unchanged at the exact parent checkpoint and
+are not attributable to this milestone.
 
 Focused cohort uncovered counts remain regression and navigation evidence, not
 a forecast of the global public delta, because other public tests may already
@@ -88,14 +91,14 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting public metric at 93.79%, with a static 99% gap of
-1,689. Clone the public harness arguments for a fresh package-local diagnostic,
+Branches remain the limiting public metric at 93.86%, with a static 99% gap of
+1,667. Clone the public harness arguments for a fresh package-local diagnostic,
 select a different branch-heavy owner or cohesive subsystem from the completed
 save-gate, active-effect-ledger, persistent-spatial, ongoing-feature admission,
 act-composition, attack-projection, attack-pipeline, and spell-damage-fill
 campaigns, plus character battle resources, the Chained Spell resolver, and
-the damage/condition lifecycle, battle lifecycle route, and spell damage
-lifecycle invariant cohorts.
+the damage/condition lifecycle, battle lifecycle route, spell damage lifecycle
+invariant, and interrupt/readied/reaction continuation cohorts.
 Audit its uncovered alternatives for schema-impossible or duplicated logic,
 cover only behaviorally reachable alternatives with focused tests, and then
 remeasure with the public root diagnostic.
