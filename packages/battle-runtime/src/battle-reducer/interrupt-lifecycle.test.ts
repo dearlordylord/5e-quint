@@ -1,19 +1,29 @@
 import { describe, expect, test, vi } from "vitest";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import type {
+  BattleInterruptCheckpointInput,
   BattleResolutionResult,
   BattleState,
 } from "../battle-state-execution.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
+import { combatantId } from "../identity.ts";
 import {
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
+  battleProcedureExecutionRefForTest,
+  fighterAttackSubject,
   targetFill,
 } from "../battle-runtime.test-support.ts";
 import {
   currentInterruptCheckpoint,
   snapshotBattle,
 } from "./battle-snapshot.ts";
-import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
+import {
+  maybeOpenInterruptWindow,
+  maybeOpenPostCastReadySpellCastWindow,
+  maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices,
+  opportunityAttackReactionChoices,
+  spendReaction,
+} from "./interrupt-execution.ts";
 import {
   InterruptLifecycleExecution,
   resolveActiveInterruptProcedure,
@@ -60,6 +70,25 @@ describe("interrupt lifecycle", () => {
     const execution = InterruptLifecycleExecution.fromResolvers(() => {
       throw new Error("Declining must not execute an interrupt subject.");
     }, continuationResumer);
+
+    expect(
+      resolveInterruptLifecycleDecision({
+        state: { ...opened.state, interruptStack: [] },
+        fill: {
+          kind: "interruptDecision",
+          holeId: decisionHole.holeId,
+          value: { kind: "decline", responderId },
+        },
+        execution,
+      }),
+    ).toMatchObject({
+      tag: "withoutInterruptRoute",
+      result: {
+        tag: "invalid",
+        reason: "staleSubject",
+        message: "No interrupt checkpoint is pending.",
+      },
+    });
 
     const outcome = resolveInterruptLifecycleDecision({
       state: opened.state,
@@ -216,6 +245,26 @@ describe("interrupt lifecycle", () => {
       result: { tag: "invalid", reason: "staleSubject" },
     });
 
+    const mismatchedAdmission = admitBattleResolutionInput({
+      state: started.result.state,
+      subject: { tag: "action", actorId, action: "dodge" },
+      fills: [],
+    });
+    if (mismatchedAdmission.tag === "staleCharacterProcedure") {
+      throw new Error("Expected an admitted non-character-bound subject.");
+    }
+    expect(
+      resolveActiveInterruptProcedure({
+        resolution: mismatchedAdmission.input,
+        execution,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "A pending interrupt checkpoint must be resolved before the interrupted procedure can continue.",
+    });
+
     const admission = admitBattleResolutionInput({
       state: started.result.state,
       subject: choice.subject,
@@ -242,5 +291,152 @@ describe("interrupt lifecycle", () => {
         input: expect.objectContaining({ fills: [procedureFill] }),
       }),
     );
+  });
+
+  test("keeps a checkpoint open while eligible responders are still unoffered", () => {
+    const base = fighterTurnWithReadiedAcidAndSecondReadiedRay();
+    const firstCasterId = [...base.readiedSpells.keys()][0];
+    if (firstCasterId === undefined) {
+      throw new Error("Expected a first readied spell caster.");
+    }
+    const first = base.readiedSpells.get(firstCasterId);
+    const secondCasterId = [...base.readiedSpells.keys()][1];
+    if (first === undefined || secondCasterId === undefined) {
+      throw new Error("Expected two readied spell casters.");
+    }
+    const saveFailedState: BattleState = {
+      ...base,
+      readiedSpells: new Map(base.readiedSpells).set(firstCasterId, {
+        ...first,
+        trigger: "saveFailed",
+      }),
+    };
+    const opened = maybeOpenInterruptWindow(
+      saveFailedState,
+      {
+        trigger: "saveFailed",
+        targetId: currentActorId(saveFailedState),
+        continuation: {
+          kind: "resolved",
+          subject: {
+            tag: "action",
+            actorId: currentActorId(saveFailedState),
+            action: "dodge",
+          },
+        },
+      },
+      undefined,
+    );
+    if (opened === null) {
+      throw new Error("Expected a multi-responder interrupt window.");
+    }
+    const decisionHole = opened.holes[0];
+    if (decisionHole?.kind !== "interruptDecision") {
+      throw new Error("Expected the interrupt decision hole.");
+    }
+    expect(decisionHole.eligibleResponders).toEqual(
+      expect.arrayContaining([firstCasterId, secondCasterId]),
+    );
+    const continuationResumer = vi.fn(
+      ({ state: resumedState }): BattleResolutionResult => ({
+        tag: "resolved",
+        state: resumedState,
+        snapshot: snapshotBattle(resumedState),
+      }),
+    );
+    const outcome = resolveInterruptLifecycleDecision({
+      state: opened.state,
+      fill: {
+        kind: "interruptDecision",
+        holeId: decisionHole.holeId,
+        value: { kind: "decline", responderId: firstCasterId },
+      },
+      execution: InterruptLifecycleExecution.fromResolvers(() => {
+        throw new Error("Declining must not execute an interrupt subject.");
+      }, continuationResumer),
+    });
+    expect(outcome).toMatchObject({
+      tag: "withInterruptRoute",
+      result: { tag: "resolved" },
+    });
+    if (outcome.result.tag !== "resolved") {
+      throw new Error("Expected the first responder decline to resolve.");
+    }
+    expect(currentInterruptCheckpoint(outcome.result.state)).toMatchObject({
+      offeredResponders: [firstCasterId],
+    });
+    expect(continuationResumer).not.toHaveBeenCalled();
+  });
+
+  test("keeps stale and already-handled spell windows side-effect free", () => {
+    const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
+    const actorId = currentActorId(state);
+    const sourceProcedureRef = battleProcedureExecutionRefForTest(
+      "synthetic-interrupt-spell-cast",
+    );
+    const frame: BattleInterruptCheckpointInput = {
+      trigger: "spellCast",
+      casterId: actorId,
+      sourceProcedureRef,
+      spellProcedure: "spellAttackDamage",
+      castLevel: 0,
+      components: [],
+      castingResource: { kind: "alreadySpent" },
+      spellSlotCommitment: { kind: "pendingCasterSpellSlot" },
+      metamagicCommitment: { kind: "none" },
+      concentrationCommitment: { kind: "none" },
+      targetIds: [],
+      reactionSpellTargetFacts: [],
+      continuation: {
+        kind: "resolved",
+        subject: { tag: "action", actorId, action: "dodge" },
+      },
+    };
+
+    expect(
+      maybeOpenSpellCastInterruptWindowWithTriggeredSpellChoices(
+        state,
+        frame,
+        "spellCast",
+      ),
+    ).toBeNull();
+    expect(
+      maybeOpenPostCastReadySpellCastWindow({
+        state,
+        subject: { tag: "action", actorId, action: "dodge" },
+        casterId: actorId,
+        sourceProcedureRef,
+        spellProcedure: "spellAttackDamage",
+        targetIds: [],
+        handledInterruptTrigger: "spellCast",
+      }),
+    ).toBeNull();
+
+    const pendingState: BattleState = {
+      ...state,
+      currentTurnResources: {
+        ...state.currentTurnResources,
+        spellSlotUsesThisTurn: [{ kind: "pending", combatantId: actorId }],
+      },
+    };
+    expect(maybeOpenInterruptWindow(pendingState, frame, undefined)).toBeNull();
+    expect(spendReaction(state, combatantId("missing-reactor"))).toBe(state);
+    const attackSubject = fighterAttackSubject(state);
+    if (
+      attackSubject.attackAbility === undefined ||
+      attackSubject.attackDamageType === undefined
+    ) {
+      throw new Error("Expected the fighter attack selection facts.");
+    }
+    expect(
+      opportunityAttackReactionChoices(state, actorId, [
+        {
+          reactorId: combatantId("missing-reactor"),
+          procedureRef: attackSubject.procedureRef,
+          attackAbility: attackSubject.attackAbility,
+          attackDamageType: attackSubject.attackDamageType,
+        },
+      ]),
+    ).toEqual([]);
   });
 });

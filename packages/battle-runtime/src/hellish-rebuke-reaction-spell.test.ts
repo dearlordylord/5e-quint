@@ -20,6 +20,7 @@ import {
   Hp,
   movementFeet,
   proficiencyBonus,
+  Round,
 } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
@@ -33,6 +34,7 @@ import {
   battleProcedureExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
   characterSpellInvocationRefForProcedureRefForTest,
+  concentrationSavingThrowFill,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -212,6 +214,144 @@ describe("Hellish Rebuke Reaction spell", () => {
         expect.objectContaining({
           combatantId: damagerId,
           hp: 10,
+        }),
+      ]),
+    );
+  });
+
+  test("requests and consumes the damaged creature's Concentration save", () => {
+    const base = battleWithHellishRebuke(srdSpellRecord(hellishRebukeUnitId));
+    const sourceDamageRollPenalty = {
+      kind: "sourceDamageRollPenalty" as const,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic-hellish-rebuke-source-penalty",
+      ),
+      sourceCombatantId: spellCasterId,
+      amount: { dice: 1 as const, dieSize: 8 as const },
+      expiresAt: {
+        kind: "endOfTurn" as const,
+        combatantId: spellCasterId,
+        round: Round(1),
+      },
+    };
+    const concentratingState = withCombatant(
+      base.state,
+      damagerId,
+      (damager) => ({
+        ...damager,
+        concentration: {
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            "synthetic-hellish-rebuke-concentration",
+          ),
+          effectKind: "spellEffect" as const,
+        },
+      }),
+    );
+    const enrichedState = withCombatant(
+      concentratingState,
+      spellCasterId,
+      (caster) => ({
+        ...caster,
+        activeEffects: [...caster.activeEffects, sourceDamageRollPenalty],
+      }),
+    );
+    const session = battleRuntimeSessionForTest({
+      ...base,
+      state: enrichedState,
+    });
+    const awaitingReaction = resolveUnarmedStrikeAgainstCaster({
+      state: session,
+      includeHellishRebukeTriggerFact: true,
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
+    }
+    const choice = requireHellishRebukeChoice(
+      awaitingReaction,
+      spellCasterId,
+      session,
+    );
+    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
+    const damage = requireHole(choice.initialHoles, "rolledDice");
+    const pendingConcentration = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
+        {
+          kind: "resolve",
+          responderId: spellCasterId,
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            procedureRef: choice.subject.procedureRef,
+            fills: [
+              savingThrowOutcomeFill(save, [
+                { targetId: damagerId, succeeded: false },
+              ]),
+              damageRollFillWithGroups(damage, [[1, 1, 1]]),
+            ],
+          },
+        },
+      ),
+    });
+    expect(pendingConcentration).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "rolledDice" }],
+    });
+    if (pendingConcentration.tag !== "needsHoles") {
+      throw new Error("Expected a source damage penalty roll hole.");
+    }
+    const concentration = requireHole(pendingConcentration.holes, "rolledDice");
+    if (!("sourceDamageRollPenalty" in concentration)) {
+      throw new Error("Expected the source damage penalty roll hole.");
+    }
+    const pendingLifecycle = resolveBattleSubject({
+      state: pendingConcentration.state,
+      subject: choice.subject,
+      fills: [
+        savingThrowOutcomeFill(save, [
+          { targetId: damagerId, succeeded: false },
+        ]),
+        damageRollFillWithGroups(damage, [[1, 1, 1]]),
+        damageRollFillWithGroups(concentration, [[1]]),
+      ],
+    });
+    expect(pendingLifecycle).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "concentrationSavingThrow", combatantId: damagerId }],
+    });
+    if (pendingLifecycle.tag !== "needsHoles") {
+      throw new Error("Expected a Concentration Saving Throw hole.");
+    }
+    const concentrationSave = requireHole(
+      pendingLifecycle.holes,
+      "concentrationSavingThrow",
+    );
+    const resolved = resolveBattleSubject({
+      state: pendingLifecycle.state,
+      subject: choice.subject,
+      fills: [
+        savingThrowOutcomeFill(save, [
+          { targetId: damagerId, succeeded: false },
+        ]),
+        damageRollFillWithGroups(damage, [[1, 1, 1]]),
+        damageRollFillWithGroups(concentration, [[1]]),
+        concentrationSavingThrowFill(concentrationSave, true),
+      ],
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: { pendingInterrupt: null },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        "Expected Hellish Rebuke with Concentration save to resolve.",
+      );
+    }
+    expect(resolved.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: damagerId,
+          concentrating: true,
         }),
       ]),
     );

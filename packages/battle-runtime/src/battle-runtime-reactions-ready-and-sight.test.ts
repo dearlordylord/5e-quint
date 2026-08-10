@@ -1,5 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { describe, expect, test } from "vitest";
+import { damageAmount } from "@dnd/shared/types";
 import type { BattleState } from "./battle-runtime.test-support.ts";
 import {
   applyCondition,
@@ -42,6 +43,7 @@ import {
   wizardTurnWithReadiedRay,
   wizardVsSkeletonBattle,
 } from "./battle-runtime.test-support.ts";
+import { openAfterDamageSequenceInterruptWindow } from "./battle-reducer/interrupt-execution.ts";
 
 function readiedSpellAttackHitPending() {
   const state = fighterTurnWithReadiedRay("attackHit");
@@ -710,6 +712,57 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           expect.objectContaining({ combatantId: goblinId, hp: 3 }),
         ]),
       },
+    });
+  });
+
+  test("resumes each event in a multi-event after-damage sequence after decline", () => {
+    const session = wizardTurnWithReadiedRay("afterDamage");
+    const event = {
+      damageSourceId: skeletonId,
+      damagedId: wizardId,
+      damageAmount: damageAmount(1),
+      reactionSpellTargetFacts: [],
+    } as const;
+    const firstWindow = openAfterDamageSequenceInterruptWindow({
+      state: session.state,
+      subject: { tag: "action", actorId: wizardId, action: "dodge" },
+      events: [event, event],
+      objectDamages: [],
+      objectIgnitions: [],
+      droppedObjects: [],
+      handledInterruptTrigger: undefined,
+    });
+    expect(firstWindow).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+    });
+    if (firstWindow.tag !== "needsHoles") {
+      throw new Error("Expected the first after-damage interrupt window.");
+    }
+    const firstDeclined = resolveBattleInterrupt({
+      state: firstWindow.state,
+      fill: interruptDecisionFill(
+        findHole(firstWindow.holes, "interruptDecision"),
+        { kind: "decline", responderId: wizardId },
+      ),
+    });
+    expect(firstDeclined).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
+    });
+    if (firstDeclined.tag !== "needsHoles") {
+      throw new Error("Expected the second after-damage interrupt window.");
+    }
+    const secondDeclined = resolveBattleInterrupt({
+      state: firstDeclined.state,
+      fill: interruptDecisionFill(
+        findHole(firstDeclined.holes, "interruptDecision"),
+        { kind: "decline", responderId: wizardId },
+      ),
+    });
+    expect(secondDeclined).toMatchObject({
+      tag: "resolved",
+      snapshot: { pendingInterrupt: null },
     });
   });
 
