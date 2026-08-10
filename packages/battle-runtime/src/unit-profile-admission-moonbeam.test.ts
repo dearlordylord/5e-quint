@@ -77,6 +77,7 @@ import {
   webUnitId,
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer/spell-reroll-issues.ts";
+import { markMoonbeamSavedThisTurn } from "./battle-reducer/spells-active-effects.ts";
 
 describe("L12G deterministic Moonbeam admission", () => {
   test("moonbeam is admitted as a movable Cylinder CON-save radiant hazard", () => {
@@ -755,6 +756,33 @@ describe("L12G deterministic Moonbeam admission", () => {
     expect(
       requireCombatant(duplicateSave.state, spellCasterId).activeEffects.find(
         (effect) => effect.kind === "moonbeam",
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        shapeShiftSuppressed: [spellTargetId],
+        savedThisTurn: [spellTargetId],
+      }),
+    );
+  });
+
+  test("validated Moonbeam marker replay remains idempotent", () => {
+    const failed = resolveMoonbeamSaveForShapeShiftedTarget({
+      state: moonbeamCastOverWildShapedTarget(),
+      trigger: "appearsInArea",
+      succeeded: false,
+    });
+    const effect = requireCombatant(failed, spellCasterId).activeEffects.find(
+      (activeEffect) => activeEffect.kind === "moonbeam",
+    );
+    if (effect === undefined || effect.kind !== "moonbeam") {
+      throw new Error("Expected Moonbeam marker effect after failed save.");
+    }
+
+    const replayed = markMoonbeamSavedThisTurn(failed, spellTargetId, effect);
+
+    expect(
+      requireCombatant(replayed, spellCasterId).activeEffects.find(
+        (activeEffect) => activeEffect.kind === "moonbeam",
       ),
     ).toEqual(
       expect.objectContaining({

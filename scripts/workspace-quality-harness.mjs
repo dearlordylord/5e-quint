@@ -49,7 +49,7 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "battle-runtime": {
-    coverage: { lines: 96, statements: 96, functions: 100, branches: 92 },
+    coverage: { lines: 96, statements: 96, functions: 100, branches: 93 },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },

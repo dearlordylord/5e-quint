@@ -1925,26 +1925,50 @@ export function applyGreaseGroundHazardCastEffects(input: {
   };
 }
 
+function updateCasterActiveEffects(input: {
+  readonly state: BattleState;
+  readonly sourceCombatantId: CombatantId;
+  readonly update: (
+    activeEffects: readonly BattleActiveEffect[],
+  ) => readonly BattleActiveEffect[];
+}): BattleState {
+  const caster = input.state.combatants.get(input.sourceCombatantId);
+  if (caster === undefined) {
+    return input.state;
+  }
+  const combatants = new Map(input.state.combatants).set(
+    input.sourceCombatantId,
+    {
+      ...caster,
+      activeEffects: input.update(caster.activeEffects),
+    },
+  );
+  return { ...input.state, combatants };
+}
+
+function appendCombatantIdOnce(
+  values: readonly CombatantId[],
+  targetId: CombatantId,
+): readonly CombatantId[] {
+  return values.includes(targetId) ? values : [...values, targetId];
+}
+
 function battleStateAfterReplacingCasterActiveEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly activeEffect: CasterAreaSpellActiveEffect;
 }): BattleState {
-  const caster = input.state.combatants.get(input.actorId);
-  if (caster === undefined) {
-    return input.state;
-  }
-  const combatants = new Map(input.state.combatants).set(input.actorId, {
-    ...caster,
-    activeEffects: [
-      ...caster.activeEffects.filter(
+  return updateCasterActiveEffects({
+    state: input.state,
+    sourceCombatantId: input.actorId,
+    update: (activeEffects) => [
+      ...activeEffects.filter(
         (activeEffect) =>
           !sameCasterAreaSpellOccurrence(activeEffect, input.activeEffect),
       ),
       input.activeEffect,
     ],
   });
-  return { ...input.state, combatants };
 }
 
 const CASTER_AREA_SPELL_ACTIVE_EFFECT_KIND_SET: ReadonlySet<
@@ -2542,29 +2566,22 @@ export function markMoonbeamSavedThisTurn(
   targetId: CombatantId,
   effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
 ): BattleState {
-  const caster = state.combatants.get(effect.sourceCombatantId);
-  /* v8 ignore start -- Defensive internal guard: Moonbeam trigger resolution receives the active effect from its still-present concentration owner. */
-  if (caster === undefined) {
-    return state;
-  }
-  /* v8 ignore stop */
-  if (effect.savedThisTurn.includes(targetId)) {
-    return state;
-  }
-  const activeEffects = caster.activeEffects.map((current) =>
-    moonbeamEffectMatches(current, effect)
-      ? {
-          ...current,
-          savedThisTurn: [...current.savedThisTurn, targetId],
-        }
-      : current,
-  );
-  const combatants = new Map(state.combatants);
-  combatants.set(effect.sourceCombatantId, {
-    ...caster,
-    activeEffects,
+  return updateCasterActiveEffects({
+    state,
+    sourceCombatantId: effect.sourceCombatantId,
+    update: (activeEffects) =>
+      activeEffects.map((current) =>
+        moonbeamEffectMatches(current, effect)
+          ? {
+              ...current,
+              savedThisTurn: appendCombatantIdOnce(
+                current.savedThisTurn,
+                targetId,
+              ),
+            }
+          : current,
+      ),
   });
-  return { ...state, combatants };
 }
 
 function moonbeamEffectMatches(
@@ -2583,28 +2600,22 @@ export function addMoonbeamShapeShiftSuppression(
   targetId: CombatantId,
   effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
 ): BattleState {
-  const caster = state.combatants.get(effect.sourceCombatantId);
-  /* v8 ignore start -- Defensive internal guard: Moonbeam shape-shift suppression is applied from an active effect owned by the still-present concentration caster. */
-  if (caster === undefined) {
-    return state;
-  }
-  /* v8 ignore stop */
-  const activeEffects = caster.activeEffects.map((current) =>
-    moonbeamEffectMatches(current, effect)
-      ? current.shapeShiftSuppressed.includes(targetId)
-        ? current
-        : {
-            ...current,
-            shapeShiftSuppressed: [...current.shapeShiftSuppressed, targetId],
-          }
-      : current,
-  );
-  const combatants = new Map(state.combatants);
-  combatants.set(effect.sourceCombatantId, {
-    ...caster,
-    activeEffects,
+  return updateCasterActiveEffects({
+    state,
+    sourceCombatantId: effect.sourceCombatantId,
+    update: (activeEffects) =>
+      activeEffects.map((current) =>
+        moonbeamEffectMatches(current, effect)
+          ? {
+              ...current,
+              shapeShiftSuppressed: appendCombatantIdOnce(
+                current.shapeShiftSuppressed,
+                targetId,
+              ),
+            }
+          : current,
+      ),
   });
-  return { ...state, combatants };
 }
 
 export function removeMoonbeamShapeShiftSuppression(
@@ -2612,28 +2623,21 @@ export function removeMoonbeamShapeShiftSuppression(
   targetId: CombatantId,
   effect: Extract<BattleActiveEffect, { readonly kind: "moonbeam" }>,
 ): BattleState {
-  const caster = state.combatants.get(effect.sourceCombatantId);
-  /* v8 ignore start -- Defensive internal guard: Moonbeam shape-shift restoration is applied from an active effect owned by the still-present concentration caster. */
-  if (caster === undefined) {
-    return state;
-  }
-  /* v8 ignore stop */
-  const activeEffects = caster.activeEffects.map((current) =>
-    moonbeamEffectMatches(current, effect)
-      ? {
-          ...current,
-          shapeShiftSuppressed: current.shapeShiftSuppressed.filter(
-            (combatantId) => combatantId !== targetId,
-          ),
-        }
-      : current,
-  );
-  const combatants = new Map(state.combatants);
-  combatants.set(effect.sourceCombatantId, {
-    ...caster,
-    activeEffects,
+  return updateCasterActiveEffects({
+    state,
+    sourceCombatantId: effect.sourceCombatantId,
+    update: (activeEffects) =>
+      activeEffects.map((current) =>
+        moonbeamEffectMatches(current, effect)
+          ? {
+              ...current,
+              shapeShiftSuppressed: current.shapeShiftSuppressed.filter(
+                (combatantId) => combatantId !== targetId,
+              ),
+            }
+          : current,
+      ),
   });
-  return { ...state, combatants };
 }
 
 export function markWebSavedThisTurn(
@@ -2642,42 +2646,30 @@ export function markWebSavedThisTurn(
   effect: Extract<BattleActiveEffect, { readonly kind: "webRestraintHazard" }>,
   trigger: BattleWebRestraintTrigger,
 ): BattleState {
-  const caster = state.combatants.get(effect.sourceCombatantId);
-  const alreadySaved =
-    trigger === "entersArea"
-      ? effect.entrySavedThisTurn.includes(targetId)
-      : effect.startTurnSavedThisTurn.includes(targetId);
-  /* v8 ignore start -- Defensive internal guard: Web save tracking receives the active hazard from its still-present concentration owner. */
-  if (caster === undefined) {
-    return state;
-  }
-  /* v8 ignore stop */
-  if (alreadySaved) {
-    return state;
-  }
-  const activeEffects = caster.activeEffects.map((current) =>
-    current === effect && trigger === "entersArea"
-      ? {
-          ...current,
-          entrySavedThisTurn: [...current.entrySavedThisTurn, targetId],
-        }
-      : current === effect
-        ? {
-            ...current,
-            startTurnSavedThisTurn: [
-              ...current.startTurnSavedThisTurn,
-              targetId,
-            ],
-          }
-        : current,
-  );
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(effect.sourceCombatantId, {
-      ...caster,
-      activeEffects,
-    }),
-  };
+  return updateCasterActiveEffects({
+    state,
+    sourceCombatantId: effect.sourceCombatantId,
+    update: (activeEffects) =>
+      activeEffects.map((current) =>
+        current === effect && trigger === "entersArea"
+          ? {
+              ...current,
+              entrySavedThisTurn: appendCombatantIdOnce(
+                current.entrySavedThisTurn,
+                targetId,
+              ),
+            }
+          : current === effect
+            ? {
+                ...current,
+                startTurnSavedThisTurn: appendCombatantIdOnce(
+                  current.startTurnSavedThisTurn,
+                  targetId,
+                ),
+              }
+            : current,
+      ),
+  });
 }
 
 function markSingleSaveAreaHazardSavedThisTurn(
@@ -2685,30 +2677,22 @@ function markSingleSaveAreaHazardSavedThisTurn(
   targetId: CombatantId,
   effect: SingleSaveAreaHazardActiveEffect,
 ): BattleState {
-  const caster = state.combatants.get(effect.sourceCombatantId);
-  /* v8 ignore start -- Defensive internal guard: single-save area tracking receives the active hazard from its still-present concentration owner. */
-  if (caster === undefined) {
-    return state;
-  }
-  /* v8 ignore stop */
-  if (effect.savedThisTurn.includes(targetId)) {
-    return state;
-  }
-  const activeEffects = caster.activeEffects.map((current) =>
-    current === effect
-      ? {
-          ...effect,
-          savedThisTurn: [...effect.savedThisTurn, targetId],
-        }
-      : current,
-  );
-  return {
-    ...state,
-    combatants: new Map(state.combatants).set(effect.sourceCombatantId, {
-      ...caster,
-      activeEffects,
-    }),
-  };
+  return updateCasterActiveEffects({
+    state,
+    sourceCombatantId: effect.sourceCombatantId,
+    update: (activeEffects) =>
+      activeEffects.map((current) =>
+        current === effect
+          ? {
+              ...effect,
+              savedThisTurn: appendCombatantIdOnce(
+                effect.savedThisTurn,
+                targetId,
+              ),
+            }
+          : current,
+      ),
+  });
 }
 
 export function markSleetStormAreaHazardSavedThisTurn(
