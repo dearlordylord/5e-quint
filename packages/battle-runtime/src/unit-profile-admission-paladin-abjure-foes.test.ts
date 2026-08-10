@@ -15,7 +15,6 @@ import * as Either from "effect/Either";
 import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
 
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
-import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 import {
   characterBattleResourceIsUnlimited,
   characterBattleResourceIsUseCount,
@@ -119,18 +118,15 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
         ],
       }),
     );
-    const firstTarget = requireCombatant(first, spellTargetId);
-    const initialTarget = requireCombatant(session.state, spellTargetId);
-    const replayState: BattleState = {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(spellTargetId, {
-        ...battleCreatureStateWithKnockOutPreservedConditions(
-          initialTarget,
-          firstTarget.conditions,
-        ),
-        activeEffects: firstTarget.activeEffects,
-      }),
-    };
+    const targetTurn = recordResolvedState(
+      endTurn({ state: first, actorId: spellCasterId }),
+    );
+    const secondTargetTurn = recordResolvedState(
+      endTurn({ state: targetTurn, actorId: spellTargetId }),
+    );
+    const replayState = recordResolvedState(
+      endTurn({ state: secondTargetTurn, actorId: secondTargetId }),
+    );
     const replayAct = abjureFoesAct(
       battleRuntimeSessionForTest({ ...session, state: replayState }),
     );

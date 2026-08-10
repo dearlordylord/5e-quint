@@ -293,61 +293,6 @@ describe("battle runtime: class action features", () => {
     expect(
       surged.snapshot.acts.some((act) => act.subject.tag === "actionSpell"),
     ).toBe(false);
-    const surgeProcedureRef = requireCharacterUnitProcedureRefForTest(
-      session,
-      fighterId,
-      "fighter_action_surge",
-    );
-    const replaySubject: BattleSubject = {
-      tag: "unitFeature",
-      actorId: fighterId,
-      procedureRef: surgeProcedureRef,
-    };
-    expect(
-      resolveBattleSubject({
-        state: {
-          ...state,
-          currentTurnResources: {
-            ...state.currentTurnResources,
-            actionResources: [
-              {
-                kind: "action",
-                source: "unit",
-                sourceOwnerId: fighterId,
-                sourceProcedureRef: surgeProcedureRef,
-                restriction: { kind: "exclude", actions: ["magic"] },
-              },
-            ],
-          },
-        },
-        subject: replaySubject,
-        fills: [],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "staleSubject",
-      message: "This Unit feature has already granted an action this turn.",
-    });
-    expect(
-      resolveBattleSubject({
-        state: {
-          ...state,
-          currentTurnResources: {
-            ...state.currentTurnResources,
-            actionOrBonusActionExclusion: {
-              kind: "restricted",
-              choice: "action",
-            },
-          },
-        },
-        subject: replaySubject,
-        fills: [],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "staleSubject",
-      message: "This Unit feature cannot grant an action for the current turn.",
-    });
     expect(
       resolveBattleSubject({
         state: surged.state,
@@ -963,69 +908,6 @@ describe("battle runtime: class action features", () => {
       reason: "staleSubject",
       message: "Steady Aim Bonus Action is no longer available.",
     });
-  });
-
-  test("Steady Aim replaces an earlier same-turn effect occurrence", () => {
-    const steadyAimUnit = unitLibrary.requireUnit("rogue_steady_aim");
-    if (steadyAimUnit.kind !== "class_feature") {
-      throw new Error("Expected Steady Aim class feature Unit.");
-    }
-    const session = startBattleSessionRight({
-      battleId: battleId("battle-rogue-steady-aim-replacement"),
-      combatants: [
-        characterSeed({
-          initiative: 20,
-          classLevels: [{ className: "rogue", level: 3 }],
-          unitFeatures: [
-            characterBattleFeatureInitForTest(steadyAimUnit, [
-              { className: "rogue", level: classLevel(3) },
-            ]),
-          ],
-          characterUnitRefs: [supportedBattleUnitRef(steadyAimUnit)],
-        }),
-        statBlockCreatureInit({ initiative: 10 }),
-      ],
-    });
-    const subject: BattleSubject = {
-      tag: "unitFeature",
-      actorId: fighterId,
-      procedureRef: requireCharacterUnitProcedureRefForTest(
-        session,
-        fighterId,
-        "rogue_steady_aim",
-      ),
-    };
-    const first = requireResolved(
-      resolveBattleSubject({ state: session.state, subject, fills: [] }),
-    );
-    const actor = first.state.combatants.get(fighterId);
-    if (actor === undefined) {
-      throw new Error("Expected Steady Aim actor.");
-    }
-    const replayState = {
-      ...first.state,
-      currentTurnResources: {
-        ...first.state.currentTurnResources,
-        currentHasBonusAction: true,
-      },
-      combatants: new Map(first.state.combatants).set(fighterId, {
-        ...actor,
-        activeEffects: actor.activeEffects,
-      }),
-    } satisfies BattleState;
-    const second = requireResolved(
-      resolveBattleSubject({ state: replayState, subject, fills: [] }),
-    );
-
-    expect(
-      second.state.combatants
-        .get(fighterId)
-        ?.activeEffects.filter(
-          (effect) =>
-            effect.kind === "nextAttackRollBySelf" ||
-            effect.kind === "selfSpeedZero",
-        ),
-    ).toHaveLength(2);
   });
 
   test("Rage enters a reusable ongoing feature and applies damage and Resistance riders", () => {

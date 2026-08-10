@@ -4485,9 +4485,7 @@ export function bardicInspirationBattle(input: {
           bardicInspirationResource({
             charismaModifier: input.charismaModifier,
           }),
-          ...(input.includeUnrelatedResource === true
-            ? [actionSurgeResource()]
-            : []),
+          ...(input.includeUnrelatedResource === true ? [resource()] : []),
         ],
         characterUnitRefs: [
           {
