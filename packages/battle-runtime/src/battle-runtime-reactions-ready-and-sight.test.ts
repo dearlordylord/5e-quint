@@ -2,6 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { describe, expect, test } from "vitest";
 import { damageAmount } from "@dnd/shared/types";
 import type { BattleState } from "./battle-runtime.test-support.ts";
+import type { BattleAfterDamageEvent } from "./battle-state-execution.ts";
 import {
   applyCondition,
   attackDamageHoleAfterHit,
@@ -722,7 +723,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       damagedId: wizardId,
       damageAmount: damageAmount(1),
       reactionSpellTargetFacts: [],
-    } as const;
+    } satisfies BattleAfterDamageEvent;
     const firstWindow = openAfterDamageSequenceInterruptWindow({
       state: session.state,
       subject: { tag: "action", actorId: wizardId, action: "dodge" },

@@ -11,7 +11,9 @@ import {
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
   battleProcedureExecutionRefForTest,
   fighterAttackSubject,
+  secondWizardId,
   targetFill,
+  wizardId,
 } from "../battle-runtime.test-support.ts";
 import {
   currentInterruptCheckpoint,
@@ -295,19 +297,14 @@ describe("interrupt lifecycle", () => {
 
   test("keeps a checkpoint open while eligible responders are still unoffered", () => {
     const base = fighterTurnWithReadiedAcidAndSecondReadiedRay();
-    const firstCasterId = [...base.readiedSpells.keys()][0];
-    if (firstCasterId === undefined) {
-      throw new Error("Expected a first readied spell caster.");
-    }
-    const first = base.readiedSpells.get(firstCasterId);
-    const secondCasterId = [...base.readiedSpells.keys()][1];
-    if (first === undefined || secondCasterId === undefined) {
-      throw new Error("Expected two readied spell casters.");
+    const wizardReadiedSpell = base.readiedSpells.get(wizardId);
+    if (wizardReadiedSpell === undefined) {
+      throw new Error("Expected the Wizard to hold a readied spell.");
     }
     const saveFailedState: BattleState = {
       ...base,
-      readiedSpells: new Map(base.readiedSpells).set(firstCasterId, {
-        ...first,
+      readiedSpells: new Map(base.readiedSpells).set(wizardId, {
+        ...wizardReadiedSpell,
         trigger: "saveFailed",
       }),
     };
@@ -335,7 +332,7 @@ describe("interrupt lifecycle", () => {
       throw new Error("Expected the interrupt decision hole.");
     }
     expect(decisionHole.eligibleResponders).toEqual(
-      expect.arrayContaining([firstCasterId, secondCasterId]),
+      expect.arrayContaining([wizardId, secondWizardId]),
     );
     const continuationResumer = vi.fn(
       ({ state: resumedState }): BattleResolutionResult => ({
@@ -349,7 +346,7 @@ describe("interrupt lifecycle", () => {
       fill: {
         kind: "interruptDecision",
         holeId: decisionHole.holeId,
-        value: { kind: "decline", responderId: firstCasterId },
+        value: { kind: "decline", responderId: wizardId },
       },
       execution: InterruptLifecycleExecution.fromResolvers(() => {
         throw new Error("Declining must not execute an interrupt subject.");
@@ -363,7 +360,7 @@ describe("interrupt lifecycle", () => {
       throw new Error("Expected the first responder decline to resolve.");
     }
     expect(currentInterruptCheckpoint(outcome.result.state)).toMatchObject({
-      offeredResponders: [firstCasterId],
+      offeredResponders: [wizardId],
     });
     expect(continuationResumer).not.toHaveBeenCalled();
   });

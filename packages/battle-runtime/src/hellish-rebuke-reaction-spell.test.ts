@@ -20,7 +20,6 @@ import {
   Hp,
   movementFeet,
   proficiencyBonus,
-  Round,
 } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
@@ -50,6 +49,7 @@ import {
   type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleCreatureState,
+  type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleInterruptCheckpoint,
@@ -219,31 +219,32 @@ describe("Hellish Rebuke Reaction spell", () => {
     );
   });
 
-  test("requests and consumes the damaged creature's Concentration save", () => {
+  test("applies a source damage penalty before the damaged creature's Concentration save", () => {
     const base = battleWithHellishRebuke(srdSpellRecord(hellishRebukeUnitId));
+    const concentrationProcedureRef = battleProcedureExecutionRefForTest(
+      "synthetic-hellish-rebuke-damager-concentration",
+    );
     const sourceDamageRollPenalty = {
-      kind: "sourceDamageRollPenalty" as const,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "synthetic-hellish-rebuke-source-penalty",
-      ),
-      sourceCombatantId: spellCasterId,
-      amount: { dice: 1 as const, dieSize: 8 as const },
+      kind: "sourceDamageRollPenalty",
+      sourceProcedureRef: concentrationProcedureRef,
+      sourceCombatantId: damagerId,
+      amount: { dice: 1, dieSize: 8 },
       expiresAt: {
-        kind: "endOfTurn" as const,
-        combatantId: spellCasterId,
-        round: Round(1),
+        kind: "concentration",
+        combatantId: damagerId,
       },
-    };
+    } satisfies Extract<
+      BattleActiveEffect,
+      { readonly kind: "sourceDamageRollPenalty" }
+    >;
     const concentratingState = withCombatant(
       base.state,
       damagerId,
       (damager) => ({
         ...damager,
         concentration: {
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            "synthetic-hellish-rebuke-concentration",
-          ),
-          effectKind: "spellEffect" as const,
+          sourceProcedureRef: concentrationProcedureRef,
+          effectKind: "spellEffect",
         },
       }),
     );
@@ -317,7 +318,13 @@ describe("Hellish Rebuke Reaction spell", () => {
     });
     expect(pendingLifecycle).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "concentrationSavingThrow", combatantId: damagerId }],
+      holes: [
+        {
+          kind: "concentrationSavingThrow",
+          combatantId: damagerId,
+          damageAmount: 2,
+        },
+      ],
     });
     if (pendingLifecycle.tag !== "needsHoles") {
       throw new Error("Expected a Concentration Saving Throw hole.");
@@ -352,6 +359,7 @@ describe("Hellish Rebuke Reaction spell", () => {
         expect.objectContaining({
           combatantId: damagerId,
           concentrating: true,
+          hp: 10,
         }),
       ]),
     );
