@@ -31,22 +31,22 @@ totals, and comparison below are the self-contained durable evidence.
 ## Current authoritative diagnostic
 
 - Date: 2026-08-09
-- Git HEAD: `bb4ec0eb50e1a14b782be97a1c3cfe18c836ff98`
+- Git HEAD: `405dba830ff3f61c5a62749b5da73fdc1868d7bf`
 - Command: `pnpm coverage`
 - Result: exit 0; all workspace coverage packages complete and green
-- Total wall duration: approximately 340 seconds
-- Battle-runtime tests: 206/206 files passed; 2,195 tests passed and 53
-  skipped (2,248 total)
+- Total wall duration: approximately 327 seconds
+- Battle-runtime tests: 207/207 files passed; 2,203 tests passed and 53
+  skipped (2,256 total)
 
-| Metric     |                `edac64ff3` |                `a716a9a56` |                `bb4ec0eb5` | `a716` -> `bb4e` covered / total |     Uncovered change |   Delta |
+| Metric     |                `a716a9a56` |                `bb4ec0eb5` |                `405dba830` | `bb4e` -> `405d` covered / total |     Uncovered change |   Delta |
 | ---------- | -------------------------: | -------------------------: | -------------------------: | -------------------------------: | -------------------: | ------: |
-| Statements | 120,493 / 124,843 (96.51%) | 120,498 / 124,843 (96.51%) | 120,513 / 124,843 (96.53%) |                           15 / 0 | 4,345 -> 4,330 (-15) | +0.02pp |
-| Branches   |   30,097 / 32,225 (93.39%) |   30,100 / 32,224 (93.40%) |   30,133 / 32,248 (93.44%) |                          33 / 24 |  2,124 -> 2,115 (-9) | +0.04pp |
+| Statements | 120,498 / 124,843 (96.51%) | 120,513 / 124,843 (96.53%) | 120,524 / 124,841 (96.54%) |                          11 / -2 | 4,330 -> 4,317 (-13) | +0.01pp |
+| Branches   |   30,100 / 32,224 (93.40%) |   30,133 / 32,248 (93.44%) |   30,146 / 32,253 (93.46%) |                           13 / 5 |  2,115 -> 2,107 (-8) | +0.02pp |
 | Functions  |       4,817 / 4,817 (100%) |       4,817 / 4,817 (100%) |       4,817 / 4,817 (100%) |                            0 / 0 |               0 -> 0 |       0 |
-| Lines      | 120,493 / 124,843 (96.51%) | 120,498 / 124,843 (96.51%) | 120,513 / 124,843 (96.53%) |                           15 / 0 | 4,345 -> 4,330 (-15) | +0.02pp |
+| Lines      | 120,498 / 124,843 (96.51%) | 120,513 / 124,843 (96.53%) | 120,524 / 124,841 (96.54%) |                          11 / -2 | 4,330 -> 4,317 (-13) | +0.01pp |
 
-The Vitest statement/line percentage rose to 96.53% and branches rose to
-93.44%; uncovered statements/lines fell by 15 and uncovered branches by 9.
+The Vitest statement/line percentage rose to 96.54% and branches rose to
+93.46%; uncovered statements/lines fell by 13 and uncovered branches by 8.
 These are measured deltas from the authoritative public run, not a forecast
 toward 99%. Denominator changes are shown explicitly because production code
 changed between checkpoints. The 93% branch ratchet and all other ratchets
@@ -61,24 +61,25 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 120,513 | 124,843 |                  123,595 |         3,082 |
-| Branches   |  30,133 |  32,248 |                   31,926 |         1,793 |
+| Statements | 120,524 | 124,841 |                  123,593 |         3,069 |
+| Branches   |  30,146 |  32,253 |                   31,931 |         1,785 |
 | Functions  |   4,817 |   4,817 |                    4,769 |             0 |
-| Lines      | 120,513 | 124,843 |                  123,595 |         3,082 |
+| Lines      | 120,524 | 124,841 |                  123,593 |         3,069 |
 
 ## Milestone context
 
-Since the prior authoritative checkpoint, `ab06f6802` added seven focused
-witnesses across the generic attack pipeline: disposition validation,
-zero-Hit-Point replacement guards and the public damage-at-zero lifecycle,
-character/Stat Block attack projection, Light-property held/offhand projection,
-attack-roll source cancellation, and action-resource preference/spend. Luna's
-review replaced an absent helper with a real third combatant. Root review then
-used the canonical Relentless Endurance fixture to make the zero-HP guards
-observable, corrected the massive-damage threshold, asserted the resulting
-death-save failure, and exercised competing action resources together in
-`bb4ec0eb5`. Focused tests, package typecheck, four Luna review rounds, and the
-repeated independent root review all converged cleanly before the public run.
+Since the prior authoritative checkpoint, `40ed09221` added focused witnesses
+for repeated damage allocation, multi-component save damage, attack-burst save
+ability projection, precomputed and unresolved source-side damage penalties,
+unresolved target resistance, and Save Damage Replacement filtering. Luna
+rejected an already-covered object-contact hypothesis after measurement, then
+completed two review rounds and corrected an implausible penalty roll. Root
+review found that the object-damage helper's optional damage type and `force`
+fallback admitted a state no production caller can create. `405dba830` made the
+known spell damage type required and removed two tests that had cemented that
+impossible fallback. Focused tests, package typecheck, Luna's review loop, and
+the repeated independent root review all converged cleanly before the public
+run.
 
 Focused cohort uncovered counts remain regression and navigation evidence, not
 a forecast of the global public delta, because other public tests may already
@@ -88,13 +89,14 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting public metric at 93.44%, with a static 99% gap of
-1,793. Clone the public harness arguments for a fresh package-local diagnostic,
+Branches remain the limiting public metric at 93.46%, with a static 99% gap of
+1,785. Clone the public harness arguments for a fresh package-local diagnostic,
 select a different branch-heavy owner or cohesive subsystem from the completed
-save-gate, active-effect-ledger, and persistent-spatial campaigns, audit its
-uncovered alternatives for schema-impossible or duplicated logic, cover only
-behaviorally reachable alternatives with focused tests, and then remeasure with
-the public root diagnostic.
+save-gate, active-effect-ledger, persistent-spatial, ongoing-feature admission,
+act-composition, attack-projection, attack-pipeline, and spell-damage-fill
+campaigns. Audit its uncovered alternatives for schema-impossible or duplicated
+logic, cover only behaviorally reachable alternatives with focused tests, and
+then remeasure with the public root diagnostic.
 
 ## Verification and completion
 
