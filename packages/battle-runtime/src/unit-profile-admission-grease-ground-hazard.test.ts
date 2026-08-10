@@ -166,6 +166,81 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       }),
     ]);
   });
+  test("grease cast leaves a successful appearance save standing while creating the hazard", () => {
+    const spell = spellRecord(greaseUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: greaseUnitId,
+      slotLevel: 1,
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+
+    const resolved = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        greaseSavingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Grease cast to resolve.");
+    }
+    expect(
+      requireCombatant(resolved.state, spellTargetId).conditions,
+    ).not.toEqual(expect.objectContaining({ prone: true }));
+    expect(
+      requireCombatant(resolved.state, spellCasterId).activeEffects,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "greaseGroundHazard",
+        areaId: greaseAreaId,
+      }),
+    ]);
+  });
+  test("grease applies Prone only to creatures that fail a multi-target appearance save", () => {
+    const spell = spellRecord(greaseUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+      extraTargetIds: [thunderwaveSecondTargetId],
+    });
+    const act = spellAct({
+      session,
+      spellId: greaseUnitId,
+      slotLevel: 1,
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+
+    const resolved = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        greaseSavingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: true },
+          { targetId: thunderwaveSecondTargetId, succeeded: false },
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Grease cast to resolve.");
+    }
+    expect(
+      requireCombatant(resolved.state, spellTargetId).conditions,
+    ).not.toEqual(expect.objectContaining({ prone: true }));
+    expect(
+      requireCombatant(resolved.state, thunderwaveSecondTargetId).conditions,
+    ).toEqual(expect.objectContaining({ prone: true }));
+  });
   test("a failed Grease appearance save opens the target's readied-spell Reaction", () => {
     const spell = spellRecord(greaseUnitId);
     const session = spellBattleWithTargetReadiedRay({

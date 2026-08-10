@@ -127,6 +127,7 @@ import {
   type BattleObjectDamageOutcome,
   type BattleObjectIgnitionOutcome,
   type BattleResolutionResult,
+  type BattleSpellAreaSavingThrowOutcomeValue,
   type BattleSavingThrowOutcome,
   type BattleSpellAreaChoice,
   type BattleSpellSavingThrowOutcomeValue,
@@ -163,6 +164,47 @@ type SaveMetamagicSelectionState =
 type SaveGatedSpellResolutionInput =
   | ActionSpellBattleResolutionInput
   | BonusActionSpellBattleResolutionInput;
+
+type AreaSavingThrowOutcomeValue = BattleSpellAreaSavingThrowOutcomeValue;
+type GreaseSavingThrowOutcomeValue = AreaSavingThrowOutcomeValue & {
+  readonly area: Extract<
+    BattleSpellAreaChoice,
+    { readonly kind: "greaseGroundArea" }
+  >;
+};
+
+function assertAreaSavingThrowOutcomes(
+  value: BattleSpellSavingThrowOutcomeValue,
+): asserts value is AreaSavingThrowOutcomeValue {
+  /* v8 ignore start -- The immediately preceding save-outcome validator proves area spells carry area facts; this assertion protects the narrowed reducer path if that validator's contract changes. */
+  if (!("area" in value)) {
+    throw new Error(
+      "Validated area save-gate outcomes must include area facts.",
+    );
+  }
+  /* v8 ignore stop */
+}
+
+function assertGreaseSavingThrowOutcomes(
+  value: BattleSpellSavingThrowOutcomeValue,
+): asserts value is GreaseSavingThrowOutcomeValue {
+  assertAreaSavingThrowOutcomes(value);
+  /* v8 ignore start -- The immediately preceding save-outcome validator dispatches Grease to its ground-area validator; this assertion protects the narrowed reducer path if that contract changes. */
+  if (value.area.kind !== "greaseGroundArea") {
+    throw new Error(
+      "Validated Grease outcomes must include ground-area facts.",
+    );
+  }
+  /* v8 ignore stop */
+}
+
+function failedSavingThrowTargetIds(
+  value: BattleSpellSavingThrowOutcomeValue,
+): readonly CombatantId[] {
+  return value.outcomes.flatMap((outcome) =>
+    outcome.succeeded ? [] : [outcome.targetId],
+  );
+}
 
 function maybeOpenSpellSaveFailedInterruptWindow(
   input: SaveGatedSpellResolutionInput,
@@ -653,31 +695,10 @@ export function resolveGreaseGroundHazardSpellAct(input: {
     );
   }
   /* v8 ignore stop */
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (!("area" in savingThrowOutcomes)) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Grease requires ground-area facts.",
-    );
-  }
-  /* v8 ignore stop */
+  assertGreaseSavingThrowOutcomes(savingThrowOutcomes);
   const area = savingThrowOutcomes.area;
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (area.kind !== "greaseGroundArea") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
-    return invalidResult(
-      input.input.state,
-      "invalidFill",
-      "Grease requires a ground-area id.",
-    );
-  }
-  /* v8 ignore stop */
 
-  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
-    outcome.succeeded ? [] : [outcome.targetId],
-  );
+  const failedTargets = failedSavingThrowTargetIds(savingThrowOutcomes);
   const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
     input.input,
     input.invocation.sourceProcedureRef,
@@ -785,12 +806,11 @@ export function resolveSleepTargetAdmissionSpellAct(input: {
     );
   }
   /* v8 ignore stop */
+  assertAreaSavingThrowOutcomes(input.fillSet.savingThrowOutcomes);
   const selectedTargetIds =
-    "area" in input.fillSet.savingThrowOutcomes
-      ? input.fillSet.savingThrowOutcomes.area.affectedTargetIds
-      : [];
-  const failedTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
-    (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
+    input.fillSet.savingThrowOutcomes.area.affectedTargetIds;
+  const failedTargets = failedSavingThrowTargetIds(
+    input.fillSet.savingThrowOutcomes,
   );
   const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
     input.input,
@@ -933,8 +953,8 @@ export function resolveHideousLaughterSpellAct(input: {
     );
   }
   /* v8 ignore stop */
-  const failedTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
-    (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
+  const failedTargets = failedSavingThrowTargetIds(
+    input.fillSet.savingThrowOutcomes,
   );
   const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
     input.input,
@@ -1051,8 +1071,8 @@ export function resolveAbilityD20TestRollModeSaveGateSpellAct(input: {
     );
   }
   /* v8 ignore stop */
-  const failedTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
-    (outcome) => (outcome.succeeded ? [] : [outcome.targetId]),
+  const failedTargets = failedSavingThrowTargetIds(
+    input.fillSet.savingThrowOutcomes,
   );
   const successfulTargets = input.fillSet.savingThrowOutcomes.outcomes.flatMap(
     (outcome) => (outcome.succeeded ? [outcome.targetId] : []),
@@ -1458,9 +1478,7 @@ export function resolveSaveGateDamageSpellAct(input: {
     input.invocation,
     input.metamagicApplications,
   );
-  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
-    outcome.succeeded ? [] : [outcome.targetId],
-  );
+  const failedTargets = failedSavingThrowTargetIds(savingThrowOutcomes);
   const saveGatedDamageSpellRequiresConcentration = spellRequiresConcentration(
     input.invocation,
   );
@@ -2660,9 +2678,7 @@ export function resolveSaveGateConditionSpellAct(input: {
   const selectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
-  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
-    outcome.succeeded ? [] : [outcome.targetId],
-  );
+  const failedTargets = failedSavingThrowTargetIds(savingThrowOutcomes);
   const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
     input.input,
     input.invocation.sourceProcedureRef,
@@ -2828,9 +2844,7 @@ export function resolveSaveGateConditionImmunitySpellAct(input: {
   const selectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
-  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
-    outcome.succeeded ? [] : [outcome.targetId],
-  );
+  const failedTargets = failedSavingThrowTargetIds(savingThrowOutcomes);
   const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
     input.input,
     input.invocation.sourceProcedureRef,
@@ -3019,9 +3033,7 @@ export function resolveCommandSpellAct(input: {
   const selectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
-  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
-    outcome.succeeded ? [] : [outcome.targetId],
-  );
+  const failedTargets = failedSavingThrowTargetIds(savingThrowOutcomes);
   const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
     input.input,
     input.invocation.sourceProcedureRef,
@@ -3157,9 +3169,7 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
   const selectedTargetIds = savingThrowOutcomes.outcomes.map(
     (outcome) => outcome.targetId,
   );
-  const failedTargets = savingThrowOutcomes.outcomes.flatMap((outcome) =>
-    outcome.succeeded ? [] : [outcome.targetId],
-  );
+  const failedTargets = failedSavingThrowTargetIds(savingThrowOutcomes);
   const saveFailedReactionWindow = maybeOpenSpellSaveFailedInterruptWindow(
     input.input,
     input.invocation.sourceProcedureRef,
