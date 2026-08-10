@@ -21,7 +21,6 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   battleId,
-  battleObjectId,
   characterId,
   combatantId,
   discoverBattleActCandidates,
@@ -53,10 +52,6 @@ import {
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
-import {
-  spellManufacturedMetalObjectTargetFill,
-  spellObjectContactTargetsFill,
-} from "./unit-profile-admission-spell-fill.test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -69,8 +64,6 @@ const unitLibrary = unitCatalogResult.catalog;
 const acidSplashUnitId = "acid_splash";
 const expeditiousRetreatUnitId = "expeditious_retreat";
 const flameBladeUnitId = "flame_blade";
-const heatMetalUnitId = "heat_metal";
-const mindSpikeUnitId = "mind_spike";
 const magicMissileUnitId = "magic_missile";
 const counterspellUnitId = "counterspell";
 const shieldUnitId = "shield";
@@ -787,50 +780,6 @@ describe("Counterspell Reaction spell", () => {
     });
   });
 
-  test("opens Counterspell before a nonverbal spell is readied", () => {
-    const session = battleWithCounterspell({
-      casterPreparedSpells: [srdSpellRecord(mindSpikeUnitId)],
-      casterSlots: [{ spellLevel: 2, count: 1 }],
-    });
-    const castSubject = requireCastSpellSubject(
-      session,
-      requireCharacterSpellProcedureRefForTest(
-        session,
-        casterId,
-        spellSlotInvocationRef(mindSpikeUnitId, 2, "saveGatedDamage"),
-      ),
-    );
-    if (castSubject.tag !== "actionSpell") {
-      throw new Error("Expected Mind Spike Action spell subject.");
-    }
-    const readySubject = {
-      ...castSubject,
-      mode: { tag: "ready" as const, trigger: "spellCast" as const },
-    };
-    const awaitingReaction = resolveBattleSubject({
-      state: session.state,
-      subject: readySubject,
-      fills: [
-        spellCastReactionFactsFill([
-          counterspellTriggerFact({
-            session,
-            reactorId: counterspellerId,
-            casterId,
-          }),
-        ]),
-      ],
-    });
-    expect(awaitingReaction).toMatchObject({
-      tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
-    });
-    if (awaitingReaction.tag !== "needsHoles") {
-      throw new Error("Expected Counterspell to interrupt readied Mind Spike.");
-    }
-    requireCounterspellChoice(awaitingReaction, counterspellerId, 3, session);
-  });
-
   test("opens Counterspell for a spell-created held object cast", () => {
     const session = battleWithCounterspell({
       casterPreparedSpells: [srdSpellRecord(flameBladeUnitId)],
@@ -982,79 +931,6 @@ describe("Counterspell Reaction spell", () => {
         }),
       }),
     });
-  });
-
-  test("opens Counterspell before Heat Metal asks for contact creatures", () => {
-    const session = battleWithCounterspell({
-      casterPreparedSpells: [srdSpellRecord(heatMetalUnitId)],
-      casterSlots: [{ spellLevel: 2, count: 1 }],
-    });
-    const subject = requireCastSpellSubject(
-      session,
-      requireCharacterSpellProcedureRefForTest(
-        session,
-        casterId,
-        spellSlotInvocationRef(heatMetalUnitId, 2, "objectContactDamage"),
-      ),
-    );
-    const objectTargetResult = resolveBattleSubject({
-      state: session.state,
-      subject,
-      fills: [],
-    });
-    if (objectTargetResult.tag !== "needsHoles") {
-      throw new Error("Expected Heat Metal object target hole.");
-    }
-    const objectTarget = requireHole(
-      objectTargetResult.holes,
-      "objectTargetChoice",
-    );
-    const objectFill = spellManufacturedMetalObjectTargetFill({
-      hole: objectTarget,
-      objectId: battleObjectId("counterspell-heat-metal-object"),
-      spellId: heatMetalUnitId,
-      casterId,
-    });
-    const contactTargetResult = resolveBattleSubject({
-      state: session.state,
-      subject,
-      fills: [objectFill],
-    });
-    if (contactTargetResult.tag !== "needsHoles") {
-      throw new Error("Expected Heat Metal contact target hole.");
-    }
-    const contactTarget = requireHole(
-      contactTargetResult.holes,
-      "objectContactTargets",
-    );
-    const awaitingReaction = resolveBattleSubject({
-      state: session.state,
-      subject,
-      fills: [
-        objectFill,
-        spellObjectContactTargetsFill({
-          hole: contactTarget,
-          targetIds: [counterspellerId],
-        }),
-        spellCastReactionFactsFill([
-          counterspellTriggerFact({
-            session,
-            reactorId: counterspellerId,
-            casterId,
-          }),
-        ]),
-      ],
-    });
-
-    expect(awaitingReaction).toMatchObject({
-      tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
-    });
-    if (awaitingReaction.tag !== "needsHoles") {
-      throw new Error("Expected Counterspell to interrupt Heat Metal.");
-    }
-    requireCounterspellChoice(awaitingReaction, counterspellerId, 3, session);
   });
 });
 

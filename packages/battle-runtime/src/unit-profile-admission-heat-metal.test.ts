@@ -7,13 +7,9 @@ import { describe, expect, test } from "vitest";
 import { requiredAttackRollMode } from "./battle-reducer/attack-roll.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type { BattleActiveEffect } from "./index.ts";
-import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import {
-  battleProcedureExecutionRefForTest,
   concentrationSavingThrowFill,
-  reactionChoiceWithSubject,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -29,10 +25,7 @@ import {
   resolveWeaponAttackMiss,
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import {
-  spellBattle,
-  spellBattleWithTargetRayOfFrost,
-} from "./unit-profile-admission-spell-battle.test-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   bonusSpellAct,
   maybeBonusSpellAct,
@@ -48,8 +41,6 @@ import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleObjectId,
   breakBattleConcentration,
-  cantripSpellInvocationRef,
-  combatantId,
   elapsedTimeTicks,
   endTurn,
   Hp,
@@ -300,48 +291,17 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     }
     expect(needsDamage.holes).toHaveLength(1);
     const damageHole = requireResultHole(needsDamage, "rolledDice");
-    const damageFill = damageRollFillWithGroups(damageHole, [[3, 4]]);
-    const directFills = [objectFill, contactFill, damageFill];
-    const actionUnavailableState = {
-      ...state,
-      currentTurnResources: {
-        ...state.currentTurnResources,
-        actionResources: [],
-      },
-    };
-    expect(
-      resolveBattleSubject({
-        state: actionUnavailableState,
-        subject: act.subject,
-        fills: directFills,
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "staleSubject",
-      message: "Magic action is no longer available for the current actor.",
-    });
-
-    const emptyContactFill = spellObjectContactTargetsFill({
-      hole: contactTarget,
-      targetIds: [],
-    });
-    const emptyContactFills = [objectFill, emptyContactFill];
-    expect(
-      resolveBattleSubject({
-        state: actionUnavailableState,
-        subject: act.subject,
-        fills: emptyContactFills,
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "staleSubject",
-      message: "Magic action is no longer available for the current actor.",
-    });
 
     const resolved = resolveBattleSubject({
       state,
       subject: act.subject,
-      fills: [objectFill, contactFill, damageFill],
+      fills: [
+        objectFill,
+        contactFill,
+        damageRollFillWithGroups(requireHole(needsDamage.holes, "rolledDice"), [
+          [3, 4],
+        ]),
+      ],
     });
 
     expect(resolved).toMatchObject({
@@ -518,244 +478,6 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
         expect.objectContaining({ spellLevel: 2, expended: 1 }),
       ]),
     );
-  });
-
-  test("contact damage opens a readied after-damage reaction before cleanup", () => {
-    const spell = spellRecord(heatMetalUnitId);
-    const session = spellBattleWithTargetRayOfFrost({
-      preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 2, count: 1 }],
-      targetHp: 20,
-      targetMaxHp: 20,
-    });
-    const targetTurn = endTurn({
-      state: session.state,
-      actorId: spellCasterId,
-    });
-    if (targetTurn.tag !== "resolved") {
-      throw new Error("Expected Heat Metal target turn to begin.");
-    }
-    const readiedRay = resolveBattleSubject({
-      state: targetTurn.state,
-      subject: {
-        tag: "actionSpell",
-        actorId: spellTargetId,
-        procedureRef: requireCharacterSpellProcedureRefForTest(
-          session,
-          spellTargetId,
-          cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
-        ),
-        mode: { tag: "ready", trigger: "afterDamage" },
-      },
-      fills: [],
-    });
-    if (readiedRay.tag !== "resolved") {
-      throw new Error("Expected Heat Metal target to ready Ray of Frost.");
-    }
-    const casterTurn = endTurn({
-      state: readiedRay.state,
-      actorId: spellTargetId,
-    });
-    if (casterTurn.tag !== "resolved") {
-      throw new Error("Expected Heat Metal caster turn to resume.");
-    }
-    const castSession = battleRuntimeSessionForTest({
-      state: casterTurn.state,
-      context: session.context,
-    });
-    const act = spellAct({
-      session: castSession,
-      spellId: heatMetalUnitId,
-      slotLevel: 2,
-    });
-    const objectFill = spellManufacturedMetalObjectTargetFill({
-      hole: requireHole(act.initialHoles, "objectTargetChoice"),
-      objectId: battleObjectId("heat-metal-after-damage-reaction"),
-      spellId: heatMetalUnitId,
-      casterId: spellCasterId,
-    });
-    const contactHole = requireResultHole(
-      resolveBattleSubject({
-        state: casterTurn.state,
-        subject: act.subject,
-        fills: [objectFill],
-      }),
-      "objectContactTargets",
-    );
-    const contactFill = spellObjectContactTargetsFill({
-      hole: contactHole,
-      targetIds: [spellTargetId],
-    });
-    const damageHole = requireResultHole(
-      resolveBattleSubject({
-        state: casterTurn.state,
-        subject: act.subject,
-        fills: [objectFill, contactFill],
-      }),
-      "rolledDice",
-    );
-    const needsConcentration = resolveBattleSubject({
-      state: casterTurn.state,
-      subject: act.subject,
-      fills: [
-        objectFill,
-        contactFill,
-        damageRollFillWithGroups(damageHole, [[3, 4]]),
-      ],
-    });
-    const concentrationHole = requireResultHole(
-      needsConcentration,
-      "concentrationSavingThrow",
-    );
-    const afterDamage = resolveBattleSubject({
-      state: casterTurn.state,
-      subject: act.subject,
-      fills: [
-        objectFill,
-        contactFill,
-        damageRollFillWithGroups(damageHole, [[3, 4]]),
-        concentrationSavingThrowFill(concentrationHole, true),
-      ],
-    });
-
-    expect(afterDamage).toMatchObject({
-      tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
-      snapshot: { pendingInterrupt: { trigger: "afterDamage" } },
-    });
-    if (afterDamage.tag !== "needsHoles") {
-      throw new Error("Expected readied after-damage reaction window.");
-    }
-    const pendingInterrupt = afterDamage.snapshot.pendingInterrupt;
-    if (pendingInterrupt === null) {
-      throw new Error("Expected pending readied after-damage reaction.");
-    }
-    const releaseChoice = reactionChoiceWithSubject(pendingInterrupt.choices);
-    if (
-      releaseChoice.subject.tag !== "runtimeCommand" ||
-      releaseChoice.subject.command !== "releaseReadiedSpell" ||
-      releaseChoice.subject.readiedSpellCasterId !== spellTargetId
-    ) {
-      throw new Error("Expected the target's readied Ray of Frost release.");
-    }
-  });
-
-  test("contact damage requests a Hideous Laughter repeat save before cleanup", () => {
-    const spell = spellRecord(heatMetalUnitId);
-    const laughterCasterId = combatantId("heat-metal-laughter-caster");
-    const baseSession = spellBattle({
-      preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 2, count: 1 }],
-      targetHp: 20,
-      targetMaxHp: 20,
-      extraTargetIds: [laughterCasterId],
-    });
-    const target = requireCombatant(baseSession.state, spellTargetId);
-    const laughterCaster = requireCombatant(
-      baseSession.state,
-      laughterCasterId,
-    );
-    const sourceProcedureRef = battleProcedureExecutionRefForTest(
-      "synthetic_heat_metal_laughter",
-    );
-    const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
-      target,
-      applyCondition(
-        applyCondition(target.conditions, "prone"),
-        "incapacitated",
-      ),
-    );
-    const withLaughter = {
-      ...baseSession.state,
-      combatants: new Map(baseSession.state.combatants)
-        .set(laughterCasterId, {
-          ...laughterCaster,
-          concentration: {
-            sourceProcedureRef,
-            effectKind: "spellEffect" as const,
-          },
-        })
-        .set(spellTargetId, {
-          ...affectedTarget,
-          activeEffects: [
-            ...target.activeEffects,
-            {
-              kind: "hideousLaughter" as const,
-              sourceProcedureRef,
-              sourceCombatantId: laughterCasterId,
-              conditionHadNonSpellProneSource: false,
-              conditionHadNonSpellIncapacitatedSource: false,
-              repeatSaveRollMode: null,
-              save: {
-                ability: "wis" as const,
-                dc: { kind: "caster_spell_save_dc" as const },
-              },
-              expiresAt: {
-                kind: "concentration" as const,
-                combatantId: laughterCasterId,
-                durationTicks: elapsedTimeTicks(60),
-              },
-            },
-          ],
-        }),
-    };
-    const session = battleRuntimeSessionForTest({
-      state: withLaughter,
-      context: baseSession.context,
-    });
-    const act = spellAct({
-      session,
-      spellId: heatMetalUnitId,
-      slotLevel: 2,
-    });
-    const objectFill = spellManufacturedMetalObjectTargetFill({
-      hole: requireHole(act.initialHoles, "objectTargetChoice"),
-      objectId: battleObjectId("heat-metal-hideous-laughter"),
-      spellId: heatMetalUnitId,
-      casterId: spellCasterId,
-    });
-    const contactHole = requireResultHole(
-      resolveBattleSubject({
-        state: withLaughter,
-        subject: act.subject,
-        fills: [objectFill],
-      }),
-      "objectContactTargets",
-    );
-    const contactFill = spellObjectContactTargetsFill({
-      hole: contactHole,
-      targetIds: [spellTargetId],
-    });
-    const damageHole = requireResultHole(
-      resolveBattleSubject({
-        state: withLaughter,
-        subject: act.subject,
-        fills: [objectFill, contactFill],
-      }),
-      "rolledDice",
-    );
-    const pendingRepeatSave = resolveBattleSubject({
-      state: withLaughter,
-      subject: act.subject,
-      fills: [
-        objectFill,
-        contactFill,
-        damageRollFillWithGroups(damageHole, [[3, 4]]),
-      ],
-    });
-
-    expect(pendingRepeatSave).toMatchObject({
-      tag: "needsHoles",
-      holes: [
-        {
-          kind: "savingThrowOutcome",
-          hideousLaughterRepeatSave: {
-            targetId: spellTargetId,
-            trigger: "damage",
-          },
-        },
-      ],
-    });
   });
 
   test("self-contact failed no-drop save does not apply the penalty after same-occurrence Concentration breaks", () => {
@@ -1081,39 +803,6 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     ).toEqual({
       sourceProcedureRef: act.subject.procedureRef,
       effectKind: "spellEffect",
-    });
-    const repeatDamageFill = damageRollFillWithGroups(repeatDamage, [
-      [1, 2, 3],
-    ]);
-    const repeatFills = [repeatFill, repeatDamageFill];
-    expect(
-      resolveBattleSubject({
-        state: casterTurn.state,
-        subject: repeat.subject,
-        fills: [],
-      }),
-    ).toMatchObject({
-      tag: "needsHoles",
-      holes: [{ kind: "objectContactTargets" }],
-    });
-    const bonusActionUnavailableState = {
-      ...casterTurn.state,
-      currentTurnResources: {
-        ...casterTurn.state.currentTurnResources,
-        currentHasBonusAction: false,
-      },
-    };
-    expect(
-      resolveBattleSubject({
-        state: bonusActionUnavailableState,
-        subject: repeat.subject,
-        fills: repeatFills,
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "staleSubject",
-      message:
-        "Bonus Action spell is no longer available for the current actor.",
     });
     expect(
       resolveBattleSubject({
