@@ -31,27 +31,27 @@ totals, and comparison below are the self-contained durable evidence.
 ## Current authoritative diagnostic
 
 - Date: 2026-08-09
-- Git HEAD: `51c2015810943e5eff756c02ad58072a64e7af1b`
+- Git HEAD: `8d879df10171de33b94f195936743d0e93747e82`
 - Command: `pnpm coverage`
-- Result: exit 0; battle-runtime segment complete and green
-- Total wall duration: 577 seconds
-- Battle-runtime tests: 204/204 files passed; 2,169 tests passed and 53
-  skipped (2,222 total)
+- Result: exit 0; all workspace coverage packages complete and green
+- Total wall duration: approximately 311 seconds
+- Battle-runtime tests: 204/204 files passed; 2,174 tests passed and 53
+  skipped (2,227 total)
 
-| Metric     |                 `85869fc2` |                `07e9580b5` |                `962fa8462` |                `51c201581` | `962fa` -> `51c` covered / total |     Uncovered change |   Delta |
-| ---------- | -------------------------: | -------------------------: | -------------------------: | -------------------------: | -------------------------------: | -------------------: | ------: |
-| Statements | 120,221 / 124,616 (96.47%) | 120,175 / 124,554 (96.48%) | 120,173 / 124,545 (96.48%) | 120,172 / 124,529 (96.50%) |                         -1 / -16 | 4,372 -> 4,357 (-15) | +0.02pp |
-| Branches   |   29,979 / 32,143 (93.26%) |   29,966 / 32,121 (93.29%) |   29,977 / 32,131 (93.29%) |   29,981 / 32,135 (93.29%) |                          +4 / +4 |   2,154 -> 2,154 (0) | +0.00pp |
-| Functions  |       4,795 / 4,795 (100%) |       4,793 / 4,793 (100%) |       4,794 / 4,794 (100%) |       4,794 / 4,794 (100%) |                            0 / 0 |               0 -> 0 |       0 |
-| Lines      | 120,221 / 124,616 (96.47%) | 120,175 / 124,554 (96.48%) | 120,173 / 124,545 (96.48%) | 120,172 / 124,529 (96.50%) |                         -1 / -16 | 4,372 -> 4,357 (-15) | +0.02pp |
+| Metric     |                `962fa8462` |                `51c201581` |                `8d879df10` | `51c` -> `8d8` covered / total |     Uncovered change |   Delta |
+| ---------- | -------------------------: | -------------------------: | -------------------------: | -----------------------------: | -------------------: | ------: |
+| Statements | 120,173 / 124,545 (96.48%) | 120,172 / 124,529 (96.50%) | 120,472 / 124,876 (96.47%) |                    +300 / +347 | 4,357 -> 4,404 (+47) | -0.03pp |
+| Branches   |   29,977 / 32,131 (93.29%) |   29,981 / 32,135 (93.29%) |   30,020 / 32,181 (93.28%) |                      +39 / +46 |  2,154 -> 2,161 (+7) | -0.01pp |
+| Functions  |       4,794 / 4,794 (100%) |       4,794 / 4,794 (100%) |       4,811 / 4,811 (100%) |                      +17 / +17 |               0 -> 0 |       0 |
+| Lines      | 120,173 / 124,545 (96.48%) | 120,172 / 124,529 (96.50%) | 120,472 / 124,876 (96.47%) |                    +300 / +347 | 4,357 -> 4,404 (+47) | -0.03pp |
 
-The Vitest statement/line percentage rose to 96.50% while branches remained at
-93.29%; uncovered statements/lines fell by 15 and uncovered branches were
-unchanged. These are measured deltas from the authoritative public run, not a
-forecast toward 99%. Denominator changes are shown explicitly because
-production code changed between checkpoints. Every other executable package in
-this root run met all 99% metric thresholds; battle-runtime is the only
-remaining package below acceptance.
+The Vitest statement/line percentage fell to 96.47% and branches fell to
+93.28%; uncovered statements/lines increased by 47 and uncovered branches by 7. These are measured deltas from the authoritative public run, not a forecast
+toward 99%. Denominator changes are shown explicitly because production code
+changed between checkpoints. The existing integer ratchets were preserved and
+no threshold was lowered. Every other executable package in this root run met
+all 99% metric thresholds; battle-runtime is the only remaining package below
+acceptance.
 
 ## Remaining static 99% gaps
 
@@ -60,40 +60,43 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 120,172 | 124,529 |                  123,284 |         3,112 |
-| Branches   |  29,981 |  32,135 |                   31,814 |         1,833 |
-| Functions  |   4,794 |   4,794 |                    4,747 |             0 |
-| Lines      | 120,172 | 124,529 |                  123,284 |         3,112 |
+| Statements | 120,472 | 124,876 |                  123,628 |         3,156 |
+| Branches   |  30,020 |  32,181 |                   31,860 |         1,840 |
+| Functions  |   4,811 |   4,811 |                    4,763 |             0 |
+| Lines      | 120,472 | 124,876 |                  123,628 |         3,156 |
 
 ## Milestone context
 
-Since the prior authoritative checkpoint, `f7494d2fb` removed an unreachable
-Dragon's Breath post-Concentration same-source guard (production net -11), and
-`e300f6559` fixed roll-modifier object/mixed-target admission using the
-canonical `creatureTargetSelection` predicate. `e0e170611` removed unreachable
-Faerie Fire post-Concentration combatant/object replay filters (production net
--11). `51c201581` fixed direct HP-restoration/area-healing and
-condition-removal/protection object/mixed-target admission with that same
-canonical predicate. These behavior changes were accompanied by focused package
-tests and typechecks; the Dragon's Breath and Faerie Fire lanes also received
-their focused MBT runs. Focused evidence is navigation and regression evidence,
-not a replacement for the public totals above. The public checkpoint now records
-15 fewer uncovered statements/lines and no uncovered-branch movement than
-`962fa8462`.
+Since the prior authoritative checkpoint, `4702e762f` corrected readied spell
+release against object targets and consolidated the corresponding public and
+MBT scenario sequence. `982115d69` narrowed validated Grease and Sleep area
+outcomes, centralized nine failed-save target projections, and added successful
+and mixed-target Grease appearance-save witnesses. Root review in `8d879df10`
+moved that projection to one saving-throw outcome owner and reused it across
+the remaining exact production copies in spell, feature, and route reducers.
+The readied-object milestone received focused QNT and MBT evidence; the
+save-gate milestone received the save-ordering and condition-saving-throw MBT
+lanes. Both received focused tests, package typecheck, and reviewer-loop
+convergence. The authoritative totals above show that the combined unmeasured
+interval did not produce numeric progress toward 99% despite preserving the
+configured ratchets.
 
-Focused cohort uncovered counts remain regression and navigation evidence, not a
-forecast of the global public delta, because other public tests may already
+Focused cohort uncovered counts remain regression and navigation evidence, not
+a forecast of the global public delta, because other public tests may already
 cover those arms. Only the full public totals establish global movement.
 Continue from the current public report, preserve behavior and Quint parity,
 and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting public metric at 93.29%, with a static 99% gap of
-1,834. Select one branch-heavy checked-in battle-runtime owner from the public
-report, audit its uncovered alternatives for schema-impossible or duplicated
-logic, cover only behaviorally reachable alternatives with focused tests, and
-then remeasure with the public root diagnostic.
+Branches remain the limiting public metric at 93.28%, with a static 99% gap of
+1,840. Do not continue the just-measured save-gate campaign without fresh
+file-level evidence: its focused diagnostic improved while the authoritative
+aggregate regressed over the wider interval. Clone the public harness arguments
+for a fresh package-local diagnostic, select a different branch-heavy owner or
+cohesive subsystem, audit its uncovered alternatives for schema-impossible or
+duplicated logic, cover only behaviorally reachable alternatives with focused
+tests, and then remeasure with the public root diagnostic.
 
 ## Verification and completion
 
