@@ -3,7 +3,10 @@ import { describe, expect, test } from "vitest";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { assertBattleSnapshotCodecRoundTripForTest } from "./battle-runtime.test-support.ts";
 import { normalizeEarlyEndedOngoingFeatures } from "./battle-reducer/creature-state.ts";
+import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state-execution.ts";
+import { sacredWeaponHeldMeleeWeapons } from "./battle-reducer/unit-feature-discovery.ts";
 import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
+import { battleObjectId } from "./identity.ts";
 import {
   abilityModifier,
   attackBonus,
@@ -55,6 +58,20 @@ describe("Sacred Weapon activation", () => {
     expect(
       sacredWeaponAct(sacredWeaponBattle({ selectedProfile: false })),
     ).toBeUndefined();
+  });
+
+  test("discovers Sacred Weapon for a held off-hand Melee weapon as well as the main weapon", () => {
+    const state = sacredWeaponBattle({ offHandWeaponUnitId: "weapon_club" });
+    const actor = state.combatants.get(paladinId);
+    if (!isCharacterBattleCreatureState(actor)) {
+      throw new Error("Expected Sacred Weapon Paladin character actor.");
+    }
+
+    const heldWeapons = sacredWeaponHeldMeleeWeapons(state, actor);
+    expect(heldWeapons.map(({ itemId }) => itemId)).toEqual([
+      actor.origin.selectedLoadout.weapon?.itemId,
+      battleObjectId("off:weapon_club"),
+    ]);
   });
 
   test("spends one Attack action and one Paladin Channel Divinity use, then binds the selected held weapon", () => {

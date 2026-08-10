@@ -5,10 +5,12 @@ import { describe, expect, test } from "vitest";
 
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
+import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   magicActionAreaSaveDamageHealingDamageRollHoleId,
   magicActionAreaSaveDamageHealingHealingRollHoleId,
+  diceExprLabel,
 } from "./battle-reducer/unit-feature-discovery.ts";
 
 import {
@@ -23,6 +25,8 @@ import {
 import {
   characterBattleFeatureInitForTest,
   characterSeed,
+  rageResource,
+  supportedBattleUnitRef,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -50,10 +54,26 @@ import {
 const druidWildShapeUnitId = "druid_wild_shape";
 const landsAidUnit = unitLibrary.requireUnit(druidLandsAidUnitId);
 const wildShapeUnit = unitLibrary.requireUnit(druidWildShapeUnitId);
+const rageUnit = unitLibrary.requireUnit("barbarian_rage");
 const secondTargetId = combatantId("lands-aid-second-target");
 const healingTargetId = combatantId("lands-aid-healing-target");
 
 describe("Druid Land's Aid area save damage and healing", () => {
+  test("labels every supported dice expression modifier", () => {
+    expect(diceExprLabel({ dice: 2, dieSize: 6 })).toBe("2d6");
+    expect(diceExprLabel({ dice: 2, dieSize: 6, flat: 0 })).toBe("2d6");
+    expect(diceExprLabel({ dice: 2, dieSize: 6, flat: 3 })).toBe("2d6+3");
+    expect(diceExprLabel({ dice: 2, dieSize: 6, flat: -1 })).toBe("2d6-1");
+    expect(
+      diceExprLabel({
+        dice: 1,
+        dieSize: 8,
+        spellcastingMod: true,
+        abilityModifier: "wis",
+      }),
+    ).toBe("1d8+spellcasting+wis");
+  });
+
   test("discovers Land's Aid from selected identity and support profile", () => {
     const state = landsAidBattle();
     const act = landsAidAct(state);
@@ -84,6 +104,39 @@ describe("Druid Land's Aid area save damage and healing", () => {
         }),
       ]),
     );
+  });
+
+  test("requests and consumes an enemy relationship fact while Rage is active", () => {
+    const initial = landsAidBattle({ includeRage: true });
+    const rageProcedureRef = requireRageProcedureRef(initial);
+    const raging = recordResolvedState(
+      resolveBattleSubject({
+        state: initial,
+        subject: {
+          tag: "unitFeature",
+          actorId: spellCasterId,
+          procedureRef: rageProcedureRef,
+        },
+        fills: [],
+      }),
+    );
+    const act = landsAidAct(raging);
+    const save = requireHole(act.initialHoles, "savingThrowOutcome");
+    if (!("relationshipFactRequest" in save)) {
+      throw new Error("Expected Land's Aid relationship fact request.");
+    }
+    expect(save.relationshipFactRequest).toEqual({
+      kind: "savingThrowTargetIsEnemy",
+      actorId: spellCasterId,
+    });
+    const relationshipResult = resolveLandsAid(raging, {
+      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      areaTargetIds: [spellTargetId, healingTargetId],
+      healingTargetId,
+      damageRolls: [4, 4],
+      healingRolls: [3, 3],
+    });
+    expect(relationshipResult).toMatchObject({ tag: "resolved" });
   });
 
   test("spends Wild Shape, resolves Constitution saves, damages, and heals one creature in the Sphere", () => {
@@ -410,9 +463,17 @@ function landsAidBattle(
     readonly healingTargetHp?: number;
     readonly wildShapeUsesRemaining?: number;
     readonly druidLevel?: number;
+    readonly includeRage?: boolean;
   } = {},
 ): BattleState {
   const druidLevel = input.druidLevel ?? 3;
+  const classLevels: CharacterBattleClassLevelInits =
+    input.includeRage === true
+      ? [
+          { className: "druid" as const, level: classLevel(druidLevel) },
+          { className: "barbarian" as const, level: classLevel(1) },
+        ]
+      : [{ className: "druid" as const, level: classLevel(druidLevel) }];
   const result = startBattle({
     battleId: battleId("druid-lands-aid"),
     combatants: [
@@ -420,18 +481,31 @@ function landsAidBattle(
         combatantId: spellCasterId,
         displayName: "Land Druid",
         initiative: 20,
-        classLevels: [{ className: "druid", level: classLevel(druidLevel) }],
-        characterUnitRefs: [requireLandsAidUnitRef(druidLevel)],
+        classLevels,
+        characterUnitRefs: [
+          requireLandsAidUnitRef(druidLevel),
+          ...(input.includeRage === true
+            ? [supportedBattleUnitRef(rageUnit)]
+            : []),
+        ],
         unitFeatures: [
           characterBattleFeatureInitForTest(landsAidUnit, [
             { className: "druid", level: classLevel(druidLevel) },
           ]),
+          ...(input.includeRage === true
+            ? [
+                characterBattleFeatureInitForTest(rageUnit, [
+                  { className: "barbarian", level: classLevel(1) },
+                ]),
+              ]
+            : []),
         ],
         resources: [
           {
             unit: wildShapeUnit,
             usesRemaining: input.wildShapeUsesRemaining ?? 2,
           },
+          ...(input.includeRage === true ? [rageResource()] : []),
         ],
         spellcasting: {
           ...wizardSpellcasting(),
@@ -467,6 +541,28 @@ function landsAidBattle(
     throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right.state;
+}
+
+function requireRageProcedureRef(
+  state: BattleState,
+): BattleProcedureExecutionRef {
+  const actor = state.combatants.get(spellCasterId);
+  if (actor?.origin.kind !== "character") {
+    throw new Error("Expected Land Druid character actor.");
+  }
+  const binding = actor.origin.execution.procedureBindings.find(
+    ({ procedure }) =>
+      procedure.kind === "unitFeature" &&
+      procedure.execution.kind === "ongoingFeature" &&
+      procedure.execution.lifecycle.kind === "roundExtended" &&
+      procedure.execution.lifecycle.extensionTriggers.includes(
+        "enemySavingThrow",
+      ),
+  );
+  if (binding === undefined) {
+    throw new Error("Expected Rage procedure binding.");
+  }
+  return binding.procedureRef;
 }
 
 function withoutActionResources(state: BattleState): BattleState {
@@ -603,10 +699,34 @@ function landsAidSavingThrowFill(
   }[],
   areaTargetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  const relationshipFactRequest =
+    "relationshipFactRequest" in hole
+      ? hole.relationshipFactRequest
+      : undefined;
+  const [firstOutcome, ...restOutcomes] = outcomes;
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
     value: { outcomes },
+    ...(relationshipFactRequest?.kind === "savingThrowTargetIsEnemy" &&
+    firstOutcome !== undefined
+      ? {
+          relationshipFacts: [
+            {
+              kind: "savingThrowTargetIsEnemy" as const,
+              actorId: relationshipFactRequest.actorId,
+              targetId: firstOutcome.targetId,
+              targetIsEnemy: true,
+            },
+            ...restOutcomes.map((outcome) => ({
+              kind: "savingThrowTargetIsEnemy" as const,
+              actorId: relationshipFactRequest.actorId,
+              targetId: outcome.targetId,
+              targetIsEnemy: true,
+            })),
+          ],
+        }
+      : {}),
     spatialFacts:
       areaTargetIds.length === 0
         ? []

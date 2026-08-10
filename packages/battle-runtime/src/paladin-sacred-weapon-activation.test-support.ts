@@ -57,6 +57,7 @@ type SacredWeaponFixtureInput = {
   readonly channelDivinityUsesRemaining?: number;
   readonly includeActionSurgeResource?: boolean;
   readonly weaponUnitId?: "weapon_longsword" | "weapon_shortbow";
+  readonly offHandWeaponUnitId?: "weapon_club";
   readonly charismaScore?: number;
   readonly alternateAbilityChoices?: NonNullable<
     ReturnType<typeof zeroAbilityWeaponAttack>["alternateAbilityChoices"]
@@ -81,6 +82,8 @@ export function sacredWeaponSession(
   if (Either.isLeft(unitRef)) {
     throw new Error(unitRef.left.message);
   }
+  const mainWeaponUnitId = input.weaponUnitId ?? "weapon_longsword";
+  const mainWeaponObjectId = battleObjectId(`main:${mainWeaponUnitId}`);
   const state = startBattle({
     battleId: battleId("paladin-sacred-weapon-activation"),
     combatants: [
@@ -97,11 +100,33 @@ export function sacredWeaponSession(
             : []),
         ],
         attack: {
-          ...zeroAbilityWeaponAttack(input.weaponUnitId ?? "weapon_longsword"),
+          ...zeroAbilityWeaponAttack(mainWeaponUnitId),
           ...(input.alternateAbilityChoices === undefined
             ? {}
             : { alternateAbilityChoices: input.alternateAbilityChoices }),
         },
+        ...(input.offHandWeaponUnitId === undefined
+          ? {}
+          : {
+              offHandAttack: {
+                ...zeroAbilityWeaponAttack(input.offHandWeaponUnitId),
+              },
+            }),
+        ...(input.offHandWeaponUnitId === undefined
+          ? {}
+          : {
+              selectedLoadout: {
+                weapon: {
+                  itemId: mainWeaponObjectId,
+                  unitId: unitLibrary.requireUnit(mainWeaponUnitId).id,
+                  grip: "one_handed" as const,
+                },
+                offHandWeapon: {
+                  itemId: battleObjectId(`off:${input.offHandWeaponUnitId}`),
+                  unitId: unitLibrary.requireUnit(input.offHandWeaponUnitId).id,
+                },
+              },
+            }),
         unitFeatures:
           input.selectedProfile === false
             ? []

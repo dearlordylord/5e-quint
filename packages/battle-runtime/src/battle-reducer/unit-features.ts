@@ -29,7 +29,7 @@ import {
   holeId,
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { MovementFeet } from "@dnd/shared/types";
+import { MovementFeet, type DifficultyClass } from "@dnd/shared/types";
 import type { DiceExpr } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import {
@@ -579,7 +579,7 @@ function resolveMagicActionHealingPoolUnitFeature(
     return needsHolesResult(input.state, input.subject, [
       magicActionHealingPoolDistributionHole(
         input.state,
-        actor.combatantId,
+        actor,
         input.subject.procedureRef,
         unitFeature,
       ),
@@ -588,6 +588,7 @@ function resolveMagicActionHealingPoolUnitFeature(
 
   const validation = validateMagicActionHealingPoolDistribution({
     state: input.state,
+    actor,
     actorId: actor.combatantId,
     sourceProcedureRef: input.subject.procedureRef,
     unitFeature,
@@ -654,7 +655,8 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
       "Magic Action damage and healing has no resource uses remaining.",
     );
   }
-  if (spellSaveDcForCaster(input.state, actor.combatantId) === null) {
+  const spellSaveDc = spellSaveDcForCaster(input.state, actor.combatantId);
+  if (spellSaveDc === null) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -698,6 +700,7 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
         actorId: actor.combatantId,
         procedureRef: input.subject.procedureRef,
         unitFeature,
+        spellSaveDc,
         fills: fills.value,
       }),
     );
@@ -849,7 +852,8 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
       "Magic Action condition has no resource uses remaining.",
     );
   }
-  if (spellSaveDcForCaster(input.state, actor.combatantId) === null) {
+  const spellSaveDc = spellSaveDcForCaster(input.state, actor.combatantId);
+  if (spellSaveDc === null) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -873,11 +877,13 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
         actor.combatantId,
         unitFeature,
         input.subject.procedureRef,
+        spellSaveDc,
       ),
     ]);
   }
   const validation = validateMagicActionSaveGatedCondition({
     state: input.state,
+    spellSaveDc,
     actor,
     sourceProcedureRef: input.subject.procedureRef,
     unitFeature,
@@ -1666,6 +1672,7 @@ function magicActionHealingPoolDistributionFill(
 
 function validateMagicActionHealingPoolDistribution(input: {
   readonly state: BattleState;
+  readonly actor: CharacterBattleCreatureState;
   readonly actorId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly unitFeature: MechanicalUnitFeature<"magicActionHealingPool">;
@@ -1686,8 +1693,7 @@ function validateMagicActionHealingPoolDistribution(input: {
   const seenTargets = new Set<CombatantId>();
   let spentHitPoints = 0;
   const poolHitPoints = magicActionHealingPoolSize(
-    input.state,
-    input.actorId,
+    input.actor,
     input.unitFeature,
   );
   for (const allocation of allocations) {
@@ -2342,6 +2348,7 @@ function magicActionSaveGatedConditionFills(
 
 function validateMagicActionSaveGatedCondition(input: {
   readonly state: BattleState;
+  readonly spellSaveDc: DifficultyClass;
   readonly actor: CharacterBattleCreatureState;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly unitFeature: MagicActionSaveGatedConditionProfile;
@@ -2357,6 +2364,7 @@ function validateMagicActionSaveGatedCondition(input: {
     input.actor.combatantId,
     input.unitFeature,
     input.sourceProcedureRef,
+    input.spellSaveDc,
   );
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.savingThrows.holeId !== hole.holeId) {
@@ -2765,6 +2773,7 @@ function magicActionAreaSaveDamageHealingMissingHoles(input: {
   readonly actorId: CombatantId;
   readonly procedureRef: BattleProcedureExecutionRef;
   readonly unitFeature: MagicActionAreaSaveDamageHealingProfile;
+  readonly spellSaveDc: DifficultyClass;
   readonly fills: MagicActionAreaSaveDamageHealingFillSet;
 }): readonly (
   | BattleUnitFeatureSavingThrowOutcomeHole
@@ -2779,6 +2788,7 @@ function magicActionAreaSaveDamageHealingMissingHoles(input: {
             input.actorId,
             input.procedureRef,
             input.unitFeature,
+            input.spellSaveDc,
           ),
         ]
       : []),

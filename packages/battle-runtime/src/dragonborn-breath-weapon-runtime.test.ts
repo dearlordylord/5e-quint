@@ -5,6 +5,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { DieRollResult } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
+import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
 
 import {
   type BattleFill,
@@ -18,6 +19,12 @@ import {
   characterCreature,
   requireHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import {
+  characterBattleFeatureInitForTest,
+  rageResource,
+  requireCharacterUnitProcedureRefForTest,
+  supportedBattleUnitRef,
+} from "./battle-runtime.test-support.ts";
 import {
   speciesDragonbornBreathWeaponUnitId,
   spellCasterId,
@@ -41,9 +48,86 @@ import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts"
 const breathWeaponUnit = unitLibrary.requireUnit(
   speciesDragonbornBreathWeaponUnitId,
 );
+const rageUnit = unitLibrary.requireUnit("barbarian_rage");
 const secondTargetId = combatantId("dragonborn-breath-second-target");
 
 describe("Dragonborn Breath Weapon runtime", () => {
+  test("resolves an empty area without damage and rejects a stale Attack action after save validation", () => {
+    const session = breathWeaponBattle();
+    const state = session.state;
+    const act = breathWeaponAct(state);
+    const savingThrowHole = requireHole(act.initialHoles, "savingThrowOutcome");
+    const savingThrowFill = breathWeaponSavingThrowFill(
+      savingThrowHole,
+      [],
+      [],
+    );
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [savingThrowFill],
+      }),
+    ).toMatchObject({ tag: "resolved" });
+
+    const staleState = {
+      ...state,
+      currentTurnResources: {
+        ...state.currentTurnResources,
+        actionResources: [],
+      },
+    };
+    expect(
+      resolveBattleSubject({
+        state: staleState,
+        subject: act.subject,
+        fills: [savingThrowFill],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Area damage replacement Attack action is no longer available.",
+    });
+  });
+
+  test("requests an enemy relationship fact while Rage is active", () => {
+    const session = breathWeaponBattle({ includeRage: true });
+    const raging = resolveBattleSubject({
+      state: session.state,
+      subject: {
+        tag: "unitFeature",
+        actorId: spellCasterId,
+        procedureRef: requireCharacterUnitProcedureRefForTest(
+          session,
+          spellCasterId,
+          "barbarian_rage",
+        ),
+      },
+      fills: [],
+    });
+    if (raging.tag !== "resolved") {
+      throw new Error("Expected Rage to resolve before Breath Weapon.");
+    }
+    const act = breathWeaponAct(raging.state);
+    const save = requireHole(act.initialHoles, "savingThrowOutcome");
+    if (!("relationshipFactRequest" in save)) {
+      throw new Error("Expected Breath Weapon relationship fact request.");
+    }
+    expect(save.relationshipFactRequest).toEqual({
+      kind: "savingThrowTargetIsEnemy",
+      actorId: spellCasterId,
+    });
+    expect(
+      resolveBreathWeaponSave(raging.state, {
+        outcomes: [
+          { targetId: spellTargetId, succeeded: false },
+          { targetId: secondTargetId, succeeded: true },
+        ],
+        areaTargetIds: [spellTargetId, secondTargetId],
+      }),
+    ).toMatchObject({ tag: "needsHoles" });
+  });
+
   test("resolves both save outcomes, applies ancestry damage, and spends one use", () => {
     const session = breathWeaponBattle();
     const state = session.state;
@@ -293,9 +377,17 @@ describe("Dragonborn Breath Weapon runtime", () => {
 function breathWeaponBattle(
   input: {
     readonly extraAttack?: boolean;
+    readonly includeRage?: boolean;
     readonly usesRemaining?: number;
   } = {},
 ): BattleRuntimeSession {
+  const classLevels: CharacterBattleClassLevelInits =
+    input.includeRage === true
+      ? [
+          { className: "fighter" as const, level: classLevel(5) },
+          { className: "barbarian" as const, level: classLevel(1) },
+        ]
+      : [{ className: "fighter" as const, level: classLevel(5) }];
   const result = startBattle({
     battleId: battleId("dragonborn-breath-weapon-runtime"),
     combatants: [
@@ -303,11 +395,22 @@ function breathWeaponBattle(
         combatantId: spellCasterId,
         displayName: "Dragonborn Fighter",
         initiative: 20,
-        classLevels: [{ className: "fighter", level: classLevel(5) }],
+        classLevels,
         characterUnitRefs: [
           breathWeaponUnitRef(),
           ...(input.extraAttack === true ? [extraAttackBattleUnitRef()] : []),
+          ...(input.includeRage === true
+            ? [supportedBattleUnitRef(rageUnit)]
+            : []),
         ],
+        unitFeatures:
+          input.includeRage === true
+            ? [
+                characterBattleFeatureInitForTest(rageUnit, [
+                  { className: "barbarian", level: classLevel(1) },
+                ]),
+              ]
+            : [],
         resources: [
           {
             unit: breathWeaponUnit,
@@ -315,6 +418,7 @@ function breathWeaponBattle(
               ? {}
               : { usesRemaining: input.usesRemaining }),
           },
+          ...(input.includeRage === true ? [rageResource()] : []),
         ],
       }),
       characterCreature({
@@ -386,9 +490,33 @@ function breathWeaponSavingThrowFill(
   }[],
   areaTargetIds: readonly CombatantId[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  const relationshipFactRequest =
+    "relationshipFactRequest" in hole
+      ? hole.relationshipFactRequest
+      : undefined;
+  const [firstOutcome, ...restOutcomes] = outcomes;
   return {
     kind: "savingThrowOutcome",
     holeId: hole.holeId,
+    ...(relationshipFactRequest?.kind === "savingThrowTargetIsEnemy" &&
+    firstOutcome !== undefined
+      ? {
+          relationshipFacts: [
+            {
+              kind: "savingThrowTargetIsEnemy" as const,
+              actorId: relationshipFactRequest.actorId,
+              targetId: firstOutcome.targetId,
+              targetIsEnemy: true,
+            },
+            ...restOutcomes.map((outcome) => ({
+              kind: "savingThrowTargetIsEnemy" as const,
+              actorId: relationshipFactRequest.actorId,
+              targetId: outcome.targetId,
+              targetIsEnemy: true,
+            })),
+          ],
+        }
+      : {}),
     value: {
       area: {
         originAnchorId: spellCasterId,

@@ -12,16 +12,20 @@ import { describe, expect, test } from "vitest";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { damageAmount, movementFeet, type ClassLevel } from "@dnd/shared/types";
 import * as Either from "effect/Either";
+import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
 
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
+import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 import {
   characterBattleResourceIsUnlimited,
   characterBattleResourceIsUseCount,
   requireCharacterUnitProcedureRefForTest,
   characterBattleFeatureInitForTest,
   characterSeed,
+  rageResource,
   resourceCount,
   savingThrowOutcomeFill,
+  supportedBattleUnitRef,
   testCharacterD20Statistics,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
@@ -70,6 +74,139 @@ const channelDivinityUnit = unitLibrary.requireUnit(
 const secondTargetId = combatantId("abjure-foes-second-target");
 
 describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
+  test("applies the caster's move/action/bonus-action restriction when the caster fails", () => {
+    const session = abjureFoesBattle();
+    const act = abjureFoesAct(session);
+    const save = requireHole(act.initialHoles, "savingThrowOutcome");
+    const procedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      spellCasterId,
+      paladinAbjureFoesUnitId,
+    );
+    const resolved = recordResolvedState(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          abjureFoesSavingThrowFill(procedureRef, save, [
+            { targetId: spellCasterId, succeeded: false },
+          ]),
+        ],
+      }),
+    );
+    expect(
+      resolved.currentTurnResources.movementActionBonusActionExclusion,
+    ).toEqual({ kind: "restricted", choice: "action" });
+  });
+
+  test("replaces an existing condition effect from the same procedure", () => {
+    const session = abjureFoesBattle();
+    const act = abjureFoesAct(session);
+    const save = requireHole(act.initialHoles, "savingThrowOutcome");
+    const procedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      spellCasterId,
+      paladinAbjureFoesUnitId,
+    );
+    const first = recordResolvedState(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [
+          abjureFoesSavingThrowFill(procedureRef, save, [
+            { targetId: spellTargetId, succeeded: false },
+          ]),
+        ],
+      }),
+    );
+    const firstTarget = requireCombatant(first, spellTargetId);
+    const initialTarget = requireCombatant(session.state, spellTargetId);
+    const replayState: BattleState = {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellTargetId, {
+        ...battleCreatureStateWithKnockOutPreservedConditions(
+          initialTarget,
+          firstTarget.conditions,
+        ),
+        activeEffects: firstTarget.activeEffects,
+      }),
+    };
+    const replayAct = abjureFoesAct(
+      battleRuntimeSessionForTest({ ...session, state: replayState }),
+    );
+    const replaySave = requireHole(
+      replayAct.initialHoles,
+      "savingThrowOutcome",
+    );
+    const replayed = recordResolvedState(
+      resolveBattleSubject({
+        state: replayState,
+        subject: replayAct.subject,
+        fills: [
+          abjureFoesSavingThrowFill(procedureRef, replaySave, [
+            { targetId: spellTargetId, succeeded: false },
+          ]),
+        ],
+      }),
+    );
+    expect(
+      requireCombatant(replayed, spellTargetId).activeEffects.filter(
+        (effect) =>
+          effect.kind === "unitFeatureCondition" &&
+          effect.sourceProcedureRef === procedureRef,
+      ),
+    ).toHaveLength(1);
+  });
+
+  test("requests and consumes an enemy relationship fact while Rage is active", () => {
+    const session = abjureFoesBattle({ includeRage: true });
+    const raging = recordResolvedState(
+      resolveBattleSubject({
+        state: session.state,
+        subject: {
+          tag: "unitFeature",
+          actorId: spellCasterId,
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            session,
+            spellCasterId,
+            "barbarian_rage",
+          ),
+        },
+        fills: [],
+      }),
+    );
+    const ragingSession = battleRuntimeSessionForTest({
+      ...session,
+      state: raging,
+    });
+    const act = abjureFoesAct(ragingSession);
+    const save = requireHole(act.initialHoles, "savingThrowOutcome");
+    if (!("relationshipFactRequest" in save)) {
+      throw new Error("Expected Abjure Foes relationship fact request.");
+    }
+    expect(save.relationshipFactRequest).toEqual({
+      kind: "savingThrowTargetIsEnemy",
+      actorId: spellCasterId,
+    });
+
+    const procedureRef = requireCharacterUnitProcedureRefForTest(
+      ragingSession,
+      spellCasterId,
+      paladinAbjureFoesUnitId,
+    );
+    expect(
+      resolveBattleSubject({
+        state: raging,
+        subject: act.subject,
+        fills: [
+          abjureFoesSavingThrowFill(procedureRef, save, [
+            { targetId: spellTargetId, succeeded: false },
+          ]),
+        ],
+      }),
+    ).toMatchObject({ tag: "resolved" });
+  });
+
   test("uses the acquired level without character context and rejects unavailable class levels or another mechanics family", () => {
     expect(
       magicActionSaveGatedConditionProfileForUnit(abjureFoesUnit, undefined),
@@ -277,10 +414,20 @@ describe("Paladin Abjure Foes Magic Action save-gated condition", () => {
 function abjureFoesBattle(
   input: {
     readonly channelDivinityUsesRemaining?: number;
+    readonly includeRage?: boolean;
     readonly paladinLevel?: ClassLevel;
   } = {},
 ): BattleRuntimeSession {
   const paladinLevel = input.paladinLevel ?? classLevel(9);
+  const rageUnit = unitLibrary.requireUnit("barbarian_rage");
+  const rageClassLevel = {
+    className: "barbarian" as const,
+    level: classLevel(1),
+  };
+  const classLevels: CharacterBattleClassLevelInits =
+    input.includeRage === true
+      ? [{ className: "paladin" as const, level: paladinLevel }, rageClassLevel]
+      : [{ className: "paladin" as const, level: paladinLevel }];
   const result = startBattle({
     battleId: battleId("paladin-abjure-foes"),
     combatants: [
@@ -288,19 +435,28 @@ function abjureFoesBattle(
         combatantId: spellCasterId,
         displayName: "Devotion Paladin",
         initiative: 20,
-        classLevels: [{ className: "paladin", level: paladinLevel }],
+        classLevels,
         d20Statistics: testCharacterD20Statistics({ cha: 16, wis: 10 }),
-        characterUnitRefs: [requireAbjureFoesUnitRef(paladinLevel)],
+        characterUnitRefs: [
+          requireAbjureFoesUnitRef(paladinLevel),
+          ...(input.includeRage === true
+            ? [supportedBattleUnitRef(rageUnit)]
+            : []),
+        ],
         unitFeatures: [
           characterBattleFeatureInitForTest(abjureFoesUnit, [
             { className: "paladin", level: paladinLevel },
           ]),
+          ...(input.includeRage === true
+            ? [characterBattleFeatureInitForTest(rageUnit, [rageClassLevel])]
+            : []),
         ],
         resources: [
           {
             unit: channelDivinityUnit,
             usesRemaining: input.channelDivinityUsesRemaining ?? 2,
           },
+          ...(input.includeRage === true ? [rageResource()] : []),
         ],
         spellcasting: {
           ...wizardSpellcasting(),

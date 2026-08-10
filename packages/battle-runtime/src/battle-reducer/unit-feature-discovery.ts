@@ -15,6 +15,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   type CharacterLevel,
+  type DifficultyClass,
   difficultyClass,
   Hp,
   proficiencyBonusForCharacterLevel,
@@ -298,7 +299,7 @@ function magicActionHealingPoolActs(
               initialHoles: [
                 magicActionHealingPoolDistributionHole(
                   state,
-                  actor.combatantId,
+                  actor,
                   procedureRef,
                   unitFeature,
                 ),
@@ -314,9 +315,10 @@ function magicActionAreaSaveDamageHealingActs(
   state: BattleState,
   actor: CharacterBattleCreatureState,
 ): readonly BattleActDiscoveryCandidate[] {
+  const spellSaveDc = spellSaveDcForCaster(state, actor.combatantId);
   if (
     !canSpendAction(state.currentTurnResources, "magic") ||
-    spellSaveDcForCaster(state, actor.combatantId) === null ||
+    spellSaveDc === null ||
     combatantInsideActiveAntimagicFieldAura(state, actor.combatantId)
   ) {
     return [];
@@ -349,6 +351,7 @@ function magicActionAreaSaveDamageHealingActs(
                 actor.combatantId,
                 procedureRef,
                 unitFeature,
+                spellSaveDc,
               ),
             },
           ]
@@ -361,9 +364,10 @@ function magicActionSaveGatedConditionActs(
   state: BattleState,
   actor: CharacterBattleCreatureState,
 ): readonly BattleActDiscoveryCandidate[] {
+  const spellSaveDc = spellSaveDcForCaster(state, actor.combatantId);
   if (
     !canSpendAction(state.currentTurnResources, "magic") ||
-    spellSaveDcForCaster(state, actor.combatantId) === null ||
+    spellSaveDc === null ||
     combatantInsideActiveAntimagicFieldAura(state, actor.combatantId)
   ) {
     return [];
@@ -405,6 +409,7 @@ function magicActionSaveGatedConditionActs(
                   actor.combatantId,
                   unitFeature,
                   procedureRef,
+                  spellSaveDc,
                 ),
               ],
             },
@@ -732,7 +737,7 @@ function bardicInspirationGrantTargetProtocolId(
 
 export function magicActionHealingPoolDistributionHole(
   state: BattleState,
-  actorId: CombatantId,
+  actor: CharacterBattleCreatureState,
   procedureRef: BattleProcedureExecutionRef,
   unitFeature: MechanicalUnitFeature<"magicActionHealingPool">,
 ): BattleHitPointHealingPoolDistributionHole {
@@ -744,12 +749,10 @@ export function magicActionHealingPoolDistributionHole(
     label: "Magic Action healing distribution",
     requiresTableSpatialFact: true,
     healingPool: {
-      sourceCombatantId: actorId,
+      sourceCombatantId: actor.combatantId,
       sourceProcedureRef: procedureRef,
       rangeFeet: unitFeature.healingPool.rangeFeet,
-      poolHitPoints: Hp(
-        magicActionHealingPoolSize(state, actorId, unitFeature),
-      ),
+      poolHitPoints: Hp(magicActionHealingPoolSize(actor, unitFeature)),
       perTargetCap: unitFeature.healingPool.perTargetCap,
     },
     choices: magicActionHealingPoolTargetChoices(state),
@@ -793,14 +796,9 @@ function magicActionHealingPoolTargetChoices(
 }
 
 export function magicActionHealingPoolSize(
-  state: BattleState,
-  actorId: CombatantId,
+  actor: CharacterBattleCreatureState,
   unitFeature: MechanicalUnitFeature<"magicActionHealingPool">,
 ): number {
-  const actor = state.combatants.get(actorId);
-  if (!isCharacterBattleCreatureState(actor)) {
-    return 0;
-  }
   const classLevel =
     actor.origin.classLevels.find(
       (level) => level.className === unitFeature.className,
@@ -980,13 +978,8 @@ export function magicActionSaveGatedConditionSavingThrowHole(
   actorId: CombatantId,
   unitFeature: MagicActionSaveGatedConditionProfile,
   procedureRef: BattleProcedureExecutionRef,
+  spellSaveDc: DifficultyClass,
 ): BattleUnitFeatureSavingThrowOutcomeHole {
-  const dc = spellSaveDcForCaster(state, actorId);
-  if (dc === null) {
-    throw new Error(
-      "Magic Action condition save hole requires a spell save DC.",
-    );
-  }
   const targetIds = magicActionSaveGatedConditionTargetChoices(
     state,
     actorId,
@@ -1011,7 +1004,7 @@ export function magicActionSaveGatedConditionSavingThrowHole(
         }
       : {}),
     ability: unitFeature.condition.save.ability,
-    dc: { kind: "fixed", dc },
+    dc: { kind: "fixed", dc: spellSaveDc },
     targetIds,
     targetRollModes: savingThrowRollModeProjections(
       state,
@@ -1046,6 +1039,7 @@ function magicActionAreaSaveDamageHealingHoles(
   actorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
   unitFeature: MagicActionAreaSaveDamageHealingProfile,
+  spellSaveDc: DifficultyClass,
 ): readonly [
   BattleUnitFeatureSavingThrowOutcomeHole,
   BattleUnitFeatureRollHole,
@@ -1058,6 +1052,7 @@ function magicActionAreaSaveDamageHealingHoles(
       actorId,
       procedureRef,
       unitFeature,
+      spellSaveDc,
     ),
     magicActionAreaSaveDamageHealingDamageRollHole(procedureRef, unitFeature),
     magicActionAreaSaveDamageHealingHealingTargetHole(state, procedureRef),
@@ -1070,13 +1065,8 @@ export function magicActionAreaSaveDamageHealingSavingThrowHole(
   actorId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
   unitFeature: MagicActionAreaSaveDamageHealingProfile,
+  spellSaveDc: DifficultyClass,
 ): BattleUnitFeatureSavingThrowOutcomeHole {
-  const dc = spellSaveDcForCaster(state, actorId);
-  if (dc === null) {
-    throw new Error(
-      "Magic Action damage and healing save hole requires a spell save DC.",
-    );
-  }
   return {
     kind: "savingThrowOutcome",
     holeId: magicActionAreaSaveDamageHealingSavingThrowHoleId(procedureRef),
@@ -1096,7 +1086,7 @@ export function magicActionAreaSaveDamageHealingSavingThrowHole(
         }
       : {}),
     ability: unitFeature.damageHealing.save.ability,
-    dc: { kind: "fixed", dc },
+    dc: { kind: "fixed", dc: spellSaveDc },
     targetIds: [...state.combatants.keys()].filter(
       (targetId) =>
         magicalEffectTargetsInterdictionMessage({

@@ -61,7 +61,10 @@ function requireBardicInspirationProcedureRef(session: BattleRuntimeSession) {
 describe("battle runtime: Bardic Inspiration", () => {
   test("Bardic Inspiration grants one one-hour d6 die at Bard level 1 and spends Bonus Action and Charisma-derived use", () => {
     const bardicInspiration = bardicInspirationUnit();
-    const state = bardicInspirationBattle({ charismaModifier: 3 });
+    const state = bardicInspirationBattle({
+      charismaModifier: 3,
+      includeUnrelatedResource: true,
+    });
     const subject = bardicInspirationSubject(bardicInspiration.id);
     const target = findHole(
       findAct(state, subject).initialHoles,

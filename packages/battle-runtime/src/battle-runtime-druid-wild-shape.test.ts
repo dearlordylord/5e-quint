@@ -49,6 +49,7 @@ import {
   spendActiveDruidWildShapeProcedureResources,
 } from "./battle-reducer/druid-wild-shape.ts";
 import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
+import { sacredWeaponHeldMeleeWeapons } from "./battle-reducer/unit-feature-discovery.ts";
 import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
 import {
   attackInitialTargetHole,
@@ -70,6 +71,7 @@ import {
   requireHole,
   requireResolved,
   resolveBattleSubject,
+  resource,
   snapshotBattle,
   spellRecord,
   startBattleSessionRight,
@@ -1011,6 +1013,7 @@ test("uses a practical worn Wild Shape weapon when form limbs can handle objects
 
 test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action lane with form statistics", () => {
   const initial = druidWildShapeBattle({
+    includeUnrelatedResource: true,
     armorClass: {
       ...defaultArmorClassState(),
       leftHandUse: "offWeapon",
@@ -1070,6 +1073,14 @@ test("keeps worn Wild Shape off-hand weapons in the Light-property Bonus Action 
     ]),
   );
   const activeDruid = requireCharacter(resolved.state, druidId);
+  expect(
+    sacredWeaponHeldMeleeWeapons(resolved.state, activeDruid).map(
+      ({ itemId }) => itemId,
+    ),
+  ).toEqual([
+    battleObjectId("main:weapon_shortsword"),
+    battleObjectId("offhand:weapon_dagger"),
+  ]);
   expect(
     combatantHandUses(resolved.state, activeDruid, resolved.state.grapples),
   ).toEqual({ left: "offWeapon", right: "mainWeapon" });
@@ -3567,6 +3578,7 @@ test("rounds odd-level duration down through the general division rule", () => {
 
 type DruidWildShapeCreatureInput = {
   readonly druidLevel?: number;
+  readonly includeUnrelatedResource?: boolean;
   readonly hitPointMaximum?: Hp;
   readonly armorClass?: ArmorClassState;
   readonly unarmoredArmorClassBases?: CharacterSeedInput["unarmoredArmorClassBases"];
@@ -3621,8 +3633,17 @@ function druidWildShapeCreatureInit(input?: DruidWildShapeCreatureInput) {
           currentHp: input.hitPointMaximum,
           maxHp: input.hitPointMaximum,
         }),
-    classLevels: [{ className: "druid", level: input?.druidLevel ?? 2 }],
-    resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
+    classLevels:
+      input?.includeUnrelatedResource === true
+        ? [
+            { className: "druid", level: input?.druidLevel ?? 2 },
+            { className: "fighter", level: 1 },
+          ]
+        : [{ className: "druid", level: input?.druidLevel ?? 2 }],
+    resources: [
+      { unit: unitLibrary.requireUnit("druid_wild_shape") },
+      ...(input?.includeUnrelatedResource === true ? [resource()] : []),
+    ],
     ...(input?.d20Statistics === undefined
       ? {}
       : { d20Statistics: input.d20Statistics }),
