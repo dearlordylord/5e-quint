@@ -642,7 +642,7 @@ export function resolvePreparedSlotSpellAct(input: {
   const damaged = targetAllocation.allocations.reduce(
     (state, allocation, allocationIndex) => {
       const target = state.combatants.get(allocation.targetId);
-      /* v8 ignore start -- Validated allocation IDs remain map members while damage application replaces values in place. */
+      /* v8 ignore start -- Validated allocation IDs are unique current members; an earlier damage application can remove only its own zero-HP familiar, never a distinct later allocation target. */
       if (target === undefined) {
         return state;
       }

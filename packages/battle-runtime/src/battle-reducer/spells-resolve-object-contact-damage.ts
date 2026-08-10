@@ -1056,7 +1056,7 @@ function resolveObjectContactDamage(input: {
     const targetId = damageTarget.target.combatantId;
     const damageAmount = damageTarget.damage;
     const target = state.combatants.get(targetId);
-    /* v8 ignore start -- Validated object-contact target IDs are current combatant-map members; damage and lifecycle state transitions replace values without deleting keys. */
+    /* v8 ignore start -- Validated target IDs are unique current members; an earlier damage application can remove only its own zero-HP familiar, never a distinct later target. */
     if (target === undefined) {
       return state;
     }
@@ -1323,11 +1323,9 @@ function applyObjectContactPenalties(input: {
   let combatants = input.state.combatants;
   for (const targetId of input.targetIds) {
     const target = combatants.get(targetId);
-    /* v8 ignore start -- Validated failed-save target IDs come from the current combatant map; penalty application only replaces values and cannot remove a key. */
     if (target === undefined) {
       continue;
     }
-    /* v8 ignore stop */
     const effect: ObjectContactPenaltyActiveEffect = {
       kind: "selfAttackRollAndAbilityCheckRollMode",
       sourceEffectRef,

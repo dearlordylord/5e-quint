@@ -9,11 +9,13 @@ import type {
 import type { BattleSubject } from "./battle-subjects.ts";
 import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { battleCreatureWithSpellActiveEffects } from "./active-effect/lifecycle.ts";
 import {
   battleActiveEffectExecutionRefForTest,
   battleId,
   battleProcedureExecutionRefForTest,
   characterSeed,
+  combatantId,
   concentrationSavingThrowFill,
   damageRollFillWithGroups,
   elapsedTimeTicks,
@@ -90,6 +92,7 @@ function magicMissileFills(
 
 describe("battle runtime: spell damage lifecycle replay", () => {
   test("prepared slot damage requests concentration, zero-HP, and relationship holes in order", () => {
+    const charmSourceId = combatantId("spell-damage-charm-source");
     const baseSession = startBattleSessionRight({
       battleId: battleId("battle-spell-damage-lifecycle"),
       combatants: [
@@ -111,12 +114,17 @@ describe("battle runtime: spell damage lifecycle replay", () => {
             { unit: unitLibrary.requireUnit("orc_relentless_endurance") },
           ],
         }),
-        statBlockCreatureInit({ combatantId: skeletonId, initiative: 5 }),
+        characterSeed({
+          combatantId: charmSourceId,
+          displayName: "Charm Source",
+          initiative: 5,
+          attack: null,
+        }),
       ],
     });
     const target = baseSession.state.combatants.get(fighterId);
     if (target === undefined) {
-      throw new Error("Expected the skeleton target.");
+      throw new Error("Expected the Orc target.");
     }
     const relationshipEffect = {
       kind: "spellCondition" as const,
@@ -126,7 +134,7 @@ describe("battle runtime: spell damage lifecycle replay", () => {
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "spell-damage-relationship-source",
       ),
-      sourceCombatantId: fighterId,
+      sourceCombatantId: charmSourceId,
       condition: "charmed" as const,
       conditionHadNonSpellSource: false,
       escape: { kind: "targetDamagedByCasterOrAlly" as const },
@@ -136,15 +144,26 @@ describe("battle runtime: spell damage lifecycle replay", () => {
         durationTicks: elapsedTimeTicks(1),
       },
     } satisfies BattleActiveEffect;
+    const concentrationSourceProcedureRef = battleProcedureExecutionRefForTest(
+      "spell-damage-concentration-source",
+    );
+    const concentrationEffect = {
+      kind: "nextAttackRollBySelf",
+      sourceProcedureRef: concentrationSourceProcedureRef,
+      sourceCombatantId: fighterId,
+      mode: "advantage",
+      expiresAt: { kind: "concentration", combatantId: fighterId },
+    } satisfies BattleActiveEffect;
+    const affectedTarget = battleCreatureWithSpellActiveEffects(target, [
+      relationshipEffect,
+      concentrationEffect,
+    ]);
     const state: BattleState = {
       ...baseSession.state,
       combatants: new Map(baseSession.state.combatants).set(fighterId, {
-        ...target,
-        activeEffects: [relationshipEffect],
+        ...affectedTarget,
         concentration: {
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            "spell-damage-concentration-source",
-          ),
+          sourceProcedureRef: concentrationSourceProcedureRef,
           effectKind: "spellEffect",
         },
       }),
