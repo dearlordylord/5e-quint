@@ -1,7 +1,7 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
-// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.HIT_POINT_RESTORATION BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.HIT_POINT_RESTORATION BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE BATTLE.SPELL.READIED_RESPONSE_PROCEDURE BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay spell-procedure-core magic_missile ray_of_frost acid_splash
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay healing-stabilization healing_word cure_wounds
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-MASS-CURE-WOUNDS mass_cure_wounds

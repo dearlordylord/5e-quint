@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE
 // RAW-COVERAGE: qnt-owner RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-damage-save-or-attack spell.reaction-shield
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-damage-save-or-attack
 
 module spellProcedureProfiles {
   import damageComponentAdjustments.* from "./damage-component-adjustments"

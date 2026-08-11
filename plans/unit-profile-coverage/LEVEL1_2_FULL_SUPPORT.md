@@ -22,8 +22,8 @@ Strict level-9 final support blockers: 0.
 | Strict level-9 final support | 128/128 (100%) |
 | SRD authored product readiness | 89/89 (100%) |
 | Rules-kernel profile join | 72/72 (100%) |
-| Rules-kernel covered profile join | 63/72 (87.5%) |
-| Supported Unit rules-kernel chain | 79/96 (82.3%) |
+| Rules-kernel covered profile join | 55/72 (76.4%) |
+| Supported Unit rules-kernel chain | 71/96 (74%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
@@ -137,9 +137,16 @@ This gate checks authored records and retained Unit references that must resolve
 | `bard_expertise` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open: `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `cleric_channel_divinity` | mapped-open | `character-creation.class-feature-resource-projection` (mapped-open: `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION` (covered)) | _plan-update-required_ |
 | `cleric_divine_order` | mapped-open | `character-creation.class-feature-option-projection` (mapped-open: `CREATION.CLASS_FEATURE_OPTION.PROJECTION` (covered)) | _plan-update-required_ |
+| `dissonant_whispers` | mapped-open | `spell.invocation-forced-reaction-movement` (mapped-open: `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` (covered), `BATTLE.REACTION.OFFER_DECLINE_RESUME` (covered), `BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE` (covered)) | _plan-update-required_ |
 | `druid_primal_order` | mapped-open | `character-creation.class-feature-option-projection` (mapped-open: `CREATION.CLASS_FEATURE_OPTION.PROJECTION` (covered)) | _plan-update-required_ |
+| `ensnaring_strike` | mapped-open | `spell.invocation-after-hit-restraint-turn-start-damage` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (covered)) | _plan-update-required_ |
+| `expeditious_retreat` | mapped-open | `spell.invocation-expeditious-retreat-dash` (mapped-open: `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` (covered), `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE` (covered)) | _plan-update-required_ |
+| `feather_fall` | mapped-open | `spell.invocation-feather-fall-mitigation` (mapped-open: `BATTLE.REACTION.OFFER_DECLINE_RESUME` (covered), `BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE` (covered)) | _plan-update-required_ |
 | `fighter_fighting_style` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` (covered)); `character-creation.fighter-fighting-style-advancement-replacement` (mapped-open: `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT` (covered)) | _plan-update-required_ |
 | `fighter_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
+| `grease` | mapped-open | `spell.invocation-grease-ground-hazard` (mapped-open: `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` (covered), `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE` (covered)) | _plan-update-required_ |
+| `hellish_rebuke` | mapped-open | `spell.reaction-hellish-rebuke` (mapped-open: `BATTLE.REACTION.OFFER_DECLINE_RESUME` (covered), `BATTLE.SPELL.REACTION_CASTING_TIME` (covered)) | _plan-update-required_ |
+| `jump` | mapped-open | `spell.invocation-jump-movement-replacement` (mapped-open: `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` (covered), `BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE` (covered)) | _plan-update-required_ |
 | `monk_uncanny_metabolism` | mapped-open | `character-creation.class-feature-source-fact-projection` (mapped-open: `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION` (covered)) | _plan-update-required_ |
 | `paladin_fighting_style` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` (covered)); `character-creation.class-feature-option-projection` (mapped-open: `CREATION.CLASS_FEATURE_OPTION.PROJECTION` (covered)) | _plan-update-required_ |
 | `paladin_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
@@ -148,6 +155,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `ranger_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `rogue_expertise` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open: `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `rogue_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
+| `searing_smite` | mapped-open | `spell.invocation-after-hit-timed-damage-save` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (covered)) | _plan-update-required_ |
 | `warlock_eldritch_invocations` | mapped-open | `character-creation.eldritch-invocation-choice` (mapped-open: `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE` (covered)); `character-creation.warlock-pact-magic-advancement` (mapped-open: `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION` (covered)) | _plan-update-required_ |
 | `wizard_scholar` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open: `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 

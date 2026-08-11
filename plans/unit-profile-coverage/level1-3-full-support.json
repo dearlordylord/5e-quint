@@ -3788,8 +3788,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 108,
-      "numerator": 96,
-      "percent": "88.9%"
+      "numerator": 83,
+      "percent": "76.9%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 108,
@@ -3798,8 +3798,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 145,
-      "numerator": 120,
-      "percent": "82.8%"
+      "numerator": 107,
+      "percent": "73.8%"
     },
     "strictFinalSupport": {
       "denominator": 212,
@@ -7813,16 +7813,16 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 145,
-        "numerator": 120,
-        "percent": "82.8%"
+        "numerator": 107,
+        "percent": "73.8%"
       }
     },
     "units": [
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
@@ -7853,21 +7853,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           },
@@ -7881,16 +7882,23 @@
                 "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
             ]
           }
@@ -8371,21 +8379,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           },
@@ -8399,16 +8408,23 @@
                 "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
             ]
           }
@@ -8422,21 +8438,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           },
@@ -8450,16 +8467,23 @@
                 "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
             ]
           }
@@ -8495,16 +8519,23 @@
                 "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
             ]
           }
@@ -8754,32 +8785,33 @@
         "unitId": "dancing_lights"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           },
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -8998,10 +9030,10 @@
         "unitId": "enhance_ability"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
@@ -9044,10 +9076,10 @@
         "unitId": "entangle"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -9117,10 +9149,10 @@
         "unitId": "false_life"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -9347,21 +9379,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           }
@@ -9369,10 +9402,10 @@
         "unitId": "fire_bolt"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
@@ -9409,10 +9442,10 @@
         "unitId": "flame_blade"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
@@ -9471,10 +9504,10 @@
         "unitId": "fog_cloud"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -9527,21 +9560,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           },
@@ -9555,16 +9589,23 @@
                 "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
             ]
           }
@@ -9616,10 +9657,10 @@
         "unitId": "heat_metal"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -9644,21 +9685,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           }
@@ -9784,21 +9826,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           }
@@ -9812,21 +9855,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           },
@@ -9840,16 +9884,23 @@
                 "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
             ]
           }
@@ -9857,10 +9908,10 @@
         "unitId": "inflict_wounds"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
@@ -9879,10 +9930,10 @@
         "unitId": "invisibility"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -9979,21 +10030,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           },
@@ -10007,16 +10059,23 @@
                 "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
             ]
           }
@@ -10030,21 +10089,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           },
@@ -10058,16 +10118,23 @@
                 "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
             ]
           }
@@ -10505,21 +10572,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           },
@@ -10533,16 +10601,23 @@
                 "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
             ]
           }
@@ -10556,21 +10631,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           },
@@ -10801,21 +10877,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           },
@@ -10829,16 +10906,23 @@
                 "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
             ]
           }
@@ -10852,21 +10936,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           },
@@ -10880,16 +10965,23 @@
                 "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
             ]
           }
@@ -11049,21 +11141,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           },
@@ -11077,16 +11170,23 @@
                 "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
             ]
           }
@@ -11138,10 +11238,10 @@
         "unitId": "scorching_ray"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
@@ -11166,12 +11266,6 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
-              },
-              {
                 "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
                 "runtime": "battle",
                 "status": "covered",
@@ -11194,21 +11288,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           }
@@ -11226,19 +11321,12 @@
                 "runtime": "battle",
                 "status": "covered",
                 "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
-              },
-              {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-                "runtime": "battle",
-                "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
               }
             ],
             "profileId": "spell.reaction-shield",
             "profileKind": "reaction",
             "qntOwners": [
-              "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
-              "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+              "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
             ]
           }
         ],
@@ -11317,21 +11405,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           },
@@ -11345,16 +11434,23 @@
                 "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
             ]
           }
@@ -11468,21 +11564,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           }
@@ -11540,10 +11637,10 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle Spiritual Weapon cast, force placement, attack proxy, repeat movement, damage, and cleanup procedure"
               }
             ],
             "profileId": "spell.invocation-spiritual-weapon-attack-proxy",
@@ -11562,21 +11659,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           }
@@ -11590,21 +11688,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           }
@@ -11640,21 +11739,22 @@
             "joinStatus": "covered",
             "obligations": [
               {
-                "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
               }
             ],
             "profileId": "spell.invocation-damage-save-or-attack",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
             ]
           },
@@ -11668,16 +11768,23 @@
                 "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
-                "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+              },
+              {
+                "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
               }
             ],
             "profileId": "spell.readied-action-time-spell",
             "profileKind": "spell-invocation",
             "qntOwners": [
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
               "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
             ]
           }
@@ -11685,10 +11792,10 @@
         "unitId": "vicious_mockery"
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "profiles": [
           {
-            "joinStatus": "covered",
+            "joinStatus": "mapped-open",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",

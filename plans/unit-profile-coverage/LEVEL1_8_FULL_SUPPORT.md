@@ -22,8 +22,8 @@ Strict level-9 final support blockers: 0.
 | Strict level-9 final support | 353/353 (100%) |
 | SRD authored product readiness | 117/117 (100%) |
 | Rules-kernel profile join | 118/118 (100%) |
-| Rules-kernel covered profile join | 104/118 (88.1%) |
-| Supported Unit rules-kernel chain | 139/167 (83.2%) |
+| Rules-kernel covered profile join | 89/118 (75.4%) |
+| Supported Unit rules-kernel chain | 124/167 (74.3%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
@@ -135,31 +135,46 @@ This gate checks authored records and retained Unit references that must resolve
 
 | Unit | Status | Profiles Needing Attention | Follow-up tasks |
 | --- | --- | --- | --- |
+| `acid_arrow` | mapped-open | `spell.invocation-acid-arrow-attack-timing` (mapped-open: `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` (covered), `BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING` (covered)) | _plan-update-required_ |
 | `barbarian_primal_knowledge` | mapped-open | `character-creation.class-feature-source-fact-projection` (mapped-open: `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION` (covered)) | _plan-update-required_ |
 | `barbarian_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `bard_expertise` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open: `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `cleric_channel_divinity` | mapped-open | `character-creation.class-feature-resource-projection` (mapped-open: `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION` (covered)) | _plan-update-required_ |
 | `cleric_divine_order` | mapped-open | `character-creation.class-feature-option-projection` (mapped-open: `CREATION.CLASS_FEATURE_OPTION.PROJECTION` (covered)) | _plan-update-required_ |
 | `cleric_life_domain_spells` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
+| `counterspell` | mapped-open | `spell.reaction-counterspell` (mapped-open: `BATTLE.REACTION.OFFER_DECLINE_RESUME` (covered), `BATTLE.SPELL.REACTION_CASTING_TIME` (covered)) | _plan-update-required_ |
+| `dissonant_whispers` | mapped-open | `spell.invocation-forced-reaction-movement` (mapped-open: `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` (covered), `BATTLE.REACTION.OFFER_DECLINE_RESUME` (covered), `BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE` (covered)) | _plan-update-required_ |
 | `druid_circle_of_the_land_spells` | mapped-open | `character-sheet.druid-circle-land-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
 | `druid_primal_order` | mapped-open | `character-creation.class-feature-option-projection` (mapped-open: `CREATION.CLASS_FEATURE_OPTION.PROJECTION` (covered)) | _plan-update-required_ |
+| `ensnaring_strike` | mapped-open | `spell.invocation-after-hit-restraint-turn-start-damage` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (covered)) | _plan-update-required_ |
+| `expeditious_retreat` | mapped-open | `spell.invocation-expeditious-retreat-dash` (mapped-open: `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` (covered), `BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE` (covered)) | _plan-update-required_ |
+| `feather_fall` | mapped-open | `spell.invocation-feather-fall-mitigation` (mapped-open: `BATTLE.REACTION.OFFER_DECLINE_RESUME` (covered), `BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE` (covered)) | _plan-update-required_ |
 | `fighter_fighting_style` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` (covered)); `character-creation.fighter-fighting-style-advancement-replacement` (mapped-open: `CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT` (covered)) | _plan-update-required_ |
 | `fighter_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
-| `haste` | mapped-open | `spell.invocation-haste-positive` (mapped-open: `BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE` (covered), `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` (covered), `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` (covered)) | _plan-update-required_ |
+| `flame_blade` | mapped-open | `spell.invocation-spell-created-held-object` (mapped-open: `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` (covered), `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` (covered), `BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE` (covered), `SHARED.HIT_POINTS.POSITIVE_DAMAGE` (covered)) | _plan-update-required_ |
+| `flaming_sphere` | mapped-open | `spell.invocation-flaming-sphere-hazard-ram` (mapped-open: `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` (covered), `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` (covered), `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE` (covered), `SHARED.HIT_POINTS.POSITIVE_DAMAGE` (covered)) | _plan-update-required_ |
+| `grease` | mapped-open | `spell.invocation-grease-ground-hazard` (mapped-open: `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` (covered), `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE` (covered)) | _plan-update-required_ |
+| `haste` | mapped-open | `spell.invocation-haste-positive` (mapped-open: `BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE` (covered), `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` (covered)) | _plan-update-required_ |
+| `hellish_rebuke` | mapped-open | `spell.reaction-hellish-rebuke` (mapped-open: `BATTLE.REACTION.OFFER_DECLINE_RESUME` (covered), `BATTLE.SPELL.REACTION_CASTING_TIME` (covered)) | _plan-update-required_ |
+| `invisibility` | mapped-open | `spell.invocation-direct-condition` (mapped-open: `BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE` (covered)) | _plan-update-required_ |
+| `jump` | mapped-open | `spell.invocation-jump-movement-replacement` (mapped-open: `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` (covered), `BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE` (covered)) | _plan-update-required_ |
 | `misty_step` | mapped-open | `spell.invocation-self-teleport` (mapped-open: `BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING` (covered), `BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE` (covered)) | _plan-update-required_ |
 | `monk_uncanny_metabolism` | mapped-open | `character-creation.class-feature-source-fact-projection` (mapped-open: `CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION` (covered)) | _plan-update-required_ |
 | `paladin_channel_divinity` | mapped-open | `character-creation.class-feature-resource-projection` (mapped-open: `CREATION.CLASS_FEATURE_RESOURCE.PROJECTION` (covered)) | _plan-update-required_ |
 | `paladin_fighting_style` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` (covered)); `character-creation.class-feature-option-projection` (mapped-open: `CREATION.CLASS_FEATURE_OPTION.PROJECTION` (covered)) | _plan-update-required_ |
 | `paladin_oath_of_devotion_spells` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
 | `paladin_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
+| `protection_from_energy` | mapped-open | `spell.invocation-chosen-damage-resistance` (mapped-open: `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` (covered)) | _plan-update-required_ |
 | `ranger_ability_score_improvement_l8` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `ranger_deft_explorer` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open: `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `ranger_fighting_style` | mapped-open | `character-creation.class-feature-feat-choice` (mapped-open: `CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION` (covered)); `character-creation.class-feature-option-projection` (mapped-open: `CREATION.CLASS_FEATURE_OPTION.PROJECTION` (covered)) | _plan-update-required_ |
 | `ranger_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `rogue_expertise` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open: `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `rogue_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
+| `searing_smite` | mapped-open | `spell.invocation-after-hit-timed-damage-save` (mapped-open: `BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS` (covered)) | _plan-update-required_ |
 | `slow` | mapped-open | `spell.invocation-slow-active-penalties` (mapped-open: `BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE` (covered)) | _plan-update-required_ |
 | `sorcerer_draconic_spells` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
+| `warding_bond` | mapped-open | `spell.invocation-warding-bond-linked-effect` (mapped-open: `BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING` (covered)) | _plan-update-required_ |
 | `warlock_eldritch_invocations` | mapped-open | `character-creation.eldritch-invocation-choice` (mapped-open: `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE` (covered)); `character-creation.warlock-pact-magic-advancement` (mapped-open: `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION` (covered)) | _plan-update-required_ |
 | `warlock_fiend_spells` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
 | `wizard_scholar` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open: `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |

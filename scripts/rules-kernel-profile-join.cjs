@@ -1,4 +1,5 @@
 const {
+  isSpellProcedureProfileId,
   rulesKernelProfileKinds,
 } = require("./unit-profile-coverage-config.cjs");
 
@@ -63,15 +64,21 @@ function buildProfileObligationMap(profileObligations) {
 function profileJoinStatus(
   obligationIds,
   obligationsById,
+  profileQntOwners,
+  requireProfileLocalSemanticCore,
   qntOwnerRolesByPath,
 ) {
   if (obligationIds.length === 0) return "unmapped";
+  const profileQntOwnerPaths = new Set(profileQntOwners);
   return obligationIds.every((obligationId) => {
     const obligation = obligationsById.get(obligationId);
     return (
       obligation?.status === "covered" &&
       (obligation.qntOwners ?? []).some(
-        (ownerPath) => qntOwnerRolesByPath.get(ownerPath) === "semantic-core",
+        (ownerPath) =>
+          (!requireProfileLocalSemanticCore ||
+            profileQntOwnerPaths.has(ownerPath)) &&
+          qntOwnerRolesByPath.get(ownerPath) === "semantic-core",
       )
     );
   })
@@ -123,6 +130,8 @@ function buildRulesKernelProfileJoin({
         joinStatus: profileJoinStatus(
           obligationIds,
           obligationsById,
+          profile.qntOwners ?? [],
+          isSpellProcedureProfileId(profile.id),
           qntOwnerRolesByPath,
         ),
         obligations: obligationRows,
@@ -137,7 +146,7 @@ function buildRulesKernelProfileJoin({
         "plans/rules-kernel-coverage/profile-obligations.jsonl",
     },
     denominatorRule:
-      "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; covered joins require every mapped obligation to have a semantic-core QNT owner",
+      "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; covered spell procedure joins require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     profileKinds: Array.from(rulesKernelProfileKinds).sort(),
     metrics: {
       rulesKernelProfileJoinCoverage: countCoverage(mapped.length, rows.length),

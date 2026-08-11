@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-spiritual-weapon-attack-proxy
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ongoing-spell-ending
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-spiritual-weapon-attack-proxy

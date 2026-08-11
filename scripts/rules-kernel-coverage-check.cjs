@@ -2135,6 +2135,20 @@ function validateCoveredEvidence(rootPath, obligation, markerIndex) {
   return issues;
 }
 
+function validateParityWitnessQntOwnerRoles(obligation, qntOwnerRolesByPath) {
+  return (obligation.parityWitnesses ?? []).flatMap((witness, index) => {
+    if (
+      witness.qntSpecPath === undefined ||
+      qntOwnerRolesByPath.get(witness.qntSpecPath) !== "bridge"
+    ) {
+      return [];
+    }
+    return [
+      `${obligation.id}.parityWitnesses[${index}].qntSpecPath ${witness.qntSpecPath} is classified as bridge; bridge modules are projection traceability, not parity evidence.`,
+    ];
+  });
+}
+
 function validateRuntimeTestWitnessProfiles(
   obligation,
   profileIds,
@@ -3108,6 +3122,7 @@ function buildKernelCoverage({
     if (coveredStatuses.has(obligation.status)) {
       issues.push(
         ...validateCoveredEvidence(rootPath, obligation, markerIndex),
+        ...validateParityWitnessQntOwnerRoles(obligation, qntOwnerRolesByPath),
         ...validateRuntimeTestWitnessProfiles(
           obligation,
           derivedProfilesByObligation.get(obligation.id) ?? [],

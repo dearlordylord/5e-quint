@@ -3054,6 +3054,48 @@ function runSelfTest(root) {
         `Self-test failed: a bridge-only obligation must not satisfy a profile semantic-coverage join, got ${JSON.stringify(bridgeOnlyProfileJoin)}`,
       );
     }
+    for (const role of ["proof-only", "mbt-fixture"]) {
+      const unrelatedSemanticCoreProfileJoin = buildRulesKernelProfileJoin({
+        obligations: [
+          {
+            id: "BATTLE.UNRELATED_SEMANTIC_CORE",
+            status: "covered",
+            qntOwners: [
+              "fixture/profile-owner.qnt",
+              "fixture/unrelated-semantic-core.qnt",
+            ],
+          },
+        ],
+        profileObligations: [
+          {
+            profileId: `spell.${role}`,
+            obligationIds: ["BATTLE.UNRELATED_SEMANTIC_CORE"],
+          },
+        ],
+        profiles: [
+          {
+            id: `spell.${role}`,
+            profileKind: "spell-invocation",
+            qntOwners: ["fixture/profile-owner.qnt"],
+          },
+        ],
+        qntOwnerRoles: [
+          { ownerPath: "fixture/profile-owner.qnt", role },
+          {
+            ownerPath: "fixture/unrelated-semantic-core.qnt",
+            role: "semantic-core",
+          },
+        ],
+      });
+      if (
+        unrelatedSemanticCoreProfileJoin.profiles[0]?.joinStatus !==
+        "mapped-open"
+      ) {
+        fail(
+          `Self-test failed: a profile-local ${role} owner must not inherit covered status from an unrelated semantic core, got ${JSON.stringify(unrelatedSemanticCoreProfileJoin)}`,
+        );
+      }
+    }
     const bridgeOnlyEvidenceGate = buildSpellProcedureMbtEvidenceGate({
       level1FullSupport: {
         scope: { title: "Fixture level 1" },

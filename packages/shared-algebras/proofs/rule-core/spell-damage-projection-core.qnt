@@ -1,5 +1,5 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES
+// KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE
 
 module spellDamageProjectionCore {
   import hitPointDamage.* from "./hit-point-damage"
