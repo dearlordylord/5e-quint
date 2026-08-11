@@ -4,6 +4,7 @@
 module battleRuntimeSaveGatedShieldReactionResolutionTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeSaveGatedShieldReactionResolution.* from "./battle-runtime-save-gated-shield-reaction-resolution"
   import battleRuntimeSaveGatedDamageResolution.* from "./battle-runtime-save-gated-damage-resolution"
 
