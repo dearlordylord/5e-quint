@@ -107,12 +107,19 @@ normal-form availability, and the active form's limb and equipment-disposition
 facts with slot-sensitive existential matching while shrinking production by 25
 physical lines. A 34-line focused regression covers the representable case in
 which main- and off-hand slots share an item identity but only the off-hand slot
-is usable; this remains within the two-test-lines-per-newly-covered-statement
-budget. No modeled rule changed. The public Magic Weapon, weapon-hosted route,
-and Wild Shape lifecycle cohort passed 76 tests; package typecheck, targeted
-lint, formatting, and the exact gate above were green. Two review rounds found
-no remaining RAW, domain, architecture/connascence, standards, or issue-scope
-finding.
+is usable. The pre-edit coverage increment added no test lines; this regression
+was added only after independent review exposed an extensional mismatch and is
+required behavioral-equivalence protection, not marginal coverage work. The
+covered statement numerator rose by 3, so its 34 / 3 = 11.33 ratio does not
+satisfy and is not accepted under the two-test-lines-per-newly-covered-statement
+budget. M23 instead earns its proportional value from the net removal of 25
+uncovered statements and 3 uncovered branches with production denominator
+shrinkage; the regression prevents that simplification from changing a
+representable behavior. No modeled rule changed. The public Magic Weapon,
+weapon-hosted route, and Wild Shape lifecycle cohort passed 76 tests; package
+typecheck, targeted lint, formatting, and the exact gate above were green. Two
+review rounds found no remaining RAW, domain, architecture/connascence,
+standards, or issue-scope finding.
 
 M22 covered a reduced attack-control increment after review removed direct
 helper matrices and forged state witnesses. Its exact baseline at `1ce2c3590`
