@@ -1137,11 +1137,16 @@ describe("battle runtime: Stat Block actions", () => {
       throw new Error("Expected a first Stat Block Bonus Action option.");
     }
     const statBlock: StatBlockRecord = {
-      ...base,
       id: parseSharedStatBlockId(
         "stat_block_limited_bonus_action_replay_test_monster",
       ),
+      kind: base.kind,
       name: "Limited Bonus Action Replay Test Monster",
+      provenance: {
+        kind: "synthetic-test",
+        section: "limited-bonus-action-replay-test-monster",
+      },
+      challengeRating: base.challengeRating,
       statBlock: {
         ...base.statBlock,
         displayName: "Limited Bonus Action Replay Test Monster",
@@ -1415,11 +1420,16 @@ describe("battle runtime: Stat Block actions", () => {
       );
     }
     const statBlock: StatBlockRecord = {
-      ...base,
       id: parseSharedStatBlockId(
         "stat_block_limited_multiattack_replay_test_monster",
       ),
+      kind: base.kind,
       name: "Limited Multiattack Replay Test Monster",
+      provenance: {
+        kind: "synthetic-test",
+        section: "limited-multiattack-replay-test-monster",
+      },
+      challengeRating: base.challengeRating,
       statBlock: {
         ...base.statBlock,
         displayName: "Limited Multiattack Replay Test Monster",
