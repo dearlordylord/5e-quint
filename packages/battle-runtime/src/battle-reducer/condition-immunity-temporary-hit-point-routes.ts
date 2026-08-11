@@ -7,7 +7,7 @@ import type {
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import {
-  activeEffectSpellRouteNextDiscoveryOwner,
+  spellSlotFallbackActiveEffectRouteNextDiscoveryOwner,
   battleReducerRouteFill,
   battleReducerRouteHoles,
   discoverBattleActsRoute,
@@ -84,7 +84,7 @@ export function conditionImmunityTemporaryHitPointRouteForResolution(
       discoverBattleActsRoute(
         SUBJECT,
         holes,
-        activeEffectSpellRouteNextDiscoveryOwner(holes),
+        spellSlotFallbackActiveEffectRouteNextDiscoveryOwner(holes),
       ),
     );
   }

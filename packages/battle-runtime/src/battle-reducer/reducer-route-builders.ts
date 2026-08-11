@@ -78,7 +78,7 @@ export function nonEmptyRouteEvents(
   return first === undefined ? undefined : [first, ...rest];
 }
 
-export function activeEffectSpellRouteNextDiscoveryOwner(
+export function spellSlotFallbackActiveEffectRouteNextDiscoveryOwner(
   holes: readonly BattleReducerRouteHole[],
 ) {
   if (holes.includes("targetChoice")) return "battleTargetSelection";

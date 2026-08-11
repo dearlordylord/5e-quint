@@ -10,7 +10,7 @@ import type {
 import type { CombatantId } from "../identity.ts";
 import { requiredAbilityCheckRollMode } from "./hole-helpers.ts";
 import {
-  activeEffectSpellRouteNextDiscoveryOwner,
+  spellSlotFallbackActiveEffectRouteNextDiscoveryOwner,
   battleReducerRouteFill,
   battleReducerRouteHoles,
   discoverBattleActsRoute,
@@ -101,7 +101,7 @@ export function markedDamageRiderRouteForResolution(
       effectRouteDiscover(
         subject,
         holes,
-        activeEffectSpellRouteNextDiscoveryOwner(holes),
+        spellSlotFallbackActiveEffectRouteNextDiscoveryOwner(holes),
       ),
     );
   }
