@@ -18,7 +18,7 @@ module battleRuntimeDragonsBreath {
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
   import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
 
   type DragonsBreathExhaleAccumulator = { state: BattleState, resolved: bool }

@@ -1,11 +1,13 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS BATTLE.SPELL.READIED_RESPONSE_PROCEDURE
+// KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS BATTLE.SPELL.READIED_RESPONSE_PROCEDURE
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-damage-reduction
 
 module battleRuntimeSpellLifecycleBridge {
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
   import spellTurnHookCore.* from "../shared-algebras/proofs/rule-core/spell-turn-hook-core"
   import spellObjectHitPointDamageCore.* from "../shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core"
   import spellSleepRepeatSaveLifecycleCore.* from "../shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core"
+  import battleRuntimeModel.* from "./battle-runtime-model"
 
   type BattleRuntimeSleepRepeatSaveLifecycle =
     | BattleRuntimeNoSleepRepeatSaveLifecycle
@@ -93,6 +95,14 @@ module battleRuntimeSpellLifecycleBridge {
     turnStartTemporaryHitPoints(existingTemporaryHitPoints, grantedTemporaryHitPoints)
   pure def battleRuntimeOncePerTurnSpellEffectUsedAtTurnStart: bool =
     oncePerTurnSpellEffectUsedAtTurnStart
+  pure def resetResistanceDamageReductions(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+    effects.map(effect => match effect {
+      | ResistanceDamageReduction(data) => ResistanceDamageReduction({
+          ...data,
+          usedThisTurn: battleRuntimeOncePerTurnSpellEffectUsedAtTurnStart,
+        })
+      | _ => effect
+    })
   pure def battleRuntimeOneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn: bool =
     oneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn
   pure def battleRuntimeTimedSpellEffectDurationAfterRoundTick(durationTicks: int): int =

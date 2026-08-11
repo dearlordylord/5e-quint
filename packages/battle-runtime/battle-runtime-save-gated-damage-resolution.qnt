@@ -9,8 +9,8 @@ module battleRuntimeSaveGatedDamageResolution {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
+  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
@@ -43,14 +43,6 @@ module battleRuntimeSaveGatedDamageResolution {
       | MindSpikeSaveGate => Set(MindSpikeConcentrationDuration({ durationTicks: mindSpikeDurationTicks }))
     }
 
-  pure def applyResistanceSpellReductionToFighter(state: BattleState, damageType: DamageType, damage: int, reductionRoll: int): BattleState = {
-    val reducedDamage = damageAfterResistanceSpellReduction(damage, damageType, state.fighter.activeEffects, reductionRoll)
-    val updatedEffects = activeEffectsAfterResistanceSpellReduction(state.fighter.activeEffects, damageType)
-    {
-      ...state,
-      fighter: applyDamage({ ...state.fighter, activeEffects: updatedEffects }, reducedDamage, 1, true),
-    }
-  }
   pure def acidSplashDamageTarget(
     target: Combatant,
     failedSavingThrow: bool,

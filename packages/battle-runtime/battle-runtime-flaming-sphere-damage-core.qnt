@@ -5,7 +5,7 @@
 module battleRuntimeFlamingSphereDamageCore {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
   import battleRuntimeFlamingSphereFacts.* from "./battle-runtime-flaming-sphere-facts"
 
   pure def flamingSphereAdjustedDamage(rolledDamage: int, savingThrowSucceeded: bool): int =

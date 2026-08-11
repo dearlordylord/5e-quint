@@ -143,7 +143,7 @@ QNT modules, such as `battle-runtime-find-familiar.qnt`,
 `battle-runtime-armor-class.qnt`,
 `battle-runtime-armor-spell-resolution.qnt`, `battle-runtime-thaumaturgy.qnt`,
 and `battle-runtime-bardic-inspiration.qnt`, and `battle-runtime-hit-points.qnt`,
-`battle-runtime-turn-order.qnt`, and `battle-runtime-damage-adjustments.qnt`,
+`battle-runtime-turn-order.qnt`, and `battle-runtime-damage-type-adjustment.qnt`,
 `battle-runtime-spell-cast-resources.qnt`,
 `battle-runtime-spell-attack-facts.qnt`,
 `battle-runtime-spell-attack-direct-resolution.qnt`, and

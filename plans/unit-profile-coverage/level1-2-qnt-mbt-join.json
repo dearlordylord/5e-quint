@@ -107,10 +107,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -198,6 +194,14 @@
       "qntOwners": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
           "role": "semantic-core"
         },
         {
@@ -1098,10 +1102,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -1189,6 +1189,14 @@
       "qntOwners": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
           "role": "semantic-core"
         },
         {
@@ -1373,10 +1381,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -1464,6 +1468,14 @@
       "qntOwners": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
           "role": "semantic-core"
         },
         {
@@ -1642,6 +1654,14 @@
       "qntOwners": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
           "role": "semantic-core"
         },
         {
@@ -2162,10 +2182,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -2284,6 +2300,14 @@
       "qntOwners": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
           "role": "semantic-core"
         },
         {
@@ -2837,6 +2861,14 @@
           "role": "semantic-core"
         },
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
         }
@@ -3341,10 +3373,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -3613,10 +3641,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -3704,6 +3728,14 @@
       "qntOwners": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
           "role": "semantic-core"
         },
         {
@@ -3919,10 +3951,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -4013,6 +4041,14 @@
           "role": "semantic-core"
         },
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
         }
@@ -4057,6 +4093,26 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
           "role": "semantic-core"
         }
       ],
@@ -4333,10 +4389,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -4477,10 +4529,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -4568,6 +4616,14 @@
       "qntOwners": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
           "role": "semantic-core"
         },
         {
@@ -4910,10 +4966,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -5001,6 +5053,14 @@
       "qntOwners": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
           "role": "semantic-core"
         },
         {
@@ -5185,10 +5245,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -5276,6 +5332,14 @@
       "qntOwners": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
           "role": "semantic-core"
         },
         {
@@ -6010,10 +6074,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -6101,6 +6161,14 @@
       "qntOwners": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
           "role": "semantic-core"
         },
         {
@@ -6284,10 +6352,6 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
           "role": "semantic-core"
         }
       ],
@@ -6627,10 +6691,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -6718,6 +6778,14 @@
       "qntOwners": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
           "role": "semantic-core"
         },
         {
@@ -6902,10 +6970,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -6993,6 +7057,14 @@
       "qntOwners": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
           "role": "semantic-core"
         },
         {
@@ -7127,8 +7199,12 @@
           "role": "semantic-core"
         },
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
+          "role": "bridge"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt",
@@ -7476,10 +7552,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -7567,6 +7639,14 @@
       "qntOwners": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
           "role": "semantic-core"
         },
         {
@@ -7795,6 +7875,14 @@
           "role": "semantic-core"
         },
         {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
+          "role": "semantic-core"
+        },
+        {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
         }
@@ -7996,10 +8084,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -8087,6 +8171,14 @@
       "qntOwners": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
           "role": "semantic-core"
         },
         {
@@ -8428,10 +8520,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -8599,10 +8687,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -8742,10 +8826,6 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
-          "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
           "role": "semantic-core"
         }
       ],
@@ -8942,10 +9022,6 @@
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
           "role": "semantic-core"
-        },
-        {
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -9033,6 +9109,14 @@
       "qntOwners": [
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
           "role": "semantic-core"
         },
         {

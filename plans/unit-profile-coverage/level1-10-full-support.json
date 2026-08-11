@@ -19827,7 +19827,10 @@
             "profileId": "spell.reaction-counterspell",
             "profileKind": "reaction",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+              "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+              "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
+              "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+              "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt"
             ]
           }
         ],
@@ -20916,7 +20919,7 @@
             "profileId": "spell.reaction-hellish-rebuke",
             "profileKind": "reaction",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+              "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
             ]
           },
           {
@@ -22645,7 +22648,8 @@
             "profileId": "spell.invocation-damage-reduction",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+              "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
+              "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt"
             ]
           }
         ],

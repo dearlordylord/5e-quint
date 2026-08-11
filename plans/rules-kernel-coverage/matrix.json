@@ -268,6 +268,8 @@
       ],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+        "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
       ],
       "runtime": "battle",
@@ -485,8 +487,7 @@
         "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
         "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
         "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt"
+        "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2319,7 +2320,12 @@
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
-        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt"
+        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt",
+        "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2900,7 +2906,8 @@
       ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
-        "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+        "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
+        "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
         "packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt"
       ],
       "runtime": "battle",
@@ -4447,11 +4454,16 @@
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-weapon-attack-interruption-frame.qnt",
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
-        "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
+        "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
         "packages/battle-runtime/battle-runtime-replay-equivalence.qnt",
         "packages/battle-runtime/battle-runtime-interrupt-bridge.qnt"
       ],
-      "reason": "This row covers the reducer protocol shape beyond the single Reaction offer. The weapon-attack frame owner computes one cohesive handoff value containing participant, target and spatial facts, Attack Roll result, damage input, Critical Hit consequence, phase, and one continuation; its focused witness drives the production reducer through offer, interruption, and resumed handoff. The reaction-window owner projects interrupt stack frames through the existing rule-core ReactionWindowState depth, decline, and advance-continuation semantics, the reaction-resolution owner resumes suspended procedures from the post-Reaction BattleState after active Spell Effects may have changed, and the replay-equivalence owner computes replay-from-root projection by combining the recorded continuation subject/fills with newly supplied suffix fills. The replay focused witness compares independently resolving recorded subject+fills from the root state against the production replay-continuation frame path over the same root state, recorded continuation, handled trigger, and suffix fill sequence. The SRD anchors Reaction timing and the Attack Roll, Critical Hit, damage, and zero-Hit-Point consequence facts retained across this boundary; choosing concrete interrupt stack frames and replay calls is reducer protocol evidence, not a separate RAW ordering interpretation.",
+      "reason": "This row covers the reducer protocol shape beyond the single Reaction offer. The weapon-attack frame owner computes one cohesive handoff value containing participant, target and spatial facts, Attack Roll result, damage input, Critical Hit consequence, phase, and one continuation; its focused witness drives the production reducer through offer, interruption, and resumed handoff. The reaction-window owner projects interrupt stack frames through the existing rule-core ReactionWindowState depth, decline, and advance-continuation semantics; the focused attack-damage and triggered-reaction owners resume suspended non-spell procedures, while the Counterspell decision owner and its direct, weapon-hosted, and save-gated continuation owners resume the exact triggering spell family from the post-Reaction BattleState; and the replay-equivalence owner computes replay-from-root projection by combining the recorded continuation subject/fills with newly supplied suffix fills. The replay focused witness compares independently resolving recorded subject+fills from the root state against the production replay-continuation frame path over the same root state, recorded continuation, handled trigger, and suffix fill sequence. The SRD anchors Reaction timing and the Attack Roll, Critical Hit, damage, and zero-Hit-Point consequence facts retained across this boundary; choosing concrete interrupt stack frames and replay calls is reducer protocol evidence, not a separate RAW ordering interpretation.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -7765,9 +7777,9 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-damage-adjustments.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt owns target-side immunity, Resistance, and vulnerability adjustment plus chosen-type Resistance spell reduction application and consumption semantics.",
       "obligationIds": ["BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"],
-      "ownerPath": "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
       "role": "semantic-core"
     },
     {
@@ -8034,9 +8046,58 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-reaction-resolution.qnt is the covered obligation QNT owner carrying reaction procedure resolution and suspended continuation resume semantics.",
-      "obligationIds": ["BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY"],
-      "ownerPath": "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
+      "evidence": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt owns attack-damage continuation and Concentration interruption resolution semantics.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt owns spell-cast and Shield spell Reaction resolution and suspended spell-attack continuation semantics.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt owns non-SpellCast Reaction decisions, suspended procedure continuation, and after-damage Hellish Rebuke resolution semantics.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt owns Counterspell decision, slot finalization, and continuation handoff semantics independent of the triggering spell family.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt owns Counterspell resume dispatch for suspended weapon-hosted spell continuations.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt owns Counterspell resume dispatch for suspended save-gated spell continuations.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
       "role": "semantic-core"
     },
     {
@@ -9975,12 +10036,6 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt is a focused QNT owner extracted from a former catch-all production closure.",
-      "obligationIds": ["BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE"],
-      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-      "role": "semantic-core"
-    },
-    {
       "evidence": "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt is a focused QNT owner extracted from a former catch-all production closure.",
       "obligationIds": [
         "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
@@ -10005,6 +10060,7 @@
     {
       "evidence": "Focused battle-runtime projection bridge from portable spell-lifecycle semantics into the battle state shape.",
       "obligationIds": [
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
         "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
         "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"
@@ -10498,6 +10554,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-attack-facts.qnt",
       "role": "proof-only"
     },
@@ -10574,6 +10635,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-creature-size-change.qnt",
       "role": "semantic-core"
     },
@@ -10594,7 +10660,7 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
       "role": "semantic-core"
     },
     {
@@ -11082,11 +11148,6 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
-      "role": "semantic-core"
-    },
-    {
-      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
       "role": "semantic-core"
     },
@@ -11189,6 +11250,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-targeting-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
       "role": "semantic-core"
     },
     {
@@ -11314,15 +11380,15 @@
       "role": "semantic-core"
     },
     {
-      "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-      "role": "semantic-core"
-    },
-    {
       "category": "proof-only-example",
       "classification": "exempt",
       "evidence": "Run-block examples for the spell bridge; registered spell rule-core and battle owners carry active coverage.",
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge-examples.qnt"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -11417,6 +11483,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-turn-advancement-death-save.qnt",
       "role": "semantic-core"
     },
@@ -11458,6 +11529,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
       "role": "semantic-core"
     },
     {
@@ -14696,7 +14772,11 @@
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
-        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt"
+        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt",
+        "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15155,8 +15235,7 @@
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
         "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
         "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt"
+        "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15210,7 +15289,7 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
-        "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+        "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15876,7 +15955,12 @@
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-weapon-attack-interruption-frame.qnt",
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
-        "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
+        "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
         "packages/battle-runtime/battle-runtime-replay-equivalence.qnt"
       ],
       "status": "generation-subset-clean"

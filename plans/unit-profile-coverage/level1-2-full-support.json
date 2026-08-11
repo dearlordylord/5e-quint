@@ -6530,7 +6530,7 @@
             "profileId": "spell.reaction-hellish-rebuke",
             "profileKind": "reaction",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+              "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
             ]
           },
           {
@@ -7530,7 +7530,8 @@
             "profileId": "spell.invocation-damage-reduction",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+              "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
+              "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt"
             ]
           }
         ],

@@ -3,12 +3,11 @@
 
 module battleRuntimeSpellAttackDirectResolution {
   import battleRuntimeSpellAttackFacts.* from "./battle-runtime-spell-attack-facts"
-  import battleRuntimeSpellAttackTimedEffects.* from "./battle-runtime-spell-attack-timed-effects"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
+  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
@@ -16,6 +15,138 @@ module battleRuntimeSpellAttackDirectResolution {
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeHidden.* from "./battle-runtime-hidden"
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
+
+  pure def rayOfFrostSpeedEffectActive(
+    hit: bool,
+    currentActor: Actor,
+    caster: Actor,
+  ): bool =
+    hit and currentActor != caster
+  pure def starryWispDimLightEmitter(
+    state: BattleState,
+    source: Actor,
+    attachment: LightEmitterAttachment,
+  ): LightEmitter =
+    match attachment {
+      | CombatantLightEmitter(_) => SpellLightEmitter({
+          source: source,
+          sourceSpell: StarryWisp,
+          attachment: attachment,
+          emission: DimLightEmission({ radiusFeet: 10 }),
+          opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
+          ongoingSpellTracking: UntrackedSpellLightEmitter,
+          expiresAt: EndOfTurnLightEmitterExpiration({
+            actor: source,
+            round: endOfCasterNextTurnExpiresAtRound(state, source),
+          }),
+        })
+      | ObjectLightEmitter(data) => ObjectInvisibleRevealLightEmitter({
+          source: source,
+          sourceSpell: StarryWisp,
+          object: data.object,
+          dimLightRadiusFeet: 10,
+          expiresAtActor: source,
+          expiresAtRound: endOfCasterNextTurnExpiresAtRound(state, source),
+        })
+      | DancingLightEmitter(_) => SpellLightEmitter({
+          source: source,
+          sourceSpell: DancingLightsSpell,
+          attachment: attachment,
+          emission: DimLightEmission({ radiusFeet: 10 }),
+          opaqueCoverInteraction: LightEmitterDoesNotBlockOpaqueCover,
+          ongoingSpellTracking: UntrackedSpellLightEmitter,
+          expiresAt: ConcentrationLightEmitterExpiration({ actor: source }),
+        })
+    }
+  pure def applyStarryWispDimLightEmitter(
+    state: BattleState,
+    source: Actor,
+    attachment: LightEmitterAttachment,
+  ): BattleState = {
+    val emitter = starryWispDimLightEmitter(state, source, attachment)
+    { ...state,
+      lightEmitters: state.lightEmitters
+        .filter(candidate => match candidate {
+          | SpellLightEmitter(data) =>
+              data.source != source
+                or data.sourceSpell != StarryWisp
+                or data.attachment != attachment
+          | ObjectInvisibleRevealLightEmitter(data) =>
+              data.source != source
+                or data.sourceSpell != StarryWisp
+                or match attachment {
+                  | CombatantLightEmitter(_) => true
+                  | ObjectLightEmitter(objectAttachment) => data.object != objectAttachment.object
+                  | DancingLightEmitter(_) => true
+                }
+        })
+        .union(Set(emitter)),
+    }
+  }
+  pure def applyChillTouchHitPointRegainPrevention(state: BattleState, target: Combatant, source: Actor): Combatant =
+    { ...target,
+      activeEffects: target.activeEffects
+        .filter(effect => match effect {
+          | ChillTouchHitPointRegainPrevented(data) => data.source != source
+          | _ => true
+        })
+        .union(Set(ChillTouchHitPointRegainPrevented({
+          source: source,
+          expiresAtRound: endOfCasterNextTurnExpiresAtRound(state, source),
+        }))),
+    }
+  pure def applyStarryWispInvisibleBenefitDenied(state: BattleState, target: Combatant, source: Actor): Combatant =
+    { ...target,
+      activeEffects: target.activeEffects
+        .filter(effect => match effect {
+          | StarryWispInvisibleBenefitDenied(data) => data.source != source
+          | _ => true
+        })
+        .union(Set(StarryWispInvisibleBenefitDenied({
+          source: source,
+          expiresAtRound: endOfCasterNextTurnExpiresAtRound(state, source),
+        }))),
+    }
+
+  type DirectSpellAttackReactionContinuation =
+    | DirectSpellAttackRayOfFrost
+    | DirectSpellAttackPoisonSpray
+    | DirectSpellAttackChillTouch
+
+  type DirectSpellAttackReactionContinuationOption =
+    | NoDirectSpellAttackReactionContinuation
+    | HasDirectSpellAttackReactionContinuation(DirectSpellAttackReactionContinuation)
+
+  pure def directSpellAttackReactionContinuation(
+    continuation: ReactionContinuation,
+  ): DirectSpellAttackReactionContinuationOption =
+    match continuation {
+      | ResumeRayOfFrost =>
+          HasDirectSpellAttackReactionContinuation(DirectSpellAttackRayOfFrost)
+      | ResumePoisonSpray =>
+          HasDirectSpellAttackReactionContinuation(DirectSpellAttackPoisonSpray)
+      | ResumeChillTouch =>
+          HasDirectSpellAttackReactionContinuation(DirectSpellAttackChillTouch)
+      | _ => NoDirectSpellAttackReactionContinuation
+    }
+
+  pure def directSpellAttackReactionContinuationSupported(
+    continuation: ReactionContinuation,
+  ): bool =
+    match directSpellAttackReactionContinuation(continuation) {
+      | HasDirectSpellAttackReactionContinuation(_) => true
+      | NoDirectSpellAttackReactionContinuation => false
+    }
+
+  pure def resumeDirectSpellAttackReactionContinuation(
+    state: BattleState,
+    continuation: DirectSpellAttackReactionContinuation,
+  ): BattleState =
+    match continuation {
+      | DirectSpellAttackRayOfFrost => resolveRayOfFrost(state, 15, 10, 4, true)
+      | DirectSpellAttackPoisonSpray => resolvePoisonSpray(state, 15, 10, 7, true)
+      | DirectSpellAttackChillTouch => resolveChillTouch(state, 15, 10, 6, true)
+    }
 
   pure def fighterSpellAttackMirrorImageRedirects(
     state: BattleState,

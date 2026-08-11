@@ -7,7 +7,7 @@ module battleRuntimeAttackFacts {
   import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
 
   pure def attackHits(total: int, naturalD20: int, armorClass: int, criticalThreshold: int): bool =
     resolveAttackRoll({

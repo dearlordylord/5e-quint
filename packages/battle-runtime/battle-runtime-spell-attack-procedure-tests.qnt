@@ -7,7 +7,6 @@ module battleRuntimeSpellAttackProcedureTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
-  import battleRuntimeSpellAttackTimedEffects.* from "./battle-runtime-spell-attack-timed-effects"
   import battleRuntimeEndOfTurnRiderExpiration.* from "./battle-runtime-end-of-turn-rider-expiration"
   import battleRuntimeSpellAttackFacts.* from "./battle-runtime-spell-attack-facts"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"

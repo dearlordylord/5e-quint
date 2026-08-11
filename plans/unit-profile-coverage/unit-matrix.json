@@ -563,7 +563,7 @@
         },
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-core-combat-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-damage-reduction-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -946,7 +946,7 @@
       "profileKind": "passive",
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
-        "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+        "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -2490,7 +2490,7 @@
       "id": "spell.reaction-hellish-rebuke",
       "profileKind": "reaction",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+        "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2522,14 +2522,17 @@
       "id": "spell.reaction-counterspell",
       "profileKind": "reaction",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+        "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
       ],
-      "sourceBoundary": "The runtime consumes typed table-supplied spell-cast Reaction facts establishing that a reactor can see a spell caster within 60 feet, requires Counterspell spell access, an available Reaction, an available Spell Slot, and the SRD same-turn spell-slot ledger, opens a spell-cast Reaction frame before the triggering spell resolves, resolves automatic or Constitution-save-gated interruption, releases the triggering pending slot when the spell is countered, and exposes nested spell-cast Reaction facts so Counterspell can itself be countered. Spell visibility, range geometry, and component witnesses remain table-supplied facts.",
+      "sourceBoundary": "The runtime consumes typed table-supplied spell-cast Reaction facts establishing that a reactor can see a spell caster within 60 feet, requires Counterspell spell access, an available Reaction, an available Spell Slot, and the SRD same-turn spell-slot ledger, opens a spell-cast Reaction frame before the triggering spell resolves, resolves automatic or Constitution-save-gated interruption, releases the triggering pending slot when the spell is countered, resumes the triggering direct, weapon-hosted, or save-gated spell continuation when it is not countered, and exposes nested spell-cast Reaction facts so Counterspell can itself be countered. Spell visibility, range geometry, and component witnesses remain table-supplied facts.",
       "taskRefs": [
         "SRDINV91A"
       ],
@@ -2537,7 +2540,15 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-core-combat-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-spell-resolution-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2607,7 +2618,8 @@
       "id": "spell.invocation-damage-reduction",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+        "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
+        "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -3325,7 +3337,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-core-combat-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar-lifecycle-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -7654,7 +7666,7 @@
         "profileId": "unit-feature.passive-damage-resistance",
         "profileKind": "passive",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+          "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
           "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt"
         ]
       },
@@ -8458,7 +8470,7 @@
         "profileId": "spell.reaction-hellish-rebuke",
         "profileKind": "reaction",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+          "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
         ]
       },
       {
@@ -8480,7 +8492,10 @@
         "profileId": "spell.reaction-counterspell",
         "profileKind": "reaction",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+          "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+          "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
+          "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+          "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt"
         ]
       },
       {
@@ -8546,7 +8561,8 @@
         "profileId": "spell.invocation-damage-reduction",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+          "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
+          "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt"
         ]
       },
       {
@@ -11554,7 +11570,10 @@
               "profileId": "spell.reaction-counterspell",
               "profileKind": "reaction",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+                "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+                "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
+                "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+                "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt"
               ]
             }
           ],
@@ -11844,7 +11863,7 @@
               "profileId": "unit-feature.passive-damage-resistance",
               "profileKind": "passive",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+                "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
                 "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt"
               ]
             },
@@ -12836,7 +12855,7 @@
               "profileId": "spell.reaction-hellish-rebuke",
               "profileKind": "reaction",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+                "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
               ]
             },
             {
@@ -14721,7 +14740,8 @@
               "profileId": "spell.invocation-damage-reduction",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+                "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
+                "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt"
               ]
             }
           ],
@@ -15510,7 +15530,7 @@
               "profileId": "unit-feature.passive-damage-resistance",
               "profileKind": "passive",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+                "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
                 "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt"
               ]
             }
@@ -29656,7 +29676,7 @@
             },
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-core-combat-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-damage-reduction-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -31479,7 +31499,7 @@
           "profileKind": "passive",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
-            "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+            "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -31595,7 +31615,7 @@
           "profileKind": "passive",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
-            "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+            "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -35518,14 +35538,17 @@
           "id": "spell.reaction-counterspell",
           "profileKind": "reaction",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+            "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+            "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
           ],
-          "sourceBoundary": "The runtime consumes typed table-supplied spell-cast Reaction facts establishing that a reactor can see a spell caster within 60 feet, requires Counterspell spell access, an available Reaction, an available Spell Slot, and the SRD same-turn spell-slot ledger, opens a spell-cast Reaction frame before the triggering spell resolves, resolves automatic or Constitution-save-gated interruption, releases the triggering pending slot when the spell is countered, and exposes nested spell-cast Reaction facts so Counterspell can itself be countered. Spell visibility, range geometry, and component witnesses remain table-supplied facts.",
+          "sourceBoundary": "The runtime consumes typed table-supplied spell-cast Reaction facts establishing that a reactor can see a spell caster within 60 feet, requires Counterspell spell access, an available Reaction, an available Spell Slot, and the SRD same-turn spell-slot ledger, opens a spell-cast Reaction frame before the triggering spell resolves, resolves automatic or Constitution-save-gated interruption, releases the triggering pending slot when the spell is countered, resumes the triggering direct, weapon-hosted, or save-gated spell continuation when it is not countered, and exposes nested spell-cast Reaction facts so Counterspell can itself be countered. Spell visibility, range geometry, and component witnesses remain table-supplied facts.",
           "taskRefs": [
             "SRDINV91A"
           ],
@@ -35533,7 +35556,15 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-core-combat-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-spell-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -37818,7 +37849,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-core-combat-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar-lifecycle-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -42135,7 +42166,8 @@
           "id": "spell.invocation-damage-reduction",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+            "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
+            "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -46773,7 +46805,7 @@
           "id": "spell.reaction-hellish-rebuke",
           "profileKind": "reaction",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+            "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",

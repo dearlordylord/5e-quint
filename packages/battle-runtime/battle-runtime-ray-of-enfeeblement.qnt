@@ -11,7 +11,7 @@ module battleRuntimeRayOfEnfeeblement {
 
   import battleRuntimeModel.* from "./battle-runtime-model"
 
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
 
   pure def rayOfEnfeeblementD20LifecycleSavingThrowAbility: Ability = ConAbility
   pure def rayOfEnfeeblementD20LifecycleSuccessActiveEffects(source: Actor): Set[ActiveEffect] =

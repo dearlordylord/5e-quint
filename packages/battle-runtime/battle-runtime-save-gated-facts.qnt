@@ -9,7 +9,7 @@ module battleRuntimeSaveGatedFacts {
   import battleRuntimeModel.* from "./battle-runtime-model"
 
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
   import battleRuntimeRayOfEnfeeblementFacts.* from "./battle-runtime-ray-of-enfeeblement-facts"
 
   pure def charmPersonCharmedDurationTicks: int = 60 * 10

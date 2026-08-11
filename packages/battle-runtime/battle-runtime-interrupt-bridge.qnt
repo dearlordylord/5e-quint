@@ -95,4 +95,9 @@ module battleRuntimeInterruptBridge {
         })
     }
 
+  pure def battleRuntimeReactionDecisionWasTaken(decision: BattleRuntimeReactionDecision): bool =
+    match decision {
+      | BattleRuntimeTookReaction(_) => true
+      | _ => false
+    }
 }
