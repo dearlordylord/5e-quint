@@ -163,6 +163,7 @@ import {
 import {
   isCommandFollowUpSubject,
   pendingCommandObligationIssue,
+  resolveCommandHaltEndTurn,
   resolveCommandFollowUp,
 } from "./command-procedures.ts";
 import { commandHaltSuppressionIssue } from "./command-halt.ts";
@@ -638,10 +639,16 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       return resolveUnitFeatureHeldWeaponActivation({ ...input, subject });
     }
     if (subject.tag === "runtimeCommand" && subject.command === "endTurn") {
-      return resolveEndTurnCommand(input);
+      return input.state.currentTurnResources.commandHalt === null
+        ? resolveEndTurnCommand(input)
+        : resolveCommandHaltEndTurn({ ...input, subject });
     }
     if (isCommandFollowUpSubject(subject)) {
-      return resolveCommandFollowUp({ ...input, subject });
+      return resolveCommandFollowUp({
+        ...input,
+        subject,
+        ...handledInterruptRouteOption,
+      });
     }
     if (isMovementProcedureSubject(subject)) {
       return resolveMovementProcedure({ ...input, subject });

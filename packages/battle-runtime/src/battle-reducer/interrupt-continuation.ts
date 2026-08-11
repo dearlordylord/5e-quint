@@ -33,10 +33,6 @@ import {
   concentrationSavingThrowHole,
   damageLifecycleConcentrationSavingThrowHoles,
 } from "./damage-apply.ts";
-import {
-  isCommandMovementContinuation,
-  resumeCommandMovementContinuation,
-} from "./command-procedures.ts";
 import { resolveCunningStrikeAfterAttackDamage } from "./cunning-strike.ts";
 import { d20TestNaturalOneRerollOutcomeIssue } from "./d20-test-natural-one-reroll.ts";
 import {
@@ -153,9 +149,6 @@ export function resumeInterruptedProcedure(
           ? undefined
           : handledInterruptTrigger,
     });
-  }
-  if (isCommandMovementContinuation(continuation)) {
-    return resumeCommandMovementContinuation(state, continuation);
   }
   if (continuation.kind === "attackDamage") {
     const damageAmount = attackDamageContinuationAmount(state, continuation);

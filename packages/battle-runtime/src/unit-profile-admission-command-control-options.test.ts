@@ -5,7 +5,7 @@ import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-sup
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resolveCommandFollowUp } from "./battle-reducer/command-procedures.ts";
 import { admitBattleResolutionInput } from "./battle-reducer/resolution-admission.ts";
-import { battleStateWithSyntheticCommandEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
+import { battleStateWithSyntheticRayOfEnfeeblementEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   requireCharacterSpellProcedureRefForTest,
@@ -287,7 +287,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const committedState = battleStateWithSyntheticCommandEndTurnSave(
+    const committedState = battleStateWithSyntheticRayOfEnfeeblementEndTurnSave(
       targetTurn.state,
       spellCasterId,
       spellTargetId,
@@ -639,7 +639,45 @@ describe("QMBT14 deterministic Command control option admission", () => {
       ],
     });
 
-    const ended = endTurn({ state: targetTurn.state, actorId: spellTargetId });
+    const committedHaltState =
+      battleStateWithSyntheticRayOfEnfeeblementEndTurnSave(
+        targetTurn.state,
+        spellCasterId,
+        spellTargetId,
+      );
+    const committedHaltSnapshot = snapshotBattle(committedHaltState);
+    const awaitingHaltSave = endTurn({
+      state: committedHaltState,
+      actorId: spellTargetId,
+    });
+    expect(awaitingHaltSave).toMatchObject({
+      tag: "needsHoles",
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      snapshot: committedHaltSnapshot,
+    });
+    if (awaitingHaltSave.tag !== "needsHoles") {
+      throw new Error("Expected halted End Turn save frontier.");
+    }
+    expect(awaitingHaltSave.state.currentTurnResources.commandHalt).toEqual({
+      kind: "commandHalt",
+    });
+    const haltEndTurnSave = requireResultHole(
+      awaitingHaltSave,
+      "savingThrowOutcome",
+    );
+    const ended = endTurn({
+      state: committedHaltState,
+      actorId: spellTargetId,
+      fills: [
+        savingThrowOutcomeFill(haltEndTurnSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
     if (ended.tag !== "resolved") {
       throw new Error("Expected halted target End Turn to resolve.");
     }
@@ -717,11 +755,12 @@ describe("QMBT14 deterministic Command control option admission", () => {
         initialHoles: [],
       }),
     ]);
-    const committedWithSave = battleStateWithSyntheticCommandEndTurnSave(
-      targetTurn.state,
-      spellCasterId,
-      spellTargetId,
-    );
+    const committedWithSave =
+      battleStateWithSyntheticRayOfEnfeeblementEndTurnSave(
+        targetTurn.state,
+        spellCasterId,
+        spellTargetId,
+      );
     const dropSubject = targetActs[0]!.subject;
     if (
       dropSubject.tag !== "runtimeCommand" ||

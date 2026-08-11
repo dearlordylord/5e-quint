@@ -810,25 +810,6 @@ export type BattleInterruptedProcedure =
       readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
       readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
     }
-  | {
-      readonly kind: "commandApproachMovement";
-      readonly subject: Extract<
-        BattleSubject,
-        { readonly tag: "runtimeCommand"; readonly command: "commandApproach" }
-      >;
-      readonly movement: BattleResolvedMovement;
-      readonly movedWithinFiveFeetOfCaster: boolean;
-      readonly endTurnFills: readonly BattleFill[];
-    }
-  | {
-      readonly kind: "commandFleeMovement";
-      readonly subject: Extract<
-        BattleSubject,
-        { readonly tag: "runtimeCommand"; readonly command: "commandFlee" }
-      >;
-      readonly movement: BattleResolvedMovement;
-      readonly endTurnFills: readonly BattleFill[];
-    }
   | BattleAttackDamageInterruptionFrame;
 export type BattleAttackHostSubject =
   | Extract<
