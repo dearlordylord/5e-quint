@@ -13,7 +13,7 @@ module battleRuntimeReactionSpellResolutionTests {
 
   run test_shield_reaction_spell_interrupts_spell_attack_hit = {
     val awaiting = resolveRayOfFrost(initialState, 15, 10, 4, true)
-    val resolved = resolveDirectSpellAttackReactionOffer(awaiting, Goblin)
+    val resolved = resolveDirectSpellReactionOffer(awaiting, Goblin)
     all {
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
         trigger: AttackHit,
@@ -26,6 +26,40 @@ module battleRuntimeReactionSpellResolutionTests {
       assert(not(resolved.goblin.reactionAvailable)),
       assert(resolved.goblin.hp == 10),
       assert(not(resolved.actionAvailable)),
+    }
+  }
+
+  run test_shield_reaction_spell_interrupts_magic_missile_targeting = {
+    val awaiting = openReactionWindow(initialState, {
+      trigger: MagicMissileTargeted,
+      procedure: ShieldReactionProcedure,
+      eligibleReactors: Set(Fighter),
+      offeredReactors: Set(),
+      continuation: ResumeMagicMissileTargeting,
+    })
+    val resolved = resolveDirectSpellReactionOffer(awaiting, Fighter)
+    all {
+      assert(resolved.interruptStack == []),
+      assert(resolved.fighter.activeEffects.contains(ShieldArmorClassBonus)),
+      assert(not(resolved.fighter.reactionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+    }
+  }
+
+  run test_declining_magic_missile_shield_resumes_without_reaction_spend = {
+    val awaiting = openReactionWindow(initialState, {
+      trigger: MagicMissileTargeted,
+      procedure: ShieldReactionProcedure,
+      eligibleReactors: Set(Fighter),
+      offeredReactors: Set(),
+      continuation: ResumeMagicMissileTargeting,
+    })
+    val resumed = declineDirectSpellReactionOfferAndResume(awaiting, Fighter)
+    all {
+      assert(resumed.interruptStack == []),
+      assert(resumed.fighter.reactionAvailable),
+      assert(not(resumed.fighter.activeEffects.contains(ShieldArmorClassBonus))),
+      assert(not(battleActorHasSpellSlotUse(resumed, Fighter))),
     }
   }
 
@@ -46,7 +80,7 @@ module battleRuntimeReactionSpellResolutionTests {
       offeredReactors: Set(),
       continuation: ResumeRayOfFrost,
     })
-    val resolved = resolveDirectSpellAttackReactionOffer(awaiting, Fighter)
+    val resolved = resolveDirectSpellReactionOffer(awaiting, Fighter)
     all {
       assert(resolved.fighter.activeEffects.contains(ShieldArmorClassBonus)),
       assert(not(resolved.fighter.reactionAvailable)),
@@ -62,7 +96,7 @@ module battleRuntimeReactionSpellResolutionTests {
       offeredReactors: Set(),
       continuation: ResumeRayOfFrost,
     })
-    assert(resolveDirectSpellAttackReactionOffer(awaiting, Fighter) == awaiting)
+    assert(resolveDirectSpellReactionOffer(awaiting, Fighter) == awaiting)
   }
 
   run test_reaction_spell_trigger_procedure_matrix_rejects_mismatched_frames = {
@@ -110,7 +144,7 @@ module battleRuntimeReactionSpellResolutionTests {
       offeredReactors: Set(),
       continuation: ResumeRayOfFrost,
     })
-    val resolved = resolveDirectSpellAttackReactionOffer(awaiting, Goblin)
+    val resolved = resolveDirectSpellReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
       assert(not(resolved.goblin.reactionAvailable)),
@@ -137,7 +171,7 @@ module battleRuntimeReactionSpellResolutionTests {
       offeredReactors: Set(),
       continuation: ResumeRayOfFrost,
     })
-    val resolved = resolveDirectSpellAttackReactionOffer(awaiting, Goblin)
+    val resolved = resolveDirectSpellReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
       assert(not(resolved.goblin.reactionAvailable)),
@@ -168,7 +202,7 @@ module battleRuntimeReactionSpellResolutionTests {
       offeredReactors: Set(),
       continuation: ResumeRayOfFrost,
     })
-    val resolved = resolveDirectSpellAttackReactionOffer(awaiting, Goblin)
+    val resolved = resolveDirectSpellReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
       assert(not(resolved.fighter.reactionAvailable)),
@@ -204,7 +238,7 @@ module battleRuntimeReactionSpellResolutionTests {
       offeredReactors: Set(),
       continuation: ResumeRayOfFrost,
     })
-    val resolved = resolveDirectSpellAttackReactionOffer(awaiting, Goblin)
+    val resolved = resolveDirectSpellReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
       assert(not(resolved.fighter.reactionAvailable)),

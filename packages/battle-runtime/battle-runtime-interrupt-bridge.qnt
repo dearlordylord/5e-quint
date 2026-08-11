@@ -23,7 +23,7 @@ module battleRuntimeInterruptBridge {
       | BattleRuntimeAttackDamage => DamageInterruptionReactionWindow
       | BattleRuntimeAfterDamage => DamageInterruptionReactionWindow
       | BattleRuntimeAttackHit => ReadiedSpellReactionWindow
-      | BattleRuntimeSpellCast => ReadiedSpellReactionWindow
+      | BattleRuntimeSpellCast => ReadiedSpellReactionWindow | BattleRuntimeMagicMissileTargeted => ReadiedSpellReactionWindow
       | BattleRuntimeCreatureFalls => ReadiedSpellReactionWindow
       | BattleRuntimeSaveFailed => DamageInterruptionReactionWindow
     }

@@ -29,6 +29,7 @@ module battleRuntimeTriggeredReactionResolution {
           resumeDirectSpellAttackReactionContinuation(state, DirectSpellAttackPoisonSpray)
       | ResumeChillTouch =>
           resumeDirectSpellAttackReactionContinuation(state, DirectSpellAttackChillTouch)
+      | ResumeMagicMissileTargeting => state
       | ResumeTrueStrikeWeaponAttack =>
           resolveTrueStrikeWeaponAttack(
             state,
@@ -81,11 +82,8 @@ module battleRuntimeTriggeredReactionResolution {
         | PendingReaction(frame) => {
             if (
               frame.trigger == SpellCast or
-                (frame.trigger == AttackHit and
-                  frame.procedure == ShieldReactionProcedure and
-                  directSpellAttackReactionContinuationSupported(
-                    frame.continuation,
-                  ))
+                reactionProcedureRequiresSpellSlot(frame.procedure) or
+                frame.continuation == ResumeMagicMissileTargeting
             )
               state
             else
@@ -115,11 +113,8 @@ module battleRuntimeTriggeredReactionResolution {
         | PendingReaction(frame) =>
             if (
               frame.trigger == SpellCast or
-                (frame.trigger == AttackHit and
-                  frame.procedure == ShieldReactionProcedure and
-                  directSpellAttackReactionContinuationSupported(
-                    frame.continuation,
-                  ))
+                reactionProcedureRequiresSpellSlot(frame.procedure) or
+                frame.continuation == ResumeMagicMissileTargeting
             )
               state
             else {
@@ -151,13 +146,6 @@ module battleRuntimeTriggeredReactionResolution {
                                 ReadiedSpellReleaseReactionProcedure
                             )
                               releaseFighterReadiedSpell(afterReactionSpend)
-                            else if (
-                              frame.procedure == ShieldReactionProcedure
-                            )
-                              castShieldReactionSpell(
-                                afterReactionSpend,
-                                reactor,
-                              )
                             else
                               afterReactionSpend
                         | _ => afterReactionSpend

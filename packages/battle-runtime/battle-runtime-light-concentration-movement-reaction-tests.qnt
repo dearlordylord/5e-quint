@@ -1093,6 +1093,42 @@ module battleRuntimeLightConcentrationMovementReactionTests {
     }
   }
 
+  run test_unsupported_shield_continuation_is_rejected_without_reaction_spend = {
+    val awaiting = openReactionWindow(initialState, {
+      trigger: AttackHit,
+      procedure: ShieldReactionProcedure,
+      eligibleReactors: Set(Fighter),
+      offeredReactors: Set(),
+      continuation: ResumeAfterDamage,
+    })
+    val resolved = resolveNonSpellReactionOffer(awaiting, Fighter)
+    val declined = declineNonSpellReactionOfferAndResume(awaiting, Fighter)
+    all {
+      assert(resolved == awaiting),
+      assert(declined == awaiting),
+      assert(resolved.fighter.reactionAvailable),
+    }
+  }
+
+  run test_unavailable_magic_missile_shield_is_rejected_without_reaction_spend = {
+    val awaiting = openReactionWindow({
+      ...initialState,
+      spellSlotUsesThisTurn: Set(BattleCommittedSpellSlotUse(Fighter)),
+    }, {
+      trigger: MagicMissileTargeted,
+      procedure: ShieldReactionProcedure,
+      eligibleReactors: Set(Fighter),
+      offeredReactors: Set(),
+      continuation: ResumeMagicMissileTargeting,
+    })
+    val resolved = resolveNonSpellReactionOffer(awaiting, Fighter)
+    val declined = declineNonSpellReactionOfferAndResume(awaiting, Fighter)
+    all {
+      assert(resolved == awaiting),
+      assert(declined == awaiting),
+    }
+  }
+
   run test_after_damage_reaction_resolves_through_damage_interruption_contract = {
     val awaitingReaction = openReactionWindow(initialState, {
       trigger: AfterDamage,

@@ -10,14 +10,18 @@ module battleRuntimeSpellCastReactionResolution {
   import battleRuntimeSpellAttackDirectResolution.* from "./battle-runtime-spell-attack-direct-resolution"
   import battleRuntimeCounterspellReactionDecision.* from "./battle-runtime-counterspell-reaction-decision"
 
-  type ShieldDirectSpellReactionFrame = {
+  type ShieldReactionContinuation =
+    | ShieldDirectSpellAttackContinuation(DirectSpellAttackReactionContinuation)
+    | ShieldMagicMissileTargetingContinuation
+
+  type ShieldReactionFrame = {
     eligibleReactors: Set[Actor],
     offeredReactors: Set[Actor],
-    continuation: DirectSpellAttackReactionContinuation,
+    continuation: ShieldReactionContinuation,
   }
 
   type DirectSpellReactionFrame =
-    | ShieldDirectSpellReaction(ShieldDirectSpellReactionFrame)
+    | ShieldReaction(ShieldReactionFrame)
     | CounterspellDirectSpellReaction({
         context: CounterspellReactionContext,
         continuation: DirectSpellAttackReactionContinuation,
@@ -29,7 +33,12 @@ module battleRuntimeSpellCastReactionResolution {
 
   type DirectSpellReactionCandidate =
     | NoDirectSpellReactionCandidate
-    | ShieldDirectSpellReactionCandidate({
+    | ShieldDirectSpellAttackReactionCandidate({
+        eligibleReactors: Set[Actor],
+        offeredReactors: Set[Actor],
+        continuation: ReactionContinuation,
+      })
+    | ShieldMagicMissileTargetingReactionCandidate({
         eligibleReactors: Set[Actor],
         offeredReactors: Set[Actor],
         continuation: ReactionContinuation,
@@ -42,7 +51,13 @@ module battleRuntimeSpellCastReactionResolution {
     match frame.procedure {
       | ShieldReactionProcedure =>
           if (frame.trigger == AttackHit)
-            ShieldDirectSpellReactionCandidate({
+            ShieldDirectSpellAttackReactionCandidate({
+              eligibleReactors: frame.eligibleReactors,
+              offeredReactors: frame.offeredReactors,
+              continuation: frame.continuation,
+            })
+          else if (frame.trigger == MagicMissileTargeted)
+            ShieldMagicMissileTargetingReactionCandidate({
               eligibleReactors: frame.eligibleReactors,
               offeredReactors: frame.offeredReactors,
               continuation: frame.continuation,
@@ -74,11 +89,28 @@ module battleRuntimeSpellCastReactionResolution {
     match directSpellAttackReactionContinuation(candidate.continuation) {
       | NoDirectSpellAttackReactionContinuation => NoDirectSpellReactionFrame
       | HasDirectSpellAttackReactionContinuation(continuation) =>
-          HasDirectSpellReactionFrame(ShieldDirectSpellReaction({
+          HasDirectSpellReactionFrame(ShieldReaction({
             eligibleReactors: candidate.eligibleReactors,
             offeredReactors: candidate.offeredReactors,
-            continuation: continuation,
+            continuation: ShieldDirectSpellAttackContinuation(continuation),
           }))
+    }
+
+  pure def shieldMagicMissileTargetingReactionFrame(
+    candidate: {
+      eligibleReactors: Set[Actor],
+      offeredReactors: Set[Actor],
+      continuation: ReactionContinuation,
+    },
+  ): DirectSpellReactionFrameOption =
+    match candidate.continuation {
+      | ResumeMagicMissileTargeting =>
+          HasDirectSpellReactionFrame(ShieldReaction({
+            eligibleReactors: candidate.eligibleReactors,
+            offeredReactors: candidate.offeredReactors,
+            continuation: ShieldMagicMissileTargetingContinuation,
+          }))
+      | _ => NoDirectSpellReactionFrame
     }
 
   pure def counterspellDirectSpellReactionFrame(
@@ -98,10 +130,28 @@ module battleRuntimeSpellCastReactionResolution {
   ): DirectSpellReactionFrameOption =
     match candidate {
       | NoDirectSpellReactionCandidate => NoDirectSpellReactionFrame
-      | ShieldDirectSpellReactionCandidate(shield) =>
+      | ShieldDirectSpellAttackReactionCandidate(shield) =>
           shieldDirectSpellReactionFrame(shield)
+      | ShieldMagicMissileTargetingReactionCandidate(shield) =>
+          shieldMagicMissileTargetingReactionFrame(shield)
       | CounterspellDirectSpellReactionCandidate(counterspell) =>
           counterspellDirectSpellReactionFrame(counterspell)
+    }
+
+  pure def shieldReactionTrigger(continuation: ShieldReactionContinuation): ReactionTrigger =
+    match continuation {
+      | ShieldDirectSpellAttackContinuation(_) => AttackHit
+      | ShieldMagicMissileTargetingContinuation => MagicMissileTargeted
+    }
+
+  pure def resumeShieldReactionContinuation(
+    state: BattleState,
+    continuation: ShieldReactionContinuation,
+  ): BattleState =
+    match continuation {
+      | ShieldDirectSpellAttackContinuation(directSpellAttack) =>
+          resumeDirectSpellAttackReactionContinuation(state, directSpellAttack)
+      | ShieldMagicMissileTargetingContinuation => state
     }
 
   pure def declineDirectSpellReactionFrame(
@@ -118,10 +168,10 @@ module battleRuntimeSpellCastReactionResolution {
                 counterspell.continuation,
               ),
             )
-      | ShieldDirectSpellReaction(shield) => {
+      | ShieldReaction(shield) => {
           val afterDecision = stateAfterDecliningReactionOffer(state, reactor)
           if (reactionDecisionClosedFrame(state, afterDecision))
-            resumeDirectSpellAttackReactionContinuation(
+            resumeShieldReactionContinuation(
               afterDecision,
               shield.continuation,
             )
@@ -158,10 +208,10 @@ module battleRuntimeSpellCastReactionResolution {
   pure def resolveShieldReactionDecision(
     state: BattleState,
     reactor: Actor,
-    frame: ShieldDirectSpellReactionFrame,
+    frame: ShieldReactionFrame,
   ): BattleState = {
     val decision = battleRuntimeTakeReactionDecision(
-      battleRuntimeReactionTrigger(AttackHit),
+      battleRuntimeReactionTrigger(shieldReactionTrigger(frame.continuation)),
       battleRuntimeReactionProcedure(ShieldReactionProcedure),
       frame.eligibleReactors.contains(reactor),
       frame.offeredReactors.contains(reactor),
@@ -186,7 +236,7 @@ module battleRuntimeSpellCastReactionResolution {
               reactor,
             )
           if (reactionDecisionClosedFrame(state, afterDecision))
-            resumeDirectSpellAttackReactionContinuation(
+            resumeShieldReactionContinuation(
               afterDecision,
               frame.continuation,
             )
@@ -211,11 +261,11 @@ module battleRuntimeSpellCastReactionResolution {
                 counterspell.continuation,
               ),
             )
-      | ShieldDirectSpellReaction(shield) =>
+      | ShieldReaction(shield) =>
           resolveShieldReactionDecision(state, reactor, shield)
     }
 
-  pure def resolveDirectSpellAttackReactionOffer(
+  pure def resolveDirectSpellReactionOffer(
     state: BattleState,
     reactor: Actor,
   ): BattleState =
