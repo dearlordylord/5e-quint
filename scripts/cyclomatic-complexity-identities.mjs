@@ -42,17 +42,72 @@ function enclosingFunction(node) {
   return null;
 }
 
+function callExpressionIdentity(call, node, sourceFile) {
+  const expressionContainsNode =
+    call.expression.pos <= node.pos && node.end <= call.expression.end;
+  const operation = expressionContainsNode
+    ? "iife"
+    : normalizedText(call.expression, sourceFile);
+  const argumentIndex = call.arguments.findIndex(
+    (argument) => argument.pos <= node.pos && node.end <= argument.end,
+  );
+  const selectors = call.arguments
+    .filter((_, index) => index !== argumentIndex)
+    .map((argument) => normalizedText(argument, sourceFile))
+    .join("|");
+  const selectorSuffix =
+    selectors === "" ? "" : `:selector-${shortHash(selectors)}`;
+  return `call:${operation}:argument-${argumentIndex}${selectorSuffix}`;
+}
+
+function expressionOwnershipSite(parent, child, sourceFile) {
+  if (ts.isPropertyAssignment(parent) || ts.isPropertyDeclaration(parent)) {
+    return `property:${normalizedText(parent.name, sourceFile)}`;
+  }
+  if (ts.isVariableDeclaration(parent)) {
+    return `variable:${normalizedText(parent.name, sourceFile)}`;
+  }
+  if (ts.isCallExpression(parent)) {
+    return callExpressionIdentity(parent, child, sourceFile);
+  }
+  if (ts.isArrayLiteralExpression(parent)) {
+    return `array-element:${parent.elements.findIndex(
+      (element) => element.pos <= child.pos && child.end <= element.end,
+    )}`;
+  }
+  if (ts.isConditionalExpression(parent)) {
+    if (parent.whenTrue.pos <= child.pos && child.end <= parent.whenTrue.end) {
+      return "conditional:true";
+    }
+    if (
+      parent.whenFalse.pos <= child.pos &&
+      child.end <= parent.whenFalse.end
+    ) {
+      return "conditional:false";
+    }
+  }
+  return null;
+}
+
 function lexicalOwners(node, sourceFile) {
   const owners = [];
+  let child = node;
   let parent = node.parent;
+  let ownsExpression = false;
   while (parent !== undefined && !ts.isFunctionLike(parent)) {
     if (ts.isClassLike(parent)) {
       const name = declaredName(parent, sourceFile);
       owners.push(`class:${name ?? "anonymous"}`);
+      ownsExpression = ts.isClassExpression(parent);
     } else if (ts.isObjectLiteralExpression(parent)) {
       const name = declaredName(parent, sourceFile);
       owners.push(`object:${name ?? "anonymous"}`);
+      ownsExpression = true;
+    } else if (ownsExpression) {
+      const site = expressionOwnershipSite(parent, child, sourceFile);
+      if (site !== null) owners.push(site);
     }
+    child = parent;
     parent = parent.parent;
   }
   return owners.reverse();
@@ -70,21 +125,7 @@ function immediateCall(node) {
 function callIdentity(node, sourceFile) {
   const context = immediateCall(node);
   if (context === null) return "anonymous";
-  const expressionContainsFunction =
-    context.expression.pos <= node.pos && node.end <= context.expression.end;
-  const operation = expressionContainsFunction
-    ? "iife"
-    : normalizedText(context.expression, sourceFile);
-  const argumentIndex = context.arguments.findIndex(
-    (argument) => argument.pos <= node.pos && node.end <= argument.end,
-  );
-  const selectors = context.arguments
-    .filter((_, index) => index !== argumentIndex)
-    .map((argument) => normalizedText(argument, sourceFile))
-    .join("|");
-  const selectorSuffix =
-    selectors === "" ? "" : `:selector-${shortHash(selectors)}`;
-  return `call:${operation}:argument-${argumentIndex}${selectorSuffix}`;
+  return callExpressionIdentity(context, node, sourceFile);
 }
 
 function functionIdentity(node, sourceFile) {

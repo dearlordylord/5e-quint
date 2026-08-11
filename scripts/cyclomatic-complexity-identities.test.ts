@@ -102,4 +102,28 @@ class SecondResolver {
     expect(second).toBe("module/owner:class:SecondResolver/binding:resolve");
     expect(first).not.toBe(second);
   });
+
+  test("class expressions include their containing property paths", () => {
+    const source = `
+const resolvers = {
+  first: class Worker { resolve() { return "first-marker"; } },
+  second: class Worker { resolve() { return "second-marker"; } },
+};
+`;
+    const resolveIdentity = complexityIdentityResolver();
+    const filename = sourceFixture(source);
+
+    const first = resolveIdentity(
+      filename,
+      diagnosticAt(source, '"first-marker"'),
+    );
+    const second = resolveIdentity(
+      filename,
+      diagnosticAt(source, '"second-marker"'),
+    );
+
+    expect(first).toContain("owner:property:first/owner:class:Worker");
+    expect(second).toContain("owner:property:second/owner:class:Worker");
+    expect(first).not.toBe(second);
+  });
 });
