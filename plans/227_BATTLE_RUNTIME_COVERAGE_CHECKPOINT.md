@@ -63,28 +63,28 @@ replace the public root diagnostic above or establish the state of other
 packages.
 
 - Date: 2026-08-10
-- Git HEAD: `b05d31a79`
+- Git HEAD: `e5fbb4703`
 - Command: the checked-in battle-runtime Vitest coverage invocation, with one
   worker and the JSON reporter, under
   `with_resource_lock_owner scripts/with-broad-workspace-lock.sh`
 - Result: exit 0
-- Duration: 96.59 seconds after lock acquisition
-- Battle-runtime tests: 214/214 files passed; 2,322 tests passed and 53 skipped
-  (2,375 total)
+- Duration: 67.37 seconds after lock acquisition
+- Battle-runtime tests: 214/214 files passed; 2,323 tests passed and 53 skipped
+  (2,376 total)
 
 | Metric     |  M22 exact covered / total |  M23 exact covered / total | Covered / total change |     Uncovered change | Percentage change |
 | ---------- | -------------------------: | -------------------------: | ---------------------: | -------------------: | ----------------: |
-| Statements | 121,188 / 124,871 (97.05%) | 121,189 / 124,849 (97.07%) |                1 / -22 | 3,683 -> 3,660 (-23) |           +0.02pp |
-| Branches   |   30,821 / 32,695 (94.27%) |   30,811 / 32,683 (94.27%) |              -10 / -12 |  1,874 -> 1,872 (-2) |          +0.004pp |
+| Statements | 121,188 / 124,871 (97.05%) | 121,191 / 124,849 (97.07%) |                3 / -22 | 3,683 -> 3,658 (-25) |           +0.02pp |
+| Branches   |   30,821 / 32,695 (94.27%) |   30,809 / 32,680 (94.27%) |              -12 / -15 |  1,874 -> 1,871 (-3) |          +0.007pp |
 | Functions  |       4,813 / 4,813 (100%) |       4,813 / 4,813 (100%) |                  0 / 0 |               0 -> 0 |                 0 |
-| Lines      | 121,188 / 124,871 (97.05%) | 121,189 / 124,849 (97.07%) |                1 / -22 | 3,683 -> 3,660 (-23) |           +0.02pp |
+| Lines      | 121,188 / 124,871 (97.05%) | 121,191 / 124,849 (97.07%) |                3 / -22 | 3,683 -> 3,658 (-25) |           +0.02pp |
 
 The checked-in battle-runtime ratchets remain 97/97/100/94 for statements,
 lines, functions, and branches. No threshold was lowered. M23 replaces Magic
 Weapon's duplicate held-weapon and Wild Shape usability branches with the
-canonical `loadoutWeaponItemIsUsableDuringWildShape` owner. Ten previously
-covered branch arms disappeared with the duplicate, so the covered-branch
-numerator fell while uncovered branches and the denominator both improved.
+canonical `loadoutHasUsableHeldWeaponItem` owner. Twelve previously covered
+branch arms disappeared with the duplicate, so the covered-branch numerator
+fell while uncovered branches and the denominator both improved.
 
 ## Remaining static 99% gaps
 
@@ -93,10 +93,10 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 121,189 | 124,849 |                  123,601 |         2,412 |
-| Branches   |  30,811 |  32,683 |                   32,357 |         1,546 |
+| Statements | 121,191 | 124,849 |                  123,601 |         2,410 |
+| Branches   |  30,809 |  32,680 |                   32,354 |         1,545 |
 | Functions  |   4,813 |   4,813 |                    4,765 |             0 |
-| Lines      | 121,189 | 124,849 |                  123,601 |         2,412 |
+| Lines      | 121,191 | 124,849 |                  123,601 |         2,410 |
 
 ## Milestone context
 
@@ -104,11 +104,15 @@ M23 removed a duplicate Magic Weapon target-usability algorithm and delegated
 to the canonical held-loadout/Wild Shape owner already consumed by weapon
 override admission. The change preserves exact main/off-hand item identity,
 normal-form availability, and the active form's limb and equipment-disposition
-facts while shrinking production by 24 physical lines. No test code or modeled
-rule changed. The public Magic Weapon, weapon-hosted route, and Wild Shape
-lifecycle cohort passed 75 tests; package typecheck, targeted lint, formatting,
-and the exact gate above were green. Two review rounds found no remaining RAW,
-domain, architecture/connascence, standards, or issue-scope finding.
+facts with slot-sensitive existential matching while shrinking production by 25
+physical lines. A 34-line focused regression covers the representable case in
+which main- and off-hand slots share an item identity but only the off-hand slot
+is usable; this remains within the two-test-lines-per-newly-covered-statement
+budget. No modeled rule changed. The public Magic Weapon, weapon-hosted route,
+and Wild Shape lifecycle cohort passed 76 tests; package typecheck, targeted
+lint, formatting, and the exact gate above were green. Two review rounds found
+no remaining RAW, domain, architecture/connascence, standards, or issue-scope
+finding.
 
 M22 covered a reduced attack-control increment after review removed direct
 helper matrices and forged state witnesses. Its exact baseline at `1ce2c3590`
@@ -181,7 +185,7 @@ and remeasure only after the next coherent increment.
 ## Next campaign
 
 Branches remain the limiting exact battle-runtime metric at 94.27%, with a
-static 99% gap of 1,546. Do not retry the rejected attack-control helper matrix.
+static 99% gap of 1,545. Do not retry the rejected attack-control helper matrix.
 Rerank the exact uncovered report against public lifecycle coverage before the
 next increment; defensive route/profile behavior remains an independent
 candidate. Admission-proven or schema-impossible guards must be narrowed or
