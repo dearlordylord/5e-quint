@@ -1,22 +1,24 @@
 # RAW player swarm
 
 Uses agents pretending to be players and DMs to discover gaps in the D&D 5e
-SRD 5.2.1 adjudicator SDK. The harness records their real interactions, replays
-the exact calls, and stores adversarial RAW findings in SQLite.
+SRD 5.2.1 adjudicator SDK. The checked-in implementation is a prototype. Its
+important output is the discovery workflow and evidence requirements, not the
+particular MCP plumbing used by the first experiment.
 
 ## Architecture
 
-The SDK is the system under test. The player agent operates it through MCP
-because MCP gives an untrusted agent a discoverable, typed interaction surface.
-This also tests the MCP adapter, but adapter coverage is a consequence rather
-than the purpose. Review findings must distinguish an SDK rules defect from an
-MCP projection or decoding defect.
+The SDK is the system under test. The first prototype operates it through MCP
+because MCP supplied a ready-made discoverable interaction surface. This also
+tests the MCP adapter, but adapter coverage is a consequence rather than the
+purpose. Review findings must distinguish an SDK rules defect from an MCP
+projection or decoding defect.
 
-There is no scenario interpreter and no second D&D command vocabulary. The
-only authored input is a natural-language player/DM prompt. During play, the
-agent chooses from the SDK's canonical surfaced acts and holes. The recorder
-captures the resulting concrete MCP calls and full responses; replay executes
-those calls verbatim and does not ask an agent to make the same choices again.
+In the checked-in MCP prototype, there is no scenario interpreter and no second
+D&D command vocabulary. Its only authored player input is a natural-language
+player/DM prompt. During play, the agent chooses from the SDK's canonical
+surfaced acts and holes. The recorder captures the resulting concrete MCP calls
+and full responses; replay executes those calls verbatim and does not ask an
+agent to make the same choices again.
 
 Ordinary package integration and regression tests remain the deterministic
 regression layer for known claims. The swarm adds discovery:
@@ -24,8 +26,8 @@ regression layer for known claims. The swarm adds discovery:
 1. a player/DM agent explores a build, battle, or interaction;
 2. the recorder preserves everything it actually tried and observed;
 3. an adversarial reviewer checks the whole trace against local RAW;
-4. an actionable discovery becomes an ordinary SDK or adapter regression and
-   a linked GitHub issue.
+4. an actionable SDK or adapter bug becomes an ordinary regression and linked
+   GitHub issue; other findings retain their separately classified disposition.
 
 The regression preserves the discovery. It does not drive or guide later
 player agents.
@@ -39,7 +41,156 @@ mise exec -- <command>
 Generated transcripts, agent logs, review output, and SQLite databases belong
 under `scripts/raw-swarm/out/` and are gitignored.
 
-## Run the existing player scenario
+## Target discovery workflow
+
+This section specifies the intended workflow. It is not a claim that the
+checked-in prototype already implements scenario generation or direct SDK play.
+
+### Generate battle scenarios as prose
+
+Scenario generation is an offline authoring process, separate from battle
+execution. A generation campaign supplies a broad distribution preference,
+such as mostly exploratory character choices with a few tightly constrained
+edge cases. It must bias toward battles, attempts to win, and materially
+different strategies rather than plots or storytelling.
+
+Each generation iteration asks an LLM for several materially different, complete
+revisions of the scenario-so-far. A script randomly selects one revision and
+passes that exact prose into the next iteration. The alternatives must differ in
+mechanically relevant facts or tactical intent, not merely wording. Unselected
+candidates, selection indices, seeds, and generation logs are disposable; only
+the final reviewed scenario is an authored artifact. Random selection is an
+unaudited diversity heuristic, not evidence of an unbiased distribution. It can
+reduce choice-after-generation bias, but cannot remove bias in the generated
+candidate set.
+
+Generation has campaign-configured minimum and maximum iteration counts. It
+cannot stop before the minimum. After the minimum, an independent readiness
+reviewer decides whether the scenario has a mechanically meaningful setup,
+enough strategic substance in every strategy-bearing brief, and the campaign's
+requested balance of fixed and delegated choices. A ready decision stops
+generation; a critique continues it. Reaching the maximum also stops generation
+and sends the result to final review. Readiness output is disposable generation
+material, not part of the final scenario. These bounds and decisions are
+authoring control, not scenario stages or domain states.
+
+Scenario prose may mix degrees of prescription. It can require an exact level,
+class, ability priority, SRD or synthetic item, SRD or synthetic spell,
+combatant count, or battlefield fact while delegating other choices to the
+player agent. Do not encode this continuum as a stage enum, prescription level,
+mechanic recipe, or parallel build model. The prose itself owns the constraints.
+Generated scenarios must follow the standing
+[PHB+ authoring policy](../../docs/mushroom-playbook/AUTHORING.md): never retain
+recognizable non-SRD official identity or expression in prompts, reviews,
+generated evidence, or other public worktree artifacts. Unsupported probes use
+visibly synthetic content.
+
+Keep prose mechanically relevant. Include only facts that can affect character
+choices, encounter setup, tactical decisions, or result interpretation. Brief
+fiction may establish terrain, visibility, distance, objectives, or another
+battle fact; do not grow dialogue, travel narrative, personalities, or plot for
+its own sake. Every represented combatant or group has a serious objective to
+win. A scenario may give any strategy-bearing brief an initial approach, but
+must permit strategies to change as the battle develops. When one agent
+controls conflicting roles, it must pursue each brief faithfully rather than
+collapsing them into one cooperative strategy.
+
+At selected generation milestones, an independent RAW reviewer classifies the
+accumulated prose against the local SRD and the registered ambiguity decisions
+in [`ASSUMPTIONS.md`](../../ASSUMPTIONS.md) for legality, coherence, and
+executability. It reports contradictions and unsupported assumptions without
+choosing tactics, predicting a winner, or silently rewriting the scenario. Its
+critique becomes input to a later generation iteration. A final review happens
+before play. The RAW classification remains distinct from the campaign's
+decision to admit a scenario for play.
+
+An impossible or partially unsupported scenario can still be valuable evidence.
+After preserving the RAW reviewer's unsupported or contradictory verdict, the
+campaign may admit the scenario when attempting it could reveal an SDK
+capability gap or unclear interaction boundary rather than mere nonsense. The
+player must make a serious attempt, use the closest legal path when appropriate,
+and report where progress became impossible. It must not fabricate support or
+force an unavailable outcome.
+
+A final scenario is one prose document. It may contain a public setup and
+controller-specific briefs. Separate opposing agents receive the public setup
+and only their own brief; a single agent controlling every combatant may receive
+the whole document. These prose sections do not constitute a scenario DSL.
+
+### Execute through the public SDK
+
+The intended primary player is an isolated external SDK consumer, not an agent
+with repository knowledge. Give it a scratch project containing the built
+public SDK, public type declarations, user documentation, and the final scenario
+prose. Do not expose implementation source or internal tests. The agent writes
+and runs ordinary TypeScript against canonical SDK operations and types.
+
+Agent topology is an execution choice rather than a scenario fact. The same
+scenario may be run by one agent controlling every combatant or by separate
+agents with explicit combatant-to-controller assignments. The SDK supplies the
+currently acting creature; the execution configuration maps that creature to a
+decision owner. It must not infer an encounter-wide `side` that the battle
+domain does not model. Record the assignment with the run. For the simple
+multi-agent form, one neutral battle-session supervisor:
+
+1. owns the SDK process, append-only program, execution transcript, and turn
+   scheduling;
+2. routes an acting creature's turn choice through its recorded controller
+   assignment, while routing a pending reaction, save, interrupt, or other
+   Table Decision through the decision subject or owner surfaced by the SDK;
+3. gives the resolved controller agent the public observation, its private brief,
+   relevant prior results, public SDK documentation, and a continuation function
+   stub;
+4. accepts the exact, variable-sized TypeScript function body authored by that
+   controller agent;
+5. validates, appends, executes, and records it without translating or
+   strategically rewriting it; and
+6. returns the observable result for the next decision.
+
+If a surfaced decision lacks enough ownership information to resolve its
+controller, the supervisor records the obstruction instead of letting the
+acting creature's controller decide by default.
+
+Reuse a controller agent when practical so its strategy has continuity.
+Controller agents must not concurrently edit one shared program. The supervisor
+seeing all briefs is an accepted instructional boundary for the prototype, not
+a claim of secure hidden information.
+
+The continuation stub is the one stable code handoff. Its function parameters
+provide the supervisor-owned current session value and required SDK operations
+using canonical public SDK types. The controller sees the stub and public
+observations, not the shared accumulated source or another controller's brief.
+The supervisor appends the authored body verbatim inside that function. The
+stub must not define new D&D actions, commands, or result types; it is ordinary
+TypeScript dependency passing around the public SDK.
+
+The starter TypeScript program is incomplete; the final scenario prose is not.
+After a continuation first produces an observable SDK interaction, its source
+becomes immutable play history. Enforce this narrowly by retaining the frozen
+prefix byte length and SHA-256 and rejecting later changes to that prefix.
+Compilation failures and other failures before SDK interaction may be edited
+freely. An SDK error or unsupported result is observable evidence and therefore
+freezes the continuation that produced it. Recovery is appended; abandoning a
+path creates a separately identified branch instead of rewriting history. Each
+branch owns a fresh SDK process and transcript. Before executing its new suffix,
+the supervisor reconstructs the fork state by replaying the frozen common
+canonical-call prefix against the same SDK revision.
+
+A continuation may contain as much ordinary TypeScript as one coherent
+decision requires. Do not impose one call or one line per checkpoint. Instruct
+agents to run and observe whenever new information could reasonably change
+their strategy. Preserve the final program, checkpoint prefix facts, canonical
+public SDK calls and results, tested SDK revision, and agent observations as
+execution evidence. Deterministic replay applies to the recorded canonical SDK
+call stream against its recorded SDK revision, not to rerunning arbitrary agent
+TypeScript with uncontrolled time, randomness, filesystem, network, or process
+inputs. The evidence, unlike discarded generation candidates, must support that
+call-stream replay and adversarial review.
+
+MCP may remain an optional parity and compound-coverage lane. It is not a
+required part of the target SDK-player workflow.
+
+## Run the existing MCP prototype
 
 The scenario id names a committed prompt at
 `freeplay/<scenario-id>.prompt.txt`. The launcher derives default transcript
@@ -84,7 +235,13 @@ The reviewer uses only `.references/srd-5.2.1/` as RAW authority and consults
 the result against JSON Schema generated from the same Effect codec used by
 report ingestion.
 
-## Add discovery width
+## Add width to the existing MCP prototype
+
+The following steps extend the checked-in MCP experiment only. They are useful
+for another immediate run, but do not replace or redefine the target SDK-player
+workflow above. Do not widen MCP solely to implement that target; begin from the
+isolated external SDK consumer and battle-session supervisor requirements in
+[Execute through the public SDK](#execute-through-the-public-sdk).
 
 Do not create JSON commands, mechanic recipes, an expectation language, or a
 generic sequencing DSL. Add another player experiment like this:
@@ -109,12 +266,13 @@ of surprise, such as a different character build, act family, pending-hole
 sequence, outcome, turn position, combatant origin, or malformed/stale player
 choice.
 
-The current swarm server exposes content discovery and battle tools. Character
-build exploration therefore requires widening that MCP interaction surface to
-the canonical character SDK tools. Reuse their existing tool definitions,
-codecs, and handlers; do not model builds in the harness. MCP is the means by
-which the player agent reaches SDK capabilities, so adding a capability means
-surfacing the owning SDK operation, not inventing a scenario instruction for it.
+The current MCP prototype exposes content discovery and battle tools. Character
+build exploration through this prototype therefore requires widening that MCP
+interaction surface to the canonical character SDK tools. Reuse their existing
+tool definitions, codecs, and handlers; do not model builds in the harness. In
+this prototype, MCP is the means by which the player agent reaches SDK
+capabilities, so adding a capability means surfacing the owning SDK operation,
+not inventing a scenario instruction for it.
 
 ## Evidence tools
 
