@@ -329,9 +329,17 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       ...brightFact,
       distanceFeet: movementFeet(40),
     };
+    const darkFact = {
+      ...brightFact,
+      distanceFeet: movementFeet(50),
+    };
     const coveredFact = {
       ...brightFact,
       opaqueCover: true,
+    };
+    const otherObjectFact = {
+      ...brightFact,
+      objectId: battleObjectId("unit-profile-light-other-object"),
     };
 
     expect(battleLightEmitterProjection(emitter, brightFact)).toEqual({
@@ -340,9 +348,21 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
     });
     expect(
       battleIlluminationFromLightEmitters(resolved.snapshot.lightEmitters, [
+        brightFact,
+      ]),
+    ).toBe("brightLight");
+    expect(
+      battleIlluminationFromLightEmitters(resolved.snapshot.lightEmitters, [
         dimFact,
       ]),
     ).toBe("dimLight");
+    expect(battleLightEmitterProjection(emitter, darkFact)).toBeNull();
+    expect(battleLightEmitterProjection(emitter, otherObjectFact)).toBeNull();
+    expect(
+      battleIlluminationFromLightEmitters(resolved.snapshot.lightEmitters, [
+        darkFact,
+      ]),
+    ).toBe("darkness");
     expect(
       battleIlluminationFromLightEmitters(resolved.snapshot.lightEmitters, [
         coveredFact,

@@ -20,7 +20,13 @@ import {
   requireCombatant,
   requireHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import {
+  declineTargetReadiedSpellAfterFailedSave,
+  readyTargetRayOfFrost,
+  spellBattle,
+  spellBattleWithTargetRayOfFrost,
+} from "./unit-profile-admission-spell-battle.test-support.ts";
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   gustOfWindLineDirectionChangeAct,
   gustOfWindLineDirectionChoiceFill,
@@ -275,6 +281,67 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: { currentActorId: spellCasterId },
+    });
+  });
+  test("failed table-triggered Gust of Wind save opens a readied-spell Reaction", () => {
+    const spell = spellRecord(gustOfWindUnitId);
+    const initialSession = spellBattleWithTargetRayOfFrost({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const castAct = spellAct({
+      session: initialSession,
+      spellId: gustOfWindUnitId,
+      slotLevel: 2,
+    });
+    const cast = resolveBattleSubject({
+      state: initialSession.state,
+      subject: castAct.subject,
+      fills: [
+        gustOfWindLineSavingThrowOutcomeFill(
+          requireHole(castAct.initialHoles, "savingThrowOutcome"),
+          [],
+        ),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Gust of Wind cast to resolve.");
+    }
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const readied = readyTargetRayOfFrost(
+      battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: initialSession.context,
+      }),
+    );
+    const endTurnAct = gustOfWindLineEndTurnSaveAct(readied.state);
+    const endTurnSave = requireHole(
+      endTurnAct.initialHoles,
+      "savingThrowOutcome",
+    );
+    const awaitingReaction = resolveBattleSubject({
+      state: readied.state,
+      subject: endTurnAct.subject,
+      fills: [
+        gustOfWindLineSavingThrowOutcomeFill(endTurnSave, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+    });
+    const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
+    expect(declined.snapshot).toMatchObject({
+      currentActorId: spellCasterId,
+      pendingInterrupt: null,
     });
   });
 
@@ -599,6 +666,29 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
         activeEffects: [],
       }),
     );
+  });
+  test("a Gust of Wind save subject becomes stale after Concentration ends", () => {
+    const cast = castGustOfWind([]);
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const endTurnAct = gustOfWindLineEndTurnSaveAct(targetTurn.state);
+    const ended = breakBattleConcentration(targetTurn.state, spellCasterId);
+    expect(
+      resolveBattleSubject({
+        state: ended,
+        subject: endTurnAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Gust of Wind Line save is no longer available.",
+    });
   });
 });
 

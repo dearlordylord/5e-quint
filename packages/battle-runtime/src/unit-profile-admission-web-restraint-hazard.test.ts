@@ -36,6 +36,7 @@ import { type CombatantId } from "./identity.ts";
 import {
   battleObscurementZones,
   battlePerceptionRollModeForObscurement,
+  breakBattleConcentration,
   elapsedTimeTicks,
   endTurn,
   movementFeet,
@@ -527,6 +528,140 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
         effectKind: "spellEffect",
       },
       activeEffects: [expect.objectContaining({ kind: "webRestraintHazard" })],
+    });
+  });
+  test("a successful Web start-turn save marks the turn without applying Restrained", () => {
+    const { targetTurn } = castWeb();
+    const startTurnAct = webRestraintSaveAct(
+      targetTurn,
+      spellTargetId,
+      "startsTurnInArea",
+    );
+    const startTurnSave = requireHole(
+      startTurnAct.initialHoles,
+      "savingThrowOutcome",
+    );
+    const succeeded = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: startTurnAct.subject,
+      fills: [
+        singleTargetSavingThrowOutcomeFill(startTurnSave, spellTargetId, true),
+      ],
+    });
+    if (succeeded.tag !== "resolved") {
+      throw new Error("Expected Web start-turn save to resolve.");
+    }
+    expect(requireCombatant(succeeded.state, spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ restrained: false }),
+    });
+    expect(
+      requireCombatant(succeeded.state, spellCasterId).activeEffects,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "webRestraintHazard",
+        entrySavedThisTurn: [],
+        startTurnSavedThisTurn: [spellTargetId],
+      }),
+    ]);
+  });
+  test("Web save markers reset when the next target turn begins", () => {
+    const { targetTurn } = castWeb();
+    const startTurnAct = webRestraintSaveAct(
+      targetTurn,
+      spellTargetId,
+      "startsTurnInArea",
+    );
+    const startTurnSave = requireHole(
+      startTurnAct.initialHoles,
+      "savingThrowOutcome",
+    );
+    const marked = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: startTurnAct.subject,
+      fills: [
+        singleTargetSavingThrowOutcomeFill(startTurnSave, spellTargetId, true),
+      ],
+    });
+    if (marked.tag !== "resolved") {
+      throw new Error("Expected Web start-turn save to resolve.");
+    }
+
+    const casterTurn = endTurn({
+      state: marked.state,
+      actorId: spellTargetId,
+    });
+    if (casterTurn.tag !== "resolved") {
+      throw new Error("Expected Web target End Turn to resolve.");
+    }
+    const nextTargetTurn = endTurn({
+      state: casterTurn.state,
+      actorId: spellCasterId,
+    });
+    if (nextTargetTurn.tag !== "resolved") {
+      throw new Error("Expected Web caster End Turn to resolve.");
+    }
+
+    expect(
+      requireCombatant(nextTargetTurn.state, spellCasterId).activeEffects,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "webRestraintHazard",
+        entrySavedThisTurn: [],
+        startTurnSavedThisTurn: [],
+      }),
+    ]);
+    expect(
+      webRestraintSaveAct(
+        battleRuntimeSessionForTest({
+          ...targetTurn,
+          state: nextTargetTurn.state,
+        }),
+        spellTargetId,
+        "startsTurnInArea",
+      ).subject,
+    ).toMatchObject({
+      command: "webRestraintSave",
+      trigger: "startsTurnInArea",
+    });
+  });
+  test("a Web save subject becomes stale after Concentration ends", () => {
+    const { targetTurn } = castWeb();
+    const entryAct = webRestraintSaveAct(
+      targetTurn,
+      spellTargetId,
+      "entersArea",
+    );
+    const ended = breakBattleConcentration(targetTurn.state, spellCasterId);
+    expect(
+      resolveBattleSubject({
+        state: ended,
+        subject: entryAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Web Restraint save is no longer available.",
+    });
+  });
+  test("a Web cleanup subject becomes stale after Concentration ends", () => {
+    const targetTurn = failedWebEntrySession();
+    const cleanupAct = webRestrainedNoLongerInAreaAct(
+      targetTurn,
+      spellTargetId,
+    );
+    const ended = breakBattleConcentration(targetTurn.state, spellCasterId);
+
+    expect(
+      resolveBattleSubject({
+        state: ended,
+        subject: cleanupAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Web Restraint cleanup is no longer available.",
     });
   });
 

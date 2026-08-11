@@ -77,6 +77,7 @@ import {
   battleCreatureStateWithKnockOutPreservedConditions,
   hasCondition,
   resourceCount,
+  selectFailedSaveConditionEffect,
   spellSlotInvocationRef,
   spellSlotLevel,
   supportedPreparedSaveGateConditionProfile,
@@ -1250,6 +1251,34 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(ended.state.combatants.get(spellTargetId)).toMatchObject({
       conditions: expect.not.objectContaining({ deafened: true }),
       activeEffects: [],
+    });
+  });
+
+  test("save-gated condition selection rejects a condition outside the authored choices", () => {
+    const spell = spellRecord(blindnessDeafnessUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: blindnessDeafnessUnitId,
+      slotLevel: 2,
+    });
+    const conditionHole = requireHole(act.initialHoles, "conditionChoice");
+    const invocation = spellHoleInvocation(session, [conditionHole]);
+    if (invocation.procedure !== "saveGatedCondition") {
+      throw new Error("Expected a save-gated condition invocation.");
+    }
+    if (invocation.effect.kind !== "choice") {
+      throw new Error("Expected a choice condition effect.");
+    }
+
+    expect(
+      selectFailedSaveConditionEffect(invocation.effect, "poisoned"),
+    ).toEqual({
+      tag: "invalidConditionChoice",
+      message: "Condition choice is not available for this spell.",
     });
   });
 

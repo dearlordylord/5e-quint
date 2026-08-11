@@ -27,6 +27,7 @@ import {
   characterSeed,
   concentrationSavingThrowFill,
   Either,
+  interruptDecisionFill,
   Schema,
   startBattleSessionRight,
   wizardSpellcasting,
@@ -38,7 +39,11 @@ import {
   requireHole,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import {
+  readyTargetRayOfFrost,
+  spellBattle,
+  spellBattleWithTargetRayOfFrost,
+} from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   moonbeamAreaFill,
   moonbeamEndTurnSaveAct,
@@ -64,6 +69,7 @@ import {
   endTurn,
   Hp,
   movementFeet,
+  resolveBattleInterrupt,
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
@@ -480,6 +486,72 @@ describe("L12G deterministic Moonbeam admission", () => {
       hp: Hp(17),
       concentration: null,
       activeEffects: [],
+    });
+  });
+
+  test("failed table-triggered Moonbeam save opens a readied-spell Reaction", () => {
+    const spell = spellRecord(moonbeamUnitId);
+    const session = spellBattleWithTargetRayOfFrost({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const castAct = spellAct({
+      session,
+      spellId: moonbeamUnitId,
+      slotLevel: 2,
+    });
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: castAct.subject,
+      fills: [
+        moonbeamAreaFill(requireHole(castAct.initialHoles, "spellAreaChoice")),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Moonbeam cast to resolve.");
+    }
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const readied = readyTargetRayOfFrost(
+      battleRuntimeSessionForTest({
+        ...session,
+        state: targetTurn.state,
+      }),
+    );
+    const endTurnAct = moonbeamEndTurnSaveAct(readied);
+    const save = requireHole(endTurnAct.initialHoles, "savingThrowOutcome");
+    const awaitingReaction = resolveBattleSubject({
+      state: readied.state,
+      subject: endTurnAct.subject,
+      fills: [singleTargetSavingThrowOutcomeFill(save, spellTargetId, false)],
+    });
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Moonbeam save Reaction.");
+    }
+    const pendingInterrupt = awaitingReaction.snapshot.pendingInterrupt;
+    if (pendingInterrupt === null) {
+      throw new Error("Expected a pending failed-save interrupt.");
+    }
+    const declined = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(pendingInterrupt.decisionHole, {
+        kind: "decline",
+        responderId: spellTargetId,
+      }),
+    });
+    expect(declined).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "rolledDice" }],
+      snapshot: { pendingInterrupt: null },
     });
   });
 
