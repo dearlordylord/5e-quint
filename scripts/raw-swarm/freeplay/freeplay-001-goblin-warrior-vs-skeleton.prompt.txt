@@ -7,3 +7,5 @@ You control both sides as the player and DM. On each creature's turn, discover i
 Do everything through the MCP tools; do not write any files.
 
 For fill_battle_hole, pass subjectJson as JSON.stringify(the exact returned subject) and fillJson as JSON.stringify(the fill object constructed for the returned hole. For resolve_battle_act, pass subjectJson the same way.
+
+Treat each attack as one uninterrupted hole sequence. After every accepted fill, inspect result.tag and, when it is needsHoles, fill result.holes[0] next using that exact kind and holeId; do not rediscover acts or repeat an earlier fill before the sequence resolves. For attackDamageDisposition, set value to one exact object from the hole's choices array. Never invent a holeId. Prefer high legal attack and damage die results so the encounter completes promptly.
