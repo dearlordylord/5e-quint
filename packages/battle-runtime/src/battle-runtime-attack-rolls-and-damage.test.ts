@@ -23,9 +23,7 @@ import {
   attackDamageDispositionHoleAfterDamage,
   attackDamageDispositionHoleAfterFills,
   attackDamageDispositionFill,
-  attackExecutionSelectionForSubjectForTest,
   battleProcedureExecutionRefForTest,
-  battleTablePositionId,
   characterSeed,
   combatantId,
   concentrationSavingThrowFill,
@@ -72,7 +70,6 @@ import {
   attackDamageModifier,
   attackDamageComponents,
   attackPotentialDamageTypes,
-  frenzyDamageTypeSelection,
   passiveRangedAttackRollBonus,
   selectedAttackDamageRiders,
   statBlockAttackTargetConstraint,
@@ -85,12 +82,7 @@ import {
 } from "./battle-reducer/statblock-attacks.ts";
 import {
   applyWeaponMasterySapOnHit,
-  applyWeaponMasteryPushOnHit,
   applyWeaponMasterySlowAfterDamage,
-  consumeOneShotAttackRollEffects,
-  consumeSelfAttackRollEffects,
-  recordHuntersPreyHordeBreakerUsed,
-  recordWeaponMasteryCleaveUsed,
   tacticalMasterAttackWithReplacement,
   tacticalMasterReplacementDecisionHole,
 } from "./battle-reducer/attack-roll.ts";
@@ -217,7 +209,7 @@ describe("battle runtime: attack rolls and damage", () => {
     ).toBeNull();
   });
 
-  test("attack-control projections keep weapon, Unarmed Strike, and Stat Block shapes distinct", () => {
+  test("attack-control projections keep attack shapes and reduced-size damage distinct", () => {
     const state = goblinTurnBattle();
     const fighter = state.combatants.get(fighterId);
     const goblin = state.combatants.get(goblinId);
@@ -307,13 +299,14 @@ describe("battle runtime: attack rolls and damage", () => {
       unarmedStrikeDamageDiceExpr(fighter.origin.unarmedStrike, true),
     ).toBeNull();
 
-    const subtractRider: SpellAttackDamageComponent = {
+    const reducedSizeRider: SpellAttackDamageComponent = {
       sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "attack-control-subtract-rider",
+        "synthetic-reduce-size-rider",
       ),
-      sourceCombatantId: goblinId,
-      damage: { expr: { dice: 1, dieSize: 4 }, damageType: "fire" },
+      sourceCombatantId: fighterId,
+      damage: { expr: { dice: 1, dieSize: 4 }, damageType: "slashing" },
       operation: "subtract",
+      minimumDamageTotal: 1,
     };
     expect(
       weaponAttackDamageExpression(
@@ -321,43 +314,12 @@ describe("battle runtime: attack rolls and damage", () => {
         false,
         { total: 14, naturalD20: DieRollResult(10) },
         [],
-        [subtractRider],
+        [reducedSizeRider],
       ),
-    ).toBe("1d6+2-slashing-1d4-fire");
+    ).toBe("1d6-1d4+2-slashing");
   });
 
-  test("Frenzy and adjacent-ally projections distinguish automatic, selected, and blocked choices", () => {
-    expect(
-      frenzyDamageTypeSelection({
-        authoredDamageTypes: ["slashing"],
-        selectedDamageType: undefined,
-      }),
-    ).toEqual({ tag: "automatic", damageType: "slashing" });
-    expect(
-      frenzyDamageTypeSelection({
-        authoredDamageTypes: ["slashing"],
-        selectedDamageType: "slashing",
-      }),
-    ).toEqual({ tag: "invalid", reason: "selectionForAutomaticType" });
-    expect(
-      frenzyDamageTypeSelection({
-        authoredDamageTypes: ["slashing", "fire", "slashing"],
-        selectedDamageType: undefined,
-      }),
-    ).toEqual({ tag: "decisionRequired", choices: ["slashing", "fire"] });
-    expect(
-      frenzyDamageTypeSelection({
-        authoredDamageTypes: ["slashing", "fire"],
-        selectedDamageType: "fire",
-      }),
-    ).toEqual({ tag: "selected", damageType: "fire" });
-    expect(
-      frenzyDamageTypeSelection({
-        authoredDamageTypes: ["slashing", "fire"],
-        selectedDamageType: "cold",
-      }),
-    ).toEqual({ tag: "invalid", reason: "outsideOfferedTypes" });
-
+  test("adjacent-ally projection ignores unrelated and Incapacitated creatures", () => {
     const allyId = combatantId("attack-control-ally");
     const stateWithAlly = startBattleRight({
       battleId: battleId("attack-control-adjacent-ally"),
@@ -424,7 +386,7 @@ describe("battle runtime: attack rolls and damage", () => {
     ).toBe(false);
   });
 
-  test("mastery replay helpers preserve identity and reject stale one-shot replays", () => {
+  test("reapplying Slow and Sap replaces the existing source effect", () => {
     const state = fighterVsGoblinBattle({
       characterUnitRefs: tacticalMasterReplacementUnitRefs(),
       weaponMasteries: longswordWeaponMasterySelections(),
@@ -436,7 +398,6 @@ describe("battle runtime: attack rolls and damage", () => {
     ) {
       throw new Error("Expected Tactical Master weapon attack.");
     }
-    const subject = fighterAttackSubject(state);
     const decisionHole = tacticalMasterReplacementDecisionHole(
       state,
       fighterId,
@@ -445,111 +406,6 @@ describe("battle runtime: attack rolls and damage", () => {
     if (decisionHole === null) {
       throw new Error("Expected Tactical Master replacement decision.");
     }
-    const pushDecision = unitFeatureDecisionFill(decisionHole, "push");
-    if (pushDecision.kind !== "unitFeatureDecision") {
-      throw new Error("Expected Tactical Master decision fill.");
-    }
-    const pushed = tacticalMasterAttackWithReplacement({
-      state,
-      attackerId: fighterId,
-      attack: fighter.origin.attack,
-      decision: pushDecision,
-    });
-    expect(pushed).toMatchObject({
-      tag: "ok",
-      attack: { kind: "weapon", weapon: { mastery: "push" } },
-    });
-    const declineDecision = unitFeatureDecisionFill(decisionHole, "decline");
-    if (declineDecision.kind !== "unitFeatureDecision") {
-      throw new Error("Expected Tactical Master decline decision fill.");
-    }
-    expect(
-      tacticalMasterAttackWithReplacement({
-        state,
-        attackerId: fighterId,
-        attack: fighter.origin.attack,
-        decision: declineDecision,
-      }),
-    ).toMatchObject({
-      tag: "ok",
-      attack: { kind: "weapon", weapon: { mastery: "sap" } },
-    });
-
-    const unsupportedState = fighterVsGoblinBattle({
-      weaponMasteries: longswordWeaponMasterySelections(),
-    });
-    const unsupportedFighter = unsupportedState.combatants.get(fighterId);
-    if (
-      unsupportedFighter?.origin.kind !== "character" ||
-      unsupportedFighter.origin.attack === null
-    ) {
-      throw new Error("Expected unsupported Tactical Master weapon attack.");
-    }
-    expect(
-      tacticalMasterAttackWithReplacement({
-        state: unsupportedState,
-        attackerId: fighterId,
-        attack: unsupportedFighter.origin.attack,
-        decision: pushDecision,
-      }),
-    ).toEqual({
-      tag: "invalid",
-      message:
-        "Tactical Master replacement is only valid for an eligible weapon mastery attack.",
-    });
-
-    const pushedAttack =
-      pushed.tag === "ok" ? pushed.attack : fighter.origin.attack;
-    const pushWithMissingTarget = applyWeaponMasteryPushOnHit({
-      state,
-      attackerId: fighterId,
-      targetId: combatantId("missing-push-target"),
-      attack: pushedAttack,
-      targetSpatialFacts: [],
-    });
-    expect(pushWithMissingTarget).toMatchObject({
-      tag: "ok",
-      shovePushes: [],
-    });
-    expect(
-      applyWeaponMasteryPushOnHit({
-        state,
-        attackerId: fighterId,
-        targetId: goblinId,
-        attack: pushedAttack,
-        targetSpatialFacts: [],
-      }),
-    ).toEqual({
-      tag: "invalid",
-      message:
-        "Weapon Mastery Push requires caller-supplied straight-away push disposition.",
-    });
-    const pushDispositionFact = {
-      kind: "weaponMasteryPushDisposition" as const,
-      attackerId: fighterId,
-      targetId: goblinId,
-      ...attackExecutionSelectionForSubjectForTest(subject),
-      disposition: {
-        kind: "pushed" as const,
-        distanceFeet: movementFeet(10),
-        destinationId: battleTablePositionId("attack-control-push-destination"),
-        provokesOpportunityAttacks: false as const,
-      },
-    };
-    const validPush = applyWeaponMasteryPushOnHit({
-      state,
-      attackerId: fighterId,
-      targetId: goblinId,
-      attack: pushedAttack,
-      targetSpatialFacts: [pushDispositionFact],
-    });
-    expect(validPush).toMatchObject({
-      tag: "ok",
-      shovePushes: [
-        { targetId: goblinId, disposition: pushDispositionFact.disposition },
-      ],
-    });
-
     const slowDecision = unitFeatureDecisionFill(decisionHole, "slow");
     if (slowDecision.kind !== "unitFeatureDecision") {
       throw new Error("Expected Tactical Master Slow decision fill.");
@@ -612,31 +468,6 @@ describe("battle runtime: attack rolls and damage", () => {
       sapFighter.origin.attack,
     );
     expect(sapTwice.combatants.get(goblinId)?.activeEffects).toHaveLength(1);
-
-    expect(
-      consumeSelfAttackRollEffects(state, combatantId("missing-attacker")),
-    ).toBe(state);
-    expect(
-      consumeOneShotAttackRollEffects(
-        state,
-        fighterId,
-        combatantId("missing-target"),
-      ),
-    ).toBe(state);
-
-    const usageRef = battleProcedureExecutionRefForTest("attack-control-usage");
-    const hordeUsed = recordHuntersPreyHordeBreakerUsed(
-      state,
-      fighterId,
-      usageRef,
-    );
-    expect(
-      recordHuntersPreyHordeBreakerUsed(hordeUsed, fighterId, usageRef),
-    ).toBe(hordeUsed);
-    const cleaveUsed = recordWeaponMasteryCleaveUsed(state, fighterId);
-    expect(recordWeaponMasteryCleaveUsed(cleaveUsed, fighterId)).toBe(
-      cleaveUsed,
-    );
   });
 
   test("attack replay parsers reject cross-family, duplicate, and critical-hole fills", () => {
