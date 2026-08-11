@@ -207,6 +207,7 @@ import type {
   CharacterBattleInvocationFeature,
   BattleWalkSpeed,
   CharacterBattleLoadoutRef,
+  HeldWeaponLoadoutSlot,
 } from "./character-creature-execution-facts.ts";
 import type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
 import type { BattlePositiveHpUnconscious } from "./positive-hp-unconscious.ts";
@@ -2955,6 +2956,7 @@ export type WeaponAttackOverrideSpellInvocation = {
   readonly procedure: "weaponAttackOverride";
   readonly spell: BattleSpellAdmissionSource;
   readonly actionCost: "bonusAction";
+  readonly attachedWeaponSlot: HeldWeaponLoadoutSlot;
   readonly attachedWeapon: {
     readonly attack: BoundCharacterWeaponAttackActionOption;
   };

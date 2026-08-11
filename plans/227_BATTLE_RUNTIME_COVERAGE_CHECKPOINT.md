@@ -63,26 +63,36 @@ replace the public root diagnostic above or establish the state of other
 packages.
 
 - Date: 2026-08-10
-- Git HEAD: `0da412ce0`
+- Git HEAD: `5c4ea30d5`
 - Command: the checked-in battle-runtime Vitest coverage invocation, with one
-  worker, under `with_resource_lock_owner scripts/with-broad-workspace-lock.sh`
+  worker and the JSON reporter, under
+  `with_resource_lock_owner scripts/with-broad-workspace-lock.sh`
 - Result: exit 0
-- Duration: 126.07 seconds
-- Battle-runtime tests: 214/214 files passed; 2,318 tests passed and 53 skipped
-  (2,371 total)
+- Duration: 68.60 seconds after lock acquisition
+- Battle-runtime tests: 214/214 files passed; 2,322 tests passed and 53 skipped
+  (2,375 total)
+- Coordination note: root confirmed the external Battle Runtime coverage lane
+  was empty before this final exact run began. The run exited 0 without overlap
+  or SIGKILL. Follow-up `caf1c4dff` only removes three defensive lines from the
+  causal test after its length assertion; production, executed scenario, test
+  count, and the coverage instrumentation boundary are unchanged.
 
-| Metric     |  M20 exact covered / total |  M21 exact covered / total | Covered / total change |     Uncovered change | Percentage change |
+| Metric     |  M22 exact covered / total |  M23 exact covered / total | Covered / total change |     Uncovered change | Percentage change |
 | ---------- | -------------------------: | -------------------------: | ---------------------: | -------------------: | ----------------: |
-| Statements | 121,132 / 124,872 (97.00%) | 121,170 / 124,870 (97.03%) |                38 / -2 | 3,740 -> 3,700 (-40) |           +0.03pp |
-| Branches   |   30,758 / 32,658 (94.18%) |   30,811 / 32,693 (94.24%) |                53 / 35 | 1,900 -> 1,882 (-18) |           +0.06pp |
-| Functions  |       4,813 / 4,813 (100%) |       4,813 / 4,813 (100%) |                  0 / 0 |               0 -> 0 |                 0 |
-| Lines      | 121,132 / 124,872 (97.00%) | 121,170 / 124,870 (97.03%) |                38 / -2 | 3,740 -> 3,700 (-40) |           +0.03pp |
+| Statements | 121,188 / 124,871 (97.05%) | 121,209 / 124,862 (97.07%) |                21 / -9 | 3,683 -> 3,653 (-30) |           +0.02pp |
+| Branches   |   30,821 / 32,695 (94.27%) |   30,826 / 32,694 (94.29%) |                 5 / -1 |  1,874 -> 1,868 (-6) |           +0.02pp |
+| Functions  |       4,813 / 4,813 (100%) |       4,814 / 4,814 (100%) |                  1 / 1 |               0 -> 0 |                 0 |
+| Lines      | 121,188 / 124,871 (97.05%) | 121,209 / 124,862 (97.07%) |                21 / -9 | 3,683 -> 3,653 (-30) |           +0.02pp |
 
 The checked-in battle-runtime ratchets remain 97/97/100/94 for statements,
-lines, functions, and branches. No threshold was lowered. The measurement
-boundary includes both the M21 coverage milestone and the separately requested
-delegated Command end-turn replay merge, so the combined delta is not falsely
-attributed to M21 alone.
+lines, functions, and branches. No threshold was lowered. M23 replaces Magic
+Weapon's duplicate held-weapon and Wild Shape usability branches with the
+canonical item-level `loadoutHasUsableHeldWeaponItem` owner. Shillelagh uses
+the slot-level `loadoutHeldWeaponSlotIsUsable` protocol, so duplicate item
+identities cannot make one held occurrence admit or execute another. The final
+execution-correlation scenario materialized and covered 15 additional branch
+points relative to the prior exact run. Against M22, covered branches increased
+by 5 while uncovered branches fell by 6 and the denominator fell by 1.
 
 ## Remaining static 99% gaps
 
@@ -91,12 +101,44 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 121,170 | 124,870 |                  123,622 |         2,452 |
-| Branches   |  30,811 |  32,693 |                   32,367 |         1,556 |
-| Functions  |   4,813 |   4,813 |                    4,765 |             0 |
-| Lines      | 121,170 | 124,870 |                  123,622 |         2,452 |
+| Statements | 121,209 | 124,862 |                  123,614 |         2,405 |
+| Branches   |  30,826 |  32,694 |                   32,368 |         1,542 |
+| Functions  |   4,814 |   4,814 |                    4,766 |             0 |
+| Lines      | 121,209 | 124,862 |                  123,614 |         2,405 |
 
 ## Milestone context
+
+M23 removed a duplicate Magic Weapon target-usability algorithm and delegated
+to the canonical held-loadout/Wild Shape owner. Item-level Magic Weapon
+validation remains existential across held occurrences. Weapon-attack override
+admission and execution instead retain the exact main/off-hand slot and apply
+that slot's limb and equipment-disposition facts; a usable off-hand occurrence
+therefore cannot admit an unusable main occurrence with the same item identity.
+An existing public Beast Spells lifecycle scenario now covers the representable
+duplicate-identity case: both merged slots expose no Shillelagh act, while a
+merged main slot and worn off-hand slot expose exactly one. It retains that
+off-hand-bound public subject, changes to an alternate state where only the
+duplicate-ID main slot is usable, and proves resolution rejects the stale
+off-hand correlation. A mutation that forced execution to recheck the main slot
+made this assertion fail with `resolved` instead of `unsupportedSubject`, so it
+distinguishes slot-aware execution from admission-only filtering. The complete
+scenario is a net 42 test lines relative to M22. Against 21 newly covered
+statements, 42 / 21 = 2.00 test lines per newly covered statement, exactly at
+the pre-edit ceiling; the production denominator also fell by 9 statements and
+1 branch. No modeled rule changed. The public Magic Weapon, weapon-hosted route,
+and Wild Shape lifecycle cohort passed 92 tests; package typecheck, targeted
+lint, formatting, the 52-test Wild Shape file, and the exact gate above were
+green. The mapped
+`BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` MBT passed 9/9 tests through its
+public locked script (61.18-second Vitest duration; 1m38.641s wall time). Two
+review rounds found no remaining RAW, domain, architecture/connascence,
+standards, or issue-scope finding.
+
+M22 covered a reduced attack-control increment after review removed direct
+helper matrices and forged state witnesses. Its exact baseline at `1ce2c3590`
+was 121,188 / 124,871 statements and lines, 30,821 / 32,695 branches, and
+4,813 / 4,813 functions. The rejected attack-control helper matrix is not a
+candidate for a later campaign.
 
 M21 covered persistent spatial spell and active-effect lifecycles through
 public, reachable battle scenarios: failed-save Reaction continuation for
@@ -162,17 +204,12 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting exact battle-runtime metric at 94.24%, with a
-static 99% gap of 1,556. The next coherent owner is the attack-control cohort
-across attack resolution, attack-roll projection, and stat-block attacks. Its
-pre-M21 residual was 172 statements and 75 branch arms; remeasure the files
-before implementation, then cover only public reachable action-resource,
-fill-validation, roll-mode, mastery/rider, replacement, and stat-block damage
-behavior. Admission-proven or schema-impossible guards must be narrowed or
-removed with concrete proof rather than reached through forged states. Run the
-mapped weapon/stat-block/relationship MBTs and repeat the reviewer loop before
-remeasurement. Defensive route/profile behavior remains a later independent
-candidate.
+Branches remain the limiting exact battle-runtime metric at 94.29%, with a
+static 99% gap of 1,542. Do not retry the rejected attack-control helper matrix.
+Rerank the exact uncovered report against public lifecycle coverage before the
+next increment; defensive route/profile behavior remains an independent
+candidate. Admission-proven or schema-impossible guards must be narrowed or
+removed with concrete proof rather than reached through forged states.
 
 ## Verification and completion
 

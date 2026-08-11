@@ -7,6 +7,12 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { BattleObjectId } from "./identity.ts";
 
+export const HELD_WEAPON_LOADOUT_SLOTS = [
+  "mainWeapon",
+  "offHandWeapon",
+] as const;
+export type HeldWeaponLoadoutSlot = (typeof HELD_WEAPON_LOADOUT_SLOTS)[number];
+
 export type CharacterBattleInvocationFeature = {
   readonly tag: "eldritchMind";
 };
