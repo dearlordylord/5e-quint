@@ -88,8 +88,8 @@
       ],
       "profiles": ["spell.invocation-sleet-storm-area-hazard"],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt",
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+        "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt"
       ],
       "reason": "The promoted Sleet Storm runtime consumes caller-supplied area identity, movement facts, and entry/start-turn trigger subjects. Automatic geometry, pathfinding, area membership, and exposed-flame state are explicit table/environment boundaries.",
       "runtime": "battle",
@@ -121,7 +121,6 @@
       ],
       "profiles": ["spell.invocation-insect-plague-area-hazard"],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt",
         "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
       ],
@@ -156,7 +155,6 @@
       ],
       "profiles": ["spell.invocation-cloudkill-area-hazard"],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt",
         "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
       ],
@@ -838,8 +836,8 @@
       ],
       "profiles": ["spell.invocation-web-restraint-hazard"],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt",
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+        "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1534,7 +1532,7 @@
       ],
       "profiles": ["spell.invocation-spike-growth-movement-hazard"],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+        "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1594,8 +1592,8 @@
       ],
       "profiles": ["spell.invocation-grease-ground-hazard"],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt",
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+        "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1622,7 +1620,7 @@
       ],
       "profiles": ["spell.invocation-fog-cloud-obscurement"],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1653,7 +1651,7 @@
       ],
       "profiles": ["spell.invocation-magical-darkness-point-origin"],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1713,7 +1711,14 @@
       "profiles": ["spell.invocation-flaming-sphere-hazard-ram"],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2006,7 +2011,15 @@
       "profiles": ["spell.invocation-moonbeam-movable-zone"],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2670,7 +2683,8 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
         "packages/battle-runtime/battle-runtime-legendary-actions.qnt",
-        "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt"
+        "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt"
       ],
       "reason": "Stat Block scope includes authored action controls and named attacks. Multi-component attack damage is admitted by structured on-hit damage shape at the generic Stat Block support boundary and resolved component-by-component through the shared attack damage pipeline. Attack-hit target Size Prone riders are admitted only from typed Surface on-hit payloads that trail a supported base damage payload, applied through target effective Size facts, and withheld when the target is larger than the parsed Size gate or immune to Prone. Non-Prone size-gated condition riders such as Grappled/Restrained payloads stay closed until their condition-specific required facts are modeled. Monster authored identity remains selection/catalog identity rather than runtime dispatch.",
       "runtime": "battle",
@@ -2763,8 +2777,9 @@
         "spell.invocation-command-halt-grovel"
       ],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt",
-        "packages/battle-runtime/battle-runtime-command-choice.qnt"
+        "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+        "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+        "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2958,7 +2973,8 @@
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-hit-points.qnt",
         "packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt",
-        "packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt"
+        "packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt",
+        "packages/battle-runtime/battle-runtime-turn-advancement-death-save.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -7710,12 +7726,6 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-command-choice.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
-      "obligationIds": ["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"],
-      "ownerPath": "packages/battle-runtime/battle-runtime-command-choice.qnt",
-      "role": "semantic-core"
-    },
-    {
       "evidence": "packages/battle-runtime/battle-runtime-concentration.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN",
@@ -7814,12 +7824,6 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split. It is classified as proof-only because profile coverage uses it as qnt-proof verification evidence.",
-      "obligationIds": ["BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"],
-      "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt",
-      "role": "proof-only"
-    },
-    {
       "evidence": "packages/battle-runtime/battle-runtime-cunning-strike.qnt is the focused Cunning Strike literal projection proof for Sneak Attack die-cost timing, level-5 option effect shapes, effective-size Trip gating, Poison repeat-save lifecycle facts, and Withdraw no-Opportunity-Attack movement.",
       "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
       "ownerPath": "packages/battle-runtime/battle-runtime-cunning-strike.qnt",
@@ -7838,18 +7842,9 @@
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-ground-command.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
-      "obligationIds": [
-        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
-        "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
-        "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
-        "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
-        "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE",
-        "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
-        "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
-        "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
-      ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
+      "evidence": "packages/battle-runtime/battle-runtime-command-next-turn.qnt owns Command option application and next-turn procedure semantics, including delegated movement and reaction continuations.",
+      "obligationIds": ["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
       "role": "semantic-core"
     },
     {
@@ -10219,6 +10214,261 @@
       "obligationIds": ["BATTLE.SPELL.READIED_RESPONSE_PROCEDURE"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-readied-target-domain.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt is the focused run-test owner for Fog Cloud and magical Darkness BattleState lifecycle semantics.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt owns Fog Cloud and magical Darkness BattleState integration semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+        "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-command-control-next-turn-tests.qnt is the focused run-test owner for Command Grovel, Halt, and Drop next-turn semantics.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused Spike Growth BattleState movement-cost, damage, and Concentration lifecycle owner.",
+      "obligationIds": ["BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused run-test owner for Spike Growth BattleState semantics.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused Sleet Storm BattleState save, terrain, obscurement, and Concentration lifecycle owner.",
+      "obligationIds": ["BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused run-test owner for Sleet Storm BattleState semantics and cross-effect Concentration teardown.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused Command Grovel, Drop, and Halt next-turn procedure owner.",
+      "obligationIds": ["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused Command Approach and Flee next-turn movement procedure owner.",
+      "obligationIds": ["BATTLE.COMMAND.OPTION_AND_NEXT_TURN"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-command-approach-next-turn-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-command-approach-next-turn-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-command-flee-next-turn-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-command-flee-next-turn-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-lifecycle-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-lifecycle-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused proof owner for Flaming Sphere end-within-5-feet damage before delegated End Turn advancement.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-grease-ground-hazard-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-lifecycle-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-lifecycle-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-save-damage-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-damage-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-state.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused proof owner for Moonbeam once-per-turn save reset during delegated End Turn advancement.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-turn-end-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": ["BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-web-restraint-lifecycle-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-lifecycle-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-web-restraint-recurring-save-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-recurring-save-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused canonical End Turn plus Stat Block recharge-roll composition owner.",
+      "obligationIds": ["BATTLE.STAT_BLOCK.ATTACK_CONTROL"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused proof owner for start-turn Stat Block recharge resolution.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-turn-advancement-recharge-tests.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "Focused canonical End Turn plus Death Saving Throw composition owner.",
+      "obligationIds": ["BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-turn-advancement-death-save.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused proof owner for start-turn Death Saving Throw resolution.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-turn-advancement-death-save-tests.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -10299,7 +10549,17 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-command-choice.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
       "role": "semantic-core"
     },
     {
@@ -10421,7 +10681,42 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt",
       "role": "semantic-core"
     },
     {
@@ -10431,7 +10726,7 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt",
       "role": "semantic-core"
     },
     {
@@ -10646,7 +10941,47 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt",
       "role": "semantic-core"
     },
     {
@@ -10687,6 +11022,11 @@
       "classification": "exempt",
       "evidence": "Generic object/light route fact vocabulary leaf imported by the focused route connector without owning reducer semantics.",
       "ownerPath": "packages/battle-runtime/battle-runtime-object-light-rider-route-facts.qnt"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -10920,6 +11260,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-slow-fall.qnt",
       "role": "proof-only"
     },
@@ -11037,6 +11382,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt",
       "role": "semantic-core"
     },
@@ -11069,6 +11419,16 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-turn-advancement-death-save.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt",
       "role": "semantic-core"
     },
     {
@@ -11120,6 +11480,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hosted-capability-facts.qnt",
       "role": "bridge"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt",
+      "role": "semantic-core"
     },
     {
       "category": "witness-protocol-leaf",
@@ -12487,11 +12852,11 @@
       ],
       "obligationId": "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
       "proofOnly": [
-        "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+        "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard-tests.qnt"
       ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt",
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+        "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -12523,7 +12888,6 @@
       "obligationId": "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt",
         "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
       ],
@@ -12557,7 +12921,6 @@
       "obligationId": "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt",
         "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
       ],
@@ -13121,9 +13484,12 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-web-restraint-lifecycle-tests.qnt",
+        "packages/battle-runtime/battle-runtime-web-restraint-recurring-save-tests.qnt"
+      ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13703,10 +14069,12 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-grease-ground-hazard-tests.qnt"
+      ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt",
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+        "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13736,9 +14104,11 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt"
+      ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13768,9 +14138,11 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt"
+      ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13826,9 +14198,20 @@
         "pattern-match"
       ],
       "obligationId": "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-flaming-sphere-lifecycle-tests.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end-tests.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage-tests.qnt"
+      ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
+        "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14108,10 +14491,23 @@
         "pattern-match"
       ],
       "obligationId": "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-moonbeam-lifecycle-tests.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-save-damage-tests.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider-tests.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-turn-end-tests.qnt"
+      ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14635,10 +15031,12 @@
       "obligationId": "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt",
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt",
+        "packages/battle-runtime/battle-runtime-turn-advancement-recharge-tests.qnt"
       ],
       "semanticCore": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
+        "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14690,10 +15088,15 @@
         "membership"
       ],
       "obligationId": "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
-      "proofOnly": [],
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-command-control-next-turn-tests.qnt",
+        "packages/battle-runtime/battle-runtime-command-approach-next-turn-tests.qnt",
+        "packages/battle-runtime/battle-runtime-command-flee-next-turn-tests.qnt"
+      ],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-command-choice.qnt",
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+        "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+        "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14921,9 +15324,13 @@
       ],
       "obligationId": "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE",
       "proofOnly": [
-        "packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt"
+        "packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt",
+        "packages/battle-runtime/battle-runtime-turn-advancement-death-save-tests.qnt"
       ],
-      "semanticCore": ["packages/battle-runtime/battle-runtime-hit-points.qnt"],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-hit-points.qnt",
+        "packages/battle-runtime/battle-runtime-turn-advancement-death-save.qnt"
+      ],
       "status": "generation-subset-clean"
     },
     {
@@ -15668,6 +16075,40 @@
       ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-relationship-discovery.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "filter",
+        "fold",
+        "exists",
+        "set-operators",
+        "membership"
+      ],
+      "obligationId": "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt"
       ],
       "status": "generation-subset-clean"
     }

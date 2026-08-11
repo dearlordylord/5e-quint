@@ -21,88 +21,6 @@ module battleRuntimeMovement {
   pure def dashFighter(state: BattleState): BattleState =
     dashFighterWithSpeedKind(state, WalkSpeedKind)
 
-  pure def movementProjectionForFighter(state: BattleState, speedKind: MovementSpeedKind): BattleRuntimeMovementProjection = {
-    currentActorOwnsTurn:
-      currentActor(state) == Fighter
-        and not(state.fighter.unconscious)
-        and not(state.fighter.incapacitated),
-    actionAvailable: state.actionAvailable,
-    bonusActionAvailable: state.bonusActionAvailable,
-    reactionAvailable: state.fighter.reactionAvailable,
-    dashMovementBonus: state.dashMovementBonus,
-    disengaged: state.disengaged,
-    dodging: state.fighter.dodging,
-    hidden: fighterIsHidden(state),
-    helpAttackHeld: state.fighterHelpAttackGoblinForGoblin,
-    readiedMovementHeld: state.fighter.readiedMovementHeld,
-    speedFeet: movementSpeed(state.fighter, speedKind),
-    movementSpentFeet: state.fighter.movementSpent,
-    prone: state.fighter.prone,
-    grappleEscapeDc: 0,
-  }
-
-  pure def movementProjectionForGoblin(state: BattleState, speedKind: MovementSpeedKind): BattleRuntimeMovementProjection = {
-    currentActorOwnsTurn:
-      currentActor(state) == Goblin
-        and not(state.goblin.unconscious)
-        and not(state.goblin.incapacitated),
-    actionAvailable: state.actionAvailable,
-    bonusActionAvailable: state.bonusActionAvailable,
-    reactionAvailable: state.goblin.reactionAvailable,
-    dashMovementBonus: state.dashMovementBonus,
-    disengaged: state.disengaged,
-    dodging: state.goblin.dodging,
-    hidden: false,
-    helpAttackHeld: false,
-    readiedMovementHeld: false,
-    speedFeet: movementSpeed(state.goblin, speedKind),
-    movementSpentFeet: state.goblin.movementSpent,
-    prone: state.goblin.prone,
-    grappleEscapeDc: 0,
-  }
-
-  pure def movementProjectionForGrappledGoblin(state: BattleState): BattleRuntimeMovementProjection =
-    match state.grapple {
-      | NoGrapple => {
-          currentActorOwnsTurn:
-            currentActor(state) == Goblin
-              and not(state.goblin.unconscious)
-              and not(state.goblin.incapacitated),
-          actionAvailable: state.actionAvailable,
-          bonusActionAvailable: state.bonusActionAvailable,
-          reactionAvailable: state.goblin.reactionAvailable,
-          dashMovementBonus: state.dashMovementBonus,
-          disengaged: state.disengaged,
-          dodging: state.goblin.dodging,
-          hidden: false,
-          helpAttackHeld: false,
-          readiedMovementHeld: false,
-          speedFeet: movementSpeed(state.goblin, WalkSpeedKind),
-          movementSpentFeet: state.goblin.movementSpent,
-          prone: state.goblin.prone,
-          grappleEscapeDc: 0,
-        }
-      | FighterGrapplesGoblin(link) => {
-          currentActorOwnsTurn:
-            currentActor(state) == Goblin
-              and not(state.goblin.unconscious)
-              and not(state.goblin.incapacitated),
-          actionAvailable: state.actionAvailable,
-          bonusActionAvailable: state.bonusActionAvailable,
-          reactionAvailable: state.goblin.reactionAvailable,
-          dashMovementBonus: state.dashMovementBonus,
-          disengaged: state.disengaged,
-          dodging: state.goblin.dodging,
-          hidden: false,
-          helpAttackHeld: false,
-          readiedMovementHeld: false,
-          speedFeet: movementSpeed(state.goblin, WalkSpeedKind),
-          movementSpentFeet: state.goblin.movementSpent,
-          prone: state.goblin.prone,
-          grappleEscapeDc: link.escapeDc,
-        }
-    }
-
   pure def dissonantWhispersGoblinGrappleEscapeDc(state: BattleState): int =
     match state.grapple {
       | NoGrapple => 0
@@ -354,29 +272,6 @@ module battleRuntimeMovement {
       prone: combatant.prone,
       grappleEscapeDc: 0,
     })
-
-  pure def movementSpeed(combatant: Combatant, speedKind: MovementSpeedKind): int = {
-    val speedDelta = if (combatant.activeEffects.contains(LongstriderSpeedDelta)) 10 else 0
-    val walkSpeed = combatant.speed + speedDelta
-    val hasSpiderClimbSpeedGrant = combatant.activeEffects.exists(effect => match effect {
-      | SpiderClimbClimbSpeedGrant(_) => true
-      | _ => false
-    })
-    val hasSelfTransformationSwimSpeedGrant = combatant.activeEffects.exists(effect => match effect {
-      | SelfTransformationModeEffect(data) => data.mode == AquaticAdaptationMode
-      | _ => false
-    })
-    val hasFlySpeedGrant = combatant.activeEffects.exists(effect => match effect {
-      | FlySpeedHoverGrant(_) => true
-      | _ => false
-    })
-    match speedKind {
-      | WalkSpeedKind => walkSpeed
-      | ClimbSpeedKind => if (combatant.hasRovingSpeedKindGrants or hasSpiderClimbSpeedGrant) walkSpeed else 0
-      | SwimSpeedKind => if (combatant.hasRovingSpeedKindGrants or hasSelfTransformationSwimSpeedGrant) walkSpeed else 0
-      | FlySpeedKind => if (hasFlySpeedGrant) 60 + speedDelta else 0
-    }
-  }
 
   pure def fighterGoblinGrappleExists(state: BattleState): bool =
     match state.grapple {

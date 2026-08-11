@@ -3,7 +3,7 @@
 
 module battleRuntimeSelfTransformationTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeMovement.* from "./battle-runtime-movement"
+  import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeSelfTransformation.* from "./battle-runtime-self-transformation"

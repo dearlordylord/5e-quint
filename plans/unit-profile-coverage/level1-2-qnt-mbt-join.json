@@ -1910,11 +1910,15 @@
       "profileKind": "table-caller",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
           "role": "semantic-core"
         },
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-command-choice.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
           "role": "semantic-core"
         }
       ],
@@ -1941,11 +1945,15 @@
       "profileKind": "table-caller",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
           "role": "semantic-core"
         },
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-command-choice.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
           "role": "semantic-core"
         }
       ],
@@ -1972,11 +1980,15 @@
       "profileKind": "table-caller",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
           "role": "semantic-core"
         },
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-command-choice.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
           "role": "semantic-core"
         }
       ],
@@ -2003,11 +2015,15 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
           "role": "semantic-core"
         },
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-command-choice.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
           "role": "semantic-core"
         }
       ],
@@ -3415,7 +3431,7 @@
       "profileKind": "table-caller",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt",
           "role": "semantic-core"
         }
       ],
@@ -3473,11 +3489,11 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
           "role": "semantic-core"
         },
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt",
           "role": "semantic-core"
         }
       ],

@@ -83,8 +83,8 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 187,
-      "numerator": 162,
-      "percent": "86.6%"
+      "numerator": 163,
+      "percent": "87.2%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 187,
@@ -269,7 +269,7 @@
       "id": "spell.invocation-sleet-storm-area-hazard",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -292,7 +292,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2067,7 +2067,7 @@
       "id": "spell.invocation-grease-ground-hazard",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2082,16 +2082,16 @@
       "title": "Spell invocation creates a timed Grease ground hazard with recurring Dexterity saves",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-grease-ground-hazard.test.ts"
         },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime.test-support.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard-tests.qnt"
         }
       ]
     },
@@ -2099,7 +2099,7 @@
       "id": "spell.invocation-fog-cloud-obscurement",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2114,7 +2114,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2126,7 +2126,7 @@
       "id": "spell.invocation-magical-darkness-point-origin",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2144,7 +2144,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2183,7 +2183,14 @@
       "id": "spell.invocation-flaming-sphere-hazard-ram",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
+        "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2201,12 +2208,20 @@
       "title": "Spell invocation creates a movable Flaming Sphere fire hazard with reposition, end-within-5-feet, and ram saves",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-lifecycle-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage-tests.qnt"
         }
       ]
     },
@@ -2306,7 +2321,8 @@
       "id": "spell.invocation-command-halt-grovel",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+        "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2323,7 +2339,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2335,7 +2351,8 @@
       "id": "spell.invocation-command-drop-held-object",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+        "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2351,7 +2368,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2363,7 +2380,8 @@
       "id": "spell.invocation-command-approach-route",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+        "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2379,7 +2397,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-approach-next-turn-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2391,7 +2409,8 @@
       "id": "spell.invocation-command-flee-route",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+        "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2407,7 +2426,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-flee-next-turn-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -4190,7 +4209,15 @@
       "id": "spell.invocation-moonbeam-movable-zone",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt"
+        "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -4206,12 +4233,24 @@
       "title": "Spell invocation creates and moves a Moonbeam Cylinder with table-supplied area witnesses",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-lifecycle-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-damage-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-turn-end-tests.qnt"
         }
       ]
     },
@@ -4322,7 +4361,7 @@
       "id": "spell.invocation-web-restraint-hazard",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -4342,16 +4381,20 @@
       "title": "Spell invocation creates a Web area hazard with table-triggered restraint, movement, and obscurement projections",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-        },
-        {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/web-restraint-hazard.mbt.test.ts"
         },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-lifecycle-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-recurring-save-tests.qnt"
         }
       ]
     },
@@ -4842,7 +4885,7 @@
       "id": "spell.invocation-spike-growth-movement-hazard",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -4862,7 +4905,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard-tests.qnt"
         },
         {
           "kind": "focused-mbt",
@@ -6942,7 +6985,6 @@
       "id": "spell.invocation-insect-plague-area-hazard",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt",
         "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
       ],
@@ -6969,7 +7011,6 @@
       "id": "spell.invocation-cloudkill-area-hazard",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt",
         "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
         "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
       ],
@@ -7203,8 +7244,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 187,
-        "numerator": 162,
-        "percent": "86.6%"
+        "numerator": 163,
+        "percent": "87.2%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 187,
@@ -7257,7 +7298,7 @@
         "profileId": "spell.invocation-sleet-storm-area-hazard",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt"
         ]
       },
       {
@@ -8133,7 +8174,7 @@
         "profileId": "spell.invocation-grease-ground-hazard",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
         ]
       },
       {
@@ -8149,7 +8190,7 @@
         "profileId": "spell.invocation-fog-cloud-obscurement",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
         ]
       },
       {
@@ -8165,7 +8206,7 @@
         "profileId": "spell.invocation-magical-darkness-point-origin",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
         ]
       },
       {
@@ -8215,7 +8256,14 @@
         "profileId": "spell.invocation-flaming-sphere-hazard-ram",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
+          "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
+          "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
+          "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
+          "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
+          "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
+          "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
+          "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
+          "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt"
         ]
       },
       {
@@ -8297,7 +8345,8 @@
         "profileId": "spell.invocation-command-halt-grovel",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+          "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
         ]
       },
       {
@@ -8313,7 +8362,8 @@
         "profileId": "spell.invocation-command-drop-held-object",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+          "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
         ]
       },
       {
@@ -8329,7 +8379,8 @@
         "profileId": "spell.invocation-command-approach-route",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
+          "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
         ]
       },
       {
@@ -8345,7 +8396,8 @@
         "profileId": "spell.invocation-command-flee-route",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
+          "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
         ]
       },
       {
@@ -9461,7 +9513,15 @@
         "profileId": "spell.invocation-moonbeam-movable-zone",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt"
+          "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt"
         ]
       },
       {
@@ -9525,7 +9585,7 @@
         "profileId": "spell.invocation-web-restraint-hazard",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt"
         ]
       },
       {
@@ -9763,7 +9823,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD",
@@ -9775,7 +9835,7 @@
         "profileId": "spell.invocation-spike-growth-movement-hazard",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt"
         ]
       },
       {
@@ -10358,7 +10418,6 @@
         "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-          "packages/battle-runtime/battle-runtime-ground-command.qnt",
           "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
         ]
       },
@@ -10376,7 +10435,6 @@
         "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-          "packages/battle-runtime/battle-runtime-ground-command.qnt",
           "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
         ]
       },
@@ -11397,7 +11455,8 @@
               "profileId": "spell.invocation-command-halt-grovel",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
+                "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+                "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
               ]
             },
             {
@@ -11413,7 +11472,8 @@
               "profileId": "spell.invocation-command-drop-held-object",
               "profileKind": "table-caller",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
+                "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+                "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
               ]
             },
             {
@@ -11429,7 +11489,8 @@
               "profileId": "spell.invocation-command-approach-route",
               "profileKind": "table-caller",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
+                "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
+                "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
               ]
             },
             {
@@ -11445,7 +11506,8 @@
               "profileId": "spell.invocation-command-flee-route",
               "profileKind": "table-caller",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
+                "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
+                "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
               ]
             }
           ],
@@ -12544,7 +12606,14 @@
               "profileId": "spell.invocation-flaming-sphere-hazard-ram",
               "profileKind": "table-caller",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
+                "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
+                "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
+                "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
+                "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
+                "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
+                "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
+                "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
+                "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt"
               ]
             }
           ],
@@ -12566,7 +12635,7 @@
               "profileId": "spell.invocation-fog-cloud-obscurement",
               "profileKind": "table-caller",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
+                "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
               ]
             }
           ],
@@ -12594,7 +12663,7 @@
               "profileId": "spell.invocation-grease-ground-hazard",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
+                "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
               ]
             }
           ],
@@ -15869,7 +15938,7 @@
               "profileId": "spell.invocation-web-restraint-hazard",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
+                "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt"
               ]
             }
           ],
@@ -34461,7 +34530,6 @@
           "id": "spell.invocation-cloudkill-area-hazard",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt",
             "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
             "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
           ],
@@ -34604,7 +34672,8 @@
           "id": "spell.invocation-command-halt-grovel",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+            "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -34621,7 +34690,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -34633,7 +34702,8 @@
           "id": "spell.invocation-command-drop-held-object",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+            "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -34649,7 +34719,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -34661,7 +34731,8 @@
           "id": "spell.invocation-command-approach-route",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+            "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -34677,7 +34748,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-command-approach-next-turn-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -34689,7 +34760,8 @@
           "id": "spell.invocation-command-flee-route",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+            "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -34705,7 +34777,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-command-flee-next-turn-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -35797,7 +35869,7 @@
           "id": "spell.invocation-magical-darkness-point-origin",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -35815,7 +35887,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -37853,7 +37925,14 @@
           "id": "spell.invocation-flaming-sphere-hazard-ram",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
+            "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
+            "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
+            "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
+            "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
+            "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
+            "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
+            "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
+            "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -37871,12 +37950,20 @@
           "title": "Spell invocation creates a movable Flaming Sphere fire hazard with reposition, end-within-5-feet, and ram saves",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-lifecycle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage-tests.qnt"
             }
           ]
         }
@@ -37931,7 +38018,7 @@
           "id": "spell.invocation-fog-cloud-obscurement",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -37946,7 +38033,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -38179,7 +38266,7 @@
           "id": "spell.invocation-grease-ground-hazard",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -38194,16 +38281,16 @@
           "title": "Spell invocation creates a timed Grease ground hazard with recurring Dexterity saves",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-grease-ground-hazard.test.ts"
             },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime.test-support.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard-tests.qnt"
             }
           ]
         }
@@ -39279,7 +39366,6 @@
           "id": "spell.invocation-insect-plague-area-hazard",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt",
             "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
             "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
           ],
@@ -44476,7 +44562,15 @@
           "id": "spell.invocation-moonbeam-movable-zone",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt"
+            "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -44492,12 +44586,24 @@
           "title": "Spell invocation creates and moves a Moonbeam Cylinder with table-supplied area witnesses",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-lifecycle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-damage-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-turn-end-tests.qnt"
             }
           ]
         }
@@ -45279,7 +45385,7 @@
           "id": "spell.invocation-sleet-storm-area-hazard",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -45302,7 +45408,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -46046,7 +46152,7 @@
           "id": "spell.invocation-spike-growth-movement-hazard",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -46066,7 +46172,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard-tests.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -47054,7 +47160,7 @@
           "id": "spell.invocation-web-restraint-hazard",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -47074,16 +47180,20 @@
           "title": "Spell invocation creates a Web area hazard with table-triggered restraint, movement, and obscurement projections",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/web-restraint-hazard.mbt.test.ts"
             },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-lifecycle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-recurring-save-tests.qnt"
             }
           ]
         }

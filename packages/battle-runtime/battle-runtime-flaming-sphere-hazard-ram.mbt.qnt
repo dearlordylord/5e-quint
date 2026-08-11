@@ -2,6 +2,7 @@
 
 module battleRuntimeFlamingSphereHazardRamMbt {
   import battleRuntimeFlamingSphereHazardRam.* from "./battle-runtime-flaming-sphere-hazard-ram"
+  import battleRuntimeFlamingSphereFacts.* from "./battle-runtime-flaming-sphere-facts"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
 
   var qActionAvailable: bool

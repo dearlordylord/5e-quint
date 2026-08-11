@@ -1,6 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
+import { isDeepStrictEqual } from "node:util";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-sleet-storm-area-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
@@ -290,6 +291,7 @@ describe("Sleet Storm area hazard MBT parity", () => {
       step: "step",
       driver: createSleetStormAreaHazardDriver(),
       backend: "typescript",
+      seed: process.env["QUINT_SEED"],
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(6),
       stateCheck: sleetStormStateCheck,
@@ -658,18 +660,10 @@ function normalizeSleetStormQuintState(
 }
 
 function compareSleetStormStates(
-  runtime: SleetStormAreaHazardState,
   quint: SleetStormAreaHazardState,
+  runtime: SleetStormAreaHazardState,
 ): boolean {
-  try {
-    expect(runtime).toEqual(quint);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-    throw error;
-  }
-  return true;
+  return isDeepStrictEqual(quint, runtime);
 }
 
 function requireResolved(

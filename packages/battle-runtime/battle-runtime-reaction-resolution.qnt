@@ -15,7 +15,7 @@ module battleRuntimeReactionResolution {
   import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
-  import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
+  import battleRuntimeCommandMovementNextTurn.* from "./battle-runtime-command-movement-next-turn"
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
 
   pure def resolveHellishRebukeAfterDamage(
