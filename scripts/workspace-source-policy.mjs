@@ -13,7 +13,5 @@ export const NON_PRODUCTION_TYPESCRIPT_GLOBS = [
 ];
 
 export function sourceGlobsUnder(sourceRoot) {
-  return NON_PRODUCTION_TYPESCRIPT_GLOBS.map(
-    (glob) => `${sourceRoot}/${glob.slice(3)}`,
-  );
+  return NON_PRODUCTION_TYPESCRIPT_GLOBS.map((glob) => `${sourceRoot}/${glob}`);
 }

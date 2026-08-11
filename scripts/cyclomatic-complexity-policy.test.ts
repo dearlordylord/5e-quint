@@ -6,8 +6,14 @@ import {
   complexityRegressionsAgainstBaseline,
   type ComplexityBaseline,
 } from "./cyclomatic-complexity-policy.mjs";
+import { sourceGlobsUnder } from "./workspace-source-policy.mjs";
 
 describe("cyclomatic complexity quality policy", () => {
+  test("retains recursive source exclusions when adapting shared globs for coverage", () => {
+    expect(sourceGlobsUnder("src")).toContain("src/**/*.test-support.ts");
+    expect(sourceGlobsUnder("src")).toContain("src/**/*.test.ts");
+  });
+
   test("projects classic complexity diagnostics into stable per-function identities", () => {
     expect(
       complexityMeasurementsFromEslint(
