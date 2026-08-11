@@ -100,8 +100,14 @@ comments alone are not enforcement. Pay particular attention to `current`,
 The working RAW authority is SRD 5.2.1 in `.references/srd-5.2.1/`; the official
 5.1→5.2.1 delta is in `.references/srd-5.2.1-conversion/`. Before implementing a
 rule, read the relevant local passage and [`UBIQUITOUS_LANGUAGE.md`](UBIQUITOUS_LANGUAGE.md).
-If the corpus is insufficient, stop and ask rather than browsing another rules
-source.
+Search `.references/srd-5.2.1/` for the expected passage in a separate bounded
+command that includes hidden and ignored paths (for example, `rg -uu`), then
+inspect the likely corpus file directly. Treat truncated output, a nonzero
+status, unreadable content, or tool failure as unresolved evidence, not proof
+that the passage is absent. Claim that the corpus is insufficient only after
+both checks, and verify this discovery workflow in the checkout and a linked
+worktree. If the corpus is then insufficient, stop and ask rather than browsing
+another rules source.
 
 Quint is a direct formalization of the SRD: no homebrew or reasonable
 extensions. Every modeled rule must trace to local RAW. Record only choices the
