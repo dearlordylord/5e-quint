@@ -73,8 +73,8 @@
     },
     "qntProfileModelingCoverage": {
       "denominator": 149,
-      "numerator": 149,
-      "percent": "100%"
+      "numerator": 147,
+      "percent": "98.7%"
     },
     "qntProofCoverage": {
       "denominator": 149,
@@ -83,8 +83,8 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 187,
-      "numerator": 162,
-      "percent": "86.6%"
+      "numerator": 161,
+      "percent": "86.1%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 187,
@@ -269,7 +269,7 @@
       "id": "spell.invocation-sleet-storm-area-hazard",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -292,7 +292,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -379,8 +379,7 @@
       "id": "unit-feature.attack-action-attack-count-scaling",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-        "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -1211,7 +1210,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-and-mastery-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -1237,7 +1236,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-and-mastery-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -1267,7 +1266,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-and-mastery-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -1663,7 +1662,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -1675,7 +1674,8 @@
       "id": "spell.invocation-damage-save-or-attack",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -2066,7 +2066,7 @@
       "id": "spell.invocation-grease-ground-hazard",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2081,16 +2081,16 @@
       "title": "Spell invocation creates a timed Grease ground hazard with recurring Dexterity saves",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-grease-ground-hazard.test.ts"
         },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime.test-support.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard-tests.qnt"
         }
       ]
     },
@@ -2098,7 +2098,7 @@
       "id": "spell.invocation-fog-cloud-obscurement",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2113,7 +2113,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2125,7 +2125,7 @@
       "id": "spell.invocation-magical-darkness-point-origin",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2143,7 +2143,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2182,7 +2182,14 @@
       "id": "spell.invocation-flaming-sphere-hazard-ram",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
+        "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
+        "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2200,12 +2207,20 @@
       "title": "Spell invocation creates a movable Flaming Sphere fire hazard with reposition, end-within-5-feet, and ram saves",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-lifecycle-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage-tests.qnt"
         }
       ]
     },
@@ -2305,7 +2320,8 @@
       "id": "spell.invocation-command-halt-grovel",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+        "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2322,7 +2338,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2334,7 +2350,8 @@
       "id": "spell.invocation-command-drop-held-object",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+        "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2350,7 +2367,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2362,7 +2379,8 @@
       "id": "spell.invocation-command-approach-route",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+        "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2378,7 +2396,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-approach-next-turn-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2390,7 +2408,8 @@
       "id": "spell.invocation-command-flee-route",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+        "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2406,7 +2425,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-command-flee-next-turn-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2431,7 +2450,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2459,7 +2478,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2551,7 +2570,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2576,7 +2595,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2625,7 +2644,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-hit-point-lifecycle-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2649,7 +2668,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2677,7 +2696,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2701,7 +2720,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2725,7 +2744,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2749,7 +2768,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2774,7 +2793,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-held-weapon-override-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2839,7 +2858,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2890,7 +2909,6 @@
       "id": "spell.reaction-shield",
       "profileKind": "reaction",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
       ],
       "runtimeOwners": [
@@ -2924,7 +2942,8 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -3092,7 +3111,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3150,7 +3169,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3901,7 +3920,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -4189,7 +4208,16 @@
       "id": "spell.invocation-moonbeam-movable-zone",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt"
+        "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-facts.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -4205,12 +4233,24 @@
       "title": "Spell invocation creates and moves a Moonbeam Cylinder with table-supplied area witnesses",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-lifecycle-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-damage-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-turn-end-tests.qnt"
         }
       ]
     },
@@ -4309,7 +4349,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -4321,7 +4361,7 @@
       "id": "spell.invocation-web-restraint-hazard",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -4341,16 +4381,20 @@
       "title": "Spell invocation creates a Web area hazard with table-triggered restraint, movement, and obscurement projections",
       "verificationOwners": [
         {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-        },
-        {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/web-restraint-hazard.mbt.test.ts"
         },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-lifecycle-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-recurring-save-tests.qnt"
         }
       ]
     },
@@ -4841,7 +4885,7 @@
       "id": "spell.invocation-spike-growth-movement-hazard",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+        "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -4861,7 +4905,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard-tests.qnt"
         },
         {
           "kind": "focused-mbt",
@@ -6940,11 +6984,8 @@
     {
       "id": "spell.invocation-insect-plague-area-hazard",
       "profileKind": "spell-invocation",
-      "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt",
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-      ],
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/insect-plague-area-hazard.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
@@ -6952,7 +6993,7 @@
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
-      "sourceBoundary": "Battle runtime admits the authored Insect Plague area-hazard shape, area choice, Concentration effect, Difficult Terrain and Lightly Obscured projections, Constitution Saving Throw outcomes, Piercing save-for-half damage, slot scaling, and once-per-turn save ledger using caller/table supplied area-membership trigger facts. The table/spatial layer remains the owner of automatic Sphere geometry, route derivation, area membership, and environmental swarm presentation.",
+      "sourceBoundary": "Battle runtime admits the authored Insect Plague area-hazard shape, area choice, Concentration effect, Difficult Terrain and Lightly Obscured projections, Constitution Saving Throw outcomes, Piercing save-for-half damage, slot scaling, and once-per-turn save ledger using caller/table supplied area-membership trigger facts. The table/spatial layer remains the owner of automatic Sphere geometry, route derivation, area membership, and environmental swarm presentation. Focused QNT semantics and QNT-connected parity remain unassessed.",
       "taskRefs": [
         "L19E-03-L5-ACTIVE-AREA-HAZARD"
       ],
@@ -6967,11 +7008,8 @@
     {
       "id": "spell.invocation-cloudkill-area-hazard",
       "profileKind": "spell-invocation",
-      "qntOwners": [
-        "packages/battle-runtime/battle-runtime-ground-command.qnt",
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-      ],
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/cloudkill-area-hazard.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
@@ -6981,7 +7019,7 @@
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
-      "sourceBoundary": "Battle runtime admits the authored Cloudkill area-hazard shape, caller-supplied Sphere area identity, Concentration effect, Heavily Obscured projection, Constitution Saving Throw outcomes, Poison save-for-half damage, slot scaling, once-per-turn save ledger, and strong-wind dispersal command using caller/table supplied area-membership and environment facts. The table/spatial layer remains the owner of automatic Sphere geometry, cloud movement away from the caster, terrain descent, area membership derivation, and wind predicate derivation.",
+      "sourceBoundary": "Battle runtime admits the authored Cloudkill area-hazard shape, caller-supplied Sphere area identity, Concentration effect, Heavily Obscured projection, Constitution Saving Throw outcomes, Poison save-for-half damage, slot scaling, once-per-turn save ledger, and strong-wind dispersal command using caller/table supplied area-membership and environment facts. The table/spatial layer remains the owner of automatic Sphere geometry, cloud movement away from the caster, terrain descent, area membership derivation, and wind predicate derivation. Focused QNT semantics and QNT-connected parity remain unassessed.",
       "taskRefs": [
         "L19E-03-L5-ACTIVE-AREA-HAZARD",
         "L19E-03-CLOUDKILL-AREA-HAZARD"
@@ -7198,12 +7236,12 @@
     }
   ],
   "rulesKernelProfileJoin": {
-    "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; covered joins require every mapped obligation to have a semantic-core QNT owner",
+    "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; profile-local-semantic-core mappings require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 187,
-        "numerator": 162,
-        "percent": "86.6%"
+        "numerator": 161,
+        "percent": "86.1%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 187,
@@ -7256,7 +7294,7 @@
         "profileId": "spell.invocation-sleet-storm-area-hazard",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt"
         ]
       },
       {
@@ -7304,7 +7342,6 @@
         "profileId": "unit-feature.attack-action-attack-count-scaling",
         "profileKind": "passive",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
           "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
         ]
       },
@@ -8027,23 +8064,25 @@
         "joinStatus": "covered",
         "obligations": [
           {
-            "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+            "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+            "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
           },
           {
-            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+            "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
           }
         ],
         "profileId": "spell.invocation-damage-save-or-attack",
         "profileKind": "spell-invocation",
         "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
           "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-        ]
+        ],
+        "semanticOwnerPolicy": "profile-local-semantic-core"
       },
       {
         "joinStatus": "covered",
@@ -8130,7 +8169,7 @@
         "profileId": "spell.invocation-grease-ground-hazard",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
         ]
       },
       {
@@ -8146,7 +8185,7 @@
         "profileId": "spell.invocation-fog-cloud-obscurement",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
         ]
       },
       {
@@ -8162,7 +8201,7 @@
         "profileId": "spell.invocation-magical-darkness-point-origin",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
         ]
       },
       {
@@ -8212,7 +8251,14 @@
         "profileId": "spell.invocation-flaming-sphere-hazard-ram",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
+          "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
+          "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
+          "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
+          "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
+          "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
+          "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
+          "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
+          "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt"
         ]
       },
       {
@@ -8294,7 +8340,8 @@
         "profileId": "spell.invocation-command-halt-grovel",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+          "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
         ]
       },
       {
@@ -8310,7 +8357,8 @@
         "profileId": "spell.invocation-command-drop-held-object",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+          "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
         ]
       },
       {
@@ -8326,7 +8374,8 @@
         "profileId": "spell.invocation-command-approach-route",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
+          "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
         ]
       },
       {
@@ -8342,7 +8391,8 @@
         "profileId": "spell.invocation-command-flee-route",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
+          "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
         ]
       },
       {
@@ -8667,20 +8717,14 @@
             "runtime": "battle",
             "status": "covered",
             "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
-          },
-          {
-            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-            "runtime": "battle",
-            "status": "covered",
-            "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
           }
         ],
         "profileId": "spell.reaction-shield",
         "profileKind": "reaction",
         "qntOwners": [
-          "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
-          "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-        ]
+          "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+        ],
+        "semanticOwnerPolicy": "profile-local-semantic-core"
       },
       {
         "joinStatus": "covered",
@@ -8692,18 +8736,26 @@
             "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
           },
           {
-            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+            "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+          },
+          {
+            "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
           }
         ],
         "profileId": "spell.readied-action-time-spell",
         "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+          "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
           "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-        ]
+        ],
+        "semanticOwnerPolicy": "profile-local-semantic-core"
       },
       {
         "joinStatus": "covered",
@@ -9456,7 +9508,16 @@
         "profileId": "spell.invocation-moonbeam-movable-zone",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt"
+          "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-facts.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt"
         ]
       },
       {
@@ -9520,7 +9581,7 @@
         "profileId": "spell.invocation-web-restraint-hazard",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt"
         ]
       },
       {
@@ -9758,7 +9819,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD",
@@ -9770,18 +9831,12 @@
         "profileId": "spell.invocation-spike-growth-movement-hazard",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-ground-command.qnt"
+          "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt"
         ]
       },
       {
         "joinStatus": "covered",
         "obligations": [
-          {
-            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-            "runtime": "battle",
-            "status": "covered",
-            "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
-          },
           {
             "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
             "runtime": "battle",
@@ -9793,7 +9848,8 @@
         "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
-        ]
+        ],
+        "semanticOwnerPolicy": "profile-local-semantic-core"
       },
       {
         "joinStatus": "covered",
@@ -9897,17 +9953,18 @@
         "joinStatus": "covered",
         "obligations": [
           {
-            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+            "obligationId": "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+            "title": "Battle Spiritual Weapon cast, force placement, attack proxy, repeat movement, damage, and cleanup procedure"
           }
         ],
         "profileId": "spell.invocation-spiritual-weapon-attack-proxy",
         "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
-        ]
+        ],
+        "semanticOwnerPolicy": "profile-local-semantic-core"
       },
       {
         "joinStatus": "covered",
@@ -10218,12 +10275,6 @@
             "runtime": "battle",
             "status": "covered",
             "title": "Battle Haste positive cast applies active target buffs and a restricted target-turn action"
-          },
-          {
-            "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-            "runtime": "battle",
-            "status": "covered",
-            "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
           }
         ],
         "profileId": "spell.invocation-haste-positive",
@@ -10231,7 +10282,8 @@
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
           "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
-        ]
+        ],
+        "semanticOwnerPolicy": "profile-local-semantic-core"
       },
       {
         "joinStatus": "mapped-open",
@@ -10349,40 +10401,32 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE",
             "runtime": "battle",
-            "status": "covered",
+            "status": "needs-qnt-owner",
             "title": "Battle Insect Plague active Sphere hazard projects Difficult Terrain and Lightly Obscured area facts, resolves table-triggered Constitution saves and Piercing damage, and cleans up on Concentration or duration end"
           }
         ],
         "profileId": "spell.invocation-insect-plague-area-hazard",
         "profileKind": "spell-invocation",
-        "qntOwners": [
-          "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-          "packages/battle-runtime/battle-runtime-ground-command.qnt",
-          "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-        ]
+        "qntOwners": []
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
             "runtime": "battle",
-            "status": "covered",
+            "status": "needs-qnt-owner",
             "title": "Battle Cloudkill active Sphere hazard projects Heavily Obscured area facts, resolves table-triggered Constitution saves and Poison damage, and cleans up on Concentration, duration, or strong wind"
           }
         ],
         "profileId": "spell.invocation-cloudkill-area-hazard",
         "profileKind": "spell-invocation",
-        "qntOwners": [
-          "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-          "packages/battle-runtime/battle-runtime-ground-command.qnt",
-          "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-        ]
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -10450,23 +10494,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -10478,18 +10524,26 @@
                   "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "acid_splash"
@@ -10664,7 +10718,6 @@
               "profileId": "unit-feature.attack-action-attack-count-scaling",
               "profileKind": "passive",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
               ]
             }
@@ -11079,23 +11132,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -11107,18 +11162,26 @@
                   "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "burning_hands"
@@ -11130,23 +11193,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -11158,18 +11223,26 @@
                   "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "chill_touch"
@@ -11203,18 +11276,26 @@
                   "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "chromatic_orb"
@@ -11363,7 +11444,8 @@
               "profileId": "spell.invocation-command-halt-grovel",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
+                "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+                "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
               ]
             },
             {
@@ -11379,7 +11461,8 @@
               "profileId": "spell.invocation-command-drop-held-object",
               "profileKind": "table-caller",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
+                "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+                "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
               ]
             },
             {
@@ -11395,7 +11478,8 @@
               "profileId": "spell.invocation-command-approach-route",
               "profileKind": "table-caller",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
+                "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
+                "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
               ]
             },
             {
@@ -11411,7 +11495,8 @@
               "profileId": "spell.invocation-command-flee-route",
               "profileKind": "table-caller",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
+                "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
+                "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
               ]
             }
           ],
@@ -11424,23 +11509,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "cone_of_cold"
@@ -11546,23 +11633,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -12139,7 +12228,6 @@
               "profileId": "unit-feature.attack-action-attack-count-scaling",
               "profileKind": "passive",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
               ]
             }
@@ -12349,23 +12437,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "fire_bolt"
@@ -12377,23 +12467,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "fireball"
@@ -12445,23 +12537,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "flame_strike"
@@ -12500,7 +12594,14 @@
               "profileId": "spell.invocation-flaming-sphere-hazard-ram",
               "profileKind": "table-caller",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
+                "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
+                "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
+                "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
+                "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
+                "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
+                "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
+                "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
+                "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt"
               ]
             }
           ],
@@ -12522,7 +12623,7 @@
               "profileId": "spell.invocation-fog-cloud-obscurement",
               "profileKind": "table-caller",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
+                "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
               ]
             }
           ],
@@ -12550,7 +12651,7 @@
               "profileId": "spell.invocation-grease-ground-hazard",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
+                "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
               ]
             }
           ],
@@ -12585,23 +12686,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -12613,18 +12716,26 @@
                   "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "guiding_bolt"
@@ -12646,12 +12757,6 @@
                   "runtime": "battle",
                   "status": "covered",
                   "title": "Battle Haste positive cast applies active target buffs and a restricted target-turn action"
-                },
-                {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-                  "runtime": "battle",
-                  "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
                 }
               ],
               "profileId": "spell.invocation-haste-positive",
@@ -12659,7 +12764,8 @@
               "qntOwners": [
                 "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "haste"
@@ -12737,23 +12843,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "hellish_rebuke"
@@ -12923,23 +13031,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "ice_knife"
@@ -12951,23 +13061,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -12979,18 +13091,26 @@
                   "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "inflict_wounds"
@@ -13096,23 +13216,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "lightning_bolt"
@@ -13146,23 +13268,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -13174,18 +13298,26 @@
                   "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "mage_armor"
@@ -13197,23 +13329,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -13225,18 +13359,26 @@
                   "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "magic_missile"
@@ -13513,7 +13655,6 @@
               "profileId": "unit-feature.attack-action-attack-count-scaling",
               "profileKind": "passive",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
               ]
             }
@@ -13862,7 +14003,6 @@
               "profileId": "unit-feature.attack-action-attack-count-scaling",
               "profileKind": "passive",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
               ]
             }
@@ -14036,23 +14176,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -14064,18 +14206,26 @@
                   "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "poison_spray"
@@ -14087,23 +14237,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -14266,7 +14418,6 @@
               "profileId": "unit-feature.attack-action-attack-count-scaling",
               "profileKind": "passive",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
               ]
             }
@@ -14439,23 +14590,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -14467,18 +14620,26 @@
                   "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "ray_of_frost"
@@ -14490,23 +14651,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -14518,18 +14681,26 @@
                   "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "ray_of_sickness"
@@ -14804,23 +14975,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -14832,18 +15005,26 @@
                   "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "sacred_flame"
@@ -14921,12 +15102,6 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-                  "runtime": "battle",
-                  "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
-                },
-                {
                   "obligationId": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
                   "runtime": "battle",
                   "status": "covered",
@@ -14937,7 +15112,8 @@
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "see_invisibility"
@@ -14949,23 +15125,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "shatter"
@@ -14981,20 +15159,14 @@
                   "runtime": "battle",
                   "status": "covered",
                   "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
-                },
-                {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
-                  "runtime": "battle",
-                  "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
                 }
               ],
               "profileId": "spell.reaction-shield",
               "profileKind": "reaction",
               "qntOwners": [
-                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
-                "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+                "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "shield"
@@ -15072,23 +15244,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -15100,18 +15274,26 @@
                   "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "shocking_grasp"
@@ -15245,23 +15427,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "sorcerous_burst"
@@ -15406,17 +15590,18 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle Spiritual Weapon cast, force placement, attack proxy, repeat movement, damage, and cleanup procedure"
                 }
               ],
               "profileId": "spell.invocation-spiritual-weapon-attack-proxy",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "spiritual_weapon"
@@ -15428,23 +15613,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "starry_wisp"
@@ -15456,23 +15643,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "thunderwave"
@@ -15506,23 +15695,25 @@
               "joinStatus": "covered",
               "obligations": [
                 {
-                  "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+                  "obligationId": "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell attack and Saving Throw damage branches for hit, miss, Critical Hit, full damage, half damage, and no damage outcomes"
+                  "title": "Battle spell direct, attack-roll, save-gated, and attack-burst damage procedure families"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
                 }
               ],
               "profileId": "spell.invocation-damage-save-or-attack",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -15534,18 +15725,26 @@
                   "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
-                  "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+                  "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle spell core invocation, slot spend, reaction spell, and readied spell procedure profiles"
+                  "title": "Battle spell invocation action, Spell Slot, access, and target-cardinality resource procedure"
+                },
+                {
+                  "obligationId": "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Readied Spell Response hold, target-domain, release, resource, and Concentration procedure"
                 }
               ],
               "profileId": "spell.readied-action-time-spell",
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+                "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "vicious_mockery"
@@ -15724,7 +15923,7 @@
               "profileId": "spell.invocation-web-restraint-hazard",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-ground-command.qnt"
+                "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt"
               ]
             }
           ],
@@ -21366,8 +21565,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -22231,8 +22429,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -24845,8 +25042,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -25586,7 +25782,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -29759,7 +29955,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -30023,8 +30219,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -30266,8 +30461,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -30682,7 +30876,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-and-mastery-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -30841,7 +31035,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-and-mastery-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -30975,7 +31169,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-and-mastery-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -32334,7 +32528,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -32383,7 +32578,8 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -32543,7 +32739,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -33495,7 +33691,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -33877,7 +34073,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -33926,7 +34123,8 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -34080,7 +34278,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -34129,7 +34328,8 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -34222,7 +34422,8 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -34308,11 +34509,8 @@
         {
           "id": "spell.invocation-cloudkill-area-hazard",
           "profileKind": "spell-invocation",
-          "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt",
-            "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-            "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-          ],
+          "qntOwners": [],
+          "qntOwnershipStatus": "needs-qnt-owner",
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/cloudkill-area-hazard.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
@@ -34322,7 +34520,7 @@
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
-          "sourceBoundary": "Battle runtime admits the authored Cloudkill area-hazard shape, caller-supplied Sphere area identity, Concentration effect, Heavily Obscured projection, Constitution Saving Throw outcomes, Poison save-for-half damage, slot scaling, once-per-turn save ledger, and strong-wind dispersal command using caller/table supplied area-membership and environment facts. The table/spatial layer remains the owner of automatic Sphere geometry, cloud movement away from the caster, terrain descent, area membership derivation, and wind predicate derivation.",
+          "sourceBoundary": "Battle runtime admits the authored Cloudkill area-hazard shape, caller-supplied Sphere area identity, Concentration effect, Heavily Obscured projection, Constitution Saving Throw outcomes, Poison save-for-half damage, slot scaling, once-per-turn save ledger, and strong-wind dispersal command using caller/table supplied area-membership and environment facts. The table/spatial layer remains the owner of automatic Sphere geometry, cloud movement away from the caster, terrain descent, area membership derivation, and wind predicate derivation. Focused QNT semantics and QNT-connected parity remain unassessed.",
           "taskRefs": [
             "L19E-03-L5-ACTIVE-AREA-HAZARD",
             "L19E-03-CLOUDKILL-AREA-HAZARD"
@@ -34452,7 +34650,8 @@
           "id": "spell.invocation-command-halt-grovel",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+            "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -34469,7 +34668,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -34481,7 +34680,8 @@
           "id": "spell.invocation-command-drop-held-object",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+            "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -34497,7 +34697,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-command-control-next-turn-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -34509,7 +34709,8 @@
           "id": "spell.invocation-command-approach-route",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+            "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -34525,7 +34726,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-command-approach-next-turn-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -34537,7 +34738,8 @@
           "id": "spell.invocation-command-flee-route",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-command-next-turn.qnt",
+            "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -34553,7 +34755,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-command-flee-next-turn-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -35002,7 +35204,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -35644,7 +35847,7 @@
           "id": "spell.invocation-magical-darkness-point-origin",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -35662,7 +35865,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -35979,7 +36182,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -36040,7 +36244,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -36099,7 +36303,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -36162,7 +36366,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -36710,7 +36914,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -36924,7 +37128,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -37076,7 +37280,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -37139,7 +37343,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -37195,7 +37399,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -37290,7 +37495,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -37487,7 +37693,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -37696,7 +37903,14 @@
           "id": "spell.invocation-flaming-sphere-hazard-ram",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
+            "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
+            "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
+            "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
+            "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
+            "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
+            "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
+            "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
+            "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -37714,12 +37928,20 @@
           "title": "Spell invocation creates a movable Flaming Sphere fire hazard with reposition, end-within-5-feet, and ram saves",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-flaming-sphere.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-lifecycle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage-tests.qnt"
             }
           ]
         }
@@ -37774,7 +37996,7 @@
           "id": "spell.invocation-fog-cloud-obscurement",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -37789,7 +38011,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-obscuring-area-effects-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -38022,7 +38244,7 @@
           "id": "spell.invocation-grease-ground-hazard",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -38037,16 +38259,16 @@
           "title": "Spell invocation creates a timed Grease ground hazard with recurring Dexterity saves",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-grease-ground-hazard.test.ts"
             },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime.test-support.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard-tests.qnt"
             }
           ]
         }
@@ -38162,7 +38384,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -38211,7 +38434,8 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -38682,7 +38906,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -38754,7 +38978,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -38838,7 +39062,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -38897,7 +39121,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -38981,7 +39206,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -39030,7 +39256,8 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -39116,11 +39343,8 @@
         {
           "id": "spell.invocation-insect-plague-area-hazard",
           "profileKind": "spell-invocation",
-          "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt",
-            "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-            "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-          ],
+          "qntOwners": [],
+          "qntOwnershipStatus": "needs-qnt-owner",
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/insect-plague-area-hazard.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
@@ -39128,7 +39352,7 @@
             "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
-          "sourceBoundary": "Battle runtime admits the authored Insect Plague area-hazard shape, area choice, Concentration effect, Difficult Terrain and Lightly Obscured projections, Constitution Saving Throw outcomes, Piercing save-for-half damage, slot scaling, and once-per-turn save ledger using caller/table supplied area-membership trigger facts. The table/spatial layer remains the owner of automatic Sphere geometry, route derivation, area membership, and environmental swarm presentation.",
+          "sourceBoundary": "Battle runtime admits the authored Insect Plague area-hazard shape, area choice, Concentration effect, Difficult Terrain and Lightly Obscured projections, Constitution Saving Throw outcomes, Piercing save-for-half damage, slot scaling, and once-per-turn save ledger using caller/table supplied area-membership trigger facts. The table/spatial layer remains the owner of automatic Sphere geometry, route derivation, area membership, and environmental swarm presentation. Focused QNT semantics and QNT-connected parity remain unassessed.",
           "taskRefs": [
             "L19E-03-L5-ACTIVE-AREA-HAZARD"
           ],
@@ -39277,7 +39501,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -39623,7 +39847,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -39842,7 +40067,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -39940,7 +40165,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -40818,7 +41043,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -40867,7 +41093,8 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -41262,7 +41489,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -41510,7 +41738,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -41559,7 +41788,8 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -41621,7 +41851,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -41670,7 +41901,8 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -42124,7 +42356,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -42173,7 +42406,8 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -42576,7 +42810,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -42722,7 +42956,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -42771,7 +43006,8 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -42840,7 +43076,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -42936,7 +43173,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-hit-point-lifecycle-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -42983,7 +43220,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -43475,7 +43713,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -43524,7 +43763,8 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -43701,7 +43941,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -43750,7 +43991,8 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -43844,7 +44086,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -43893,7 +44136,8 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -44002,7 +44246,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -44105,7 +44349,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -44293,7 +44538,16 @@
           "id": "spell.invocation-moonbeam-movable-zone",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt"
+            "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-facts.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -44309,12 +44563,24 @@
           "title": "Spell invocation creates and moves a Moonbeam Cylinder with table-supplied area witnesses",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-            },
-            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-moonbeam.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-lifecycle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-damage-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-turn-end-tests.qnt"
             }
           ]
         }
@@ -44567,7 +44833,6 @@
           "id": "spell.reaction-shield",
           "profileKind": "reaction",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
             "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
           ],
           "runtimeOwners": [
@@ -44651,7 +44916,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -44711,7 +44976,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -44817,7 +45083,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-held-weapon-override-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -44915,7 +45181,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -45096,7 +45362,7 @@
           "id": "spell.invocation-sleet-storm-area-hazard",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -45119,7 +45385,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-sleet-storm-area-hazard-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -45324,7 +45590,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -45793,7 +46059,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -45863,7 +46129,7 @@
           "id": "spell.invocation-spike-growth-movement-hazard",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -45883,7 +46149,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard-tests.qnt"
             },
             {
               "kind": "focused-mbt",
@@ -46176,7 +46442,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -46271,7 +46538,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -46538,7 +46805,8 @@
           "id": "spell.invocation-damage-save-or-attack",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -46869,7 +47137,7 @@
           "id": "spell.invocation-web-restraint-hazard",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-ground-command.qnt"
+            "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -46889,16 +47157,20 @@
           "title": "Spell invocation creates a Web area hazard with table-triggered restraint, movement, and obscurement projections",
           "verificationOwners": [
             {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt"
-            },
-            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/web-restraint-hazard.mbt.test.ts"
             },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-web-restraint-hazard.test.ts"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-lifecycle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-recurring-save-tests.qnt"
             }
           ]
         }

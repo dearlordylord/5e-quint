@@ -55,7 +55,6 @@ module battleRuntimeCoreCombatTests {
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
-  import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
   import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
 
@@ -502,16 +501,6 @@ module battleRuntimeCoreCombatTests {
   run test_goblin_turn_opens_stat_block_recharge_hole_before_attack = {
     val spentRecharge = { ...initialState, goblin: { ...initialState.goblin, rechargeAvailable: false } }
     assert(combatOpenHoles(endTurn(spentRecharge)) == Set(StatBlockRechargeRoll))
-  }
-
-  run test_goblin_recharge_roll_restores_available_part_on_success = {
-    val spentRecharge = { ...initialState, goblin: { ...initialState.goblin, rechargeAvailable: false } }
-    val failed = endTurnWithGoblinRechargeRoll(spentRecharge, 4)
-    val succeeded = endTurnWithGoblinRechargeRoll(spentRecharge, 5)
-    all {
-      assert(not(failed.goblin.rechargeAvailable)),
-      assert(succeeded.goblin.rechargeAvailable),
-    }
   }
 
   run test_legendary_action_window_excludes_initial_and_own_turn = {

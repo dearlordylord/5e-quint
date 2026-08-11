@@ -891,6 +891,16 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       spellCasterId,
       spellTargetId,
     );
+    expect(
+      requireResultHole(
+        resolveBattleSubject({
+          state: session.state,
+          subject: act.subject,
+          fills: [targetFill],
+        }),
+        "abilityChoice",
+      ),
+    ).toEqual(abilityHole);
     const abilityFill = abilityChoiceFill(abilityHole, "wis");
     const needsSave = resolveBattleSubject({
       state: session.state,

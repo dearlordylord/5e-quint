@@ -2,6 +2,13 @@ const {
   rulesKernelProfileKinds,
 } = require("./unit-profile-coverage-config.cjs");
 
+const profileSemanticOwnerPolicies = Object.freeze([
+  "shared-semantic-core",
+  "profile-local-semantic-core",
+]);
+const profileSemanticOwnerPolicySet = new Set(profileSemanticOwnerPolicies);
+const defaultProfileSemanticOwnerPolicy = "shared-semantic-core";
+
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
   if (value && typeof value === "object") {
@@ -51,10 +58,14 @@ function buildProfileObligationMap(profileObligations) {
     const current = groups.get(row.profileId) ?? {
       followUpTaskIds: [],
       obligationIds: [],
+      semanticOwnerPolicy: defaultProfileSemanticOwnerPolicy,
     };
     current.obligationIds.push(...(row.obligationIds ?? []));
     current.followUpTaskIds.push(...(row.followUpTaskIds ?? []));
     if (row.reason !== undefined) current.reason = row.reason;
+    if (row.semanticOwnerPolicy !== undefined) {
+      current.semanticOwnerPolicy = row.semanticOwnerPolicy;
+    }
     groups.set(row.profileId, current);
     return groups;
   }, new Map());
@@ -63,15 +74,21 @@ function buildProfileObligationMap(profileObligations) {
 function profileJoinStatus(
   obligationIds,
   obligationsById,
+  profileQntOwners,
+  semanticOwnerPolicy,
   qntOwnerRolesByPath,
 ) {
   if (obligationIds.length === 0) return "unmapped";
+  const profileQntOwnerPaths = new Set(profileQntOwners);
   return obligationIds.every((obligationId) => {
     const obligation = obligationsById.get(obligationId);
     return (
       obligation?.status === "covered" &&
       (obligation.qntOwners ?? []).some(
-        (ownerPath) => qntOwnerRolesByPath.get(ownerPath) === "semantic-core",
+        (ownerPath) =>
+          (semanticOwnerPolicy !== "profile-local-semantic-core" ||
+            profileQntOwnerPaths.has(ownerPath)) &&
+          qntOwnerRolesByPath.get(ownerPath) === "semantic-core",
       )
     );
   })
@@ -98,6 +115,7 @@ function buildRulesKernelProfileJoin({
       const mapping = obligationIdsByProfile.get(profile.id) ?? {
         followUpTaskIds: [],
         obligationIds: [],
+        semanticOwnerPolicy: defaultProfileSemanticOwnerPolicy,
       };
       const obligationIds = uniqueSorted(mapping.obligationIds);
       const obligationRows = obligationIds.map((obligationId) => {
@@ -120,9 +138,14 @@ function buildRulesKernelProfileJoin({
           ? { followUpTaskIds: uniqueSorted(mapping.followUpTaskIds) }
           : {}),
         ...(mapping.reason !== undefined ? { gapReason: mapping.reason } : {}),
+        ...(mapping.semanticOwnerPolicy !== defaultProfileSemanticOwnerPolicy
+          ? { semanticOwnerPolicy: mapping.semanticOwnerPolicy }
+          : {}),
         joinStatus: profileJoinStatus(
           obligationIds,
           obligationsById,
+          profile.qntOwners ?? [],
+          mapping.semanticOwnerPolicy,
           qntOwnerRolesByPath,
         ),
         obligations: obligationRows,
@@ -137,7 +160,7 @@ function buildRulesKernelProfileJoin({
         "plans/rules-kernel-coverage/profile-obligations.jsonl",
     },
     denominatorRule:
-      "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; covered joins require every mapped obligation to have a semantic-core QNT owner",
+      "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; profile-local-semantic-core mappings require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     profileKinds: Array.from(rulesKernelProfileKinds).sort(),
     metrics: {
       rulesKernelProfileJoinCoverage: countCoverage(mapped.length, rows.length),
@@ -201,5 +224,7 @@ module.exports = {
   buildRulesKernelSupportedUnitJoin,
   isRulesKernelProfile,
   isRulesKernelProfileKind,
+  profileSemanticOwnerPolicies,
+  profileSemanticOwnerPolicySet,
   rulesKernelUnitJoin,
 };

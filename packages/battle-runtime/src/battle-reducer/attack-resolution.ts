@@ -41,25 +41,19 @@ import {
 import { difficultyClass } from "@dnd/shared/types";
 
 import { Match } from "effect";
-import {
-  characterProcedureBinding,
-  type CharacterUnitProcedureExecution,
-} from "../character-execution-queries.ts";
-import type {
-  BattleProcedureExecutionRef,
-  BattleResourcePoolExecutionRef,
-} from "../identity.ts";
+import type { BattleProcedureExecutionRef } from "../identity.ts";
 
 import * as Either from "effect/Either";
 
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 
-import { type BattleSubject } from "../battle-subjects.ts";
-
 import {
-  resourceHasUsesRemaining,
-  spendCharacterResourceUse,
-} from "../character-battle-resource-execution.ts";
+  type ActionHideSubject,
+  type BattleSubject,
+  type BonusActionStandardActionSubject,
+} from "../battle-subjects.ts";
+
+import { spendCharacterResourceUse } from "../character-battle-resource-execution.ts";
 
 import { CombatantId } from "../identity.ts";
 
@@ -89,7 +83,6 @@ import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-f
 import {
   battleCreatureStateWithKnockOutPreservedConditions,
   combatantCanTakeActions,
-  isCharacterBattleCreatureState,
 } from "./creature-state-execution.ts";
 
 import {
@@ -158,9 +151,11 @@ import {
   statBlockAttackProcedureSection,
   updateStatBlockActorResources,
 } from "./statblock.ts";
-import {
-  statBlockProcedureBinding,
-  statBlockProcedureResourcesAvailable,
+import { statBlockProcedureResourcesAvailable } from "../stat-block-execution-state.ts";
+import type {
+  StatBlockBonusActionOptionProcedure,
+  StatBlockMultiattackProcedure,
+  StatBlockProcedureBindingFor,
 } from "../stat-block-execution-state.ts";
 
 import type {
@@ -188,7 +183,6 @@ import type {
   EscapeGrappleBattleResolutionInput,
   EscapeSpellRestraintBattleResolutionInput,
   GrappleBattleResolutionInput,
-  HideBattleResolutionInput,
   MultiattackBattleResolutionInput,
   SearchBattleResolutionInput,
   ShoveBattleResolutionInput,
@@ -198,10 +192,12 @@ import type {
   StatBlockBonusActionOptionBattleResolutionInput,
   WeaponDamageDiceRollChoiceFill,
 } from "../battle-state-execution.ts";
+import type { CharacterBattleUseCountResourceState } from "../character-battle-resource-execution.ts";
 import type {
   GrappleFillSet,
   ShoveFillSet,
   StatBlockMultiattackActionResource,
+  SupportedStatBlockBonusActionStandardAction,
 } from "./battle-runtime-protocol.ts";
 import {
   ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
@@ -222,9 +218,7 @@ import {
 } from "./battle-runtime-protocol.ts";
 import {
   actorHasClassFeatureExtraAttackActionResource,
-  isStatBlockBattleCreatureState,
   spendTurnAction,
-  supportedStatBlockBonusActionStandardAction,
 } from "./battle-discovery.ts";
 import {
   isStatBlockMultiattackActionResource,
@@ -238,6 +232,55 @@ import {
   helpAttackTargetHole,
 } from "./help-attack.ts";
 import { zeroHpLifecycleIsTerminal } from "./creature-state-leaves.ts";
+
+type BonusActionStandardActionResolverInputBase =
+  BonusActionStandardActionBattleResolutionInput & {
+    readonly actor: CharacterBattleCreatureState;
+  };
+
+type BonusActionStandardActionDashResolverInput =
+  BonusActionStandardActionResolverInputBase & {
+    readonly subject: BonusActionStandardActionSubject & {
+      readonly action: "dash";
+    };
+    readonly dashTemporaryHitPoints:
+      | { readonly kind: "notGranted" }
+      | {
+          readonly kind: "available";
+          readonly resource: CharacterBattleUseCountResourceState;
+        }
+      | { readonly kind: "unavailable" };
+  };
+
+type BonusActionStandardActionDisengageResolverInput =
+  BonusActionStandardActionResolverInputBase & {
+    readonly subject: BonusActionStandardActionSubject & {
+      readonly action: "disengage";
+    };
+  };
+
+type BonusActionStandardActionHideResolverInput =
+  BonusActionStandardActionResolverInputBase & {
+    readonly subject: BonusActionStandardActionSubject & {
+      readonly action: "hide";
+    };
+  };
+
+type MultiattackResolverInput = Omit<
+  MultiattackBattleResolutionInput,
+  "fills"
+> & {
+  readonly fills: readonly [];
+  readonly actor: StatBlockBattleCreatureState;
+  readonly multiattackBinding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>;
+};
+
+type StatBlockBonusActionOptionResolverInput =
+  StatBlockBonusActionOptionBattleResolutionInput & {
+    readonly actor: StatBlockBattleCreatureState;
+    readonly optionBinding: StatBlockProcedureBindingFor<StatBlockBonusActionOptionProcedure>;
+    readonly standardAction: SupportedStatBlockBonusActionStandardAction;
+  };
 export function needsAttackDamageConcentrationResult(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
@@ -353,105 +396,8 @@ export function resolveDisengage(
   };
 }
 
-function bonusActionStandardActionProcedure(
-  actor: BattleCreatureState | undefined,
-  subject: BonusActionStandardActionBattleResolutionInput["subject"],
-):
-  | { readonly kind: "spell" }
-  | { readonly kind: "staleSpell" }
-  | {
-      readonly kind: "unit";
-      readonly actor: CharacterBattleCreatureState;
-      readonly procedure: CharacterUnitProcedureExecution;
-    }
-  | undefined {
-  if (!isCharacterBattleCreatureState(actor)) return undefined;
-  const binding = characterProcedureBinding(
-    actor.origin.execution,
-    subject.procedureRef,
-  );
-  if (
-    binding?.procedure.kind === "spellInvocation" &&
-    binding.procedure.execution.procedure === "expeditiousRetreatDash"
-  ) {
-    return "sourceEffectRef" in subject &&
-      actor.activeEffects.some(
-        (effect) =>
-          effect.kind === "spellDashBonusAction" &&
-          effect.effectRef === subject.sourceEffectRef &&
-          effect.sourceProcedureRef === subject.procedureRef &&
-          effect.sourceCombatantId === actor.combatantId,
-      )
-      ? { kind: "spell" }
-      : { kind: "staleSpell" };
-  }
-  if (
-    binding?.procedure.kind !== "unitFeature" &&
-    binding?.procedure.kind !== "unitSupportProfile"
-  ) {
-    return undefined;
-  }
-  return { kind: "unit", actor, procedure: binding.procedure };
-}
-
-export function resolveBonusActionStandardAction(
-  input: BonusActionStandardActionBattleResolutionInput,
-): BattleResolutionResult {
-  const actor = input.state.combatants.get(input.subject.actorId);
-  const procedure = bonusActionStandardActionProcedure(actor, input.subject);
-  if (procedure?.kind === "staleSpell") {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "The spell effect that granted this Bonus Action is no longer active.",
-    );
-  }
-  if (
-    (procedure?.kind !== "unit" ||
-      typeof procedure.procedure.execution !== "object" ||
-      procedure.procedure.execution.kind !== "alternateActionCost" ||
-      procedure.procedure.execution.to.kind !== "bonusAction" ||
-      !procedure.procedure.execution.from.actions.includes(
-        input.subject.action,
-      )) &&
-    (input.subject.action !== "dash" ||
-      (procedure?.kind !== "spell" &&
-        (procedure?.kind !== "unit" ||
-          typeof procedure.procedure.execution !== "object" ||
-          procedure.procedure.execution.kind !==
-            "bonusActionDashTemporaryHitPoints")))
-  ) {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Bonus Action standard action requires an admitted alternate action cost feature.",
-    );
-  }
-
-  return Match.value(input.subject).pipe(
-    Match.when({ action: "dash" }, (subject) =>
-      resolveBonusActionDash({ ...input, subject }),
-    ),
-    Match.when({ action: "disengage" }, (subject) =>
-      resolveBonusActionDisengage({ ...input, subject }),
-    ),
-    Match.when({ action: "hide" }, (subject) =>
-      resolveHide({ ...input, subject }),
-    ),
-    Match.exhaustive,
-  );
-}
-
 export function resolveBonusActionDash(
-  input: BattleResolutionInputForSubject<
-    Extract<
-      BattleSubject,
-      {
-        readonly tag: "bonusActionStandardAction";
-        readonly action: "dash";
-      }
-    >
-  >,
+  input: BonusActionStandardActionDashResolverInput,
 ): BattleResolutionResult {
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
@@ -459,23 +405,7 @@ export function resolveBonusActionDash(
     return invalidResult(input.state, "invalidFill", "Dash accepts no fills.");
   }
   /* v8 ignore stop */
-  const actor = input.state.combatants.get(input.subject.actorId);
-  /* v8 ignore start -- Defensive internal guard: the dispatcher derives the current actor from the combatant map, so its current-actor gate rejects an absent Bonus Action Dash actor before routing here. */
-  if (actor === undefined) {
-    return invalidResult(
-      input.state,
-      "missingCombatant",
-      "Dash actor is not in this battle.",
-    );
-  }
-  /* v8 ignore stop */
-  const procedure = bonusActionStandardActionProcedure(actor, input.subject);
-  const dashTemporaryHitPointsProcedure =
-    procedure?.kind === "unit" &&
-    typeof procedure.procedure.execution === "object" &&
-    procedure.procedure.execution.kind === "bonusActionDashTemporaryHitPoints"
-      ? procedure
-      : null;
+  const actor = input.actor;
   const speedKind = input.subject.speedKind;
   if (!representedMovementSpeedKinds(actor).includes(speedKind)) {
     return invalidResult(
@@ -484,30 +414,28 @@ export function resolveBonusActionDash(
       "Dash speed kind is not represented for this combatant.",
     );
   }
-  const dashTemporaryHitPoints =
-    dashTemporaryHitPointsProcedure === null ||
-    dashTemporaryHitPointsProcedure.procedure.source.kind !== "resourcePool"
-      ? null
-      : {
-          actor: dashTemporaryHitPointsProcedure.actor,
-          resourcePoolRef:
-            dashTemporaryHitPointsProcedure.procedure.source.resourcePoolRef,
-        };
-  if (
-    dashTemporaryHitPointsProcedure !== null &&
-    (dashTemporaryHitPoints === null ||
-      !dashTemporaryHitPoints.actor.origin.resources.some(
-        (resource) =>
-          resource.resourcePoolRef === dashTemporaryHitPoints.resourcePoolRef &&
-          resourceHasUsesRemaining(resource),
-      ))
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Bonus Action Dash Temporary Hit Points is no longer available.",
-    );
-  }
+  return Match.value(input.dashTemporaryHitPoints).pipe(
+    Match.when({ kind: "unavailable" }, () =>
+      invalidResult(
+        input.state,
+        "staleSubject",
+        "Bonus Action Dash Temporary Hit Points is no longer available.",
+      ),
+    ),
+    Match.when({ kind: "notGranted" }, () =>
+      resolveAdmittedBonusActionDash(input, null),
+    ),
+    Match.when({ kind: "available" }, ({ resource }) =>
+      resolveAdmittedBonusActionDash(input, resource),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function resolveAdmittedBonusActionDash(
+  input: BonusActionStandardActionDashResolverInput,
+  temporaryHitPointsResource: CharacterBattleUseCountResourceState | null,
+): BattleResolutionResult {
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
@@ -522,15 +450,15 @@ export function resolveBonusActionDash(
   /* v8 ignore stop */
   const nextState = applyDashToActor(
     input.state,
-    actor,
-    speedKind,
+    input.actor,
+    input.subject.speedKind,
     spent.right,
   );
-  if (dashTemporaryHitPoints !== null) {
+  if (temporaryHitPointsResource !== null) {
     return resolveBonusActionDashTemporaryHitPoints(
       nextState,
-      dashTemporaryHitPoints.actor,
-      dashTemporaryHitPoints.resourcePoolRef,
+      input.actor,
+      temporaryHitPointsResource,
     );
   }
   return {
@@ -540,10 +468,10 @@ export function resolveBonusActionDash(
   };
 }
 
-export function resolveBonusActionDashTemporaryHitPoints(
+function resolveBonusActionDashTemporaryHitPoints(
   dashedState: BattleState,
   actor: CharacterBattleCreatureState,
-  resourcePoolRef: BattleResourcePoolExecutionRef,
+  resource: CharacterBattleUseCountResourceState,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
   const nextActor = applyTemporaryHitPoints(
     {
@@ -551,9 +479,8 @@ export function resolveBonusActionDashTemporaryHitPoints(
       origin: {
         ...actor.origin,
         resources: actor.origin.resources.map((candidate) =>
-          candidate.resourcePoolRef === resourcePoolRef &&
-          resourceHasUsesRemaining(candidate)
-            ? spendCharacterResourceUse(candidate)
+          candidate.resourcePoolRef === resource.resourcePoolRef
+            ? spendCharacterResourceUse(resource)
             : candidate,
         ),
       },
@@ -575,11 +502,7 @@ export function resolveBonusActionDashTemporaryHitPoints(
 }
 
 export function resolveBonusActionDisengage(
-  input: BattleResolutionInputForSubject<
-    Extract<BattleSubject, { readonly tag: "bonusActionStandardAction" }> & {
-      readonly action: "disengage";
-    }
-  >,
+  input: BonusActionStandardActionDisengageResolverInput,
 ): BattleResolutionResult {
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.fills.length > 0) {
@@ -951,9 +874,14 @@ export function resolveShakeAwakeFromHypnoticPattern(
 }
 
 export function resolveHide(
-  input: HideBattleResolutionInput,
+  input:
+    | BattleResolutionInputForSubject<ActionHideSubject>
+    | BonusActionStandardActionHideResolverInput,
 ): BattleResolutionResult {
-  const actor = input.state.combatants.get(input.subject.actorId);
+  const actor =
+    "actor" in input
+      ? input.actor
+      : input.state.combatants.get(input.subject.actorId);
   /* v8 ignore start -- Defensive internal guard: dispatcher combatant and action-eligibility admission rejects a missing or ineligible actor before routing Hide here. */
   if (actor === undefined || !combatantCanTakeActions(actor)) {
     return invalidResult(
@@ -963,26 +891,6 @@ export function resolveHide(
     );
   }
   /* v8 ignore stop */
-  const bonusActionProcedure =
-    input.subject.tag === "bonusActionStandardAction"
-      ? bonusActionStandardActionProcedure(actor, input.subject)
-      : undefined;
-  if (
-    input.subject.tag === "bonusActionStandardAction" &&
-    (bonusActionProcedure?.kind !== "unit" ||
-      bonusActionProcedure.procedure.kind !== "unitSupportProfile" ||
-      typeof bonusActionProcedure.procedure.execution !== "object" ||
-      bonusActionProcedure.procedure.execution.kind !== "alternateActionCost" ||
-      !bonusActionProcedure.procedure.execution.from.actions.includes(
-        input.subject.action,
-      ))
-  ) {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Bonus Action Hide requires an admitted alternate action cost feature.",
-    );
-  }
   if (!canHideInCurrentCircumstances(input.state, input.subject.actorId)) {
     return invalidResult(
       input.state,
@@ -1045,41 +953,11 @@ export function resolveHide(
 }
 
 export function resolveMultiattack(
-  input: MultiattackBattleResolutionInput,
+  input: MultiattackResolverInput,
 ): BattleResolutionResult {
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (input.fills.length > 0) {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Multiattack accepts no fills.",
-    );
-  }
-  /* v8 ignore stop */
-  const actor = input.state.combatants.get(input.subject.actorId);
-  if (
-    !isStatBlockBattleCreatureState(actor) ||
-    !combatantCanTakeActions(actor)
-  ) {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Multiattack requires an admitted Stat Block Multiattack.",
-    );
-  }
+  const actor = input.actor;
   const origin = actor.origin;
-  const multiattackBinding = statBlockProcedureBinding(
-    origin.execution,
-    input.subject.procedureRef,
-  );
-  if (multiattackBinding?.procedure.kind !== "multiattack") {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Multiattack requires an admitted Stat Block Multiattack.",
-    );
-  }
+  const multiattackBinding = input.multiattackBinding;
   if (
     !multiattackBinding.procedure.dispatchProcedureRefs.every((procedureRef) =>
       statBlockProcedureResourcesAvailable(origin.execution, procedureRef),
@@ -1228,59 +1106,11 @@ export function resolveSearch(
 }
 
 export function resolveStatBlockBonusActionOption(
-  input: StatBlockBonusActionOptionBattleResolutionInput,
+  input: StatBlockBonusActionOptionResolverInput,
 ): BattleResolutionResult {
-  const actor = input.state.combatants.get(input.subject.actorId);
-  if (
-    !isStatBlockBattleCreatureState(actor) ||
-    !combatantCanTakeActions(actor)
-  ) {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Stat Block Bonus Action requires an admitted Stat Block action option.",
-    );
-  }
-  const statBlockActor = actor;
-  const origin = statBlockActor.origin;
-  const optionBinding = statBlockProcedureBinding(
-    origin.execution,
-    input.subject.procedureRef,
-  );
-  if (
-    optionBinding?.procedure.kind !== "bonusActionOption" ||
-    !optionBinding.procedure.standardActions.some(
-      (standardAction) => standardAction === input.subject.standardAction,
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Stat Block Bonus Action requires an admitted Stat Block action option.",
-    );
-  }
-  if (
-    !statBlockProcedureResourcesAvailable(
-      origin.execution,
-      optionBinding.procedureRef,
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Stat Block Bonus Action resource is no longer available.",
-    );
-  }
-  if (
-    !supportedStatBlockBonusActionStandardAction(input.subject.standardAction)
-  ) {
-    return invalidResult(
-      input.state,
-      "unsupportedActOption",
-      "Stat Block Bonus Action requires an admitted standard action option.",
-    );
-  }
-  const standardAction = input.subject.standardAction;
+  const statBlockActor = input.actor;
+  const optionBinding = input.optionBinding;
+  const standardAction = input.standardAction;
 
   return Match.value(standardAction).pipe(
     Match.when("disengage", () =>
@@ -1744,7 +1574,7 @@ export function resolveEscapeSpellRestraint(
     );
   }
   /* v8 ignore start -- Discovered-subject invariant: the effect reference comes from a restraint effect whose immutable escape procedure is an Ability Check. */
-  if (effect.escape?.kind !== "abilityCheck") {
+  if (!isAbilityCheckSpellConditionEffect(effect)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1845,11 +1675,8 @@ export function resolveEscapeSpellRestraint(
 function resolveSuccessfulEscapeSpellRestraint(
   state: BattleState,
   targetId: CombatantId,
-  effect: Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>,
+  effect: AbilityCheckSpellConditionEffect,
 ): BattleState {
-  if (effect.escape?.kind !== "abilityCheck") {
-    return removeSpellConditionEffect(state, targetId, effect);
-  }
   return Match.value(effect.escape.successEnds).pipe(
     Match.when("condition", () =>
       removeSpellConditionEffect(state, targetId, effect),
@@ -1859,6 +1686,22 @@ function resolveSuccessfulEscapeSpellRestraint(
     ),
     Match.exhaustive,
   );
+}
+
+type AbilityCheckSpellConditionEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellCondition" }
+> & {
+  readonly escape: Extract<
+    Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>["escape"],
+    { readonly kind: "abilityCheck" }
+  >;
+};
+
+function isAbilityCheckSpellConditionEffect(
+  effect: Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>,
+): effect is AbilityCheckSpellConditionEffect {
+  return effect.escape?.kind === "abilityCheck";
 }
 
 function spellRestraintEscapeActorWithinTargetReach(

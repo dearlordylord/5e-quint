@@ -40,7 +40,7 @@ import {
 } from "../battle-action-options.ts";
 import {
   resourceHasUsesRemaining,
-  type CharacterBattleResourceState,
+  type CharacterBattleUseCountResourceState,
 } from "../character-battle-resource-execution.ts";
 import { ongoingSpellEffectSuppressedByAntimagicField } from "./antimagic-field-suppression.ts";
 import { ongoingFeatureEnemyRelationshipDecisionRequired } from "./attack-roll.ts";
@@ -1049,7 +1049,7 @@ export function bonusActionDashTemporaryHitPointsProfilesForActor(
     UnitFeatureProcedureExecution | UnitSupportProcedureExecution,
     { readonly kind: "bonusActionDashTemporaryHitPoints" }
   >;
-  readonly resource: CharacterBattleResourceState;
+  readonly resource: CharacterBattleUseCountResourceState;
 }[] {
   if (combatant?.origin.kind !== "character") {
     return [];

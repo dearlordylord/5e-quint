@@ -32,17 +32,9 @@
 module battleRuntimeMoonbeamMovableZone {
   import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
   import battleRuntimeShapeShifting.* from "./battle-runtime-shape-shifting"
+  import battleRuntimeMoonbeamFacts.* from "./battle-runtime-moonbeam-facts"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
-  import spellSaveGate.* from "../shared-algebras/proofs/rule-core/spell-save-gate"
   import spellSlotExpenditure.* from "../shared-algebras/proofs/rule-core/spell-slot-expenditure"
-
-  pure val moonbeamDurationTicks: int = 10
-  pure val moonbeamRadiusFeet: int = 5
-  pure val moonbeamHeightFeet: int = 40
-  pure val moonbeamRepositionMaxMoveFeet: int = 60
-  pure val moonbeamMinimumSlotLevel: int = 2
-  pure val moonbeamBaseDamageDice: int = 2
-  pure val moonbeamDamageDieSize: int = 10
 
   type MoonbeamSaveTrigger =
     | MoonbeamAppearsInArea
@@ -76,15 +68,6 @@ module battleRuntimeMoonbeamMovableZone {
     savingThrowSucceeded: bool,
     rolledDamage: int,
     moveFeet: int,
-  }
-
-  pure def moonbeamDamageDice(slotLevel: int): int =
-    moonbeamBaseDamageDice + (slotLevel - moonbeamMinimumSlotLevel)
-
-  pure def moonbeamDamageAfterSave(rolledDamage: int, savingThrowSucceeded: bool): int = {
-    val branch = spellSaveGateBranch(savingThrowSucceeded)
-    val damageResult = spellSaveGateDamageResult(branch, SpellSaveGateHalfDamageOnSuccess)
-    spellSaveGateDamageAmount(rolledDamage, damageResult)
   }
 
   pure def moonbeamDamageRollAccepted(rolledDamage: int, damageDice: int): bool =

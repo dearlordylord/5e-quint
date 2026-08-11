@@ -1,4 +1,3 @@
-import { optionalProperty } from "./optional-property.ts";
 import {
   AbilityModifier,
   NonNegativeInteger,
@@ -419,15 +418,6 @@ function bookOfShadowsOnPersonAccesses(
   );
 }
 
-export function characterBattleInvocationSpellAccessInitIssue(
-  invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessInit[],
-): string | null {
-  const parsed = parseCharacterBattleInvocationSpellAccesses(
-    invocationSpellAccesses,
-  );
-  return parsed.tag === "issue" ? parsed.message : null;
-}
-
 /* v8 ignore start -- Malformed ritual-access initialization: admitted spellbook entries are unique, leveled ritual spells carrying their typed spellbook-Ritual facts. */
 export function characterBattleSpellbookRitualSpellAccessInitIssue(
   spellbookRitualSpellAccesses: readonly CharacterBattleSpellbookRitualSpellAccessInit[],
@@ -507,21 +497,19 @@ export function characterResourceState(
   resourcePoolRef: BattleResourcePoolExecutionRef,
 ): CharacterBattleResourceState {
   const initIssue = characterBattleResourceInitIssue(input, classLevels);
+  /* v8 ignore start -- Resource admission runs this constructor only after the same initialization issue check at the battle boundary. */
   if (initIssue !== null) {
     throw new Error(initIssue);
   }
+  /* v8 ignore stop */
   const resource = characterBattleResourceForUnit(input.unit);
   const base = { resourcePoolRef };
   if (resource.kind === "point_pool") {
-    const defaultPointsRemaining = characterBattleResourceMaxPoints({
-      unit: input.unit,
-      classLevels,
-    });
-    if (defaultPointsRemaining === undefined) {
-      throw new Error(
-        "Point-pool character battle resource requires a finite cap.",
-      );
-    }
+    const defaultPointsRemaining = supportedResourceCapForLevel(
+      resource,
+      characterBattleResourceLevel(input.unit, classLevels),
+      input.capAbilityModifier,
+    );
     return {
       ...base,
       resource,
@@ -538,9 +526,6 @@ export function characterResourceState(
   if (activationResourceIsUnlimited(resource)) {
     return { ...useCountBase, resource };
   }
-  if (!activationResourceIsLimited(resource)) {
-    throw new Error("Character battle resource has an unsupported cap shape.");
-  }
   if (input.usesRemaining !== undefined) {
     return {
       ...useCountBase,
@@ -548,14 +533,11 @@ export function characterResourceState(
       usesRemaining: resourceCount(input.usesRemaining),
     };
   }
-  const defaultUsesRemaining = characterBattleResourceMaxUses({
-    unit: input.unit,
-    classLevels,
-    ...optionalProperty("capAbilityModifier", input.capAbilityModifier),
-  });
-  if (defaultUsesRemaining === undefined) {
-    throw new Error("Limited character battle resource requires a finite cap.");
-  }
+  const defaultUsesRemaining = supportedResourceCapForLevel(
+    resource,
+    characterBattleResourceLevel(input.unit, classLevels),
+    input.capAbilityModifier,
+  );
   return {
     ...useCountBase,
     resource,
@@ -574,9 +556,6 @@ export function characterBattleResourceMaxUses(input: {
   }
   if (activationResourceIsUnlimited(resource)) {
     return undefined;
-  }
-  if (!activationResourceIsLimited(resource)) {
-    throw new Error("Character battle resource has an unsupported cap shape.");
   }
   return supportedResourceCapForLevel(
     resource,
@@ -751,12 +730,7 @@ function characterBattleResourceForUnitOrNull(
   }
   const zeroHitPointReplacement = zeroHitPointReplacementUnitProfile(unit);
   if (zeroHitPointReplacement !== null) {
-    return activationResourceIsSupportedByBattleForUnit(
-      unit,
-      zeroHitPointReplacement.resource,
-    )
-      ? zeroHitPointReplacement.resource
-      : null;
+    return zeroHitPointReplacement.resource;
   }
   if (
     unit.kind === "species_trait" &&
@@ -766,9 +740,12 @@ function characterBattleResourceForUnitOrNull(
   ) {
     const resource = unit.mechanics.resource;
     if (resource !== undefined) {
-      return activationResourceIsSupportedByBattleForUnit(unit, resource)
-        ? resource
-        : null;
+      if (!activationResourceIsSupportedByBattleForUnit(unit, resource)) {
+        /* v8 ignore start -- Both admitted species-resource profiles require a use-count resource with a proficiency-bonus cap, so this support predicate is established by the profile guards above. */
+        return null;
+        /* v8 ignore stop */
+      }
+      return resource;
     }
   }
   if (
@@ -846,12 +823,6 @@ function activationResourceIsUnlimited(
   resource: ActivationResource,
 ): resource is UnlimitedActivationResource {
   return resource.kind === "use_count" && resource.cap.kind === "unlimited";
-}
-
-function activationResourceIsLimited(
-  resource: CharacterBattleActivationResource,
-): resource is LimitedUseCountActivationResource {
-  return !activationResourceIsUnlimited(resource);
 }
 
 function activationResourceIsSupportedByBattle(
@@ -935,16 +906,13 @@ function admittedSpellWithFreeCastRefs(
   };
 }
 
-export function characterSpellcastingState(
-  input: CharacterBattleSpellcastingStateInit,
-  classLevels: readonly CharacterBattleClassLevel[],
+export function characterSpellcastingStateInitIssue(
+  input: CharacterBattleSpellcastingInit,
   spellAccessUnits: readonly (
     | CharacterBattleResourceInit
     | CharacterBattleFeatureInit
   )[],
-  resources: readonly CharacterBattleResourceState[],
-  resourceOwnership: readonly CharacterBattleResourceOwnership[],
-): CharacterBattleSpellcastingState {
+): string | null {
   const spellSlotLevels = new Set<number>();
   for (const slot of input.spellSlots) {
     if (
@@ -954,47 +922,41 @@ export function characterSpellcastingState(
       !Number.isInteger(slot.count) ||
       slot.count < 0
     ) {
-      throw new Error(
-        "Spell Slot level must be 1-9 and count must be a non-negative integer.",
-      );
+      return "Spell Slot level must be 1-9 and count must be a non-negative integer.";
     }
     if (spellSlotLevels.has(slot.spellLevel)) {
-      throw new Error("Spell Slot levels must be unique.");
+      return "Spell Slot levels must be unique.";
     }
     spellSlotLevels.add(slot.spellLevel);
   }
 
-  const spellSlotExpenditures =
-    input.spellSlotExpenditures ??
-    input.spellSlots.map((slot) => ({
-      spellLevel: slot.spellLevel,
-      expended: resourceCount(0),
-    }));
-  if (spellSlotExpenditures.length !== input.spellSlots.length) {
-    throw new Error("Spell Slot expenditure state must match slot capacity.");
-  }
-  const expenditureLevels = new Set<number>();
-  for (const expenditure of spellSlotExpenditures) {
-    const capacity = input.spellSlots.find(
-      (slot) => slot.spellLevel === expenditure.spellLevel,
-    );
-    if (
-      capacity === undefined ||
-      expenditureLevels.has(expenditure.spellLevel)
-    ) {
-      throw new Error("Spell Slot expenditure state must match slot capacity.");
+  const spellSlotExpenditures = input.spellSlotExpenditures;
+  if (spellSlotExpenditures !== undefined) {
+    if (spellSlotExpenditures.length !== input.spellSlots.length) {
+      return "Spell Slot expenditure state must match slot capacity.";
     }
-    expenditureLevels.add(expenditure.spellLevel);
-    if (
-      !Number.isInteger(expenditure.expended) ||
-      expenditure.expended < 0 ||
-      expenditure.expended > capacity.count
-    ) {
-      throw new Error(
-        "Spell Slot expenditure must be an integer between zero and count.",
+    const expenditureLevels = new Set<number>();
+    for (const expenditure of spellSlotExpenditures) {
+      const capacity = input.spellSlots.find(
+        (slot) => slot.spellLevel === expenditure.spellLevel,
       );
+      if (
+        capacity === undefined ||
+        expenditureLevels.has(expenditure.spellLevel)
+      ) {
+        return "Spell Slot expenditure state must match slot capacity.";
+      }
+      expenditureLevels.add(expenditure.spellLevel);
+      if (
+        !Number.isInteger(expenditure.expended) ||
+        expenditure.expended < 0 ||
+        expenditure.expended > capacity.count
+      ) {
+        return "Spell Slot expenditure must be an integer between zero and count.";
+      }
     }
   }
+
   for (const featureSpell of input.featurePreparedSpells) {
     if (
       !spellAccessUnits.some((source) =>
@@ -1005,11 +967,24 @@ export function characterSpellcastingState(
         ),
       )
     ) {
-      throw new Error(
-        "Feature-prepared spells must trace to a character Unit grant.",
-      );
+      return "Feature-prepared spells must trace to a character Unit grant.";
     }
   }
+  return null;
+}
+
+export function characterSpellcastingState(
+  input: CharacterBattleSpellcastingStateInit,
+  classLevels: readonly CharacterBattleClassLevel[],
+  resources: readonly CharacterBattleResourceState[],
+  resourceOwnership: readonly CharacterBattleResourceOwnership[],
+): CharacterBattleSpellcastingState {
+  const spellSlotExpenditures =
+    input.spellSlotExpenditures ??
+    input.spellSlots.map((slot) => ({
+      spellLevel: slot.spellLevel,
+      expended: resourceCount(0),
+    }));
   return {
     sourceClassName: spellcastingSourceClassName(
       input.sourceClassName,
@@ -1030,17 +1005,19 @@ export function characterSpellcastingState(
       admittedSpellWithFreeCastRefs(spell, resources, resourceOwnership),
     ),
     spellbookRitualSpellAccesses: input.spellbookRitualSpellAccesses,
-    bookOfShadowsSpellAccesses: input.bookOfShadowsSpellAccesses ?? [],
+    bookOfShadowsSpellAccesses: input.bookOfShadowsSpellAccesses,
     invocationSpellAccesses: input.invocationSpellAccesses,
     spellSlots: input.spellSlots.map((slot) => {
       const expenditure = spellSlotExpenditures.find(
         (candidate) => candidate.spellLevel === slot.spellLevel,
       );
+      /* v8 ignore start -- The preceding length, membership, and uniqueness checks establish an expenditure for every admitted slot. */
       if (expenditure === undefined) {
         throw new Error(
           "Spell Slot expenditure state must match slot capacity.",
         );
       }
+      /* v8 ignore stop */
       return {
         spellLevel: spellSlotLevel(slot.spellLevel),
         count: resourceCount(slot.count),
@@ -1142,6 +1119,7 @@ function spellcastingSourceClassName(
   ) {
     return sourceClassName;
   }
+  /* v8 ignore next -- Character spellcasting admission checks the source class against the admitted class-level set before state projection. */
   throw new Error(
     "Battle spellcasting source class must match a character class level.",
   );

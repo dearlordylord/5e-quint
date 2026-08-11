@@ -3,7 +3,7 @@ import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-suppor
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SPIRITUAL-WEAPON-PERSISTENT-ATTACK-RUNTIME spiritual_weapon
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-spiritual-weapon-attack-proxy
-// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY
 import { describe, expect, test } from "vitest";
 import {
   requireCharacterSpellProcedureRefForTest,

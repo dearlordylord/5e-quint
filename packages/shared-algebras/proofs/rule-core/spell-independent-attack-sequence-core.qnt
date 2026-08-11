@@ -1,5 +1,5 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 
 module spellIndependentAttackSequenceCore {
   import damageComponentAdjustments.* from "./damage-component-adjustments"

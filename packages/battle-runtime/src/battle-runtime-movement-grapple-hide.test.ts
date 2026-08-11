@@ -2159,6 +2159,99 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     ]);
   });
 
+  test("Grapple and Shove reject duplicate fills from their discovered holes", () => {
+    const state = fighterVsGoblinBattle();
+    const grappleSubject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "grapple",
+    };
+    const grappleTarget = requireHole(
+      resolveBattleSubject({ state, subject: grappleSubject, fills: [] }),
+      "targetChoice",
+    );
+    const grappleTargetFill = targetFill(grappleTarget, goblinId);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: grappleSubject,
+        fills: [grappleTargetFill, grappleTargetFill],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Grapple target was filled twice.",
+    });
+    const grappleOutcome = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: grappleSubject,
+        fills: [grappleTargetFill],
+      }),
+      "grappleOutcome",
+    );
+    const grappleOutcomeFillValue = grappleOutcomeFill(grappleOutcome, false);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: grappleSubject,
+        fills: [
+          grappleTargetFill,
+          grappleOutcomeFillValue,
+          grappleOutcomeFillValue,
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Grapple outcome was filled twice.",
+    });
+
+    const shoveSubject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "shove",
+    };
+    const shoveTarget = requireHole(
+      resolveBattleSubject({ state, subject: shoveSubject, fills: [] }),
+      "targetChoice",
+    );
+    const shoveTargetFill = targetFill(shoveTarget, goblinId);
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: shoveSubject,
+        fills: [shoveTargetFill, shoveTargetFill],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Shove target was filled twice.",
+    });
+    const shoveOutcome = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: shoveSubject,
+        fills: [shoveTargetFill],
+      }),
+      "shoveOutcome",
+    );
+    const shoveOutcomeFillValue = shoveOutcomeFill(shoveOutcome, {
+      succeeded: true,
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: shoveSubject,
+        fills: [shoveTargetFill, shoveOutcomeFillValue, shoveOutcomeFillValue],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Shove outcome was filled twice.",
+    });
+  });
+
   test("Grapple admission requires a free hand, size limit, and failed save", () => {
     const grappleSubject: BattleSubject = {
       tag: "action",
@@ -3128,6 +3221,36 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       ]),
     );
     expect(found.state.combatants.get(fighterId)?.hidden).toBeNull();
+  });
+
+  test("Hide rejects a duplicate ability-check fill from its discovered hole", () => {
+    const state = fighterVsGoblinBattle({
+      hidePrerequisites: hidePrerequisites([
+        [fighterId, { kind: "heavilyObscuredOutOfEnemyLineOfSight" }],
+      ]),
+    });
+    const subject: BattleSubject = {
+      tag: "action",
+      actorId: fighterId,
+      action: "hide",
+    };
+    const act = findAct(state, subject);
+    const check = abilityCheckFill(
+      findHole(act.initialHoles, "abilityCheck"),
+      18,
+    );
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [check, check],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Hide check was filled twice.",
+    });
   });
 
   test("Hide is unavailable without the RAW obscured/cover and sight prerequisite", () => {

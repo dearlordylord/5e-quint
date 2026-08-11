@@ -107,7 +107,7 @@ export type {
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hide-action-obscurement-permission
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
-// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.STAT_BLOCK.ATTACK_CONTROL BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
+// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.STAT_BLOCK.ATTACK_CONTROL BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE BATTLE.SPELL.READIED_RESPONSE_PROCEDURE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE BATTLE.SPELL.REACTION_CASTING_TIME
@@ -207,6 +207,7 @@ import type {
   CharacterBattleInvocationFeature,
   BattleWalkSpeed,
   CharacterBattleLoadoutRef,
+  HeldWeaponLoadoutSlot,
 } from "./character-creature-execution-facts.ts";
 import type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
 import type { BattlePositiveHpUnconscious } from "./positive-hp-unconscious.ts";
@@ -234,6 +235,7 @@ import {
   type BattleInterruptAttackExecutionSelection,
   type BattleMovementSpeedKind,
   type BattleSubject,
+  type BonusActionStandardActionSubject,
   type SpellInvocationRef,
   type MonkFocusFlurryOfBlowsStrikeSubject,
 } from "./battle-subjects.ts";
@@ -249,6 +251,7 @@ import type {
   CharacterExecutionState,
   CharacterProcedureBindingSnapshot,
   UnitFeatureProcedureExecution,
+  UnitSupportProcedureExecution,
 } from "./character-execution-vocabulary.ts";
 import type {
   SpellExecutableExecutionOf,
@@ -2955,6 +2958,7 @@ export type WeaponAttackOverrideSpellInvocation = {
   readonly procedure: "weaponAttackOverride";
   readonly spell: BattleSpellAdmissionSource;
   readonly actionCost: "bonusAction";
+  readonly attachedWeaponSlot: HeldWeaponLoadoutSlot;
   readonly attachedWeapon: {
     readonly attack: BoundCharacterWeaponAttackActionOption;
   };
@@ -6528,6 +6532,77 @@ type UnitFeatureSubject = Extract<
   BattleSubject,
   { readonly tag: "unitFeature" }
 >;
+type BonusActionStandardActionAdmissionFacts =
+  | {
+      readonly admissionKind: "bonusActionStandardActionRejection";
+      readonly subject: BonusActionStandardActionSubject;
+      readonly bonusActionStandardActionRejection: {
+        readonly reason: "staleSubject" | "unsupportedActOption";
+        readonly message: string;
+      };
+    }
+  | {
+      readonly admissionKind: "bonusActionStandardAction";
+      readonly subject: Extract<
+        BonusActionStandardActionSubject,
+        { readonly action: "dash" }
+      >;
+      readonly bonusActionStandardActionAdmission: {
+        readonly actor: CharacterBattleCreatureState;
+        readonly procedure: { readonly kind: "expeditiousRetreatDash" };
+      };
+    }
+  | {
+      readonly admissionKind: "bonusActionStandardAction";
+      readonly subject: BonusActionStandardActionSubject;
+      readonly bonusActionStandardActionAdmission: {
+        readonly actor: CharacterBattleCreatureState;
+        readonly procedure: {
+          readonly kind: "supportedAlternateActionCost";
+          readonly procedure: Extract<
+            CharacterUnitProcedureExecution,
+            { readonly kind: "unitSupportProfile" }
+          > & {
+            readonly execution: Extract<
+              UnitSupportProcedureExecution,
+              { readonly kind: "alternateActionCost" }
+            >;
+          };
+        };
+      };
+    }
+  | {
+      readonly admissionKind: "bonusActionStandardAction";
+      readonly subject: Extract<
+        BonusActionStandardActionSubject,
+        { readonly action: "dash" }
+      >;
+      readonly bonusActionStandardActionAdmission: {
+        readonly actor: CharacterBattleCreatureState;
+        readonly procedure: {
+          readonly kind: "dashTemporaryHitPoints";
+          readonly procedure:
+            | (Extract<
+                CharacterUnitProcedureExecution,
+                { readonly kind: "unitFeature" }
+              > & {
+                readonly execution: Extract<
+                  UnitFeatureProcedureExecution,
+                  { readonly kind: "bonusActionDashTemporaryHitPoints" }
+                >;
+              })
+            | (Extract<
+                CharacterUnitProcedureExecution,
+                { readonly kind: "unitSupportProfile" }
+              > & {
+                readonly execution: Extract<
+                  UnitSupportProcedureExecution,
+                  { readonly kind: "bonusActionDashTemporaryHitPoints" }
+                >;
+              });
+        };
+      };
+    };
 type UnitFeatureAdmissionFacts = {
   readonly admissionKind: "unitFeature";
   readonly unitFeatureAdmission: {
@@ -6555,6 +6630,17 @@ type DruidWildShapeAdmissionFacts = {
     };
   };
 };
+type AdmittedBonusActionStandardActionMember<
+  TInput extends BattleResolutionInput,
+  TFacts extends BonusActionStandardActionAdmissionFacts =
+    BonusActionStandardActionAdmissionFacts,
+> = TFacts extends BonusActionStandardActionAdmissionFacts
+  ? Omit<TInput, "subject"> &
+      AdmittedBattleResolutionBrand &
+      TFacts & {
+        readonly subject: Extract<TInput["subject"], TFacts["subject"]>;
+      }
+  : never;
 export type AdmittedBattleResolutionInputFor<
   TInput extends BattleResolutionInput,
 > = TInput extends BattleResolutionInput
@@ -6563,7 +6649,12 @@ export type AdmittedBattleResolutionInputFor<
 
 type AdmittedBattleResolutionInputMember<TInput extends BattleResolutionInput> =
   | ([
-      Exclude<TInput["subject"], DruidWildShapeSubject | UnitFeatureSubject>,
+      Exclude<
+        TInput["subject"],
+        | BonusActionStandardActionSubject
+        | DruidWildShapeSubject
+        | UnitFeatureSubject
+      >,
     ] extends [never]
       ? never
       : Omit<TInput, "subject"> &
@@ -6571,7 +6662,9 @@ type AdmittedBattleResolutionInputMember<TInput extends BattleResolutionInput> =
             readonly admissionKind: "general";
             readonly subject: Exclude<
               TInput["subject"],
-              DruidWildShapeSubject | UnitFeatureSubject
+              | BonusActionStandardActionSubject
+              | DruidWildShapeSubject
+              | UnitFeatureSubject
             >;
           })
   | ([Extract<TInput["subject"], UnitFeatureSubject>] extends [never]
@@ -6587,9 +6680,23 @@ type AdmittedBattleResolutionInputMember<TInput extends BattleResolutionInput> =
           AdmittedBattleResolutionBrand &
           DruidWildShapeAdmissionFacts & {
             readonly subject: Extract<TInput["subject"], DruidWildShapeSubject>;
-          });
+          })
+  | ([Extract<TInput["subject"], BonusActionStandardActionSubject>] extends [
+      never,
+    ]
+      ? never
+      : AdmittedBonusActionStandardActionMember<TInput>);
 export type AdmittedBattleResolutionInput =
   AdmittedBattleResolutionInputFor<BattleResolutionInput>;
+export type AdmittedBonusActionStandardActionBattleResolutionInput = Extract<
+  AdmittedBattleResolutionInput,
+  { readonly admissionKind: "bonusActionStandardAction" }
+>;
+export type AdmittedBonusActionStandardActionRejectionBattleResolutionInput =
+  Extract<
+    AdmittedBattleResolutionInput,
+    { readonly admissionKind: "bonusActionStandardActionRejection" }
+  >;
 export type BattleInterruptRouteOptions =
   | {
       readonly replayingInterruptedProcedure?: never;

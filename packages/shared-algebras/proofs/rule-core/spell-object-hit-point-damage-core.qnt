@@ -1,5 +1,5 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.READIED_RESPONSE_PROCEDURE
 
 module spellObjectHitPointDamageCore {
   // RAW anchors:

@@ -1,5 +1,5 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE
 
 module spellInvocationActionSlotCore {
   import spellDefinitionProfiles.* from "./spell-definition-profiles"

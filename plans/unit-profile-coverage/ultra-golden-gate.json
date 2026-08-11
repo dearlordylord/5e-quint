@@ -79,12 +79,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 39,
-              "numerator": 39
+              "denominator": 40,
+              "numerator": 40
             },
             "qntCoveredObligations": {
-              "denominator": 46,
-              "numerator": 46
+              "denominator": 47,
+              "numerator": 47
             }
           },
           "generatorBlockingRows": [],
@@ -96,12 +96,12 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 46,
-              "numerator": 46
+              "denominator": 47,
+              "numerator": 47
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 5,
-              "focused-mbt": 55,
+              "focused-mbt": 56,
               "runtime-test": 14
             }
           },
@@ -257,7 +257,6 @@
       ],
       "scopedObligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
-        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -267,6 +266,7 @@
         "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
         "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
         "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
         "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
@@ -276,12 +276,13 @@
         "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.HIT_POINT_RESTORATION",
         "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
         "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
         "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
         "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
         "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
         "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
         "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
@@ -352,12 +353,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 40,
-              "numerator": 40
+              "denominator": 41,
+              "numerator": 41
             },
             "qntCoveredObligations": {
-              "denominator": 49,
-              "numerator": 49
+              "denominator": 50,
+              "numerator": 50
             }
           },
           "generatorBlockingRows": [],
@@ -369,12 +370,12 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 49,
-              "numerator": 49
+              "denominator": 50,
+              "numerator": 50
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 8,
-              "focused-mbt": 55,
+              "focused-mbt": 56,
               "runtime-test": 14
             }
           },
@@ -530,7 +531,6 @@
       ],
       "scopedObligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
-        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -540,6 +540,7 @@
         "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
         "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
         "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
         "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
@@ -549,12 +550,13 @@
         "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.HIT_POINT_RESTORATION",
         "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
         "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
         "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
         "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
         "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
         "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
         "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
@@ -628,12 +630,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 59,
-              "numerator": 59
+              "denominator": 62,
+              "numerator": 62
             },
             "qntCoveredObligations": {
-              "denominator": 70,
-              "numerator": 70
+              "denominator": 73,
+              "numerator": 73
             }
           },
           "generatorBlockingRows": [],
@@ -645,13 +647,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 70,
-              "numerator": 70
+              "denominator": 73,
+              "numerator": 73
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 74,
-              "runtime-test": 22
+              "focused-mbt": 78,
+              "runtime-test": 23
             }
           },
           "id": "mbt-parity-evidence",
@@ -763,6 +765,7 @@
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
         "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
         "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
         "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
@@ -777,16 +780,17 @@
         "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.HIT_POINT_RESTORATION",
         "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
         "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
         "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
         "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
         "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
         "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
         "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
         "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
         "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
         "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
@@ -796,6 +800,7 @@
         "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+        "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
         "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
@@ -867,12 +872,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 59,
-              "numerator": 59
+              "denominator": 62,
+              "numerator": 62
             },
             "qntCoveredObligations": {
-              "denominator": 70,
-              "numerator": 70
+              "denominator": 73,
+              "numerator": 73
             }
           },
           "generatorBlockingRows": [],
@@ -884,13 +889,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 70,
-              "numerator": 70
+              "denominator": 73,
+              "numerator": 73
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 74,
-              "runtime-test": 22
+              "focused-mbt": 78,
+              "runtime-test": 23
             }
           },
           "id": "mbt-parity-evidence",
@@ -1002,6 +1007,7 @@
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
         "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
         "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
         "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
@@ -1016,16 +1022,17 @@
         "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.HIT_POINT_RESTORATION",
         "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
         "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
         "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
         "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
         "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
         "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
         "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
         "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
         "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
         "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
@@ -1035,6 +1042,7 @@
         "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+        "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
         "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
@@ -1106,12 +1114,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 60,
-              "numerator": 60
+              "denominator": 63,
+              "numerator": 63
             },
             "qntCoveredObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 76,
+              "numerator": 76
             }
           },
           "generatorBlockingRows": [],
@@ -1123,13 +1131,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 76,
+              "numerator": 76
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 76,
-              "runtime-test": 25
+              "focused-mbt": 80,
+              "runtime-test": 26
             }
           },
           "id": "mbt-parity-evidence",
@@ -1241,6 +1249,7 @@
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
         "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
         "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
         "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
@@ -1257,16 +1266,17 @@
         "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.HIT_POINT_RESTORATION",
         "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
         "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
         "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
         "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
         "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
         "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
         "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
         "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
         "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
         "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
@@ -1277,6 +1287,7 @@
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+        "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
         "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
@@ -1348,12 +1359,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 60,
-              "numerator": 60
+              "denominator": 63,
+              "numerator": 63
             },
             "qntCoveredObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 76,
+              "numerator": 76
             }
           },
           "generatorBlockingRows": [],
@@ -1365,13 +1376,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 76,
+              "numerator": 76
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 76,
-              "runtime-test": 25
+              "focused-mbt": 80,
+              "runtime-test": 26
             }
           },
           "id": "mbt-parity-evidence",
@@ -1483,6 +1494,7 @@
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
         "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
         "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
         "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
@@ -1499,16 +1511,17 @@
         "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.HIT_POINT_RESTORATION",
         "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
         "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
         "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
         "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
         "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
         "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
         "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
         "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
         "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
         "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
@@ -1519,6 +1532,7 @@
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+        "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
         "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
@@ -1590,12 +1604,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 60,
-              "numerator": 60
+              "denominator": 63,
+              "numerator": 63
             },
             "qntCoveredObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 76,
+              "numerator": 76
             }
           },
           "generatorBlockingRows": [],
@@ -1607,13 +1621,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 76,
+              "numerator": 76
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 76,
-              "runtime-test": 25
+              "focused-mbt": 80,
+              "runtime-test": 26
             }
           },
           "id": "mbt-parity-evidence",
@@ -1725,6 +1739,7 @@
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
         "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
         "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
         "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
@@ -1741,16 +1756,17 @@
         "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.HIT_POINT_RESTORATION",
         "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
         "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
         "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
         "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
         "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
         "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
         "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
         "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
         "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
         "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
@@ -1761,6 +1777,7 @@
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+        "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
         "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
@@ -1832,12 +1849,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 60,
-              "numerator": 60
+              "denominator": 63,
+              "numerator": 63
             },
             "qntCoveredObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 76,
+              "numerator": 76
             }
           },
           "generatorBlockingRows": [],
@@ -1849,13 +1866,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 76,
+              "numerator": 76
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 76,
-              "runtime-test": 25
+              "focused-mbt": 80,
+              "runtime-test": 26
             }
           },
           "id": "mbt-parity-evidence",
@@ -1967,6 +1984,7 @@
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
         "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
         "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
         "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
@@ -1983,16 +2001,17 @@
         "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.HIT_POINT_RESTORATION",
         "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
         "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
         "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
         "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
         "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
         "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
         "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
         "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
         "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
         "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
@@ -2003,6 +2022,7 @@
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+        "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
         "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
@@ -2074,12 +2094,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 60,
-              "numerator": 60
+              "denominator": 63,
+              "numerator": 63
             },
             "qntCoveredObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 76,
+              "numerator": 76
             }
           },
           "generatorBlockingRows": [],
@@ -2091,13 +2111,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 76,
+              "numerator": 76
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 76,
-              "runtime-test": 25
+              "focused-mbt": 80,
+              "runtime-test": 26
             }
           },
           "id": "mbt-parity-evidence",
@@ -2197,6 +2217,7 @@
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
         "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
         "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
         "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
@@ -2213,16 +2234,17 @@
         "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.HIT_POINT_RESTORATION",
         "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
         "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
         "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
         "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
         "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
         "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
         "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
         "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
         "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
         "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
@@ -2233,6 +2255,7 @@
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+        "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
         "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
@@ -2304,12 +2327,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 60,
-              "numerator": 60
+              "denominator": 63,
+              "numerator": 63
             },
             "qntCoveredObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 76,
+              "numerator": 76
             }
           },
           "generatorBlockingRows": [],
@@ -2321,13 +2344,13 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 76,
+              "numerator": 76
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 76,
-              "runtime-test": 25
+              "focused-mbt": 80,
+              "runtime-test": 26
             }
           },
           "id": "mbt-parity-evidence",
@@ -2427,6 +2450,7 @@
         "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
         "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
         "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
         "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
@@ -2443,16 +2467,17 @@
         "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.HIT_POINT_RESTORATION",
         "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
         "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
         "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
         "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
         "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
         "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
         "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
         "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
         "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
         "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
         "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
@@ -2463,6 +2488,7 @@
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+        "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY",
         "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
         "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",

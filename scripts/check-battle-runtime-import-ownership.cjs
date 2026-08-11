@@ -9,10 +9,10 @@ const ts = require("typescript");
 const ROOT = path.resolve(__dirname, "..");
 const BATTLE_RUNTIME_SRC = "packages/battle-runtime/src";
 
-const EXECUTION_ROOT_DIRECTORIES = [
+const EXECUTION_ENTRY_POINT_DIRECTORIES = [
   `${BATTLE_RUNTIME_SRC}/procedure-execution`,
 ];
-const EXECUTION_ROOT_FILES = [
+const EXECUTION_ENTRY_POINT_FILES = [
   `${BATTLE_RUNTIME_SRC}/character-execution.ts`,
   `${BATTLE_RUNTIME_SRC}/active-effect/codecs.ts`,
   `${BATTLE_RUNTIME_SRC}/active-effect/types.ts`,
@@ -61,7 +61,7 @@ function isAuthoredSurfaceSymbol(name) {
   );
 }
 
-const PROTECTED_EXECUTION_SHAPES = new Map([
+const EXECUTION_SHAPE_FORBIDDEN_FIELDS = new Map([
   [
     "CharacterWeaponAttackExecutionWeapon",
     new Set([
@@ -75,7 +75,7 @@ const PROTECTED_EXECUTION_SHAPES = new Map([
   ],
 ]);
 
-function protectedExecutionShapeLaundering(file) {
+function executionShapeLaundering(file) {
   const source = fs.readFileSync(file, "utf8");
   const sourceFile = ts.createSourceFile(
     file,
@@ -90,7 +90,7 @@ function protectedExecutionShapeLaundering(file) {
       ts.isTypeAliasDeclaration(statement)
         ? statement.name.text
         : undefined;
-    const forbiddenFields = PROTECTED_EXECUTION_SHAPES.get(shapeName);
+    const forbiddenFields = EXECUTION_SHAPE_FORBIDDEN_FIELDS.get(shapeName);
     if (forbiddenFields === undefined) continue;
     const members = ts.isInterfaceDeclaration(statement)
       ? statement.members
@@ -197,39 +197,39 @@ function isRepoLocalSpecifier(specifier) {
   );
 }
 
-function executionRoots() {
-  const declaredFiles = EXECUTION_ROOT_FILES.map(normalizedRepoPath);
-  assertDeclaredRootsExist(declaredFiles);
+function executionEntryPoints() {
+  const declaredFiles = EXECUTION_ENTRY_POINT_FILES.map(normalizedRepoPath);
+  assertDeclaredEntryPointsExist(declaredFiles);
   return [
-    ...declaredDirectoryRoots(
-      EXECUTION_ROOT_DIRECTORIES.map(normalizedRepoPath),
+    ...declaredDirectoryEntryPoints(
+      EXECUTION_ENTRY_POINT_DIRECTORIES.map(normalizedRepoPath),
     ),
     ...declaredFiles,
   ].sort();
 }
 
-function declaredDirectoryRoots(directories) {
+function declaredDirectoryEntryPoints(directories) {
   return directories.flatMap((directory) => {
     if (!fs.existsSync(directory) || !fs.statSync(directory).isDirectory()) {
       throw new Error(
-        `Declared battle-runtime execution root directory does not exist: ${toRepoPath(directory)}`,
+        `Directory of declared battle-runtime execution entry points does not exist: ${toRepoPath(directory)}`,
       );
     }
-    const roots = listTypeScriptFiles(directory);
-    if (roots.length === 0) {
+    const entryPoints = listTypeScriptFiles(directory);
+    if (entryPoints.length === 0) {
       throw new Error(
-        `Declared battle-runtime execution root directory has no TypeScript roots: ${toRepoPath(directory)}`,
+        `Directory of declared battle-runtime execution entry points has no TypeScript files: ${toRepoPath(directory)}`,
       );
     }
-    return roots;
+    return entryPoints;
   });
 }
 
-function assertDeclaredRootsExist(files) {
+function assertDeclaredEntryPointsExist(files) {
   const missing = files.filter((file) => !fs.existsSync(file));
   if (missing.length > 0) {
     throw new Error(
-      `Declared battle-runtime execution root(s) do not exist:\n${missing
+      `Declared battle-runtime execution entry points do not exist:\n${missing
         .map(toRepoPath)
         .join("\n")}`,
     );
@@ -344,7 +344,7 @@ function compilerOptions() {
 }
 
 function importGraph(
-  roots,
+  entryPoints,
   repositoryRoot = ROOT,
   options = compilerOptions(),
 ) {
@@ -354,7 +354,7 @@ function importGraph(
     options,
   );
   const graph = new Map();
-  const pending = [...roots];
+  const pending = [...entryPoints];
   while (pending.length > 0) {
     const file = pending.pop();
     if (graph.has(file)) continue;
@@ -431,7 +431,7 @@ function rejectOpaqueModuleLoading(file, source) {
           !ts.isStringLiteralLike(node.arguments[0]))
       ) {
         throw new Error(
-          `Opaque module loading is not allowed in a protected execution closure: ${toRepoPath(file)}.`,
+          `Opaque module loading is not allowed in an execution entry point's reachable import closure: ${toRepoPath(file)}.`,
         );
       }
     }
@@ -440,9 +440,9 @@ function rejectOpaqueModuleLoading(file, source) {
   visit(sourceFile);
 }
 
-function shortestForbiddenPath(graph, root, classifyForbidden) {
-  const queue = [[root]];
-  const visited = new Set([root]);
+function shortestForbiddenPath(graph, entryPoint, classifyForbidden) {
+  const queue = [[entryPoint]];
+  const visited = new Set([entryPoint]);
   while (queue.length > 0) {
     const candidatePath = queue.shift();
     const current = candidatePath[candidatePath.length - 1];
@@ -459,9 +459,9 @@ function shortestForbiddenPath(graph, root, classifyForbidden) {
   return undefined;
 }
 
-function reachableFiles(graph, roots) {
-  const reachable = new Set(roots);
-  const queue = [...roots];
+function reachableFiles(graph, entryPoints) {
+  const reachable = new Set(entryPoints);
+  const queue = [...entryPoints];
   while (queue.length > 0) {
     const current = queue.shift();
     for (const dependency of graph.get(current) ?? []) {
@@ -532,7 +532,7 @@ function spellExecutionBoundaryViolations(graph) {
       ? { zone: "spell execution composition" }
       : undefined,
   );
-  const protectedReducerRoot = normalizedRepoPath(
+  const executionReducerDirectory = normalizedRepoPath(
     `${BATTLE_RUNTIME_SRC}/battle-reducer`,
   );
   const canonicalRegistry = normalizedRepoPath(
@@ -541,7 +541,7 @@ function spellExecutionBoundaryViolations(graph) {
   const directResolutionViolations = [
     ...reachableFiles(graph, [dispatcher, glyphDispatcher]),
   ]
-    .filter((file) => isWithin(file, protectedReducerRoot))
+    .filter((file) => isWithin(file, executionReducerDirectory))
     .flatMap((file) => directResolveCalls(file))
     .filter(
       (violation) =>
@@ -583,8 +583,11 @@ function runSelfTests() {
     1,
   );
   assert.throws(
-    () => assertDeclaredRootsExist([path.join(ROOT, "missing-root.ts")]),
-    /Declared battle-runtime execution root\(s\) do not exist/,
+    () =>
+      assertDeclaredEntryPointsExist([
+        path.join(ROOT, "missing-entry-point.ts"),
+      ]),
+    /Declared battle-runtime execution entry points do not exist/,
   );
   const graph = new Map([
     ["execution", ["long-a", "short-helper"]],
@@ -609,12 +612,12 @@ function runSelfTests() {
   );
   try {
     assert.throws(
-      () => declaredDirectoryRoots([path.join(fixtureRoot, "missing")]),
-      /execution root directory does not exist/,
+      () => declaredDirectoryEntryPoints([path.join(fixtureRoot, "missing")]),
+      /execution entry points does not exist/,
     );
     assert.throws(
-      () => declaredDirectoryRoots([fixtureRoot]),
-      /execution root directory has no TypeScript roots/,
+      () => declaredDirectoryEntryPoints([fixtureRoot]),
+      /execution entry points has no TypeScript files/,
     );
     const fixtureExecution = path.join(fixtureRoot, "execution.ts");
     const fixtureHelper = path.join(fixtureRoot, "helper.ts");
@@ -661,14 +664,14 @@ function runSelfTests() {
       fixtureLaundered,
       "export type CharacterWeaponAttackExecutionWeapon = { readonly name: string; readonly usage: 'melee' };\n",
     );
-    assert.deepEqual(protectedExecutionShapeLaundering(fixtureLaundered), [
+    assert.deepEqual(executionShapeLaundering(fixtureLaundered), [
       { shapeName: "CharacterWeaponAttackExecutionWeapon", field: "name" },
     ]);
     fs.writeFileSync(
       fixtureLaundered,
       "export type CharacterWeaponAttackExecutionWeapon = { readonly weaponUnitId: string; readonly usage: 'melee' };\n",
     );
-    assert.deepEqual(protectedExecutionShapeLaundering(fixtureLaundered), []);
+    assert.deepEqual(executionShapeLaundering(fixtureLaundered), []);
     fs.writeFileSync(
       fixtureAuthored,
       'import type { AuthoredSpellSource, AuthoredUnitSource } from "@dnd/surface/surface/types";\nexport type Fixture = AuthoredSpellSource | AuthoredUnitSource;\n',
@@ -782,7 +785,7 @@ function runSelfTests() {
         { length: shortLength + extraLength },
         (_, index) => `long-${index}`,
       );
-      generatedGraph.set("root", [longPath[0], shortPath[0]]);
+      generatedGraph.set("entry-point", [longPath[0], shortPath[0]]);
       for (const branch of [shortPath, longPath]) {
         branch.forEach((node, index) => {
           generatedGraph.set(
@@ -793,7 +796,11 @@ function runSelfTests() {
           );
         });
       }
-      const result = shortestForbiddenPath(generatedGraph, "root", classify);
+      const result = shortestForbiddenPath(
+        generatedGraph,
+        "entry-point",
+        classify,
+      );
       assert.equal(result?.path.length, shortLength + 2);
       assert.equal(result?.path.at(-1), "forbidden-short-0");
     }
@@ -842,9 +849,9 @@ function runSelfTests() {
   }
 }
 
-function formatViolation(root, violation) {
+function formatViolation(entryPoint, violation) {
   return [
-    `${toRepoPath(root)} reaches ${violation.forbidden.zone} owner ${toRepoPath(
+    `${toRepoPath(entryPoint)} reaches ${violation.forbidden.zone} owner ${toRepoPath(
       violation.path[violation.path.length - 1],
     )}:`,
     ...violation.path.map(
@@ -853,37 +860,41 @@ function formatViolation(root, violation) {
   ].join("\n");
 }
 
-function checkRoots(roots, failOnViolation, forbiddenZones = [undefined]) {
+function checkEntryPoints(
+  entryPoints,
+  failOnViolation,
+  forbiddenZones = [undefined],
+) {
   const startedAt = process.hrtime.bigint();
-  const graph = importGraph(roots);
-  const violations = roots.flatMap((root) =>
+  const graph = importGraph(entryPoints);
+  const violations = entryPoints.flatMap((entryPoint) =>
     forbiddenZones.flatMap((zone) => {
-      const violation = shortestForbiddenPath(graph, root, (file) =>
+      const violation = shortestForbiddenPath(graph, entryPoint, (file) =>
         forbiddenOwner(file, zone),
       );
-      return violation === undefined ? [] : [{ root, violation }];
+      return violation === undefined ? [] : [{ entryPoint, violation }];
     }),
   );
   const launderingViolations = [...graph.keys()].flatMap((file) =>
-    protectedExecutionShapeLaundering(file).map((violation) => ({
+    executionShapeLaundering(file).map((violation) => ({
       file,
       ...violation,
     })),
   );
   const spellExecutionViolations = spellExecutionBoundaryViolations(graph);
   const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
-  for (const { root, violation } of violations) {
-    console.error(formatViolation(root, violation));
+  for (const { entryPoint, violation } of violations) {
+    console.error(formatViolation(entryPoint, violation));
   }
   for (const violation of launderingViolations) {
     console.error(
-      `${toRepoPath(violation.file)} launders forbidden field ${violation.field} into protected execution shape ${violation.shapeName}.`,
+      `${toRepoPath(violation.file)} launders forbidden field ${violation.field} into execution shape ${violation.shapeName}.`,
     );
   }
   if (spellExecutionViolations.compositionPath !== undefined) {
     console.error(
       formatViolation(
-        dispatcherRoot(),
+        dispatcherEntryPoint(),
         spellExecutionViolations.compositionPath,
       ),
     );
@@ -894,7 +905,7 @@ function checkRoots(roots, failOnViolation, forbiddenZones = [undefined]) {
     );
   }
   console.log(
-    `Battle-runtime import ownership: ${roots.length} root(s), ${graph.size} transitive module(s), ${elapsedMs.toFixed(1)}ms.`,
+    `Battle-runtime import ownership: ${entryPoints.length} execution entry points, ${graph.size} modules in the reachable import closure, ${elapsedMs.toFixed(1)}ms.`,
   );
   if (
     failOnViolation &&
@@ -908,7 +919,7 @@ function checkRoots(roots, failOnViolation, forbiddenZones = [undefined]) {
   return violations;
 }
 
-function dispatcherRoot() {
+function dispatcherEntryPoint() {
   return normalizedRepoPath(
     `${BATTLE_RUNTIME_SRC}/battle-reducer/dispatcher.ts`,
   );
@@ -931,11 +942,13 @@ if (cliArguments.length > 1) {
 runSelfTests();
 
 if (cliArguments.includes("--self-test")) {
-  console.log("Battle-runtime import ownership synthetic tests passed.");
+  console.log(
+    "Battle-runtime import ownership synthetic tests passed: reachable import closure traversal and shortest violation paths.",
+  );
 } else {
-  const roots = executionRoots();
-  if (roots.length === 0) {
-    throw new Error("No battle-runtime procedure-execution roots were found.");
+  const entryPoints = executionEntryPoints();
+  if (entryPoints.length === 0) {
+    throw new Error("No battle-runtime execution entry points were found.");
   }
-  checkRoots(roots, true);
+  checkEntryPoints(entryPoints, true);
 }

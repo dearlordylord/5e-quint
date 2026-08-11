@@ -2,16 +2,12 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
 
 module battleRuntimeTurnAdvancement {
+  import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
-  import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"
-  import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
-  import battleRuntimeFeatureTurnEndEffects.* from "./battle-runtime-feature-turn-end-effects"
+  import battleRuntimeFighterOngoingFeatureLifecycle.* from "./battle-runtime-fighter-ongoing-feature-lifecycle"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
-  import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
 
   pure def endTurn(state: BattleState): BattleState = {
     val featureChecked = normalizeFighterEarlyEndedOngoingFeatures(expireFighterEndOfTurnOngoingFeatures(expireEndOfTurnSpellEffects(state)))
@@ -55,7 +51,9 @@ module battleRuntimeTurnAdvancement {
         readiedSpellHeld: if (spellDurationAdvanced.fighter.readiedSpellHeld and nextActor == Fighter) false else spellDurationAdvanced.fighter.readiedSpellHeld,
         readiedMovementHeld: if (nextActor == Fighter) nextActorStep.readiedMovementHeld else spellDurationAdvanced.fighter.readiedMovementHeld,
         sneakAttackUsedThisTurn: false,
-        extraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterEndTurn(spellDurationAdvanced.fighter.extraAttackSlotsRemaining),
+        // Extra Attack grants attacks only within the current Attack action;
+        // unspent slots cannot cross the canonical End Turn boundary.
+        extraAttackSlotsRemaining: NoAdditionalAttacks,
         cleaveExtraAttackUsedThisTurn: false,
       },
       goblin: {
@@ -68,20 +66,4 @@ module battleRuntimeTurnAdvancement {
     }
   }
 
-  pure def endTurnWithGoblinRechargeRoll(state: BattleState, roll: int): BattleState = {
-    val advanced = endTurn(state)
-    if (currentActor(advanced) == Goblin and not(advanced.goblin.rechargeAvailable))
-      { ...advanced, goblin: { ...advanced.goblin, rechargeAvailable: battleRuntimeRechargeAvailableAfterRoll(advanced.goblin.rechargeAvailable, 5, roll) } }
-    else
-      advanced
-  }
-
-  pure def endTurnWithDeathSave(state: BattleState, deathSaveRoll: int): BattleState = {
-    val advanced = endTurn(state)
-
-    if (currentActor(advanced) == Fighter)
-      { ...advanced, fighter: applyStartTurnDeathSave(advanced.fighter, deathSaveRoll) }
-    else
-      advanced
-  }
 }

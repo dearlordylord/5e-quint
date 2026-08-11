@@ -3,7 +3,7 @@ import { ongoingConcentrationAreaSpellFacts } from "../ongoing-concentration-are
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 //
 // Cloudkill-shaped hazard: action-time Spell Slot casting creates a
 // caster-owned Concentration Sphere. The runtime owns Spell Slot spending,

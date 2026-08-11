@@ -453,7 +453,12 @@ export function relentlessEnduranceBattle(input: {
 }
 
 export function adrenalineRushBattle(
-  input: { readonly tempHp?: number; readonly usesRemaining?: number } = {},
+  input: { readonly tempHp?: number } & (
+    | { readonly resource?: never }
+    | {
+        readonly resource: { readonly usesRemaining: number } | null;
+      }
+  ) = {},
 ): BattleRuntimeSession {
   const unit = unitLibrary.requireUnit(orcAdrenalineRushUnitId);
   const result = startBattle({
@@ -465,11 +470,17 @@ export function adrenalineRushBattle(
         initiative: 20,
         tempHp: input.tempHp ?? 0,
         classLevels: [{ className: "fighter", level: classLevel(5) }],
-        resources: [
-          input.usesRemaining === undefined
-            ? { unit }
-            : { unit, usesRemaining: input.usesRemaining },
-        ],
+        resources:
+          input.resource === null
+            ? []
+            : [
+                input.resource === undefined
+                  ? { unit }
+                  : {
+                      unit,
+                      usesRemaining: input.resource.usesRemaining,
+                    },
+              ],
         characterUnitRefs: [adrenalineRushBattleUnitRef()],
       }),
       characterCreature({

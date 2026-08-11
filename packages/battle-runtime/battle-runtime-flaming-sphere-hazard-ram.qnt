@@ -24,16 +24,11 @@
 //   - initiative order, unrelated active effects, and reaction windows
 
 module battleRuntimeFlamingSphereHazardRam {
+  import battleRuntimeFlamingSphereFacts.* from "./battle-runtime-flaming-sphere-facts"
   import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
   import spellSaveGate.* from "../shared-algebras/proofs/rule-core/spell-save-gate"
   import spellSlotExpenditure.* from "../shared-algebras/proofs/rule-core/spell-slot-expenditure"
-
-  pure val flamingSphereDurationTicks: int = 10
-  pure val flamingSphereDiameterFeet: int = 5
-  pure val flamingSphereRamMaxMoveFeet: int = 30
-  pure val flamingSphereMinimumSlotLevel: int = 2
-  pure val flamingSphereBaseDamageDice: int = 2
 
   type FlamingSphereHazardRamEntrypoint =
     | FlamingSphereEndWithinFiveFeet
@@ -60,15 +55,6 @@ module battleRuntimeFlamingSphereHazardRam {
     savingThrowSucceeded: bool,
     rolledDamage: int,
     moveFeet: int,
-  }
-
-  pure def flamingSphereDamageDice(slotLevel: int): int =
-    flamingSphereBaseDamageDice + (slotLevel - flamingSphereMinimumSlotLevel)
-
-  pure def flamingSphereDamageAfterSave(rolledDamage: int, savingThrowSucceeded: bool): int = {
-    val branch = spellSaveGateBranch(savingThrowSucceeded)
-    val damageResult = spellSaveGateDamageResult(branch, SpellSaveGateHalfDamageOnSuccess)
-    spellSaveGateDamageAmount(rolledDamage, damageResult)
   }
 
   pure def flamingSphereMoveDistanceAccepted(moveFeet: int, maxMoveFeet: int): bool =

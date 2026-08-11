@@ -10,6 +10,8 @@ import type { CharacterProcedureBattleSubject } from "../battle-subjects.ts";
 import type {
   AdmittedBattleResolutionInput,
   AdmittedBattleResolutionInputFor,
+  AdmittedBonusActionStandardActionBattleResolutionInput,
+  AdmittedBonusActionStandardActionRejectionBattleResolutionInput,
   AdmittedDruidWildShapeBattleResolutionInput,
   AdmittedUnitFeatureBattleResolutionInput,
   BattleResolutionInput,
@@ -105,24 +107,15 @@ function admitUnitSubject(
   if (!isCharacterBattleCreatureState(actor)) {
     return { tag: "staleCharacterProcedure" };
   }
+  if (subject.tag === "bonusActionStandardAction") {
+    return admitBonusActionStandardAction(input, actor, subject);
+  }
   const query = characterUnitProcedureQueryForSubject(subject);
   const unitProcedure = characterUnitProcedure(
     actor.origin.execution,
     subject.procedureRef,
     query,
   );
-  if (
-    subject.tag === "bonusActionStandardAction" &&
-    unitProcedure === undefined
-  ) {
-    return characterSpellProcedure(
-      actor.origin.execution,
-      subject.procedureRef,
-      actor,
-    )?.procedure === "expeditiousRetreatDash"
-      ? { tag: "admitted", input: asAdmitted(input) }
-      : { tag: "staleCharacterProcedure" };
-  }
   if (subject.tag === "druidWildShape") {
     return unitProcedure?.kind === "unitFeature" &&
       unitProcedure.execution.kind === "druidWildShapeKnownForm" &&
@@ -148,6 +141,159 @@ function admitUnitSubject(
   return unitProcedure === undefined
     ? { tag: "staleCharacterProcedure" }
     : { tag: "admitted", input: asAdmitted(input) };
+}
+
+function admitBonusActionStandardAction(
+  input: BattleResolutionInput,
+  actor: CharacterBattleCreatureState,
+  subject: Extract<
+    UnitProcedureSubject,
+    { readonly tag: "bonusActionStandardAction" }
+  >,
+): BattleResolutionAdmission {
+  const unitProcedure = characterUnitProcedure(
+    actor.origin.execution,
+    subject.procedureRef,
+    characterUnitProcedureQueryForSubject(subject),
+  );
+  return unitProcedure === undefined
+    ? admitExpeditiousRetreatDash(input, actor, subject)
+    : admitUnitBonusActionStandardAction(input, actor, subject, unitProcedure);
+}
+
+type BonusActionStandardActionProcedureAdmission =
+  AdmittedBonusActionStandardActionBattleResolutionInput["bonusActionStandardActionAdmission"]["procedure"];
+
+function admitUnitBonusActionStandardAction(
+  input: BattleResolutionInput,
+  actor: CharacterBattleCreatureState,
+  subject: Extract<
+    UnitProcedureSubject,
+    { readonly tag: "bonusActionStandardAction" }
+  >,
+  unitProcedure: CharacterUnitProcedureExecution,
+): BattleResolutionAdmission {
+  const alternateActionCost = supportedAlternateActionCostProcedure(
+    unitProcedure,
+    subject.action,
+  );
+  if (alternateActionCost !== undefined) {
+    return {
+      tag: "admitted",
+      input: asAdmittedBonusActionStandardAction(input, actor, {
+        kind: "supportedAlternateActionCost",
+        procedure: alternateActionCost,
+      }),
+    };
+  }
+  const dashTemporaryHitPoints = dashTemporaryHitPointsProcedure(
+    unitProcedure,
+    subject.action,
+  );
+  if (dashTemporaryHitPoints !== undefined) {
+    return {
+      tag: "admitted",
+      input: asAdmittedBonusActionStandardAction(input, actor, {
+        kind: "dashTemporaryHitPoints",
+        procedure: dashTemporaryHitPoints,
+      }),
+    };
+  }
+  return admittedBonusActionStandardActionRejection(input, {
+    reason: "unsupportedActOption",
+    message:
+      "Bonus Action standard action requires an admitted alternate action cost feature.",
+  });
+}
+
+function supportedAlternateActionCostProcedure(
+  procedure: CharacterUnitProcedureExecution,
+  action: Extract<
+    UnitProcedureSubject,
+    { readonly tag: "bonusActionStandardAction" }
+  >["action"],
+):
+  | Extract<
+      BonusActionStandardActionProcedureAdmission,
+      { readonly kind: "supportedAlternateActionCost" }
+    >["procedure"]
+  | undefined {
+  return procedure.kind === "unitSupportProfile" &&
+    typeof procedure.execution === "object" &&
+    procedure.execution.kind === "alternateActionCost" &&
+    procedure.execution.to.kind === "bonusAction" &&
+    procedure.execution.from.actions.includes(action)
+    ? { ...procedure, execution: procedure.execution }
+    : undefined;
+}
+
+function dashTemporaryHitPointsProcedure(
+  procedure: CharacterUnitProcedureExecution,
+  action: Extract<
+    UnitProcedureSubject,
+    { readonly tag: "bonusActionStandardAction" }
+  >["action"],
+):
+  | Extract<
+      BonusActionStandardActionProcedureAdmission,
+      { readonly kind: "dashTemporaryHitPoints" }
+    >["procedure"]
+  | undefined {
+  return action === "dash" &&
+    typeof procedure.execution === "object" &&
+    procedure.execution.kind === "bonusActionDashTemporaryHitPoints"
+    ? { ...procedure, execution: procedure.execution }
+    : undefined;
+}
+
+function admitExpeditiousRetreatDash(
+  input: BattleResolutionInput,
+  actor: CharacterBattleCreatureState,
+  subject: Extract<
+    UnitProcedureSubject,
+    { readonly tag: "bonusActionStandardAction" }
+  >,
+): BattleResolutionAdmission {
+  const spellProcedure = characterSpellProcedure(
+    actor.origin.execution,
+    subject.procedureRef,
+    actor,
+  );
+  if (spellProcedure?.procedure !== "expeditiousRetreatDash") {
+    return { tag: "staleCharacterProcedure" };
+  }
+  if (!expeditiousRetreatEffectIsActive(actor, subject)) {
+    return admittedBonusActionStandardActionRejection(input, {
+      reason: "staleSubject",
+      message:
+        "The spell effect that granted this Bonus Action is no longer active.",
+    });
+  }
+  return {
+    tag: "admitted",
+    input: asAdmittedBonusActionStandardAction(input, actor, {
+      kind: "expeditiousRetreatDash",
+    }),
+  };
+}
+
+function expeditiousRetreatEffectIsActive(
+  actor: CharacterBattleCreatureState,
+  subject: Extract<
+    UnitProcedureSubject,
+    { readonly tag: "bonusActionStandardAction" }
+  >,
+): subject is Extract<typeof subject, { readonly action: "dash" }> {
+  return (
+    subject.action === "dash" &&
+    actor.activeEffects.some(
+      (effect) =>
+        effect.kind === "spellDashBonusAction" &&
+        effect.effectRef === subject.sourceEffectRef &&
+        effect.sourceProcedureRef === subject.procedureRef &&
+        effect.sourceCombatantId === actor.combatantId,
+    )
+  );
 }
 
 function asAdmittedUnitFeature(
@@ -196,6 +342,36 @@ function asAdmittedDruidWildShape(
     // preceding guards prove the actor, subject-specific procedure query,
     // and exact Wild Shape execution profile stored in this payload.
   } as AdmittedDruidWildShapeBattleResolutionInput;
+}
+
+function asAdmittedBonusActionStandardAction(
+  input: BattleResolutionInput,
+  actor: CharacterBattleCreatureState,
+  procedure: AdmittedBonusActionStandardActionBattleResolutionInput["bonusActionStandardActionAdmission"]["procedure"],
+): AdmittedBonusActionStandardActionBattleResolutionInput {
+  return {
+    ...input,
+    admissionKind: "bonusActionStandardAction",
+    bonusActionStandardActionAdmission: { actor, procedure },
+    // The subject-specific query immediately above proves the actor and exact
+    // Unit or Expeditious Retreat procedure stored in this admission payload.
+  } as AdmittedBonusActionStandardActionBattleResolutionInput;
+}
+
+function admittedBonusActionStandardActionRejection(
+  input: BattleResolutionInput,
+  rejection: AdmittedBonusActionStandardActionRejectionBattleResolutionInput["bonusActionStandardActionRejection"],
+): BattleResolutionAdmission {
+  return {
+    tag: "admitted",
+    input: {
+      ...input,
+      admissionKind: "bonusActionStandardActionRejection",
+      bonusActionStandardActionRejection: rejection,
+      // Admission proved the binding and classified the exact unsupported or
+      // stale selected state without creating a contradictory procedure fact.
+    } as AdmittedBonusActionStandardActionRejectionBattleResolutionInput,
+  };
 }
 
 function asAdmitted(

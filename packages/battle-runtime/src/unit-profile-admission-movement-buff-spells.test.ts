@@ -264,7 +264,7 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
     });
   });
 
-  test("expeditious_retreat grants later Bonus Action Dash until Concentration ends", () => {
+  test("expeditious_retreat grants only later Bonus Action Dash until Concentration ends", () => {
     const spell = spellRecord(expeditiousRetreatUnitId);
     const session = spellBattle({ preparedSpells: [spell] });
     const castAct = bonusActionDashSpellAct({
@@ -308,9 +308,31 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
         candidate.subject.speedKind === "walk",
     );
     expect(laterDashAct).toBeDefined();
-    if (laterDashAct === undefined) {
+    if (
+      laterDashAct === undefined ||
+      laterDashAct.subject.tag !== "bonusActionStandardAction" ||
+      laterDashAct.subject.action !== "dash"
+    ) {
       throw new Error("Expected Expeditious Retreat Bonus Action Dash act.");
     }
+
+    expect(
+      resolveBattleSubject({
+        state: nextCasterTurn.state,
+        subject: {
+          tag: "bonusActionStandardAction",
+          actorId: laterDashAct.subject.actorId,
+          procedureRef: laterDashAct.subject.procedureRef,
+          action: "disengage",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "The spell effect that granted this Bonus Action is no longer active.",
+    });
 
     const withoutConcentration = breakBattleConcentration(
       nextCasterTurn.state,

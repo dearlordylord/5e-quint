@@ -41,30 +41,14 @@ const PURE_VOCABULARY_LEAVES = new Map([
 // root that reaches the defaults must graduate by deleting its entry.
 const EXCEPTIONS = {
   "packages/battle-runtime/battle-runtime-core-combat-tests.qnt": {
-    maxFiles: 112,
-    maxLines: 22_500,
-  },
-  "packages/battle-runtime/battle-runtime-ground-command-tests.qnt": {
-    maxFiles: 90,
-    maxLines: 19_500,
-  },
-  "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt": {
-    maxFiles: 110,
-    maxLines: 22_500,
+    maxFiles: 108,
+    maxLines: 20_500,
   },
   "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt":
-    { maxFiles: 110, maxLines: 22_500 },
-  "packages/battle-runtime/battle-runtime-object-contact-damage-tests.qnt": {
-    maxFiles: 65,
-    maxLines: 13_500,
-  },
+    { maxFiles: 106, maxLines: 21_000 },
   "packages/battle-runtime/battle-runtime-save-spell-tests.qnt": {
-    maxFiles: 116,
-    maxLines: 23_000,
-  },
-  "packages/battle-runtime/battle-runtime-see-invisibility-tests.qnt": {
-    maxFiles: 63,
-    maxLines: 12_500,
+    maxFiles: 110,
+    maxLines: 21_000,
   },
 };
 

@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES
-// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE
+// KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE
 
 // RAW trace:
 // - .references/srd-5.2.1/Playing-the-Game.md#Damage Rolls defines spell
