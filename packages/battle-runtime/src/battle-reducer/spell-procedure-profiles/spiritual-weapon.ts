@@ -1,5 +1,8 @@
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
-import { ongoingSpellRepeatCastIsAvailable } from "../ongoing-spell-repeat-cast.ts";
+import {
+  ongoingSpellRepeatCastIsAvailable,
+  ongoingSpellRepeatIsOnLaterTurn,
+} from "../ongoing-spell-repeat-cast.ts";
 import { spellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
@@ -20,9 +23,8 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 //   - UBIQUITOUS_LANGUAGE.md: Bonus Action, Spell Attack, Attack Roll, Damage
 //     Roll, Damage Type, Spell Slot, Spell Invocation, and Spell Effect.
 //
-// What lives here: shape admission, synthesized repeat execution registration,
-// discovery, cast summaries, invocation references, and the profile-owned
-// resolve entry.
+// What lives here: shape admission, active-effect repeat admission, discovery,
+// cast summaries, invocation references, and the profile-owned resolve entry.
 //
 // What stays in shared infrastructure: the attack/damage resolver body remains
 // in spells-resolve.ts because ordinary spell attacks, held-light hurls,
@@ -47,6 +49,7 @@ import type {
 import { Either } from "effect";
 import {
   type BattleActDiscoveryCandidate,
+  type BattleActiveEffect,
   type BattleExecutableSpellInvocation,
   type BattleResolutionResult,
   type BattleState,
@@ -57,6 +60,7 @@ import {
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
+import { antimagicFieldOngoingSpellEffectRefForActiveEffect } from "../antimagic-field-suppression.ts";
 import {
   spiritualWeaponForcePositionHole,
   spellTargetHole,
@@ -68,7 +72,6 @@ import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
-  SynthesizedSpellProcedureDeclaration,
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
@@ -79,6 +82,8 @@ import {
 } from "../codec-building-blocks.ts";
 import {
   preparedSpellSlotInvocations,
+  spellAdmissionBattleTurn,
+  spellAdmissionOngoingSpellEffectSuppressed,
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
 } from "./profile.ts";
@@ -168,12 +173,66 @@ function admitSpiritualWeaponAttackProxy(
   });
 }
 
+function admitSpiritualWeaponRepeatAttack(
+  spell: BattleSpellAdmissionSource,
+  ctx: SpellAdmissionContext,
+): readonly SpiritualWeaponRepeatAttackInvocation[] {
+  if (spiritualWeaponSpell(spell) === null) {
+    return [];
+  }
+  return ctx.actor.activeEffects.flatMap(
+    (effect): readonly SpiritualWeaponRepeatAttackInvocation[] => {
+      if (
+        effect.kind !== "spiritualWeapon" ||
+        effect.sourceCombatantId !== ctx.actor.combatantId ||
+        spellAdmissionOngoingSpellEffectSuppressed(
+          ctx,
+          antimagicFieldOngoingSpellEffectRefForActiveEffect(effect),
+        ) ||
+        !spiritualWeaponRepeatIsLaterTurn(effect, ctx)
+      ) {
+        return [];
+      }
+      return [
+        {
+          access: {
+            tag: "spellEffect",
+            sourceCombatantId: effect.sourceCombatantId,
+          },
+          resource: { tag: "none" },
+          procedure: "spiritualWeaponRepeatAttack",
+          spell,
+          actionCost: "bonusAction",
+          activeEffect: effect,
+          targeting: { kind: "singleCombatant" },
+          damage: effect.damage,
+          attackKind: effect.attackKind,
+          attackBonus: effect.attackBonus,
+          forceReachFeet: effect.forceReachFeet,
+          repeatMoveMaxFeet: effect.repeatMoveMaxFeet,
+        },
+      ];
+    },
+  );
+}
+
 function spiritualWeaponAttackBonus(input: {
   readonly spellcastingAbilityModifier: AbilityModifier;
   readonly proficiencyBonus: ProficiencyBonusType;
 }) {
   return attackBonus(
     Number(input.spellcastingAbilityModifier) + Number(input.proficiencyBonus),
+  );
+}
+
+function spiritualWeaponRepeatIsLaterTurn(
+  effect: Extract<BattleActiveEffect, { readonly kind: "spiritualWeapon" }>,
+  ctx: SpellAdmissionContext,
+): boolean {
+  const battleTurn = spellAdmissionBattleTurn(ctx);
+  return (
+    battleTurn !== undefined &&
+    ongoingSpellRepeatIsOnLaterTurn(battleTurn, effect)
   );
 }
 
@@ -430,11 +489,13 @@ export const spiritualWeaponAttackProxyProfile: SpellProcedureDeclaration<
   resolve: resolveSpiritualWeapon,
 };
 
-export const spiritualWeaponRepeatAttackProfile: SynthesizedSpellProcedureDeclaration<"spiritualWeaponRepeatAttack"> =
-  {
-    admission: "synthesized",
-    procedure: "spiritualWeaponRepeatAttack",
-    executionSchema: SpiritualWeaponRepeatAttackInvocationSchema,
-    discoverCastAct: discoverSpiritualWeaponRepeatAttackCastAct,
-    resolve: resolveSpiritualWeapon,
-  };
+export const spiritualWeaponRepeatAttackProfile: SpellProcedureDeclaration<
+  "spiritualWeaponRepeatAttack",
+  SpiritualWeaponRepeatAttackInvocation
+> = {
+  procedure: "spiritualWeaponRepeatAttack",
+  executionSchema: SpiritualWeaponRepeatAttackInvocationSchema,
+  admit: admitSpiritualWeaponRepeatAttack,
+  discoverCastAct: discoverSpiritualWeaponRepeatAttackCastAct,
+  resolve: resolveSpiritualWeapon,
+};
