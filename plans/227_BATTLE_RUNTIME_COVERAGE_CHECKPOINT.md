@@ -62,27 +62,27 @@ under the broad workspace lock. It is exact package evidence, but it does not
 replace the public root diagnostic above or establish the state of other
 packages.
 
-- Date: 2026-08-10
-- Git HEAD: `0da412ce0`
+- Date: 2026-08-11
+- Git HEAD: `efb1da523`
 - Command: the checked-in battle-runtime Vitest coverage invocation, with one
   worker, under `with_resource_lock_owner scripts/with-broad-workspace-lock.sh`
 - Result: exit 0
-- Duration: 126.07 seconds
-- Battle-runtime tests: 214/214 files passed; 2,318 tests passed and 53 skipped
-  (2,371 total)
+- Duration: 61.47 seconds
+- Battle-runtime tests: 216/216 files passed; 2,337 tests passed and 53 skipped
+  (2,390 total)
 
-| Metric     |  M20 exact covered / total |  M21 exact covered / total | Covered / total change |     Uncovered change | Percentage change |
-| ---------- | -------------------------: | -------------------------: | ---------------------: | -------------------: | ----------------: |
-| Statements | 121,132 / 124,872 (97.00%) | 121,170 / 124,870 (97.03%) |                38 / -2 | 3,740 -> 3,700 (-40) |           +0.03pp |
-| Branches   |   30,758 / 32,658 (94.18%) |   30,811 / 32,693 (94.24%) |                53 / 35 | 1,900 -> 1,882 (-18) |           +0.06pp |
-| Functions  |       4,813 / 4,813 (100%) |       4,813 / 4,813 (100%) |                  0 / 0 |               0 -> 0 |                 0 |
-| Lines      | 121,132 / 124,872 (97.00%) | 121,170 / 124,870 (97.03%) |                38 / -2 | 3,740 -> 3,700 (-40) |           +0.03pp |
+| Metric     | Pre-M22 exact covered / total | Current exact covered / total | Covered / total change |     Uncovered change | Percentage change |
+| ---------- | ----------------------------: | ----------------------------: | ---------------------: | -------------------: | ----------------: |
+| Statements |    121,226 / 124,871 (97.08%) |    121,280 / 124,892 (97.10%) |                54 / 21 | 3,645 -> 3,612 (-33) |           +0.02pp |
+| Branches   |      30,853 / 32,718 (94.29%) |      30,883 / 32,730 (94.35%) |                30 / 12 | 1,865 -> 1,847 (-18) |           +0.06pp |
+| Functions  |          4,813 / 4,813 (100%) |          4,813 / 4,813 (100%) |                  0 / 0 |               0 -> 0 |                 0 |
+| Lines      |    121,226 / 124,871 (97.08%) |    121,280 / 124,892 (97.10%) |                54 / 21 | 3,645 -> 3,612 (-33) |           +0.02pp |
 
 The checked-in battle-runtime ratchets remain 97/97/100/94 for statements,
 lines, functions, and branches. No threshold was lowered. The measurement
-boundary includes both the M21 coverage milestone and the separately requested
-delegated Command end-turn replay merge, so the combined delta is not falsely
-attributed to M21 alone.
+baseline was measured at production commit `a757810a1`. The M22 delta includes
+the resource-admission milestone and its review corrections; the table reports
+the exact global movement rather than the larger focused source-site estimate.
 
 ## Remaining static 99% gaps
 
@@ -91,12 +91,24 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 121,170 | 124,870 |                  123,622 |         2,452 |
-| Branches   |  30,811 |  32,693 |                   32,367 |         1,556 |
+| Statements | 121,280 | 124,892 |                  123,644 |         2,364 |
+| Branches   |  30,883 |  32,730 |                   32,403 |         1,520 |
 | Functions  |   4,813 |   4,813 |                    4,765 |             0 |
-| Lines      | 121,170 | 124,870 |                  123,622 |         2,452 |
+| Lines      | 121,280 | 124,892 |                  123,644 |         2,364 |
 
 ## Milestone context
+
+M22 hardened character resource and spellcasting admission through public
+battle-start boundaries. Malformed spell-slot expenditure, feature-prepared
+spell provenance, invocation access, ritual access, and source-class mismatch
+now return typed battle initialization issues instead of escaping as projection
+throws. Redundant post-admission resource guards were removed or narrowed to
+their exact impossible assertion arms, and the internal resource-admission
+projector and result type were removed from the public package surface. Luna
+self-review and independent review converged after correcting one over-broad
+coverage ignore and one dead type re-export. Commits `97767c00b`, `8c502e379`,
+and `efb1da523` passed focused tests, package typecheck, formatting, and the
+exact package coverage gate above.
 
 M21 covered persistent spatial spell and active-effect lifecycles through
 public, reachable battle scenarios: failed-save Reaction continuation for
@@ -162,8 +174,8 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting exact battle-runtime metric at 94.24%, with a
-static 99% gap of 1,556. The next coherent owner is the attack-control cohort
+Branches remain the limiting exact battle-runtime metric at 94.35%, with a
+static 99% gap of 1,520. The next coherent owner is the attack-control cohort
 across attack resolution, attack-roll projection, and stat-block attacks. Its
 pre-M21 residual was 172 statements and 75 branch arms; remeasure the files
 before implementation, then cover only public reachable action-resource,
@@ -187,7 +199,10 @@ candidate.
    reviewer loop converges, documenting only concretely rejected findings.
 4. Run the public root `pnpm coverage` diagnostic and update this checkpoint from
    that output alone.
-5. At the 99% target, run the public root `pnpm quality` gate, distill any
-   durable result into issue #227 or its owning document, and delete only this
-   temporary note. Deleting it does not authorize changing the approved
-   untracked artifacts named above.
+5. After every executable package reaches the 99% coverage target, complete
+   issue #254: eliminate every production cyclomatic-complexity violation above
+   8 and enforce an empty/no-debt baseline.
+6. Then run the public root `pnpm quality` gate, distill any durable result into
+   issue #227 or its owning document, and delete only this temporary note.
+   Deleting it does not authorize changing the approved untracked artifacts
+   named above.
