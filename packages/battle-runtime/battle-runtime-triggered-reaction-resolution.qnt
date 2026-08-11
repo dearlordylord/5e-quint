@@ -29,7 +29,6 @@ module battleRuntimeTriggeredReactionResolution {
           resumeDirectSpellAttackReactionContinuation(state, DirectSpellAttackPoisonSpray)
       | ResumeChillTouch =>
           resumeDirectSpellAttackReactionContinuation(state, DirectSpellAttackChillTouch)
-      | ResumeMagicMissileTargeting => state
       | ResumeTrueStrikeWeaponAttack =>
           resolveTrueStrikeWeaponAttack(
             state,
@@ -82,8 +81,7 @@ module battleRuntimeTriggeredReactionResolution {
         | PendingReaction(frame) => {
             if (
               frame.trigger == SpellCast or
-                reactionProcedureRequiresSpellSlot(frame.procedure) or
-                frame.continuation == ResumeMagicMissileTargeting
+                reactionProcedureRequiresSpellSlot(frame.procedure)
             )
               state
             else
@@ -113,8 +111,7 @@ module battleRuntimeTriggeredReactionResolution {
         | PendingReaction(frame) =>
             if (
               frame.trigger == SpellCast or
-                reactionProcedureRequiresSpellSlot(frame.procedure) or
-                frame.continuation == ResumeMagicMissileTargeting
+                reactionProcedureRequiresSpellSlot(frame.procedure)
             )
               state
             else {

@@ -268,6 +268,11 @@
       ],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+        "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
@@ -277,7 +282,10 @@
         "packages/battle-runtime/src/battle-state-execution.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [],
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Rules-Glossary.md#Reaction",
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield"
+      ],
       "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
     },
     {
@@ -8040,6 +8048,36 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt owns the typed Shield Reaction offer, decline, resource admission, spend, and frame-close decision protocol.",
+      "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt owns Shield continuation admission and resume for direct Ray of Frost, Poison Spray, and Chill Touch attack frames.",
+      "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt owns Shield continuation admission and resume for Produce Flame hurl and Flame Blade attack frames, including the consumed-held-light boundary.",
+      "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt owns Shield continuation admission and resume for the Ice Knife attack-and-burst frame.",
+      "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt owns Shield continuation admission and resume for the True Strike weapon attack frame.",
+      "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "The owner computes the canonical weapon-attack interruption frame through offer, interrupt, and handoff transitions without embedding a test-only literal projection.",
       "obligationIds": ["BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY"],
       "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-interruption-frame.qnt",
@@ -8055,7 +8093,7 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt owns spell-cast and Shield spell Reaction resolution and suspended spell-attack continuation semantics.",
+      "evidence": "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt owns Counterspell spell-cast Reaction resolution and direct suspended spell-attack continuation semantics.",
       "obligationIds": [
         "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
         "BATTLE.SPELL.REACTION_CASTING_TIME"
@@ -10675,6 +10713,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-dragons-breath.qnt",
       "role": "semantic-core"
     },
@@ -10837,6 +10880,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
       "role": "semantic-core"
     },
     {
@@ -11279,6 +11327,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt",
       "role": "semantic-core"
     },
@@ -11312,6 +11365,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-shape-shifting.qnt",
       "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -11550,6 +11608,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hosted-capability-facts.qnt",
       "role": "bridge"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",

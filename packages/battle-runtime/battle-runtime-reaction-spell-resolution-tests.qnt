@@ -1,19 +1,19 @@
 // -*- mode: Bluespec; -*-
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-counterspell
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-counterspell spell.reaction-shield
 
 module battleRuntimeReactionSpellResolutionTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
+  import battleRuntimeDirectShieldReactionResolution.* from "./battle-runtime-direct-shield-reaction-resolution"
   import battleRuntimeSpellCastReactionResolution.* from "./battle-runtime-spell-cast-reaction-resolution"
   import battleRuntimeSpellAttackDirectResolution.* from "./battle-runtime-spell-attack-direct-resolution"
-  import battleRuntimeMagicMissileArithmetic.* from "./battle-runtime-magic-missile-arithmetic"
   import battleRuntimeSpellSlotClassification.* from "./battle-runtime-spell-slot-classification"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
 
 
   run test_shield_reaction_spell_interrupts_spell_attack_hit = {
     val awaiting = resolveRayOfFrost(initialState, 15, 10, 4, true)
-    val resolved = resolveDirectSpellReactionOffer(awaiting, Goblin)
+    val resolved = resolveDirectShieldReactionOffer(awaiting, Goblin)
     all {
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
         trigger: AttackHit,
@@ -29,58 +29,9 @@ module battleRuntimeReactionSpellResolutionTests {
     }
   }
 
-  run test_shield_reaction_spell_interrupts_magic_missile_targeting = {
-    val awaiting = openReactionWindow(initialState, {
-      trigger: MagicMissileTargeted,
-      procedure: ShieldReactionProcedure,
-      eligibleReactors: Set(Fighter),
-      offeredReactors: Set(),
-      continuation: ResumeMagicMissileTargeting,
-    })
-    val resolved = resolveDirectSpellReactionOffer(awaiting, Fighter)
-    all {
-      assert(resolved.interruptStack == []),
-      assert(resolved.fighter.activeEffects.contains(ShieldArmorClassBonus)),
-      assert(not(resolved.fighter.reactionAvailable)),
-      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
-    }
-  }
-
-  run test_declining_magic_missile_shield_resumes_without_reaction_spend = {
-    val awaiting = openReactionWindow(initialState, {
-      trigger: MagicMissileTargeted,
-      procedure: ShieldReactionProcedure,
-      eligibleReactors: Set(Fighter),
-      offeredReactors: Set(),
-      continuation: ResumeMagicMissileTargeting,
-    })
-    val resumed = declineDirectSpellReactionOfferAndResume(awaiting, Fighter)
-    all {
-      assert(resumed.interruptStack == []),
-      assert(resumed.fighter.reactionAvailable),
-      assert(not(resumed.fighter.activeEffects.contains(ShieldArmorClassBonus))),
-      assert(not(battleActorHasSpellSlotUse(resumed, Fighter))),
-    }
-  }
-
-  run test_shield_reaction_spell_negates_magic_missile_damage_to_target = {
-    val shielded = applyShieldReactionSpell(initialState, Fighter)
-    all {
-      assert(magicMissileTargetDamage(initialState.fighter, 3, 3, 1) == 6),
-      assert(magicMissileTargetDamage(shielded.fighter, 3, 3, 1) == 0),
-      assert(expendedSlotsAfterInvocation(Shield, 0) == 1),
-    }
-  }
-
   run test_shield_reaction_spell_spends_turn_spell_slot = {
-    val awaiting = openReactionWindow(initialState, {
-      trigger: AttackHit,
-      procedure: ShieldReactionProcedure,
-      eligibleReactors: Set(Fighter),
-      offeredReactors: Set(),
-      continuation: ResumeRayOfFrost,
-    })
-    val resolved = resolveDirectSpellReactionOffer(awaiting, Fighter)
+    val awaiting = resolveRayOfFrost(initialState, 15, 10, 4, true)
+    val resolved = resolveDirectShieldReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.fighter.activeEffects.contains(ShieldArmorClassBonus)),
       assert(not(resolved.fighter.reactionAvailable)),
@@ -89,14 +40,33 @@ module battleRuntimeReactionSpellResolutionTests {
   }
 
   run test_shield_reaction_spell_rejects_second_slot_spell_in_same_turn = {
-    val awaiting = openReactionWindow({ ...initialState, spellSlotUsesThisTurn: Set(BattleCommittedSpellSlotUse(Fighter)) }, {
+    val awaiting = resolveRayOfFrost({ ...initialState, spellSlotUsesThisTurn: Set(BattleCommittedSpellSlotUse(Goblin)) }, 15, 10, 4, true)
+    assert(resolveDirectShieldReactionOffer(awaiting, Goblin) == awaiting)
+  }
+
+  run test_declining_direct_shield_resumes_spell_attack = {
+    val awaiting = resolveRayOfFrost(initialState, 15, 10, 4, true)
+    val resumed = declineDirectShieldReactionOfferAndResume(awaiting, Goblin)
+    all {
+      assert(resumed.interruptStack == []),
+      assert(resumed.goblin.reactionAvailable),
+      assert(resumed.goblin.hp == 6),
+      assert(not(resumed.actionAvailable)),
+    }
+  }
+
+  run test_direct_shield_rejects_malformed_continuation_without_spend = {
+    val awaiting = openReactionWindow(initialState, {
       trigger: AttackHit,
       procedure: ShieldReactionProcedure,
       eligibleReactors: Set(Fighter),
       offeredReactors: Set(),
-      continuation: ResumeRayOfFrost,
+      continuation: ResumeAfterDamage,
     })
-    assert(resolveDirectSpellReactionOffer(awaiting, Fighter) == awaiting)
+    all {
+      assert(resolveDirectShieldReactionOffer(awaiting, Fighter) == awaiting),
+      assert(declineDirectShieldReactionOfferAndResume(awaiting, Fighter) == awaiting),
+    }
   }
 
   run test_reaction_spell_trigger_procedure_matrix_rejects_mismatched_frames = {

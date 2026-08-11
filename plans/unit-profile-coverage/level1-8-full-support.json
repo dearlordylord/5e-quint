@@ -20214,6 +20214,11 @@
             "profileId": "spell.reaction-shield",
             "profileKind": "reaction",
             "qntOwners": [
+              "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
             ],
             "semanticOwnerPolicy": "profile-local-semantic-core"

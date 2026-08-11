@@ -14,7 +14,7 @@ module battleRuntimeReactionKinds {
   type BattleRuntimeReactionTrigger =
     | BattleRuntimeAttackHit
     | BattleRuntimeAttackDamage
-    | BattleRuntimeSpellCast | BattleRuntimeMagicMissileTargeted
+    | BattleRuntimeSpellCast
     | BattleRuntimeCreatureFalls
     | BattleRuntimeSaveFailed
     | BattleRuntimeAfterDamage

@@ -373,7 +373,7 @@ module battleRuntimeModel {
     huntersMarkDamageRoll: int,
   }
 
-  type ReactionTrigger = AttackHit | AttackDamage | SpellCast | MagicMissileTargeted | SaveFailed | AfterDamage | OpportunityAttack
+  type ReactionTrigger = AttackHit | AttackDamage | SpellCast | SaveFailed | AfterDamage | OpportunityAttack
 
   type HellishRebukeAfterDamageTrigger =
     | HellishRebukeDamageFromVisibleCreatureWithin60Feet
@@ -445,7 +445,7 @@ module battleRuntimeModel {
     | ResumeAttack({ damage: int })
     | ResumeRayOfFrost
     | ResumePoisonSpray
-    | ResumeChillTouch | ResumeMagicMissileTargeting
+    | ResumeChillTouch
     | ResumeTrueStrikeWeaponAttack
     | ResumeProduceFlameHurl
     | ResumeFlameBladeAttack
@@ -492,7 +492,7 @@ module battleRuntimeModel {
     match trigger {
       | AttackHit => BattleRuntimeAttackHit
       | AttackDamage => BattleRuntimeAttackDamage
-      | SpellCast => BattleRuntimeSpellCast | MagicMissileTargeted => BattleRuntimeMagicMissileTargeted
+      | SpellCast => BattleRuntimeSpellCast
       | SaveFailed => BattleRuntimeSaveFailed
       | AfterDamage => BattleRuntimeAfterDamage
       | OpportunityAttack => BattleRuntimeOpportunityAttack
@@ -503,7 +503,7 @@ module battleRuntimeModel {
       | ResumeAttack(_) => BattleRuntimeAttackDamageContinuation
       | ResumeRayOfFrost => BattleRuntimeSpellAttackContinuation
       | ResumePoisonSpray => BattleRuntimeSpellAttackContinuation
-      | ResumeChillTouch => BattleRuntimeSpellAttackContinuation | ResumeMagicMissileTargeting => BattleRuntimeSpellCastContinuation
+      | ResumeChillTouch => BattleRuntimeSpellAttackContinuation
       | ResumeTrueStrikeWeaponAttack => BattleRuntimeSpellAttackContinuation
       | ResumeProduceFlameHurl => BattleRuntimeSpellAttackContinuation
       | ResumeFlameBladeAttack => BattleRuntimeSpellAttackContinuation

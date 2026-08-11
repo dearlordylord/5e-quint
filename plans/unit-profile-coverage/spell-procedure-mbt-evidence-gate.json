@@ -242,6 +242,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -730,6 +750,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -1085,6 +1125,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -1318,6 +1378,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {
@@ -1885,6 +1965,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {
@@ -2513,6 +2613,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -3065,6 +3185,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {
@@ -4038,6 +4178,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -4589,6 +4749,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -4944,6 +5124,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -5296,6 +5496,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {
@@ -5902,6 +6122,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -6254,6 +6494,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {
@@ -6656,6 +6916,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {
@@ -7263,6 +7543,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {
@@ -8284,6 +8584,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -8667,6 +8987,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {
@@ -9158,6 +9498,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -9513,6 +9873,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -9746,6 +10126,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {
@@ -10313,6 +10713,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {
@@ -10941,6 +11361,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -11493,6 +11933,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {
@@ -12466,6 +12926,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -13017,6 +13497,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -13369,6 +13869,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {
@@ -13794,6 +14314,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -14397,6 +14937,26 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
               "role": "semantic-core"
             },
@@ -14749,6 +15309,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {
@@ -15151,6 +15731,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {
@@ -15758,6 +16358,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {
@@ -16776,6 +17396,26 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
               "role": "semantic-core"
             },
             {

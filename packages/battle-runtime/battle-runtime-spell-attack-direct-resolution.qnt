@@ -130,14 +130,6 @@ module battleRuntimeSpellAttackDirectResolution {
       | _ => NoDirectSpellAttackReactionContinuation
     }
 
-  pure def directSpellAttackReactionContinuationSupported(
-    continuation: ReactionContinuation,
-  ): bool =
-    match directSpellAttackReactionContinuation(continuation) {
-      | HasDirectSpellAttackReactionContinuation(_) => true
-      | NoDirectSpellAttackReactionContinuation => false
-    }
-
   pure def resumeDirectSpellAttackReactionContinuation(
     state: BattleState,
     continuation: DirectSpellAttackReactionContinuation,

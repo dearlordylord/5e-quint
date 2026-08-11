@@ -2921,12 +2921,18 @@
       "id": "spell.reaction-shield",
       "profileKind": "reaction",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-interrupt-triggers.ts",
         "packages/battle-runtime/src/battle-state-execution.ts"
       ],
+      "sourceBoundary": "The runtime admits Shield only from an attack-hit or its existing SpellCast/repeatedDamageAllocation path. This QNT owner set models the attack-hit frame with typed direct spell-attack, weapon, light-created, and save-gated continuations; Magic Missile target allocation and per-dart damage facts remain at the runtime spell-cast boundary until a matching narrowed QNT owner exists.",
       "taskRefs": [
         "QCORE8",
         "QCORE10",
@@ -2938,6 +2944,22 @@
         {
           "kind": "qnt-proof",
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-spell-resolution-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution-tests.qnt"
         },
         {
           "kind": "focused-mbt",
@@ -8738,6 +8760,11 @@
         "profileId": "spell.reaction-shield",
         "profileKind": "reaction",
         "qntOwners": [
+          "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+          "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+          "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+          "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+          "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
           "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
         ],
         "semanticOwnerPolicy": "profile-local-semantic-core"
@@ -15184,6 +15211,11 @@
               "profileId": "spell.reaction-shield",
               "profileKind": "reaction",
               "qntOwners": [
+                "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+                "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+                "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+                "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+                "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
               ],
               "semanticOwnerPolicy": "profile-local-semantic-core"
@@ -44865,12 +44897,18 @@
           "id": "spell.reaction-shield",
           "profileKind": "reaction",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+            "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-interrupt-triggers.ts",
             "packages/battle-runtime/src/battle-state-execution.ts"
           ],
+          "sourceBoundary": "The runtime admits Shield only from an attack-hit or its existing SpellCast/repeatedDamageAllocation path. This QNT owner set models the attack-hit frame with typed direct spell-attack, weapon, light-created, and save-gated continuations; Magic Missile target allocation and per-dart damage facts remain at the runtime spell-cast boundary until a matching narrowed QNT owner exists.",
           "taskRefs": [
             "QCORE8",
             "QCORE10",
@@ -44882,6 +44920,22 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-spell-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution-tests.qnt"
             },
             {
               "kind": "focused-mbt",

@@ -40,7 +40,7 @@ module battleRuntimeReactionWindow {
     procedure: PendingReactionProcedure
   ): bool =
     match procedure {
-      | ShieldReactionProcedure => trigger == AttackHit or trigger == MagicMissileTargeted
+      | ShieldReactionProcedure => trigger == AttackHit
       | CounterspellReactionProcedure(_) => trigger == SpellCast
       | OpportunityAttackReactionProcedure => trigger == OpportunityAttack
       | ReadiedSpellReleaseReactionProcedure => trigger == AttackHit
