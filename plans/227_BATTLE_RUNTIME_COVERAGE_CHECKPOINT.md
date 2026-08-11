@@ -63,26 +63,26 @@ replace the public root diagnostic above or establish the state of other
 packages.
 
 - Date: 2026-08-11
-- Git HEAD: `384dd3e6b`
+- Git HEAD: `5f1b47e2d`
 - Command: the checked-in battle-runtime Vitest coverage invocation, with one
   worker, under `with_resource_lock_owner scripts/with-broad-workspace-lock.sh`
 - Result: exit 0
-- Duration: 63.91 seconds
-- Battle-runtime tests: 217/217 files passed; 2,345 tests passed and 53 skipped
-  (2,398 total)
+- Duration: 61.93 seconds
+- Battle-runtime tests: 218/218 files passed; 2,353 tests passed and 53 skipped
+  (2,406 total)
 
-| Metric     | Pre-M24 exact covered / total | Current exact covered / total | Covered / total change |     Uncovered change | Percentage change |
+| Metric     | Pre-M25 exact covered / total | Current exact covered / total | Covered / total change |     Uncovered change | Percentage change |
 | ---------- | ----------------------------: | ----------------------------: | ---------------------: | -------------------: | ----------------: |
-| Statements |    121,280 / 124,892 (97.10%) |    121,327 / 124,892 (97.14%) |                 47 / 0 | 3,612 -> 3,565 (-47) |           +0.04pp |
-| Branches   |      30,883 / 32,730 (94.35%) |      30,917 / 32,751 (94.40%) |                34 / 21 | 1,847 -> 1,834 (-13) |           +0.05pp |
-| Functions  |          4,813 / 4,813 (100%) |          4,813 / 4,813 (100%) |                  0 / 0 |               0 -> 0 |                 0 |
-| Lines      |    121,280 / 124,892 (97.10%) |    121,327 / 124,892 (97.14%) |                 47 / 0 | 3,612 -> 3,565 (-47) |           +0.04pp |
+| Statements |    121,327 / 124,892 (97.14%) |    121,480 / 125,002 (97.18%) |              153 / 110 | 3,565 -> 3,522 (-43) |           +0.04pp |
+| Branches   |      30,917 / 32,751 (94.40%) |      30,949 / 32,770 (94.44%) |                32 / 19 | 1,834 -> 1,821 (-13) |           +0.04pp |
+| Functions  |          4,813 / 4,813 (100%) |          4,817 / 4,817 (100%) |                  4 / 4 |               0 -> 0 |                 0 |
+| Lines      |    121,327 / 124,892 (97.14%) |    121,480 / 125,002 (97.18%) |              153 / 110 | 3,565 -> 3,522 (-43) |           +0.04pp |
 
 The checked-in battle-runtime ratchets remain 97/97/100/94 for statements,
 lines, functions, and branches. No threshold was lowered. The measurement
-baseline is the prior exact M22 checkpoint. Production did not change in M24;
-the branch denominator movement comes from V8's dynamically reported branch
-map, so the table reports covered, total, and uncovered changes separately.
+baseline is the prior exact M24 checkpoint. M25 changed production admission
+and its tests, so the table reports covered, total, and uncovered changes
+separately.
 
 ## Remaining static 99% gaps
 
@@ -91,12 +91,25 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 121,327 | 124,892 |                  123,644 |         2,317 |
-| Branches   |  30,917 |  32,751 |                   32,424 |         1,507 |
-| Functions  |   4,813 |   4,813 |                    4,765 |             0 |
-| Lines      | 121,327 | 124,892 |                  123,644 |         2,317 |
+| Statements | 121,480 | 125,002 |                  123,752 |         2,272 |
+| Branches   |  30,949 |  32,770 |                   32,443 |         1,494 |
+| Functions  |   4,817 |   4,817 |                    4,769 |             0 |
+| Lines      | 121,480 | 125,002 |                  123,752 |         2,272 |
 
 ## Milestone context
+
+M25 converted malformed character battle initialization from assertion throws
+to accumulated typed issues for duplicate resource, feature, and Weapon
+Mastery identities; contradictory loadout/hand facts; and invalid zero-Hit-
+Point lifecycle state. Spellcasting invocation access is now parsed once and
+the admitted state is threaded into projection. Luna self-review and
+independent root review decomposed every new function below the current
+complexity ceiling, removed a duplicated nonempty-array helper, made the
+spellcasting admission union exhaustive, and deleted the superseded invocation
+admission wrapper after the first locked run exposed it as the package's sole
+uncovered function. Review converged with 27 focused tests, package typecheck,
+formatting, lint, complexity inspection, and the exact package gate above.
+The milestone is commits `4204f0ec3` and `5f1b47e2d`.
 
 M24 covered Ice Knife's attack-burst boundaries through public battle
 procedures: Halfling natural-one rerolls, Sanctuary retargeting, Mirror Image
