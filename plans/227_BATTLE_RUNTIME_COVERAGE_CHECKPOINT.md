@@ -63,26 +63,28 @@ replace the public root diagnostic above or establish the state of other
 packages.
 
 - Date: 2026-08-10
-- Git HEAD: `0da412ce0`
+- Git HEAD: `b05d31a79`
 - Command: the checked-in battle-runtime Vitest coverage invocation, with one
-  worker, under `with_resource_lock_owner scripts/with-broad-workspace-lock.sh`
+  worker and the JSON reporter, under
+  `with_resource_lock_owner scripts/with-broad-workspace-lock.sh`
 - Result: exit 0
-- Duration: 126.07 seconds
-- Battle-runtime tests: 214/214 files passed; 2,318 tests passed and 53 skipped
-  (2,371 total)
+- Duration: 96.59 seconds after lock acquisition
+- Battle-runtime tests: 214/214 files passed; 2,322 tests passed and 53 skipped
+  (2,375 total)
 
-| Metric     |  M20 exact covered / total |  M21 exact covered / total | Covered / total change |     Uncovered change | Percentage change |
+| Metric     |  M22 exact covered / total |  M23 exact covered / total | Covered / total change |     Uncovered change | Percentage change |
 | ---------- | -------------------------: | -------------------------: | ---------------------: | -------------------: | ----------------: |
-| Statements | 121,132 / 124,872 (97.00%) | 121,170 / 124,870 (97.03%) |                38 / -2 | 3,740 -> 3,700 (-40) |           +0.03pp |
-| Branches   |   30,758 / 32,658 (94.18%) |   30,811 / 32,693 (94.24%) |                53 / 35 | 1,900 -> 1,882 (-18) |           +0.06pp |
+| Statements | 121,188 / 124,871 (97.05%) | 121,189 / 124,849 (97.07%) |                1 / -22 | 3,683 -> 3,660 (-23) |           +0.02pp |
+| Branches   |   30,821 / 32,695 (94.27%) |   30,811 / 32,683 (94.27%) |              -10 / -12 |  1,874 -> 1,872 (-2) |          +0.004pp |
 | Functions  |       4,813 / 4,813 (100%) |       4,813 / 4,813 (100%) |                  0 / 0 |               0 -> 0 |                 0 |
-| Lines      | 121,132 / 124,872 (97.00%) | 121,170 / 124,870 (97.03%) |                38 / -2 | 3,740 -> 3,700 (-40) |           +0.03pp |
+| Lines      | 121,188 / 124,871 (97.05%) | 121,189 / 124,849 (97.07%) |                1 / -22 | 3,683 -> 3,660 (-23) |           +0.02pp |
 
 The checked-in battle-runtime ratchets remain 97/97/100/94 for statements,
-lines, functions, and branches. No threshold was lowered. The measurement
-boundary includes both the M21 coverage milestone and the separately requested
-delegated Command end-turn replay merge, so the combined delta is not falsely
-attributed to M21 alone.
+lines, functions, and branches. No threshold was lowered. M23 replaces Magic
+Weapon's duplicate held-weapon and Wild Shape usability branches with the
+canonical `loadoutWeaponItemIsUsableDuringWildShape` owner. Ten previously
+covered branch arms disappeared with the duplicate, so the covered-branch
+numerator fell while uncovered branches and the denominator both improved.
 
 ## Remaining static 99% gaps
 
@@ -91,12 +93,28 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 121,170 | 124,870 |                  123,622 |         2,452 |
-| Branches   |  30,811 |  32,693 |                   32,367 |         1,556 |
+| Statements | 121,189 | 124,849 |                  123,601 |         2,412 |
+| Branches   |  30,811 |  32,683 |                   32,357 |         1,546 |
 | Functions  |   4,813 |   4,813 |                    4,765 |             0 |
-| Lines      | 121,170 | 124,870 |                  123,622 |         2,452 |
+| Lines      | 121,189 | 124,849 |                  123,601 |         2,412 |
 
 ## Milestone context
+
+M23 removed a duplicate Magic Weapon target-usability algorithm and delegated
+to the canonical held-loadout/Wild Shape owner already consumed by weapon
+override admission. The change preserves exact main/off-hand item identity,
+normal-form availability, and the active form's limb and equipment-disposition
+facts while shrinking production by 24 physical lines. No test code or modeled
+rule changed. The public Magic Weapon, weapon-hosted route, and Wild Shape
+lifecycle cohort passed 75 tests; package typecheck, targeted lint, formatting,
+and the exact gate above were green. Two review rounds found no remaining RAW,
+domain, architecture/connascence, standards, or issue-scope finding.
+
+M22 covered a reduced attack-control increment after review removed direct
+helper matrices and forged state witnesses. Its exact baseline at `1ce2c3590`
+was 121,188 / 124,871 statements and lines, 30,821 / 32,695 branches, and
+4,813 / 4,813 functions. The rejected attack-control helper matrix is not a
+candidate for a later campaign.
 
 M21 covered persistent spatial spell and active-effect lifecycles through
 public, reachable battle scenarios: failed-save Reaction continuation for
@@ -162,17 +180,12 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting exact battle-runtime metric at 94.24%, with a
-static 99% gap of 1,556. The next coherent owner is the attack-control cohort
-across attack resolution, attack-roll projection, and stat-block attacks. Its
-pre-M21 residual was 172 statements and 75 branch arms; remeasure the files
-before implementation, then cover only public reachable action-resource,
-fill-validation, roll-mode, mastery/rider, replacement, and stat-block damage
-behavior. Admission-proven or schema-impossible guards must be narrowed or
-removed with concrete proof rather than reached through forged states. Run the
-mapped weapon/stat-block/relationship MBTs and repeat the reviewer loop before
-remeasurement. Defensive route/profile behavior remains a later independent
-candidate.
+Branches remain the limiting exact battle-runtime metric at 94.27%, with a
+static 99% gap of 1,546. Do not retry the rejected attack-control helper matrix.
+Rerank the exact uncovered report against public lifecycle coverage before the
+next increment; defensive route/profile behavior remains an independent
+candidate. Admission-proven or schema-impossible guards must be narrowed or
+removed with concrete proof rather than reached through forged states.
 
 ## Verification and completion
 
