@@ -23,7 +23,7 @@ import {
   type WeaponAttackOverrideInvocation,
 } from "../../weapon-attack-override-admission.ts";
 import { activeDruidWildShapeEffect } from "../druid-wild-shape.ts";
-import { loadoutWeaponItemIsUsableDuringWildShape } from "../wild-shape-equipment.ts";
+import { loadoutHasUsableHeldWeaponItem } from "../wild-shape-equipment.ts";
 import { battleObjectIsOnGround } from "../battle-object-lifecycle.ts";
 import {
   discoverWeaponAttackOverrideCastAct,
@@ -80,7 +80,7 @@ function resolveWeaponAttackOverrideProfile(
       snapshot: snapshotBattle,
       activeDruidWildShapeEffect,
       battleObjectIsOnGround,
-      loadoutWeaponItemIsUsableDuringWildShape,
+      loadoutHasUsableHeldWeaponItem,
       spellCastInterruptFrame,
       interruptWindowProgress,
       commitWeaponAttackOverrideEffect: ({ authorization, activeEffects }) => ({
@@ -116,7 +116,7 @@ export const weaponAttackOverrideProfile: WeaponAttackOverrideProfile = {
     discoverWeaponAttackOverrideCastAct(state, actorId, invocation, {
       activeDruidWildShapeEffect,
       battleObjectIsOnGround,
-      loadoutWeaponItemIsUsableDuringWildShape,
+      loadoutHasUsableHeldWeaponItem,
     }),
   resolve: resolveWeaponAttackOverrideProfile,
 };

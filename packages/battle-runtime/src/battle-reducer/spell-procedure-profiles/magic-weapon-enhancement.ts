@@ -31,7 +31,7 @@ import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
-import { loadoutWeaponItemIsUsableDuringWildShape } from "../wild-shape-equipment.ts";
+import { loadoutHasUsableHeldWeaponItem } from "../wild-shape-equipment.ts";
 import { characterEffectiveLoadout } from "../battle-object-lifecycle.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
@@ -321,7 +321,7 @@ function battleMagicWeaponTargetItemIsHeldWeapon(
     return false;
   }
   const loadout = characterEffectiveLoadout(state, holder);
-  return loadoutWeaponItemIsUsableDuringWildShape({
+  return loadoutHasUsableHeldWeaponItem({
     loadout,
     activeWildShape: activeDruidWildShapeEffect(holder),
     itemId: targetItem.itemId,

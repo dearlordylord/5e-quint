@@ -51,6 +51,7 @@ import {
 import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
 import { sacredWeaponHeldMeleeWeapons } from "./battle-reducer/unit-feature-discovery.ts";
 import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
+import { loadoutHasUsableHeldWeaponItem } from "./battle-reducer/wild-shape-equipment.ts";
 import {
   attackInitialTargetHole,
   attackDamageDispositionFill,
@@ -608,6 +609,39 @@ test("derives Wild Shape equipment disposition candidates from selected loadout 
     },
   ]);
   expect(wildShapeLoadoutObjectRefs({})).toEqual([]);
+});
+
+test("accepts duplicate held-weapon item identity when only the off-hand slot is usable", () => {
+  const itemId = battleObjectId("duplicate:held-weapon");
+  expect(
+    loadoutHasUsableHeldWeaponItem({
+      loadout: {
+        weapon: {
+          itemId,
+          unitId: parseSharedUnitId("weapon_quarterstaff"),
+          grip: "one_handed",
+        },
+        offHandWeapon: {
+          itemId,
+          unitId: parseSharedUnitId("weapon_dagger"),
+        },
+      },
+      activeWildShape: {
+        formLimbs: { kind: "canHandleObjects" },
+        equipmentDisposition: [
+          {
+            item: { kind: "mainWeapon", objectId: itemId },
+            disposition: "merges",
+          },
+          {
+            item: { kind: "offHandWeapon", objectId: itemId },
+            disposition: "worn",
+          },
+        ],
+      },
+      itemId,
+    }),
+  ).toBe(true);
 });
 
 test("decodes Wild Shape worn equipment disposition fills for selected loadout objects", () => {

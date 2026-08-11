@@ -114,7 +114,7 @@ type WeaponAttackOverrideUsabilityRuntime<
     actorId: CombatantId,
     objectId: BattleObjectId,
   ) => boolean;
-  readonly loadoutWeaponItemIsUsableDuringWildShape: (input: {
+  readonly loadoutHasUsableHeldWeaponItem: (input: {
     readonly loadout: SelectedLoadout;
     readonly activeWildShape: ActiveDruidWildShape;
     readonly itemId: BattleObjectId;
@@ -149,7 +149,7 @@ function weaponAttackOverrideWeaponIsUsable<
       actor.combatantId,
       invocation.activeEffect.weaponItemId,
     ) &&
-    runtime.loadoutWeaponItemIsUsableDuringWildShape({
+    runtime.loadoutHasUsableHeldWeaponItem({
       loadout: actor.origin.selectedLoadout,
       activeWildShape: runtime.activeDruidWildShapeEffect(actor),
       itemId: invocation.activeEffect.weaponItemId,
@@ -237,7 +237,7 @@ export function weaponAttackOverrideExecutor<
         actorId: CombatantId,
         objectId: BattleObjectId,
       ) => boolean;
-      readonly loadoutWeaponItemIsUsableDuringWildShape: (input: {
+      readonly loadoutHasUsableHeldWeaponItem: (input: {
         readonly loadout: SelectedLoadout;
         readonly activeWildShape: ActiveDruidWildShape;
         readonly itemId: BattleObjectId;

@@ -233,7 +233,7 @@ export function wildShapeCanUseWornLoadoutObject(input: {
   return wildShapeWornLoadoutObjectForUse(input) !== undefined;
 }
 
-export function loadoutWeaponItemIsUsableDuringWildShape(input: {
+export function loadoutHasUsableHeldWeaponItem(input: {
   readonly loadout: CharacterBattleLoadoutRef;
   readonly activeWildShape: {
     readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
@@ -241,7 +241,7 @@ export function loadoutWeaponItemIsUsableDuringWildShape(input: {
   } | null;
   readonly itemId: BattleObjectId;
 }): boolean {
-  const heldWeapon = [
+  const heldWeapons = [
     ...(input.loadout.weapon === undefined
       ? []
       : [{ objectKind: "mainWeapon" as const, ...input.loadout.weapon }]),
@@ -253,19 +253,18 @@ export function loadoutWeaponItemIsUsableDuringWildShape(input: {
             ...input.loadout.offHandWeapon,
           },
         ]),
-  ].find((candidate) => candidate.itemId === input.itemId);
-  if (heldWeapon === undefined) {
-    return false;
-  }
-  return (
-    input.activeWildShape === null ||
-    wildShapeCanUseWornLoadoutObject({
-      loadout: input.loadout,
-      formLimbs: input.activeWildShape.formLimbs,
-      equipmentDisposition: input.activeWildShape.equipmentDisposition,
-      objectKind: heldWeapon.objectKind,
-      objectId: heldWeapon.itemId,
-    })
+  ];
+  return heldWeapons.some(
+    (heldWeapon) =>
+      heldWeapon.itemId === input.itemId &&
+      (input.activeWildShape === null ||
+        wildShapeCanUseWornLoadoutObject({
+          loadout: input.loadout,
+          formLimbs: input.activeWildShape.formLimbs,
+          equipmentDisposition: input.activeWildShape.equipmentDisposition,
+          objectKind: heldWeapon.objectKind,
+          objectId: heldWeapon.itemId,
+        })),
   );
 }
 

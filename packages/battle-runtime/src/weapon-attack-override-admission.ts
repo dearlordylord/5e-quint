@@ -18,7 +18,7 @@ import { type BattleObjectId, type CombatantId } from "./identity.ts";
 import type { WeaponAttackOverrideProcedureFacts } from "./procedure-facts/weapon-attack-override.ts";
 import { sameStringSet } from "./battle-reducer/spells-execution-facts.ts";
 import {
-  loadoutWeaponItemIsUsableDuringWildShape,
+  loadoutHasUsableHeldWeaponItem,
   wildShapeCanUseWornLoadoutObject,
 } from "./battle-reducer/wild-shape-equipment.ts";
 
@@ -156,7 +156,7 @@ function attachedWeaponAttacksEligibleForOverride(
   return [
     ...(origin.attack === null ||
     origin.selectedLoadout.weapon === undefined ||
-    !loadoutWeaponItemIsUsableDuringWildShape({
+    !loadoutHasUsableHeldWeaponItem({
       loadout: origin.selectedLoadout,
       activeWildShape,
       itemId: origin.selectedLoadout.weapon.itemId,
@@ -170,7 +170,7 @@ function attachedWeaponAttacksEligibleForOverride(
         ]),
     ...(origin.offHandAttack === undefined ||
     origin.selectedLoadout.offHandWeapon === undefined ||
-    !loadoutWeaponItemIsUsableDuringWildShape({
+    !loadoutHasUsableHeldWeaponItem({
       loadout: origin.selectedLoadout,
       activeWildShape,
       itemId: origin.selectedLoadout.offHandWeapon.itemId,
