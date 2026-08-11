@@ -723,6 +723,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     const session = spellBattleWithTargetRayOfFrost({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterClassLevels: [{ className: "wizard", level: 3 }],
     });
     const castAct = spellAct({
       session,

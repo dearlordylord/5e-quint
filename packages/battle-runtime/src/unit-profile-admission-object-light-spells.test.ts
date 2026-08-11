@@ -293,7 +293,7 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
     );
   });
 
-  test("light object emitter illumination is derived with opaque-cover suppression", () => {
+  test("light object emitter projection respects range, object identity, and opaque cover", () => {
     const spell = spellRecord(lightUnitId);
     const session = spellBattle({ cantrips: [spell] });
     const act = spellAct({ session, spellId: lightUnitId });

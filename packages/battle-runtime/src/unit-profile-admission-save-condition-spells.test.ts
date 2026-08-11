@@ -1259,6 +1259,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterClassLevels: [{ className: "wizard", level: 3 }],
     });
     const act = spellAct({
       session,

@@ -76,6 +76,7 @@ function castWebForTargetTurn(
   )({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 2, count: 1 }],
+    casterClassLevels: [{ className: "wizard", level: 3 }],
     ...(input.extraTargetIds === undefined
       ? {}
       : { extraTargetIds: input.extraTargetIds }),

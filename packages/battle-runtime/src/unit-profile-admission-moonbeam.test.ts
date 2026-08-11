@@ -494,6 +494,7 @@ describe("L12G deterministic Moonbeam admission", () => {
     const session = spellBattleWithTargetRayOfFrost({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterClassLevels: [{ className: "druid", level: 3 }],
     });
     const castAct = spellAct({
       session,

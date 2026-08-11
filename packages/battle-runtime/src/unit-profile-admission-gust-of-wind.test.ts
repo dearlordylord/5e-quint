@@ -288,6 +288,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     const initialSession = spellBattleWithTargetRayOfFrost({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterClassLevels: [{ className: "wizard", level: 3 }],
     });
     const castAct = spellAct({
       session: initialSession,
@@ -702,6 +703,7 @@ function castGustOfWind(
   const state = spellBattle({
     preparedSpells: [spell],
     spellSlots: [{ spellLevel: 2, count: 1 }],
+    casterClassLevels: [{ className: "wizard", level: 3 }],
   });
   const act = spellAct({
     session: state,
