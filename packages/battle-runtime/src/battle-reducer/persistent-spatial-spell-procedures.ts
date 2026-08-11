@@ -1247,9 +1247,6 @@ function validateFlamingSphereDamageRoll(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   hole: BattleFlamingSphereDamageRollHole,
 ): string | null {
-  if (fill.holeId !== hole.holeId) {
-    return "Movable zone damage must use the selected damage hole.";
-  }
   return validateRolledDiceFillForDiceExpr(fill, hole.movableZone.damage.expr);
 }
 
@@ -1257,9 +1254,6 @@ function validateFlamingSphereRamMovement(
   fill: Extract<BattleFill, { readonly kind: "movableZoneRamMovement" }>,
   hole: BattleFlamingSphereRamMovementHole,
 ): string | null {
-  if (fill.holeId !== hole.holeId) {
-    return "Movable zone ram movement must use the selected sphere movement hole.";
-  }
   if (
     Number(fill.value.moveFeet) <= 0 ||
     !Number.isInteger(fill.value.moveFeet)
@@ -1966,9 +1960,6 @@ function validateMoonbeamDamageRoll(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
   hole: BattleMoonbeamDamageRollHole,
 ): string | null {
-  if (fill.holeId !== hole.holeId) {
-    return "Movable zone save damage must use the selected damage hole.";
-  }
   return validateRolledDiceFillForDiceExpr(fill, hole.movableZone.damage.expr);
 }
 
