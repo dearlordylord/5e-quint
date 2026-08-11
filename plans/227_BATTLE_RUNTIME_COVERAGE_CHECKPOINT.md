@@ -63,23 +63,24 @@ replace the public root diagnostic above or establish the state of other
 packages.
 
 - Date: 2026-08-10
-- Git HEAD: `0837bcce0`
+- Git HEAD: `5c4ea30d5`
 - Command: the checked-in battle-runtime Vitest coverage invocation, with one
   worker and the JSON reporter, under
   `with_resource_lock_owner scripts/with-broad-workspace-lock.sh`
 - Result: exit 0
-- Duration: 85.42 seconds after lock acquisition
+- Duration: 68.60 seconds after lock acquisition
 - Battle-runtime tests: 214/214 files passed; 2,322 tests passed and 53 skipped
   (2,375 total)
-- Coordination note: this exact run was already active when a GH-213 focused
-  Quint typecheck began under the separate MBT lock. The commands overlapped;
-  this run exited 0 without SIGKILL, and no further heavy verification was
-  launched from this worktree.
+- Coordination note: root confirmed the external Battle Runtime coverage lane
+  was empty before this final exact run began. The run exited 0 without overlap
+  or SIGKILL. Follow-up `caf1c4dff` only removes three defensive lines from the
+  causal test after its length assertion; production, executed scenario, test
+  count, and the coverage instrumentation boundary are unchanged.
 
 | Metric     |  M22 exact covered / total |  M23 exact covered / total | Covered / total change |     Uncovered change | Percentage change |
 | ---------- | -------------------------: | -------------------------: | ---------------------: | -------------------: | ----------------: |
 | Statements | 121,188 / 124,871 (97.05%) | 121,209 / 124,862 (97.07%) |                21 / -9 | 3,683 -> 3,653 (-30) |           +0.02pp |
-| Branches   |   30,821 / 32,695 (94.27%) |   30,811 / 32,679 (94.28%) |              -10 / -16 |  1,874 -> 1,868 (-6) |           +0.02pp |
+| Branches   |   30,821 / 32,695 (94.27%) |   30,826 / 32,694 (94.29%) |                 5 / -1 |  1,874 -> 1,868 (-6) |           +0.02pp |
 | Functions  |       4,813 / 4,813 (100%) |       4,814 / 4,814 (100%) |                  1 / 1 |               0 -> 0 |                 0 |
 | Lines      | 121,188 / 124,871 (97.05%) | 121,209 / 124,862 (97.07%) |                21 / -9 | 3,683 -> 3,653 (-30) |           +0.02pp |
 
@@ -88,10 +89,10 @@ lines, functions, and branches. No threshold was lowered. M23 replaces Magic
 Weapon's duplicate held-weapon and Wild Shape usability branches with the
 canonical item-level `loadoutHasUsableHeldWeaponItem` owner. Shillelagh uses
 the slot-level `loadoutHeldWeaponSlotIsUsable` protocol, so duplicate item
-identities cannot make one held occurrence admit or execute another. Ten
-previously covered branch arms disappeared with the duplicate, so the
-covered-branch numerator fell while uncovered branches and the denominator both
-improved.
+identities cannot make one held occurrence admit or execute another. The final
+execution-correlation scenario materialized and covered 15 additional branch
+points relative to the prior exact run. Against M22, covered branches increased
+by 5 while uncovered branches fell by 6 and the denominator fell by 1.
 
 ## Remaining static 99% gaps
 
@@ -101,7 +102,7 @@ or instrumentation changes rather than treating them as a fixed work quota.
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
 | Statements | 121,209 | 124,862 |                  123,614 |         2,405 |
-| Branches   |  30,811 |  32,679 |                   32,353 |         1,542 |
+| Branches   |  30,826 |  32,694 |                   32,368 |         1,542 |
 | Functions  |   4,814 |   4,814 |                    4,766 |             0 |
 | Lines      | 121,209 | 124,862 |                  123,614 |         2,405 |
 
@@ -115,14 +116,19 @@ that slot's limb and equipment-disposition facts; a usable off-hand occurrence
 therefore cannot admit an unusable main occurrence with the same item identity.
 An existing public Beast Spells lifecycle scenario now covers the representable
 duplicate-identity case: both merged slots expose no Shillelagh act, while a
-merged main slot and worn off-hand slot expose exactly one. The scenario was a
-causal red before slot identity was threaded through execution and is a net 11
-test lines relative to M22. Against 21 newly covered statements, 11 / 21 = 0.52
-test lines per newly covered statement, within the pre-edit ceiling of 2; the
-production denominator also fell by 9 statements and 16 branches. No modeled
-rule changed. The public Magic Weapon, weapon-hosted route, and Wild Shape
-lifecycle cohort passed 92 tests; package typecheck, targeted lint, formatting,
-the 52-test Wild Shape file, and the exact gate above were green. The mapped
+merged main slot and worn off-hand slot expose exactly one. It retains that
+off-hand-bound public subject, changes to an alternate state where only the
+duplicate-ID main slot is usable, and proves resolution rejects the stale
+off-hand correlation. A mutation that forced execution to recheck the main slot
+made this assertion fail with `resolved` instead of `unsupportedSubject`, so it
+distinguishes slot-aware execution from admission-only filtering. The complete
+scenario is a net 42 test lines relative to M22. Against 21 newly covered
+statements, 42 / 21 = 2.00 test lines per newly covered statement, exactly at
+the pre-edit ceiling; the production denominator also fell by 9 statements and
+1 branch. No modeled rule changed. The public Magic Weapon, weapon-hosted route,
+and Wild Shape lifecycle cohort passed 92 tests; package typecheck, targeted
+lint, formatting, the 52-test Wild Shape file, and the exact gate above were
+green. The mapped
 `BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS` MBT passed 9/9 tests through its
 public locked script (61.18-second Vitest duration; 1m38.641s wall time). Two
 review rounds found no remaining RAW, domain, architecture/connascence,
@@ -198,7 +204,7 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting exact battle-runtime metric at 94.28%, with a
+Branches remain the limiting exact battle-runtime metric at 94.29%, with a
 static 99% gap of 1,542. Do not retry the rejected attack-control helper matrix.
 Rerank the exact uncovered report against public lifecycle coverage before the
 next increment; defensive route/profile behavior remains an independent
