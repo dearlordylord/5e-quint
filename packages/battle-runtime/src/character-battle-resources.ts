@@ -418,15 +418,6 @@ function bookOfShadowsOnPersonAccesses(
   );
 }
 
-export function characterBattleInvocationSpellAccessInitIssue(
-  invocationSpellAccesses: readonly CharacterBattleInvocationSpellAccessInit[],
-): string | null {
-  const parsed = parseCharacterBattleInvocationSpellAccesses(
-    invocationSpellAccesses,
-  );
-  return parsed.tag === "issue" ? parsed.message : null;
-}
-
 /* v8 ignore start -- Malformed ritual-access initialization: admitted spellbook entries are unique, leveled ritual spells carrying their typed spellbook-Ritual facts. */
 export function characterBattleSpellbookRitualSpellAccessInitIssue(
   spellbookRitualSpellAccesses: readonly CharacterBattleSpellbookRitualSpellAccessInit[],
