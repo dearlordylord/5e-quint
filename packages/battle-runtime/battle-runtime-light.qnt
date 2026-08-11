@@ -24,37 +24,6 @@ module battleRuntimeLight {
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
   import battleRuntimeEndOfTurnLightExpiration.* from "./battle-runtime-end-of-turn-light-expiration"
 
-  pure def tickDurationLightEmitters(emitters: Set[LightEmitter]): Set[LightEmitter] =
-    emitters
-      .map(emitter => match emitter {
-        | SpellLightEmitter(data) => match data.expiresAt {
-          | DurationLightEmitterExpiration(expiresAt) =>
-            if (expiresAt.durationTicks > 0)
-              SpellLightEmitter({
-                ...data,
-                expiresAt: DurationLightEmitterExpiration({
-                  durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(expiresAt.durationTicks),
-                }),
-              })
-            else
-              emitter
-          | EndOfTurnLightEmitterExpiration(_) => emitter
-          | ConcentrationLightEmitterExpiration(_) => emitter
-          | UntilDispelledLightEmitterExpiration => emitter
-        }
-        | ObjectInvisibleRevealLightEmitter(_) => emitter
-      })
-      .filter(emitter => match emitter {
-        | SpellLightEmitter(data) => match data.expiresAt {
-          | DurationLightEmitterExpiration(expiresAt) =>
-            battleRuntimeTimedSpellEffectRemainsActive(expiresAt.durationTicks)
-          | EndOfTurnLightEmitterExpiration(_) => true
-          | ConcentrationLightEmitterExpiration(_) => true
-          | UntilDispelledLightEmitterExpiration => true
-        }
-        | ObjectInvisibleRevealLightEmitter(_) => true
-      })
-
   pure def produceFlameBrightLightRadiusFeet: int = 20
 
   pure def produceFlameDimLightAdditionalFeet: int = 20
@@ -445,24 +414,6 @@ module battleRuntimeLight {
             dispelMagicEndsOngoingSpellTracking(data.ongoingSpellTracking, slotLevel, successfulCheckEffectIds)
           )
       | ObjectInvisibleRevealLightEmitter(_) => true
-    })
-
-  pure def dispelMagicObjectTargetActiveEffects(
-    effects: Set[ActiveEffect],
-    objectId: int,
-    slotLevel: int,
-    successfulCheckEffectIds: Set[int],
-  ): Set[ActiveEffect] =
-    effects.filter(effect => match effect {
-      | HeatMetalObjectContactDamage(data) =>
-          data.objectId != objectId
-          or not(dispelMagicEndsTrackedOngoingSpell(
-            slotLevel,
-            successfulCheckEffectIds,
-            data.effectId,
-            data.sourceSpellLevel,
-          ))
-      | _ => true
     })
 
   pure def ongoingSpellTrackingSourceEffectIdIn(
