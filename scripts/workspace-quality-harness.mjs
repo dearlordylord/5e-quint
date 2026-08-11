@@ -18,6 +18,11 @@ import {
   complexityMeasurementsFromEslint,
   complexityRegressionsAgainstBaseline,
 } from "./cyclomatic-complexity-policy.mjs";
+import {
+  NON_PRODUCTION_TYPESCRIPT_GLOBS,
+  PRODUCTION_TYPESCRIPT_INCLUDE,
+  sourceGlobsUnder,
+} from "./workspace-source-policy.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const PACKAGE_ROOT = join(ROOT, "packages");
@@ -25,25 +30,7 @@ const COMPLEXITY_BASELINE_PATH = join(
   ROOT,
   "cyclomatic-complexity-baseline.json",
 );
-const PRODUCTION_INCLUDE = "src/**/*.{ts,tsx}";
-const COMMON_COVERAGE_EXCLUDES = [
-  "src/**/*.test.ts",
-  "src/**/*.test.tsx",
-  "src/**/*.mbt.test.ts",
-  "src/**/*.test-support.ts",
-  "src/**/*.qnt-replay.test-support.ts",
-  "src/**/*.replay-data.test-support.ts",
-  "src/**/*.gen.*",
-];
-const COMMON_DUPLICATION_EXCLUDES = [
-  "**/*.test.ts",
-  "**/*.test.tsx",
-  "**/*.mbt.test.ts",
-  "**/*.test-support.ts",
-  "**/*.qnt-replay.test-support.ts",
-  "**/*.replay-data.test-support.ts",
-  "**/*.gen.*",
-];
+const COMMON_COVERAGE_EXCLUDES = sourceGlobsUnder("src");
 
 // Every production package must appear here. Coverage floors are temporary
 // non-regression ratchets, initially measured on 2026-07-26, incrementally
@@ -238,7 +225,7 @@ function checkDuplication() {
           "--threshold",
           "100",
           "--ignore",
-          COMMON_DUPLICATION_EXCLUDES.join(","),
+          NON_PRODUCTION_TYPESCRIPT_GLOBS.join(","),
           "--reporters",
           "json",
           "--output",
@@ -271,6 +258,8 @@ function checkDuplication() {
 async function checkCyclomaticComplexity(pruneBaseline) {
   checkInventory();
   const { ESLint } = await import("eslint");
+  const { complexityIdentityResolver } =
+    await import("./cyclomatic-complexity-identities.mjs");
   const eslint = new ESLint({
     cwd: ROOT,
     overrideConfigFile: join(ROOT, "eslint.complexity.config.mjs"),
@@ -295,7 +284,11 @@ async function checkCyclomaticComplexity(pruneBaseline) {
     );
   }
 
-  const measurements = complexityMeasurementsFromEslint(ROOT, results);
+  const measurements = complexityMeasurementsFromEslint(
+    ROOT,
+    results,
+    complexityIdentityResolver(),
+  );
   const baseline = JSON.parse(readFileSync(COMPLEXITY_BASELINE_PATH, "utf8"));
   if (pruneBaseline) {
     const policyIssues = complexityBaselineIssues(
@@ -344,7 +337,7 @@ async function checkCyclomaticComplexity(pruneBaseline) {
     );
   }
   const violationCount = Object.values(measurements).reduce(
-    (count, values) => count + values.length,
+    (count, identities) => count + Object.keys(identities).length,
     0,
   );
   process.stdout.write(
@@ -361,7 +354,7 @@ function coverageArguments(coverage) {
     "**/*.mbt.test.ts",
     "--coverage",
     "--coverage.reporter=text-summary",
-    `--coverage.include=${PRODUCTION_INCLUDE}`,
+    `--coverage.include=${PRODUCTION_TYPESCRIPT_INCLUDE}`,
     ...COMMON_COVERAGE_EXCLUDES.map(
       (excluded) => `--coverage.exclude=${excluded}`,
     ),
@@ -450,7 +443,7 @@ function selfTest() {
         "--coverage.provider=v8",
         "--coverage.reporter=json-summary",
         `--coverage.reportsDirectory=${coverageReports}`,
-        `--coverage.include=${PRODUCTION_INCLUDE}`,
+        `--coverage.include=${PRODUCTION_TYPESCRIPT_INCLUDE}`,
         "--coverage.exclude=src/**/*.test.ts",
         "--maxWorkers=1",
       ],
@@ -474,7 +467,9 @@ function selfTest() {
   for (const policy of Object.values(PACKAGE_POLICIES)) {
     if (policy.coverage !== "packageConfig") {
       const args = coverageArguments(policy.coverage);
-      assert(args.includes(`--coverage.include=${PRODUCTION_INCLUDE}`));
+      assert(
+        args.includes(`--coverage.include=${PRODUCTION_TYPESCRIPT_INCLUDE}`),
+      );
       assert(
         !COMMON_COVERAGE_EXCLUDES.some(
           (excluded) => excluded === "src/**/*.ts" || excluded === "src/**",

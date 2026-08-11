@@ -83,11 +83,12 @@ pnpm dev                        # React UI
 ```
 
 `pnpm check:complexity` applies classic cyclomatic complexity with a maximum of
-8 to production-package source. Existing violations are recorded as an exact,
-descending per-file complexity vector, so a new violation, a higher ranked
-value, or an obsolete baseline fails the gate. Tests, generated files, test
-support, and throwaway prototypes are excluded. Inline ESLint configuration is
-disabled for this analysis; complexity exceptions cannot be hidden in source.
+8 to production-package source. Existing violations are recorded by stable,
+syntax-derived function identity and measured value, so a new violation, an
+increase in an existing function, or an obsolete baseline entry fails the gate.
+Tests, generated files, test support, and throwaway prototypes are excluded.
+Inline ESLint configuration is disabled for this analysis; complexity
+exceptions cannot be hidden in source.
 After reducing existing debt, run `pnpm check:complexity:prune` to ratchet the
 baseline downward. That command refuses to record regressions.
 

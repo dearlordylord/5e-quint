@@ -1,36 +1,50 @@
 import { relative, resolve } from "node:path";
 
+import { NON_PRODUCTION_TYPESCRIPT_GLOBS } from "./workspace-source-policy.mjs";
+
 export const CYCLOMATIC_COMPLEXITY_THRESHOLD = 8;
 export const CYCLOMATIC_COMPLEXITY_VARIANT = "classic";
+export const CYCLOMATIC_COMPLEXITY_IGNORES = [
+  "**/node_modules/**",
+  "**/dist/**",
+  "**/build/**",
+  "**/coverage/**",
+  ...NON_PRODUCTION_TYPESCRIPT_GLOBS,
+];
 
 const complexityMessagePattern = /complexity of (?<complexity>\d+)\./u;
-
-/** @param {readonly number[]} values */
-function formatComplexityVector(values) {
-  return `[${values.join(", ")}]`;
-}
 
 /**
  * @typedef {{
  *   readonly threshold: number;
  *   readonly variant: string;
- *   readonly files: Readonly<Record<string, readonly number[]>>;
+ *   readonly files: Readonly<Record<string, Readonly<Record<string, number>>>>;
  * }} ComplexityBaseline
  */
 
 /**
  * @param {string} workspaceRoot
- * @param {readonly { readonly filePath: string; readonly messages: readonly { readonly ruleId: string | null; readonly message: string }[] }[]} results
- * @returns {Record<string, number[]>}
+ * @param {readonly { readonly filePath: string; readonly messages: readonly { readonly ruleId: string | null; readonly message: string; readonly line?: number; readonly column?: number }[] }[]} results
+ * @param {(filename: string, diagnostic: { readonly line: number; readonly column: number }) => string} identityForDiagnostic
+ * @returns {Record<string, Record<string, number>>}
  */
-export function complexityMeasurementsFromEslint(workspaceRoot, results) {
-  /** @type {Map<string, number[]>} */
+export function complexityMeasurementsFromEslint(
+  workspaceRoot,
+  results,
+  identityForDiagnostic,
+) {
+  /** @type {Map<string, Map<string, number>>} */
   const measurements = new Map();
 
   for (const result of results) {
     const filename = relative(workspaceRoot, resolve(result.filePath));
     for (const message of result.messages) {
       if (message.ruleId !== "complexity") continue;
+      if (message.line === undefined || message.column === undefined) {
+        throw new Error(
+          `Complexity diagnostic for ${filename} has no location.`,
+        );
+      }
       const match = complexityMessagePattern.exec(message.message);
       if (match?.groups?.complexity === undefined) {
         throw new Error(
@@ -38,19 +52,29 @@ export function complexityMeasurementsFromEslint(workspaceRoot, results) {
         );
       }
       const measuredComplexity = Number.parseInt(match.groups.complexity, 10);
-      measurements.set(filename, [
-        ...(measurements.get(filename) ?? []),
-        measuredComplexity,
-      ]);
+      const identity = identityForDiagnostic(result.filePath, {
+        line: message.line,
+        column: message.column,
+      });
+      const fileMeasurements = measurements.get(filename) ?? new Map();
+      if (fileMeasurements.has(identity)) {
+        throw new Error(
+          `Cyclomatic complexity identity is not unique in ${filename}: ${identity}`,
+        );
+      }
+      fileMeasurements.set(identity, measuredComplexity);
+      measurements.set(filename, fileMeasurements);
     }
   }
 
   return Object.fromEntries(
     [...measurements]
       .sort(([left], [right]) => left.localeCompare(right))
-      .map(([filename, values]) => [
+      .map(([filename, identities]) => [
         filename,
-        values.toSorted((left, right) => right - left),
+        Object.fromEntries(
+          [...identities].sort(([left], [right]) => left.localeCompare(right)),
+        ),
       ]),
   );
 }
@@ -59,7 +83,7 @@ export function complexityMeasurementsFromEslint(workspaceRoot, results) {
  * @param {ComplexityBaseline} baseline
  * @param {number} configuredThreshold
  * @param {string} configuredVariant
- * @param {Readonly<Record<string, readonly number[]>>} measurements
+ * @param {Readonly<Record<string, Readonly<Record<string, number>>>>} measurements
  * @returns {string[]}
  */
 export function complexityBaselineIssues(
@@ -87,12 +111,22 @@ export function complexityBaselineIssues(
   for (const filename of [...filenames].sort((left, right) =>
     left.localeCompare(right),
   )) {
-    const expected = baseline.files[filename] ?? [];
-    const actual = measurements[filename] ?? [];
-    if (JSON.stringify(expected) !== JSON.stringify(actual)) {
-      issues.push(
-        `${filename}: expected ${formatComplexityVector(expected)}, found ${formatComplexityVector(actual)}`,
-      );
+    const expected = baseline.files[filename] ?? {};
+    const actual = measurements[filename] ?? {};
+    const identities = new Set([
+      ...Object.keys(expected),
+      ...Object.keys(actual),
+    ]);
+    for (const identity of [...identities].sort((left, right) =>
+      left.localeCompare(right),
+    )) {
+      const expectedComplexity = expected[identity];
+      const actualComplexity = actual[identity];
+      if (expectedComplexity !== actualComplexity) {
+        issues.push(
+          `${filename} :: ${identity}: expected ${expectedComplexity ?? "absent"}, found ${actualComplexity ?? "absent"}`,
+        );
+      }
     }
   }
   return issues;
@@ -100,7 +134,7 @@ export function complexityBaselineIssues(
 
 /**
  * @param {ComplexityBaseline} baseline
- * @param {Readonly<Record<string, readonly number[]>>} measurements
+ * @param {Readonly<Record<string, Readonly<Record<string, number>>>>} measurements
  * @returns {string[]}
  */
 export function complexityRegressionsAgainstBaseline(baseline, measurements) {
@@ -108,19 +142,16 @@ export function complexityRegressionsAgainstBaseline(baseline, measurements) {
   for (const [filename, actual] of Object.entries(measurements).sort(
     ([left], [right]) => left.localeCompare(right),
   )) {
-    const expected = baseline.files[filename] ?? [];
-    for (const [index, measuredComplexity] of actual.entries()) {
-      const recordedComplexity = expected[index];
+    const expected = baseline.files[filename] ?? {};
+    for (const [identity, measuredComplexity] of Object.entries(actual)) {
+      const recordedComplexity = expected[identity];
       if (recordedComplexity === undefined) {
-        const addedCount = actual.length - expected.length;
         issues.push(
-          `${filename}: added ${addedCount} ${addedCount === 1 ? "violation" : "violations"} above the threshold`,
+          `${filename} :: ${identity}: added complexity ${measuredComplexity} above the threshold`,
         );
-        break;
-      }
-      if (measuredComplexity > recordedComplexity) {
+      } else if (measuredComplexity > recordedComplexity) {
         issues.push(
-          `${filename}: ranked violation ${index + 1} increased from ${recordedComplexity} to ${measuredComplexity}`,
+          `${filename} :: ${identity}: increased from ${recordedComplexity} to ${measuredComplexity}`,
         );
       }
     }
