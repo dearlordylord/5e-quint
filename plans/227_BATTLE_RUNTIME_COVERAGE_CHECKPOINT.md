@@ -104,6 +104,13 @@ materialization churned across the package but netted +6 covered / +6 total,
 leaving its uncovered count unchanged; the package-wide six-branch uncovered
 reduction is exactly the changed-owner movement. Functions remain 100%.
 
+Integration subsequently synchronized the clean `master` milestone through
+`3c1e061b3`, including the parallel Ice Knife and typed character-admission
+increments described below. Those commits are not present in the M28
+lane-local totals above. The next exact package baseline must therefore
+remeasure the combined integration HEAD before these remaining-gap figures are
+used for selection.
+
 ## Remaining static 99% gaps
 
 These are planning gaps at the current denominators. Recompute them after code
@@ -233,6 +240,27 @@ package gate. Against its pre-increment measurement at `a757810a1`, statements
 and lines moved from 121,226 / 124,871 to 121,280 / 124,892, branches from
 30,853 / 32,718 to 30,883 / 32,730, and functions remained 4,813 / 4,813.
 
+A parallel M24 increment on `master` covered Ice Knife's attack-burst
+boundaries through public battle procedures: Halfling natural-one rerolls,
+Sanctuary retargeting, Mirror Image interception, distinct attack and burst
+relationship decisions, and spell-cast, attack-hit, failed-save, and
+after-damage reaction windows. Review replaced manually injected effects with
+real casts, corrected caster classes and levels, strengthened the damage-event
+relationship oracles, and converged with eight focused tests, package
+typecheck, formatting, and its exact package gate. The milestone is commit
+`384dd3e6b`.
+
+A parallel M25 increment on `master` converted malformed character battle
+initialization from assertion throws to accumulated typed issues for duplicate
+resource, feature, and Weapon Mastery identities; contradictory loadout/hand
+facts; and invalid zero-Hit-Point lifecycle state. Spellcasting invocation
+access is parsed once and threaded through projection, and the superseded
+invocation-admission wrapper was deleted. Review converged with 27 focused
+tests, package typecheck, lint, formatting, complexity inspection, and its exact
+package gate. Commits `4204f0ec3` and `5f1b47e2d` moved statements and lines
+from 121,327 / 124,892 to 121,480 / 125,002, branches from 30,917 / 32,751 to
+30,949 / 32,770, and functions from 4,813 / 4,813 to 4,817 / 4,817.
+
 M21 covered persistent spatial spell and active-effect lifecycles through
 public, reachable battle scenarios: failed-save Reaction continuation for
 Grease, Gust of Wind, Flaming Sphere, and Moonbeam; successful and stale Web
@@ -298,7 +326,8 @@ and remeasure only after the next coherent increment.
 ## Next campaign
 
 Branches remain the limiting exact M28 battle-runtime metric at 94.40%, with a
-lane-local static 99% gap of 1,507.
+lane-local static 99% gap of 1,507 pending the combined post-sync
+remeasurement.
 Do not retry the rejected attack-control helper matrix or the isolated
 Spiritual Weapon synthesized-admission conversion.
 Rerank the exact uncovered report against public lifecycle coverage before the
