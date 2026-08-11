@@ -186,6 +186,15 @@ mapped weapon/stat-block/relationship MBTs and repeat the reviewer loop before
 remeasurement. Defensive route/profile behavior remains a later independent
 candidate.
 
+A rejected M23 codec audit exposed a correctness issue worth retaining for a
+later cohesive boundary tranche: the open `rolledDice` schema member can accept
+a specialized hole payload and strip its selector fields during decode. A
+disjoint-fallback prototype preserved specialized fields, rejected malformed
+specialized payloads, and kept genuine open placeholders valid, but its focused
+coverage delta was only 23 sites and the prototype was fully reverted under the
+milestone threshold. A future fix must make the generic and specialized schema
+shapes structurally disjoint rather than rely on union-member ordering.
+
 ## Verification and completion
 
 1. Before changing a modeled rule, trace it to the relevant local SRD passage
