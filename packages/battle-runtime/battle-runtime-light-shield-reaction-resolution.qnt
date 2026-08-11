@@ -95,30 +95,34 @@ module battleRuntimeLightShieldReactionResolution {
     state: BattleState,
     reactor: Actor,
     frame: LightShieldReactionFrame,
-  ): BattleState =
-    match takeShieldReactionDecision(state, reactor) {
+  ): BattleState = {
+    val decision = takeShieldReactionDecision(state, reactor)
+    match decision {
       | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameClosed(data)) =>
           resumeLightShieldReactionAfterTake(data.state, frame.continuation)
       | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameOpen(data)) =>
           data.state
       | _ => state
     }
+  }
 
   pure def declineLightShieldReactionFrame(
     state: BattleState,
     reactor: Actor,
     frame: LightShieldReactionFrame,
-  ): BattleState =
-    match declineShieldReactionDecision(
+  ): BattleState = {
+    val decision = declineShieldReactionDecision(
       state,
       reactor,
-    ) {
+    )
+    match decision {
       | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameClosed(data)) =>
           resumeLightShieldReactionAfterDecline(data.state, frame.continuation)
       | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameOpen(data)) =>
           data.state
       | _ => state
     }
+  }
 
   pure def resolveLightShieldReactionOffer(
     state: BattleState,

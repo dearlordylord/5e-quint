@@ -57,30 +57,34 @@ module battleRuntimeDirectShieldReactionResolution {
     state: BattleState,
     reactor: Actor,
     frame: DirectShieldReactionFrame,
-  ): BattleState =
-    match takeShieldReactionDecision(state, reactor) {
+  ): BattleState = {
+    val decision = takeShieldReactionDecision(state, reactor)
+    match decision {
       | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameClosed(data)) =>
           resumeDirectShieldReactionAfterTake(data.state, frame.continuation)
       | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameOpen(data)) =>
           data.state
       | _ => state
     }
+  }
 
   pure def declineDirectShieldReactionFrame(
     state: BattleState,
     reactor: Actor,
     frame: DirectShieldReactionFrame,
-  ): BattleState =
-    match declineShieldReactionDecision(
+  ): BattleState = {
+    val decision = declineShieldReactionDecision(
       state,
       reactor,
-    ) {
+    )
+    match decision {
       | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameClosed(data)) =>
           resumeDirectShieldReactionAfterDecline(data.state, frame.continuation)
       | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameOpen(data)) =>
           data.state
       | _ => state
     }
+  }
 
   pure def resolveDirectShieldReactionOffer(
     state: BattleState,

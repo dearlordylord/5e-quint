@@ -83,30 +83,34 @@ module battleRuntimeSaveGatedShieldReactionResolution {
     state: BattleState,
     reactor: Actor,
     frame: SaveGatedShieldReactionFrame,
-  ): BattleState =
-    match takeShieldReactionDecision(state, reactor) {
+  ): BattleState = {
+    val decision = takeShieldReactionDecision(state, reactor)
+    match decision {
       | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameClosed(data)) =>
           resumeSaveGatedShieldReactionAfterTake(data.state, frame.continuation)
       | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameOpen(data)) =>
           data.state
       | _ => state
     }
+  }
 
   pure def declineSaveGatedShieldReactionFrame(
     state: BattleState,
     reactor: Actor,
     frame: SaveGatedShieldReactionFrame,
-  ): BattleState =
-    match declineShieldReactionDecision(
+  ): BattleState = {
+    val decision = declineShieldReactionDecision(
       state,
       reactor,
-    ) {
+    )
+    match decision {
       | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameClosed(data)) =>
           resumeSaveGatedShieldReactionAfterDecline(data.state, frame.continuation)
       | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameOpen(data)) =>
           data.state
       | _ => state
     }
+  }
 
   pure def resolveSaveGatedShieldReactionOffer(
     state: BattleState,

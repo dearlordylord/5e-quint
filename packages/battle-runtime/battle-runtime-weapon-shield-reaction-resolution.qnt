@@ -81,30 +81,34 @@ module battleRuntimeWeaponShieldReactionResolution {
     state: BattleState,
     reactor: Actor,
     frame: WeaponShieldReactionFrame,
-  ): BattleState =
-    match takeShieldReactionDecision(state, reactor) {
+  ): BattleState = {
+    val decision = takeShieldReactionDecision(state, reactor)
+    match decision {
       | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameClosed(data)) =>
           resumeWeaponShieldReactionAfterTake(data.state, frame.continuation)
       | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameOpen(data)) =>
           data.state
       | _ => state
     }
+  }
 
   pure def declineWeaponShieldReactionFrame(
     state: BattleState,
     reactor: Actor,
     frame: WeaponShieldReactionFrame,
-  ): BattleState =
-    match declineShieldReactionDecision(
+  ): BattleState = {
+    val decision = declineShieldReactionDecision(
       state,
       reactor,
-    ) {
+    )
+    match decision {
       | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameClosed(data)) =>
           resumeWeaponShieldReactionAfterDecline(data.state, frame.continuation)
       | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameOpen(data)) =>
           data.state
       | _ => state
     }
+  }
 
   pure def resolveWeaponShieldReactionOffer(
     state: BattleState,
