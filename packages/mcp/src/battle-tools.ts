@@ -282,7 +282,11 @@ function battleResolutionContent(
   root: McpCompositionRoot,
   result: BattleRuntimeResolutionResult,
 ): BattleToolResult {
-  const payload = battleResolutionPayload(root, result, result.session);
+  const payload = battleResolutionPayload(
+    root,
+    result,
+    root.sessionStore.battleSession ?? result.session,
+  );
   return Either.isLeft(payload)
     ? battleSnapshotPresentationIssueContent(payload.left)
     : schemaJsonContent(BattleResolutionOutputSchema, payload.right);

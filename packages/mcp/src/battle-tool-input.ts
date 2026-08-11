@@ -24,6 +24,7 @@ import {
   decodeStartBattleArgs,
   type StartBattleToolInput,
 } from "./start-battle-tool-input.ts";
+import { errorContent } from "./tool-content.ts";
 
 const EmptyArgsSchema = Schema.Struct({});
 const CombatantIdTextSchema = Schema.NonEmptyTrimmedString.annotations({
@@ -34,22 +35,24 @@ const SelectStatBlockArgsSchema = Schema.Struct({
     description: "SRD Stat Block id from list_stat_blocks.",
   }),
 });
+const BattleSubjectJsonSchema = Schema.String.pipe(
+  Schema.minLength(2),
+).annotations({
+  description:
+    "JSON.stringify(subject) for the exact subject returned by discover_battle_acts.",
+});
+const BattleFillJsonSchema = Schema.String.pipe(
+  Schema.minLength(2),
+).annotations({
+  description:
+    "JSON.stringify(fill) for one BattleFill matching the next returned hole.",
+});
 const FillBattleHoleArgsSchema = Schema.Struct({
-  subject: BattleSubjectSchema.annotations({
-    description:
-      "Battle act subject returned by discover_battle_acts. Copy it exactly.",
-  }),
-  fill: BattleFillSchema.annotations({
-    identifier: "BattleFill",
-    description:
-      "One BattleFill matching the next hole returned by the battle runtime for the selected act replay.",
-  }),
+  subjectJson: BattleSubjectJsonSchema,
+  fillJson: BattleFillJsonSchema,
 });
 const ResolveBattleActArgsSchema = Schema.Struct({
-  subject: BattleSubjectSchema.annotations({
-    description:
-      "No-hole battle act subject returned by discover_battle_acts, such as Action Surge.",
-  }),
+  subjectJson: BattleSubjectJsonSchema,
   reactionSpellTargetFacts: Schema.optionalWith(
     Schema.Array(
       Schema.Struct({
@@ -250,10 +253,22 @@ function decodeFillBattleHoleArgs(
   );
   if (Either.isLeft(record)) return Either.left(record.left);
 
-  return Either.right({
-    subject: record.right.subject,
-    fill: record.right.fill,
-  });
+  const subject = decodeJsonFact(
+    BattleSubjectSchema,
+    record.right.subjectJson,
+    battleToolNames.fillBattleHole,
+    "subjectJson",
+  );
+  if (Either.isLeft(subject)) return Either.left(subject.left);
+  return Either.map(
+    decodeJsonFact(
+      BattleFillSchema,
+      record.right.fillJson,
+      battleToolNames.fillBattleHole,
+      "fillJson",
+    ),
+    (fill) => ({ subject: subject.right, fill }),
+  );
 }
 
 function decodeResolveBattleActArgs(
@@ -264,9 +279,17 @@ function decodeResolveBattleActArgs(
     args,
     battleToolNames.resolveBattleAct,
   );
-  return Either.map(record, (value) => ({
-    subject: value.subject,
-    reactionSpellTargetFacts: (value.reactionSpellTargetFacts ?? []).map(
+  if (Either.isLeft(record)) return Either.left(record.left);
+  const subject = decodeJsonFact(
+    BattleSubjectSchema,
+    record.right.subjectJson,
+    battleToolNames.resolveBattleAct,
+    "subjectJson",
+  );
+  if (Either.isLeft(subject)) return Either.left(subject.left);
+  return Either.right({
+    subject: subject.right,
+    reactionSpellTargetFacts: (record.right.reactionSpellTargetFacts ?? []).map(
       (fact) => ({
         kind: fact.kind,
         reactorId: combatantId(fact.reactorId),
@@ -275,7 +298,25 @@ function decodeResolveBattleActArgs(
         rangeFeet: movementFeet(fact.rangeFeet),
       }),
     ),
-  }));
+  });
+}
+
+function decodeJsonFact<A, I>(
+  schema: Schema.Schema<A, I, never>,
+  json: string,
+  toolName: BattleToolName,
+  field: string,
+): ToolInputResult<A> {
+  return Either.mapLeft(
+    Schema.decodeUnknownEither(Schema.parseJson(schema), {
+      onExcessProperty: "error",
+    })(json),
+    (issue) =>
+      errorContent(`${toolName} expects valid ${field} JSON.`, {
+        code: "INVALID_ARGUMENTS",
+        message: issue.message,
+      }),
+  );
 }
 
 function decodeEndTurnArgs(

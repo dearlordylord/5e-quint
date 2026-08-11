@@ -10,9 +10,18 @@ import {
   toolDefinitions,
   type McpCompositionRoot,
 } from "./server.ts";
+import type { McpObjectInputSchema, McpOutputSchema } from "./schema-codec.ts";
+
+type ProtocolToolDefinition = {
+  readonly name: string;
+  readonly description: string;
+  readonly inputSchema: McpObjectInputSchema;
+  readonly outputSchema?: McpOutputSchema;
+};
 
 export function createDndMcpProtocolServer(
   root: McpCompositionRoot = createMcpCompositionRoot(),
+  definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
 ) {
   const server = new Server(
     { name: "dnd-surface-runtime", version: "0.1.0" },
@@ -20,7 +29,7 @@ export function createDndMcpProtocolServer(
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: toolDefinitions,
+    tools: definitions,
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request) =>

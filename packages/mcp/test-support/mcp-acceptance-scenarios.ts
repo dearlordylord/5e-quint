@@ -21,6 +21,7 @@ import {
   GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
 } from "./battle-act-labels.ts";
 import { loadoutHoleId, unitHoleId } from "./creation-hole-ids.ts";
+import { battleToolWireArgs } from "./battle-tool-wire-args.ts";
 
 type JsonObject = Record<string, unknown>;
 
@@ -436,9 +437,9 @@ export async function verifyToolContract(client: Client) {
   );
   assert.ok(fillBattleHole, "fill_battle_hole tool must be registered");
   const battleFillSchemaText = JSON.stringify(fillBattleHole.inputSchema);
-  assert.match(battleFillSchemaText, /targetChoice/);
-  assert.match(battleFillSchemaText, /attackRoll/);
-  assert.match(battleFillSchemaText, /rolledDice/);
+  assert.match(battleFillSchemaText, /subjectJson/);
+  assert.match(battleFillSchemaText, /fillJson/);
+  assert.ok(battleFillSchemaText.length < 2048);
 
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_goblin_warrior",
@@ -3254,7 +3255,10 @@ async function fillBaseCharacter(
 }
 
 async function callTool(client: Client, name: string, args: JsonObject) {
-  const result = await client.callTool({ name, arguments: args });
+  const result = await client.callTool({
+    name,
+    arguments: battleToolWireArgs(name, args),
+  });
   if (result.isError === true) {
     throw new Error(`${name} returned error: ${JSON.stringify(result)}`);
   }
@@ -3267,7 +3271,10 @@ async function callTool(client: Client, name: string, args: JsonObject) {
 }
 
 async function expectToolError(client: Client, name: string, args: JsonObject) {
-  const result = await client.callTool({ name, arguments: args });
+  const result = await client.callTool({
+    name,
+    arguments: battleToolWireArgs(name, args),
+  });
   assert.equal(result.isError, true, `${name} should return a tool error`);
   return parseToolPayload(result, name);
 }

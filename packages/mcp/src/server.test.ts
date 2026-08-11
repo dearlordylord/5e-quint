@@ -59,9 +59,10 @@ import {
   contentToolDefinitions,
   createMcpCompositionRoot,
   createMcpSessionStore,
-  handleToolCall,
+  handleToolCall as handleWireToolCall,
   startBattleFromCharacterBuildAndStatBlock,
 } from "./server.ts";
+import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import type { BattleToolResult } from "./battle-tools.ts";
 import type { CharacterToolResult } from "./character-tools.ts";
 import {
@@ -89,6 +90,14 @@ import {
   loadoutHoleId,
   unitHoleId,
 } from "../test-support/creation-hole-ids.ts";
+
+function handleToolCall(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+  name: string,
+  args: unknown,
+) {
+  return handleWireToolCall(root, name, battleToolWireArgs(name, args));
+}
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import {
@@ -1265,6 +1274,22 @@ describe("MCP server route", () => {
       "end_turn",
       "end_battle",
     ]);
+  });
+
+  test("publishes a cold-client-compatible JSON-text fill_battle_hole contract", () => {
+    const tool = battleToolDefinitions.find(
+      (candidate) => candidate.name === "fill_battle_hole",
+    );
+    const inputSchema = jsonSchemaObject(tool?.inputSchema);
+
+    const schemaText = JSON.stringify(inputSchema);
+    expect(inputSchema?.properties?.subjectJson).toMatchObject({
+      description: expect.stringContaining("JSON.stringify(subject)"),
+    });
+    expect(inputSchema?.properties?.fillJson).toMatchObject({
+      description: expect.stringContaining("JSON.stringify(fill)"),
+    });
+    expect(schemaText.length).toBeLessThan(2_048);
   });
 
   test("describes MCP workflow and lists discoverable catalogs through tools", () => {
@@ -4809,7 +4834,7 @@ describe("MCP server route", () => {
         },
       }),
     );
-    readPayload(
+    const damagePendingDisposition = readPayload(
       handleToolCall(root, "fill_battle_hole", {
         subject: goblinScimitar,
         fill: {
@@ -4819,6 +4844,40 @@ describe("MCP server route", () => {
         },
       }),
     );
+    expect(damagePendingDisposition).toMatchObject({
+      result: {
+        tag: "needsHoles",
+        holes: [{ kind: "attackDamageDisposition" }],
+      },
+      snapshot: { turn: { attackRollMadeThisTurn: true } },
+    });
+
+    const duplicateDamage = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: goblinScimitar,
+        fill: {
+          kind: "rolledDice",
+          holeId: "battle:attack:damage-result:1d6+2-slashing",
+          value: [{ results: [5] }],
+        },
+      }),
+    );
+    expect(duplicateDamage).toMatchObject({
+      result: {
+        tag: "invalid",
+        reason: "invalidFill",
+        message: "Attack damage was filled twice.",
+      },
+      snapshot: { turn: { attackRollMadeThisTurn: true } },
+      session: {
+        transientBattleFills: {
+          fills: expect.arrayContaining([
+            expect.objectContaining({ kind: "attackRoll" }),
+            expect.objectContaining({ kind: "rolledDice" }),
+          ]),
+        },
+      },
+    });
     readPayload(
       handleToolCall(root, "fill_battle_hole", {
         subject: goblinScimitar,

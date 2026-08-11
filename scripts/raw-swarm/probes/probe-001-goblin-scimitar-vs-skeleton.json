@@ -1,0 +1,92 @@
+{
+  "id": "probe-001-goblin-scimitar-vs-skeleton",
+  "kind": "scripted-probe",
+  "rawCitations": [
+    ".references/srd-5.2.1/Monsters/Monsters-E-G.md#goblin-warrior",
+    ".references/srd-5.2.1/Monsters/Monsters-P-S.md#skeleton",
+    ".references/srd-5.2.1/Rules-Glossary.md#action",
+    ".references/srd-5.2.1/Rules-Glossary.md#attack-action",
+    ".references/srd-5.2.1/Playing-the-Game.md#monster-death"
+  ],
+  "setup": {
+    "battleId": "battle:raw-swarm-probe-001",
+    "participants": [
+      {
+        "combatantId": "goblin",
+        "statBlockId": "stat_block_goblin_warrior",
+        "initiative": 15
+      },
+      {
+        "combatantId": "skeleton",
+        "statBlockId": "stat_block_skeleton",
+        "initiative": 10
+      }
+    ]
+  },
+  "script": [
+    {
+      "kind": "meleeAttackHit",
+      "actor": "goblin",
+      "actSelector": { "labelContains": "Scimitar", "subjectKind": "attack" },
+      "resolution": {
+        "targetChoice": "skeleton",
+        "attackRoll": 18,
+        "attackNaturalD20": 14,
+        "damage": { "kind": "retainsPositiveHitPoints", "rolledDice": [[4]] }
+      },
+      "then": "endTurn"
+    },
+    {
+      "kind": "isolationPass",
+      "actor": "skeleton",
+      "reason": "Keep the probe focused on Goblin Scimitar damage and action economy; no Skeleton action is under test.",
+      "then": "endTurn"
+    },
+    {
+      "kind": "meleeAttackHit",
+      "actor": "goblin",
+      "actSelector": { "labelContains": "Scimitar", "subjectKind": "attack" },
+      "resolution": {
+        "targetChoice": "skeleton",
+        "attackRoll": 18,
+        "attackNaturalD20": 14,
+        "damage": {
+          "kind": "reducesToZeroHitPoints",
+          "rolledDice": [[5]],
+          "disposition": "ordinaryDamage"
+        }
+      },
+      "then": "endTurn"
+    }
+  ],
+  "expectations": [
+    {
+      "afterAct": 1,
+      "path": "snapshot.combatants[skeleton].hp",
+      "equals": 7,
+      "citation": ".references/srd-5.2.1/Monsters/Monsters-E-G.md#goblin-warrior",
+      "note": "Skeleton HP 13 (2d8+4); Scimitar hit deals 1d6+2 slashing = 4+2 = 6 damage, so 13-6 = 7."
+    },
+    {
+      "afterAct": 1,
+      "path": "availableActs[label=Attack].length",
+      "equals": 0,
+      "citation": ".references/srd-5.2.1/Rules-Glossary.md#action",
+      "note": "On your turn you can take one action; the goblin spent it on Attack, so no Attack act remains that turn. Goblin Warrior has no Multiattack or Extra Attack."
+    },
+    {
+      "afterAct": 3,
+      "path": "snapshot.combatants[skeleton].hp",
+      "equals": 0,
+      "citation": ".references/srd-5.2.1/Monsters/Monsters-P-S.md#skeleton",
+      "note": "Second hit deals 5+2 = 7 damage: 7-7 = 0 HP."
+    },
+    {
+      "afterAct": 3,
+      "path": "snapshot.combatants[skeleton].zeroHpLifecycle.dead",
+      "equals": true,
+      "citation": ".references/srd-5.2.1/Playing-the-Game.md#monster-death",
+      "note": "A monster reduced to 0 Hit Points dies (Death Saving Throws are for player characters, Rules-Glossary.md#death-saving-throw)."
+    }
+  ]
+}

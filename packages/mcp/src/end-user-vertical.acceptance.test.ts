@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { createMcpCompositionRoot, handleToolCall } from "./server.ts";
+import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import { characterDraftId } from "@dnd/character-creation-runtime";
 import { combatantId, type BattleActPresentation } from "@dnd/battle-runtime";
 import { characterIdFromDraftId } from "./session-store.ts";
@@ -1171,7 +1172,10 @@ function callTool(
   name: string,
   args: unknown,
 ) {
-  return JSON.parse(handleToolCall(root, name, args).content[0]?.text ?? "{}");
+  return JSON.parse(
+    handleToolCall(root, name, battleToolWireArgs(name, args)).content[0]
+      ?.text ?? "{}",
+  );
 }
 
 function holeIds(payload: {
