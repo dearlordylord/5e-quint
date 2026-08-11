@@ -10,6 +10,7 @@ import type {
 import type { CombatantId } from "../identity.ts";
 import { requiredAbilityCheckRollMode } from "./hole-helpers.ts";
 import {
+  spellSlotFallbackActiveEffectRouteNextDiscoveryOwner,
   battleReducerRouteFill,
   battleReducerRouteHoles,
   discoverBattleActsRoute,
@@ -100,7 +101,7 @@ export function markedDamageRiderRouteForResolution(
       effectRouteDiscover(
         subject,
         holes,
-        markedDamageRiderNextDiscoveryOwner(holes),
+        spellSlotFallbackActiveEffectRouteNextDiscoveryOwner(holes),
       ),
     );
   }
@@ -207,21 +208,6 @@ function markedDamageRiderFillOwner(
     return "battleAttackRoll";
   }
   if (fill === "rolledDice") {
-    return "battleHitPoint";
-  }
-  return "battleSpellSlotAndActionEconomy";
-}
-
-function markedDamageRiderNextDiscoveryOwner(
-  holes: readonly BattleReducerRouteHole[],
-): BattleReducerRouteOwnerGroup {
-  if (holes.includes("targetChoice")) {
-    return "battleTargetSelection";
-  }
-  if (holes.includes("attackRoll")) {
-    return "battleAttackRoll";
-  }
-  if (holes.includes("rolledDice")) {
     return "battleHitPoint";
   }
   return "battleSpellSlotAndActionEconomy";

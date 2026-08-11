@@ -78,6 +78,15 @@ export function nonEmptyRouteEvents(
   return first === undefined ? undefined : [first, ...rest];
 }
 
+export function spellSlotFallbackActiveEffectRouteNextDiscoveryOwner(
+  holes: readonly BattleReducerRouteHole[],
+) {
+  if (holes.includes("targetChoice")) return "battleTargetSelection";
+  if (holes.includes("attackRoll")) return "battleAttackRoll";
+  if (holes.includes("rolledDice")) return "battleHitPoint";
+  return "battleSpellSlotAndActionEconomy";
+}
+
 export function battleReducerRouteHoles(
   holes: readonly BattleHole[],
 ): readonly BattleReducerRouteHole[] {
