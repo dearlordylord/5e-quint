@@ -1125,6 +1125,84 @@ describe("battle runtime: Stat Block actions", () => {
     expect(result.combatants.get(goblinId)?.hidden).toBeNull();
   });
 
+  test("limited-use Stat Block Bonus Action rejects a replay after a later turn", () => {
+    const base = monsterMultiattackStatBlock();
+    const bonusActions = base.statBlock.bonusActions;
+    if (bonusActions?.actionOptions === undefined) {
+      throw new Error("Expected a Stat Block Bonus Action option.");
+    }
+    const [firstBonusAction, ...remainingBonusActions] =
+      bonusActions.actionOptions;
+    if (firstBonusAction === undefined) {
+      throw new Error("Expected a first Stat Block Bonus Action option.");
+    }
+    const statBlock: StatBlockRecord = {
+      id: parseSharedStatBlockId(
+        "stat_block_limited_bonus_action_replay_test_monster",
+      ),
+      kind: base.kind,
+      name: "Limited Bonus Action Replay Test Monster",
+      provenance: {
+        kind: "synthetic-test",
+        section: "limited-bonus-action-replay-test-monster",
+      },
+      challengeRating: base.challengeRating,
+      statBlock: {
+        ...base.statBlock,
+        displayName: "Limited Bonus Action Replay Test Monster",
+        bonusActions: {
+          ...bonusActions,
+          actionOptions: [
+            {
+              ...firstBonusAction,
+              limitedUse: { kind: "daily" as const, uses: 1 },
+            },
+            ...remainingBonusActions.map((option) => ({
+              ...option,
+              limitedUse: { kind: "daily" as const, uses: 1 },
+            })),
+          ],
+        },
+      },
+    };
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-stat-block-limited-bonus-replay"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({ initiative: 10, statBlock }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject = discoveredStatBlockBonusActionSubject(
+      goblinTurn,
+      "disengage",
+    );
+
+    const afterUse = requireResolved(
+      resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
+    ).state;
+    expect(afterUse.currentTurnResources.currentHasBonusAction).toBe(false);
+
+    const fighterTurn = requireResolved(
+      endTurn({ state: afterUse, actorId: goblinId }),
+    ).state;
+    const nextGoblinTurn = requireResolved(
+      endTurn({ state: fighterTurn, actorId: fighterId }),
+    ).state;
+
+    expect(
+      resolveBattleSubject({ state: nextGoblinTurn, subject, fills: [] }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Stat Block Bonus Action resource is no longer available.",
+    });
+  });
+
   test("Stat Block Multiattack spends the Attack action and grants named dispatch attacks", () => {
     const goblinTurn = requireResolved(
       endTurn({
@@ -1320,6 +1398,89 @@ describe("battle runtime: Stat Block actions", () => {
         fills: [targetChoice],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+  });
+
+  test("limited-use Stat Block Multiattack rejects a replay after its dispatch is spent", () => {
+    const base = monsterMultiattackStatBlock({ scimitarCount: 1 });
+    const attacks = base.statBlock.actions?.attacks;
+    const multiattacks = base.statBlock.actions?.multiattacks;
+    const scimitar = attacks?.find((attack) => attack.name === "Scimitar");
+    const multiattack = multiattacks?.[0];
+    if (
+      attacks === undefined ||
+      multiattack === undefined ||
+      scimitar === undefined
+    ) {
+      throw new Error("Expected the synthetic Multiattack fixtures.");
+    }
+    const [firstDispatch] = multiattack.dispatches;
+    if (firstDispatch?.name !== "Scimitar") {
+      throw new Error(
+        "Expected Scimitar to be the first Multiattack dispatch.",
+      );
+    }
+    const statBlock: StatBlockRecord = {
+      id: parseSharedStatBlockId(
+        "stat_block_limited_multiattack_replay_test_monster",
+      ),
+      kind: base.kind,
+      name: "Limited Multiattack Replay Test Monster",
+      provenance: {
+        kind: "synthetic-test",
+        section: "limited-multiattack-replay-test-monster",
+      },
+      challengeRating: base.challengeRating,
+      statBlock: {
+        ...base.statBlock,
+        displayName: "Limited Multiattack Replay Test Monster",
+        actions: {
+          ...base.statBlock.actions,
+          attacks: [
+            {
+              ...scimitar,
+              limitedUse: { kind: "daily" as const, uses: 1 },
+            },
+            ...attacks.filter((attack) => attack.name !== "Scimitar"),
+          ],
+          multiattacks: [
+            {
+              ...multiattack,
+              dispatches: [firstDispatch],
+            },
+          ],
+        },
+      },
+    };
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-stat-block-limited-multiattack-replay"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({ initiative: 10, statBlock }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject = discoveredMultiattackSubject(goblinTurn);
+    const afterMultiattack = requireResolved(
+      resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
+    ).state;
+    const fighterTurn = requireResolved(
+      endTurn({ state: afterMultiattack, actorId: goblinId }),
+    ).state;
+    const nextGoblinTurn = requireResolved(
+      endTurn({ state: fighterTurn, actorId: fighterId }),
+    ).state;
+
+    expect(
+      resolveBattleSubject({ state: nextGoblinTurn, subject, fills: [] }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Multiattack Stat Block resources are no longer available.",
+    });
   });
 
   test("Stat Block Multiattack remains gated when a dispatch has no positive literal count", () => {
