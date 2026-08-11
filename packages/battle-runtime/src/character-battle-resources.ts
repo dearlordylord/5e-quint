@@ -1123,16 +1123,15 @@ function spellcastingSourceClassName(
   sourceClassName: ClassName,
   classLevels: readonly CharacterBattleClassLevel[],
 ): ClassName {
-  /* v8 ignore start -- Character spellcasting admission checks the source class against the admitted class-level set before state projection. */
   if (
     classLevels.some((classLevel) => classLevel.className === sourceClassName)
   ) {
     return sourceClassName;
   }
+  /* v8 ignore next -- Character spellcasting admission checks the source class against the admitted class-level set before state projection. */
   throw new Error(
     "Battle spellcasting source class must match a character class level.",
   );
-  /* v8 ignore stop */
 }
 
 function supportedResourceCapForLevel(
