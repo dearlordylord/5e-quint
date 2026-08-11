@@ -3069,6 +3069,7 @@ function runSelfTest(root) {
         profileObligations: [
           {
             profileId: `spell.${role}`,
+            semanticOwnerPolicy: "profile-local-semantic-core",
             obligationIds: ["BATTLE.UNRELATED_SEMANTIC_CORE"],
           },
         ],

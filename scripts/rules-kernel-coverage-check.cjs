@@ -38,6 +38,9 @@ const {
 const {
   extractBattleSubjectKinds,
 } = require("./battle-subject-kind-folds.cjs");
+const {
+  profileSemanticOwnerPolicySet,
+} = require("./rules-kernel-profile-join.cjs");
 
 const root = process.env.RULES_KERNEL_COVERAGE_ROOT ?? process.cwd();
 const write = process.argv.includes("--write");
@@ -1153,6 +1156,14 @@ function validateProfileMapping(
   }
   if (hasObligationIds) {
     if (
+      mapping.semanticOwnerPolicy !== undefined &&
+      !profileSemanticOwnerPolicySet.has(mapping.semanticOwnerPolicy)
+    ) {
+      issues.push(
+        `${context}.semanticOwnerPolicy must be shared-semantic-core or profile-local-semantic-core.`,
+      );
+    }
+    if (
       !Array.isArray(mapping.obligationIds) ||
       mapping.obligationIds.length === 0
     ) {
@@ -1178,6 +1189,11 @@ function validateProfileMapping(
     }
   }
   if (hasFollowUpTaskIds) {
+    if (Object.prototype.hasOwnProperty.call(mapping, "semanticOwnerPolicy")) {
+      issues.push(
+        `${context}.semanticOwnerPolicy is only valid with obligationIds.`,
+      );
+    }
     issues.push(
       ...validateRequiredStringArray(
         mapping.followUpTaskIds,
@@ -3119,10 +3135,12 @@ function buildKernelCoverage({
         `${obligation.id}.profiles is derived from profile-obligations.jsonl; remove the field from obligations.jsonl. Derived profiles: ${derived.join(", ") || "_none_"}.`,
       );
     }
+    issues.push(
+      ...validateParityWitnessQntOwnerRoles(obligation, qntOwnerRolesByPath),
+    );
     if (coveredStatuses.has(obligation.status)) {
       issues.push(
         ...validateCoveredEvidence(rootPath, obligation, markerIndex),
-        ...validateParityWitnessQntOwnerRoles(obligation, qntOwnerRolesByPath),
         ...validateRuntimeTestWitnessProfiles(
           obligation,
           derivedProfilesByObligation.get(obligation.id) ?? [],

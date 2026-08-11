@@ -369,7 +369,10 @@ function runSelfTest() {
         ...bridgeParitySample,
         qntOwners: [...bridgeParitySample.qntOwners, "sample.mbt.qnt"],
       }),
-      JSON.stringify(bridgeParityBoundary),
+      JSON.stringify({
+        ...bridgeParityBoundary,
+        parityWitnesses: bridgeParitySample.parityWitnesses,
+      }),
     ].join("\n") + "\n",
   );
   writeFile(
@@ -395,6 +398,12 @@ function runSelfTest() {
       "BATTLE.SAMPLE.parityWitnesses[0].qntSpecPath sample.mbt.qnt is classified as bridge; bridge modules are projection traceability, not parity evidence.",
     ),
     `Expected bridge parity witness issue, got ${JSON.stringify(bridgeParityResult.issues)}`,
+  );
+  assert.ok(
+    bridgeParityResult.issues.includes(
+      "BATTLE.BOUNDARY.parityWitnesses[0].qntSpecPath sample.mbt.qnt is classified as bridge; bridge modules are projection traceability, not parity evidence.",
+    ),
+    `Expected non-covered bridge parity witness issue, got ${JSON.stringify(bridgeParityResult.issues)}`,
   );
   writeFile(bridgeParityObligationsPath, initialBridgeParityObligationsText);
   writeFile(bridgeParityOwnerRolesPath, initialBridgeParityOwnerRolesText);
@@ -1867,8 +1876,8 @@ function runSelfTest() {
       "profile-obligations.jsonl",
     ),
     [
-      '{"profileId":"spell.sample","obligationIds":["BATTLE.SAMPLE"]}',
-      '{"profileId":"spell.sample","obligationIds":["BATTLE.SAMPLE"]}',
+      '{"profileId":"spell.sample","semanticOwnerPolicy":"unknown-policy","obligationIds":["BATTLE.SAMPLE"]}',
+      '{"profileId":"spell.sample","semanticOwnerPolicy":"profile-local-semantic-core","obligationIds":["BATTLE.SAMPLE"]}',
     ].join("\n") + "\n",
   );
   const invalidResult = buildKernelCoverage({ root });
@@ -1895,6 +1904,12 @@ function runSelfTest() {
       "BATTLE.SAMPLE.profiles is derived from profile-obligations.jsonl; remove the field from obligations.jsonl. Derived profiles: spell.sample.",
     ),
     `Expected duplicate profiles field issue, got ${JSON.stringify(invalidResult.issues)}`,
+  );
+  assert.ok(
+    invalidResult.issues.includes(
+      "profile-obligations row 1.semanticOwnerPolicy must be shared-semantic-core or profile-local-semantic-core.",
+    ),
+    `Expected unknown semantic owner policy issue, got ${JSON.stringify(invalidResult.issues)}`,
   );
   assert.ok(
     invalidResult.issues.includes(

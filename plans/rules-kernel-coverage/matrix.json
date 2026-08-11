@@ -1051,8 +1051,7 @@
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt",
         "packages/battle-runtime/battle-runtime-light.qnt",
-        "packages/battle-runtime/battle-runtime-object-contact-damage.qnt",
-        "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
+        "packages/battle-runtime/battle-runtime-object-contact-damage.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -7001,7 +7000,8 @@
         "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
         "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE"
       ],
-      "profileId": "spell.invocation-damage-save-or-attack"
+      "profileId": "spell.invocation-damage-save-or-attack",
+      "semanticOwnerPolicy": "profile-local-semantic-core"
     },
     {
       "obligationIds": ["BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"],
@@ -7017,7 +7017,8 @@
     },
     {
       "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
-      "profileId": "spell.reaction-shield"
+      "profileId": "spell.reaction-shield",
+      "semanticOwnerPolicy": "profile-local-semantic-core"
     },
     {
       "obligationIds": [
@@ -7025,7 +7026,8 @@
         "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
         "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE"
       ],
-      "profileId": "spell.readied-action-time-spell"
+      "profileId": "spell.readied-action-time-spell",
+      "semanticOwnerPolicy": "profile-local-semantic-core"
     },
     {
       "obligationIds": ["BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"],
@@ -7518,11 +7520,13 @@
     },
     {
       "obligationIds": ["BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT"],
-      "profileId": "spell.invocation-see-invisible-observer-sight"
+      "profileId": "spell.invocation-see-invisible-observer-sight",
+      "semanticOwnerPolicy": "profile-local-semantic-core"
     },
     {
       "obligationIds": ["BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY"],
-      "profileId": "spell.invocation-spiritual-weapon-attack-proxy"
+      "profileId": "spell.invocation-spiritual-weapon-attack-proxy",
+      "semanticOwnerPolicy": "profile-local-semantic-core"
     },
     {
       "obligationIds": ["BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL"],
@@ -7546,7 +7550,8 @@
         "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
         "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE"
       ],
-      "profileId": "spell.invocation-haste-positive"
+      "profileId": "spell.invocation-haste-positive",
+      "semanticOwnerPolicy": "profile-local-semantic-core"
     },
     {
       "obligationIds": ["BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE"],
@@ -8152,10 +8157,7 @@
     },
     {
       "evidence": "Executable Spiritual Weapon cast, force-position, attack-proxy, repeat-movement, damage, and cleanup semantics.",
-      "obligationIds": [
-        "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
-        "BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY"
-      ],
+      "obligationIds": ["BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY"],
       "ownerPath": "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt",
       "role": "semantic-core"
     },
@@ -13300,9 +13302,7 @@
         "membership"
       ],
       "obligationId": "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
-      "proofOnly": [
-        "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
-      ],
+      "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt",
         "packages/battle-runtime/battle-runtime-light.qnt",

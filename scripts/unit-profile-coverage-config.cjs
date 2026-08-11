@@ -37,17 +37,10 @@ const profileKinds = new Set([
   "table-caller",
 ]);
 const unitFeatureProfileIdPrefix = "unit-feature.";
-const spellProcedureProfileIdPrefix = "spell.";
 function isUnitFeatureProfileId(profileId) {
   return (
     typeof profileId === "string" &&
     profileId.startsWith(unitFeatureProfileIdPrefix)
-  );
-}
-function isSpellProcedureProfileId(profileId) {
-  return (
-    typeof profileId === "string" &&
-    profileId.startsWith(spellProcedureProfileIdPrefix)
   );
 }
 const rulesKernelProfileKindClasses = new Set([
@@ -396,7 +389,6 @@ module.exports = {
   deterministicAdmissionProjectionEvidenceTag,
   executableProfileKinds,
   fungiTerms,
-  isSpellProcedureProfileId,
   isUnitFeatureProfileId,
   nearCanonicalDenyList,
   profileKinds,
@@ -409,7 +401,6 @@ module.exports = {
   selectedIdentityReplayEvidenceTag,
   selectedIdentityNonApplicableDispositionTag,
   skippedClaimScanDirs,
-  spellProcedureProfileIdPrefix,
   surfaceUnitKinds,
   unitFeatureProfileIdPrefix,
   unitEvidenceTags,

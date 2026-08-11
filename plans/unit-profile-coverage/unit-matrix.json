@@ -83,8 +83,8 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 187,
-      "numerator": 145,
-      "percent": "77.5%"
+      "numerator": 162,
+      "percent": "86.6%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 187,
@@ -93,8 +93,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 201,
-      "numerator": 154,
-      "percent": "76.6%"
+      "numerator": 169,
+      "percent": "84.1%"
     },
     "runtimeMappingCoverage": {
       "denominator": 149,
@@ -7199,12 +7199,12 @@
     }
   ],
   "rulesKernelProfileJoin": {
-    "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; covered spell procedure joins require every mapped obligation to have a semantic-core QNT owner also named by the profile",
+    "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; profile-local-semantic-core mappings require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 187,
-        "numerator": 145,
-        "percent": "77.5%"
+        "numerator": 162,
+        "percent": "86.6%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 187,
@@ -8045,7 +8045,8 @@
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
           "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-        ]
+        ],
+        "semanticOwnerPolicy": "profile-local-semantic-core"
       },
       {
         "joinStatus": "covered",
@@ -8114,7 +8115,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -8184,7 +8185,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
@@ -8234,7 +8235,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
@@ -8348,7 +8349,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -8370,7 +8371,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -8392,7 +8393,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -8414,7 +8415,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -8436,7 +8437,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -8458,7 +8459,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -8550,7 +8551,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
@@ -8566,7 +8567,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
@@ -8675,7 +8676,8 @@
         "profileKind": "reaction",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
-        ]
+        ],
+        "semanticOwnerPolicy": "profile-local-semantic-core"
       },
       {
         "joinStatus": "covered",
@@ -8705,7 +8707,8 @@
           "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
           "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-        ]
+        ],
+        "semanticOwnerPolicy": "profile-local-semantic-core"
       },
       {
         "joinStatus": "covered",
@@ -8789,7 +8792,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
@@ -9332,7 +9335,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
@@ -9348,7 +9351,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
@@ -9364,7 +9367,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
@@ -9428,7 +9431,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
@@ -9789,7 +9792,8 @@
         "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
-        ]
+        ],
+        "semanticOwnerPolicy": "profile-local-semantic-core"
       },
       {
         "joinStatus": "covered",
@@ -9903,7 +9907,8 @@
         "profileKind": "spell-invocation",
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
-        ]
+        ],
+        "semanticOwnerPolicy": "profile-local-semantic-core"
       },
       {
         "joinStatus": "covered",
@@ -10114,7 +10119,7 @@
         ]
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "obligations": [
           {
             "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
@@ -10221,7 +10226,8 @@
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
           "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
-        ]
+        ],
+        "semanticOwnerPolicy": "profile-local-semantic-core"
       },
       {
         "joinStatus": "mapped-open",
@@ -10400,16 +10406,16 @@
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
           "denominator": 201,
-          "numerator": 154,
-          "percent": "76.6%"
+          "numerator": 169,
+          "percent": "84.1%"
         }
       },
       "units": [
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
@@ -10457,7 +10463,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -10487,7 +10494,8 @@
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "acid_splash"
@@ -11094,7 +11102,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -11124,7 +11133,8 @@
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "burning_hands"
@@ -11153,7 +11163,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -11183,7 +11194,8 @@
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "chill_touch"
@@ -11235,7 +11247,8 @@
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "chromatic_orb"
@@ -11462,16 +11475,17 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "cone_of_cold"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -11562,7 +11576,7 @@
           "unitId": "defense"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
               "joinStatus": "covered",
@@ -11585,10 +11599,11 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -11846,10 +11861,10 @@
           "unitId": "enhance_ability"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
@@ -11892,10 +11907,10 @@
           "unitId": "entangle"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -12097,10 +12112,10 @@
           "unitId": "feat_two_weapon_fighting"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -12389,7 +12404,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "fire_bolt"
@@ -12418,16 +12434,17 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "fireball"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
@@ -12487,16 +12504,17 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "flame_strike"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
@@ -12555,10 +12573,10 @@
           "unitId": "fog_cloud"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -12628,7 +12646,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -12658,7 +12677,8 @@
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "guiding_bolt"
@@ -12687,7 +12707,8 @@
               "qntOwners": [
                 "packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-haste-positive-effects-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "haste"
@@ -12737,10 +12758,10 @@
           "unitId": "heat_metal"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -12782,7 +12803,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "hellish_rebuke"
@@ -12969,7 +12991,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "ice_knife"
@@ -12998,7 +13021,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -13028,16 +13052,17 @@
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "inflict_wounds"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
@@ -13056,10 +13081,10 @@
           "unitId": "invisibility"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
@@ -13151,7 +13176,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "lightning_bolt"
@@ -13202,7 +13228,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -13232,7 +13259,8 @@
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "mage_armor"
@@ -13261,7 +13289,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -13291,7 +13320,8 @@
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "magic_missile"
@@ -14108,7 +14138,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -14138,7 +14169,8 @@
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "poison_spray"
@@ -14167,7 +14199,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -14189,10 +14222,10 @@
           "unitId": "produce_flame"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
@@ -14520,7 +14553,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -14550,7 +14584,8 @@
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "ray_of_frost"
@@ -14579,7 +14614,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -14609,7 +14645,8 @@
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "ray_of_sickness"
@@ -14901,7 +14938,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -14931,7 +14969,8 @@
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "sacred_flame"
@@ -14981,10 +15020,10 @@
           "unitId": "scorching_ray"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
@@ -15019,7 +15058,8 @@
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/battle-runtime/battle-runtime-see-invisibility.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "see_invisibility"
@@ -15048,7 +15088,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "shatter"
@@ -15070,7 +15111,8 @@
               "profileKind": "reaction",
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "shield"
@@ -15165,7 +15207,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -15195,7 +15238,8 @@
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "shocking_grasp"
@@ -15346,7 +15390,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "sorcerous_burst"
@@ -15501,7 +15546,8 @@
               "profileKind": "spell-invocation",
               "qntOwners": [
                 "packages/battle-runtime/battle-runtime-spiritual-weapon.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "spiritual_weapon"
@@ -15530,7 +15576,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "starry_wisp"
@@ -15559,7 +15606,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "thunderwave"
@@ -15610,7 +15658,8 @@
               "qntOwners": [
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             },
             {
               "joinStatus": "covered",
@@ -15640,16 +15689,17 @@
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
                 "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt"
-              ]
+              ],
+              "semanticOwnerPolicy": "profile-local-semantic-core"
             }
           ],
           "unitId": "vicious_mockery"
         },
         {
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "profiles": [
             {
-              "joinStatus": "mapped-open",
+              "joinStatus": "covered",
               "obligations": [
                 {
                   "obligationId": "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",

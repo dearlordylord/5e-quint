@@ -1801,7 +1801,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
           "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
@@ -1840,7 +1840,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
@@ -1879,7 +1879,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
           "obligationStatus": "covered",
           "obligationTitle": "Battle failed-save forced Reaction movement, no-movement fallback, movement fill admission, Opportunity Attack interruption, and continuation ordering",
@@ -2099,7 +2099,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
@@ -2257,7 +2257,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
           "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
@@ -2296,7 +2296,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Expeditious Retreat immediate Dash, Bonus Action and Spell Slot spend, Concentration-owned later Bonus Action Dash permission, and cleanup",
@@ -2457,7 +2457,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
@@ -2496,7 +2496,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Feather Fall falling Reaction, target admission, per-target mitigation effect, descent-rate projection, landing cleanup, and table-elevation boundary",
@@ -2709,7 +2709,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
           "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
@@ -2748,7 +2748,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Grease ground hazard lifecycle, Difficult Terrain movement evidence, recurring Dexterity saves, Prone application, and cleanup",
@@ -4159,7 +4159,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
           "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
@@ -4198,7 +4198,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Jump target admission, one-minute active effect, once-per-target-turn jump movement replacement, landing witnesses, Prone result, and cleanup",
@@ -6795,7 +6795,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
@@ -10173,7 +10173,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
           "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
@@ -10212,7 +10212,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
@@ -10251,7 +10251,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
           "obligationStatus": "covered",
           "obligationTitle": "Battle failed-save forced Reaction movement, no-movement fallback, movement fill admission, Opportunity Attack interruption, and continuation ordering",
@@ -10471,7 +10471,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
@@ -10629,7 +10629,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
           "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
@@ -10668,7 +10668,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Expeditious Retreat immediate Dash, Bonus Action and Spell Slot spend, Concentration-owned later Bonus Action Dash permission, and cleanup",
@@ -10829,7 +10829,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
@@ -10868,7 +10868,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Feather Fall falling Reaction, target admission, per-target mitigation effect, descent-rate projection, landing cleanup, and table-elevation boundary",
@@ -11081,7 +11081,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
           "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
@@ -11120,7 +11120,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Grease ground hazard lifecycle, Difficult Terrain movement evidence, recurring Dexterity saves, Prone application, and cleanup",
@@ -12531,7 +12531,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
           "obligationStatus": "covered",
           "obligationTitle": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts",
@@ -12570,7 +12570,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Jump target admission, one-minute active effect, once-per-target-turn jump movement replacement, landing witnesses, Prone result, and cleanup",
@@ -15234,7 +15234,7 @@
         {
           "evidenceStatus": "evidence-present",
           "gaps": [],
-          "joinStatus": "mapped-open",
+          "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle after-hit Bonus Action spell riders for immediate damage, save-gated restraint, timed start-turn damage, illumination, Spell Slot or free-cast spend, and Concentration cleanup",
