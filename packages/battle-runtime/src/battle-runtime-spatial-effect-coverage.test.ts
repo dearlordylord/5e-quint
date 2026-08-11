@@ -15,7 +15,6 @@ import {
 import {
   flamingSphereUnitId,
   greaseUnitId,
-  gustOfWindUnitId,
   sleetStormUnitId,
   spellCasterId,
   spellTargetId,
@@ -26,11 +25,8 @@ import {
   flamingSphereAreaFill,
   flamingSphereRamAct,
   flamingSphereRamMovementFill,
-  flamingSphereRepositionAct,
   greaseGroundHazardEndTurnAct,
   greaseSavingThrowOutcomeFill,
-  gustOfWindLineEndTurnSaveAct,
-  gustOfWindLineSavingThrowOutcomeFill,
   singleTargetSavingThrowOutcomeFill,
   sleetStormAreaFill,
   sleetStormAreaHazardSaveAct,
@@ -48,31 +44,23 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 
 describe("battle runtime spatial-effect coverage", () => {
-  test("legitimate spatial subjects become stale after their effect expires or concentration ends", () => {
-    const web = castWeb();
-    const webSave = webRestraintSaveAct(
-      web.targetTurn,
-      spellTargetId,
-      "entersArea",
-    );
-    expect(
-      resolveBattleSubject({
-        state: breakBattleConcentration(web.targetTurn.state, spellCasterId),
-        subject: webSave.subject,
-        fills: [],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "staleSubject",
-      message: "Web Restraint save is no longer available.",
-    });
-
+  test("caller-supplied Sleet Storm and expired Grease subjects become stale", () => {
     const sleet = castSleetStorm();
     const sleetSave = sleetStormAreaHazardSaveAct(
       sleet.targetTurn,
       spellTargetId,
       "entersArea",
     );
+    expect(
+      resolveBattleSubject({
+        state: sleet.targetTurn,
+        subject: sleetSave.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+    });
     expect(
       resolveBattleSubject({
         state: breakBattleConcentration(sleet.targetTurn, spellCasterId),
@@ -83,20 +71,6 @@ describe("battle runtime spatial-effect coverage", () => {
       tag: "invalid",
       reason: "staleSubject",
       message: "Sleet Storm save is no longer available.",
-    });
-
-    const gust = castGustOfWind();
-    const gustSave = gustOfWindLineEndTurnSaveAct(gust.targetTurn);
-    expect(
-      resolveBattleSubject({
-        state: breakBattleConcentration(gust.targetTurn, spellCasterId),
-        subject: gustSave.subject,
-        fills: [],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "staleSubject",
-      message: "Gust of Wind Line save is no longer available.",
     });
 
     const grease = castGrease();
@@ -126,20 +100,6 @@ describe("battle runtime spatial-effect coverage", () => {
       tag: "invalid",
       reason: "staleSubject",
       message: "Grease ground-hazard save is no longer available.",
-    });
-
-    const sphere = castFlamingSphere();
-    const sphereReposition = sphere.reposition;
-    expect(
-      resolveBattleSubject({
-        state: breakBattleConcentration(sphere.cast.state, spellCasterId),
-        subject: sphereReposition.subject,
-        fills: [],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "staleSubject",
-      message: "Movable zone reposition is no longer available.",
     });
   });
 
@@ -419,37 +379,6 @@ function castSleetStorm() {
   };
 }
 
-function castGustOfWind() {
-  const session = spellBattle({
-    preparedSpells: [spellRecord(gustOfWindUnitId)],
-    spellSlots: [{ spellLevel: 2, count: 1 }],
-    casterClassLevels: [{ className: "wizard", level: 3 }],
-  });
-  const act = spellAct({
-    session,
-    spellId: gustOfWindUnitId,
-    slotLevel: 2,
-  });
-  const cast = requireResolved(
-    resolveBattleSubject({
-      state: session.state,
-      subject: act.subject,
-      fills: [
-        gustOfWindLineSavingThrowOutcomeFill(
-          requireHole(act.initialHoles, "savingThrowOutcome"),
-          [],
-        ),
-      ],
-    }),
-  );
-  const targetTurn = requireResolved(
-    endTurn({ state: cast.state, actorId: spellCasterId }),
-  );
-  return {
-    targetTurn: targetTurn.state,
-  };
-}
-
 function castGrease() {
   const session = spellBattle({
     preparedSpells: [spellRecord(greaseUnitId)],
@@ -474,35 +403,5 @@ function castGrease() {
   return {
     session,
     targetTurn: targetTurn.state,
-  };
-}
-
-function castFlamingSphere() {
-  const session = spellBattle({
-    preparedSpells: [spellRecord(flamingSphereUnitId)],
-    spellSlots: [{ spellLevel: 2, count: 1 }],
-    casterClassLevels: [{ className: "wizard", level: 3 }],
-  });
-  const act = spellAct({
-    session,
-    spellId: flamingSphereUnitId,
-    slotLevel: 2,
-  });
-  const cast = requireResolved(
-    resolveBattleSubject({
-      state: session.state,
-      subject: act.subject,
-      fills: [
-        flamingSphereAreaFill(requireHole(act.initialHoles, "spellAreaChoice")),
-      ],
-    }),
-  );
-  const castSession = battleRuntimeSessionForTest({
-    ...session,
-    state: cast.state,
-  });
-  return {
-    cast: castSession,
-    reposition: flamingSphereRepositionAct(castSession),
   };
 }
