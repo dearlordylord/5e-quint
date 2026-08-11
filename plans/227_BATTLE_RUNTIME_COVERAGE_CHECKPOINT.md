@@ -63,48 +63,52 @@ replace the public root diagnostic above or establish the state of other
 packages.
 
 - Date: 2026-08-11
-- Git HEAD: `9d4e22628`
+- Git HEAD: `6e4e7e7c7`
 - Command: the checked-in battle-runtime Vitest coverage invocation, with one
   worker and the JSON reporter, under
   `with_resource_lock_owner scripts/with-broad-workspace-lock.sh`
 - Result: exit 0
-- Duration: 107.61 seconds after lock acquisition
+- Duration: 69.85 seconds after lock acquisition
 - Battle-runtime tests: 216/216 files passed; 2,331 tests passed and 53 skipped
   (2,384 total)
 - Coordination note: root confirmed the external Battle Runtime coverage lane
   was empty before this final exact run began. The run exited 0 without overlap
   or SIGKILL. The JSON report contains the same 407 production files as the
-  exact M25 base at `9c032c02e`; all checked-in production include/excludes and
-  thresholds were identical, with only the reporter output path changed.
+  exact M26 base at `63d3b6d52`; all checked-in production include/excludes and
+  thresholds were identical, with only the reporter output path changed. The
+  first audit iterations exited 75 before launch because they matched the
+  resident Apalache server and their own audit shells. A later empty audit
+  exposed an incorrect package-relative lock-script path and exited 127 before
+  a wrapper or Vitest started. Neither setup failure is coverage evidence. The
+  successful command first verified both `../../scripts` paths and an empty
+  active-client audit.
 
-| Metric     |   M25 base covered / total |  M25 final covered / total | Covered / total change |    Uncovered change | Percentage change |
-| ---------- | -------------------------: | -------------------------: | ---------------------: | ------------------: | ----------------: |
-| Statements | 121,224 / 124,814 (97.12%) | 121,216 / 124,810 (97.12%) |                -8 / -4 | 3,590 -> 3,594 (+4) |         -0.0033pp |
-| Branches   |   30,862 / 32,719 (94.32%) |   30,860 / 32,718 (94.32%) |                -2 / -1 | 1,857 -> 1,858 (+1) |         -0.0032pp |
-| Functions  |       4,812 / 4,812 (100%) |       4,812 / 4,812 (100%) |                  0 / 0 |              0 -> 0 |                 0 |
-| Lines      | 121,224 / 124,814 (97.12%) | 121,216 / 124,810 (97.12%) |                -8 / -4 | 3,590 -> 3,594 (+4) |         -0.0033pp |
+| Metric     |   M26 base covered / total |  M26 final covered / total | Covered / total change |     Uncovered change | Percentage change |
+| ---------- | -------------------------: | -------------------------: | ---------------------: | -------------------: | ----------------: |
+| Statements | 121,224 / 124,810 (97.13%) | 121,224 / 124,795 (97.14%) |                0 / -15 | 3,586 -> 3,571 (-15) |         +0.0117pp |
+| Branches   |   30,864 / 32,721 (94.32%) |   30,865 / 32,722 (94.32%) |                  1 / 1 |   1,857 -> 1,857 (0) |         +0.0002pp |
+| Functions  |       4,812 / 4,812 (100%) |       4,812 / 4,812 (100%) |                  0 / 0 |               0 -> 0 |                 0 |
+| Lines      | 121,224 / 124,810 (97.13%) | 121,224 / 124,795 (97.14%) |                0 / -15 | 3,586 -> 3,571 (-15) |         +0.0117pp |
 
 The checked-in battle-runtime ratchets remain 97/97/100/94 for statements,
-lines, functions, and branches. No threshold was lowered. M25 replaces the two
-profile-local Wild Shape held-weapon usability calculations for spell-hosted
-attacks with the canonical, slot-sensitive `loadoutHeldWeaponSlotIsUsable`
-owner. Main- and off-hand slots remain distinct even if they contain the same
-object identity, and the ordinary non-Wild-Shape path still short-circuits
-without consulting the helper.
+lines, functions, and branches. No threshold was lowered. M26 removes three
+unexported targeting-kind arrays whose only consumers were same-file
+`typeof ...[number]` type queries. The equivalent targeting types are now
+composed directly from constrained `SpellTargetingByKind<...>` members, so the
+type vocabulary remains checked against `SpellTargeting["kind"]` without
+emitting dead runtime values.
 
 This structural increment adds no test lines and changes one production file
-by 13 additions and 17 deletions (net -4). In that owner, exact statements move
-from 319 / 371 to 319 / 367: four uncovered statements are removed, while its
-55 / 71 branches and 9 / 9 functions are unchanged. Across the complete
-package, unchanged owners had coverage variability despite identical tests and
-instrumentation: `battle-fill-equality.ts` accounts for the eight-statement
-covered-count loss through changed execution hits, while unchanged branch maps
-also materialized differently. The global exact result therefore reports four
-more uncovered statements/lines and one more uncovered branch. The changed
-owner improves, all ratchets remain green, and functions remain 100%. The
-acceptance basis is canonical ownership and removal of duplicated slot
-usability, not a marginal covered-statement claim; the pre-edit budget was zero
-added test lines.
+by 8 additions and 26 deletions (net -18). In that owner, exact statements move
+from 0 / 15 to 0 / 0, while its 1 / 1 branch and 1 / 1 function are unchanged.
+A lightweight TypeScript transpilation audit found three emitted array
+declarations and two spread references at the base, and no emitted
+`SAVE_GATED_*` value after the change. Across the complete package, statements
+and lines retain the same covered numerator while removing all 15 uncovered
+runtime statements. Unchanged-owner V8 materialization added one covered and
+one total branch, leaving the uncovered branch count unchanged. The pre-edit
+budget was zero added test lines, all ratchets remain green, and functions
+remain 100%.
 
 ## Remaining static 99% gaps
 
@@ -113,12 +117,23 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 121,216 | 124,810 |                  123,562 |         2,346 |
-| Branches   |  30,860 |  32,718 |                   32,391 |         1,531 |
+| Statements | 121,224 | 124,795 |                  123,548 |         2,324 |
+| Branches   |  30,865 |  32,722 |                   32,395 |         1,530 |
 | Functions  |   4,812 |   4,812 |                    4,764 |             0 |
-| Lines      | 121,216 | 124,810 |                  123,562 |         2,346 |
+| Lines      | 121,224 | 124,795 |                  123,548 |         2,324 |
 
 ## Milestone context
+
+M26 replaces type-derivation-only save-gated targeting arrays with structural
+unions of the canonical `SpellTargeting` members. Repository-wide search found
+no value consumer or export for the removed arrays. The four condition-area
+and seven damage-area members remain extensionally identical to the execution
+schemas in `codec-building-blocks.ts`, whose profile declarations continue to
+check them with `satisfies SpellProcedureDeclaration<...>`. Package typecheck,
+targeted lint, formatting, the exact gate above, and the transpilation audit
+were green. RAW, QNT, runtime protocol behavior, public APIs, and tests are
+unchanged, so no focused test or MBT was required. Independent Standards and
+separate Spec/RAW/QNT reviews found no remaining issue.
 
 M25 delegates the spell-hosted attack profile's main- and off-hand Wild Shape
 checks to the canonical held-weapon slot usability predicate. The helper first
@@ -247,7 +262,7 @@ and remeasure only after the next coherent increment.
 ## Next campaign
 
 Branches remain the limiting exact battle-runtime metric at 94.32%, with a
-static 99% gap of 1,531. Do not retry the rejected attack-control helper matrix
+static 99% gap of 1,530. Do not retry the rejected attack-control helper matrix
 or the isolated Spiritual Weapon synthesized-admission conversion.
 Rerank the exact uncovered report against public lifecycle coverage before the
 next increment; defensive route/profile behavior remains an independent
