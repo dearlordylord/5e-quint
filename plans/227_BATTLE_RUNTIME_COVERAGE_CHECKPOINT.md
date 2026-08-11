@@ -63,58 +63,52 @@ replace the public root diagnostic above or establish the state of other
 packages.
 
 - Date: 2026-08-11
-- Git HEAD: `6e4e7e7c7`
+- Git HEAD: `c31981a95`
 - Command: the checked-in battle-runtime Vitest coverage invocation, with one
   worker and the JSON reporter, under
   `with_resource_lock_owner scripts/with-broad-workspace-lock.sh`
 - Result: exit 0
-- Duration: 69.85 seconds after lock acquisition
-- Battle-runtime tests: 216/216 files passed; 2,331 tests passed and 53 skipped
-  (2,384 total)
-- Coordination note: root confirmed the external Battle Runtime coverage lane
-  was empty before this final exact run began. The run exited 0 without overlap
-  or SIGKILL. The JSON report contains the same 407 production files as the
-  exact M26 base at `63d3b6d52`; all checked-in production include/excludes and
-  thresholds were identical, with only the reporter output path changed. The
-  first audit iterations exited 75 before launch because they matched the
-  resident Apalache server and their own audit shells. A later empty audit
-  exposed an incorrect package-relative lock-script path and exited 127 before
-  a wrapper or Vitest started. Neither setup failure is coverage evidence. The
-  successful command first verified both `../../scripts` paths and an empty
-  active-client audit.
+- Duration: 63.10 seconds after lock acquisition
+- Battle-runtime tests: 216/216 files passed; 2,337 tests passed and 53 skipped
+  (2,390 total)
+- Coordination note: root confirmed the verification lane was empty before the
+  final exact run began. The comm/parent-aware audit found no active verification
+  client. The run exited 0 without overlap or SIGKILL. Its JSON report contains
+  the same 407 production files as the exact combined-HEAD M27 baseline at
+  `4d697e6f5`; all checked-in production include/excludes and thresholds were
+  identical, with only the reporter output path changed. Standards review after
+  measurement narrowed the shared identifier to name its spell-slot fallback;
+  commit `a3d15264c` changes only that identifier at its definition and two
+  callers, leaves the measured executable control-flow shape unchanged, and
+  passed the same 41 focused tests plus typecheck, lint, and formatting.
 
-| Metric     |   M26 base covered / total |  M26 final covered / total | Covered / total change |     Uncovered change | Percentage change |
-| ---------- | -------------------------: | -------------------------: | ---------------------: | -------------------: | ----------------: |
-| Statements | 121,224 / 124,810 (97.13%) | 121,224 / 124,795 (97.14%) |                0 / -15 | 3,586 -> 3,571 (-15) |         +0.0117pp |
-| Branches   |   30,864 / 32,721 (94.32%) |   30,865 / 32,722 (94.32%) |                  1 / 1 |   1,857 -> 1,857 (0) |         +0.0002pp |
-| Functions  |       4,812 / 4,812 (100%) |       4,812 / 4,812 (100%) |                  0 / 0 |               0 -> 0 |                 0 |
-| Lines      | 121,224 / 124,810 (97.13%) | 121,224 / 124,795 (97.14%) |                0 / -15 | 3,586 -> 3,571 (-15) |         +0.0117pp |
+| Metric     |   M27 base covered / total |  M27 final covered / total | Covered / total change |    Uncovered change | Percentage change |
+| ---------- | -------------------------: | -------------------------: | ---------------------: | ------------------: | ----------------: |
+| Statements | 121,276 / 124,816 (97.16%) | 121,269 / 124,808 (97.16%) |                -7 / -8 | 3,540 -> 3,539 (-1) |         +0.0006pp |
+| Branches   |   30,898 / 32,739 (94.38%) |   30,898 / 32,739 (94.38%) |                  0 / 0 |  1,841 -> 1,841 (0) |                 0 |
+| Functions  |       4,812 / 4,812 (100%) |       4,811 / 4,811 (100%) |                -1 / -1 |              0 -> 0 |                 0 |
+| Lines      | 121,276 / 124,816 (97.16%) | 121,269 / 124,808 (97.16%) |                -7 / -8 | 3,540 -> 3,539 (-1) |         +0.0006pp |
 
 The checked-in battle-runtime ratchets remain 97/97/100/94 for statements,
-lines, functions, and branches. No threshold was lowered. M26 removes three
-unexported targeting-kind arrays whose only consumers were same-file
-`typeof ...[number]` type queries. The equivalent targeting types are now
-composed directly from constrained `SpellTargetingByKind<...>` members, so the
-type vocabulary remains checked against `SpellTargeting["kind"]` without
-emitting dead runtime values.
+lines, functions, and branches. No threshold was lowered. M27 removes two
+duplicate spell-slot-fallback active-effect route next-discovery algorithms.
+Both callers now delegate to one route-protocol owner that exhaustively maps
+`targetChoice`, `attackRoll`, and `rolledDice` holes and retains the same
+action-economy fallback. Each caller's different fill-owner algorithm remains
+local.
 
-This structural increment adds no test lines and changes one production file
-by 8 additions and 26 deletions (net -18). In that owner, exact statements move
-from 0 / 15 to 0 / 0, while its 1 / 1 branch and 1 / 1 function are unchanged.
-A lightweight TypeScript transpilation audit found three emitted array
-declarations and two spread references at the base, and no emitted
-`SAVE_GATED_*` value after the change. Across the complete package, statements
-and lines retain the same covered numerator while removing all 15 uncovered
-runtime statements. Unchanged-owner V8 materialization added one covered and
-one total branch, leaving the uncovered branch count unchanged. The pre-edit
-budget was zero added test lines, all ratchets remain green, and functions
-remain 100%.
-
-Integration subsequently synchronized the clean `master` milestone through
-`d844987c4`, including the character-resource admission increment described
-below. That milestone is not present in the M26 lane-local totals above. The
-next exact package baseline must therefore remeasure the combined integration
-HEAD before these remaining-gap figures are used for selection.
+This structural increment adds no test lines and changes three production files
+by 19 additions and 26 deletions (net -7). The pre-edit budget was zero added
+test lines for an expected 14 fewer uncovered statements. Exact changed-owner
+measurement instead found eight fewer uncovered statements: condition-immunity
+routes moved from 135 / 142 to 137 / 140, marked-damage routes from 362 / 387
+to 356 / 373, and the shared builders from 115 / 117 to 119 / 125. The measured
+test-line ratio is therefore still 0 / 8 = 0.00. In an unchanged owner,
+`battle-fill-equality.ts` rematerialized from 321 / 322 to 314 / 322, adding
+seven uncovered statements without a source change; this V8 noise masks the
+changed-owner improvement to the truthful package-wide reduction of one.
+Unchanged-owner branch materialization also churned in both directions but
+netted to zero package-wide. Functions remain 100%.
 
 ## Remaining static 99% gaps
 
@@ -123,12 +117,24 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 121,224 | 124,795 |                  123,548 |         2,324 |
-| Branches   |  30,865 |  32,722 |                   32,395 |         1,530 |
-| Functions  |   4,812 |   4,812 |                    4,764 |             0 |
-| Lines      | 121,224 | 124,795 |                  123,548 |         2,324 |
+| Statements | 121,269 | 124,808 |                  123,560 |         2,291 |
+| Branches   |  30,898 |  32,739 |                   32,412 |         1,514 |
+| Functions  |   4,811 |   4,811 |                    4,763 |             0 |
+| Lines      | 121,269 | 124,808 |                  123,560 |         2,291 |
 
 ## Milestone context
+
+M27 consolidates the identical next-discovery owner used by marked-damage and
+condition-immunity/temporary-hit-point spell-slot-fallback active-effect routes.
+Existing public route tests passed 41/41, and package typecheck, targeted lint,
+and formatting were green. A broader first draft was rejected before commit
+because the fill-owner algorithms are not extensionally identical: marked
+damage maps `abilityChoice` to the active-effect owner, while the
+condition-immunity route maps it to spell-slot/action-economy ownership. Those
+algorithms therefore remain separate and local. RAW, QNT, runtime behavior,
+public APIs, and tests are unchanged, so no MBT was required.
+Standards review produced the fallback-policy naming correction above; the
+subsequent independent Spec review found no remaining issue.
 
 M26 replaces type-derivation-only save-gated targeting arrays with structural
 unions of the canonical `SpellTargeting` members. Repository-wide search found
@@ -280,8 +286,8 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting exact M26 battle-runtime metric at 94.32%, with a
-lane-local static 99% gap of 1,530 pending the combined post-sync remeasurement.
+Branches remain the limiting exact M27 battle-runtime metric at 94.38%, with a
+lane-local static 99% gap of 1,514.
 Do not retry the rejected attack-control helper matrix or the isolated
 Spiritual Weapon synthesized-admission conversion.
 Rerank the exact uncovered report against public lifecycle coverage before the
