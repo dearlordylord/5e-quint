@@ -327,6 +327,54 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       pendingInterrupt: null,
     });
   });
+  test("Grease entry failure opens a readied-spell Reaction before applying Prone", () => {
+    const spell = spellRecord(greaseUnitId);
+    const session = spellBattleWithTargetRayOfFrost({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const castAct = spellAct({
+      session,
+      spellId: greaseUnitId,
+      slotLevel: 1,
+    });
+    const castSave = requireHole(castAct.initialHoles, "savingThrowOutcome");
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: castAct.subject,
+      fills: [greaseSavingThrowOutcomeFill(castSave, [])],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Grease cast to resolve.");
+    }
+
+    const targetTurn = endCasterTurnAndReadyTargetRayOfFrost({
+      session: battleRuntimeSessionForTest({ ...session, state: cast.state }),
+      casterId: spellCasterId,
+    });
+    const entryAct = greaseGroundHazardSaveAct(
+      targetTurn,
+      spellTargetId,
+      "entersArea",
+    );
+    const entrySave = requireHole(entryAct.initialHoles, "savingThrowOutcome");
+    const awaitingReaction = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: entryAct.subject,
+      fills: [
+        singleTargetSavingThrowOutcomeFill(entrySave, spellTargetId, false),
+      ],
+    });
+
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+    });
+    const declined = declineTargetReadiedSpellAfterFailedSave(awaitingReaction);
+    expect(requireCombatant(declined.state, spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ prone: true }),
+    });
+  });
   test("Heightened Grease requires its selected target before save resolution", () => {
     const { session, act, heightenedTarget } = heightenedGreaseCastSetup();
 

@@ -83,6 +83,7 @@ import type {
   CombatantId,
   EffectAtom,
 } from "./unit-profile-admission.test-support.ts";
+import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import {
   repeatedDamageAllocationInvocationFacts,
@@ -1307,6 +1308,52 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
     ]);
   });
+  test("sacred_flame successful saves resolve without Potent Cantrip damage", () => {
+    const spell = spellRecord(sacredFlameUnitId);
+    const session = spellBattle({
+      cantrips: [spell],
+      casterClassLevels: [{ className: "cleric", level: 1 }],
+    });
+    const initialTargetHp = Number(
+      requireCombatant(session.state, spellTargetId).hp,
+    );
+    const act = spellAct({
+      session,
+      spellId: sacredFlameUnitId,
+    });
+    const targetFill = spellTargetFill(
+      requireHole(act.initialHoles, "targetChoice"),
+      sacredFlameUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const resolved = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Sacred Flame successful save to resolve.");
+    }
+    expect(Number(requireCombatant(resolved.state, spellTargetId).hp)).toBe(
+      initialTargetHp,
+    );
+  });
   test("inflict_wounds is admitted through prepared spell access and projected as single-target save-gated slot damage", () => {
     const spell = spellRecord(inflictWoundsUnitId);
     const state = spellBattle({
@@ -2167,6 +2214,103 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
       }),
     );
   });
+  test("save-gated damage replays a missing Hideous Laughter damage repeat save", () => {
+    const spell = spellRecord(fireballUnitId);
+    const baseSession = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      casterClassLevels: [{ className: "wizard", level: 5 }],
+      targetHp: 50,
+      targetMaxHp: 50,
+    });
+    const baseCaster = requireCombatant(baseSession.state, spellCasterId);
+    const baseTarget = requireCombatant(baseSession.state, spellTargetId);
+    const hideousLaughterProcedureRef = battleProcedureExecutionRefForTest(
+      "synthetic-save-gated-damage-hideous-laughter",
+    );
+    const hideousLaughter = {
+      kind: "hideousLaughter" as const,
+      sourceProcedureRef: hideousLaughterProcedureRef,
+      sourceCombatantId: spellCasterId,
+      conditionHadNonSpellProneSource: false,
+      conditionHadNonSpellIncapacitatedSource: false,
+      repeatSaveRollMode: null,
+      save: {
+        ability: "wis" as const,
+        dc: { kind: "caster_spell_save_dc" as const },
+      },
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: spellCasterId,
+      },
+    } satisfies Extract<
+      BattleActiveEffect,
+      { readonly kind: "hideousLaughter" }
+    >;
+    const enrichedState = {
+      ...baseSession.state,
+      combatants: new Map(baseSession.state.combatants)
+        .set(spellCasterId, {
+          ...baseCaster,
+          concentration: {
+            sourceProcedureRef: hideousLaughterProcedureRef,
+            effectKind: "spellEffect" as const,
+          },
+        })
+        .set(spellTargetId, {
+          ...baseTarget,
+          activeEffects: [...baseTarget.activeEffects, hideousLaughter],
+        }),
+    };
+    const session = battleRuntimeSessionForTest({
+      ...baseSession,
+      state: enrichedState,
+    });
+    const act = spellAct({
+      session,
+      spellId: fireballUnitId,
+      slotLevel: 3,
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    const saveFill = fireballSavingThrowOutcomeFill(
+      savingThrow,
+      [{ targetId: spellTargetId, succeeded: false }],
+      [],
+    );
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state: enrichedState,
+        subject: act.subject,
+        fills: [saveFill],
+      }),
+      "rolledDice",
+    );
+    const awaitingRepeatSave = resolveBattleSubject({
+      state: enrichedState,
+      subject: act.subject,
+      fills: [
+        saveFill,
+        damageRollFillWithGroups(damageRoll, [[4, 4, 4, 4, 4, 4, 4, 4]]),
+      ],
+    });
+
+    expect(awaitingRepeatSave).toMatchObject({ tag: "needsHoles" });
+    if (awaitingRepeatSave.tag !== "needsHoles") {
+      throw new Error("Expected a Hideous Laughter repeat-save hole.");
+    }
+    const repeatSaveHole = awaitingRepeatSave.holes.find(
+      (hole) => "hideousLaughterRepeatSave" in hole,
+    );
+    expect(repeatSaveHole).toBeDefined();
+    expect(repeatSaveHole).toMatchObject({
+      kind: "savingThrowOutcome",
+      hideousLaughterRepeatSave: expect.objectContaining({
+        targetId: spellTargetId,
+        trigger: "damage",
+      }),
+    });
+  });
+
   test("fireball applies area save damage and emits unattended flammable object ignitions", () => {
     const spell = spellRecord(fireballUnitId);
     const state = spellBattle({

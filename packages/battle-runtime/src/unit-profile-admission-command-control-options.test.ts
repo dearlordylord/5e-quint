@@ -3,6 +3,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel
 import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { battleStateWithSyntheticWeakeningEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   requireCharacterSpellProcedureRefForTest,
@@ -47,6 +48,7 @@ import {
   endTurn,
   movementFeet,
   resolveBattleSubject,
+  snapshotBattle,
   spellSlotInvocationRef,
 } from "./unit-profile-admission.test-support.ts";
 
@@ -229,6 +231,126 @@ describe("QMBT14 deterministic Command control option admission", () => {
     expect(requireCombatant(grovel.state, spellTargetId).activeEffects).toEqual(
       [],
     );
+  });
+  test("command Grovel delegated End Turn keeps one committed state and snapshot until its save resolves", () => {
+    const spell = spellRecord(commandUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: commandUnitId,
+      slotLevel: 1,
+    });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+    const targetFill = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      commandUnitId,
+      [spellTargetId],
+    );
+    const optionFill: Extract<
+      BattleFill,
+      { readonly kind: "commandOptionChoice" }
+    > = {
+      kind: "commandOptionChoice",
+      holeId: commandOption.holeId,
+      value: "grovel",
+    };
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [targetFill, optionFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        optionFill,
+        savingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Command Grovel cast to resolve.");
+    }
+    const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const committedState = battleStateWithSyntheticWeakeningEndTurnSave(
+      targetTurn.state,
+      spellCasterId,
+      spellTargetId,
+    );
+    const grovelAct = discoverBattleActCandidates(committedState)[0];
+    if (
+      grovelAct === undefined ||
+      grovelAct.subject.tag !== "runtimeCommand" ||
+      grovelAct.subject.command !== "commandGrovel"
+    ) {
+      throw new Error("Expected Command Grovel act.");
+    }
+    const committedSnapshot = snapshotBattle(committedState);
+
+    const awaitingSave = resolveBattleSubject({
+      state: committedState,
+      subject: grovelAct.subject,
+      fills: [],
+    });
+
+    expect(awaitingSave).toMatchObject({
+      tag: "needsHoles",
+      state: committedState,
+      subject: grovelAct.subject,
+      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+    });
+    expect(awaitingSave.snapshot).toEqual(committedSnapshot);
+    expect(requireCombatant(committedState, spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ prone: false }),
+      activeEffects: expect.arrayContaining([
+        expect.objectContaining({ kind: "commandPending", option: "grovel" }),
+      ]),
+    });
+    const saveHole = requireResultHole(awaitingSave, "savingThrowOutcome");
+    const saveFill = savingThrowOutcomeFill(saveHole, [
+      { targetId: spellTargetId, succeeded: true },
+    ]);
+    const rejectedDuplicate = resolveBattleSubject({
+      state: committedState,
+      subject: grovelAct.subject,
+      fills: [saveFill, saveFill],
+    });
+    expect(rejectedDuplicate).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "End Turn received duplicate Saving Throw outcome fills.",
+    });
+    expect(rejectedDuplicate.snapshot).toEqual(committedSnapshot);
+
+    const replayed = resolveBattleSubject({
+      state: committedState,
+      subject: grovelAct.subject,
+      fills: [saveFill],
+    });
+    expect(replayed).toMatchObject({
+      tag: "resolved",
+      snapshot: { currentActorId: spellCasterId },
+    });
+    if (replayed.tag !== "resolved") {
+      throw new Error("Expected Command Grovel replay to resolve.");
+    }
+    expect(requireCombatant(replayed.state, spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ prone: true }),
+      activeEffects: [],
+    });
   });
 
   test("a failed Command save opens the target's readied-spell Reaction", () => {
@@ -516,7 +638,44 @@ describe("QMBT14 deterministic Command control option admission", () => {
       ],
     });
 
-    const ended = endTurn({ state: targetTurn.state, actorId: spellTargetId });
+    const committedHaltState = battleStateWithSyntheticWeakeningEndTurnSave(
+      targetTurn.state,
+      spellCasterId,
+      spellTargetId,
+    );
+    const committedHaltSnapshot = snapshotBattle(committedHaltState);
+    const awaitingHaltSave = endTurn({
+      state: committedHaltState,
+      actorId: spellTargetId,
+    });
+    expect(awaitingHaltSave).toMatchObject({
+      tag: "needsHoles",
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "endTurn",
+      },
+      snapshot: committedHaltSnapshot,
+    });
+    if (awaitingHaltSave.tag !== "needsHoles") {
+      throw new Error("Expected halted End Turn save frontier.");
+    }
+    expect(awaitingHaltSave.state.currentTurnResources.commandHalt).toEqual({
+      kind: "commandHalt",
+    });
+    const haltEndTurnSave = requireResultHole(
+      awaitingHaltSave,
+      "savingThrowOutcome",
+    );
+    const ended = endTurn({
+      state: committedHaltState,
+      actorId: spellTargetId,
+      fills: [
+        savingThrowOutcomeFill(haltEndTurnSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
     if (ended.tag !== "resolved") {
       throw new Error("Expected halted target End Turn to resolve.");
     }
@@ -594,6 +753,56 @@ describe("QMBT14 deterministic Command control option admission", () => {
         initialHoles: [],
       }),
     ]);
+    const committedWithSave = battleStateWithSyntheticWeakeningEndTurnSave(
+      targetTurn.state,
+      spellCasterId,
+      spellTargetId,
+    );
+    const dropSubject = targetActs[0]!.subject;
+    if (
+      dropSubject.tag !== "runtimeCommand" ||
+      dropSubject.command !== "commandDrop"
+    ) {
+      throw new Error("Expected Command Drop subject.");
+    }
+    const awaitingEndTurnSave = resolveBattleSubject({
+      state: committedWithSave,
+      subject: dropSubject,
+      fills: [],
+    });
+    expect(awaitingEndTurnSave).toMatchObject({
+      tag: "needsHoles",
+      state: committedWithSave,
+      subject: dropSubject,
+      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+    });
+    expect(awaitingEndTurnSave).not.toHaveProperty("droppedObjects");
+    expect(awaitingEndTurnSave.snapshot).toEqual(
+      snapshotBattle(committedWithSave),
+    );
+    const endTurnSave = requireResultHole(
+      awaitingEndTurnSave,
+      "savingThrowOutcome",
+    );
+    const resolvedDelegation = resolveBattleSubject({
+      state: committedWithSave,
+      subject: dropSubject,
+      fills: [
+        savingThrowOutcomeFill(endTurnSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(resolvedDelegation).toMatchObject({
+      tag: "resolved",
+      droppedObjects: [
+        expect.objectContaining({
+          kind: "objectDropped",
+          actorId: spellTargetId,
+          objectId: battleObjectId("main:weapon_longsword"),
+        }),
+      ],
+    });
 
     const dropped = resolveBattleSubject({
       state: targetTurn.state,

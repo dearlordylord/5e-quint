@@ -376,6 +376,11 @@ const PointOriginSphereSpellTargetingSchema = Schema.Struct({
   kind: Schema.Literal("pointOriginSphere"),
   radiusFeet: MovementFeet,
 });
+const PointOriginCylinderSpellTargetingSchema = Schema.Struct({
+  kind: Schema.Literal("pointOriginCylinder"),
+  radiusFeet: MovementFeet,
+  heightFeet: MovementFeet,
+});
 const PointOriginCubeExcludingCasterSpellTargetingSchema = Schema.Struct({
   kind: Schema.Literal("pointOriginCubeExcludingCaster"),
   sideFeet: MovementFeet,
@@ -389,17 +394,22 @@ const SelfOriginConeSpellTargetingSchema = Schema.Struct({
   lengthFeet: MovementFeet,
 });
 
-export const SaveGatedConditionSpellTargetingSchema = Schema.Union(
-  SingleCombatantSpellTargetingSchema,
-  TargetListSpellTargetingSchema,
+const SaveGatedConditionAreaSpellTargetingSchema = Schema.Union(
   PointOriginSphereSpellTargetingSchema,
   PointOriginCubeExcludingCasterSpellTargetingSchema,
   PointOriginCubeSpellTargetingSchema,
   SelfOriginConeSpellTargetingSchema,
 );
 
+export const SaveGatedConditionSpellTargetingSchema = Schema.Union(
+  TargetListSpellTargetingSchema,
+  SaveGatedConditionAreaSpellTargetingSchema,
+);
+
 export const SaveGatedDamageSpellTargetingSchema = Schema.Union(
-  SaveGatedConditionSpellTargetingSchema,
+  SingleCombatantSpellTargetingSchema,
+  SaveGatedConditionAreaSpellTargetingSchema,
+  PointOriginCylinderSpellTargetingSchema,
   Schema.Struct({
     kind: Schema.Literal("selfOriginCube"),
     sideFeet: MovementFeet,

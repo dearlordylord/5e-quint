@@ -77,6 +77,7 @@ import {
   battleCreatureStateWithKnockOutPreservedConditions,
   hasCondition,
   resourceCount,
+  selectFailedSaveConditionEffect,
   spellSlotInvocationRef,
   spellSlotLevel,
   supportedPreparedSaveGateConditionProfile,
@@ -813,6 +814,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 5, count: 1 }],
+      casterClassLevels: [{ className: "cleric", level: 9 }],
     });
     const act = spellAct({
       session,
@@ -964,6 +966,38 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       ),
     ).toBe(false);
     expect(contagionEffect(successState)).toBeUndefined();
+  });
+
+  test("contagion requests its failed-save ability choice before the Saving Throw", () => {
+    const spell = spellRecord(contagionUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 5, count: 1 }],
+      casterClassLevels: [{ className: "cleric", level: 9 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: contagionUnitId,
+      slotLevel: 5,
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      targetHole,
+      contagionUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+
+    const awaitingAbilityChoice = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+
+    expect(awaitingAbilityChoice).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "abilityChoice" })],
+    });
   });
 
   test("contagion locks in after three failed repeated saves", () => {
@@ -1217,6 +1251,35 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(ended.state.combatants.get(spellTargetId)).toMatchObject({
       conditions: expect.not.objectContaining({ deafened: true }),
       activeEffects: [],
+    });
+  });
+
+  test("save-gated condition selection rejects a condition outside the authored choices", () => {
+    const spell = spellRecord(blindnessDeafnessUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterClassLevels: [{ className: "wizard", level: 3 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: blindnessDeafnessUnitId,
+      slotLevel: 2,
+    });
+    const conditionHole = requireHole(act.initialHoles, "conditionChoice");
+    const invocation = spellHoleInvocation(session, [conditionHole]);
+    if (invocation.procedure !== "saveGatedCondition") {
+      throw new Error("Expected a save-gated condition invocation.");
+    }
+    if (invocation.effect.kind !== "choice") {
+      throw new Error("Expected a choice condition effect.");
+    }
+
+    expect(
+      selectFailedSaveConditionEffect(invocation.effect, "poisoned"),
+    ).toEqual({
+      tag: "invalidConditionChoice",
+      message: "Condition choice is not available for this spell.",
     });
   });
 

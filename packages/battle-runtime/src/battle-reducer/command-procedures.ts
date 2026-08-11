@@ -3,11 +3,11 @@
 
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
 import { Match } from "effect";
+import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleDroppedObjectOutcome,
   BattleFill,
-  BattleInterruptedProcedure,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
   BattleResolvedMovement,
@@ -16,11 +16,15 @@ import type {
 import {
   type BattleRuntimeCommand,
   type BattleSubject,
+  sameBattleSubject,
 } from "../battle-subjects.ts";
 import type { BattleCommandOption } from "../active-effect/execution-vocabulary.ts";
 import { CombatantId } from "../identity.ts";
 import { MOVEMENT_HOLE_ID } from "./battle-runtime-protocol.ts";
-import { snapshotBattle } from "./battle-snapshot.ts";
+import {
+  currentInterruptCheckpoint,
+  snapshotBattle,
+} from "./battle-snapshot.ts";
 import { battleSubjectActorId } from "./creature-state-execution.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { movementHole } from "./movement-holes.ts";
@@ -69,6 +73,13 @@ type CommandFollowUpSubject = Extract<
   }
 >;
 
+type CommandDelegatedEndTurnSubject =
+  | CommandFollowUpSubject
+  | Extract<
+      BattleSubject,
+      { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
+    >;
+
 export function isCommandFollowUpSubject(
   subject: BattleSubject,
 ): subject is CommandFollowUpSubject {
@@ -83,6 +94,7 @@ export function isCommandFollowUpSubject(
 export function resolveCommandFollowUp(
   input: AdmittedBattleResolutionInput & {
     readonly subject: CommandFollowUpSubject;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
 ): BattleResolutionResult {
   return Match.value(input.subject).pipe(
@@ -106,6 +118,14 @@ export function pendingCommandObligationIssue(
   state: BattleState,
   subject: BattleSubject,
 ): string | null {
+  const activeInterruptSubject =
+    currentInterruptCheckpoint(state)?.activeInterrupt?.subject;
+  if (
+    activeInterruptSubject !== undefined &&
+    sameBattleSubject(subject, activeInterruptSubject)
+  ) {
+    return null;
+  }
   const actorId = battleSubjectActorId(subject);
   const pendingEffects = commandPendingEffectsForActor(state, actorId).filter(
     (effect) => COMMAND_FOLLOW_UP_BY_OPTION[effect.option] !== null,
@@ -121,48 +141,6 @@ export function pendingCommandObligationIssue(
   )
     ? null
     : "A pending Command effect must be resolved before other battle subjects.";
-}
-
-type CommandMovementContinuation = Extract<
-  BattleInterruptedProcedure,
-  {
-    readonly kind: "commandApproachMovement" | "commandFleeMovement";
-  }
->;
-
-export function isCommandMovementContinuation(
-  continuation: BattleInterruptedProcedure,
-): continuation is CommandMovementContinuation {
-  return (
-    continuation.kind === "commandApproachMovement" ||
-    continuation.kind === "commandFleeMovement"
-  );
-}
-
-export function resumeCommandMovementContinuation(
-  state: BattleState,
-  continuation: CommandMovementContinuation,
-): BattleResolutionResult {
-  return Match.value(continuation).pipe(
-    Match.when({ kind: "commandApproachMovement" }, (approach) =>
-      resolveCommandApproachAfterMovement({
-        state,
-        subject: approach.subject,
-        movement: approach.movement,
-        movedWithinFiveFeetOfCaster: approach.movedWithinFiveFeetOfCaster,
-        endTurnFills: approach.endTurnFills,
-      }),
-    ),
-    Match.when({ kind: "commandFleeMovement" }, (flee) =>
-      resolveCommandFleeAfterMovement({
-        state,
-        subject: flee.subject,
-        movement: flee.movement,
-        endTurnFills: flee.endTurnFills,
-      }),
-    ),
-    Match.exhaustive,
-  );
 }
 
 function commandPendingEffectForSubject(
@@ -209,6 +187,40 @@ function stateWithoutCommandPendingEffect(
       ),
     }),
   };
+}
+
+function projectDelegatedEndTurnResult(
+  replayRoot: {
+    readonly state: BattleState;
+    readonly subject: CommandDelegatedEndTurnSubject;
+  },
+  delegatedResult: BattleResolutionResult,
+): BattleResolutionResult {
+  return Match.value(delegatedResult).pipe(
+    Match.when({ tag: "needsHoles" }, (result) => ({
+      ...result,
+      state: replayRoot.state,
+      subject: replayRoot.subject,
+      snapshot: snapshotBattle(replayRoot.state),
+    })),
+    Match.when({ tag: "invalid" }, (result) => ({
+      ...result,
+      snapshot: snapshotBattle(replayRoot.state),
+    })),
+    Match.when({ tag: "resolved" }, (result) => result),
+    Match.exhaustive,
+  );
+}
+
+export function resolveCommandHaltEndTurn(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
+    >
+  >,
+): BattleResolutionResult {
+  return projectDelegatedEndTurnResult(input, resolveEndTurnCommand(input));
 }
 
 function resolveCommandGrovelCommand(
@@ -262,9 +274,7 @@ function resolveCommandGrovelCommand(
     },
     fills: input.fills,
   });
-  return endTurnResult.tag === "needsHoles"
-    ? { ...endTurnResult, state: input.state, subject: input.subject }
-    : endTurnResult;
+  return projectDelegatedEndTurnResult(input, endTurnResult);
 }
 
 function resolveCommandDropCommand(
@@ -385,25 +395,26 @@ function resolveCommandDropCommand(
     },
     fills: input.fills.filter((fill) => fill.kind !== "heldObjectFacts"),
   });
-  const droppedObjects: readonly BattleDroppedObjectOutcome[] = objectIds.map(
-    (objectId) => ({
-      kind: "objectDropped",
-      actorId: input.subject.actorId,
-      objectId,
-      source: {
-        kind: "spell",
-        sourceCombatantId: effect.sourceCombatantId,
-        sourceProcedureRef: effect.sourceProcedureRef,
-      },
+  const projectedResult = projectDelegatedEndTurnResult(input, endTurnResult);
+  return Match.value(projectedResult).pipe(
+    Match.when({ tag: "needsHoles" }, (result) => result),
+    Match.when({ tag: "invalid" }, (result) => result),
+    Match.when({ tag: "resolved" }, (result) => {
+      const droppedObjects: readonly BattleDroppedObjectOutcome[] =
+        objectIds.map((objectId) => ({
+          kind: "objectDropped",
+          actorId: input.subject.actorId,
+          objectId,
+          source: {
+            kind: "spell",
+            sourceCombatantId: effect.sourceCombatantId,
+            sourceProcedureRef: effect.sourceProcedureRef,
+          },
+        }));
+      return { ...result, droppedObjects };
     }),
+    Match.exhaustive,
   );
-  if (endTurnResult.tag === "needsHoles") {
-    return { ...endTurnResult, state: input.state, subject: input.subject };
-  }
-  if (endTurnResult.tag === "invalid") {
-    return endTurnResult;
-  }
-  return { ...endTurnResult, droppedObjects };
 }
 
 function resolveCommandApproachCommand(
@@ -415,7 +426,7 @@ function resolveCommandApproachCommand(
         readonly command: "commandApproach";
       }
     >
-  >,
+  > & { readonly handledInterruptTrigger?: BattleInterruptTrigger },
 ): BattleResolutionResult {
   const effect = commandPendingEffectForSubject(
     input.state,
@@ -508,7 +519,10 @@ function resolveCommandApproachCommand(
     input.state,
     movement.movement,
   );
-  if (threats.length > 0) {
+  if (
+    threats.length > 0 &&
+    input.handledInterruptTrigger !== "opportunityAttack"
+  ) {
     const reactionWindow = maybeOpenInterruptWindow(
       input.state,
       {
@@ -516,11 +530,9 @@ function resolveCommandApproachCommand(
         moverId: input.subject.actorId,
         threats,
         continuation: {
-          kind: "commandApproachMovement",
+          kind: "replay",
           subject: input.subject,
-          movement: movement.movement,
-          movedWithinFiveFeetOfCaster: approachFact.movedWithinFiveFeetOfCaster,
-          endTurnFills: extraFills,
+          fills: input.fills,
         },
       },
       undefined,
@@ -599,9 +611,7 @@ function resolveCommandApproachAfterMovement(input: {
     },
     fills: movementEffects.remainingFills,
   });
-  return endTurnResult.tag === "needsHoles"
-    ? { ...endTurnResult, state: input.state, subject: input.subject }
-    : endTurnResult;
+  return projectDelegatedEndTurnResult(input, endTurnResult);
 }
 
 function resolveCommandFleeCommand(
@@ -613,7 +623,7 @@ function resolveCommandFleeCommand(
         readonly command: "commandFlee";
       }
     >
-  >,
+  > & { readonly handledInterruptTrigger?: BattleInterruptTrigger },
 ): BattleResolutionResult {
   const effect = commandPendingEffectForSubject(
     input.state,
@@ -649,9 +659,7 @@ function resolveCommandFleeCommand(
         },
         fills: input.fills,
       });
-      return endTurnResult.tag === "needsHoles"
-        ? { ...endTurnResult, state: input.state, subject: input.subject }
-        : endTurnResult;
+      return projectDelegatedEndTurnResult(input, endTurnResult);
     }
     return needsHolesResult(input.state, input.subject, [
       movementHole(input.state, input.subject.actorId),
@@ -718,7 +726,10 @@ function resolveCommandFleeCommand(
     input.state,
     movement.movement,
   );
-  if (threats.length > 0) {
+  if (
+    threats.length > 0 &&
+    input.handledInterruptTrigger !== "opportunityAttack"
+  ) {
     const reactionWindow = maybeOpenInterruptWindow(
       input.state,
       {
@@ -726,10 +737,9 @@ function resolveCommandFleeCommand(
         moverId: input.subject.actorId,
         threats,
         continuation: {
-          kind: "commandFleeMovement",
+          kind: "replay",
           subject: input.subject,
-          movement: movement.movement,
-          endTurnFills: extraFills,
+          fills: input.fills,
         },
       },
       undefined,
@@ -790,7 +800,5 @@ function resolveCommandFleeAfterMovement(input: {
     },
     fills: movementEffects.remainingFills,
   });
-  return endTurnResult.tag === "needsHoles"
-    ? { ...endTurnResult, state: input.state, subject: input.subject }
-    : endTurnResult;
+  return projectDelegatedEndTurnResult(input, endTurnResult);
 }

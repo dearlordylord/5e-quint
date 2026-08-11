@@ -107,7 +107,7 @@ export type {
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hide-action-obscurement-permission
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
-// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.STAT_BLOCK.ATTACK_CONTROL BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
+// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.STAT_BLOCK.ATTACK_CONTROL BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE BATTLE.SPELL.REACTION_CASTING_TIME
@@ -257,6 +257,8 @@ import type {
 import type { SpellRuleExecutionFactsOwner } from "./procedure-execution/spell-procedure-execution.ts";
 import type {
   PreparedSpellAccess,
+  SaveGatedConditionSpellTargeting,
+  SaveGatedDamageSpellTargeting,
   SpellSlotInvocationResource,
   SpellTargeting,
 } from "./procedure-execution/spell-invocation-vocabulary.ts";
@@ -284,6 +286,8 @@ export {
 } from "./active-effect/execution-vocabulary.ts";
 export type {
   PreparedSpellAccess,
+  SaveGatedConditionSpellTargeting,
+  SaveGatedDamageSpellTargeting,
   SpellSlotInvocationResource,
   SpellTargeting,
 } from "./procedure-execution/spell-invocation-vocabulary.ts";
@@ -805,25 +809,6 @@ export type BattleInterruptedProcedure =
       readonly objectDamages: readonly BattleObjectDamageOutcome[];
       readonly objectIgnitions: readonly BattleObjectIgnitionOutcome[];
       readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
-    }
-  | {
-      readonly kind: "commandApproachMovement";
-      readonly subject: Extract<
-        BattleSubject,
-        { readonly tag: "runtimeCommand"; readonly command: "commandApproach" }
-      >;
-      readonly movement: BattleResolvedMovement;
-      readonly movedWithinFiveFeetOfCaster: boolean;
-      readonly endTurnFills: readonly BattleFill[];
-    }
-  | {
-      readonly kind: "commandFleeMovement";
-      readonly subject: Extract<
-        BattleSubject,
-        { readonly tag: "runtimeCommand"; readonly command: "commandFlee" }
-      >;
-      readonly movement: BattleResolvedMovement;
-      readonly endTurnFills: readonly BattleFill[];
     }
   | BattleAttackDamageInterruptionFrame;
 export type BattleAttackHostSubject =
@@ -3118,7 +3103,7 @@ type SupportedSpellInvocationSource =
       >;
       readonly ability: Ability;
       readonly dc: DcSource;
-      readonly targeting: SpellTargeting;
+      readonly targeting: SaveGatedDamageSpellTargeting;
       readonly damage: {
         readonly expr: DiceExpr;
         readonly damageType: DamageType;
@@ -3170,7 +3155,7 @@ type SupportedSpellInvocationSource =
       readonly spell: BattleSpellAdmissionSource;
       readonly ability: Ability;
       readonly dc: DcSource;
-      readonly targeting: SpellTargeting;
+      readonly targeting: SaveGatedConditionSpellTargeting;
       readonly targetCreatureTypes: readonly CreatureType[] | null;
       readonly effect: SpellFailedSaveConditionEffect;
       readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;

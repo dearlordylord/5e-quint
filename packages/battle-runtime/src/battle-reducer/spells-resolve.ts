@@ -2058,6 +2058,7 @@ function resolveSpellActInternal(
   }
 
   if (invocation.procedure === "chainedSpellAttackDamage") {
+    /* v8 ignore start -- Chained spell invocation admission exposes this profile only through the Action subject lane. */
     if (lane.tag !== "action") {
       return invalidResult(
         input.state,
@@ -2065,6 +2066,7 @@ function resolveSpellActInternal(
         "Chained spell attacks require the Action spell resolution lane.",
       );
     }
+    /* v8 ignore stop */
     const fillSet = parseChainedSpellFillSet(
       input.fills,
       invocation,
@@ -2107,6 +2109,7 @@ function resolveSpellActInternal(
     options,
   );
   if (sharedInvocation === undefined) {
+    /* v8 ignore start -- Registered non-shared spell profiles are admitted only from an Action subject; the Bonus Action proxy is narrowed to shared attack damage above. */
     if (lane.tag !== "action") {
       return invalidResult(
         input.state,
@@ -2114,6 +2117,8 @@ function resolveSpellActInternal(
         "This spell procedure does not use the Bonus Action spell resolution lane.",
       );
     }
+    /* v8 ignore stop */
+    /* v8 ignore start -- The registered profile resolution input is selected from the Action subject's procedure facts, which carry this action-profile support fact. */
     if (!invocationUsesActionSpellProfileResolution(invocation)) {
       return invalidResult(
         input.state,
@@ -2121,6 +2126,7 @@ function resolveSpellActInternal(
         "This spell procedure does not use the Action spell resolution lane.",
       );
     }
+    /* v8 ignore stop */
     return resolveRegisteredSpellProcedureExecution(
       executionRegistry,
       actionSpellProcedureResolveDispatchInput(
@@ -2230,6 +2236,7 @@ function resolveSpellActInternal(
   }
   const objectTarget = fillSet.objectTarget;
   if (objectTarget !== undefined) {
+    /* v8 ignore start -- Object-target spell attack profiles are admitted only through the Action subject lane. */
     if (lane.tag !== "action") {
       return invalidResult(
         input.state,
@@ -2237,6 +2244,7 @@ function resolveSpellActInternal(
         "Object-target spell attacks require the Action spell resolution lane.",
       );
     }
+    /* v8 ignore stop */
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       (invocationForResolution.procedure !== "heldLightHurl" &&
@@ -2703,9 +2711,11 @@ function resolveSpellActInternal(
           state: attackRolledStateAfterHurl,
           snapshot: snapshotBattle(attackRolledStateAfterHurl),
         };
+    /* v8 ignore start -- Availability is checked before attack resolution; intervening attack-roll and held-hurl reducers do not spend or remove the slot or Bonus Action, so this defensive resource result is unreachable for an admitted replay. */
     if (attackRolledStateWithSpiritualWeaponCast.tag !== "resolved") {
       return attackRolledStateWithSpiritualWeaponCast;
     }
+    /* v8 ignore stop */
     const attackRolledStateBeforeHitContinuations =
       attackRolledStateWithSpiritualWeaponCast.state;
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -2721,6 +2731,7 @@ function resolveSpellActInternal(
     if (hit) {
       const mirrorImageAttacker =
         attackRolledStateBeforeHitContinuations.combatants.get(subject.actorId);
+      /* v8 ignore start -- Attack-roll state reducers preserve the admitted caster combatant; removal would require a reducer contract change. */
       if (mirrorImageAttacker === undefined) {
         return invalidResult(
           input.state,
@@ -2728,6 +2739,7 @@ function resolveSpellActInternal(
           "Spell attack actor is no longer in this battle.",
         );
       }
+      /* v8 ignore stop */
       const mirrorImageCheck = mirrorImageHitInterceptionCheck({
         state: attackRolledStateBeforeHitContinuations,
         attacker: mirrorImageAttacker,
@@ -2961,9 +2973,11 @@ function resolveSpellActInternal(
         spiritualWeaponForcePosition,
       ),
     });
+  /* v8 ignore start -- A hit path has already committed this exact force position and the reducer is idempotent; a miss path reaches this reducer exactly once after the admission resource proof. */
   if (spellDamageBaseStateResult.tag !== "resolved") {
     return spellDamageBaseStateResult;
   }
+  /* v8 ignore stop */
   const spellDamageBaseState = spellDamageBaseStateResult.state;
   const targetBeforeDamage =
     spellDamageBaseState.combatants.get(target.combatantId) ?? target;
@@ -3941,6 +3955,7 @@ export function resolveBonusActionDashSpellAct(
           actor,
         )
       : undefined;
+  /* v8 ignore start -- Bonus Action Dash admission carries a character actor and Expeditious Retreat procedure; this guard preserves a typed invalid result if that admission proof is ever bypassed. */
   if (
     actor?.origin.kind !== "character" ||
     invocation?.procedure !== "expeditiousRetreatDash"
@@ -3951,6 +3966,7 @@ export function resolveBonusActionDashSpellAct(
       "Bonus Action Dash spell act requires a supported Expeditious Retreat spell.",
     );
   }
+  /* v8 ignore stop */
   const castingState =
     spellInvocationIsSpellcasting(invocation) &&
     invocation.spellRuleFacts.components.verbal

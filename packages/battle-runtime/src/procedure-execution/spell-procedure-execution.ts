@@ -70,6 +70,8 @@ import type {
   NoSpellInvocationResource,
   PreparedSpellAccess,
   RollModifierSpellSaveGate,
+  SaveGatedConditionSpellTargeting,
+  SaveGatedDamageSpellTargeting,
   SpellEffectSpellAccess,
   SpellSlotInvocationResource,
   SpellTargeting,
@@ -1004,7 +1006,7 @@ export type SaveGatedConditionSpellProcedureExecution =
     readonly resource: SpellSlotInvocationResource;
     readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
     readonly targetCreatureTypes: readonly CreatureType[] | null;
-    readonly targeting: SpellTargeting;
+    readonly targeting: SaveGatedConditionSpellTargeting;
   };
 
 export type SaveGatedConditionImmunitySpellProcedureExecution =
@@ -1052,7 +1054,7 @@ export type SaveGatedDamageClassCantripSpellProcedureExecution =
     readonly resource: NoSpellInvocationResource;
     readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
     readonly successDamage: "none" | "half";
-    readonly targeting: SpellTargeting;
+    readonly targeting: SaveGatedDamageSpellTargeting;
   };
 
 export type SaveGatedDamagePreparedSpellProcedureExecution =
@@ -1080,7 +1082,7 @@ export type SaveGatedDamagePreparedSpellProcedureExecution =
     readonly resource: SpellSlotInvocationResource;
     readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
     readonly successDamage: "none" | "half";
-    readonly targeting: SpellTargeting;
+    readonly targeting: SaveGatedDamageSpellTargeting;
   };
 
 export type ScalarBuffSpellProcedureExecution = SpellRuleExecutionFactsOwner & {

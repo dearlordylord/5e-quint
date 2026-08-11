@@ -31,6 +31,7 @@ import {
   interruptDecisionFill,
   requireHole,
   requireCharacterUnitProcedureRefForTest,
+  rageResource,
   requireResolved,
   reactionModifierUnitRef,
   resolveBattleSubject,
@@ -42,6 +43,7 @@ import {
   startBattleRight,
   startBattleSessionRight,
   statBlockCreatureInit,
+  recklessAttackFeature,
   supportedBattleUnitRef,
   testCharacterD20Statistics,
   testDaggerAttack,
@@ -1353,6 +1355,147 @@ describe("battle runtime: Hunter's Prey", () => {
     ).toEqual([
       { attackerId: fighterId, procedureRef: huntersPreyProcedureRef(session) },
     ]);
+  });
+
+  test("Horde Breaker applies Frenzy after a Reckless miss while raging", () => {
+    const frenzyUnit = unitLibrary.requireUnit("barbarian_frenzy");
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-hunters-prey-horde-breaker-frenzy"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [
+            { className: "barbarian", level: 3 },
+            { className: "ranger", level: 3 },
+          ],
+          resources: [rageResource()],
+          characterUnitRefs: [
+            huntersPreyUnitRef("hordeBreaker"),
+            supportedBattleUnitRef(frenzyUnit),
+          ],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(frenzyUnit, [
+              { className: "barbarian", level: classLevel(3) },
+            ]),
+            recklessAttackFeature(),
+          ],
+          attack: testLongswordAttack(),
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          displayName: "Second Target",
+          initiative: 9,
+        }),
+      ],
+    });
+    const rageSubject = {
+      tag: "unitFeature" as const,
+      actorId: fighterId,
+      procedureRef: requireCharacterUnitProcedureRefForTest(
+        session,
+        fighterId,
+        "barbarian_rage",
+      ),
+    };
+    const raging = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: rageSubject,
+        fills: [],
+      }),
+    ).state;
+    const subject = fighterAttackSubject(raging, "Longsword");
+    const primaryTarget = attackInitialTargetHole(raging, subject);
+    const primaryRoll = attackRollHoleAfterTarget(
+      raging,
+      primaryTarget,
+      subject,
+      goblinId,
+    );
+    const primaryFills = [
+      attackTargetFill(
+        primaryTarget,
+        fighterId,
+        goblinId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
+      attackRollFill(primaryRoll, {
+        total: 5,
+        naturalD20: 2,
+        rollMode: "advantage",
+        activatedOngoingFeatureProcedureRef:
+          requireCharacterUnitProcedureRefForTest(
+            session,
+            fighterId,
+            "barbarian_reckless_attack",
+          ),
+      }),
+    ] as const;
+    const decision = requireHole(
+      resolveBattleSubject({ state: raging, subject, fills: primaryFills }),
+      "unitFeatureDecision",
+    );
+    const target = requireHole(
+      resolveBattleSubject({
+        state: raging,
+        subject,
+        fills: [...primaryFills, unitFeatureDecisionFill(decision, "use")],
+      }),
+      "targetChoice",
+    );
+    const secondTargetFill = targetFill(target, skeletonId, [
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
+      {
+        kind: "hordeBreakerSecondTargetEligible",
+        attackerId: fighterId,
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(target),
+        originalTargetId: goblinId,
+        secondTargetId: skeletonId,
+      },
+    ]);
+    const hordeRoll = requireHole(
+      resolveBattleSubject({
+        state: raging,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(decision, "use"),
+          secondTargetFill,
+        ],
+      }),
+      "attackRoll",
+    );
+    const hordeDamage = requireHole(
+      resolveBattleSubject({
+        state: raging,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(decision, "use"),
+          secondTargetFill,
+          attackRollFill(hordeRoll, {
+            total: 15,
+            naturalD20: 10,
+            rollMode: "advantage",
+          }),
+        ],
+      }),
+      "rolledDice",
+    );
+    expect(hordeDamage).toMatchObject({
+      attackDamageRiders: [
+        expect.objectContaining({
+          optional: false,
+          damage: { dice: 2, dieSize: 6, damageType: "slashing" },
+        }),
+      ],
+    });
   });
 
   test("Horde Breaker can be declined after the original weapon attack misses", () => {

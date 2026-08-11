@@ -72,3 +72,46 @@ export type SpellTargeting =
       readonly kind: "primaryTargetOriginEmanation";
       readonly radiusFeet: MovementFeet;
     };
+
+type SpellTargetingByKind<Kind extends SpellTargeting["kind"]> = Extract<
+  SpellTargeting,
+  { readonly kind: Kind }
+>;
+
+const SAVE_GATED_CONDITION_AREA_TARGETING_KINDS = [
+  "pointOriginSphere",
+  "pointOriginCubeExcludingCaster",
+  "pointOriginCube",
+  "selfOriginCone",
+] as const;
+
+type SaveGatedConditionAreaTargetingKind =
+  (typeof SAVE_GATED_CONDITION_AREA_TARGETING_KINDS)[number];
+
+const SAVE_GATED_DAMAGE_ONLY_AREA_TARGETING_KINDS = [
+  "pointOriginCylinder",
+  "selfOriginCube",
+  "selfOriginLine",
+] as const;
+
+const SAVE_GATED_DAMAGE_AREA_TARGETING_KINDS = [
+  ...SAVE_GATED_CONDITION_AREA_TARGETING_KINDS,
+  ...SAVE_GATED_DAMAGE_ONLY_AREA_TARGETING_KINDS,
+] as const;
+
+type SaveGatedDamageAreaTargetingKind =
+  (typeof SAVE_GATED_DAMAGE_AREA_TARGETING_KINDS)[number];
+
+type SaveGatedConditionAreaSpellTargeting =
+  SpellTargetingByKind<SaveGatedConditionAreaTargetingKind>;
+
+type SaveGatedDamageAreaSpellTargeting =
+  SpellTargetingByKind<SaveGatedDamageAreaTargetingKind>;
+
+export type SaveGatedConditionSpellTargeting =
+  | SpellTargetingByKind<"targetList">
+  | SaveGatedConditionAreaSpellTargeting;
+
+export type SaveGatedDamageSpellTargeting =
+  | SpellTargetingByKind<"singleCombatant">
+  | SaveGatedDamageAreaSpellTargeting;

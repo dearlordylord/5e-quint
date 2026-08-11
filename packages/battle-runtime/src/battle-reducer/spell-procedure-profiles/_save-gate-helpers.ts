@@ -49,6 +49,10 @@ import {
 import { damageSpellSource } from "../spells-invocation-guards.ts";
 import type { CharacterBattleSpellcastingExecutionState } from "../../character-battle-resource-execution.ts";
 import type { CombatantId } from "../../identity.ts";
+import type {
+  SaveGatedConditionSpellTargeting,
+  SaveGatedDamageSpellTargeting,
+} from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   sameStringSet,
   scalarBuffSpellTargetCount,
@@ -59,7 +63,9 @@ import {
 
 export type SaveGateConditionSpell = {
   readonly phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>;
-  readonly targeting: (slotLevel: SpellSlotLevel) => SpellTargeting;
+  readonly targeting: (
+    slotLevel: SpellSlotLevel,
+  ) => SaveGatedConditionSpellTargeting;
   readonly targetCreatureTypes: readonly CreatureType[] | null;
   readonly effect: SpellFailedSaveConditionEffect;
   readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;
@@ -986,7 +992,7 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
 
   return {
     phase,
-    targeting: (slotLevel): SpellTargeting => {
+    targeting: (slotLevel): SaveGatedConditionSpellTargeting => {
       const targetCount = scalarBuffSpellTargetCount(
         targetSelection,
         spell.mechanics.level,
@@ -1157,7 +1163,7 @@ export function supportedSaveGateDamageProfile(
   const rangeFeet =
     targeting?.kind === "singleCombatant"
       ? singleTargetSpellRangeFeet(spell.mechanics.range)
-      : targeting === null || targeting.kind === "singleCreatureOrObject"
+      : targeting === null
         ? null
         : areaSaveGateSpellRangeFeet(spell.mechanics.range, targeting);
   const failedSaveEffects =
@@ -1247,7 +1253,7 @@ function isDamageType(value: unknown): value is DamageType {
 
 export function saveGateTargeting(
   attachment: Attachment,
-): SpellTargeting | null {
+): SaveGatedDamageSpellTargeting | null {
   const value = attachment.kind === "hole" ? attachment.value : attachment;
   if (
     value.kind === "target" &&
@@ -1333,7 +1339,7 @@ export function saveGateTargeting(
 function saveGatedDamageTargeting(
   spell: BattleSpellAdmissionSource,
   attachment: Attachment,
-): SpellTargeting | null {
+): SaveGatedDamageSpellTargeting | null {
   return (
     saveGateTargeting(attachment) ??
     level5SelfOriginConeTargeting(spell, attachment) ??

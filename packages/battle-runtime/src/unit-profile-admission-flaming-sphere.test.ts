@@ -11,7 +11,11 @@ import {
   requireHole,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
-import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import {
+  readyTargetRayOfFrost,
+  spellBattle,
+  spellBattleWithTargetRayOfFrost,
+} from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   flamingSphereAreaFill,
   flamingSphereEndTurnAct,
@@ -709,6 +713,74 @@ describe("L12G deterministic Flaming Sphere admission", () => {
     });
 
     expect(afterDecline).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "rolledDice" }],
+      snapshot: { pendingInterrupt: null },
+    });
+  });
+  test("failed table-triggered Flaming Sphere save opens a readied-spell Reaction", () => {
+    const spell = spellRecord(flamingSphereUnitId);
+    const session = spellBattleWithTargetRayOfFrost({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterClassLevels: [{ className: "wizard", level: 3 }],
+    });
+    const castAct = spellAct({
+      session,
+      spellId: flamingSphereUnitId,
+      slotLevel: 2,
+    });
+    const cast = resolveBattleSubject({
+      state: session.state,
+      subject: castAct.subject,
+      fills: [
+        flamingSphereAreaFill(
+          requireHole(castAct.initialHoles, "spellAreaChoice"),
+        ),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Flaming Sphere cast to resolve.");
+    }
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const readied = readyTargetRayOfFrost(
+      battleRuntimeSessionForTest({
+        ...session,
+        state: targetTurn.state,
+      }),
+    );
+    const endTurnAct = flamingSphereEndTurnAct(readied);
+    const save = requireHole(endTurnAct.initialHoles, "savingThrowOutcome");
+    const awaitingReaction = resolveBattleSubject({
+      state: readied.state,
+      subject: endTurnAct.subject,
+      fills: [singleTargetSavingThrowOutcomeFill(save, spellTargetId, false)],
+    });
+    expect(awaitingReaction).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Flaming Sphere save Reaction.");
+    }
+    const pendingInterrupt = awaitingReaction.snapshot.pendingInterrupt;
+    if (pendingInterrupt === null) {
+      throw new Error("Expected a pending failed-save interrupt.");
+    }
+    const declined = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(pendingInterrupt.decisionHole, {
+        kind: "decline",
+        responderId: spellTargetId,
+      }),
+    });
+    expect(declined).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
       snapshot: { pendingInterrupt: null },

@@ -46,6 +46,7 @@ import {
   flamingSphereRepositionAct,
   flamingSphereRepositionMovementFill,
   flamingSphereUnitId,
+  greaseUnitId,
   maybeSpellAct,
   movementFeet,
   requireCombatant,
@@ -78,7 +79,10 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
-import { shillelaghUnitId } from "./unit-profile-admission-catalog.test-support.ts";
+import {
+  shillelaghUnitId,
+  spiritualWeaponUnitId,
+} from "./unit-profile-admission-catalog.test-support.ts";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 import { BattleSnapshotSchema } from "./index.ts";
 
@@ -642,11 +646,12 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     });
   });
 
-  test("a successful Slow Somatic outcome continues a Shillelagh cast", () => {
+  test("the Slow Somatic outcome gates a Shillelagh weapon override", () => {
     const targetTurn = targetTurnAfterFailedSlow(
       spellBattle({
         preparedSpells: [spellRecord(slowUnitId)],
         spellSlots: [{ spellLevel: 3, count: 1 }],
+        casterClassLevels: [{ className: "wizard", level: 5 }],
         targetAttack: zeroAbilityWeaponAttack("weapon_quarterstaff"),
         targetClassLevels: [{ className: "druid", level: 1 }],
         targetSpellcasting: {
@@ -665,6 +670,22 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     );
     const act = spellActForActor(targetTurn, spellTargetId, shillelaghUnitId);
     const slowChance = requireSlowSomaticSpellFailureHole(act.initialHoles);
+
+    const failed = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: act.subject,
+      fills: [slowSomaticSpellFailureFill(slowChance, true)],
+    });
+
+    if (failed.tag !== "resolved") {
+      throw new Error("Expected failed slowed Shillelagh to resolve.");
+    }
+    expect(
+      requireCombatant(failed.state, spellTargetId).activeEffects,
+    ).not.toContainEqual(
+      expect.objectContaining({ kind: "spellWeaponAttackOverride" }),
+    );
+    expect(failed.state.currentTurnResources.currentHasBonusAction).toBe(false);
 
     expect(
       resolveBattleSubject({
@@ -695,6 +716,93 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       requireCombatant(resolved.state, spellTargetId).activeEffects,
     ).toContainEqual(
       expect.objectContaining({ kind: "spellWeaponAttackOverride" }),
+    );
+  });
+
+  test("a failed Slow Somatic outcome stops an Action spell before its target holes", () => {
+    const targetTurn = targetTurnAfterFailedSlow(
+      spellBattle({
+        preparedSpells: [spellRecord(slowUnitId)],
+        spellSlots: [{ spellLevel: 3, count: 1 }],
+        casterClassLevels: [{ className: "wizard", level: 5 }],
+        targetClassLevels: [{ className: "wizard", level: 1 }],
+        targetPreparedSpells: [spellRecord(greaseUnitId)],
+      }),
+    );
+    const act = spellActForActor(targetTurn, spellTargetId, greaseUnitId);
+    const slowChance = requireSlowSomaticSpellFailureHole(act.initialHoles);
+
+    const failed = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: act.subject,
+      fills: [slowSomaticSpellFailureFill(slowChance, true)],
+    });
+    if (failed.tag !== "resolved") {
+      throw new Error("Expected failed slowed Grease cast to resolve.");
+    }
+    expect(
+      requireCombatant(failed.state, spellTargetId).activeEffects,
+    ).not.toContainEqual(
+      expect.objectContaining({ kind: "greaseGroundHazard" }),
+    );
+    expect(failed.state.currentTurnResources.actionResources).toEqual([]);
+    expect(
+      failed.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "committed",
+        combatantId: spellTargetId,
+      }),
+    );
+  });
+
+  test("a failed Slow Somatic outcome stops Spiritual Weapon before its target holes", () => {
+    const targetTurn = targetTurnAfterFailedSlow(
+      spellBattle({
+        preparedSpells: [spellRecord(slowUnitId)],
+        spellSlots: [{ spellLevel: 3, count: 1 }],
+        casterClassLevels: [{ className: "wizard", level: 5 }],
+        targetClassLevels: [{ className: "cleric", level: 3 }],
+        targetSpellcasting: {
+          sourceClassName: "cleric",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [spellRecord(spiritualWeaponUnitId)],
+          featurePreparedSpells: [],
+          spellbookRitualSpellAccesses: [],
+          invocationSpellAccesses: [],
+          spellSlots: [{ spellLevel: 2, count: 1 }],
+        },
+      }),
+    );
+    const act = spellActForActor(
+      targetTurn,
+      spellTargetId,
+      spiritualWeaponUnitId,
+    );
+    const slowChance = requireSlowSomaticSpellFailureHole(act.initialHoles);
+
+    const failed = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: act.subject,
+      fills: [slowSomaticSpellFailureFill(slowChance, true)],
+    });
+    if (failed.tag !== "resolved") {
+      throw new Error("Expected failed slowed Spiritual Weapon to resolve.");
+    }
+    expect(
+      requireCombatant(failed.state, spellTargetId).activeEffects,
+    ).not.toContainEqual(expect.objectContaining({ kind: "spiritualWeapon" }));
+    expect(failed.state.currentTurnResources.currentHasBonusAction).toBe(false);
+    expect(
+      failed.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "committed",
+        combatantId: spellTargetId,
+      }),
     );
   });
 

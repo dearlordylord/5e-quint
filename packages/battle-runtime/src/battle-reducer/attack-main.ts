@@ -390,6 +390,7 @@ type BrutalStrikeEligibleAttack =
     > & { readonly attackAbility: "str" });
 
 type BrutalStrikeSelection = {
+  readonly attackerId: CombatantId;
   readonly procedureRef: BattleProcedureExecutionRef;
   readonly profile: BrutalStrikeProfile;
   readonly attack: BrutalStrikeEligibleAttack;
@@ -421,6 +422,7 @@ function brutalStrikeSelection(
       procedure.execution.kind === BRUTAL_STRIKE_SUPPORT_PROFILE
     ) {
       return {
+        attackerId,
         procedureRef: binding.procedureRef,
         profile: procedure.execution.brutalStrike,
         attack,
@@ -431,10 +433,10 @@ function brutalStrikeSelection(
 }
 
 function selectedBrutalStrikeEffect(
-  selection: BrutalStrikeSelection | null,
+  selection: BrutalStrikeSelection,
   choice: BrutalStrikeEffectDecisionChoice | null,
 ): BrutalStrikeEffect | null {
-  if (selection === null || choice === null) {
+  if (choice === null) {
     return null;
   }
   return Match.value(choice).pipe(
@@ -521,41 +523,27 @@ function battleStateAfterBrutalStrikeAttackCompletion(
       };
 }
 
-function brutalStrikeDamageRiders(input: {
-  readonly state: BattleState;
-  readonly attackerId: CombatantId;
-  readonly attack: SupportedAttackActionOption;
-  readonly selected: boolean;
-}): readonly AttackDamageRider[] {
-  if (!input.selected) return [];
-  const selection = brutalStrikeSelection(
-    input.state,
-    input.attackerId,
-    input.attack,
-  );
-  return selection === null
-    ? []
-    : [
-        {
-          attackerId: input.attackerId,
-          procedureRef: selection.procedureRef,
-          optional: false,
-          damage: {
-            dice: selection.profile.damage.dice,
-            dieSize: selection.profile.damage.dieSize,
-            damageType: attackDamageTypeForBrutalStrike(selection.attack),
-          },
-        },
-      ];
+function brutalStrikeDamageRider(
+  selection: BrutalStrikeSelection,
+): AttackDamageRider {
+  return {
+    attackerId: selection.attackerId,
+    procedureRef: selection.procedureRef,
+    optional: false,
+    damage: {
+      dice: selection.profile.damage.dice,
+      dieSize: selection.profile.damage.dieSize,
+      damageType: attackDamageTypeForBrutalStrike(selection.attack),
+    },
+  };
 }
 
 function resolveBrutalStrikeAfterDamage(input: {
   readonly state: BattleState;
   readonly replayState: BattleState;
   readonly subject: BattleAttackHostSubject;
-  readonly attackerId: CombatantId;
   readonly targetId: CombatantId;
-  readonly attack: SupportedAttackActionOption;
+  readonly selection: BrutalStrikeSelection;
   readonly choice: BrutalStrikeEffectDecisionChoice | null;
   readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
 }):
@@ -571,13 +559,8 @@ function resolveBrutalStrikeAfterDamage(input: {
         { readonly tag: "resolved" }
       >;
     } {
-  const selection = brutalStrikeSelection(
-    input.state,
-    input.attackerId,
-    input.attack,
-  );
-  const effect = selectedBrutalStrikeEffect(selection, input.choice);
-  if (selection === null || effect === null) {
+  const effect = selectedBrutalStrikeEffect(input.selection, input.choice);
+  if (effect === null) {
     /* v8 ignore start -- Malformed attack fill set: Forceful Blow follow-up fills are discovered only for a resolved Forceful Blow. */
     if (
       input.fillSet.brutalStrikeForcefulBlowMovementDecision !== undefined ||
@@ -598,8 +581,13 @@ function resolveBrutalStrikeAfterDamage(input: {
   return Match.value(effect).pipe(
     byKind("forcefulBlow", (forceful) => {
       const movement = resolveBrutalStrikeForcefulBlowMovement({
-        ...input,
+        state: input.state,
+        replayState: input.replayState,
+        subject: input.subject,
+        attackerId: input.selection.attackerId,
+        targetId: input.targetId,
         effect: forceful,
+        fillSet: input.fillSet,
       });
       if (movement.tag === "result") return movement;
       return {
@@ -654,8 +642,8 @@ function resolveBrutalStrikeAfterDamage(input: {
         ...retainedActiveEffects,
         {
           kind: "brutalStrikeHamstring",
-          sourceProcedureRef: selection.procedureRef,
-          sourceCombatantId: input.attackerId,
+          sourceProcedureRef: input.selection.procedureRef,
+          sourceCombatantId: input.selection.attackerId,
           effect: hamstring,
           expiresAt: { kind: "startOfSourceTurn" },
         } as const,
@@ -1385,6 +1373,20 @@ export function resolveSelectedAttackProcedure<
     attackerId,
     attack,
   );
+  /* v8 ignore start -- Malformed resolution input: Forceful Blow movement fills cannot be replayed after support admission has become unavailable. */
+  if (
+    brutalStrikeSupportSelection === null &&
+    (fillSet.brutalStrikeForcefulBlowMovementDecision !== undefined ||
+      fillSet.brutalStrikeForcefulBlowMovement !== undefined)
+  ) {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects movement fills without an admitted Brutal Strike selection. */
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Brutal Strike Forceful Blow movement requires that effect to resolve.",
+    );
+  }
+  /* v8 ignore stop */
   const replayedBrutalStrikePending = brutalStrikePendingForSubject(
     input.state,
     input.subject,
@@ -1446,6 +1448,16 @@ export function resolveSelectedAttackProcedure<
         } as const)
       : null);
   const brutalStrikeSelected = brutalStrikePending !== null;
+  /* v8 ignore start -- Stale subject: a replayed Brutal Strike roll cannot continue after its admitted support selection disappears. */
+  if (brutalStrikeSelected && brutalStrikeSupportSelection === null) {
+    /* v8 ignore next -- Stale subject: reject rider/effect construction without the caller-proven actor/profile selection. */
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Brutal Strike support selection is no longer available for the selected attack.",
+    );
+  }
+  /* v8 ignore stop */
 
   if (fillSet.attackRoll == null) {
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -1818,12 +1830,9 @@ export function resolveSelectedAttackProcedure<
           fillSet.targetSpatialFacts,
           frenzyDamageType,
         ),
-        ...brutalStrikeDamageRiders({
-          state: attackRolledState,
-          attackerId,
-          attack,
-          selected: brutalStrikeSelected,
-        }),
+        ...(brutalStrikeSelected && brutalStrikeSupportSelection !== null
+          ? [brutalStrikeDamageRider(brutalStrikeSupportSelection)]
+          : []),
       ]
     : [];
   const eligibleDamageDiceChoiceUnitIds = hit
@@ -2986,16 +2995,22 @@ export function resolveSelectedAttackProcedure<
       attack,
       damageAmount: Number(reducedDamageAmount),
     });
-    const brutalStrikeApplied = resolveBrutalStrikeAfterDamage({
-      state: damageWithSlowState,
-      replayState: attackRolledState,
-      subject: input.subject,
-      attackerId,
-      targetId: target.combatantId,
-      attack,
-      choice: brutalStrikeEffectChoice,
-      fillSet,
-    });
+    const brutalStrikeApplied =
+      brutalStrikeSupportSelection === null
+        ? ({
+            tag: "ok",
+            state: damageWithSlowState,
+            shovePushes: [],
+          } as const)
+        : resolveBrutalStrikeAfterDamage({
+            state: damageWithSlowState,
+            replayState: attackRolledState,
+            subject: input.subject,
+            targetId: target.combatantId,
+            selection: brutalStrikeSupportSelection,
+            choice: brutalStrikeEffectChoice,
+            fillSet,
+          });
     if (brutalStrikeApplied.tag === "result") {
       return brutalStrikeApplied.result;
     }

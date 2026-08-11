@@ -30,7 +30,6 @@ import {
   type SupportedAttackActionOption,
   type SupportedCreatureAttackRollMechanics,
 } from "../battle-action-options.ts";
-import type { CreatureAttackRollMechanics } from "@dnd/surface/surface/types";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import {
@@ -70,25 +69,19 @@ const byTag = Match.discriminator("tag");
 
 export function supportedStatBlockAttackTargetConstraint(
   attack: SupportedCreatureAttackRollMechanics,
-): AttackTargetConstraint;
-export function supportedStatBlockAttackTargetConstraint(
-  attack: Pick<
-    CreatureAttackRollMechanics,
-    "attackType" | "reachFeet" | "rangeFeet"
-  >,
-): AttackTargetConstraint | null {
-  if (attack.attackType === "melee" && attack.reachFeet !== undefined) {
-    return { kind: "meleeReach", reachFeet: movementFeet(attack.reachFeet) };
-  }
-  if (attack.attackType === "ranged" && attack.rangeFeet !== undefined) {
-    return {
-      kind: "rangedRange",
-      normalFeet: movementFeet(attack.rangeFeet.normal),
-      longFeet: movementFeet(attack.rangeFeet.long),
-    };
-  }
-
-  return null;
+): AttackTargetConstraint {
+  return Match.value(attack).pipe(
+    Match.when({ attackType: "melee" }, (meleeAttack) => ({
+      kind: "meleeReach" as const,
+      reachFeet: movementFeet(meleeAttack.reachFeet),
+    })),
+    Match.when({ attackType: "ranged" }, (rangedAttack) => ({
+      kind: "rangedRange" as const,
+      normalFeet: movementFeet(rangedAttack.rangeFeet.normal),
+      longFeet: movementFeet(rangedAttack.rangeFeet.long),
+    })),
+    Match.exhaustive,
+  );
 }
 
 export function statBlockAttackDamage(

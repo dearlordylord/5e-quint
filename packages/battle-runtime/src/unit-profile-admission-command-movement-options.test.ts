@@ -1,9 +1,13 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-approach-route spell.invocation-command-flee-route
 import { describe, expect, test } from "vitest";
 import {
+  attackRollFill,
   attackExecutionSelectionForSubjectForTest,
   characterAttackSubjectForTest,
+  opportunityAttackProcedureSelectionForTest,
+  reactionChoiceWithSubject,
 } from "./battle-runtime.test-support.ts";
+import { battleStateWithSyntheticWeakeningEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
 import {
   commandUnitId,
   spellCasterId,
@@ -32,6 +36,7 @@ import {
   movementFeet,
   resolveBattleInterrupt,
   resolveBattleSubject,
+  snapshotBattle,
 } from "./unit-profile-admission.test-support.ts";
 import type {
   BattleFill,
@@ -223,7 +228,13 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const approachAct = discoverBattleActCandidates(targetTurn.state)[0];
+    const committedState = battleStateWithSyntheticWeakeningEndTurnSave(
+      targetTurn.state,
+      spellCasterId,
+      spellTargetId,
+    );
+    const committedSnapshot = snapshotBattle(committedState);
+    const approachAct = discoverBattleActCandidates(committedState)[0];
     if (
       approachAct === undefined ||
       approachAct.subject.tag !== "runtimeCommand" ||
@@ -232,15 +243,36 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       throw new Error("Expected Command Approach act.");
     }
     const movement = requireHole(approachAct.initialHoles, "movement");
+    const movementFill = commandApproachMovementFill(movement, {
+      movementCostFeet: 10,
+      movedWithinFiveFeetOfCaster: true,
+      provokedOpportunityAttacks: [],
+    });
+    const awaitingEndTurnSave = resolveBattleSubject({
+      state: committedState,
+      subject: approachAct.subject,
+      fills: [movementFill],
+    });
+    expect(awaitingEndTurnSave).toMatchObject({
+      tag: "needsHoles",
+      subject: approachAct.subject,
+      snapshot: committedSnapshot,
+    });
+    if (awaitingEndTurnSave.tag !== "needsHoles") {
+      throw new Error("Expected Command Approach End Turn save frontier.");
+    }
+    const endTurnSave = requireResultHole(
+      awaitingEndTurnSave,
+      "savingThrowOutcome",
+    );
     const approached = resolveBattleSubject({
-      state: targetTurn.state,
+      state: awaitingEndTurnSave.state,
       subject: approachAct.subject,
       fills: [
-        commandApproachMovementFill(movement, {
-          movementCostFeet: 10,
-          movedWithinFiveFeetOfCaster: true,
-          provokedOpportunityAttacks: [],
-        }),
+        movementFill,
+        savingThrowOutcomeFill(endTurnSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
       ],
     });
     expect(approached).toMatchObject({
@@ -688,7 +720,13 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const fleeAct = discoverBattleActCandidates(targetTurn.state)[0];
+    const committedState = battleStateWithSyntheticWeakeningEndTurnSave(
+      targetTurn.state,
+      spellCasterId,
+      spellTargetId,
+    );
+    const committedSnapshot = snapshotBattle(committedState);
+    const fleeAct = discoverBattleActCandidates(committedState)[0];
     if (
       fleeAct === undefined ||
       fleeAct.subject.tag !== "runtimeCommand" ||
@@ -697,26 +735,25 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       throw new Error("Expected Command Flee act.");
     }
     const movement = requireHole(fleeAct.initialHoles, "movement");
-    const fled = resolveBattleSubject({
-      state: targetTurn.state,
-      subject: fleeAct.subject,
-      fills: [
-        commandFleeMovementFill(movement, {
-          movementCostFeet: 30,
-          provokedOpportunityAttacks: [
-            {
-              reactorId: spellCasterId,
-              ...attackExecutionSelectionForSubjectForTest(
-                characterAttackSubjectForTest(
-                  targetTurn.state,
-                  spellCasterId,
-                  "Unarmed Strike",
-                ),
-              ),
-            },
-          ],
-        }),
+    const movementFill = commandFleeMovementFill(movement, {
+      movementCostFeet: 30,
+      provokedOpportunityAttacks: [
+        {
+          reactorId: spellCasterId,
+          ...attackExecutionSelectionForSubjectForTest(
+            characterAttackSubjectForTest(
+              committedState,
+              spellCasterId,
+              "Unarmed Strike",
+            ),
+          ),
+        },
       ],
+    });
+    const fled = resolveBattleSubject({
+      state: committedState,
+      subject: fleeAct.subject,
+      fills: [movementFill],
     });
     const reaction = requireResultHole(fled, "interruptDecision");
     expect(reaction.trigger).toBe("opportunityAttack");
@@ -731,15 +768,148 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       }),
     });
     expect(afterDecline).toMatchObject({
+      tag: "needsHoles",
+      subject: fleeAct.subject,
+      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+    });
+    if (afterDecline.tag !== "needsHoles") {
+      throw new Error("Expected Command Flee End Turn save after decline.");
+    }
+    expect(afterDecline.snapshot).toEqual(committedSnapshot);
+    expect(afterDecline.state.interruptStack).toEqual([
+      {
+        kind: "replayContinuation",
+        continuation: {
+          kind: "replay",
+          subject: fleeAct.subject,
+          fills: [movementFill],
+        },
+        handledInterruptTrigger: "opportunityAttack",
+      },
+    ]);
+    expect(requireCombatant(afterDecline.state, spellTargetId)).toMatchObject({
+      movementSpentFeet: movementFeet(0),
+      activeEffects: expect.arrayContaining([
+        expect.objectContaining({ kind: "commandPending", option: "flee" }),
+      ]),
+    });
+    const endTurnSave = requireResultHole(afterDecline, "savingThrowOutcome");
+    const rejectedReplay = resolveBattleSubject({
+      state: afterDecline.state,
+      subject: fleeAct.subject,
+      fills: [
+        savingThrowOutcomeFill(endTurnSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+        savingThrowOutcomeFill(endTurnSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(rejectedReplay).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "End Turn received duplicate Saving Throw outcome fills.",
+      snapshot: committedSnapshot,
+      routeEvents: [
+        {
+          kind: "resolveBattleSubject",
+          subject: "commandEffect",
+          fill: "savingThrowOutcome",
+          holes: [],
+          owner: "battleHoleFrontier",
+        },
+      ],
+    });
+    const replayed = resolveBattleSubject({
+      state: afterDecline.state,
+      subject: fleeAct.subject,
+      fills: [
+        savingThrowOutcomeFill(endTurnSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(replayed).toMatchObject({
       tag: "resolved",
       snapshot: { currentActorId: spellCasterId },
     });
-    if (afterDecline.tag !== "resolved") {
-      throw new Error("Expected Command Flee to resolve after decline.");
+    if (replayed.tag !== "resolved") {
+      throw new Error("Expected Command Flee replay to resolve.");
     }
-    expect(requireCombatant(afterDecline.state, spellTargetId)).toMatchObject({
+    expect(requireCombatant(replayed.state, spellTargetId)).toMatchObject({
       movementSpentFeet: movementFeet(30),
       activeEffects: [],
     });
+
+    const choice = reactionChoiceWithSubject(
+      fled.snapshot.pendingInterrupt!.choices,
+    );
+    const startedReaction = resolveBattleInterrupt({
+      state: fled.state,
+      fill: interruptDecisionFill(reaction, {
+        kind: "resolve",
+        responderId: spellCasterId,
+        choice: opportunityAttackProcedureSelectionForTest(choice),
+      }),
+    });
+    if (startedReaction.tag !== "needsHoles") {
+      throw new Error(
+        `Expected Command Flee Opportunity Attack roll, got ${JSON.stringify(startedReaction)}.`,
+      );
+    }
+    const attackRoll = requireResultHole(startedReaction, "attackRoll");
+    const afterAcceptedMiss = resolveBattleSubject({
+      state: startedReaction.state,
+      subject: choice.subject,
+      fills: [attackRollFill(attackRoll, { total: 1, naturalD20: 1 })],
+    });
+    expect(afterAcceptedMiss).toMatchObject({
+      tag: "needsHoles",
+      subject: fleeAct.subject,
+      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+    });
+    if (afterAcceptedMiss.tag !== "needsHoles") {
+      throw new Error("Expected End Turn save after accepted missed attack.");
+    }
+    expect(
+      requireCombatant(afterAcceptedMiss.state, spellCasterId)
+        .reactionAvailable,
+    ).toBe(false);
+    expect(
+      requireCombatant(afterAcceptedMiss.state, spellTargetId),
+    ).toMatchObject({
+      movementSpentFeet: movementFeet(0),
+      activeEffects: expect.arrayContaining([
+        expect.objectContaining({ kind: "commandPending", option: "flee" }),
+      ]),
+    });
+    const acceptedEndTurnSave = requireResultHole(
+      afterAcceptedMiss,
+      "savingThrowOutcome",
+    );
+    const replayedAfterAcceptedMiss = resolveBattleSubject({
+      state: afterAcceptedMiss.state,
+      subject: fleeAct.subject,
+      fills: [
+        savingThrowOutcomeFill(acceptedEndTurnSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(replayedAfterAcceptedMiss).toMatchObject({
+      tag: "resolved",
+      snapshot: { currentActorId: spellCasterId },
+    });
+    if (replayedAfterAcceptedMiss.tag !== "resolved") {
+      throw new Error("Expected accepted Command Flee replay to resolve.");
+    }
+    expect(
+      requireCombatant(replayedAfterAcceptedMiss.state, spellCasterId)
+        .reactionAvailable,
+    ).toBe(true);
+    expect(
+      requireCombatant(replayedAfterAcceptedMiss.state, spellTargetId),
+    ).toMatchObject({ movementSpentFeet: movementFeet(30), activeEffects: [] });
   });
 });
