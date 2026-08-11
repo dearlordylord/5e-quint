@@ -5,6 +5,8 @@ import {
 } from "@dnd/shared-algebras/action-economy-algebra";
 import type { StandardActionKind } from "@dnd/shared/game-facts";
 import { Match } from "effect";
+import { characterProcedureBinding } from "../character-execution-queries.ts";
+import type { UnitFeatureProcedureExecution } from "../character-execution-vocabulary.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
   BattleState,
@@ -51,6 +53,47 @@ type ActionEligibilityFacts =
   | { readonly tag: "heldWeaponActivation" };
 
 const byTag = Match.discriminator("tag");
+
+const BONUS_ACTION_UNIT_FEATURE_KINDS = new Set<
+  UnitFeatureProcedureExecution["kind"]
+>(["selfBonusActionHealing", "bardicInspirationGrant", "rogueSteadyAim"]);
+
+export function battleSubjectBeginsBonusAction(
+  state: BattleState,
+  subject: BattleSubject,
+): boolean {
+  return Match.value(subject).pipe(
+    byTag("action", () => false),
+    byTag("monkFocusOption", () => true),
+    byTag("monkFocusFlurryOfBlowsStrike", () => false),
+    byTag("unitFeatureHeldWeaponActivation", () => false),
+    byTag("pactOfTheChainFamiliarAttack", () => false),
+    byTag("actionSpell", () => false),
+    byTag("bonusAction", () => true),
+    byTag("bonusActionDashSpell", () => true),
+    byTag("bonusActionSpell", () => true),
+    byTag("bonusActionStandardAction", () => true),
+    byTag("companionLifecycle", () => false),
+    byTag("druidWildShape", () => true),
+    byTag("findFamiliarSharedSenses", () => true),
+    byTag("findFamiliarTouchSpell", () => false),
+    byTag("runtimeCommand", () => false),
+    byTag("unitFeature", (unitFeatureSubject) => {
+      const actor = state.combatants.get(unitFeatureSubject.actorId);
+      if (actor?.origin.kind !== "character") return false;
+      const binding = characterProcedureBinding(
+        actor.origin.execution,
+        unitFeatureSubject.procedureRef,
+      );
+      if (binding?.procedure.kind !== "unitFeature") return false;
+      const execution = binding.procedure.execution;
+      return execution.kind === "ongoingFeature"
+        ? execution.activationTrigger === "bonusAction"
+        : BONUS_ACTION_UNIT_FEATURE_KINDS.has(execution.kind);
+    }),
+    Match.exhaustive,
+  );
+}
 
 export function battleSubjectActionEligibilityIssue(
   state: BattleState,
@@ -104,7 +147,6 @@ function actionEligibilityFacts(
     byTag("bonusActionSpell", () => ({ tag: "bonusActionSpell" }) as const),
     byTag("bonusActionStandardAction", () => ({ tag: "bonusAction" }) as const),
     byTag("companionLifecycle", () => ({ tag: "notApplicable" }) as const),
-    byTag("creatureAttack", () => ({ tag: "notApplicable" }) as const),
     byTag("druidWildShape", () => ({ tag: "wildShapeBonusAction" }) as const),
     byTag(
       "findFamiliarSharedSenses",

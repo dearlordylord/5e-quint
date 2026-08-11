@@ -39,7 +39,6 @@ import {
   battleBonusActionStandardActionSupportForUnit,
   BattleFillSchema,
   battleId,
-  BattleSubjectSchema,
   battleTablePositionId,
   battleUnitSupportProfilesForUnit,
   cantripSpellInvocationRef,
@@ -70,7 +69,9 @@ import {
   magicSubject,
   movementFeet,
   movementFill,
+  removeBattleCombatantsRight,
   rageResource,
+  readyDeclarationFillForTest,
   requireHole,
   requireResolved,
   resolveBattleInterrupt,
@@ -185,22 +186,28 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     );
     expect(dodged.state.combatants.get(fighterId)?.dodging).toBe(true);
 
+    const readySubject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "ready" as const,
+    };
+    const readyHole = findAct(state, readySubject).initialHoles[0]!;
     const readied = requireResolved(
       resolveBattleSubject({
         state,
-        subject: {
-          tag: "action",
-          actorId: fighterId,
-          action: "ready",
-          readyTrigger: "attackHit",
-        },
-        fills: [],
+        subject: readySubject,
+        fills: [
+          readyDeclarationFillForTest(readyHole, "the goblin attacks", {
+            kind: "movement",
+          }),
+        ],
       }),
     );
-    expect(readied.snapshot.readiedResponses.movements).toEqual([
+    expect(readied.snapshot.readiedResponses.actionsOrMovements).toEqual([
       expect.objectContaining({
         actorId: fighterId,
-        trigger: "attackHit",
+        trigger: "the goblin attacks",
+        response: { kind: "movement" },
       }),
     ]);
   });
@@ -496,14 +503,65 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     ]);
   });
 
-  test("Ready subjects require an explicit Reaction trigger", () => {
-    const decoded = Schema.decodeUnknownEither(BattleSubjectSchema)({
-      tag: "action",
+  test("Ready asks for the player's perceivable trigger and response", () => {
+    const state = fighterVsGoblinBattle();
+    const subject = {
+      tag: "action" as const,
       actorId: fighterId,
-      action: "ready",
-    });
+      action: "ready" as const,
+    };
+    const act = findAct(state, subject);
 
-    expect(Either.isLeft(decoded)).toBe(true);
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "readyDeclaration",
+        actorId: fighterId,
+        responseChoices: expect.arrayContaining([
+          { kind: "movement" },
+          expect.objectContaining({ kind: "attack" }),
+          {
+            kind: "action",
+            subject: {
+              tag: "action",
+              actorId: fighterId,
+              action: "dash",
+              speedKind: "walk",
+            },
+          },
+          {
+            kind: "action",
+            subject: {
+              tag: "action",
+              actorId: fighterId,
+              action: "disengage",
+            },
+          },
+          {
+            kind: "action",
+            subject: {
+              tag: "action",
+              actorId: fighterId,
+              action: "dodge",
+            },
+          },
+          {
+            kind: "action",
+            subject: {
+              tag: "action",
+              actorId: fighterId,
+              action: "grapple",
+            },
+          },
+        ]),
+      }),
+    ]);
+    expect(
+      Schema.decodeUnknownEither(BattleFillSchema)({
+        kind: "readyDeclaration",
+        holeId: act.initialHoles[0]?.holeId,
+        value: { trigger: "   ", response: { kind: "movement" } },
+      }),
+    ).toMatchObject({ _tag: "Left" });
   });
 
   test("Disengage suppresses Opportunity Attacks for current-turn Movement", () => {
@@ -1433,33 +1491,39 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     });
   });
 
-  test("Ready holds Reaction movement until its trigger or the actor's next turn", () => {
+  test("Ready holds chosen Reaction movement until the table reports its trigger or the actor's next turn", () => {
+    // SRD 5.2.1, Rules Glossary, Ready [Action]: choose a perceivable
+    // circumstance and an action or movement; when it occurs, react or ignore.
     const state = fighterVsGoblinBattle();
+    const readySubject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "ready" as const,
+    };
+    const declarationHole = findAct(state, readySubject).initialHoles[0]!;
     const readied = requireResolved(
       resolveBattleSubject({
         state,
-        subject: {
-          tag: "action",
-          actorId: fighterId,
-          action: "ready",
-          readyTrigger: "attackHit",
-        },
-        fills: [],
+        subject: readySubject,
+        fills: [
+          readyDeclarationFillForTest(
+            declarationHole,
+            "the goblin raises its scimitar",
+            { kind: "movement" },
+          ),
+        ],
       }),
     ).state;
     const goblinTurn = requireResolved(
       endTurn({ state: readied, actorId: fighterId }),
     ).state;
-    expect(discoverBattleActCandidates(goblinTurn)).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          subject: expect.objectContaining({
-            tag: "runtimeCommand",
-            command: "releaseReadiedMovement",
-          }),
-        }),
-      ]),
-    );
+    const reportSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: goblinId,
+      command: "reportReadyTrigger" as const,
+      readiedActorId: fighterId,
+    };
+    expect(findAct(goblinTurn, reportSubject)).toBeDefined();
     const releaseSubject = {
       tag: "runtimeCommand" as const,
       actorId: goblinId,
@@ -1476,32 +1540,12 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     const nextFighterTurn = requireResolved(
       endTurn({ state: goblinTurn, actorId: goblinId }),
     ).state;
-    expect(nextFighterTurn.readiedMovements.has(fighterId)).toBe(false);
+    expect(nextFighterTurn.readiedResponses.has(fighterId)).toBe(false);
 
-    const attackSubject = goblinAttackSubject(goblinTurn, "Scimitar");
-    const target = requireHole(
-      resolveBattleSubject({
-        state: goblinTurn,
-        subject: attackSubject,
-        fills: [],
-      }),
-      "targetChoice",
-    );
-    const roll = requireHole(
-      resolveBattleSubject({
-        state: goblinTurn,
-        subject: attackSubject,
-        fills: [targetFill(target, fighterId)],
-      }),
-      "attackRoll",
-    );
     const awaitingReaction = resolveBattleSubject({
       state: goblinTurn,
-      subject: attackSubject,
-      fills: [
-        targetFill(target, fighterId),
-        attackRollFill(roll, { total: 20, naturalD20: 12 }),
-      ],
+      subject: reportSubject,
+      fills: [],
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(`Expected needsHoles, got ${awaitingReaction.tag}.`);
@@ -1548,7 +1592,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       resolveBattleInterrupt({
         state: {
           ...awaitingReaction.state,
-          readiedMovements: new Map(),
+          readiedResponses: new Map(),
         },
         fill: interruptDecisionFill(decision, {
           kind: "resolve",
@@ -1599,7 +1643,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     if (opportunityWindow.tag !== "needsHoles") {
       throw new Error("Expected nested Opportunity Attack interrupt.");
     }
-    expect(opportunityWindow.state.readiedMovements.has(fighterId)).toBe(false);
+    expect(opportunityWindow.state.readiedResponses.has(fighterId)).toBe(false);
 
     const released = resolveBattleInterrupt({
       state: awaitingReaction.state,
@@ -1619,10 +1663,283 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       );
     }
 
-    expect(released.state.readiedMovements.has(fighterId)).toBe(false);
+    expect(released.state.readiedResponses.has(fighterId)).toBe(false);
     expect(released.state.combatants.get(fighterId)).toMatchObject({
       reactionAvailable: false,
-      movementSpentFeet: movementFeet(5),
+      movementSpentFeet: movementFeet(0),
+    });
+  });
+
+  test("Ready stores a chosen Attack and begins it only after the table reports the trigger", () => {
+    // SRD 5.2.1, Rules Glossary, Ready [Action]: the response may be an
+    // action, and taking it after the chosen circumstance spends a Reaction.
+    const state = fighterVsGoblinBattle();
+    const readySubject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "ready" as const,
+    };
+    const declarationHole = findAct(state, readySubject).initialHoles[0];
+    if (declarationHole?.kind !== "readyDeclaration") {
+      throw new Error("Expected Ready declaration hole.");
+    }
+    const attackResponse = declarationHole.responseChoices.find(
+      (response) => response.kind === "attack",
+    );
+    if (attackResponse?.kind !== "attack") {
+      throw new Error("Expected an offered Ready Attack response.");
+    }
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: readySubject,
+        fills: [
+          readyDeclarationFillForTest(
+            declarationHole,
+            "the goblin comes within reach",
+            attackResponse,
+          ),
+        ],
+      }),
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state: readied.state, actorId: fighterId }),
+    );
+    const reportSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: goblinId,
+      command: "reportReadyTrigger" as const,
+      readiedActorId: fighterId,
+    };
+    const reported = resolveBattleSubject({
+      state: goblinTurn.state,
+      subject: reportSubject,
+      fills: [],
+    });
+    if (reported.tag !== "needsHoles") {
+      throw new Error("Expected reported Ready trigger interrupt.");
+    }
+    const choice = reported.snapshot.pendingInterrupt?.choices.find(
+      (candidate) =>
+        candidate.kind === "releaseReadiedAttack" &&
+        candidate.subject.targetId === goblinId,
+    );
+    if (choice?.kind !== "releaseReadiedAttack") {
+      throw new Error("Expected the chosen readied Attack response.");
+    }
+    const begun = resolveBattleInterrupt({
+      state: reported.state,
+      fill: interruptDecisionFill(requireHole(reported, "interruptDecision"), {
+        kind: "resolve",
+        responderId: fighterId,
+        choice: {
+          kind: "releaseReadiedAttack",
+          reactorId: fighterId,
+          targetId: goblinId,
+          procedureRef: attackResponse.selection.procedureRef,
+          fills: [],
+        },
+      }),
+    });
+    if (begun.tag === "invalid") {
+      throw new Error(`Expected readied Attack release, got ${begun.message}.`);
+    }
+
+    expect(begun).toMatchObject({
+      tag: "needsHoles",
+      subject: { command: "releaseReadiedAttack", targetId: goblinId },
+      holes: [{ kind: "attackRoll" }],
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: fighterId,
+            reactionAvailable: false,
+          }),
+        ]),
+      },
+    });
+  });
+
+  test("Ready releases a chosen ordinary action after the table reports the trigger", () => {
+    const state = fighterVsGoblinBattle();
+    const readySubject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "ready" as const,
+    };
+    const declarationHole = findAct(state, readySubject).initialHoles[0];
+    if (declarationHole?.kind !== "readyDeclaration") {
+      throw new Error("Expected Ready declaration hole.");
+    }
+    const dodgeResponse = declarationHole.responseChoices.find(
+      (response) =>
+        response.kind === "action" && response.subject.action === "dodge",
+    );
+    if (dodgeResponse?.kind !== "action") {
+      throw new Error("Expected an offered Dodge response.");
+    }
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: readySubject,
+        fills: [
+          readyDeclarationFillForTest(
+            declarationHole,
+            "the goblin raises its weapon",
+            dodgeResponse,
+          ),
+        ],
+      }),
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state: readied.state, actorId: fighterId }),
+    );
+    const reported = resolveBattleSubject({
+      state: goblinTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: goblinId,
+        command: "reportReadyTrigger",
+        readiedActorId: fighterId,
+      },
+      fills: [],
+    });
+    if (reported.tag !== "needsHoles") {
+      throw new Error("Expected a reported Ready trigger interrupt.");
+    }
+    const released = resolveBattleInterrupt({
+      state: reported.state,
+      fill: interruptDecisionFill(requireHole(reported, "interruptDecision"), {
+        kind: "resolve",
+        responderId: fighterId,
+        choice: {
+          kind: "releaseReadiedAction",
+          reactorId: fighterId,
+          fills: [],
+        },
+      }),
+    });
+    if (released.tag !== "resolved") {
+      throw new Error("Expected the readied Dodge to resolve.");
+    }
+    expect(released.state.combatants.get(fighterId)).toMatchObject({
+      dodging: true,
+      reactionAvailable: false,
+    });
+    expect(released.state.readiedResponses.has(fighterId)).toBe(false);
+  });
+
+  test("a multi-step Ready response restores the subject that was already awaiting fills", () => {
+    const state = fighterVsGoblinBattle();
+    const readySubject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "ready" as const,
+    };
+    const declarationHole = findAct(state, readySubject).initialHoles[0];
+    if (declarationHole?.kind !== "readyDeclaration") {
+      throw new Error("Expected Ready declaration hole.");
+    }
+    const attackResponse = declarationHole.responseChoices.find(
+      (response) => response.kind === "attack",
+    );
+    if (attackResponse?.kind !== "attack") {
+      throw new Error("Expected an offered Attack response.");
+    }
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: readySubject,
+        fills: [
+          readyDeclarationFillForTest(
+            declarationHole,
+            "the goblin attacks",
+            attackResponse,
+          ),
+        ],
+      }),
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state: readied.state, actorId: fighterId }),
+    );
+    const goblinAttack = goblinAttackSubject(goblinTurn.state, "Scimitar");
+    const awaitingTarget = resolveBattleSubject({
+      state: goblinTurn.state,
+      subject: goblinAttack,
+      fills: [],
+    });
+    if (awaitingTarget.tag !== "needsHoles") {
+      throw new Error("Expected the Goblin attack target frontier.");
+    }
+    const reported = resolveBattleSubject({
+      state: awaitingTarget.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: goblinId,
+        command: "reportReadyTrigger",
+        readiedActorId: fighterId,
+      },
+      fills: [],
+    });
+    if (reported.tag !== "needsHoles") {
+      throw new Error("Expected the nested Ready trigger frontier.");
+    }
+    const begun = resolveBattleInterrupt({
+      state: reported.state,
+      fill: interruptDecisionFill(requireHole(reported, "interruptDecision"), {
+        kind: "resolve",
+        responderId: fighterId,
+        choice: {
+          kind: "releaseReadiedAttack",
+          reactorId: fighterId,
+          targetId: goblinId,
+          procedureRef: attackResponse.selection.procedureRef,
+          fills: [],
+        },
+      }),
+    });
+    if (begun.tag !== "needsHoles") {
+      throw new Error("Expected the readied Attack Roll frontier.");
+    }
+    const attackRoll = requireHole(begun, "attackRoll");
+    const completed = resolveBattleSubject({
+      state: begun.state,
+      subject: begun.subject,
+      fills: [
+        attackRollFill(attackRoll, {
+          total: 1,
+          naturalD20: 2,
+        }),
+      ],
+    });
+    if (completed.tag !== "resolved") {
+      throw new Error("Expected the readied Attack miss to resolve.");
+    }
+    expect(completed.state.subjectResolutionPhase).toEqual({
+      kind: "subjectContinuation",
+      subject: goblinAttack,
+    });
+    expect(
+      completed.snapshot.acts.every(
+        ({ subject }) =>
+          subject.tag === "runtimeCommand" &&
+          subject.command === "reportReadyTrigger",
+      ),
+    ).toBe(true);
+    expect(
+      resolveBattleSubject({
+        state: completed.state,
+        subject: goblinAttack,
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "needsHoles", holes: [{ kind: "targetChoice" }] });
+
+    const removedResponder = removeBattleCombatantsRight({
+      state: begun.state,
+      combatantIds: [fighterId],
+    });
+    expect(removedResponder.subjectResolutionPhase).toEqual({
+      kind: "subjectSelection",
     });
   });
 

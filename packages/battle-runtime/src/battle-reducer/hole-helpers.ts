@@ -19,6 +19,7 @@ import {
   type DifficultyClass,
 } from "@dnd/shared/types";
 import type { Ability, Skill } from "@dnd/surface/surface/types";
+import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
 import type {
   BattleActiveEffectExecutionRef,
   BattleProcedureExecutionRef,
@@ -206,6 +207,7 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         "movableZoneRepositionMovement",
         () => "movableZoneRepositionMovement" as const,
       ),
+      byBattleHoleKind("readyDeclaration", () => "readyDeclaration" as const),
       byBattleHoleKind("movement", () => "movement" as const),
       byBattleHoleKind(
         "objectContactTargets",
@@ -1184,7 +1186,7 @@ export function grappleTargetChoices(
   actorId: CombatantId,
 ): readonly CombatantId[] {
   const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind !== "character") {
+  if (actor === undefined || isPresentFindFamiliarCombatant(state, actorId)) {
     return [];
   }
   return [...state.combatants.keys()].filter((targetId) => {
@@ -1204,7 +1206,7 @@ export function shoveTargetChoices(
   actorId: CombatantId,
 ): readonly CombatantId[] {
   const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind !== "character") {
+  if (actor === undefined || isPresentFindFamiliarCombatant(state, actorId)) {
     return [];
   }
   return [...state.combatants.keys()].filter((targetId) => {

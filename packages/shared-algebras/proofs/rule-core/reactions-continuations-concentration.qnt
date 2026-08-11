@@ -356,8 +356,7 @@ module reactionsContinuationsConcentration {
       cost > 0,
       reactor.turn.readiedMovementHeld,
       effectiveSpeedFeet(reactor) > 0,
-      cost <= effectiveSpeedFeet(reactor),
-      reactor.movementSpentFeet + cost <= 120,
+      cost <= effectiveSpeedFeet(reactor)
     }
   }
 
@@ -368,7 +367,6 @@ module reactionsContinuationsConcentration {
     if (not(canSpendReadiedReactionMovement(reactor, facts))) reactor
     else reactor
       .with("turn", reactor.turn.with("readiedMovementHeld", false))
-      .with("movementSpentFeet", reactor.movementSpentFeet + movementCostFeet(facts))
 
   pure def concentrationForActor(
     concentration: ActorConcentrationState,

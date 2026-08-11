@@ -84,7 +84,6 @@ import {
 import {
   GENERIC_COMBAT_ACTION_LABELS,
   GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE,
-  GENERIC_READY_TRIGGERS,
 } from "../test-support/battle-act-labels.ts";
 import {
   loadoutHoleId,
@@ -1572,7 +1571,7 @@ describe("MCP server route", () => {
             initiative: 7,
           },
         ],
-        readiedResponses: { spells: [], movements: [] },
+        readiedResponses: { spells: [], actionsOrMovements: [] },
         helpAttackMarkers: [],
         pendingInterrupt: null,
       },
@@ -1629,16 +1628,16 @@ describe("MCP server route", () => {
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
+      "Ready",
       "End Turn",
     ]);
     expect(
       read.availableActs
         .filter((act: { label: string }) => act.label === "Ready")
-        .map(
-          (act: { subject: { readonly readyTrigger?: string } }) =>
-            act.subject.readyTrigger,
+        .map((act: { initialHoles: readonly { kind: string }[] }) =>
+          act.initialHoles.map((hole) => hole.kind),
         ),
-    ).toEqual([...GENERIC_READY_TRIGGERS]);
+    ).toEqual([["readyDeclaration"]]);
     expect(read.snapshot.combatants).toHaveLength(2);
   });
 
@@ -2044,6 +2043,8 @@ describe("MCP server route", () => {
       tag: "needsHoles",
       holes: [{ kind: "attackRoll", holeId: "battle:attack:roll" }],
     });
+    expect(afterTarget.availableActs).toEqual([]);
+    expect(afterTarget.snapshot.acts).toEqual([]);
     expect(afterTarget.session.transientBattleFills).toMatchObject({
       subject: expect.objectContaining({
         procedureRef: fighterAttackSubject.procedureRef,
@@ -2079,6 +2080,8 @@ describe("MCP server route", () => {
         },
       ],
     });
+    expect(afterAttackRoll.availableActs).toEqual([]);
+    expect(afterAttackRoll.snapshot.acts).toEqual([]);
     expect(afterAttackRoll.session.transientBattleFills.fills).toHaveLength(2);
 
     const afterDamage = readPayload(
@@ -2150,9 +2153,13 @@ describe("MCP server route", () => {
       "Attack",
       "Attack",
       "Attack",
+      "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
+      "Unarmed Strike (Grapple)",
+      "Unarmed Strike (Shove)",
       "Nimble Escape",
       "Move",
+      "Ready",
       "End Turn",
     ]);
 
@@ -4341,6 +4348,7 @@ describe("MCP server route", () => {
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
+      "Ready",
       "End Turn",
     ]);
 
@@ -4435,9 +4443,13 @@ describe("MCP server route", () => {
       "Attack",
       "Attack",
       "Attack",
+      "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
+      "Unarmed Strike (Grapple)",
+      "Unarmed Strike (Shove)",
       "Nimble Escape",
       "Move",
+      "Ready",
       "End Turn",
     ]);
 
@@ -4868,7 +4880,7 @@ describe("MCP server route", () => {
         reason: "invalidFill",
         message: "Attack damage was filled twice.",
       },
-      snapshot: { turn: { attackRollMadeThisTurn: true } },
+      snapshot: { turn: { attackRollMadeThisTurn: false } },
       session: {
         transientBattleFills: {
           fills: expect.arrayContaining([

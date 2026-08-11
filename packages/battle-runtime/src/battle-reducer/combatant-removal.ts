@@ -141,6 +141,10 @@ export function removeBattleCombatants(input: {
       currentTurnResources: currentRemoved
         ? resetBattleTurnResources(input.state.currentTurnResources)
         : input.state.currentTurnResources,
+      subjectResolutionPhase:
+        input.state.subjectResolutionPhase.kind === "subjectContinuation"
+          ? { kind: "subjectSelection" }
+          : input.state.subjectResolutionPhase,
       hidePrerequisites: new Map(
         [...input.state.hidePrerequisites].filter(([id, prerequisite]) =>
           hidePrerequisiteReferencedCombatantIds(id, prerequisite).every(
@@ -151,8 +155,8 @@ export function removeBattleCombatants(input: {
       readiedSpells: new Map(
         [...input.state.readiedSpells].filter(([id]) => !removeIds.has(id)),
       ),
-      readiedMovements: new Map(
-        [...input.state.readiedMovements].filter(([id]) => !removeIds.has(id)),
+      readiedResponses: new Map(
+        [...input.state.readiedResponses].filter(([id]) => !removeIds.has(id)),
       ),
       helpAttacks: input.state.helpAttacks.filter(
         (help) =>

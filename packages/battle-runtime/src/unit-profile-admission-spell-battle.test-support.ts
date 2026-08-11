@@ -27,6 +27,7 @@ import {
 import {
   interruptDecisionFill,
   requireCharacterSpellProcedureRefForTest,
+  resolveReadySpellForTest,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -265,19 +266,15 @@ export function spellBattleWithTargetRayOfFrost(
 export function readyTargetRayOfFrost(
   session: BattleRuntimeSession,
 ): BattleRuntimeSession {
-  const readied = resolveBattleSubject({
+  const readied = resolveReadySpellForTest({
     state: session.state,
-    subject: {
-      tag: "actionSpell",
-      actorId: spellTargetId,
-      procedureRef: requireCharacterSpellProcedureRefForTest(
-        session,
-        spellTargetId,
-        cantripSpellInvocationRef(rayOfFrostUnitId, "spellAttackDamage"),
-      ),
-      mode: { tag: "ready", trigger: "saveFailed" },
-    },
-    fills: [],
+    actorId: spellTargetId,
+    procedureRef: requireCharacterSpellProcedureRefForTest(
+      session,
+      spellTargetId,
+      cantripSpellInvocationRef(rayOfFrostUnitId, "spellAttackDamage"),
+    ),
+    trigger: "saveFailed",
   });
   if (readied.tag !== "resolved") {
     throw new Error("Expected target to Ready Ray of Frost.");

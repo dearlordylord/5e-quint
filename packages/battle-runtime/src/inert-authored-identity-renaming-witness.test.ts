@@ -204,7 +204,7 @@ function stateMechanicalProjection(state: BattleState) {
     hidePrerequisites: Array.from(state.hidePrerequisites.entries()),
     turnResources: turnResourcesProjection(state.currentTurnResources),
     readiedSpells: Array.from(state.readiedSpells.entries()),
-    readiedMovements: Array.from(state.readiedMovements.entries()),
+    readiedResponses: Array.from(state.readiedResponses.entries()),
     helpAttacks: state.helpAttacks,
     grapples: state.grapples,
     interruptStack: state.interruptStack,

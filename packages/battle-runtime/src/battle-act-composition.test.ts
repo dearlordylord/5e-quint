@@ -404,7 +404,6 @@ describe("battle act composition presentations", () => {
           NonNegativeInteger(0),
         ),
       },
-      { tag: "creatureAttack", actorId: goblinId, targetId: fighterId },
       {
         tag: "monkFocusFlurryOfBlowsStrike",
         actorId: goblinId,

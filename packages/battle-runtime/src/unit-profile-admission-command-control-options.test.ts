@@ -308,11 +308,20 @@ describe("QMBT14 deterministic Command control option admission", () => {
 
     expect(awaitingSave).toMatchObject({
       tag: "needsHoles",
-      state: committedState,
       subject: grovelAct.subject,
       holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
     });
-    expect(awaitingSave.snapshot).toEqual(committedSnapshot);
+    if (awaitingSave.tag !== "needsHoles") {
+      throw new Error("Expected Command Grovel save frontier.");
+    }
+    expect(awaitingSave.state).toEqual({
+      ...committedState,
+      subjectResolutionPhase: {
+        kind: "subjectContinuation",
+        subject: grovelAct.subject,
+      },
+    });
+    expect(awaitingSave.snapshot).toEqual(snapshotBattle(awaitingSave.state));
     expect(requireCombatant(committedState, spellTargetId)).toMatchObject({
       conditions: expect.objectContaining({ prone: false }),
       activeEffects: expect.arrayContaining([
@@ -643,7 +652,6 @@ describe("QMBT14 deterministic Command control option admission", () => {
       spellCasterId,
       spellTargetId,
     );
-    const committedHaltSnapshot = snapshotBattle(committedHaltState);
     const awaitingHaltSave = endTurn({
       state: committedHaltState,
       actorId: spellTargetId,
@@ -655,11 +663,14 @@ describe("QMBT14 deterministic Command control option admission", () => {
         actorId: spellTargetId,
         command: "endTurn",
       },
-      snapshot: committedHaltSnapshot,
     });
     if (awaitingHaltSave.tag !== "needsHoles") {
       throw new Error("Expected halted End Turn save frontier.");
     }
+    expect(awaitingHaltSave.snapshot).toEqual(
+      snapshotBattle(awaitingHaltSave.state),
+    );
+    expect(awaitingHaltSave.snapshot.acts).toEqual([]);
     expect(awaitingHaltSave.state.currentTurnResources.commandHalt).toEqual({
       kind: "commandHalt",
     });
@@ -772,13 +783,22 @@ describe("QMBT14 deterministic Command control option admission", () => {
     });
     expect(awaitingEndTurnSave).toMatchObject({
       tag: "needsHoles",
-      state: committedWithSave,
       subject: dropSubject,
       holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
     });
+    if (awaitingEndTurnSave.tag !== "needsHoles") {
+      throw new Error("Expected Command Drop save frontier.");
+    }
+    expect(awaitingEndTurnSave.state).toEqual({
+      ...committedWithSave,
+      subjectResolutionPhase: {
+        kind: "subjectContinuation",
+        subject: dropSubject,
+      },
+    });
     expect(awaitingEndTurnSave).not.toHaveProperty("droppedObjects");
     expect(awaitingEndTurnSave.snapshot).toEqual(
-      snapshotBattle(committedWithSave),
+      snapshotBattle(awaitingEndTurnSave.state),
     );
     const endTurnSave = requireResultHole(
       awaitingEndTurnSave,

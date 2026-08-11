@@ -21,6 +21,7 @@ import {
   requireHole,
   requireNeedsHoles,
   requireResolved,
+  resolveReadySpellForTest,
   resolveBattleInterrupt,
   resolveBattleSubject,
   skeletonCreatureInit,
@@ -98,15 +99,11 @@ export function resolveReadiedFireBoltObjectScenario(input: {
     cantripSpellInvocationRef("fire_bolt", "spellAttackDamage"),
   );
   const ready = requireResolved(
-    resolveBattleSubject({
+    resolveReadySpellForTest({
       state: session.state,
-      subject: {
-        tag: "actionSpell",
-        actorId: wizardId,
-        procedureRef,
-        mode: { tag: "ready", trigger: "attackHit" },
-      },
-      fills: [],
+      actorId: wizardId,
+      procedureRef,
+      trigger: "attackHit",
     }),
   );
   const skeletonTurn = requireResolved(

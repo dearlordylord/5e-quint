@@ -32,7 +32,7 @@ describe("battle runtime: round end and runtime commands", () => {
         turnOrder: [fighterId, goblinId],
         turn: {
           actionResources: [{ kind: "action", source: "turn" }],
-          bonusActionAvailable: true,
+          bonusActionAvailable: false,
         },
       },
     });

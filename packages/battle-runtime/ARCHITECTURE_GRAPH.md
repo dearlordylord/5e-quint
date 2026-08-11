@@ -45,12 +45,7 @@ Grapple discovery, stale-subject eligibility, and execution share the typed spen
 `battle-reducer/action-resource-kinds.ts`, so an Extra Attack or Stat Block
 Multiattack resource cannot be mistaken for the creature's Action.
 
-Creature Attack discovery facts, hole contracts, and pure damage transition
-live in the dependency-leaf `battle-reducer/creature-attack.ts`;
-`battle-reducer/creature-attack-procedures.ts` owns admission, action spending,
-fill progression, damage-relationship decisions, and the final resolution
-commit. This split keeps battle discovery independent of snapshot-backed
-reducer results. Voluntary Concentration ending is resolved by
+Voluntary Concentration ending is resolved by
 `battle-reducer/concentration-procedures.ts`. Persistent-area appearance-save
 turn admission is owned alongside those procedures in
 `battle-reducer/persistent-spatial-spell-procedures.ts`.

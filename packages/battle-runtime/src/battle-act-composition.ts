@@ -89,18 +89,15 @@ export function battleActDruidWildShapePresentation(
 export function discoverBattleActs(
   session: BattleRuntimeSession,
 ): readonly AvailableBattleAct[] {
-  return discoverBattleActsForState(session.state, session.context);
+  return presentBattleActs(session, discoverBattleActCandidates(session.state));
 }
 
-function discoverBattleActsForState(
-  state: BattleState,
-  context: BattleRuntimeContext,
+export function presentBattleActs(
+  session: BattleRuntimeSession,
+  candidates: readonly BattleActDiscoveryCandidate[],
 ): readonly AvailableBattleAct[] {
-  const acts = admitCharacterProcedureDiscoveryActs(
-    state,
-    context,
-    discoverBattleActCandidates(state),
-  );
+  const { state, context } = session;
+  const acts = admitCharacterProcedureDiscoveryActs(state, context, candidates);
   return battleActsWithReducerRouteEvents(state, acts);
 }
 
@@ -413,6 +410,9 @@ const INTRINSIC_RUNTIME_COMMAND_LABELS = {
   standFromProne: "Stand",
   releaseReadiedSpell: "Release Readied Spell",
   releaseReadiedMovement: "Release Readied Movement",
+  reportReadyTrigger: "Report Ready Trigger",
+  releaseReadiedAction: "Release Readied Action",
+  releaseReadiedAttack: "Release Readied Attack",
   castTriggeredReactionSpell: "Cast Reaction Spell",
   castAttackHitBonusActionSpell: "Cast Bonus Action Spell",
   releaseGrapple: "Release Grapple",
@@ -477,7 +477,6 @@ function intrinsicActPresentationLabel(
     ),
     byTag("findFamiliarSharedSenses", () => "Share Familiar Senses"),
     byTag("pactOfTheChainFamiliarAttack", () => "Pact Familiar Attack"),
-    byTag("creatureAttack", () => "Attack"),
     byTag(
       "monkFocusFlurryOfBlowsStrike",
       () => "Flurry of Blows Unarmed Strike",

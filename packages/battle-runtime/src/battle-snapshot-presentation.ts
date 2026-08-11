@@ -16,7 +16,13 @@ import { BattleCreatureDisplayNameSchema } from "./battle-creature-display-name.
 export function battlePresentedSnapshot(
   session: BattleRuntimeSession,
 ): Either.Either<BattlePresentedSnapshot, BattleSnapshotPresentationIssues> {
-  const snapshot = snapshotBattle(session.state);
+  return presentBattleSnapshot(session, snapshotBattle(session.state));
+}
+
+export function presentBattleSnapshot(
+  session: BattleRuntimeSession,
+  snapshot: import("./battle-state-execution.ts").BattleSnapshot,
+): Either.Either<BattlePresentedSnapshot, BattleSnapshotPresentationIssues> {
   return Either.map(
     traverseValidation(snapshot.combatants, (combatant) =>
       presentedCombatant(session, combatant),

@@ -24,8 +24,8 @@ import {
 //   - UBIQUITOUS_LANGUAGE.md: Saving Throw, Damage Type, Magic Action, and
 //     Spell Invocation.
 
-import { BATTLE_READIED_SPELL_TRIGGERS } from "../../battle-interrupt-triggers.ts";
 import { type CombatantId } from "../../identity.ts";
+import { BATTLE_READIED_SPELL_TRIGGERS } from "../../battle-interrupt-triggers.ts";
 import {
   supportedCantripSaveGateDamageProfile,
   supportedPreparedSaveGateDamageProfile,

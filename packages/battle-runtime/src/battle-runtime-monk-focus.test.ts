@@ -945,7 +945,7 @@ describe("battle runtime: Monk's Focus battle options", () => {
         fills: [],
       });
       expect(result).toMatchObject({ tag: "invalid", reason: "staleSubject" });
-      expect(result.snapshot.turn.bonusActionAvailable).toBe(true);
+      expect(result.snapshot.turn.bonusActionAvailable).toBe(false);
       expect(monkFocusUsesRemaining(result.snapshot)).toBe(2);
       expect(flurryResourceCount(result.snapshot.turn.actionResources)).toBe(0);
     }

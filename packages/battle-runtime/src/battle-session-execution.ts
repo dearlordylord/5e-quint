@@ -19,7 +19,7 @@ import {
   type BattleRuntimeSession,
 } from "./battle-runtime-context.ts";
 import type { CombatantId } from "./identity.ts";
-import type { BattleSubject } from "./battle-subjects.ts";
+import { sameBattleSubject, type BattleSubject } from "./battle-subjects.ts";
 import type {
   BattleFill,
   BattleResolutionInput,
@@ -228,7 +228,32 @@ export function openCreatureFallsRuntimeInterruptWindow(input: {
 export function resolveBattleSubject(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
-  const admission = admitBattleResolutionInput(input);
+  const phase = input.state.subjectResolutionPhase;
+  const reportsReadyTrigger =
+    input.subject.tag === "runtimeCommand" &&
+    input.subject.command === "reportReadyTrigger";
+  if (
+    phase.kind === "subjectContinuation" &&
+    !reportsReadyTrigger &&
+    !sameBattleSubject(phase.subject, input.subject)
+  ) {
+    return {
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "The pending subject continuation must resolve before another subject can begin.",
+      snapshot: snapshotBattle(input.state),
+    };
+  }
+  const dispatchState =
+    phase.kind === "subjectContinuation" && !reportsReadyTrigger
+      ? {
+          ...input.state,
+          subjectResolutionPhase: { kind: "subjectSelection" as const },
+        }
+      : input.state;
+  const admittedInput = { ...input, state: dispatchState };
+  const admission = admitBattleResolutionInput(admittedInput);
   if (admission.tag === "staleCharacterProcedure") {
     return {
       tag: "invalid",
@@ -238,7 +263,26 @@ export function resolveBattleSubject(
       snapshot: snapshotBattle(input.state),
     };
   }
-  const result = resolveAdmittedBattleSubject(admission.input);
+  const mechanical = resolveAdmittedBattleSubject(admission.input);
+  const result = reportsReadyTrigger
+    ? mechanicalResultWithPreservedSubjectPhase(
+        mechanical,
+        input.state.subjectResolutionPhase,
+      )
+    : mechanical;
   const routeEvents = battleReducerRouteForResolution(admission.input, result);
   return routeEvents === undefined ? result : { ...result, routeEvents };
+}
+
+function mechanicalResultWithPreservedSubjectPhase(
+  result: BattleResolutionResult,
+  subjectResolutionPhase: BattleResolutionInput["state"]["subjectResolutionPhase"],
+): BattleResolutionResult {
+  return result.tag === "invalid"
+    ? result
+    : {
+        ...result,
+        state: { ...result.state, subjectResolutionPhase },
+        snapshot: snapshotBattle({ ...result.state, subjectResolutionPhase }),
+      };
 }

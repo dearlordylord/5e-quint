@@ -33,7 +33,6 @@ import {
   targetFill,
   attackTargetFill,
   attackRollFill,
-  interruptDecisionFill,
   grappleOutcomeFill,
   damageRollFill,
   damageRollFillWithGroups,
@@ -73,7 +72,7 @@ import {
   movementFill,
   movementFeet,
   movementDeltaFeet,
-  resolveBattleInterrupt,
+  readyTriggerDescriptionForTest,
   resolveBattleSubject,
   resolveFailedAbilityCheckResourceBoost,
   resourceCount,
@@ -2496,7 +2495,7 @@ describe("battle runtime: class action features", () => {
       ]),
     );
     const damage = findHole(reckless.holes, "rolledDice");
-    expect(
+    const completedAttack = requireResolved(
       resolveBattleSubject({
         state: reckless.state,
         subject: attackSubject,
@@ -2517,10 +2516,10 @@ describe("battle runtime: class action features", () => {
           damageRollFill(damage, 4),
         ],
       }),
-    ).toMatchObject({ tag: "resolved" });
+    );
 
     const goblinTurn = requireResolved(
-      endTurn({ state: reckless.state, actorId: fighterId }),
+      endTurn({ state: completedAttack.state, actorId: fighterId }),
     ).state;
     const scimitar = goblinAttackSubject(goblinTurn, "Scimitar");
     const barbarianTarget = attackInitialTargetHole(goblinTurn, scimitar);
@@ -4189,7 +4188,7 @@ describe("battle runtime: class action features", () => {
     ).toMatchObject({ tag: "resolved" });
   });
 
-  test("Brutal Strike waits until after an attack-hit Reaction window to choose its effect", () => {
+  test("Brutal Strike does not interpret a player-authored Ready trigger", () => {
     const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
     const baseState = startBattleRight({
       battleId: battleId("battle-reckless-reaction-replay"),
@@ -4211,11 +4210,12 @@ describe("battle runtime: class action features", () => {
     });
     const state = {
       ...baseState,
-      readiedMovements: new Map([
+      readiedResponses: new Map([
         [
           wizardId,
           {
-            trigger: "attackHit" as const,
+            trigger: readyTriggerDescriptionForTest("the attack hits"),
+            response: { kind: "movement" as const },
             expiresAt: { kind: "startOfTurn" as const, combatantId: wizardId },
           },
         ],
@@ -4242,7 +4242,7 @@ describe("battle runtime: class action features", () => {
       }),
       "attackRoll",
     );
-    const awaitingReaction = resolveBattleSubject({
+    const awaitingBrutalStrike = resolveBattleSubject({
       state,
       subject: attackSubject,
       fills: [
@@ -4256,32 +4256,22 @@ describe("battle runtime: class action features", () => {
         }),
       ],
     });
-    if (awaitingReaction.tag !== "needsHoles") {
-      throw new Error("Expected attack-hit Reaction window.");
+    if (awaitingBrutalStrike.tag !== "needsHoles") {
+      throw new Error("Expected the Brutal Strike effect decision.");
     }
     expect(
-      awaitingReaction.holes.some(
-        (hole) =>
-          hole.kind === "unitFeatureDecision" &&
-          hole.label === "Choose a Brutal Strike effect",
+      awaitingBrutalStrike.holes.some(
+        (hole) => hole.kind === "interruptDecision",
       ),
     ).toBe(false);
-
-    const decision = findHole(awaitingReaction.holes, "interruptDecision");
-    const resumed = resolveBattleInterrupt({
-      state: awaitingReaction.state,
-      fill: interruptDecisionFill(decision, {
-        kind: "decline",
-        responderId: wizardId,
-      }),
-    });
-
-    if (resumed.tag !== "needsHoles") {
-      throw new Error("Expected resumed Brutal Strike to need an effect.");
-    }
-    expect(findHole(resumed.holes, "unitFeatureDecision")).toMatchObject({
+    expect(
+      findHole(awaitingBrutalStrike.holes, "unitFeatureDecision"),
+    ).toMatchObject({
       label: "Choose a Brutal Strike effect",
       choices: ["forceful_blow", "hamstring_blow", "decline"],
     });
+    expect(awaitingBrutalStrike.state.readiedResponses.get(wizardId)).toEqual(
+      state.readiedResponses.get(wizardId),
+    );
   });
 });

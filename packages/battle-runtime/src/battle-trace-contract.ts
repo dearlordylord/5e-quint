@@ -10,6 +10,7 @@ import type {
 } from "./battle-state-execution.ts";
 
 export const BATTLE_TRACE_HOLE_KINDS = [
+  "readyDeclaration",
   "helpAttackAllyDecision",
   "helpAttackEnemyDecision",
   "targetChoice",

@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 137,
-    "covered": 129,
+    "total": 136,
+    "covered": 128,
     "open": 2,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 106,
+      "battle": 105,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 129,
+      "covered": 128,
       "needs-qnt-owner": 2,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -27,14 +27,14 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 185,
+    "total": 184,
     "bySubject": {
-      "battle-hole-family": 93,
+      "battle-hole-family": 92,
       "battle-fill-kind": 53,
       "battle-subject-kind": 39
     },
     "byClassification": {
-      "semantic-frontier": 146,
+      "semantic-frontier": 145,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 39,
       "unsupported-dead-branch": 0
@@ -270,13 +270,21 @@
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
       ],
+      "reason": "The shared rule core and focused MBT own the generic Reaction window plus the held and released readied-Movement branch, including the fact that its movement does not consume ordinary turn movement. Focused runtime regressions separately exercise the canonical declaration choices and ordinary Action and Attack release branches. Together the evidence proves that the runtime stores the player-authored perceivable trigger and selected offered action or movement, opens the Reaction only after a table report, expires it at the actor's next turn, and restores any interrupted subject continuation. This row does not claim that the QNT movement branch alone models every response discriminant.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/ready.ts",
+        "packages/battle-runtime/src/battle-reducer/ready-trigger.ts",
+        "packages/battle-runtime/src/battle-reducer/readied-release.ts",
+        "packages/battle-runtime/src/battle-reducer/interrupt-execution.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [],
-      "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Rules-Glossary.md#Ready-Action",
+        ".references/srd-5.2.1/Rules-Glossary.md#Reaction"
+      ],
+      "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
     },
     {
       "id": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
@@ -4290,27 +4298,6 @@
       "title": "Focused battle drivers expose executable reducer-route connectors through start battle, act discovery, and subject resolution instead of local replay islands"
     },
     {
-      "id": "BATTLE.ATTACK.MINIMAL_RESOLUTION",
-      "kind": "state-transition",
-      "parityWitnesses": [
-        {
-          "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/creature-attack.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/creature-attack.mbt.qnt",
-          "stepAction": "step"
-        }
-      ],
-      "profiles": [],
-      "qntOwners": ["packages/battle-runtime/creature-attack.qnt"],
-      "runtime": "battle",
-      "runtimeOwners": [
-        "packages/battle-runtime/src/battle-reducer/creature-attack.ts"
-      ],
-      "status": "covered",
-      "surfaceEvidence": [],
-      "title": "Pilot slice - minimal creature-vs-creature attack interleaving with bounded HP state, per-action nondet damage and hit, and HP damage application via the SHARED.HIT_POINTS.POSITIVE_DAMAGE atomic"
-    },
-    {
       "id": "BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL",
       "kind": "resource-sequencing",
       "parityWitnesses": [
@@ -4432,12 +4419,6 @@
       "parityWitnesses": [
         {
           "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/weapon-attack-interruption-frame.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime-weapon-attack-interruption-frame.mbt.qnt",
-          "stepAction": "step"
-        },
-        {
-          "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/interrupt-stack-resume.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
           "stepAction": "step"
@@ -4445,13 +4426,12 @@
       ],
       "profiles": [],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-weapon-attack-interruption-frame.qnt",
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-replay-equivalence.qnt",
         "packages/battle-runtime/battle-runtime-interrupt-bridge.qnt"
       ],
-      "reason": "This row covers the reducer protocol shape beyond the single Reaction offer. The weapon-attack frame owner computes one cohesive handoff value containing participant, target and spatial facts, Attack Roll result, damage input, Critical Hit consequence, phase, and one continuation; its focused witness drives the production reducer through offer, interruption, and resumed handoff. The reaction-window owner projects interrupt stack frames through the existing rule-core ReactionWindowState depth, decline, and advance-continuation semantics, the reaction-resolution owner resumes suspended procedures from the post-Reaction BattleState after active Spell Effects may have changed, and the replay-equivalence owner computes replay-from-root projection by combining the recorded continuation subject/fills with newly supplied suffix fills. The replay focused witness compares independently resolving recorded subject+fills from the root state against the production replay-continuation frame path over the same root state, recorded continuation, handled trigger, and suffix fill sequence. The SRD anchors Reaction timing and the Attack Roll, Critical Hit, damage, and zero-Hit-Point consequence facts retained across this boundary; choosing concrete interrupt stack frames and replay calls is reducer protocol evidence, not a separate RAW ordering interpretation.",
+      "reason": "This row covers the reducer protocol shape beyond the single Reaction offer. The reaction-window owner projects interrupt stack frames through the existing rule-core ReactionWindowState depth, decline, and advance-continuation semantics, the reaction-resolution owner resumes suspended procedures from the post-Reaction BattleState after active Spell Effects may have changed, and the replay-equivalence owner computes replay-from-root projection by combining the recorded continuation subject/fills with newly supplied suffix fills. The focused interrupt-stack witness covers nested decline, active Spell Effect mutation, and replay-from-root equivalence against the production reducer. The SRD anchors Reaction timing and the Attack Roll, Critical Hit, damage, and zero-Hit-Point consequence facts retained across this boundary; choosing concrete interrupt stack frames and replay calls is reducer protocol evidence, not a separate RAW ordering interpretation.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -6325,6 +6305,30 @@
     },
     {
       "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "readyDeclaration",
+      "id": "BattleReadyDeclarationHole",
+      "reason": "The Ready declaration hole carries the player's perceivable trigger description and selected Action or movement response through the canonical battle protocol. Trigger occurrence remains a later table report rather than an engine-authored event-category guess.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "fillKind": "readyDeclaration",
+      "followUpTaskIds": [],
+      "id": "readyDeclaration",
+      "reason": "The Ready declaration fill binds a non-empty player-authored trigger description to one response offered by the canonical Action and movement owners; the reducer stores that declaration until expiry or a table-reported trigger.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
       "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"],
       "followUpTaskIds": [],
       "id": "actionAttack",
@@ -6550,6 +6554,18 @@
     },
     {
       "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeTableDecision",
+      "reason": "The table reports that a player-authored Ready trigger occurred through a dedicated runtime command; the reducer then opens the ordinary reaction decision without mapping prose onto a closed event taxonomy.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeTableDecision"
+    },
+    {
+      "classification": "semantic-frontier",
       "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"],
       "followUpTaskIds": [],
       "id": "runtimeReaction",
@@ -6676,33 +6692,6 @@
     },
     {
       "classification": "semantic-frontier",
-      "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"],
-      "followUpTaskIds": [],
-      "holeKind": "attackRoll",
-      "id": "BattleCreatureAttackRollHole",
-      "reason": "Minimal creature Attack Roll holes are covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY as typed public reducer frontier vocabulary. Task 67 target replay covers the executable creatureAttack route through public discoverBattleActs and resolveBattleSubject route events.",
-      "subject": "battle-hole-family"
-    },
-    {
-      "classification": "semantic-frontier",
-      "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"],
-      "followUpTaskIds": [],
-      "holeKind": "rolledDice",
-      "id": "BattleCreatureAttackDamageRollHole",
-      "reason": "Minimal creature damage Rolled Dice holes are covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY as typed public reducer frontier vocabulary. Task 67 target replay covers the executable creatureAttack hit path through the Battle Hit Point owner.",
-      "subject": "battle-hole-family"
-    },
-    {
-      "classification": "semantic-frontier",
-      "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"],
-      "fillKind": "creatureAttackZeroDamage",
-      "followUpTaskIds": [],
-      "id": "creatureAttackZeroDamage",
-      "reason": "The creatureAttackZeroDamage fill is narrow protocol vocabulary for copied minimal creature-attack zero-damage replay. It preserves the global non-empty Rolled Dice fill boundary while projecting to the connector's rolledDice route event for Task 67 qRoute evidence.",
-      "subject": "battle-fill-kind"
-    },
-    {
-      "classification": "semantic-frontier",
       "coveredByObligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
@@ -6718,15 +6707,6 @@
       "id": "toolPossessionFacts",
       "reason": "Tool possession fills are caller/table inventory facts consumed by supported feature procedures such as Cunning Strike Poison; durable equipment ownership and on-person derivation remain outside reducer state.",
       "subject": "battle-fill-kind"
-    },
-    {
-      "classification": "semantic-frontier",
-      "coveredByObligationIds": ["BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"],
-      "followUpTaskIds": [],
-      "id": "creatureAttack",
-      "reason": "The minimal creatureAttack subject kind is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY as public BattleSubject vocabulary. Task 67 target replay covers its executable reducer route through Attack Roll and Hit Point owners.",
-      "subject": "battle-subject-kind",
-      "subjectKind": "creatureAttack"
     },
     {
       "classification": "table-owned-fact",
@@ -8028,12 +8008,6 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "The owner computes the canonical weapon-attack interruption frame through offer, interrupt, and handoff transitions without embedding a test-only literal projection.",
-      "obligationIds": ["BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY"],
-      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-interruption-frame.qnt",
-      "role": "semantic-core"
-    },
-    {
       "evidence": "packages/battle-runtime/battle-runtime-reaction-resolution.qnt is the covered obligation QNT owner carrying reaction procedure resolution and suspended continuation resume semantics.",
       "obligationIds": ["BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY"],
       "ownerPath": "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
@@ -8905,12 +8879,6 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/creature-attack.qnt is the pilot composite slice QNT owner carrying executable creature-vs-creature attack resolution semantics by importing the shared hit-point-damage atomic.",
-      "obligationIds": ["BATTLE.ATTACK.MINIMAL_RESOLUTION"],
-      "ownerPath": "packages/battle-runtime/creature-attack.qnt",
-      "role": "semantic-core"
-    },
-    {
       "evidence": "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt is the focused semantic core for Warding Bond target Resistance, same-amount source damage, and source-zero/separation/recast cleanup.",
       "obligationIds": ["BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING"],
       "ownerPath": "packages/battle-runtime/battle-runtime-warding-bond-damage-sharing.qnt",
@@ -8951,12 +8919,6 @@
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-self-transformation-tests.qnt",
       "role": "proof-only"
-    },
-    {
-      "evidence": "packages/battle-runtime/creature-attack.mbt.qnt is assessed generator-readiness proofOnly evidence for minimal attack MBT replay coverage.",
-      "obligationIds": [],
-      "ownerPath": "packages/battle-runtime/creature-attack.mbt.qnt",
-      "role": "mbt-fixture"
     },
     {
       "evidence": "packages/character-creation-runtime/character-creation-runtime-slice-tests.qnt is assessed generator-readiness proofOnly evidence for character creation slice replay coverage.",
@@ -11447,11 +11409,6 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-interruption-frame.qnt",
-      "role": "semantic-core"
-    },
-    {
-      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt",
       "role": "semantic-core"
     },
@@ -11485,11 +11442,6 @@
       "classification": "exempt",
       "evidence": "Typed witness protocol vocabulary leaf for lightweight battle-runtime MBT witnesses.",
       "ownerPath": "packages/battle-runtime/battle-runtime-witness-protocol.qnt"
-    },
-    {
-      "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/creature-attack.qnt",
-      "role": "semantic-core"
     },
     {
       "category": "leaf-type-vocabulary",
@@ -15726,25 +15678,6 @@
         "variant",
         "record",
         "pure-def",
-        "int",
-        "bool",
-        "if-expression",
-        "arithmetic",
-        "boolean-connective",
-        "pattern-match"
-      ],
-      "obligationId": "BATTLE.ATTACK.MINIMAL_RESOLUTION",
-      "proofOnly": ["packages/battle-runtime/creature-attack.mbt.qnt"],
-      "semanticCore": ["packages/battle-runtime/creature-attack.qnt"],
-      "status": "generation-subset-clean"
-    },
-    {
-      "blockedBy": [],
-      "generatorSubset": [
-        "import",
-        "variant",
-        "record",
-        "pure-def",
         "constant-def",
         "int",
         "bool",
@@ -15874,7 +15807,6 @@
       "obligationId": "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-weapon-attack-interruption-frame.qnt",
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-replay-equivalence.qnt"

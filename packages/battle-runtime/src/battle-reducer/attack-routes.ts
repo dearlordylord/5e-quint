@@ -16,7 +16,6 @@ import {
   ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
   ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
 } from "./attack-ordering-messages.ts";
-import { creatureAttackHit } from "./creature-attack.ts";
 import {
   markedDamageRiderTransferRouteForResolution,
   markedDamageRiderWeaponAttackRouteForDiscoveredAct,
@@ -66,20 +65,6 @@ export function statBlockActionRouteForDiscoveredAct(
     : undefined;
 }
 
-export function creatureAttackRouteForDiscoveredAct(
-  act: BattleActDiscoveryCandidate,
-): BattleReducerRouteEvents | undefined {
-  return act.subject.tag === "creatureAttack"
-    ? [
-        discoverBattleActsRoute(
-          "creatureAttack",
-          battleReducerRouteHoles(act.initialHoles),
-          "battleAttackRoll",
-        ),
-      ]
-    : undefined;
-}
-
 export function weaponAttackRouteForDiscoveredAct(
   state: BattleState,
   act: BattleActDiscoveryCandidate,
@@ -95,54 +80,6 @@ export function weaponAttackRouteForDiscoveredAct(
     "battleActionEconomy",
   );
   return markedRoute === undefined ? [weaponRoute] : [markedRoute, weaponRoute];
-}
-
-export function creatureAttackRouteForResolution(
-  input: BattleResolutionInput,
-  result: BattleResolutionResult,
-): BattleReducerRouteEvents | undefined {
-  if (input.subject.tag !== "creatureAttack") {
-    return undefined;
-  }
-  const fill = input.fills.at(-1);
-  if (fill === undefined || result.tag === "invalid") {
-    return undefined;
-  }
-  const routeFill = battleReducerRouteFill(fill);
-  if (routeFill === "attackRoll" && fill.kind === "attackRoll") {
-    const target = input.state.combatants.get(input.subject.targetId);
-    if (target === undefined) {
-      return undefined;
-    }
-    const holes = creatureAttackHit({
-      state: input.state,
-      target,
-      attackRoll: fill,
-    })
-      ? result.tag === "needsHoles"
-        ? battleReducerRouteHoles(result.holes)
-        : []
-      : [];
-    return [
-      resolveBattleSubjectRoute(
-        "creatureAttack",
-        routeFill,
-        holes,
-        "battleAttackRoll",
-      ),
-    ];
-  }
-  if (routeFill !== "rolledDice") {
-    return undefined;
-  }
-  return [
-    resolveBattleSubjectRoute(
-      "creatureAttack",
-      routeFill,
-      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
-      "battleHitPoint",
-    ),
-  ];
 }
 
 export function weaponAttackRouteForResolution(

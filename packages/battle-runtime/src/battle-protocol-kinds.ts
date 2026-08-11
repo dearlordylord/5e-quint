@@ -43,10 +43,6 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
         "cunningStrikeEndTurnCoverFacts",
         () => "cunningStrikeEndTurnCoverFacts" as const,
       ),
-      byBattleFillKind(
-        "creatureAttackZeroDamage",
-        () => "creatureAttackZeroDamage" as const,
-      ),
       byBattleFillKind("damageTypeChoice", () => "damageTypeChoice" as const),
       byBattleFillKind(
         "dancingLightsPlacement",
@@ -98,6 +94,7 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
         "movableZoneRepositionMovement",
         () => "movableZoneRepositionMovement" as const,
       ),
+      byBattleFillKind("readyDeclaration", () => "readyDeclaration" as const),
       byBattleFillKind("movement", () => "movement" as const),
       byBattleFillKind(
         "objectContactTargets",
@@ -195,7 +192,6 @@ export function battleSubjectKind(subject: BattleSubject) {
         "pactOfTheChainFamiliarAttack",
         () => "companionAttack" as const,
       ),
-      byBattleSubjectTag("creatureAttack", () => "creatureAttack" as const),
       byBattleSubjectTag("bonusAction", bonusActionSubjectKind),
       byBattleSubjectTag(
         "bonusActionStandardAction",
@@ -414,6 +410,9 @@ function runtimeCommandSubjectKind(
       byCommand("endConcentration", () => "runtimeEffectCleanup" as const),
     )
     .pipe(
+      byCommand("reportReadyTrigger", () => "runtimeTableDecision" as const),
+      byCommand("releaseReadiedAction", () => "runtimeReaction" as const),
+      byCommand("releaseReadiedAttack", () => "runtimeReaction" as const),
       byCommand(
         "levitateAltitudeControl",
         () => "runtimeAltitudeControl" as const,

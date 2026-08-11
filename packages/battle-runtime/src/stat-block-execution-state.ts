@@ -10,6 +10,7 @@ import type {
   CreatureLimitedUse,
   StatBlockId,
   StatBlockMechanics,
+  StatBlockRecord,
 } from "@dnd/surface/surface/types";
 import type {
   StatBlockAttackActionOption,
@@ -20,6 +21,7 @@ import type {
 } from "./battle-action-options.ts";
 import type { SupportedStatBlockBonusActionStandardAction } from "./battle-reducer/battle-runtime-protocol.ts";
 import {
+  statBlockAttackDamageRequiresRoll,
   statBlockAttackDamageSupportsStaticNotation,
   supportedStatBlockAttackDamage,
 } from "./statblock-attack-damage-support.ts";
@@ -31,6 +33,7 @@ import type {
 
 export type BattleStatBlockExecutionSource = {
   readonly id: StatBlockId;
+  readonly challengeRating: StatBlockRecord["challengeRating"];
   readonly statBlock: StatBlockMechanics;
 };
 
@@ -136,6 +139,7 @@ export function statBlockAttackActionOptions(
   return execution.procedureBindings.flatMap((binding) => {
     if (binding.procedure.kind !== "attack") return [];
     const attack = binding.procedure.attack;
+    const damage = supportedStatBlockAttackDamage(attack);
     const base = {
       kind: "statBlockAttack" as const,
       procedureRef: binding.procedureRef,
@@ -146,7 +150,9 @@ export function statBlockAttackActionOptions(
       ),
     };
     return [
-      { ...base, damageNotation: "rolled" as const },
+      ...(statBlockAttackDamageRequiresRoll(damage)
+        ? [{ ...base, damageNotation: "rolled" as const }]
+        : []),
       ...(statBlockAttackSupportsStaticDamageNotation(attack)
         ? [{ ...base, attack, damageNotation: "static" as const }]
         : []),

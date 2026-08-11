@@ -40,7 +40,6 @@ import {
   elapsedTimeTicks,
   endTurn,
   resolveBattleSubject,
-  sameBattleSubject,
   spellSaveDcForCaster,
   spellSlotInvocationRef,
   type BattleActiveEffect,
@@ -284,11 +283,7 @@ describe("Dragon's Breath initial cast admission", () => {
       Either.isLeft(
         Schema.decodeUnknownEither(BattleSnapshotSchema)({
           ...encodedSnapshot,
-          acts: needsDamage.snapshot.acts.map((candidate) =>
-            sameBattleSubject(candidate.subject, exhaleAct.subject)
-              ? { ...candidate, initialHoles: wrongOwnerHoles }
-              : candidate,
-          ),
+          acts: [{ subject: exhaleAct.subject, initialHoles: wrongOwnerHoles }],
         }),
       ),
     ).toBe(true);

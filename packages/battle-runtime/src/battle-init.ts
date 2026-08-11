@@ -205,6 +205,7 @@ function battleDruidWildShapeFormProjectionStatBlock(
   if (Either.isLeft(speeds)) return Either.left(speeds.left);
   return Either.right({
     id: form.id,
+    challengeRating: form.challengeRating,
     statBlock: {
       ...form.statBlock,
       ac: armorClass,

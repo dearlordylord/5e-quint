@@ -1,12 +1,7 @@
-import { BATTLE_INTERRUPT_TRIGGERS } from "@dnd/battle-runtime";
-
-export const GENERIC_READY_TRIGGERS = BATTLE_INTERRUPT_TRIGGERS;
-
 export const GENERIC_COMBAT_ACTION_LABELS = [
   "Dash",
   "Disengage",
   "Dodge",
-  ...GENERIC_READY_TRIGGERS.map(() => "Ready" as const),
 ] as const;
 
 export const GENERIC_COMBAT_ACTION_LABELS_WITH_SHOVE = [
@@ -19,7 +14,6 @@ export const GENERIC_COMBAT_ACTION_LABELS_WITH_HELP = [
   "Disengage",
   "Dodge",
   "Help",
-  ...GENERIC_READY_TRIGGERS.map(() => "Ready" as const),
 ] as const;
 
 export const GENERIC_COMBAT_ACTION_LABELS_WITH_HELP_AND_SHOVE = [

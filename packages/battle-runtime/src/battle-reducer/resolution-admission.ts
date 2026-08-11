@@ -45,7 +45,6 @@ export function admitBattleResolutionInput(
     Match.discriminatorsExhaustive("tag")({
       action: () => admitWithoutCharacterBinding(input),
       pactOfTheChainFamiliarAttack: () => admitWithoutCharacterBinding(input),
-      creatureAttack: () => admitWithoutCharacterBinding(input),
       bonusAction: () => admitWithoutCharacterBinding(input),
       monkFocusFlurryOfBlowsStrike: () => admitWithoutCharacterBinding(input),
       companionLifecycle: () => admitWithoutCharacterBinding(input),

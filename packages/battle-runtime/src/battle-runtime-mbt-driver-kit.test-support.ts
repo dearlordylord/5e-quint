@@ -886,7 +886,6 @@ type ReducerRouteSubjectFamily =
   | "weaponHostedSpellEffectCleanup"
   | "afterHitSpell"
   | "statBlockAction"
-  | "creatureAttack"
   | "deathSavingThrow"
   | "zeroHitPointStabilization"
   | "concentrationTeardown"
@@ -12263,7 +12262,6 @@ const REDUCER_ROUTE_SUBJECT_BY_VARIANT_TAG = {
   WeaponHostedSpellEffectCleanupRouteSubject: "weaponHostedSpellEffectCleanup",
   AfterHitSpellRouteSubject: "afterHitSpell",
   StatBlockActionRouteSubject: "statBlockAction",
-  CreatureAttackRouteSubject: "creatureAttack",
   DeathSavingThrowRouteSubject: "deathSavingThrow",
   ZeroHitPointStabilizationRouteSubject: "zeroHitPointStabilization",
   ConcentrationTeardownRouteSubject: "concentrationTeardown",
@@ -18873,6 +18871,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
         Match.when({ kind: "cunningStrikeEndTurnCoverFacts" }, () => {
           throw new Error(
             "Battle runtime MBT does not model Cunning Strike end-turn cover fact holes.",
+          );
+        }),
+        Match.when({ kind: "readyDeclaration" }, () => {
+          throw new Error(
+            "Generic battle runtime MBT leaves Ready declarations to the focused Ready witness.",
           );
         }),
         Match.exhaustive,

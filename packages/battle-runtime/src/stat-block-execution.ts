@@ -2,6 +2,7 @@ import { optionalProperty } from "./optional-property.ts";
 import {
   NonNegativeInteger,
   PositiveInteger,
+  abilityScoreToMod,
   resourceCount,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
@@ -76,6 +77,7 @@ type AllocatedStatBlockExecution = {
   readonly execution: StatBlockExecutionState;
   readonly procedureRefs: ReadonlyMap<
     | AdmittedAttackOccurrence
+    | AdmittedUnarmedStrikeOccurrence
     | AdmittedMultiattackOccurrence
     | AdmittedBonusActionOccurrence,
     BattleStatBlockProcedureExecutionRef
@@ -89,6 +91,11 @@ export type AdmittedAttackOccurrence = {
   readonly attack: StatBlockAttackProcedure["attack"];
   readonly traitAttackRollModes?: StatBlockAttackProcedure["traitAttackRollModes"];
   readonly limitedUse?: CreatureLimitedUse;
+};
+
+export type AdmittedUnarmedStrikeOccurrence = {
+  readonly kind: "unarmedStrike";
+  readonly attack: StatBlockAttackProcedure["attack"];
 };
 
 export type AdmittedMultiattackOccurrence = {
@@ -110,6 +117,7 @@ export type AdmittedBonusActionOccurrence = {
 export type AdmittedStatBlockOccurrences = {
   readonly legendaryActionUses?: PositiveInteger;
   readonly attacks: readonly AdmittedAttackOccurrence[];
+  readonly unarmedStrike: AdmittedUnarmedStrikeOccurrence;
   readonly multiattacks: readonly AdmittedMultiattackOccurrence[];
   readonly bonusActions: readonly AdmittedBonusActionOccurrence[];
 };
@@ -182,7 +190,6 @@ function admitStatBlock(
       attacks.push(occurrence);
     }
   }
-
   const actionAttacks = attacks.filter(({ section }) => section === "actions");
   const multiattacks: AdmittedMultiattackOccurrence[] = [];
   for (const multiattack of statBlock.statBlock.actions?.multiattacks ?? []) {
@@ -237,10 +244,58 @@ function admitStatBlock(
             ),
           }),
       attacks,
+      unarmedStrike: admittedUnarmedStrike(statBlock),
       multiattacks,
       bonusActions,
     },
   };
+}
+
+function admittedUnarmedStrike(
+  statBlock: BattleStatBlockExecutionSource,
+): AdmittedUnarmedStrikeOccurrence {
+  const strengthModifier = abilityScoreToMod(
+    statBlock.statBlock.abilityScores.str,
+  );
+  const damage = Math.max(0, 1 + strengthModifier);
+  const attack: StatBlockAttackProcedure["attack"] = {
+    attackAbility: "str",
+    attackType: "melee",
+    attackBonus: {
+      kind: "literal",
+      value:
+        strengthModifier + statBlockProficiencyBonus(statBlock.challengeRating),
+    },
+    reachFeet: 5,
+    onHit: [
+      {
+        kind: "damage",
+        amount: {
+          kind: "fixed",
+          expr: { dice: 0, dieSize: 4, flat: damage },
+          static: damage,
+        },
+        damageType: "bludgeoning",
+      },
+    ],
+  };
+  return {
+    kind: "unarmedStrike",
+    attack,
+  };
+}
+
+function statBlockProficiencyBonus(
+  challengeRating: BattleStatBlockExecutionSource["challengeRating"],
+): number {
+  if (challengeRating <= 4) return 2;
+  if (challengeRating <= 8) return 3;
+  if (challengeRating <= 12) return 4;
+  if (challengeRating <= 16) return 5;
+  if (challengeRating <= 20) return 6;
+  if (challengeRating <= 24) return 7;
+  if (challengeRating <= 28) return 8;
+  return 9;
 }
 
 function admittedMultiattackDispatches(
@@ -292,6 +347,7 @@ function allocateStatBlockExecution(
   const resourcePools: StatBlockResourcePoolState[] = [];
   const procedureRefs = new Map<
     | AdmittedAttackOccurrence
+    | AdmittedUnarmedStrikeOccurrence
     | AdmittedMultiattackOccurrence
     | AdmittedBonusActionOccurrence,
     BattleStatBlockProcedureExecutionRef
@@ -344,6 +400,18 @@ function allocateStatBlockExecution(
       ],
     });
   }
+
+  const unarmedStrikeProcedureRef = allocateProcedureRef(allocator);
+  procedureRefs.set(admitted.unarmedStrike, unarmedStrikeProcedureRef);
+  procedureBindings.push({
+    procedureRef: unarmedStrikeProcedureRef,
+    procedure: {
+      kind: "attack",
+      section: "actions",
+      attack: admitted.unarmedStrike.attack,
+    },
+    resourcePoolRefs: [],
+  });
 
   for (const multiattack of admitted.multiattacks) {
     const dispatchProcedureRefs = nonEmpty(

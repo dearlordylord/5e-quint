@@ -165,6 +165,15 @@ export function statBlockAttackDamageSupportsStaticNotation(
   );
 }
 
+export function statBlockAttackDamageRequiresRoll(
+  damage: StatBlockAttackDamage,
+): boolean {
+  return (
+    damage.baseComponents.some((component) => component.expr.dice > 0) ||
+    (damage.advantageBonus?.expr.dice ?? 0) > 0
+  );
+}
+
 function nonEmpty<T>(values: readonly T[]): ReadonlyNonEmptyArray<T> | null {
   const [first, ...rest] = values;
   return first === undefined ? null : [first, ...rest];

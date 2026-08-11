@@ -1055,7 +1055,13 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     if (awaitingDecision.tag !== "needsHoles") {
       throw new Error("Expected a Remarkable Athlete decision hole.");
     }
-    expect(awaitingDecision.state).toBe(targetTurn.state);
+    expect(awaitingDecision.state).toEqual({
+      ...targetTurn.state,
+      subjectResolutionPhase: {
+        kind: "subjectContinuation",
+        subject: releaseSubject,
+      },
+    });
 
     const awaitingMovement = resolveBattleSubject({
       state: targetTurn.state,
@@ -1075,7 +1081,13 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     if (awaitingMovement.tag !== "needsHoles") {
       throw new Error("Expected a Remarkable Athlete movement hole.");
     }
-    expect(awaitingMovement.state).toBe(targetTurn.state);
+    expect(awaitingMovement.state).toEqual({
+      ...targetTurn.state,
+      subjectResolutionPhase: {
+        kind: "subjectContinuation",
+        subject: releaseSubject,
+      },
+    });
 
     const invalidMovement = resolveBattleSubject({
       state: targetTurn.state,

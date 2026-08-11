@@ -15,8 +15,6 @@ import {
 } from "./after-hit-spell-routes.ts";
 import {
   battleActionRouteForResolution,
-  creatureAttackRouteForDiscoveredAct,
-  creatureAttackRouteForResolution,
   statBlockActionRouteForDiscoveredAct,
   weaponAttackRouteForDiscoveredAct,
   weaponAttackRouteForResolution,
@@ -206,7 +204,6 @@ export function battleReducerRouteEventsForDiscoveredAct(
     terminalRouteCandidate(() =>
       statBlockActionRouteForDiscoveredAct(state, act),
     ),
-    terminalRouteCandidate(() => creatureAttackRouteForDiscoveredAct(act)),
     terminalRouteCandidate(() => weaponAttackRouteForDiscoveredAct(state, act)),
     terminalRouteCandidate(() =>
       concentrationRouteForDiscoveredAct(state, act),
@@ -513,9 +510,6 @@ export function battleReducerRouteForResolution(
     ),
     terminalRouteCandidate(() =>
       withWildShapeTerminal(weaponAttackRouteForResolution(input, result)),
-    ),
-    terminalRouteCandidate(() =>
-      withWildShapeTerminal(creatureAttackRouteForResolution(input, result)),
     ),
     terminalRouteCandidate(() =>
       appendTerminalRouteEvents(

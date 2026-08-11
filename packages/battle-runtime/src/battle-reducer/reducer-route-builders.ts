@@ -140,7 +140,6 @@ export function battleReducerRouteFill(
   }
   if (kind === "attackRoll") return "attackRoll";
   if (kind === "concentrationSavingThrow") return "concentrationSavingThrow";
-  if (kind === "creatureAttackZeroDamage") return "rolledDice";
   if (kind === "damageTypeChoice") return "damageTypeChoice";
   if (kind === "deathSavingThrow") return "deathSavingThrow";
   if (kind === "grappleOutcome") return "grappleOutcome";

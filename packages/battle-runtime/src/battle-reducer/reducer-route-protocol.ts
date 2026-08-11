@@ -64,7 +64,6 @@ export type BattleReducerRouteSubjectFamily =
   | "companionSharedSenses"
   | "companionTouchDelivery"
   | "companionReactionAttack"
-  | "creatureAttack"
   | "slotSpell"
   | "objectTargetSpellAttack"
   | "spellAttackProcedure"

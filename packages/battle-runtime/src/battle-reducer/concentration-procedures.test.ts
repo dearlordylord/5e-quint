@@ -2,7 +2,6 @@ import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { describe, expect, test } from "vitest";
 import type { BattleFill, BattleSubject } from "../index.ts";
 import {
-  skeletonId,
   wizardId,
   wizardTurnWithReadiedRay,
 } from "../battle-runtime.test-support.ts";
@@ -20,12 +19,9 @@ describe("End Concentration procedure owner", () => {
       command: "endConcentration",
     };
     const unexpectedFill = {
-      kind: "creatureAttackZeroDamage",
+      kind: "heldObjectFacts",
       holeId: holeId("test:end-concentration:unexpected-fill"),
-      creatureAttack: {
-        actorId: wizardId,
-        targetId: skeletonId,
-      },
+      value: { objectIds: [] },
     } as const satisfies BattleFill;
 
     expect(

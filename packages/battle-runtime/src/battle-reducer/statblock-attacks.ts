@@ -18,6 +18,7 @@ import {
 } from "../unit-feature-execution-constants.ts";
 import type { UnitFeatureProcedureExecution } from "../character-execution-queries.ts";
 import {
+  UNARMED_STRIKE_NAME,
   attackExecutionAbility,
   type BoundSupportedAttackActionOption,
   type BattleWeaponDamage,
@@ -181,7 +182,7 @@ export function attackActionOptionName(
       { kind: "weapon" },
       (weaponAttack) => weaponAttack.weapon.weaponUnitId,
     ),
-    Match.when({ kind: "unarmedStrike" }, () => "Unarmed Strike"),
+    Match.when({ kind: "unarmedStrike" }, () => UNARMED_STRIKE_NAME),
     Match.when({ kind: "statBlockAttack" }, () => "Stat Block Attack"),
     Match.exhaustive,
   );

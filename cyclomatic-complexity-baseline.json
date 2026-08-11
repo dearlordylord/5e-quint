@@ -107,7 +107,6 @@
     },
     "packages/battle-runtime/src/battle-reducer/attack-routes.ts": {
       "module/binding:battleActionRouteForResolution": 11,
-      "module/binding:creatureAttackRouteForResolution": 11,
       "module/binding:weaponAttackRouteForResolution": 23,
       "module/binding:weaponHostedAttackCompositionRouteForResolution": 23
     },
@@ -157,12 +156,6 @@
     },
     "packages/battle-runtime/src/battle-reducer/condition-immunity-temporary-hit-point-routes.ts": {
       "module/binding:conditionImmunityTemporaryHitPointRouteForResolution": 11
-    },
-    "packages/battle-runtime/src/battle-reducer/creature-attack-procedures.ts": {
-      "module/binding:resolveCreatureAttack": 14
-    },
-    "packages/battle-runtime/src/battle-reducer/creature-attack.ts": {
-      "module/binding:creatureAttackFillSequence": 9
     },
     "packages/battle-runtime/src/battle-reducer/creature-state-execution.ts": {
       "module/binding:combatantCanStillHoldBoundWeaponItem": 11,
