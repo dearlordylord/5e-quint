@@ -76,4 +76,30 @@ export function classify(value: number) {
     );
     expect(first).not.toBe(second);
   });
+
+  test("same-named methods retain distinct lexical class owners", () => {
+    const source = `
+class FirstResolver {
+  resolve() { return "first-marker"; }
+}
+class SecondResolver {
+  resolve() { return "second-marker"; }
+}
+`;
+    const resolveIdentity = complexityIdentityResolver();
+    const filename = sourceFixture(source);
+
+    const first = resolveIdentity(
+      filename,
+      diagnosticAt(source, '"first-marker"'),
+    );
+    const second = resolveIdentity(
+      filename,
+      diagnosticAt(source, '"second-marker"'),
+    );
+
+    expect(first).toBe("module/owner:class:FirstResolver/binding:resolve");
+    expect(second).toBe("module/owner:class:SecondResolver/binding:resolve");
+    expect(first).not.toBe(second);
+  });
 });

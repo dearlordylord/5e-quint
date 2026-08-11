@@ -42,6 +42,22 @@ function enclosingFunction(node) {
   return null;
 }
 
+function lexicalOwners(node, sourceFile) {
+  const owners = [];
+  let parent = node.parent;
+  while (parent !== undefined && !ts.isFunctionLike(parent)) {
+    if (ts.isClassLike(parent)) {
+      const name = declaredName(parent, sourceFile);
+      owners.push(`class:${name ?? "anonymous"}`);
+    } else if (ts.isObjectLiteralExpression(parent)) {
+      const name = declaredName(parent, sourceFile);
+      owners.push(`object:${name ?? "anonymous"}`);
+    }
+    parent = parent.parent;
+  }
+  return owners.reverse();
+}
+
 function immediateCall(node) {
   let parent = node.parent;
   while (parent !== undefined && !ts.isFunctionLike(parent)) {
@@ -73,8 +89,12 @@ function callIdentity(node, sourceFile) {
 
 function functionIdentity(node, sourceFile) {
   const enclosing = enclosingFunction(node);
-  const prefix =
+  const functionPrefix =
     enclosing === null ? "module" : functionIdentity(enclosing, sourceFile);
+  const prefix = lexicalOwners(node, sourceFile).reduce(
+    (identity, owner) => `${identity}/owner:${owner}`,
+    functionPrefix,
+  );
   const name = declaredName(node, sourceFile);
   return name === null
     ? `${prefix}/${callIdentity(node, sourceFile)}`
