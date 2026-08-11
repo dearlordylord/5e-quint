@@ -25,4 +25,3 @@ module battleRuntimeMoonbeamSaveWithShapeShift {
       resolveMoonbeamShapeShiftRider(damaged, targetActor, areaId, savingThrowSucceeded, targetShapeShiftState)
   }
 }
-

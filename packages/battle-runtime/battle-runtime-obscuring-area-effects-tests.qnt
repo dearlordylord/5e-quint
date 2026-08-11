@@ -176,4 +176,3 @@ module battleRuntimeObscuringAreaEffectsTests {
   }
 
 }
-
