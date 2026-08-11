@@ -82,7 +82,7 @@ packages.
 | Statements | 121,224 / 124,814 (97.12%) | 121,216 / 124,810 (97.12%) |                -8 / -4 | 3,590 -> 3,594 (+4) |         -0.0033pp |
 | Branches   |   30,862 / 32,719 (94.32%) |   30,860 / 32,718 (94.32%) |                -2 / -1 | 1,857 -> 1,858 (+1) |         -0.0032pp |
 | Functions  |       4,812 / 4,812 (100%) |       4,812 / 4,812 (100%) |                  0 / 0 |              0 -> 0 |                 0 |
-| Lines      | 121,224 / 124,814 (97.12%) | 121,216 / 124,810 (97.12%) |                -8 / -4 | 3,590 -> 3,594 (+4) |            0.00pp |
+| Lines      | 121,224 / 124,814 (97.12%) | 121,216 / 124,810 (97.12%) |                -8 / -4 | 3,590 -> 3,594 (+4) |         -0.0033pp |
 
 The checked-in battle-runtime ratchets remain 97/97/100/94 for statements,
 lines, functions, and branches. No threshold was lowered. M25 replaces the two
@@ -100,10 +100,11 @@ package, unchanged owners had coverage variability despite identical tests and
 instrumentation: `battle-fill-equality.ts` accounts for the eight-statement
 covered-count loss through changed execution hits, while unchanged branch maps
 also materialized differently. The global exact result therefore reports four
-more uncovered statements and one more uncovered branch. The changed owner
-improves, all ratchets remain green, and functions remain 100%. The acceptance
-basis is canonical ownership and removal of duplicated slot usability, not a
-marginal covered-statement claim; the pre-edit budget was zero added test lines.
+more uncovered statements/lines and one more uncovered branch. The changed
+owner improves, all ratchets remain green, and functions remain 100%. The
+acceptance basis is canonical ownership and removal of duplicated slot
+usability, not a marginal covered-statement claim; the pre-edit budget was zero
+added test lines.
 
 ## Remaining static 99% gaps
 
