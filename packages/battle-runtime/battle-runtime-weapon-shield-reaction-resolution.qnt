@@ -84,9 +84,9 @@ module battleRuntimeWeaponShieldReactionResolution {
   ): BattleState = {
     val decision = takeShieldReactionDecision(state, reactor)
     match decision {
-      | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameClosed(data)) =>
+      | ShieldReactionDecisionTakenClosed(data) =>
           resumeWeaponShieldReactionAfterTake(data.state, frame.continuation)
-      | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameOpen(data)) =>
+      | ShieldReactionDecisionTakenOpen(data) =>
           data.state
       | _ => state
     }
@@ -102,9 +102,9 @@ module battleRuntimeWeaponShieldReactionResolution {
       reactor,
     )
     match decision {
-      | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameClosed(data)) =>
+      | ShieldReactionDecisionDeclinedClosed(data) =>
           resumeWeaponShieldReactionAfterDecline(data.state, frame.continuation)
-      | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameOpen(data)) =>
+      | ShieldReactionDecisionDeclinedOpen(data) =>
           data.state
       | _ => state
     }

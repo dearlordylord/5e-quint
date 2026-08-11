@@ -86,9 +86,9 @@ module battleRuntimeSaveGatedShieldReactionResolution {
   ): BattleState = {
     val decision = takeShieldReactionDecision(state, reactor)
     match decision {
-      | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameClosed(data)) =>
+      | ShieldReactionDecisionTakenClosed(data) =>
           resumeSaveGatedShieldReactionAfterTake(data.state, frame.continuation)
-      | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameOpen(data)) =>
+      | ShieldReactionDecisionTakenOpen(data) =>
           data.state
       | _ => state
     }
@@ -104,9 +104,9 @@ module battleRuntimeSaveGatedShieldReactionResolution {
       reactor,
     )
     match decision {
-      | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameClosed(data)) =>
+      | ShieldReactionDecisionDeclinedClosed(data) =>
           resumeSaveGatedShieldReactionAfterDecline(data.state, frame.continuation)
-      | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameOpen(data)) =>
+      | ShieldReactionDecisionDeclinedOpen(data) =>
           data.state
       | _ => state
     }

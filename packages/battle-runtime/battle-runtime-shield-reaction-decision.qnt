@@ -10,28 +10,17 @@ module battleRuntimeShieldReactionDecision {
 
   // RAW: .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield
 
-  type ShieldReactionDecisionFrame =
-    | ShieldReactionDecisionFrameOpen({ state: BattleState })
-    | ShieldReactionDecisionFrameClosed({ state: BattleState })
-
   type ShieldReactionDecision =
     | ShieldReactionDecisionUnchanged
-    | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrame)
-    | ShieldReactionDecisionTaken(ShieldReactionDecisionFrame)
+    | ShieldReactionDecisionTakenOpen({ state: BattleState })
+    | ShieldReactionDecisionTakenClosed({ state: BattleState })
+    | ShieldReactionDecisionDeclinedOpen({ state: BattleState })
+    | ShieldReactionDecisionDeclinedClosed({ state: BattleState })
 
   pure def shieldReactionFrameIsFreshGoblinTarget(
     frame: PendingReactionFrame,
   ): bool =
     frame.eligibleReactors == Set(Goblin) and frame.offeredReactors == Set()
-
-  pure def shieldReactionDecisionFrame(
-    before: BattleState,
-    after: BattleState,
-  ): ShieldReactionDecisionFrame =
-    if (reactionDecisionClosedFrame(before, after))
-      ShieldReactionDecisionFrameClosed({ state: after })
-    else
-      ShieldReactionDecisionFrameOpen({ state: after })
 
   pure def declineShieldReactionDecision(
     state: BattleState,
@@ -40,8 +29,10 @@ module battleRuntimeShieldReactionDecision {
     val afterDecision = stateAfterDecliningReactionOffer(state, reactor)
     if (afterDecision == state)
       ShieldReactionDecisionUnchanged
+    else if (reactionDecisionClosedFrame(state, afterDecision))
+      ShieldReactionDecisionDeclinedClosed({ state: afterDecision })
     else
-      ShieldReactionDecisionDeclined(shieldReactionDecisionFrame(state, afterDecision))
+      ShieldReactionDecisionDeclinedOpen({ state: afterDecision })
   }
 
   pure def takeShieldReactionDecision(
@@ -69,9 +60,10 @@ module battleRuntimeShieldReactionDecision {
             afterReactionProcedure,
             reactor,
           )
-          ShieldReactionDecisionTaken(
-            shieldReactionDecisionFrame(state, afterDecision)
-          )
+          if (reactionDecisionClosedFrame(state, afterDecision))
+            ShieldReactionDecisionTakenClosed({ state: afterDecision })
+          else
+            ShieldReactionDecisionTakenOpen({ state: afterDecision })
         }
       | _ => ShieldReactionDecisionUnchanged
     }
