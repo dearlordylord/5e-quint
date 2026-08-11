@@ -54,6 +54,37 @@ were preserved; no threshold was lowered. Every other
 executable package in this root run met all 99% metric thresholds;
 battle-runtime is the only remaining package below acceptance.
 
+## Current exact battle-runtime diagnostic
+
+This package-local milestone measurement clones the checked-in battle-runtime
+arguments and thresholds from `scripts/workspace-quality-harness.mjs` and ran
+under the broad workspace lock. It is exact package evidence, but it does not
+replace the public root diagnostic above or establish the state of other
+packages.
+
+- Date: 2026-08-10
+- Measured working tree committed as: `40ca17067` (on top of Luna milestone
+  `569fdf65b`)
+- Command: the checked-in battle-runtime Vitest coverage invocation, with one
+  worker, under `with_resource_lock_owner scripts/with-broad-workspace-lock.sh`
+- Result: exit 0
+- Duration: 134.93 seconds
+- Battle-runtime tests: 214/214 files passed; 2,307 tests passed and 53 skipped
+  (2,360 total)
+
+| Metric     | M19 public covered / total |  M20 exact covered / total | Covered / total change |     Uncovered change | Percentage change |
+| ---------- | -------------------------: | -------------------------: | ---------------------: | -------------------: | ----------------: |
+| Statements | 120,978 / 124,745 (96.98%) | 121,132 / 124,872 (97.00%) |              154 / 127 | 3,767 -> 3,740 (-27) |           +0.02pp |
+| Branches   |   30,757 / 32,651 (94.19%) |   30,758 / 32,658 (94.18%) |                  1 / 7 |  1,894 -> 1,900 (+6) |           -0.01pp |
+| Functions  |       4,813 / 4,813 (100%) |       4,813 / 4,813 (100%) |                  0 / 0 |               0 -> 0 |                 0 |
+| Lines      | 120,978 / 124,745 (96.98%) | 121,132 / 124,872 (97.00%) |              154 / 127 | 3,767 -> 3,740 (-27) |           +0.02pp |
+
+The checked-in battle-runtime ratchets rose from 96/96/100/93 to
+97/97/100/94 for statements, lines, functions, and branches. No threshold was
+lowered. The branch denominator grew as behaviorally reachable validation
+alternatives were restored to honest instrumentation, so its small percentage
+decrease is retained rather than hidden.
+
 ## Remaining static 99% gaps
 
 These are planning gaps at the current denominators. Recompute them after code
@@ -61,12 +92,28 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 120,978 | 124,745 |                  123,498 |         2,520 |
-| Branches   |  30,757 |  32,651 |                   32,325 |         1,568 |
+| Statements | 121,132 | 124,872 |                  123,624 |         2,492 |
+| Branches   |  30,758 |  32,658 |                   32,332 |         1,574 |
 | Functions  |   4,813 |   4,813 |                    4,765 |             0 |
-| Lines      | 120,978 | 124,745 |                  123,498 |         2,520 |
+| Lines      | 121,132 | 124,872 |                  123,624 |         2,492 |
 
 ## Milestone context
+
+M20 covered reachable save-gate validation and attack-resolution behavior,
+including malformed but type-valid Thunderwave fills, spell and feature
+admission paths, and save/attack interactions. Luna completed implementation,
+focused verification, required MBTs, the exact package gate, and self-review in
+`569fdf65b`. Independent standards and specification reviews then converged.
+Root corrections in `40ca17067` removed inaccurate coverage suppressions from
+reachable invalid-input paths, deleted two redundant Thunderwave guards whose
+states are unrepresentable, narrowed the Brutal Strike helper protocol, and
+made spell/feature test actors and state reachable under their real class,
+level, spellcasting, and concentration requirements. The correction gate
+included 245 focused tests, package typecheck, formatting, and the exact
+coverage result above.
+
+The following M19 history remains for continuity with the last public root
+diagnostic.
 
 Since the prior authoritative checkpoint, `450850a90` covered the cohesive Unit
 Feature action dispatch and discovery owner: Rage-aware enemy saving-throw
@@ -98,17 +145,15 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting public metric at 94.19%, with a static 99% gap of
-1,568. Clone the public harness arguments for a fresh package-local diagnostic,
-select a different branch-heavy owner or cohesive subsystem from the completed
-save-gate, active-effect-ledger, persistent-spatial, ongoing-feature admission,
-act-composition, attack-projection, attack-pipeline, and spell-damage-fill
-campaigns, plus character battle resources, the Chained Spell resolver, and
-the damage/condition lifecycle, battle lifecycle route, spell damage lifecycle
-invariant, and interrupt/readied/reaction continuation cohorts.
-Audit its uncovered alternatives for schema-impossible or duplicated logic,
-cover only behaviorally reachable alternatives with focused tests, and then
-remeasure with the public root diagnostic.
+Branches remain the limiting exact battle-runtime metric at 94.18%, with a
+static 99% gap of 1,574. The next coherent owner is the persistent spatial spell
+and active-effect lifecycle cohort: Grease, Web, Gust of Wind, Flaming Sphere,
+Moonbeam, their save/reaction/end-turn/concentration paths, and active-effect
+projection, replacement, reset, light, and held-object behavior. Audit
+uncovered alternatives for schema-impossible or duplicated logic, cover only
+behaviorally reachable alternatives with focused tests, run the relevant MBTs,
+and repeat the review loop before remeasurement. Attack resolution and
+defensive route/profile cohorts remain later independent candidates.
 
 ## Verification and completion
 
