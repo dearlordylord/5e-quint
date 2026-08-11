@@ -66,6 +66,26 @@ describe("RAW swarm report store", () => {
       );
 
       runReport(["ingest", transcriptPath, "--db", dbPath]);
+      expect(() =>
+        runReport([
+          "verdict",
+          "--db",
+          dbPath,
+          "--run",
+          "999",
+          "--class",
+          "bug",
+          "--claim",
+          "orphan",
+          "--evidence",
+          "none",
+          "--reviewer",
+          "test",
+        ]),
+      ).toThrow();
+      expect(queryOne(dbPath, "SELECT COUNT(*) AS count FROM issues")).toEqual({
+        count: 0,
+      });
       const reviewPath = join(directory, "review.json");
       writeFileSync(
         reviewPath,

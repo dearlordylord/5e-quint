@@ -7,8 +7,7 @@ import {
 } from "../../packages/mcp/src/server.ts";
 
 import {
-  isTranscriptHeader,
-  isTranscriptStep,
+  parseScriptedTranscript,
   repoRoot,
   sha256Canonical,
   toolResultPayload,
@@ -23,19 +22,16 @@ function main(): void {
   if (transcriptPath === undefined) {
     fail("Usage: replay.ts <transcript.jsonl>");
   }
-  const lines = readFileSync(resolve(repoRoot, transcriptPath), "utf8")
+  const records = readFileSync(resolve(repoRoot, transcriptPath), "utf8")
     .split("\n")
-    .filter((line) => line.trim().length > 0);
+    .filter((line) => line.trim().length > 0)
+    .map((line): unknown => JSON.parse(line));
+  const parsed = parseScriptedTranscript(records);
+  if (parsed.tag === "invalid") fail(parsed.message);
 
   const root = createMcpCompositionRoot();
   let checked = 0;
-  for (const line of lines) {
-    const entry: unknown = JSON.parse(line);
-    if (isTranscriptHeader(entry)) continue;
-    if (!isTranscriptStep(entry)) {
-      fail("Replay transcript contains an invalid scripted step");
-    }
-    const step = entry;
+  for (const step of parsed.value.steps) {
     const result = handleToolCall(root, step.tool, step.args);
     const payload = toolResultPayload(result);
     const actualSha = sha256Canonical(payload);

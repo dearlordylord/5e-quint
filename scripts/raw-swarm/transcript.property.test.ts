@@ -3,7 +3,9 @@ import { describe, expect, test } from "vitest";
 
 import {
   canonicalJson,
+  isMcpTranscriptStep,
   mcpToolExchanges,
+  parseScriptedTranscript,
   sha256Canonical,
   type McpTranscriptStep,
 } from "./transcript.ts";
@@ -83,6 +85,51 @@ describe("RAW swarm transcript canonicalization", () => {
     expect(mcpToolExchanges([call(1, "first"), call(2, "second")])).toEqual({
       tag: "invalid",
       message: "Duplicate pending JSON-RPC id 7 at seq 2",
+    });
+  });
+
+  test("rejects records that claim both parsed and unparsed payloads", () => {
+    expect(
+      isMcpTranscriptStep({
+        seq: 1,
+        direction: "client->server",
+        message: { jsonrpc: "2.0" },
+        unparsed: true,
+        raw: "not json",
+      }),
+    ).toBe(false);
+  });
+
+  test("requires a first scripted header and strictly increasing sequence", () => {
+    const response = { tag: "resolved" };
+    const step = {
+      seq: 1,
+      tool: "example",
+      args: {},
+      response,
+      responseSha256: sha256Canonical(response),
+    };
+    const header = {
+      type: "header",
+      scenarioId: "probe",
+      kind: "scripted-probe",
+      rawCitations: [],
+      gitSha: "0123456789abcdef",
+      startedAt: "2026-08-11T00:00:00.000Z",
+    };
+
+    expect(parseScriptedTranscript([step])).toMatchObject({ tag: "invalid" });
+    expect(
+      parseScriptedTranscript([header, step, { ...step, tool: "duplicate" }]),
+    ).toEqual({
+      tag: "invalid",
+      message: "Transcript seq 1 must be a positive integer greater than 1",
+    });
+    expect(
+      parseScriptedTranscript([header, { ...step, seq: 2 }, step]),
+    ).toEqual({
+      tag: "invalid",
+      message: "Transcript seq 1 must be a positive integer greater than 2",
     });
   });
 });

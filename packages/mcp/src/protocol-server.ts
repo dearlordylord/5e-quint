@@ -11,6 +11,7 @@ import {
   type McpCompositionRoot,
 } from "./server.ts";
 import type { McpObjectInputSchema, McpOutputSchema } from "./schema-codec.ts";
+import { errorContent } from "./tool-content.ts";
 
 type ProtocolToolDefinition = {
   readonly name: string;
@@ -23,6 +24,9 @@ export function createDndMcpProtocolServer(
   root: McpCompositionRoot = createMcpCompositionRoot(),
   definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
 ) {
+  const advertisedToolNames = new Set(
+    definitions.map((definition) => definition.name),
+  );
   const server = new Server(
     { name: "dnd-surface-runtime", version: "0.1.0" },
     { capabilities: { tools: {} } },
@@ -32,9 +36,12 @@ export function createDndMcpProtocolServer(
     tools: definitions,
   }));
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) =>
-    handleToolCall(root, request.params.name, request.params.arguments),
-  );
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const name = request.params.name;
+    return advertisedToolNames.has(name)
+      ? handleToolCall(root, name, request.params.arguments)
+      : errorContent(`Tool is not advertised by this MCP server: ${name}`);
+  });
 
   return { root, server };
 }

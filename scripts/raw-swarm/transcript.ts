@@ -64,15 +64,31 @@ export type TranscriptStep = {
   readonly responseSha256: string;
 };
 
-export type McpTranscriptStep = {
+type ParsedMcpTranscriptStep = {
   readonly seq: number;
   readonly direction: "client->server" | "server->client";
-  readonly message?: unknown;
-  readonly unparsed?: true;
-  readonly raw?: string;
+  readonly message: unknown;
+  readonly unparsed?: never;
+  readonly raw?: never;
 };
 
+type UnparsedMcpTranscriptStep = {
+  readonly seq: number;
+  readonly direction: "client->server" | "server->client";
+  readonly message?: never;
+  readonly unparsed: true;
+  readonly raw: string;
+};
+
+export type McpTranscriptStep =
+  | ParsedMcpTranscriptStep
+  | UnparsedMcpTranscriptStep;
+
 export type McpToolExchange = TranscriptStep;
+
+type TranscriptParseResult<A> =
+  | { readonly tag: "valid"; readonly value: A }
+  | { readonly tag: "invalid"; readonly message: string };
 
 export function isJsonRecord(
   value: unknown,
@@ -108,10 +124,63 @@ export function isMcpTranscriptStep(line: unknown): line is McpTranscriptStep {
   if (!isJsonRecord(line)) return false;
   const directionIsValid =
     line.direction === "client->server" || line.direction === "server->client";
-  const payloadIsValid =
-    "message" in line ||
-    (line.unparsed === true && typeof line.raw === "string");
-  return Number.isInteger(line.seq) && directionIsValid && payloadIsValid;
+  const isParsed =
+    "message" in line && !("unparsed" in line) && !("raw" in line);
+  const isUnparsed =
+    !("message" in line) &&
+    line.unparsed === true &&
+    typeof line.raw === "string";
+  return (
+    Number.isInteger(line.seq) && directionIsValid && (isParsed || isUnparsed)
+  );
+}
+
+export function validateTranscriptSequence(
+  steps: readonly { readonly seq: number }[],
+): TranscriptParseResult<readonly { readonly seq: number }[]> {
+  let previousSeq = 0;
+  for (const step of steps) {
+    if (!Number.isInteger(step.seq) || step.seq <= previousSeq) {
+      return {
+        tag: "invalid",
+        message: `Transcript seq ${step.seq} must be a positive integer greater than ${previousSeq}`,
+      };
+    }
+    previousSeq = step.seq;
+  }
+  return { tag: "valid", value: steps };
+}
+
+export function parseScriptedTranscript(
+  records: readonly unknown[],
+): TranscriptParseResult<{
+  readonly header: TranscriptHeader & { readonly kind: "scripted-probe" };
+  readonly steps: readonly TranscriptStep[];
+}> {
+  const [header, ...steps] = records;
+  if (!isTranscriptHeader(header) || header.kind !== "scripted-probe") {
+    return {
+      tag: "invalid",
+      message: "Scripted transcript requires one first scripted-probe header",
+    };
+  }
+  if (!steps.every(isTranscriptStep)) {
+    return {
+      tag: "invalid",
+      message: "Scripted transcript contains an invalid step",
+    };
+  }
+  const sequence = validateTranscriptSequence(steps);
+  if (sequence.tag === "invalid") return sequence;
+  if (
+    steps.some((step) => step.responseSha256 !== sha256Canonical(step.response))
+  ) {
+    return {
+      tag: "invalid",
+      message: "Scripted transcript contains a response hash mismatch",
+    };
+  }
+  return { tag: "valid", value: { header, steps } };
 }
 
 export function mcpToolExchanges(
@@ -119,6 +188,8 @@ export function mcpToolExchanges(
 ):
   | { readonly tag: "valid"; readonly exchanges: readonly McpToolExchange[] }
   | { readonly tag: "invalid"; readonly message: string } {
+  const sequence = validateTranscriptSequence(steps);
+  if (sequence.tag === "invalid") return sequence;
   const pending = new Map<
     string,
     { readonly seq: number; readonly tool: string; readonly args: unknown }

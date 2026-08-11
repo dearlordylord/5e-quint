@@ -10,8 +10,8 @@ import {
   isJsonRecord,
   isMcpTranscriptStep,
   isTranscriptHeader,
-  isTranscriptStep,
   mcpToolExchanges,
+  parseScriptedTranscript,
   repoRoot,
   sha256Canonical,
   type TranscriptHeader,
@@ -133,6 +133,27 @@ function required(value: string | undefined, name: string): string {
   return value ?? fail(`Missing required ${name}`);
 }
 
+function positiveRunId(value: string): number {
+  const runId = Number(value);
+  return Number.isInteger(runId) && runId > 0
+    ? runId
+    : fail("--run must be a positive integer");
+}
+
+function verdictClass(value: string): (typeof VERDICT_CLASSES)[number] {
+  return (
+    VERDICT_CLASSES.find((candidate) => candidate === value) ??
+    fail(
+      `Invalid --class ${value}; expected one of ${VERDICT_CLASSES.join(", ")}`,
+    )
+  );
+}
+
+function runExists(db: DatabaseSync, runId: number): boolean {
+  const run = db.prepare("SELECT id FROM runs WHERE id = ?").get(runId);
+  return isJsonRecord(run) && run.id === runId;
+}
+
 export function ingest(args: readonly string[]): void {
   const [transcriptArg, ...rest] = args;
   const transcriptPath = required(transcriptArg, "<transcript.jsonl>");
@@ -214,17 +235,8 @@ function reportSteps(
   records: readonly unknown[],
 ): readonly TranscriptStep[] {
   if (header.kind === "scripted-probe") {
-    if (!records.every(isTranscriptStep)) {
-      return fail("Scripted transcript contains an invalid step");
-    }
-    if (
-      records.some(
-        (step) => step.responseSha256 !== sha256Canonical(step.response),
-      )
-    ) {
-      return fail("Scripted transcript contains a response hash mismatch");
-    }
-    return records;
+    const parsed = parseScriptedTranscript([header, ...records]);
+    return parsed.tag === "valid" ? parsed.value.steps : fail(parsed.message);
   }
   if (!records.every(isMcpTranscriptStep)) {
     return fail("Freeplay transcript contains an invalid MCP record");
@@ -237,35 +249,50 @@ function reportSteps(
 
 function verdict(args: readonly string[]): void {
   const dbPath = required(flagValue(args, "--db"), "--db");
-  const runId = required(flagValue(args, "--run"), "--run");
-  const verdictClass = required(flagValue(args, "--class"), "--class");
+  const runId = positiveRunId(required(flagValue(args, "--run"), "--run"));
+  const parsedVerdictClass = verdictClass(
+    required(flagValue(args, "--class"), "--class"),
+  );
   const claim = required(flagValue(args, "--claim"), "--claim");
   const evidence = required(flagValue(args, "--evidence"), "--evidence");
   const reviewer = required(flagValue(args, "--reviewer"), "--reviewer");
-  if (!VERDICT_CLASSES.some((candidate) => candidate === verdictClass)) {
-    fail(
-      `Invalid --class ${verdictClass}; expected one of ${VERDICT_CLASSES.join(", ")}`,
-    );
-  }
 
   const db = openDb(dbPath);
+  if (!runExists(db, runId)) {
+    db.close();
+    fail(`Unknown run ${runId}`);
+  }
   const createdAt = new Date().toISOString();
-  const issueFingerprint = recordIssue(db, verdictClass, claim, createdAt);
-  const info = db
-    .prepare(
-      "INSERT INTO verdicts(runId, class, claim, evidence, reviewer, createdAt, issueFingerprint) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    )
-    .run(
-      Number(runId),
-      verdictClass,
-      claim,
-      evidence,
-      reviewer,
-      createdAt,
-      issueFingerprint,
-    );
+  const insertVerdict = db.prepare(
+    "INSERT INTO verdicts(runId, class, claim, evidence, reviewer, createdAt, issueFingerprint) VALUES (?, ?, ?, ?, ?, ?, ?)",
+  );
+  db.exec("BEGIN");
+  const info = (() => {
+    try {
+      const issueFingerprint = recordIssue(
+        db,
+        parsedVerdictClass,
+        claim,
+        createdAt,
+      );
+      const inserted = insertVerdict.run(
+        runId,
+        parsedVerdictClass,
+        claim,
+        evidence,
+        reviewer,
+        createdAt,
+        issueFingerprint,
+      );
+      db.exec("COMMIT");
+      return inserted;
+    } catch (error) {
+      db.exec("ROLLBACK");
+      throw error;
+    }
+  })();
   console.log(
-    `Verdict ${Number(info.lastInsertRowid)} recorded for run ${runId}: ${verdictClass}`,
+    `Verdict ${Number(info.lastInsertRowid)} recorded for run ${runId}: ${parsedVerdictClass}`,
   );
   db.close();
 }
@@ -274,10 +301,7 @@ export function review(args: readonly string[]): void {
   const [reviewArg, ...rest] = args;
   const reviewPath = required(reviewArg, "<review.json>");
   const dbPath = required(flagValue(rest, "--db"), "--db");
-  const runId = Number(required(flagValue(rest, "--run"), "--run"));
-  if (!Number.isInteger(runId) || runId < 1) {
-    fail("--run must be a positive integer");
-  }
+  const runId = positiveRunId(required(flagValue(rest, "--run"), "--run"));
   const decoded = Schema.decodeUnknownEither(ReviewOutputSchema, {
     onExcessProperty: "error",
   })(JSON.parse(readFileSync(resolve(repoRoot, reviewPath), "utf8")));
@@ -285,8 +309,7 @@ export function review(args: readonly string[]): void {
     fail(`Invalid review output: ${decoded.left.message}`);
 
   const db = openDb(dbPath);
-  const run = db.prepare("SELECT id FROM runs WHERE id = ?").get(runId);
-  if (!isJsonRecord(run) || run.id !== runId) {
+  if (!runExists(db, runId)) {
     db.close();
     fail(`Unknown run ${runId}`);
   }

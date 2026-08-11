@@ -209,6 +209,7 @@ class Driver {
     actNumber: number,
   ): JsonObject {
     let response: JsonObject | undefined;
+    const attemptedFills: JsonObject[] = [];
     for (let guard = 0; guard < 16; guard++) {
       const fill = this.nextFill(
         response,
@@ -226,8 +227,14 @@ class Driver {
         subjectJson: JSON.stringify(selected.subject),
         fillJson: JSON.stringify(fill),
       });
+      attemptedFills.push(fill);
       if (isJsonObject(response.result) && response.result.tag === "resolved") {
-        return response;
+        return validateMeleeAttackHitResolution(
+          response,
+          attemptedFills,
+          resolution,
+          actNumber,
+        );
       }
     }
     fail(`Act ${actNumber}: fill loop did not converge`);
@@ -291,6 +298,32 @@ class Driver {
       ),
     );
   }
+}
+
+function validateMeleeAttackHitResolution(
+  response: JsonObject,
+  attemptedFills: readonly JsonObject[],
+  resolution: Extract<
+    ScriptAct,
+    { readonly kind: "meleeAttackHit" }
+  >["resolution"],
+  actNumber: number,
+): JsonObject {
+  const fillKinds = attemptedFills.map((fill) => fill.kind);
+  if (!fillKinds.includes("rolledDice")) {
+    fail(
+      `Act ${actNumber}: meleeAttackHit resolved before the required damage roll`,
+    );
+  }
+  if (
+    resolution.damage.kind === "reducesToZeroHitPoints" &&
+    !fillKinds.includes("attackDamageDisposition")
+  ) {
+    fail(
+      `Act ${actNumber}: reducesToZeroHitPoints resolved before the required damage disposition`,
+    );
+  }
+  return response;
 }
 
 type SelectedAct = {
