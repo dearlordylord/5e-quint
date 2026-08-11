@@ -9,30 +9,28 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import {
+  CYCLOMATIC_COMPLEXITY_THRESHOLD,
+  CYCLOMATIC_COMPLEXITY_VARIANT,
+  complexityBaselineIssues,
+  complexityMeasurementsFromEslint,
+  complexityRegressionsAgainstBaseline,
+} from "./cyclomatic-complexity-policy.mjs";
+import {
+  NON_PRODUCTION_TYPESCRIPT_GLOBS,
+  PRODUCTION_TYPESCRIPT_INCLUDE,
+  sourceGlobsUnder,
+} from "./workspace-source-policy.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const PACKAGE_ROOT = join(ROOT, "packages");
-const PRODUCTION_INCLUDE = "src/**/*.{ts,tsx}";
-const COMMON_COVERAGE_EXCLUDES = [
-  "src/**/*.test.ts",
-  "src/**/*.test.tsx",
-  "src/**/*.mbt.test.ts",
-  "src/**/*.test-support.ts",
-  "src/**/*.qnt-replay.test-support.ts",
-  "src/**/*.replay-data.test-support.ts",
-  "src/**/*.gen.*",
-];
-const COMMON_DUPLICATION_EXCLUDES = [
-  "**/*.test.ts",
-  "**/*.test.tsx",
-  "**/*.mbt.test.ts",
-  "**/*.test-support.ts",
-  "**/*.qnt-replay.test-support.ts",
-  "**/*.replay-data.test-support.ts",
-  "**/*.gen.*",
-];
+const COMPLEXITY_BASELINE_PATH = join(
+  ROOT,
+  "cyclomatic-complexity-baseline.json",
+);
+const COMMON_COVERAGE_EXCLUDES = sourceGlobsUnder("src");
 
 // Every production package must appear here. Coverage floors are temporary
 // non-regression ratchets, initially measured on 2026-07-26, incrementally
@@ -227,7 +225,7 @@ function checkDuplication() {
           "--threshold",
           "100",
           "--ignore",
-          COMMON_DUPLICATION_EXCLUDES.join(","),
+          NON_PRODUCTION_TYPESCRIPT_GLOBS.join(","),
           "--reporters",
           "json",
           "--output",
@@ -257,6 +255,96 @@ function checkDuplication() {
   }
 }
 
+async function checkCyclomaticComplexity(pruneBaseline) {
+  checkInventory();
+  const { ESLint } = await import("eslint");
+  const { complexityIdentityResolver } =
+    await import("./cyclomatic-complexity-identities.mjs");
+  const eslint = new ESLint({
+    cwd: ROOT,
+    overrideConfigFile: join(ROOT, "eslint.complexity.config.mjs"),
+    errorOnUnmatchedPattern: false,
+  });
+  const results = await eslint.lintFiles(
+    Object.keys(PACKAGE_POLICIES).map(
+      (packageName) => `packages/${packageName}/src/**/*.{ts,tsx,mts,cts}`,
+    ),
+  );
+  const fatalDiagnostics = results.flatMap((result) =>
+    result.messages
+      .filter((message) => message.fatal === true)
+      .map(
+        (message) =>
+          `${relative(ROOT, result.filePath)}:${message.line ?? 0}:${message.column ?? 0}: ${message.message}`,
+      ),
+  );
+  if (fatalDiagnostics.length > 0) {
+    throw new Error(
+      `Cyclomatic complexity analysis failed:\n${fatalDiagnostics.join("\n")}`,
+    );
+  }
+
+  const measurements = complexityMeasurementsFromEslint(
+    ROOT,
+    results,
+    complexityIdentityResolver(),
+  );
+  const baseline = JSON.parse(readFileSync(COMPLEXITY_BASELINE_PATH, "utf8"));
+  if (pruneBaseline) {
+    const policyIssues = complexityBaselineIssues(
+      { ...baseline, files: measurements },
+      CYCLOMATIC_COMPLEXITY_THRESHOLD,
+      CYCLOMATIC_COMPLEXITY_VARIANT,
+      measurements,
+    );
+    const regressions = complexityRegressionsAgainstBaseline(
+      baseline,
+      measurements,
+    );
+    if (policyIssues.length > 0 || regressions.length > 0) {
+      throw new Error(
+        `Cyclomatic complexity baseline cannot be pruned:\n${[
+          ...policyIssues,
+          ...regressions,
+        ].join("\n")}`,
+      );
+    }
+    writeFileSync(
+      COMPLEXITY_BASELINE_PATH,
+      `${JSON.stringify(
+        {
+          threshold: CYCLOMATIC_COMPLEXITY_THRESHOLD,
+          variant: CYCLOMATIC_COMPLEXITY_VARIANT,
+          files: measurements,
+        },
+        undefined,
+        2,
+      )}\n`,
+    );
+    process.stdout.write("Pruned the cyclomatic complexity baseline.\n");
+    return;
+  }
+
+  const issues = complexityBaselineIssues(
+    baseline,
+    CYCLOMATIC_COMPLEXITY_THRESHOLD,
+    CYCLOMATIC_COMPLEXITY_VARIANT,
+    measurements,
+  );
+  if (issues.length > 0) {
+    throw new Error(
+      `Cyclomatic complexity baseline is out of sync:\n${issues.join("\n")}\nReduce regressions; after improvements, run pnpm check:complexity:prune.`,
+    );
+  }
+  const violationCount = Object.values(measurements).reduce(
+    (count, identities) => count + Object.keys(identities).length,
+    0,
+  );
+  process.stdout.write(
+    `Cyclomatic complexity is within the exact baseline: ${violationCount} existing violations across ${Object.keys(measurements).length} files; new production functions must be at most ${CYCLOMATIC_COMPLEXITY_THRESHOLD}.\n`,
+  );
+}
+
 function coverageArguments(coverage) {
   return [
     "exec",
@@ -266,7 +354,7 @@ function coverageArguments(coverage) {
     "**/*.mbt.test.ts",
     "--coverage",
     "--coverage.reporter=text-summary",
-    `--coverage.include=${PRODUCTION_INCLUDE}`,
+    `--coverage.include=${PRODUCTION_TYPESCRIPT_INCLUDE}`,
     ...COMMON_COVERAGE_EXCLUDES.map(
       (excluded) => `--coverage.exclude=${excluded}`,
     ),
@@ -355,7 +443,7 @@ function selfTest() {
         "--coverage.provider=v8",
         "--coverage.reporter=json-summary",
         `--coverage.reportsDirectory=${coverageReports}`,
-        `--coverage.include=${PRODUCTION_INCLUDE}`,
+        `--coverage.include=${PRODUCTION_TYPESCRIPT_INCLUDE}`,
         "--coverage.exclude=src/**/*.test.ts",
         "--maxWorkers=1",
       ],
@@ -379,7 +467,9 @@ function selfTest() {
   for (const policy of Object.values(PACKAGE_POLICIES)) {
     if (policy.coverage !== "packageConfig") {
       const args = coverageArguments(policy.coverage);
-      assert(args.includes(`--coverage.include=${PRODUCTION_INCLUDE}`));
+      assert(
+        args.includes(`--coverage.include=${PRODUCTION_TYPESCRIPT_INCLUDE}`),
+      );
       assert(
         !COMMON_COVERAGE_EXCLUDES.some(
           (excluded) => excluded === "src/**/*.ts" || excluded === "src/**",
@@ -396,10 +486,12 @@ const command = process.argv[2];
 if (command === "--self-test") selfTest();
 else if (command === "inventory") checkInventory();
 else if (command === "circular") checkCircularDependencies();
+else if (command === "complexity") await checkCyclomaticComplexity(false);
+else if (command === "complexity:prune") await checkCyclomaticComplexity(true);
 else if (command === "duplication") checkDuplication();
 else if (command === "coverage") checkCoverage();
 else {
   throw new Error(
-    "Usage: workspace-quality-harness.mjs --self-test|inventory|circular|duplication|coverage",
+    "Usage: workspace-quality-harness.mjs --self-test|inventory|circular|complexity|complexity:prune|duplication|coverage",
   );
 }
