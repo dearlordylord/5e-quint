@@ -3,6 +3,7 @@
 
 module battleRuntimeWeaponShieldReactionResolutionTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
   import battleRuntimeWeaponShieldReactionResolution.* from "./battle-runtime-weapon-shield-reaction-resolution"
 
