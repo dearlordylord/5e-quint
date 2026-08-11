@@ -8,7 +8,7 @@ import type {
 } from "./battle-state-execution.ts";
 import type { CombatantId } from "./identity.ts";
 
-export function battleStateWithSyntheticRayOfEnfeeblementEndTurnSave(
+export function battleStateWithSyntheticWeakeningEndTurnSave(
   state: BattleState,
   sourceId: CombatantId,
   targetId: CombatantId,
@@ -16,14 +16,12 @@ export function battleStateWithSyntheticRayOfEnfeeblementEndTurnSave(
   const source = state.combatants.get(sourceId);
   const target = state.combatants.get(targetId);
   if (source === undefined || target === undefined) {
-    throw new Error(
-      "Expected synthetic Ray of Enfeeblement End Turn save combatants.",
-    );
+    throw new Error("Expected synthetic weakening End Turn save combatants.");
   }
   const sourceProcedureRef = battleProcedureExecutionRefForTest(
     "synthetic-command-delegated-end-turn-save",
   );
-  const rayOfEnfeeblement = {
+  const weakeningEffect = {
     kind: "abilityD20TestRollModeEndTurnSave",
     sourceProcedureRef,
     sourceCombatantId: sourceId,
@@ -48,7 +46,7 @@ export function battleStateWithSyntheticRayOfEnfeeblementEndTurnSave(
       })
       .set(targetId, {
         ...target,
-        activeEffects: [...target.activeEffects, rayOfEnfeeblement],
+        activeEffects: [...target.activeEffects, weakeningEffect],
       }),
   };
 }

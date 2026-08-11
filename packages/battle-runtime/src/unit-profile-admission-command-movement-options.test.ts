@@ -7,7 +7,7 @@ import {
   opportunityAttackProcedureSelectionForTest,
   reactionChoiceWithSubject,
 } from "./battle-runtime.test-support.ts";
-import { battleStateWithSyntheticRayOfEnfeeblementEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
+import { battleStateWithSyntheticWeakeningEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
 import {
   commandUnitId,
   spellCasterId,
@@ -228,7 +228,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const committedState = battleStateWithSyntheticRayOfEnfeeblementEndTurnSave(
+    const committedState = battleStateWithSyntheticWeakeningEndTurnSave(
       targetTurn.state,
       spellCasterId,
       spellTargetId,
@@ -720,7 +720,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const committedState = battleStateWithSyntheticRayOfEnfeeblementEndTurnSave(
+    const committedState = battleStateWithSyntheticWeakeningEndTurnSave(
       targetTurn.state,
       spellCasterId,
       spellTargetId,
@@ -776,6 +776,17 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       throw new Error("Expected Command Flee End Turn save after decline.");
     }
     expect(afterDecline.snapshot).toEqual(committedSnapshot);
+    expect(afterDecline.state.interruptStack).toEqual([
+      {
+        kind: "replayContinuation",
+        continuation: {
+          kind: "replay",
+          subject: fleeAct.subject,
+          fills: [movementFill],
+        },
+        handledInterruptTrigger: "opportunityAttack",
+      },
+    ]);
     expect(requireCombatant(afterDecline.state, spellTargetId)).toMatchObject({
       movementSpentFeet: movementFeet(0),
       activeEffects: expect.arrayContaining([
@@ -798,8 +809,17 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     expect(rejectedReplay).toMatchObject({
       tag: "invalid",
       reason: "invalidFill",
+      message: "End Turn received duplicate Saving Throw outcome fills.",
       snapshot: committedSnapshot,
-      routeEvents: expect.any(Array),
+      routeEvents: [
+        {
+          kind: "resolveBattleSubject",
+          subject: "commandEffect",
+          fill: "savingThrowOutcome",
+          holes: [],
+          owner: "battleHoleFrontier",
+        },
+      ],
     });
     const replayed = resolveBattleSubject({
       state: afterDecline.state,

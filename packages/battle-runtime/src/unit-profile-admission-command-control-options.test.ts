@@ -3,9 +3,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel
 import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { resolveCommandFollowUp } from "./battle-reducer/command-procedures.ts";
-import { admitBattleResolutionInput } from "./battle-reducer/resolution-admission.ts";
-import { battleStateWithSyntheticRayOfEnfeeblementEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
+import { battleStateWithSyntheticWeakeningEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
   requireCharacterSpellProcedureRefForTest,
@@ -287,7 +285,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const committedState = battleStateWithSyntheticRayOfEnfeeblementEndTurnSave(
+    const committedState = battleStateWithSyntheticWeakeningEndTurnSave(
       targetTurn.state,
       spellCasterId,
       spellTargetId,
@@ -337,21 +335,22 @@ describe("QMBT14 deterministic Command control option admission", () => {
     });
     expect(rejectedDuplicate.snapshot).toEqual(committedSnapshot);
 
-    const delegatedAdmission = admitBattleResolutionInput({
+    const replayed = resolveBattleSubject({
       state: committedState,
       subject: grovelAct.subject,
-      fills: [saveFill, saveFill],
+      fills: [saveFill],
     });
-    if (delegatedAdmission.tag !== "admitted") {
-      throw new Error("Expected Command Grovel input admission.");
+    expect(replayed).toMatchObject({
+      tag: "resolved",
+      snapshot: { currentActorId: spellCasterId },
+    });
+    if (replayed.tag !== "resolved") {
+      throw new Error("Expected Command Grovel replay to resolve.");
     }
-    const delegatedRejection = resolveCommandFollowUp(delegatedAdmission.input);
-    expect(delegatedRejection).toMatchObject({
-      tag: "invalid",
-      reason: "invalidFill",
-      message: "End Turn received duplicate Saving Throw outcome fills.",
+    expect(requireCombatant(replayed.state, spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ prone: true }),
+      activeEffects: [],
     });
-    expect(delegatedRejection.snapshot).toEqual(committedSnapshot);
   });
 
   test("a failed Command save opens the target's readied-spell Reaction", () => {
@@ -639,12 +638,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
       ],
     });
 
-    const committedHaltState =
-      battleStateWithSyntheticRayOfEnfeeblementEndTurnSave(
-        targetTurn.state,
-        spellCasterId,
-        spellTargetId,
-      );
+    const committedHaltState = battleStateWithSyntheticWeakeningEndTurnSave(
+      targetTurn.state,
+      spellCasterId,
+      spellTargetId,
+    );
     const committedHaltSnapshot = snapshotBattle(committedHaltState);
     const awaitingHaltSave = endTurn({
       state: committedHaltState,
@@ -755,12 +753,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
         initialHoles: [],
       }),
     ]);
-    const committedWithSave =
-      battleStateWithSyntheticRayOfEnfeeblementEndTurnSave(
-        targetTurn.state,
-        spellCasterId,
-        spellTargetId,
-      );
+    const committedWithSave = battleStateWithSyntheticWeakeningEndTurnSave(
+      targetTurn.state,
+      spellCasterId,
+      spellTargetId,
+    );
     const dropSubject = targetActs[0]!.subject;
     if (
       dropSubject.tag !== "runtimeCommand" ||
@@ -768,17 +765,11 @@ describe("QMBT14 deterministic Command control option admission", () => {
     ) {
       throw new Error("Expected Command Drop subject.");
     }
-    const delegatedAdmission = admitBattleResolutionInput({
+    const awaitingEndTurnSave = resolveBattleSubject({
       state: committedWithSave,
       subject: dropSubject,
       fills: [],
     });
-    if (delegatedAdmission.tag !== "admitted") {
-      throw new Error("Expected Command Drop input admission.");
-    }
-    const awaitingEndTurnSave = resolveCommandFollowUp(
-      delegatedAdmission.input,
-    );
     expect(awaitingEndTurnSave).toMatchObject({
       tag: "needsHoles",
       state: committedWithSave,
@@ -793,7 +784,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
       awaitingEndTurnSave,
       "savingThrowOutcome",
     );
-    const resolvingAdmission = admitBattleResolutionInput({
+    const resolvedDelegation = resolveBattleSubject({
       state: committedWithSave,
       subject: dropSubject,
       fills: [
@@ -802,10 +793,6 @@ describe("QMBT14 deterministic Command control option admission", () => {
         ]),
       ],
     });
-    if (resolvingAdmission.tag !== "admitted") {
-      throw new Error("Expected resolving Command Drop input admission.");
-    }
-    const resolvedDelegation = resolveCommandFollowUp(resolvingAdmission.input);
     expect(resolvedDelegation).toMatchObject({
       tag: "resolved",
       droppedObjects: [
