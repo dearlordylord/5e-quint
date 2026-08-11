@@ -337,6 +337,81 @@ function runSelfTest() {
   assert.equal(result.matrix.semanticCoreRunBlockFindings.length, 0);
   assert.equal(result.matrix.kernelIrBoundaries.length, 8);
 
+  const bridgeParityObligationsPath = path.join(
+    root,
+    "plans",
+    "rules-kernel-coverage",
+    "obligations.jsonl",
+  );
+  const bridgeParityOwnerRolesPath = path.join(
+    root,
+    "plans",
+    "rules-kernel-coverage",
+    "qnt-owner-roles.jsonl",
+  );
+  const initialBridgeParityObligationsText = fs.readFileSync(
+    bridgeParityObligationsPath,
+    "utf8",
+  );
+  const initialBridgeParityOwnerRolesText = fs.readFileSync(
+    bridgeParityOwnerRolesPath,
+    "utf8",
+  );
+  const [bridgeParitySample, bridgeParityBoundary] =
+    initialBridgeParityObligationsText
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+  writeFile(
+    bridgeParityObligationsPath,
+    [
+      JSON.stringify({
+        ...bridgeParitySample,
+        qntOwners: [...bridgeParitySample.qntOwners, "sample.mbt.qnt"],
+      }),
+      JSON.stringify({
+        ...bridgeParityBoundary,
+        parityWitnesses: bridgeParitySample.parityWitnesses,
+      }),
+    ].join("\n") + "\n",
+  );
+  writeFile(
+    bridgeParityOwnerRolesPath,
+    initialBridgeParityOwnerRolesText +
+      JSON.stringify({
+        ownerPath: "sample.mbt.qnt",
+        role: "bridge",
+        evidence: "Synthetic bridge must not serve as parity evidence.",
+      }) +
+      "\n",
+  );
+  writeFile(
+    path.join(root, "sample.mbt.qnt"),
+    [
+      "// KERNEL-COVERAGE: qnt-owner BATTLE.SAMPLE",
+      "module sampleMbt { action step = any { doSample, } action doSample = true }",
+    ].join("\n") + "\n",
+  );
+  const bridgeParityResult = buildKernelCoverage({ root });
+  assert.ok(
+    bridgeParityResult.issues.includes(
+      "BATTLE.SAMPLE.parityWitnesses[0].qntSpecPath sample.mbt.qnt is classified as bridge; bridge modules are projection traceability, not parity evidence.",
+    ),
+    `Expected bridge parity witness issue, got ${JSON.stringify(bridgeParityResult.issues)}`,
+  );
+  assert.ok(
+    bridgeParityResult.issues.includes(
+      "BATTLE.BOUNDARY.parityWitnesses[0].qntSpecPath sample.mbt.qnt is classified as bridge; bridge modules are projection traceability, not parity evidence.",
+    ),
+    `Expected non-covered bridge parity witness issue, got ${JSON.stringify(bridgeParityResult.issues)}`,
+  );
+  writeFile(bridgeParityObligationsPath, initialBridgeParityObligationsText);
+  writeFile(bridgeParityOwnerRolesPath, initialBridgeParityOwnerRolesText);
+  writeFile(
+    path.join(root, "sample.mbt.qnt"),
+    "module sampleMbt { action step = any { doSample, } action doSample = true }\n",
+  );
+
   const unregisteredPackageQntPath = path.join(
     root,
     "packages",
@@ -1801,8 +1876,8 @@ function runSelfTest() {
       "profile-obligations.jsonl",
     ),
     [
-      '{"profileId":"spell.sample","obligationIds":["BATTLE.SAMPLE"]}',
-      '{"profileId":"spell.sample","obligationIds":["BATTLE.SAMPLE"]}',
+      '{"profileId":"spell.sample","semanticOwnerPolicy":"unknown-policy","obligationIds":["BATTLE.SAMPLE"]}',
+      '{"profileId":"spell.sample","semanticOwnerPolicy":"profile-local-semantic-core","obligationIds":["BATTLE.SAMPLE"]}',
     ].join("\n") + "\n",
   );
   const invalidResult = buildKernelCoverage({ root });
@@ -1829,6 +1904,12 @@ function runSelfTest() {
       "BATTLE.SAMPLE.profiles is derived from profile-obligations.jsonl; remove the field from obligations.jsonl. Derived profiles: spell.sample.",
     ),
     `Expected duplicate profiles field issue, got ${JSON.stringify(invalidResult.issues)}`,
+  );
+  assert.ok(
+    invalidResult.issues.includes(
+      "profile-obligations row 1.semanticOwnerPolicy must be shared-semantic-core or profile-local-semantic-core.",
+    ),
+    `Expected unknown semantic owner policy issue, got ${JSON.stringify(invalidResult.issues)}`,
   );
   assert.ok(
     invalidResult.issues.includes(

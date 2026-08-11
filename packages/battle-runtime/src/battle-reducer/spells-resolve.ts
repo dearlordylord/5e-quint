@@ -22,6 +22,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE
 // Spell resolution dispatch owns the spell-act
 // resolvers (`resolveSpellAct`, `resolveAttackBurstSaveDamageSpellAct`,
 // `resolveSpellRelease`, `resolvePreparedSlotSpellAct`, …),

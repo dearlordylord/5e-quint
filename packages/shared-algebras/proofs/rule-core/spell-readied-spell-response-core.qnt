@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.readied-action-time-spell
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.READIED_RESPONSE_PROCEDURE
 
 module spellReadiedSpellResponseCore {
   import actionTurnProcedures.* from "./action-turn-procedures"

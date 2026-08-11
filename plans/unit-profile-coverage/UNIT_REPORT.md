@@ -110,7 +110,7 @@ The Unit matrix owns authored-content breadth. `plans/rules-kernel-coverage/prof
 | `spell.invocation-spike-growth-movement-hazard` | spell-invocation | mapped-open | _plan-update-required_ | _none_ | `BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD` (covered) |
 | `character-sheet.class-feature-prepared-spell-access` | character-sheet | mapped-open | _plan-update-required_ | _none_ | `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered) |
 | `character-sheet.druid-circle-land-spell-access` | character-sheet | mapped-open | _plan-update-required_ | _none_ | `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered) |
-| `spell.invocation-haste-positive` | spell-invocation | mapped-open | _plan-update-required_ | _none_ | `BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE` (covered), `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` (covered), `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` (covered) |
+| `spell.invocation-haste-positive` | spell-invocation | mapped-open | _plan-update-required_ | _none_ | `BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE` (covered), `BATTLE.SPELL.HASTE_POSITIVE_EFFECTS` (covered) |
 | `spell.invocation-glyph-durable-occurrence` | spell-invocation | mapped-open | _plan-update-required_ | _none_ | `BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE` (covered) |
 | `spell.invocation-glyph-explosive-rune-release` | spell-invocation | mapped-open | _plan-update-required_ | _none_ | `BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE` (covered) |
 | `spell.invocation-glyph-stored-spell-release` | spell-invocation | mapped-open | _plan-update-required_ | _none_ | `BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE` (covered) |

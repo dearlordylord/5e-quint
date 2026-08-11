@@ -7,7 +7,7 @@ import { spellCastCandidate } from "../spell-cast-candidate.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SPIRITUAL_WEAPON_ATTACK_PROXY
 //
 // The Spiritual Weapon profile family: a prepared Bonus Action spell creates a
 // spell-owned spectral force attack proxy, and later Bonus Actions move the

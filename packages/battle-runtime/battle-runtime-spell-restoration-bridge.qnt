@@ -1,5 +1,5 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.HIT_POINT_RESTORATION
 
 module battleRuntimeSpellRestorationBridge {
   import spellDefinitionProfiles.* from "../shared-algebras/proofs/rule-core/spell-definition-profiles"
