@@ -178,7 +178,6 @@ export {
   type CharacterBattlePointPoolResourceState,
   type CharacterBattlePointPoolSpendIssue,
   type CharacterBattleResourceInit,
-  type CharacterBattleResourceAdmission,
   type CharacterBattleResourceExecutionFacts,
   type CharacterBattleResourceOwnership,
   type CharacterBattleResourceState,
