@@ -7,6 +7,7 @@ import type {
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import {
+  activeEffectSpellRouteNextDiscoveryOwner,
   battleReducerRouteFill,
   battleReducerRouteHoles,
   discoverBattleActsRoute,
@@ -79,7 +80,13 @@ export function conditionImmunityTemporaryHitPointRouteForResolution(
     );
   }
   if (result.tag === "needsHoles") {
-    route.push(discoverBattleActsRoute(SUBJECT, holes, nextOwner(holes)));
+    route.push(
+      discoverBattleActsRoute(
+        SUBJECT,
+        holes,
+        activeEffectSpellRouteNextDiscoveryOwner(holes),
+      ),
+    );
   }
   if (result.tag === "resolved") {
     route.push(
@@ -123,15 +130,6 @@ function fillOwner(fill: BattleReducerRouteFill): BattleReducerRouteOwnerGroup {
   if (fill === "damageTypeChoice") return "battleActiveEffect";
   if (fill === "attackRoll") return "battleAttackRoll";
   if (fill === "rolledDice") return "battleHitPoint";
-  return "battleSpellSlotAndActionEconomy";
-}
-
-function nextOwner(
-  holes: readonly BattleReducerRouteHole[],
-): BattleReducerRouteOwnerGroup {
-  if (holes.includes("targetChoice")) return "battleTargetSelection";
-  if (holes.includes("attackRoll")) return "battleAttackRoll";
-  if (holes.includes("rolledDice")) return "battleHitPoint";
   return "battleSpellSlotAndActionEconomy";
 }
 
