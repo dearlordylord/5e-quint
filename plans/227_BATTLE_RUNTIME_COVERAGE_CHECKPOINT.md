@@ -63,26 +63,26 @@ replace the public root diagnostic above or establish the state of other
 packages.
 
 - Date: 2026-08-11
-- Git HEAD: `efb1da523`
+- Git HEAD: `384dd3e6b`
 - Command: the checked-in battle-runtime Vitest coverage invocation, with one
   worker, under `with_resource_lock_owner scripts/with-broad-workspace-lock.sh`
 - Result: exit 0
-- Duration: 61.47 seconds
-- Battle-runtime tests: 216/216 files passed; 2,337 tests passed and 53 skipped
-  (2,390 total)
+- Duration: 63.91 seconds
+- Battle-runtime tests: 217/217 files passed; 2,345 tests passed and 53 skipped
+  (2,398 total)
 
-| Metric     | Pre-M22 exact covered / total | Current exact covered / total | Covered / total change |     Uncovered change | Percentage change |
+| Metric     | Pre-M24 exact covered / total | Current exact covered / total | Covered / total change |     Uncovered change | Percentage change |
 | ---------- | ----------------------------: | ----------------------------: | ---------------------: | -------------------: | ----------------: |
-| Statements |    121,226 / 124,871 (97.08%) |    121,280 / 124,892 (97.10%) |                54 / 21 | 3,645 -> 3,612 (-33) |           +0.02pp |
-| Branches   |      30,853 / 32,718 (94.29%) |      30,883 / 32,730 (94.35%) |                30 / 12 | 1,865 -> 1,847 (-18) |           +0.06pp |
+| Statements |    121,280 / 124,892 (97.10%) |    121,327 / 124,892 (97.14%) |                 47 / 0 | 3,612 -> 3,565 (-47) |           +0.04pp |
+| Branches   |      30,883 / 32,730 (94.35%) |      30,917 / 32,751 (94.40%) |                34 / 21 | 1,847 -> 1,834 (-13) |           +0.05pp |
 | Functions  |          4,813 / 4,813 (100%) |          4,813 / 4,813 (100%) |                  0 / 0 |               0 -> 0 |                 0 |
-| Lines      |    121,226 / 124,871 (97.08%) |    121,280 / 124,892 (97.10%) |                54 / 21 | 3,645 -> 3,612 (-33) |           +0.02pp |
+| Lines      |    121,280 / 124,892 (97.10%) |    121,327 / 124,892 (97.14%) |                 47 / 0 | 3,612 -> 3,565 (-47) |           +0.04pp |
 
 The checked-in battle-runtime ratchets remain 97/97/100/94 for statements,
 lines, functions, and branches. No threshold was lowered. The measurement
-baseline was measured at production commit `a757810a1`. The M22 delta includes
-the resource-admission milestone and its review corrections; the table reports
-the exact global movement rather than the larger focused source-site estimate.
+baseline is the prior exact M22 checkpoint. Production did not change in M24;
+the branch denominator movement comes from V8's dynamically reported branch
+map, so the table reports covered, total, and uncovered changes separately.
 
 ## Remaining static 99% gaps
 
@@ -91,12 +91,23 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 121,280 | 124,892 |                  123,644 |         2,364 |
-| Branches   |  30,883 |  32,730 |                   32,403 |         1,520 |
+| Statements | 121,327 | 124,892 |                  123,644 |         2,317 |
+| Branches   |  30,917 |  32,751 |                   32,424 |         1,507 |
 | Functions  |   4,813 |   4,813 |                    4,765 |             0 |
-| Lines      | 121,280 | 124,892 |                  123,644 |         2,364 |
+| Lines      | 121,327 | 124,892 |                  123,644 |         2,317 |
 
 ## Milestone context
+
+M24 covered Ice Knife's attack-burst boundaries through public battle
+procedures: Halfling natural-one rerolls, Sanctuary retargeting, Mirror Image
+interception, distinct attack and burst relationship decisions, and spell-cast,
+attack-hit, failed-save, and after-damage reaction windows. Luna self-review
+replaced manually injected active effects with real casts. Independent root
+review then corrected Sanctuary and Animal Friendship caster classes, made the
+Mirror Image Wizard level-appropriate, strengthened the two damage-event
+relationship oracles, and renamed the suite after its rule owner. Review
+converged with eight focused tests, package typecheck, formatting, and the exact
+package gate above. The milestone is commit `384dd3e6b`.
 
 M22 hardened character resource and spellcasting admission through public
 battle-start boundaries. Malformed spell-slot expenditure, feature-prepared
@@ -174,8 +185,8 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting exact battle-runtime metric at 94.35%, with a
-static 99% gap of 1,520. The next coherent owner is the attack-control cohort
+Branches remain the limiting exact battle-runtime metric at 94.40%, with a
+static 99% gap of 1,507. The next coherent owner is the attack-control cohort
 across attack resolution, attack-roll projection, and stat-block attacks. Its
 pre-M21 residual was 172 statements and 75 branch arms; remeasure the files
 before implementation, then cover only public reachable action-resource,
