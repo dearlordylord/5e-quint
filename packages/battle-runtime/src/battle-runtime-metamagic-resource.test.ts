@@ -3306,6 +3306,11 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
     ({ spellId: selectedSpellId, procedure, spellLevel }) => {
       const session = saveMetamagicBattle({
         knownOptions: [carefulMetamagicOption()],
+        classLevels: [
+          { className: "sorcerer", level: 5 },
+          { className: "bard", level: 3 },
+        ],
+        spellcastingSourceClassName: "bard",
         preparedSpells: [selectedSpellId],
         spellSlots: [{ spellLevel, count: 1 }],
       });

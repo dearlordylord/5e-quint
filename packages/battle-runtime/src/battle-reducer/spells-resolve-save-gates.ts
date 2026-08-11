@@ -3203,28 +3203,20 @@ export function validateSavingThrowOutcomes(
 ): string | null {
   const outcomes = value.outcomes;
   if (invocation.procedure === "rollModifier") {
-    /* v8 ignore start -- Malformed roll-modifier save fill: discovery requests a non-empty outcome list without area geometry, so this rejects only an empty caller mutation. */
     if (outcomes.length === 0) {
       return "Save-gated roll modifier spell must include at least one target Saving Throw outcome.";
     }
-    /* v8 ignore stop */
-    /* v8 ignore start -- Malformed roll-modifier save fill: the selected-target adapter cannot attach area geometry to this hole, so this rejects only a caller mutation. */
     if ("area" in value) {
       return "Save-gated roll modifier spell outcomes must not include area facts.";
     }
-    /* v8 ignore stop */
     const seenTargets = new Set<CombatantId>();
     for (const outcome of outcomes) {
-      /* v8 ignore start -- Malformed roll-modifier save witness: discovery selects combatants from this battle, so this rejects only a caller-mutated foreign identity. */
       if (!state.combatants.has(outcome.targetId)) {
         return "Save-gated roll modifier spell target must be a combatant in this battle.";
       }
-      /* v8 ignore stop */
-      /* v8 ignore start -- Malformed roll-modifier save witness: the selected-target adapter emits each target once, so this rejects only a caller-mutated duplicate. */
       if (seenTargets.has(outcome.targetId)) {
         return "Save-gated roll modifier spell Saving Throw outcomes must not duplicate targets.";
       }
-      /* v8 ignore stop */
       seenTargets.add(outcome.targetId);
     }
     if (invocation.targeting.kind === "selfAndChosenLegalTargets") {
@@ -3236,9 +3228,7 @@ export function validateSavingThrowOutcomes(
     ) {
       return null;
     }
-    /* v8 ignore start -- The save-outcome validator is only called by save-gated procedures; no admitted roll-modifier invocation reaches this malformed target-count arm. */
     return "Save-gated roll modifier spell Saving Throw outcomes exceed the selected spell's target count.";
-    /* v8 ignore stop */
   }
   const targeting = spellSavingThrowTargeting(invocation);
   if (invocation.procedure === "sleepTargetAdmission") {
@@ -3256,7 +3246,6 @@ export function validateSavingThrowOutcomes(
     });
   }
   if (targeting.kind === "singleCombatant") {
-    /* v8 ignore start -- Malformed Saving Throw fill: discovery creates one selected-combatant hole without area facts, and its typed fill adapter preserves that target. These branches only reject caller-mutated cardinality, geometry, identity, or battle-membership fields; canonical outcome selections remain measured below. */
     if (outcomes.length === 0) {
       return "Save-gate spell must include at least one affected target Saving Throw outcome.";
     }
@@ -3272,7 +3261,6 @@ export function validateSavingThrowOutcomes(
     if (!state.combatants.has(targetId)) {
       return "Save-gate spell target must be a combatant in this battle.";
     }
-    /* v8 ignore stop */
     return validateSavingThrowOutcomeSelections({
       outcomes,
       state,
@@ -3283,7 +3271,6 @@ export function validateSavingThrowOutcomes(
     });
   }
   if (targeting.kind === "targetList") {
-    /* v8 ignore start -- Malformed Saving Throw fill: target-list discovery fixes the non-empty bounded target identities before requesting outcomes. These branches reject caller-mutated area, count, membership, and duplicate-target facts; the selected-target outcome semantics remain measured below. */
     if ("area" in value) {
       return "Target-list save-gate spell outcomes must not include area facts.";
     }
@@ -3316,7 +3303,6 @@ export function validateSavingThrowOutcomes(
       }
       seenTargets.add(outcome.targetId);
     }
-    /* v8 ignore stop */
     return validateSavingThrowOutcomeSelections({
       outcomes,
       state,
@@ -3437,7 +3423,6 @@ export function validateSavingThrowOutcomes(
     return antimagicInterdiction;
   }
   const seenTargets = new Set<CombatantId>();
-  /* v8 ignore start -- Malformed area Saving Throw outcome list: the area fill adapter emits exactly one outcome for each table-supplied affected target. These branches reject caller-mutated foreign, duplicate, or missing identities; metamagic selection semantics remain measured below. */
   for (const outcome of outcomes) {
     const targetId = outcome.targetId;
     if (!affectedTargets.has(targetId)) {
@@ -3451,7 +3436,6 @@ export function validateSavingThrowOutcomes(
   if (seenTargets.size !== affectedTargets.size) {
     return "Save-gate spell Saving Throw outcomes must cover every table-supplied area affected target.";
   }
-  /* v8 ignore stop */
   return validateSavingThrowOutcomeSelections({
     outcomes,
     state,
@@ -3696,57 +3680,43 @@ function validateThunderwaveAreaEffect(input: {
     { readonly kind: "thunderwave" }
   >;
 }): string | null {
-  /* v8 ignore start -- Malformed Thunderwave area fill: discovery supplies Thunderwave-specific area facts, so this rejects only a missing or cross-spell caller mutation. */
   if (input.area === undefined || input.area.kind !== "thunderwaveArea") {
     return "Thunderwave requires caller-supplied push, object, and audible-boom area facts.";
   }
-  /* v8 ignore stop */
   const failedTargetIds = new Set(input.failedTargetIds);
   const pushedTargetIds = new Set<CombatantId>();
   for (const push of input.area.creaturePushes) {
-    /* v8 ignore start -- Malformed Thunderwave creature witness: discovery requests exactly the failed-save targets, so this rejects only a caller-mutated foreign identity. */
     if (!failedTargetIds.has(push.targetId)) {
       return "Thunderwave creature push facts must match failed-save targets.";
     }
-    /* v8 ignore stop */
-    /* v8 ignore start -- Malformed Thunderwave creature witness: the table adapter emits each failed-save target once, so this rejects only a caller-mutated duplicate. */
     if (pushedTargetIds.has(push.targetId)) {
       return "Thunderwave creature push facts must not duplicate targets.";
     }
-    /* v8 ignore stop */
     pushedTargetIds.add(push.targetId);
     const dispositionValidation = validateThunderwavePushDisposition(
       push.disposition,
       input.effect.creaturePush.distanceFeet,
     );
-    /* v8 ignore start -- Malformed Thunderwave creature witness: the table adapter constructs the validated push disposition, so this propagates only a caller-mutated contradiction. */
     if (dispositionValidation !== null) {
       return dispositionValidation;
     }
-    /* v8 ignore stop */
   }
-  /* v8 ignore start -- Malformed Thunderwave creature witness set: discovery requests every failed-save target exactly once, so this rejects only a caller-mutated omission. */
   if (pushedTargetIds.size !== failedTargetIds.size) {
     return "Thunderwave creature push facts must cover every failed-save target.";
   }
-  /* v8 ignore stop */
   const objectIds = new Set<string>();
   for (const push of input.area.unsecuredObjectPushes) {
-    /* v8 ignore start -- Malformed Thunderwave object witness: the table adapter emits each unsecured object identity once, so this rejects only a caller-mutated duplicate. */
     if (objectIds.has(push.objectId)) {
       return "Thunderwave unsecured-object push facts must not duplicate objects.";
     }
-    /* v8 ignore stop */
     objectIds.add(push.objectId);
     const dispositionValidation = validateThunderwavePushDisposition(
       push.disposition,
       input.effect.unsecuredObjectPush.distanceFeet,
     );
-    /* v8 ignore start -- Malformed Thunderwave object witness: the table adapter constructs the validated push disposition, so this propagates only a caller-mutated contradiction. */
     if (dispositionValidation !== null) {
       return dispositionValidation;
     }
-    /* v8 ignore stop */
   }
   if (
     input.area.audibleBoom.sound === input.effect.audibleBoom.sound &&
@@ -3755,30 +3725,16 @@ function validateThunderwaveAreaEffect(input: {
   ) {
     return null;
   }
-  /* v8 ignore start -- Thunderwave admission supplies the audible-boom witness directly from the typed effect facts; this error arm only rejects a caller-mutated contradiction. */
   return "Thunderwave audible-boom fact must match the spell's thunderous boom within 300 feet.";
-  /* v8 ignore stop */
 }
 
 function validateThunderwavePushDisposition(
   disposition: BattleThunderwavePushDisposition,
   distanceFeet: MovementFeet,
 ): string | null {
-  /* v8 ignore start -- Malformed Thunderwave push witness: the table adapter copies the spell distance, so this rejects only a caller-mutated distance. */
   if (disposition.distanceFeet !== distanceFeet) {
     return "Thunderwave push disposition must use the spell's 10-foot distance.";
   }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed Thunderwave push witness: the table adapter fixes the non-provoking forced-movement rule, so this rejects only a caller mutation. */
-  if (disposition.provokesOpportunityAttacks !== false) {
-    return "Thunderwave push disposition must not provoke Opportunity Attacks.";
-  }
-  /* v8 ignore stop */
-  /* v8 ignore start -- Malformed Thunderwave push witness: the table adapter requires a selected table position for an applied push, so this rejects only a caller-mutated empty destination. */
-  if (disposition.kind === "pushed" && disposition.destinationId.length === 0) {
-    return "Thunderwave pushed destinations must be caller-supplied non-empty table positions.";
-  }
-  /* v8 ignore stop */
   return null;
 }
 
@@ -3787,7 +3743,6 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
   readonly area: BattleSpellAreaChoice | undefined;
   readonly state: BattleState;
 }): string | null {
-  /* v8 ignore start -- Malformed Sleep area fill: the discovered point-origin Sphere hole supplies an in-battle anchor and a non-empty unique target set. These checks reject caller-mutated geometry, membership, duplication, or non-sleeper witness identities before the automatic-success projection below. */
   if (input.area === undefined) {
     return "Sleep Saving Throw outcomes require point-origin Sphere target facts.";
   }
@@ -3818,7 +3773,6 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
       nonSleeperTargetIds.add(fact.targetId);
     }
   }
-  /* v8 ignore stop */
   const autoSuccessTargetIds = new Set(
     input.area.affectedTargetIds.filter((targetId) =>
       sleepTargetAutomaticallySucceeds(input.state, targetId, {
@@ -3830,7 +3784,6 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
     (targetId) => !autoSuccessTargetIds.has(targetId),
   );
   const outcomeTargetIds = new Set<CombatantId>();
-  /* v8 ignore start -- Malformed Sleep outcome fill: the hole adapter emits outcomes only for the selected targets that are not automatic successes and cannot duplicate an identity. The canonical automatic-success partition remains measured above and the exact coverage comparison remains measured below. */
   for (const outcome of input.value.outcomes) {
     if (!selectedTargets.has(outcome.targetId)) {
       return "Sleep Saving Throw outcomes must match selected Sphere targets.";
@@ -3846,13 +3799,12 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
   if (outcomeTargetIds.size !== nonAutomaticTargetIds.length) {
     return "Sleep Saving Throw outcomes must cover every selected target that is not an automatic success.";
   }
-  /* v8 ignore stop */
   if (
     nonAutomaticTargetIds.every((targetId) => outcomeTargetIds.has(targetId))
   ) {
     return null;
   }
-  /* v8 ignore start -- Sleep admission partitions automatic successes before requesting outcomes, so this error arm only rejects a caller-mutated witness. */
+  /* v8 ignore start -- The preceding subset, uniqueness, and equal-cardinality checks prove that every non-automatic target is present. */
   return "Sleep Saving Throw outcomes must cover every selected target that is not an automatic success.";
   /* v8 ignore stop */
 }
@@ -3862,7 +3814,6 @@ function validateGreaseGroundHazardSavingThrowOutcomes(input: {
   readonly area: BattleSpellAreaChoice | undefined;
   readonly state: BattleState;
 }): string | null {
-  /* v8 ignore start -- Malformed Grease area/outcome fill: discovery owns a non-empty ground-area id, an in-battle anchor, and one unique outcome per table-supplied affected target. These branches only reject caller-mutated cross-spell, membership, or duplicate facts; the exact target-set comparison remains measured below. */
   if (input.area === undefined) {
     return "Grease Saving Throw outcomes require ground-area facts.";
   }
@@ -3897,13 +3848,10 @@ function validateGreaseGroundHazardSavingThrowOutcomes(input: {
     }
     outcomeTargetIds.add(outcome.targetId);
   }
-  /* v8 ignore stop */
   if (outcomeTargetIds.size === selectedTargets.size) {
     return null;
   }
-  /* v8 ignore start -- Grease admission requests one outcome per table-supplied affected target, so this error arm only rejects a caller-mutated witness. */
   return "Grease Saving Throw outcomes must cover every table-supplied ground-area affected target.";
-  /* v8 ignore stop */
 }
 
 function sleepTargetAutomaticallySucceeds(

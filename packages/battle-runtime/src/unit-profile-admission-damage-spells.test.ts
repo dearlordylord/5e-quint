@@ -1310,7 +1310,10 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   });
   test("sacred_flame successful saves resolve without Potent Cantrip damage", () => {
     const spell = spellRecord(sacredFlameUnitId);
-    const session = spellBattle({ cantrips: [spell] });
+    const session = spellBattle({
+      cantrips: [spell],
+      casterClassLevels: [{ className: "cleric", level: 1 }],
+    });
     const initialTargetHp = Number(
       requireCombatant(session.state, spellTargetId).hp,
     );
@@ -2216,15 +2219,18 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     const baseSession = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
+      casterClassLevels: [{ className: "wizard", level: 5 }],
       targetHp: 50,
       targetMaxHp: 50,
     });
+    const baseCaster = requireCombatant(baseSession.state, spellCasterId);
     const baseTarget = requireCombatant(baseSession.state, spellTargetId);
+    const hideousLaughterProcedureRef = battleProcedureExecutionRefForTest(
+      "synthetic-save-gated-damage-hideous-laughter",
+    );
     const hideousLaughter = {
       kind: "hideousLaughter" as const,
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "synthetic-save-gated-damage-hideous-laughter",
-      ),
+      sourceProcedureRef: hideousLaughterProcedureRef,
       sourceCombatantId: spellCasterId,
       conditionHadNonSpellProneSource: false,
       conditionHadNonSpellIncapacitatedSource: false,
@@ -2243,10 +2249,18 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
     >;
     const enrichedState = {
       ...baseSession.state,
-      combatants: new Map(baseSession.state.combatants).set(spellTargetId, {
-        ...baseTarget,
-        activeEffects: [...baseTarget.activeEffects, hideousLaughter],
-      }),
+      combatants: new Map(baseSession.state.combatants)
+        .set(spellCasterId, {
+          ...baseCaster,
+          concentration: {
+            sourceProcedureRef: hideousLaughterProcedureRef,
+            effectKind: "spellEffect" as const,
+          },
+        })
+        .set(spellTargetId, {
+          ...baseTarget,
+          activeEffects: [...baseTarget.activeEffects, hideousLaughter],
+        }),
     };
     const session = battleRuntimeSessionForTest({
       ...baseSession,

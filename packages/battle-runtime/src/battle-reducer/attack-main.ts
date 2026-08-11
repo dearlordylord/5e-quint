@@ -542,9 +542,7 @@ function resolveBrutalStrikeAfterDamage(input: {
   readonly state: BattleState;
   readonly replayState: BattleState;
   readonly subject: BattleAttackHostSubject;
-  readonly attackerId: CombatantId;
   readonly targetId: CombatantId;
-  readonly attack: SupportedAttackActionOption;
   readonly selection: BrutalStrikeSelection;
   readonly choice: BrutalStrikeEffectDecisionChoice | null;
   readonly fillSet: Extract<AttackFillSet, { readonly tag: "ok" }>;
@@ -583,8 +581,13 @@ function resolveBrutalStrikeAfterDamage(input: {
   return Match.value(effect).pipe(
     byKind("forcefulBlow", (forceful) => {
       const movement = resolveBrutalStrikeForcefulBlowMovement({
-        ...input,
+        state: input.state,
+        replayState: input.replayState,
+        subject: input.subject,
+        attackerId: input.selection.attackerId,
+        targetId: input.targetId,
         effect: forceful,
+        fillSet: input.fillSet,
       });
       if (movement.tag === "result") return movement;
       return {
@@ -640,7 +643,7 @@ function resolveBrutalStrikeAfterDamage(input: {
         {
           kind: "brutalStrikeHamstring",
           sourceProcedureRef: input.selection.procedureRef,
-          sourceCombatantId: input.attackerId,
+          sourceCombatantId: input.selection.attackerId,
           effect: hamstring,
           expiresAt: { kind: "startOfSourceTurn" },
         } as const,
@@ -3003,9 +3006,7 @@ export function resolveSelectedAttackProcedure<
             state: damageWithSlowState,
             replayState: attackRolledState,
             subject: input.subject,
-            attackerId,
             targetId: target.combatantId,
-            attack,
             selection: brutalStrikeSupportSelection,
             choice: brutalStrikeEffectChoice,
             fillSet,

@@ -1364,7 +1364,10 @@ describe("battle runtime: Hunter's Prey", () => {
       combatants: [
         characterSeed({
           initiative: 20,
-          classLevels: [{ className: "barbarian", level: 3 }],
+          classLevels: [
+            { className: "barbarian", level: 3 },
+            { className: "ranger", level: 3 },
+          ],
           resources: [rageResource()],
           characterUnitRefs: [
             huntersPreyUnitRef("hordeBreaker"),

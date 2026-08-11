@@ -337,6 +337,90 @@ describe("SRDINV51 deterministic Thunderwave Spell Unit admission", () => {
         "Thunderwave creature push facts must cover every failed-save target.",
     });
   });
+
+  test.each(
+    (() => {
+      const area = thunderwaveArea([spellTargetId], [spellTargetId]);
+      return [
+        {
+          caseName: "a creature push for a target that did not fail",
+          area: {
+            ...area,
+            creaturePushes: area.creaturePushes.map((push) => ({
+              ...push,
+              targetId: spellCasterId,
+            })),
+          },
+          message:
+            "Thunderwave creature push facts must match failed-save targets.",
+        },
+        {
+          caseName: "duplicate creature pushes",
+          area: {
+            ...area,
+            creaturePushes: [...area.creaturePushes, ...area.creaturePushes],
+          },
+          message:
+            "Thunderwave creature push facts must not duplicate targets.",
+        },
+        {
+          caseName: "a creature push with the wrong distance",
+          area: {
+            ...area,
+            creaturePushes: area.creaturePushes.map((push) => ({
+              ...push,
+              disposition: {
+                ...push.disposition,
+                distanceFeet: movementFeet(5),
+              },
+            })),
+          },
+          message:
+            "Thunderwave push disposition must use the spell's 10-foot distance.",
+        },
+        {
+          caseName: "duplicate unsecured-object pushes",
+          area: {
+            ...area,
+            unsecuredObjectPushes: [
+              ...area.unsecuredObjectPushes,
+              ...area.unsecuredObjectPushes,
+            ],
+          },
+          message:
+            "Thunderwave unsecured-object push facts must not duplicate objects.",
+        },
+        {
+          caseName: "an incorrect audible radius",
+          area: {
+            ...area,
+            audibleBoom: {
+              ...area.audibleBoom,
+              audibleRadiusFeet: movementFeet(5),
+            },
+          },
+          message:
+            "Thunderwave audible-boom fact must match the spell's thunderous boom within 300 feet.",
+        },
+      ] as const;
+    })(),
+  )("thunderwave rejects $caseName", ({ area, message }) => {
+    const spell = spellRecord(thunderwaveUnitId);
+    const state = spellBattle({ preparedSpells: [spell] });
+    const act = spellAct({ session: state, spellId: thunderwaveUnitId });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    const fill = thunderwaveSavingThrowOutcomeFill(savingThrow, [
+      { targetId: spellTargetId, succeeded: false },
+    ]);
+
+    expect(
+      resolveBattleSubject({
+        state: state.state,
+        subject: act.subject,
+        fills: [{ ...fill, value: { ...fill.value, area } }],
+      }),
+    ).toMatchObject({ tag: "invalid", message });
+  });
 });
 
 describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () => {

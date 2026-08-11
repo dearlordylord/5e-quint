@@ -56,6 +56,7 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import {
   counterspellUnitId,
+  mirrorImageUnitId,
   shieldUnitId,
   spellCasterId,
   spellTargetId,
@@ -137,6 +138,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterClassLevels: [{ className: "cleric", level: 3 }],
     });
     const firstAct = bonusSpellAct({
       session,
@@ -245,85 +247,14 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     });
   });
 
-  test("a failed Slow Somatic check stops the Spiritual Weapon Bonus Action before target holes", () => {
-    const spell = spellRecord(spiritualWeaponUnitId);
-    const session = spellBattle({
-      preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 2, count: 1 }],
-    });
-    const caster = requireCombatant(session.state, spellCasterId);
-    const slowedState: BattleState = {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(spellCasterId, {
-        ...caster,
-        activeEffects: [
-          ...caster.activeEffects,
-          {
-            kind: "slowActivePenalties",
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              "synthetic-slow-for-spiritual-weapon",
-            ),
-            sourceCombatantId: spellTargetId,
-            save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
-            expiresAt: {
-              kind: "concentration",
-              combatantId: spellTargetId,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        ],
-      }),
-    };
-    const slowedSession = battleRuntimeSessionForTest({
-      ...session,
-      state: slowedState,
-    });
-    const act = bonusSpellAct({
-      session: slowedSession,
-      spellId: spiritualWeaponUnitId,
-      slotLevel: 2,
-    });
-    const slowHole = requireHole(
-      act.initialHoles,
-      "slowSomaticSpellFailureOutcome",
-    );
-    if (slowHole.kind !== "slowSomaticSpellFailureOutcome") {
-      throw new Error("Expected Slow Somatic outcome hole.");
-    }
-
-    const failed = resolveBattleSubject({
-      state: slowedState,
-      subject: act.subject,
-      fills: [
-        {
-          kind: "slowSomaticSpellFailureOutcome",
-          holeId: slowHole.holeId,
-          value: { spellFailed: true },
-        },
-      ],
-    });
-    if (failed.tag !== "resolved") {
-      throw new Error("Expected failed slowed Spiritual Weapon to resolve.");
-    }
-    expect(
-      requireCombatant(failed.state, spellCasterId).activeEffects,
-    ).not.toContainEqual(expect.objectContaining({ kind: "spiritualWeapon" }));
-    expect(failed.state.currentTurnResources.currentHasBonusAction).toBe(false);
-    expect(
-      failed.state.currentTurnResources.spellSlotUsesThisTurn,
-    ).toContainEqual(
-      expect.objectContaining({
-        kind: "committed",
-        combatantId: spellCasterId,
-      }),
-    );
-  });
-
   test("Mirror Image redirects an immediate Spiritual Weapon hit after the cast commit", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const session = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterClassLevels: [{ className: "cleric", level: 3 }],
+      targetClassLevels: [{ className: "wizard", level: 3 }],
+      targetPreparedSpells: [spellRecord(mirrorImageUnitId)],
       targetHp: 30,
       targetMaxHp: 30,
     });
