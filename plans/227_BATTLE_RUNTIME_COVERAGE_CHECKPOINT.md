@@ -63,45 +63,47 @@ replace the public root diagnostic above or establish the state of other
 packages.
 
 - Date: 2026-08-11
-- Git HEAD: `acb3d9a40`
+- Git HEAD: `9d4e22628`
 - Command: the checked-in battle-runtime Vitest coverage invocation, with one
   worker and the JSON reporter, under
   `with_resource_lock_owner scripts/with-broad-workspace-lock.sh`
 - Result: exit 0
-- Duration: 109.95 seconds after lock acquisition
+- Duration: 107.61 seconds after lock acquisition
 - Battle-runtime tests: 216/216 files passed; 2,331 tests passed and 53 skipped
   (2,384 total)
 - Coordination note: root confirmed the external Battle Runtime coverage lane
   was empty before this final exact run began. The run exited 0 without overlap
   or SIGKILL. The JSON report contains the same 407 production files as the
-  exact M24 base at `26cf9c757`; all checked-in production include/excludes and
+  exact M25 base at `9c032c02e`; all checked-in production include/excludes and
   thresholds were identical, with only the reporter output path changed.
 
-| Metric     |   M24 base covered / total |  M24 final covered / total | Covered / total change |     Uncovered change | Percentage change |
-| ---------- | -------------------------: | -------------------------: | ---------------------: | -------------------: | ----------------: |
-| Statements | 121,249 / 124,862 (97.11%) | 121,222 / 124,814 (97.12%) |              -27 / -48 | 3,613 -> 3,592 (-21) |           +0.02pp |
-| Branches   |   30,876 / 32,733 (94.33%) |   30,863 / 32,721 (94.32%) |              -13 / -12 |  1,857 -> 1,858 (+1) |           -0.01pp |
-| Functions  |       4,814 / 4,814 (100%) |       4,812 / 4,812 (100%) |                -2 / -2 |               0 -> 0 |                 0 |
-| Lines      | 121,249 / 124,862 (97.11%) | 121,222 / 124,814 (97.12%) |              -27 / -48 | 3,613 -> 3,592 (-21) |           +0.02pp |
+| Metric     |   M25 base covered / total |  M25 final covered / total | Covered / total change |    Uncovered change | Percentage change |
+| ---------- | -------------------------: | -------------------------: | ---------------------: | ------------------: | ----------------: |
+| Statements | 121,224 / 124,814 (97.12%) | 121,216 / 124,810 (97.12%) |                -8 / -4 | 3,590 -> 3,594 (+4) |         -0.0033pp |
+| Branches   |   30,862 / 32,719 (94.32%) |   30,860 / 32,718 (94.32%) |                -2 / -1 | 1,857 -> 1,858 (+1) |         -0.0032pp |
+| Functions  |       4,812 / 4,812 (100%) |       4,812 / 4,812 (100%) |                  0 / 0 |              0 -> 0 |                 0 |
+| Lines      | 121,224 / 124,814 (97.12%) | 121,216 / 124,810 (97.12%) |                -8 / -4 | 3,590 -> 3,594 (+4) |            0.00pp |
 
 The checked-in battle-runtime ratchets remain 97/97/100/94 for statements,
-lines, functions, and branches. No threshold was lowered. M24 marks Dancing
-Lights reposition as the synthesized follow-up it already is: cast execution
-creates the correlated procedure, so the authored-character admission path was
-dead and duplicated the wrong lifecycle owner. Removing it exposed an unused
-procedure-reference query, which was also deleted with its barrel export.
+lines, functions, and branches. No threshold was lowered. M25 replaces the two
+profile-local Wild Shape held-weapon usability calculations for spell-hosted
+attacks with the canonical, slot-sensitive `loadoutHeldWeaponSlotIsUsable`
+owner. Main- and off-hand slots remain distinct even if they contain the same
+object identity, and the ordinary non-Wild-Shape path still short-circuits
+without consulting the helper.
 
-This structural increment adds no test lines, deletes 61 production lines, and
-adds 9 (net -52).
-In the two changed production owners, uncovered statements fell by 23 (18 in
-the Dancing Lights profile and 5 in the dead query) while uncovered branches
-did not increase. Across the complete package, unchanged owners had small V8
-branch-materialization shifts despite identical tests and instrumentation; the
-net exact branch result is one more uncovered branch and a 0.01 percentage-point
-movement after rounding. The threshold remains green, and no changed owner
-introduced an uncovered branch. The acceptance basis is structural ownership
-and dead-code removal, not a marginal covered-statement claim; the pre-edit
-budget was zero added test lines.
+This structural increment adds no test lines and changes one production file
+by 13 additions and 17 deletions (net -4). In that owner, exact statements move
+from 319 / 371 to 319 / 367: four uncovered statements are removed, while its
+55 / 71 branches and 9 / 9 functions are unchanged. Across the complete
+package, unchanged owners had coverage variability despite identical tests and
+instrumentation: `battle-fill-equality.ts` accounts for the eight-statement
+covered-count loss through changed execution hits, while unchanged branch maps
+also materialized differently. The global exact result therefore reports four
+more uncovered statements and one more uncovered branch. The changed owner
+improves, all ratchets remain green, and functions remain 100%. The acceptance
+basis is canonical ownership and removal of duplicated slot usability, not a
+marginal covered-statement claim; the pre-edit budget was zero added test lines.
 
 ## Remaining static 99% gaps
 
@@ -110,12 +112,31 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 121,222 | 124,814 |                  123,566 |         2,344 |
-| Branches   |  30,863 |  32,721 |                   32,394 |         1,531 |
+| Statements | 121,216 | 124,810 |                  123,562 |         2,346 |
+| Branches   |  30,860 |  32,718 |                   32,391 |         1,531 |
 | Functions  |   4,812 |   4,812 |                    4,764 |             0 |
-| Lines      | 121,222 | 124,814 |                  123,566 |         2,344 |
+| Lines      | 121,216 | 124,810 |                  123,562 |         2,346 |
 
 ## Milestone context
+
+M25 delegates the spell-hosted attack profile's main- and off-hand Wild Shape
+checks to the canonical held-weapon slot usability predicate. The helper first
+correlates the exact slot kind and object identity, then applies the same limb
+and equipment-disposition rule as the removed local calculation. Existing
+public True Strike, Druid Wild Shape, duplicate-identity slot admission, and
+registry tests passed 74/74 with package typecheck, lint, and formatting green.
+RAW, QNT, runtime protocol behavior, and tests are unchanged, so no MBT was
+required. Independent Standards and separate Spec/RAW/QNT reviews found no
+remaining issue.
+
+An initial M25 attempt marked Spiritual Weapon repeat attacks as synthesized.
+The exact public run rejected it: two Antimagic Field tests proved that the
+valid restoration projection reconstructs repeat execution from a live active
+effect through authored admission. A canonical synthesized restoration design
+would span the dynamic follow-up family, beyond this bounded owner; forging a
+binding in the fixture or adding a second reconstruction path was rejected.
+Commits `a06bd49db` and `622a4384e` retain the failed experiment and exact
+restoration as recoverable evidence, with zero net diff.
 
 M24 removes the obsolete authored-character admission algorithm for Dancing
 Lights reposition. The cast lifecycle in `spells-active-effects.ts` remains the
@@ -225,7 +246,8 @@ and remeasure only after the next coherent increment.
 ## Next campaign
 
 Branches remain the limiting exact battle-runtime metric at 94.32%, with a
-static 99% gap of 1,531. Do not retry the rejected attack-control helper matrix.
+static 99% gap of 1,531. Do not retry the rejected attack-control helper matrix
+or the isolated Spiritual Weapon synthesized-admission conversion.
 Rerank the exact uncovered report against public lifecycle coverage before the
 next increment; defensive route/profile behavior remains an independent
 candidate. Admission-proven or schema-impossible guards must be narrowed or
