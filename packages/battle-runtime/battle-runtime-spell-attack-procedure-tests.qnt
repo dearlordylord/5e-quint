@@ -1,8 +1,9 @@
 // -*- mode: Bluespec; -*-
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-independent-attack-sequence
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-independent-attack-sequence spell.reaction-shield
 
 module battleRuntimeSpellAttackProcedureTests {
   import battleRuntimeSpellAttackDirectResolution.* from "./battle-runtime-spell-attack-direct-resolution"
+  import battleRuntimeDirectShieldReactionResolution.* from "./battle-runtime-direct-shield-reaction-resolution"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
@@ -47,6 +48,36 @@ module battleRuntimeSpellAttackProcedureTests {
           assert(failedRoll.goblin.hp == 6),
           assert(activeEffectsMirrorImageRemainingDuplicates(failedRoll.goblin.activeEffects) == 3),
           assert(failedRoll.goblin.activeEffects.contains(RayOfFrostSpeedDelta)),
+        }
+      },
+    {
+        val poisonAwaiting = resolvePoisonSpray(initialState, 15, 10, 7, true)
+        val poisonTaken = resolveDirectShieldReactionOffer(poisonAwaiting, Goblin)
+        val poisonDeclined = declineDirectShieldReactionOfferAndResume(poisonAwaiting, Goblin)
+        val chillAwaiting = resolveChillTouch(initialState, 15, 10, 6, true)
+        val chillTaken = resolveDirectShieldReactionOffer(chillAwaiting, Goblin)
+        val chillDeclined = declineDirectShieldReactionOfferAndResume(chillAwaiting, Goblin)
+        all {
+          assert(poisonTaken.interruptStack == []),
+          assert(poisonTaken.goblin.activeEffects.contains(ShieldArmorClassBonus)),
+          assert(not(poisonTaken.goblin.reactionAvailable)),
+          assert(battleActorHasCommittedSpellSlotUse(poisonTaken, Goblin)),
+          assert(poisonTaken.goblin.hp == 10),
+          assert(poisonDeclined.interruptStack == []),
+          assert(poisonDeclined.goblin.reactionAvailable),
+          assert(not(poisonDeclined.goblin.activeEffects.contains(ShieldArmorClassBonus))),
+          assert(not(battleActorHasSpellSlotUse(poisonDeclined, Goblin))),
+          assert(poisonDeclined.goblin.hp == 3),
+          assert(chillTaken.interruptStack == []),
+          assert(chillTaken.goblin.activeEffects.contains(ShieldArmorClassBonus)),
+          assert(not(chillTaken.goblin.reactionAvailable)),
+          assert(battleActorHasCommittedSpellSlotUse(chillTaken, Goblin)),
+          assert(chillTaken.goblin.hp == 10),
+          assert(chillDeclined.interruptStack == []),
+          assert(chillDeclined.goblin.reactionAvailable),
+          assert(not(chillDeclined.goblin.activeEffects.contains(ShieldArmorClassBonus))),
+          assert(not(battleActorHasSpellSlotUse(chillDeclined, Goblin))),
+          assert(chillDeclined.goblin.hp == 4),
         }
       },
     {

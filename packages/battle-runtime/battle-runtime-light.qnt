@@ -975,6 +975,8 @@ module battleRuntimeLight {
     else if (characterLevel >= 5) 2
     else 1
 
+  type LightShieldOfferBoundary = | LightShieldOfferPending | LightShieldOfferConsidered
+
   pure def resolveProduceFlameHurl(
     state: BattleState,
     attackTotal: int,
@@ -992,7 +994,9 @@ module battleRuntimeLight {
       false,
     )
 
-  pure def resolveProduceFlameHurlWithMirrorImageDuplicateRoll(
+  pure def resolveProduceFlameHurlWithMirrorImageDuplicateRoll(state: BattleState, attackTotal: int, naturalD20: int, damageRoll: int, concentrationSaveSucceeded: bool, mirrorImageDuplicateHighestRoll: int, attackerPerceivesTargetWithBlindsightOrTruesight: bool): BattleState = resolveProduceFlameHurlWithMirrorImageDuplicateRollAtShieldOfferBoundary(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight, LightShieldOfferPending)
+
+  pure def resolveProduceFlameHurlWithMirrorImageDuplicateRollAtShieldOfferBoundary(
     state: BattleState,
     attackTotal: int,
     naturalD20: int,
@@ -1000,6 +1004,7 @@ module battleRuntimeLight {
     concentrationSaveSucceeded: bool,
     mirrorImageDuplicateHighestRoll: int,
     attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+    shieldOfferBoundary: LightShieldOfferBoundary,
   ): BattleState =
     if (
       not(state.actionAvailable) or
@@ -1007,7 +1012,8 @@ module battleRuntimeLight {
       state.fighter.unconscious or
       state.fighter.incapacitated or
       fighterHasRage(state) or
-      not(activeEffectsContainProduceFlameHeldLight(state.fighter.activeEffects))
+      (shieldOfferBoundary == LightShieldOfferPending and
+       not(activeEffectsContainProduceFlameHeldLight(state.fighter.activeEffects)))
     )
       state
     else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
@@ -1035,7 +1041,9 @@ module battleRuntimeLight {
         actionAvailable: false,
       }
     }
-    else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+    else if (shieldOfferBoundary == LightShieldOfferPending and
+             state.goblin.reactionAvailable and
+             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       openReactionWindow({ ...rolled, fighter: fighterWithoutProduceFlameHeldLight(rolled) }, {
         trigger: AttackHit,
@@ -1052,13 +1060,9 @@ module battleRuntimeLight {
       { ...rolled, fighter: fighterWithoutProduceFlameHeldLight(rolled), goblin: damaged, actionAvailable: false }
     }
 
-  pure def resolveFlameBladeAttack(
-    state: BattleState,
-    attackTotal: int,
-    naturalD20: int,
-    damageDiceRoll: int,
-    concentrationSaveSucceeded: bool,
-  ): BattleState =
+  pure def resolveFlameBladeAttack(state: BattleState, attackTotal: int, naturalD20: int, damageDiceRoll: int, concentrationSaveSucceeded: bool): BattleState = resolveFlameBladeAttackAtShieldOfferBoundary(state, attackTotal, naturalD20, damageDiceRoll, concentrationSaveSucceeded, LightShieldOfferPending)
+
+  pure def resolveFlameBladeAttackAtShieldOfferBoundary(state: BattleState, attackTotal: int, naturalD20: int, damageDiceRoll: int, concentrationSaveSucceeded: bool, shieldOfferBoundary: LightShieldOfferBoundary): BattleState =
     if (
       not(state.actionAvailable) or
       currentActor(state) != Fighter or
@@ -1072,7 +1076,7 @@ module battleRuntimeLight {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       { ...rolled, actionAvailable: false }
     }
-    else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+    else if (shieldOfferBoundary == LightShieldOfferPending and state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
         trigger: AttackHit,
         procedure: ShieldReactionProcedure,

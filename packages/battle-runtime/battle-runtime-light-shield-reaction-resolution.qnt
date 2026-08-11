@@ -4,13 +4,6 @@
 
 module battleRuntimeLightShieldReactionResolution {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
-  import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
-  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
-  import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
-  import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
-  import battleRuntimeHidden.* from "./battle-runtime-hidden"
-  import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeShieldReactionDecision.* from "./battle-runtime-shield-reaction-decision"
 
@@ -20,50 +13,12 @@ module battleRuntimeLightShieldReactionResolution {
     | LightShieldFlameBladeAttack
 
   type LightShieldReactionFrame = {
-    eligibleReactors: Set[Actor],
-    offeredReactors: Set[Actor],
     continuation: LightShieldReactionContinuation,
   }
 
   type LightShieldReactionCandidate =
     | NoLightShieldReactionCandidate
     | HasLightShieldReactionCandidate(LightShieldReactionFrame)
-
-  // The attack-hit Shield frame is opened after the held light has already
-  // been consumed. Resume from that boundary instead of replaying the
-  // pre-attack held-light admission.
-  pure def resumeProduceFlameHurlAfterHeldLightConsumed(
-    state: BattleState,
-    attackTotal: int,
-    naturalD20: int,
-    damageRoll: int,
-    concentrationSaveSucceeded: bool,
-  ): BattleState =
-    if (
-      not(state.actionAvailable) or
-      currentActor(state) != Fighter or
-      state.fighter.unconscious or
-      state.fighter.incapacitated or
-      fighterHasRage(state)
-    )
-      state
-    else if (not(attackHits(attackTotal, naturalD20, combatantArmorClass(state.goblin), 20))) {
-      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
-      { ...rolled, actionAvailable: false }
-    }
-    else {
-      val rolled = recordFighterAttackRoll(revealFighterHidden(state))
-      val adjustedDamage = damageAfterAdjustments(damageRoll, Fire, Set(), Set(), Set())
-      val damaged = applyDamageFromSource(
-        state.goblin,
-        adjustedDamage,
-        if (attackIsCritical(naturalD20, 20)) 2 else 1,
-        concentrationSaveSucceeded,
-        OrdinaryDamage,
-        Fighter,
-      )
-      { ...rolled, goblin: damaged, actionAvailable: false }
-    }
 
   pure def lightShieldReactionCandidate(
     frame: PendingReactionFrame,
@@ -77,14 +32,10 @@ module battleRuntimeLightShieldReactionResolution {
             match frame.continuation {
               | ResumeProduceFlameHurl =>
                   HasLightShieldReactionCandidate({
-                    eligibleReactors: frame.eligibleReactors,
-                    offeredReactors: frame.offeredReactors,
                     continuation: LightShieldProduceFlameHurl,
                   })
               | ResumeFlameBladeAttack =>
                   HasLightShieldReactionCandidate({
-                    eligibleReactors: frame.eligibleReactors,
-                    offeredReactors: frame.offeredReactors,
                     continuation: LightShieldFlameBladeAttack,
                   })
               | _ => NoLightShieldReactionCandidate
@@ -92,15 +43,52 @@ module battleRuntimeLightShieldReactionResolution {
       | _ => NoLightShieldReactionCandidate
     }
 
-  pure def resumeLightShieldReactionContinuation(
+  pure def resumeLightShieldReactionAfterTake(
     state: BattleState,
     continuation: LightShieldReactionContinuation,
   ): BattleState =
+    resumeLightShieldReactionAtShieldOfferBoundary(
+      state,
+      continuation,
+      LightShieldOfferConsidered,
+    )
+
+  pure def resumeLightShieldReactionAfterDecline(
+    state: BattleState,
+    continuation: LightShieldReactionContinuation,
+  ): BattleState =
+    resumeLightShieldReactionAtShieldOfferBoundary(
+      state,
+      continuation,
+      LightShieldOfferConsidered,
+    )
+
+  pure def resumeLightShieldReactionAtShieldOfferBoundary(
+    state: BattleState,
+    continuation: LightShieldReactionContinuation,
+    shieldOfferBoundary: LightShieldOfferBoundary,
+  ): BattleState =
     match continuation {
       | LightShieldProduceFlameHurl =>
-          resumeProduceFlameHurlAfterHeldLightConsumed(state, 15, 10, 5, true)
+          resolveProduceFlameHurlWithMirrorImageDuplicateRollAtShieldOfferBoundary(
+            state,
+            15,
+            10,
+            5,
+            true,
+            0,
+            false,
+            shieldOfferBoundary,
+          )
       | LightShieldFlameBladeAttack =>
-          resolveFlameBladeAttack(state, 15, 10, 6, true)
+          resolveFlameBladeAttackAtShieldOfferBoundary(
+            state,
+            15,
+            10,
+            6,
+            true,
+            shieldOfferBoundary,
+          )
     }
 
   pure def resolveLightShieldReactionFrame(
@@ -108,17 +96,11 @@ module battleRuntimeLightShieldReactionResolution {
     reactor: Actor,
     frame: LightShieldReactionFrame,
   ): BattleState =
-    match takeShieldReactionDecision(
-      state,
-      reactor,
-      frame.eligibleReactors,
-      frame.offeredReactors,
-    ) {
-      | ShieldReactionDecisionTaken(data) =>
-          if (data.frameClosed)
-            resumeLightShieldReactionContinuation(data.state, frame.continuation)
-          else
-            data.state
+    match takeShieldReactionDecision(state, reactor) {
+      | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameClosed(data)) =>
+          resumeLightShieldReactionAfterTake(data.state, frame.continuation)
+      | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameOpen(data)) =>
+          data.state
       | _ => state
     }
 
@@ -131,18 +113,10 @@ module battleRuntimeLightShieldReactionResolution {
       state,
       reactor,
     ) {
-      | ShieldReactionDecisionDeclined(data) =>
-          if (data.frameClosed)
-            resumeShieldReactionAfterDecline(
-              data.state,
-              reactor,
-              resumeState => resumeLightShieldReactionContinuation(
-                resumeState,
-                frame.continuation,
-              ),
-            )
-          else
-            data.state
+      | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameClosed(data)) =>
+          resumeLightShieldReactionAfterDecline(data.state, frame.continuation)
+      | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameOpen(data)) =>
+          data.state
       | _ => state
     }
 

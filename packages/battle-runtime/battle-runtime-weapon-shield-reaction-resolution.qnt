@@ -12,8 +12,6 @@ module battleRuntimeWeaponShieldReactionResolution {
     | WeaponShieldTrueStrikeAttack
 
   type WeaponShieldReactionFrame = {
-    eligibleReactors: Set[Actor],
-    offeredReactors: Set[Actor],
     continuation: WeaponShieldReactionContinuation,
   }
 
@@ -30,8 +28,6 @@ module battleRuntimeWeaponShieldReactionResolution {
               frame.trigger == AttackHit and
               frame.continuation == ResumeTrueStrikeWeaponAttack)
             HasWeaponShieldReactionCandidate({
-              eligibleReactors: frame.eligibleReactors,
-              offeredReactors: frame.offeredReactors,
               continuation: WeaponShieldTrueStrikeAttack,
             })
           else
@@ -39,13 +35,34 @@ module battleRuntimeWeaponShieldReactionResolution {
       | _ => NoWeaponShieldReactionCandidate
     }
 
-  pure def resumeWeaponShieldReactionContinuation(
+  pure def resumeWeaponShieldReactionAfterTake(
     state: BattleState,
     continuation: WeaponShieldReactionContinuation,
   ): BattleState =
+    resumeWeaponShieldReactionAtShieldOfferBoundary(
+      state,
+      continuation,
+      TrueStrikeShieldOfferConsidered,
+    )
+
+  pure def resumeWeaponShieldReactionAfterDecline(
+    state: BattleState,
+    continuation: WeaponShieldReactionContinuation,
+  ): BattleState =
+    resumeWeaponShieldReactionAtShieldOfferBoundary(
+      state,
+      continuation,
+      TrueStrikeShieldOfferConsidered,
+    )
+
+  pure def resumeWeaponShieldReactionAtShieldOfferBoundary(
+    state: BattleState,
+    continuation: WeaponShieldReactionContinuation,
+    shieldOfferBoundary: TrueStrikeShieldOfferBoundary,
+  ): BattleState =
     match continuation {
       | WeaponShieldTrueStrikeAttack =>
-          resolveTrueStrikeWeaponAttack(
+          resolveTrueStrikeWeaponAttackAtShieldOfferBoundary(
             state,
             15,
             10,
@@ -56,6 +73,7 @@ module battleRuntimeWeaponShieldReactionResolution {
             Radiant,
             Slashing,
             true,
+            shieldOfferBoundary,
           )
     }
 
@@ -64,17 +82,11 @@ module battleRuntimeWeaponShieldReactionResolution {
     reactor: Actor,
     frame: WeaponShieldReactionFrame,
   ): BattleState =
-    match takeShieldReactionDecision(
-      state,
-      reactor,
-      frame.eligibleReactors,
-      frame.offeredReactors,
-    ) {
-      | ShieldReactionDecisionTaken(data) =>
-          if (data.frameClosed)
-            resumeWeaponShieldReactionContinuation(data.state, frame.continuation)
-          else
-            data.state
+    match takeShieldReactionDecision(state, reactor) {
+      | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameClosed(data)) =>
+          resumeWeaponShieldReactionAfterTake(data.state, frame.continuation)
+      | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameOpen(data)) =>
+          data.state
       | _ => state
     }
 
@@ -87,18 +99,10 @@ module battleRuntimeWeaponShieldReactionResolution {
       state,
       reactor,
     ) {
-      | ShieldReactionDecisionDeclined(data) =>
-          if (data.frameClosed)
-            resumeShieldReactionAfterDecline(
-              data.state,
-              reactor,
-              resumeState => resumeWeaponShieldReactionContinuation(
-                resumeState,
-                frame.continuation,
-              ),
-            )
-          else
-            data.state
+      | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameClosed(data)) =>
+          resumeWeaponShieldReactionAfterDecline(data.state, frame.continuation)
+      | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameOpen(data)) =>
+          data.state
       | _ => state
     }
 

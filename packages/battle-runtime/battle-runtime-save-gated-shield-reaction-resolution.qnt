@@ -12,8 +12,6 @@ module battleRuntimeSaveGatedShieldReactionResolution {
     | SaveGatedShieldIceKnife
 
   type SaveGatedShieldReactionFrame = {
-    eligibleReactors: Set[Actor],
-    offeredReactors: Set[Actor],
     continuation: SaveGatedShieldReactionContinuation,
   }
 
@@ -30,8 +28,6 @@ module battleRuntimeSaveGatedShieldReactionResolution {
               frame.trigger == AttackHit and
               frame.continuation == ResumeIceKnife)
             HasSaveGatedShieldReactionCandidate({
-              eligibleReactors: frame.eligibleReactors,
-              offeredReactors: frame.offeredReactors,
               continuation: SaveGatedShieldIceKnife,
             })
           else
@@ -39,13 +35,48 @@ module battleRuntimeSaveGatedShieldReactionResolution {
       | _ => NoSaveGatedShieldReactionCandidate
     }
 
-  pure def resumeSaveGatedShieldReactionContinuation(
+  pure def resumeSaveGatedShieldReactionAfterTake(
     state: BattleState,
     continuation: SaveGatedShieldReactionContinuation,
   ): BattleState =
+    resumeSaveGatedShieldReactionAtShieldOfferBoundary(
+      state,
+      continuation,
+      IceKnifeShieldOfferConsidered,
+    )
+
+  pure def resumeSaveGatedShieldReactionAfterDecline(
+    state: BattleState,
+    continuation: SaveGatedShieldReactionContinuation,
+  ): BattleState =
+    resumeSaveGatedShieldReactionAtShieldOfferBoundary(
+      state,
+      continuation,
+      IceKnifeShieldOfferConsidered,
+    )
+
+  pure def resumeSaveGatedShieldReactionAtShieldOfferBoundary(
+    state: BattleState,
+    continuation: SaveGatedShieldReactionContinuation,
+    shieldOfferBoundary: IceKnifeShieldOfferBoundary,
+  ): BattleState =
     match continuation {
       | SaveGatedShieldIceKnife =>
-          resolveIceKnife(state, 15, 10, 4, false, true, false, 6, true, true)
+          resolveIceKnifeWithMirrorImageDuplicateRollAtShieldOfferBoundary(
+            state,
+            15,
+            10,
+            4,
+            false,
+            true,
+            false,
+            6,
+            true,
+            true,
+            0,
+            false,
+            shieldOfferBoundary,
+          )
     }
 
   pure def resolveSaveGatedShieldReactionFrame(
@@ -53,17 +84,11 @@ module battleRuntimeSaveGatedShieldReactionResolution {
     reactor: Actor,
     frame: SaveGatedShieldReactionFrame,
   ): BattleState =
-    match takeShieldReactionDecision(
-      state,
-      reactor,
-      frame.eligibleReactors,
-      frame.offeredReactors,
-    ) {
-      | ShieldReactionDecisionTaken(data) =>
-          if (data.frameClosed)
-            resumeSaveGatedShieldReactionContinuation(data.state, frame.continuation)
-          else
-            data.state
+    match takeShieldReactionDecision(state, reactor) {
+      | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameClosed(data)) =>
+          resumeSaveGatedShieldReactionAfterTake(data.state, frame.continuation)
+      | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameOpen(data)) =>
+          data.state
       | _ => state
     }
 
@@ -76,18 +101,10 @@ module battleRuntimeSaveGatedShieldReactionResolution {
       state,
       reactor,
     ) {
-      | ShieldReactionDecisionDeclined(data) =>
-          if (data.frameClosed)
-            resumeShieldReactionAfterDecline(
-              data.state,
-              reactor,
-              resumeState => resumeSaveGatedShieldReactionContinuation(
-                resumeState,
-                frame.continuation,
-              ),
-            )
-          else
-            data.state
+      | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameClosed(data)) =>
+          resumeSaveGatedShieldReactionAfterDecline(data.state, frame.continuation)
+      | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameOpen(data)) =>
+          data.state
       | _ => state
     }
 

@@ -290,20 +290,12 @@ module battleRuntimeSaveGatedDamageResolution {
       0,
       false,
     )
-  pure def resolveIceKnifeWithMirrorImageDuplicateRoll(
-    state: BattleState,
-    attackTotal: int,
-    naturalD20: int,
-    attackDamageRoll: int,
-    goblinSavingThrowSucceeded: bool,
-    fighterIncludedInBurst: bool,
-    fighterSavingThrowSucceeded: bool,
-    burstDamageRoll: int,
-    goblinConcentrationSaveSucceeded: bool,
-    fighterConcentrationSaveSucceeded: bool,
-    mirrorImageDuplicateHighestRoll: int,
-    attackerPerceivesTargetWithBlindsightOrTruesight: bool,
-  ): BattleState =
+
+  type IceKnifeShieldOfferBoundary = | IceKnifeShieldOfferPending | IceKnifeShieldOfferConsidered
+
+  pure def resolveIceKnifeWithMirrorImageDuplicateRoll(state: BattleState, attackTotal: int, naturalD20: int, attackDamageRoll: int, goblinSavingThrowSucceeded: bool, fighterIncludedInBurst: bool, fighterSavingThrowSucceeded: bool, burstDamageRoll: int, goblinConcentrationSaveSucceeded: bool, fighterConcentrationSaveSucceeded: bool, mirrorImageDuplicateHighestRoll: int, attackerPerceivesTargetWithBlindsightOrTruesight: bool): BattleState = resolveIceKnifeWithMirrorImageDuplicateRollAtShieldOfferBoundary(state, attackTotal, naturalD20, attackDamageRoll, goblinSavingThrowSucceeded, fighterIncludedInBurst, fighterSavingThrowSucceeded, burstDamageRoll, goblinConcentrationSaveSucceeded, fighterConcentrationSaveSucceeded, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight, IceKnifeShieldOfferPending)
+
+  pure def resolveIceKnifeWithMirrorImageDuplicateRollAtShieldOfferBoundary(state: BattleState, attackTotal: int, naturalD20: int, attackDamageRoll: int, goblinSavingThrowSucceeded: bool, fighterIncludedInBurst: bool, fighterSavingThrowSucceeded: bool, burstDamageRoll: int, goblinConcentrationSaveSucceeded: bool, fighterConcentrationSaveSucceeded: bool, mirrorImageDuplicateHighestRoll: int, attackerPerceivesTargetWithBlindsightOrTruesight: bool, shieldOfferBoundary: IceKnifeShieldOfferBoundary): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)))
       state
     else {
@@ -315,7 +307,7 @@ module battleRuntimeSaveGatedDamageResolution {
         attackerPerceivesTargetWithBlindsightOrTruesight,
         mirrorImageDuplicateHighestRoll,
       )
-      if (hit and not(mirrorImageRedirects) and state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+      if (hit and not(mirrorImageRedirects) and shieldOfferBoundary == IceKnifeShieldOfferPending and state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
         openReactionWindow(rolled, {
           trigger: AttackHit,
           procedure: ShieldReactionProcedure,

@@ -10,21 +10,28 @@ module battleRuntimeShieldReactionDecision {
 
   // RAW: .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield
 
+  type ShieldReactionDecisionFrame =
+    | ShieldReactionDecisionFrameOpen({ state: BattleState })
+    | ShieldReactionDecisionFrameClosed({ state: BattleState })
+
   type ShieldReactionDecision =
     | ShieldReactionDecisionUnchanged
-    | ShieldReactionDecisionDeclined({
-        state: BattleState,
-        frameClosed: bool,
-      })
-    | ShieldReactionDecisionTaken({
-        state: BattleState,
-        frameClosed: bool,
-      })
+    | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrame)
+    | ShieldReactionDecisionTaken(ShieldReactionDecisionFrame)
 
   pure def shieldReactionFrameIsFreshGoblinTarget(
     frame: PendingReactionFrame,
   ): bool =
     frame.eligibleReactors == Set(Goblin) and frame.offeredReactors == Set()
+
+  pure def shieldReactionDecisionFrame(
+    before: BattleState,
+    after: BattleState,
+  ): ShieldReactionDecisionFrame =
+    if (reactionDecisionClosedFrame(before, after))
+      ShieldReactionDecisionFrameClosed({ state: after })
+    else
+      ShieldReactionDecisionFrameOpen({ state: after })
 
   pure def declineShieldReactionDecision(
     state: BattleState,
@@ -34,59 +41,22 @@ module battleRuntimeShieldReactionDecision {
     if (afterDecision == state)
       ShieldReactionDecisionUnchanged
     else
-      ShieldReactionDecisionDeclined({
-        state: afterDecision,
-        frameClosed: reactionDecisionClosedFrame(state, afterDecision),
-      })
-  }
-
-  pure def resumeShieldReactionAfterDecline(
-    state: BattleState,
-    reactor: Actor,
-    resumeContinuation: (BattleState) => BattleState,
-  ): BattleState = {
-    val reactionAvailable = reactorCanReact(state, reactor)
-    val stateWithoutReaction = match reactor {
-      | Fighter => {
-          ...state,
-          fighter: { ...state.fighter, reactionAvailable: false },
-        }
-      | Goblin => {
-          ...state,
-          goblin: { ...state.goblin, reactionAvailable: false },
-        }
-    }
-    val resumed = resumeContinuation(stateWithoutReaction)
-    match reactor {
-      | Fighter => {
-          ...resumed,
-          fighter: { ...resumed.fighter, reactionAvailable: reactionAvailable },
-        }
-      | Goblin => {
-          ...resumed,
-          goblin: { ...resumed.goblin, reactionAvailable: reactionAvailable },
-        }
-    }
+      ShieldReactionDecisionDeclined(shieldReactionDecisionFrame(state, afterDecision))
   }
 
   pure def takeShieldReactionDecision(
     state: BattleState,
     reactor: Actor,
-    eligibleReactors: Set[Actor],
-    offeredReactors: Set[Actor],
   ): ShieldReactionDecision = {
+    val reactorIsGoblin = reactor == Goblin
     val decision = battleRuntimeTakeReactionDecision(
       battleRuntimeReactionTrigger(AttackHit),
       battleRuntimeReactionProcedure(ShieldReactionProcedure),
-      eligibleReactors.contains(reactor),
-      offeredReactors.contains(reactor),
+      reactorIsGoblin,
+      false,
       reactorCanReact(state, reactor),
       canActorExpendSpellSlotThisTurn(state, reactor),
-      reactionOfferCompletesFrame(
-        eligibleReactors,
-        offeredReactors,
-        reactor,
-      ),
+      reactorIsGoblin,
     )
     match decision {
       | BattleRuntimeTookReaction(_) => {
@@ -99,10 +69,9 @@ module battleRuntimeShieldReactionDecision {
             afterReactionProcedure,
             reactor,
           )
-          ShieldReactionDecisionTaken({
-            state: afterDecision,
-            frameClosed: reactionDecisionClosedFrame(state, afterDecision),
-          })
+          ShieldReactionDecisionTaken(
+            shieldReactionDecisionFrame(state, afterDecision)
+          )
         }
       | _ => ShieldReactionDecisionUnchanged
     }

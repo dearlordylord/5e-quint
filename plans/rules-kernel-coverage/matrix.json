@@ -13067,7 +13067,12 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
-        "packages/battle-runtime/battle-runtime-reaction-window.qnt"
+        "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+        "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt"
       ],
       "status": "generation-subset-clean"
     },

@@ -14,8 +14,6 @@ module battleRuntimeDirectShieldReactionResolution {
   // target-allocation or per-dart damage facts, so it does not invent a second
   // MagicMissileTargeted trigger or a no-op continuation here.
   type DirectShieldReactionFrame = {
-    eligibleReactors: Set[Actor],
-    offeredReactors: Set[Actor],
     continuation: DirectSpellAttackReactionContinuation,
   }
 
@@ -37,36 +35,34 @@ module battleRuntimeDirectShieldReactionResolution {
                   NoDirectShieldReactionCandidate
               | HasDirectSpellAttackReactionContinuation(continuation) =>
                   HasDirectShieldReactionCandidate({
-                    eligibleReactors: frame.eligibleReactors,
-                    offeredReactors: frame.offeredReactors,
                     continuation: continuation,
                   })
             }
       | _ => NoDirectShieldReactionCandidate
     }
 
-  pure def resumeDirectShieldReactionContinuation(
+  pure def resumeDirectShieldReactionAfterTake(
     state: BattleState,
     continuation: DirectSpellAttackReactionContinuation,
   ): BattleState =
-    resumeDirectSpellAttackReactionContinuation(state, continuation)
+    resumeDirectSpellAttackReactionContinuationAfterShieldOffer(state, continuation)
+
+  pure def resumeDirectShieldReactionAfterDecline(
+    state: BattleState,
+    continuation: DirectSpellAttackReactionContinuation,
+  ): BattleState =
+    resumeDirectSpellAttackReactionContinuationAfterShieldOffer(state, continuation)
 
   pure def resolveDirectShieldReactionFrame(
     state: BattleState,
     reactor: Actor,
     frame: DirectShieldReactionFrame,
   ): BattleState =
-    match takeShieldReactionDecision(
-      state,
-      reactor,
-      frame.eligibleReactors,
-      frame.offeredReactors,
-    ) {
-      | ShieldReactionDecisionTaken(data) =>
-          if (data.frameClosed)
-            resumeDirectShieldReactionContinuation(data.state, frame.continuation)
-          else
-            data.state
+    match takeShieldReactionDecision(state, reactor) {
+      | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameClosed(data)) =>
+          resumeDirectShieldReactionAfterTake(data.state, frame.continuation)
+      | ShieldReactionDecisionTaken(ShieldReactionDecisionFrameOpen(data)) =>
+          data.state
       | _ => state
     }
 
@@ -79,18 +75,10 @@ module battleRuntimeDirectShieldReactionResolution {
       state,
       reactor,
     ) {
-      | ShieldReactionDecisionDeclined(data) =>
-          if (data.frameClosed)
-            resumeShieldReactionAfterDecline(
-              data.state,
-              reactor,
-              resumeState => resumeDirectShieldReactionContinuation(
-                resumeState,
-                frame.continuation,
-              ),
-            )
-          else
-            data.state
+      | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameClosed(data)) =>
+          resumeDirectShieldReactionAfterDecline(data.state, frame.continuation)
+      | ShieldReactionDecisionDeclined(ShieldReactionDecisionFrameOpen(data)) =>
+          data.state
       | _ => state
     }
 

@@ -113,6 +113,10 @@ module battleRuntimeSpellAttackDirectResolution {
     | DirectSpellAttackPoisonSpray
     | DirectSpellAttackChillTouch
 
+  type DirectSpellAttackShieldOfferBoundary =
+    | DirectSpellAttackShieldOfferPending
+    | DirectSpellAttackShieldOfferConsidered
+
   type DirectSpellAttackReactionContinuationOption =
     | NoDirectSpellAttackReactionContinuation
     | HasDirectSpellAttackReactionContinuation(DirectSpellAttackReactionContinuation)
@@ -134,10 +138,61 @@ module battleRuntimeSpellAttackDirectResolution {
     state: BattleState,
     continuation: DirectSpellAttackReactionContinuation,
   ): BattleState =
+    resumeDirectSpellAttackReactionContinuationAtShieldOfferBoundary(
+      state,
+      continuation,
+      DirectSpellAttackShieldOfferPending,
+    )
+
+  pure def resumeDirectSpellAttackReactionContinuationAfterShieldOffer(
+    state: BattleState,
+    continuation: DirectSpellAttackReactionContinuation,
+  ): BattleState =
+    resumeDirectSpellAttackReactionContinuationAtShieldOfferBoundary(
+      state,
+      continuation,
+      DirectSpellAttackShieldOfferConsidered,
+    )
+
+  pure def resumeDirectSpellAttackReactionContinuationAtShieldOfferBoundary(
+    state: BattleState,
+    continuation: DirectSpellAttackReactionContinuation,
+    shieldOfferBoundary: DirectSpellAttackShieldOfferBoundary,
+  ): BattleState =
     match continuation {
-      | DirectSpellAttackRayOfFrost => resolveRayOfFrost(state, 15, 10, 4, true)
-      | DirectSpellAttackPoisonSpray => resolvePoisonSpray(state, 15, 10, 7, true)
-      | DirectSpellAttackChillTouch => resolveChillTouch(state, 15, 10, 6, true)
+      | DirectSpellAttackRayOfFrost =>
+          resolveRayOfFrostWithDamageRollAndMirrorImageDuplicateRoll(
+            state,
+            15,
+            10,
+            fighterSpellAttackDamageRoll(4),
+            true,
+            0,
+            false,
+            shieldOfferBoundary,
+          )
+      | DirectSpellAttackPoisonSpray =>
+          resolvePoisonSprayWithMirrorImageDuplicateRoll(
+            state,
+            15,
+            10,
+            7,
+            true,
+            0,
+            false,
+            shieldOfferBoundary,
+          )
+      | DirectSpellAttackChillTouch =>
+          resolveChillTouchWithMirrorImageDuplicateRoll(
+            state,
+            15,
+            10,
+            6,
+            true,
+            0,
+            false,
+            shieldOfferBoundary,
+          )
     }
 
   pure def fighterSpellAttackMirrorImageRedirects(
@@ -193,6 +248,7 @@ module battleRuntimeSpellAttackDirectResolution {
       concentrationSaveSucceeded,
       mirrorImageDuplicateHighestRoll,
       attackerPerceivesTargetWithBlindsightOrTruesight,
+      DirectSpellAttackShieldOfferPending,
     )
   pure def resolveRayOfFrostWithDamageRoll(
     state: BattleState,
@@ -209,6 +265,7 @@ module battleRuntimeSpellAttackDirectResolution {
       concentrationSaveSucceeded,
       0,
       false,
+      DirectSpellAttackShieldOfferPending,
     )
   pure def resolveRayOfFrostWithDamageRollAndMirrorImageDuplicateRoll(
     state: BattleState,
@@ -218,6 +275,7 @@ module battleRuntimeSpellAttackDirectResolution {
     concentrationSaveSucceeded: bool,
     mirrorImageDuplicateHighestRoll: int,
     attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+    shieldOfferBoundary: DirectSpellAttackShieldOfferBoundary,
   ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
       state
@@ -227,7 +285,9 @@ module battleRuntimeSpellAttackDirectResolution {
     }
     else if (fighterSpellAttackMirrorImageRedirects(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight))
       recordFighterSpellAttackMirrorImageDuplicateHit(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight)
-    else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+    else if (shieldOfferBoundary == DirectSpellAttackShieldOfferPending and
+             state.goblin.reactionAvailable and
+             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
         trigger: AttackHit,
         procedure: ShieldReactionProcedure,
@@ -257,6 +317,7 @@ module battleRuntimeSpellAttackDirectResolution {
       concentrationSaveSucceeded,
       0,
       false,
+      DirectSpellAttackShieldOfferPending,
     )
   pure def resolvePoisonSprayWithMirrorImageDuplicateRoll(
     state: BattleState,
@@ -266,6 +327,7 @@ module battleRuntimeSpellAttackDirectResolution {
     concentrationSaveSucceeded: bool,
     mirrorImageDuplicateHighestRoll: int,
     attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+    shieldOfferBoundary: DirectSpellAttackShieldOfferBoundary,
   ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
       state
@@ -275,7 +337,9 @@ module battleRuntimeSpellAttackDirectResolution {
     }
     else if (fighterSpellAttackMirrorImageRedirects(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight))
       recordFighterSpellAttackMirrorImageDuplicateHit(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight)
-    else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+    else if (shieldOfferBoundary == DirectSpellAttackShieldOfferPending and
+             state.goblin.reactionAvailable and
+             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
         trigger: AttackHit,
         procedure: ShieldReactionProcedure,
@@ -305,6 +369,7 @@ module battleRuntimeSpellAttackDirectResolution {
       concentrationSaveSucceeded,
       0,
       false,
+      DirectSpellAttackShieldOfferPending,
     )
   pure def resolveChillTouchWithMirrorImageDuplicateRoll(
     state: BattleState,
@@ -314,6 +379,7 @@ module battleRuntimeSpellAttackDirectResolution {
     concentrationSaveSucceeded: bool,
     mirrorImageDuplicateHighestRoll: int,
     attackerPerceivesTargetWithBlindsightOrTruesight: bool,
+    shieldOfferBoundary: DirectSpellAttackShieldOfferBoundary,
   ): BattleState =
     if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state))
       state
@@ -323,7 +389,9 @@ module battleRuntimeSpellAttackDirectResolution {
     }
     else if (fighterSpellAttackMirrorImageRedirects(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight))
       recordFighterSpellAttackMirrorImageDuplicateHit(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight)
-    else if (state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+    else if (shieldOfferBoundary == DirectSpellAttackShieldOfferPending and
+             state.goblin.reactionAvailable and
+             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
         trigger: AttackHit,
         procedure: ShieldReactionProcedure,

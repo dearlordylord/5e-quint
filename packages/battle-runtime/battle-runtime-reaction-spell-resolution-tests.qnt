@@ -33,9 +33,9 @@ module battleRuntimeReactionSpellResolutionTests {
     val awaiting = resolveRayOfFrost(initialState, 15, 10, 4, true)
     val resolved = resolveDirectShieldReactionOffer(awaiting, Goblin)
     all {
-      assert(resolved.fighter.activeEffects.contains(ShieldArmorClassBonus)),
-      assert(not(resolved.fighter.reactionAvailable)),
-      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+      assert(resolved.goblin.activeEffects.contains(ShieldArmorClassBonus)),
+      assert(not(resolved.goblin.reactionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Goblin)),
     }
   }
 

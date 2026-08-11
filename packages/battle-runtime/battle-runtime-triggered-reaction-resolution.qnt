@@ -9,9 +9,6 @@ module battleRuntimeTriggeredReactionResolution {
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeSaveGatedDamageTarget.* from "./battle-runtime-save-gated-damage-target"
   import battleRuntimeSaveGatedDamageResolution.* from "./battle-runtime-save-gated-damage-resolution"
-  import battleRuntimeSpellAttackDirectResolution.* from "./battle-runtime-spell-attack-direct-resolution"
-  import battleRuntimeLight.* from "./battle-runtime-light"
-  import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeCommandMovementNextTurn.* from "./battle-runtime-command-movement-next-turn"
   import battleRuntimeAttackDamageConcentrationReaction.* from "./battle-runtime-attack-damage-concentration-reaction"
@@ -23,31 +20,6 @@ module battleRuntimeTriggeredReactionResolution {
     match continuation {
       | ResumeAttack(_) =>
           resumeAttackDamageReactionContinuation(state, continuation)
-      | ResumeRayOfFrost =>
-          resumeDirectSpellAttackReactionContinuation(state, DirectSpellAttackRayOfFrost)
-      | ResumePoisonSpray =>
-          resumeDirectSpellAttackReactionContinuation(state, DirectSpellAttackPoisonSpray)
-      | ResumeChillTouch =>
-          resumeDirectSpellAttackReactionContinuation(state, DirectSpellAttackChillTouch)
-      | ResumeTrueStrikeWeaponAttack =>
-          resolveTrueStrikeWeaponAttack(
-            state,
-            15,
-            10,
-            4,
-            5,
-            3,
-            5,
-            Radiant,
-            Slashing,
-            true,
-          )
-      | ResumeProduceFlameHurl =>
-          resolveProduceFlameHurl(state, 15, 10, 5, true)
-      | ResumeFlameBladeAttack =>
-          resolveFlameBladeAttack(state, 15, 10, 6, true)
-      | ResumeIceKnife =>
-          resolveIceKnife(state, 15, 10, 4, false, true, false, 6, true, true)
       | ResumeSaveGateDamage =>
           resolveAcidSplash(state, false, true, 4, true, true)
       | ResumeAfterDamage => state
@@ -67,6 +39,9 @@ module battleRuntimeTriggeredReactionResolution {
           )
       | ResumeDissonantWhispersMovementThenAfterDamage(_) =>
           openDissonantWhispersAfterDamageSequence(state)
+      // Shield-family continuations are owned by typed Shield resolvers; an
+      // unjoined continuation stays unchanged in this generic lane.
+      | _ => state
     }
 
   pure def declineNonSpellReactionOfferAndResume(

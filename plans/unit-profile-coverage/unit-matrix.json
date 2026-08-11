@@ -2932,7 +2932,7 @@
         "packages/battle-runtime/src/battle-interrupt-triggers.ts",
         "packages/battle-runtime/src/battle-state-execution.ts"
       ],
-      "sourceBoundary": "The runtime admits Shield only from an attack-hit or its existing SpellCast/repeatedDamageAllocation path. This QNT owner set models the attack-hit frame with typed direct spell-attack, weapon, light-created, and save-gated continuations; Magic Missile target allocation and per-dart damage facts remain at the runtime spell-cast boundary until a matching narrowed QNT owner exists.",
+      "sourceBoundary": "The runtime admits Shield only from an attack-hit or its existing SpellCast/repeatedDamageAllocation path. This QNT owner set models the attack-hit frame with typed direct spell-attack, weapon, light-created, and save-gated continuations; Magic Missile target allocation and per-dart damage facts remain at the runtime spell-cast boundary until a matching narrowed QNT owner exists. Runtime Shield/Magic Missile verification remains owned by the listed Counterspell runtime test; this profile makes no QNT parity claim for Magic Missile.",
       "taskRefs": [
         "QCORE8",
         "QCORE10",
@@ -2951,6 +2951,10 @@
         },
         {
           "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-procedure-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
           "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution-tests.qnt"
         },
         {
@@ -2960,6 +2964,10 @@
         {
           "kind": "qnt-proof",
           "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/counterspell-reaction-spell.test.ts"
         },
         {
           "kind": "focused-mbt",
@@ -44908,7 +44916,7 @@
             "packages/battle-runtime/src/battle-interrupt-triggers.ts",
             "packages/battle-runtime/src/battle-state-execution.ts"
           ],
-          "sourceBoundary": "The runtime admits Shield only from an attack-hit or its existing SpellCast/repeatedDamageAllocation path. This QNT owner set models the attack-hit frame with typed direct spell-attack, weapon, light-created, and save-gated continuations; Magic Missile target allocation and per-dart damage facts remain at the runtime spell-cast boundary until a matching narrowed QNT owner exists.",
+          "sourceBoundary": "The runtime admits Shield only from an attack-hit or its existing SpellCast/repeatedDamageAllocation path. This QNT owner set models the attack-hit frame with typed direct spell-attack, weapon, light-created, and save-gated continuations; Magic Missile target allocation and per-dart damage facts remain at the runtime spell-cast boundary until a matching narrowed QNT owner exists. Runtime Shield/Magic Missile verification remains owned by the listed Counterspell runtime test; this profile makes no QNT parity claim for Magic Missile.",
           "taskRefs": [
             "QCORE8",
             "QCORE10",
@@ -44927,6 +44935,10 @@
             },
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-procedure-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution-tests.qnt"
             },
             {
@@ -44936,6 +44948,10 @@
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/counterspell-reaction-spell.test.ts"
             },
             {
               "kind": "focused-mbt",
