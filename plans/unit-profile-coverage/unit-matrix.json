@@ -1210,7 +1210,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-and-mastery-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -1236,7 +1236,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-and-mastery-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -1266,7 +1266,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-and-mastery-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -1662,7 +1662,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2450,7 +2450,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2478,7 +2478,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2570,7 +2570,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2595,7 +2595,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2644,7 +2644,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-hit-point-lifecycle-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2668,7 +2668,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2696,7 +2696,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2720,7 +2720,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2744,7 +2744,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2768,7 +2768,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2793,7 +2793,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-held-weapon-override-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2858,7 +2858,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3111,7 +3111,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3169,7 +3169,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3920,7 +3920,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -4349,7 +4349,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -25782,7 +25782,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -29955,7 +29955,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -30876,7 +30876,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-and-mastery-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -31035,7 +31035,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-and-mastery-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -31169,7 +31169,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-attack-and-mastery-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -32739,7 +32739,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -33691,7 +33691,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -36244,7 +36244,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -36303,7 +36303,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -36366,7 +36366,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -36914,7 +36914,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -37128,7 +37128,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -37280,7 +37280,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -37343,7 +37343,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -38906,7 +38906,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -38978,7 +38978,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -39062,7 +39062,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spellcasting-and-utility-facts-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -39501,7 +39501,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -40067,7 +40067,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -40165,7 +40165,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spatial-movement-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -42810,7 +42810,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -43173,7 +43173,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-hit-point-lifecycle-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -44246,7 +44246,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -44916,7 +44916,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -45083,7 +45083,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-held-weapon-override-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -45181,7 +45181,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-after-hit-spell-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -45590,7 +45590,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -46059,7 +46059,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-scalar-buff-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -46538,7 +46538,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack-tests.qnt"
             },
             {
               "kind": "runtime-test",
