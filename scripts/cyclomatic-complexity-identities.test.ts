@@ -126,4 +126,28 @@ const resolvers = {
     expect(second).toContain("owner:property:second/owner:class:Worker");
     expect(first).not.toBe(second);
   });
+
+  test("named function expressions include their containing property paths", () => {
+    const source = `
+const resolvers = {
+  first: function Worker() { return "first-marker"; },
+  second: function Worker() { return "second-marker"; },
+};
+`;
+    const resolveIdentity = complexityIdentityResolver();
+    const filename = sourceFixture(source);
+
+    const first = resolveIdentity(
+      filename,
+      diagnosticAt(source, '"first-marker"'),
+    );
+    const second = resolveIdentity(
+      filename,
+      diagnosticAt(source, '"second-marker"'),
+    );
+
+    expect(first).toContain("owner:property:first/binding:Worker");
+    expect(second).toContain("owner:property:second/binding:Worker");
+    expect(first).not.toBe(second);
+  });
 });

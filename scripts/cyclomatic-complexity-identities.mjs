@@ -93,7 +93,7 @@ function lexicalOwners(node, sourceFile) {
   const owners = [];
   let child = node;
   let parent = node.parent;
-  let ownsExpression = false;
+  let ownsExpression = ts.isFunctionExpression(node) && node.name !== undefined;
   while (parent !== undefined && !ts.isFunctionLike(parent)) {
     if (ts.isClassLike(parent)) {
       const name = declaredName(parent, sourceFile);
