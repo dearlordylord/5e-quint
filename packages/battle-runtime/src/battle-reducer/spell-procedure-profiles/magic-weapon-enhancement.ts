@@ -31,7 +31,7 @@ import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
-import { wildShapeCanUseWornLoadoutObject } from "../wild-shape-equipment.ts";
+import { loadoutWeaponItemIsUsableDuringWildShape } from "../wild-shape-equipment.ts";
 import { characterEffectiveLoadout } from "../battle-object-lifecycle.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import {
@@ -321,35 +321,11 @@ function battleMagicWeaponTargetItemIsHeldWeapon(
     return false;
   }
   const loadout = characterEffectiveLoadout(state, holder);
-  const activeWildShape = activeDruidWildShapeEffect(holder);
-  if (activeWildShape !== null) {
-    const main = loadout.weapon;
-    const offHand = loadout.offHandWeapon;
-    return (
-      (main !== undefined &&
-        main.itemId === targetItem.itemId &&
-        wildShapeCanUseWornLoadoutObject({
-          loadout,
-          formLimbs: activeWildShape.formLimbs,
-          equipmentDisposition: activeWildShape.equipmentDisposition,
-          objectKind: "mainWeapon",
-          objectId: main.itemId,
-        })) ||
-      (offHand !== undefined &&
-        offHand.itemId === targetItem.itemId &&
-        wildShapeCanUseWornLoadoutObject({
-          loadout,
-          formLimbs: activeWildShape.formLimbs,
-          equipmentDisposition: activeWildShape.equipmentDisposition,
-          objectKind: "offHandWeapon",
-          objectId: offHand.itemId,
-        }))
-    );
-  }
-  return (
-    loadout.weapon?.itemId === targetItem.itemId ||
-    loadout.offHandWeapon?.itemId === targetItem.itemId
-  );
+  return loadoutWeaponItemIsUsableDuringWildShape({
+    loadout,
+    activeWildShape: activeDruidWildShapeEffect(holder),
+    itemId: targetItem.itemId,
+  });
 }
 
 export const MagicWeaponEnhancementInvocationSchema =
