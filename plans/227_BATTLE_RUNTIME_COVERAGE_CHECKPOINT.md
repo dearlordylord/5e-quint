@@ -30,6 +30,31 @@ totals, and comparison below are the self-contained durable evidence.
 
 ## Current authoritative diagnostic
 
+- Date: 2026-08-11
+- Git HEAD: `0865a38ef`
+- Command: `pnpm coverage`
+- Result: exit 0; every workspace coverage package completed green
+- Total wall duration: approximately 9 minutes under concurrent machine load
+- Battle-runtime tests: 219/219 files passed; 2,371 tests passed and 71
+  skipped (2,442 total)
+
+| Metric     | M25 combined base `3c1e061b3` | Current combined HEAD `0865a38ef` | Covered / total change |      Uncovered change | Percentage change |
+| ---------- | ----------------------------: | --------------------------------: | ---------------------: | --------------------: | ----------------: |
+| Statements |    121,480 / 125,002 (97.18%) |        121,517 / 124,911 (97.28%) |               37 / -91 | 3,522 -> 3,394 (-128) |         +0.1004pp |
+| Branches   |      30,949 / 32,770 (94.44%) |          30,998 / 32,787 (94.54%) |                49 / 17 |  1,821 -> 1,789 (-32) |         +0.1005pp |
+| Functions  |          4,817 / 4,817 (100%) |              4,815 / 4,815 (100%) |                -2 / -2 |                0 -> 0 |                 0 |
+| Lines      |    121,480 / 125,002 (97.18%) |        121,517 / 124,911 (97.28%) |               37 / -91 | 3,522 -> 3,394 (-128) |         +0.1004pp |
+
+This is the first authoritative combined measurement after integrating the
+parallel M23-M28 lane, the typed character-admission milestone, and M26's
+attack-damage profile boundary coverage. It therefore supersedes the
+lane-local M28 totals below. Every executable package other than
+battle-runtime remains at or above 99% for statements, branches, functions,
+and lines. The checked-in battle-runtime ratchets remain 97/97/100/94; no
+threshold was lowered.
+
+## Prior authoritative diagnostic (superseded)
+
 - Date: 2026-08-09
 - Git HEAD: `4eeecad28`
 - Command: `pnpm coverage`
@@ -54,7 +79,7 @@ were preserved; no threshold was lowered. Every other
 executable package in this root run met all 99% metric thresholds;
 battle-runtime is the only remaining package below acceptance.
 
-## Current exact battle-runtime diagnostic
+## Prior lane-local battle-runtime diagnostic (superseded)
 
 This package-local milestone measurement clones the checked-in battle-runtime
 arguments and thresholds from `scripts/workspace-quality-harness.mjs` and ran
@@ -118,12 +143,25 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 121,281 | 124,801 |                  123,553 |         2,272 |
-| Branches   |  30,900 |  32,734 |                   32,407 |         1,507 |
-| Functions  |   4,811 |   4,811 |                    4,763 |             0 |
-| Lines      | 121,281 | 124,801 |                  123,553 |         2,272 |
+| Statements | 121,517 | 124,911 |                  123,662 |         2,145 |
+| Branches   |  30,998 |  32,787 |                   32,460 |         1,462 |
+| Functions  |   4,815 |   4,815 |                    4,767 |             0 |
+| Lines      | 121,517 | 124,911 |                  123,662 |         2,145 |
 
 ## Milestone context
+
+M26 adds schema-decoded synthetic attack-damage profile boundaries through the
+public battle-start and action-discovery path. Seventeen negative scenarios
+pair each rejected record with an admitted control under the same access and
+caster setup; the Ice Knife direct-emanation positive checks the exact synthetic
+spell identity and `attackBurstSaveDamage` procedure. The focused report proves
+34 M25-residual statement lines newly covered. V8 branch maps differ
+structurally between focused and full runs, so focused evidence is recorded only
+as 17 candidate-only covered branch lines, not as an exact arm-count claim.
+Luna self-review and independent Standards/Spec loops corrected causal controls,
+fixture duplication, Wizard/Warlock class facts, and level-5 Pact Magic slots
+before converging clean. Root verification passed 18/18 focused tests, package
+typecheck, Prettier, and ESLint. The reviewed milestone is `0865a38ef`.
 
 M28 replaces the environmental-fall owner's duplicate falling-prone
 knockout-condition reconstruction with the canonical creature-state operation.
