@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
 
 module battleRuntimeTurnAdvancement {
+  import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
   import battleRuntimeFeatureTurnEndEffects.* from "./battle-runtime-feature-turn-end-effects"
   import battleRuntimeModel.* from "./battle-runtime-model"
@@ -50,7 +51,9 @@ module battleRuntimeTurnAdvancement {
         readiedSpellHeld: if (spellDurationAdvanced.fighter.readiedSpellHeld and nextActor == Fighter) false else spellDurationAdvanced.fighter.readiedSpellHeld,
         readiedMovementHeld: if (nextActor == Fighter) nextActorStep.readiedMovementHeld else spellDurationAdvanced.fighter.readiedMovementHeld,
         sneakAttackUsedThisTurn: false,
-        extraAttackSlotsRemaining: battleRuntimeExtraAttackSlotsAfterEndTurn(spellDurationAdvanced.fighter.extraAttackSlotsRemaining),
+        // Extra Attack grants attacks only within the current Attack action;
+        // unspent slots cannot cross the canonical End Turn boundary.
+        extraAttackSlotsRemaining: NoAdditionalAttacks,
         cleaveExtraAttackUsedThisTurn: false,
       },
       goblin: {

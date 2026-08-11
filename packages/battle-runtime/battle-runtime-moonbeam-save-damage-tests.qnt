@@ -4,6 +4,7 @@
 module battleRuntimeMoonbeamSaveDamageTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMoonbeamState.* from "./battle-runtime-moonbeam-state"
+  import battleRuntimeMoonbeamFacts.* from "./battle-runtime-moonbeam-facts"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeMoonbeamSaveDamage.* from "./battle-runtime-moonbeam-save-damage"
 

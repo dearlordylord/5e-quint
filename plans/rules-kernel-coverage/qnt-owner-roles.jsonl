@@ -359,7 +359,8 @@
 {"ownerPath":"packages/battle-runtime/battle-runtime-grease-ground-hazard-tests.qnt","role":"proof-only","evidence":"Focused run-test proof owner for Grease entry, turn-start save, prone, and terrain lifecycle semantics."}
 {"ownerPath":"packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt","role":"semantic-core","evidence":"Focused Grease BattleState area-entry, turn-start save, prone, and terrain lifecycle owner."}
 {"ownerPath":"packages/battle-runtime/battle-runtime-moonbeam-cast.qnt","role":"semantic-core","evidence":"Focused Moonbeam cast-state and Concentration lifecycle owner."}
-{"ownerPath":"packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt","role":"semantic-core","evidence":"Focused Moonbeam radiant-damage, slot scaling, and half-save arithmetic owner."}
+{"ownerPath":"packages/battle-runtime/battle-runtime-moonbeam-facts.qnt","role":"semantic-core","evidence":"Canonical Moonbeam duration, Cylinder dimensions, reposition distance, slot scaling, and half-save damage facts owner."}
+{"ownerPath":"packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt","role":"semantic-core","evidence":"Focused Moonbeam Radiant damage adjustment and Hit Point application owner."}
 {"ownerPath":"packages/battle-runtime/battle-runtime-moonbeam-lifecycle-tests.qnt","role":"proof-only","evidence":"Focused run-test proof owner for Moonbeam cast, reposition, and Concentration lifecycle semantics."}
 {"ownerPath":"packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt","role":"semantic-core","evidence":"Focused Moonbeam action-based area reposition owner."}
 {"ownerPath":"packages/battle-runtime/battle-runtime-moonbeam-save-damage-tests.qnt","role":"proof-only","evidence":"Focused run-test proof owner for Moonbeam save, damage, and once-per-turn gating."}

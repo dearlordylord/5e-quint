@@ -23,6 +23,17 @@ module battleRuntimeFeatureBridge {
   import unitFeatureMartialArtsCore.* from "../shared-algebras/proofs/rule-core/unit-feature-martial-arts-core"
   import battleRuntimeFeatureTurnEndEffects.* from "./battle-runtime-feature-turn-end-effects"
 
+  pure def battleRuntimeAttackCountState(
+    actionAvailable: bool,
+    extraAttackSlotsRemaining: AttackActionAdditionalAttacks
+  ): AttackActionAttackCountState = {
+    actionAvailable: actionAvailable,
+    additionalAttacksRemaining: extraAttackSlotsRemaining,
+    attacksResolved: 0,
+    movementSegmentsTaken: 0,
+    turnEnded: false,
+  }
+
   type BattleRuntimeRageResistanceProjection = {
     bludgeoning: bool,
     piercing: bool,

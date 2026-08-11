@@ -2,6 +2,7 @@
 
 module battleRuntimeMoonbeamMovableZoneMbt {
   import battleRuntimeMoonbeamMovableZone.* from "./battle-runtime-moonbeam-movable-zone"
+  import battleRuntimeMoonbeamFacts.* from "./battle-runtime-moonbeam-facts"
   import battleRuntimeShapeShifting.* from "./battle-runtime-shape-shifting"
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
 

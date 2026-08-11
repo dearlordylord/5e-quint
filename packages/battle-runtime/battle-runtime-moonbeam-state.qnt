@@ -5,13 +5,7 @@
 module battleRuntimeMoonbeamState {
   import battleRuntimeModel.* from "./battle-runtime-model"
 
-  pure val moonbeamDurationTicks = 10
   pure val moonbeamAreaId = 6
-  pure val moonbeamRadiusFeet = 5
-  pure val moonbeamHeightFeet = 40
-  pure val moonbeamRepositionMaxMoveFeet = 60
-  pure def moonbeamDamageDice(slotLevel: int): int =
-    2 + (slotLevel - 2)
 
   pure def activeEffectsWithoutMoonbeamMovableZone(effects: Set[ActiveEffect], areaId: int): Set[ActiveEffect] =
     effects.filter(effect => match effect {

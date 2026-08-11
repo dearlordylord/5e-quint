@@ -56,18 +56,6 @@ module battleRuntimeSleetStormAreaHazard {
       | SleetStormTurnStartInArea(_) => CreatureStartsTurnInArea
     }
 
-  pure def sleetStormAreaHazardSaveAlreadyResolved(state: BattleState, targetActor: Actor, triggerFact: SleetStormAreaMembershipTriggerFact): bool = {
-    val areaId = sleetStormAreaHazardTriggerAreaId(triggerFact)
-    val saved = sleetStormSaveAlreadyResolved(state, targetActor, areaId)
-    areaEffectTriggerAlreadyResolved(
-      sleetStormFirstEntryAndStartTurnProfile(
-        saved,
-        saved,
-      ),
-      sleetStormAreaHazardSaveTriggerTiming(triggerFact),
-    )
-  }
-
   pure def markSleetStormSavedThisTurn(state: BattleState, targetActor: Actor, triggerFact: SleetStormAreaMembershipTriggerFact): BattleState = {
     val areaId = sleetStormAreaHazardTriggerAreaId(triggerFact)
     {

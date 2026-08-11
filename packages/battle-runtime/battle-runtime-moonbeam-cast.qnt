@@ -9,13 +9,14 @@ module battleRuntimeMoonbeamCast {
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeMoonbeamState.* from "./battle-runtime-moonbeam-state"
+  import battleRuntimeMoonbeamFacts.* from "./battle-runtime-moonbeam-facts"
 
   pure def resolveMoonbeam(
     state: BattleState,
     areaId: int,
     slotLevel: int,
   ): BattleState =
-    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or slotLevel < 2)
+    if (not(state.actionAvailable) or currentActor(state) != Fighter or state.fighter.unconscious or state.fighter.incapacitated or fighterHasRage(state) or not(canExpendSpellSlotThisTurn(state)) or slotLevel < moonbeamMinimumSlotLevel)
       state
     else {
       val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
@@ -39,4 +40,3 @@ module battleRuntimeMoonbeamCast {
     }
 
 }
-

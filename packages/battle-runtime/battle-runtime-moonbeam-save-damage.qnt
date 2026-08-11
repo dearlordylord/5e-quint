@@ -3,7 +3,6 @@
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 module battleRuntimeMoonbeamSaveDamage {
-  import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMoonbeamState.* from "./battle-runtime-moonbeam-state"
   import battleRuntimeMoonbeamDamageCore.* from "./battle-runtime-moonbeam-damage-core"
@@ -15,12 +14,10 @@ module battleRuntimeMoonbeamSaveDamage {
     savingThrowSucceeded: bool,
     rolledDamage: int,
   ): BattleState =
-    if (not(areaEffectTriggerCanResolve(
-      moonbeamActive(state, areaId),
-      true,
-      moonbeamOnceAcrossQualifiedTriggersProfile(moonbeamSavedThisTurn(state, targetActor, areaId)),
-      CreatureEndsTurnInArea,
-    )))
+    // This BattleState procedure is entered only with the caller's qualified
+    // Moonbeam area-trigger witness; active-area and once-per-turn state are
+    // the remaining admission facts at this boundary.
+    if (not(moonbeamActive(state, areaId)) or moonbeamSavedThisTurn(state, targetActor, areaId))
       state
     else {
       val marked = markMoonbeamSavedThisTurn(state, targetActor, areaId)

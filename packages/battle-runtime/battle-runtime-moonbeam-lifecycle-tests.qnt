@@ -7,6 +7,7 @@ module battleRuntimeMoonbeamLifecycleTests {
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeMoonbeamState.* from "./battle-runtime-moonbeam-state"
+  import battleRuntimeMoonbeamFacts.* from "./battle-runtime-moonbeam-facts"
   import battleRuntimeMoonbeamCast.* from "./battle-runtime-moonbeam-cast"
   import battleRuntimeMoonbeamReposition.* from "./battle-runtime-moonbeam-reposition"
 

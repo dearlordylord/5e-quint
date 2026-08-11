@@ -26,6 +26,19 @@ module battleRuntimeCommandNextTurn {
       | _ => true
     })
 
+  pure def combatantWithCommandPending(
+    state: BattleState,
+    targetActor: Actor,
+    option: CommandOption,
+  ): Combatant = {
+    val combatant = combatantForActor(state, targetActor)
+    {
+      ...combatant,
+      activeEffects: activeEffectsWithoutCommandPending(combatant.activeEffects, Fighter)
+        .union(Set(commandPendingEffectFor(state, targetActor, option))),
+    }
+  }
+
   pure def resolveCommand(
     state: BattleState,
     targets: Set[Actor],
@@ -45,27 +58,20 @@ module battleRuntimeCommandNextTurn {
       not(failedTargets.forall(target => targets.contains(target)))
     )
       state
-    else
-      commitActorSpellSlotUse({
-        ...state,
-        fighter: if (failedTargets.contains(Fighter)) {
-          ...state.fighter,
-          activeEffects: activeEffectsWithoutCommandPending(state.fighter.activeEffects, Fighter)
-            .union(Set(commandPendingEffectFor(state, Fighter, option))),
-        } else state.fighter,
-        goblin: if (failedTargets.contains(Goblin)) {
-          ...state.goblin,
-          activeEffects: activeEffectsWithoutCommandPending(state.goblin.activeEffects, Fighter)
-            .union(Set(commandPendingEffectFor(state, Goblin, option))),
-        } else state.goblin,
-        actionAvailable: false,
-      }, Fighter)
+    else {
+      val withFighterPending = if (failedTargets.contains(Fighter))
+        stateWithActorCombatant(state, Fighter, combatantWithCommandPending(state, Fighter, option))
+      else
+        state
+      val withFailedTargetPending = if (failedTargets.contains(Goblin))
+        stateWithActorCombatant(withFighterPending, Goblin, combatantWithCommandPending(withFighterPending, Goblin, option))
+      else
+        withFighterPending
+      commitActorSpellSlotUse({ ...withFailedTargetPending, actionAvailable: false }, Fighter)
+    }
 
   pure def commandPendingEffectsForActor(state: BattleState, actor: Actor, option: CommandOption): Set[ActiveEffect] =
-    match actor {
-      | Fighter => state.fighter.activeEffects
-      | Goblin => state.goblin.activeEffects
-    }
+    combatantForActor(state, actor).activeEffects
       .filter(effect => match effect {
         | CommandPending(data) =>
             data.option == option and data.expiresAtActor == actor and data.expiresAtRound == state.initiative.round

@@ -6,12 +6,7 @@ module battleRuntimeMoonbeamDamageCore {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
-
-  pure def moonbeamDamageAfterSave(rolledDamage: int, savingThrowSucceeded: bool): int =
-    if (savingThrowSucceeded)
-      rolledDamage / 2
-    else
-      rolledDamage
+  import battleRuntimeMoonbeamFacts.* from "./battle-runtime-moonbeam-facts"
 
   pure def moonbeamAdjustedDamage(rolledDamage: int, savingThrowSucceeded: bool): int =
     damageAfterAdjustments(
@@ -37,4 +32,3 @@ module battleRuntimeMoonbeamDamageCore {
     )
 
 }
-

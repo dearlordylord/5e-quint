@@ -62,15 +62,6 @@ module battleRuntimeWebRestraintAreaHazard {
       | _ => false
     })
 
-  pure def webRestraintSaveAlreadyResolved(state: BattleState, targetActor: Actor, areaId: int, triggerIsEntry: bool): bool =
-    areaEffectTriggerAlreadyResolved(
-      webRestraintFirstEntryAndStartTurnProfile(
-        webEntrySaveAlreadyResolved(state, targetActor, areaId),
-        webStartTurnSaveAlreadyResolved(state, targetActor, areaId),
-      ),
-      webRestraintSaveTriggerTiming(triggerIsEntry),
-    )
-
   pure def webRestraintSaveTriggerTiming(triggerIsEntry: bool): AreaEffectTriggerTiming =
     if (triggerIsEntry)
       CreatureEntersArea
@@ -200,4 +191,3 @@ module battleRuntimeWebRestraintAreaHazard {
       state
 
 }
-

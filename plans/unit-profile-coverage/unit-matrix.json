@@ -4210,6 +4210,7 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-facts.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
@@ -9515,6 +9516,7 @@
         "qntOwners": [
           "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
           "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
+          "packages/battle-runtime/battle-runtime-moonbeam-facts.qnt",
           "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
           "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt",
           "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt",
@@ -44563,6 +44565,7 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
+            "packages/battle-runtime/battle-runtime-moonbeam-facts.qnt",
             "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
             "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
             "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",

@@ -2011,6 +2011,7 @@
       "profiles": ["spell.invocation-moonbeam-movable-zone"],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-facts.qnt",
         "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
@@ -10363,7 +10364,13 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "Focused Moonbeam radiant-damage, slot scaling, and half-save arithmetic owner.",
+      "evidence": "Canonical Moonbeam duration, Cylinder dimensions, reposition distance, slot scaling, and half-save damage facts owner.",
+      "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused Moonbeam Radiant damage adjustment and Hit Point application owner.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
       "role": "semantic-core"
@@ -10947,6 +10954,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-facts.qnt",
       "role": "semantic-core"
     },
     {
@@ -14499,6 +14511,7 @@
       ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt",
+        "packages/battle-runtime/battle-runtime-moonbeam-facts.qnt",
         "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
         "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",

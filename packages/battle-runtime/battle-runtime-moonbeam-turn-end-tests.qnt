@@ -6,6 +6,7 @@ module battleRuntimeMoonbeamTurnEndTests {
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeMoonbeamState.* from "./battle-runtime-moonbeam-state"
+  import battleRuntimeMoonbeamFacts.* from "./battle-runtime-moonbeam-facts"
   import battleRuntimeMoonbeamSaveDamage.* from "./battle-runtime-moonbeam-save-damage"
   import battleRuntimeMoonbeamTurnEnd.* from "./battle-runtime-moonbeam-turn-end"
 
