@@ -1,6 +1,5 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-insect-plague-area-hazard spell.invocation-cloudkill-area-hazard
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE
 
 module spellSaveDamageProjectionCore {
   import damageComponentAdjustments.* from "./damage-component-adjustments"

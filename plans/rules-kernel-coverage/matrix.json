@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 137,
-    "covered": 131,
-    "open": 0,
+    "covered": 129,
+    "open": 2,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,8 +12,8 @@
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 131,
-      "needs-qnt-owner": 0,
+      "covered": 129,
+      "needs-qnt-owner": 2,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
       "boundary-only": 5,
@@ -120,11 +120,8 @@
         }
       ],
       "profiles": ["spell.invocation-insect-plague-area-hazard"],
-      "qntOwners": [
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-      ],
-      "reason": "The promoted Insect Plague runtime consumes caller-supplied area identity, movement facts, appears-in-area, enters-area, and ends-turn-in-area trigger subjects, then owns Concentration duration, active Sphere effect state, Difficult Terrain and Lightly Obscured projections, one shared once-per-turn save ledger, Constitution save-for-half Piercing damage, slot scaling, and cleanup. Automatic Sphere geometry, pathfinding, area membership derivation, and environmental swarm presentation are explicit table/spatial boundaries.",
+      "qntOwners": [],
+      "reason": "The promoted Insect Plague runtime consumes caller-supplied area identity, movement facts, appears-in-area, enters-area, and ends-turn-in-area trigger subjects, then owns Concentration duration, active Sphere effect state, Difficult Terrain and Lightly Obscured projections, one shared once-per-turn save ledger, Constitution save-for-half Piercing damage, slot scaling, and cleanup. Automatic Sphere geometry, pathfinding, area membership derivation, and environmental swarm presentation are explicit table/spatial boundaries. Focused QNT semantic ownership and QNT-connected parity remain unassessed after retirement of the mixed Ground Command owner.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/insect-plague-area-hazard.ts",
@@ -133,7 +130,7 @@
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
-      "status": "covered",
+      "status": "needs-qnt-owner",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Insect Plague",
         "UBIQUITOUS_LANGUAGE.md#Movement",
@@ -154,11 +151,8 @@
         }
       ],
       "profiles": ["spell.invocation-cloudkill-area-hazard"],
-      "qntOwners": [
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-      ],
-      "reason": "The promoted Cloudkill runtime consumes caller-supplied Sphere area identity, appears/moves-into-space/enters/ends-turn area membership trigger subjects, and environmental strong-wind facts, then owns Concentration duration, active Sphere effect state, Heavily Obscured projection, one shared once-per-turn save ledger, Constitution save-for-half Poison damage, slot scaling, strong-wind cleanup, and Concentration/duration cleanup. Automatic cloud movement away from the caster, terrain descent, wind derivation, pathfinding, and area membership derivation remain table/spatial and environment boundaries.",
+      "qntOwners": [],
+      "reason": "The promoted Cloudkill runtime consumes caller-supplied Sphere area identity, appears/moves-into-space/enters/ends-turn area membership trigger subjects, and environmental strong-wind facts, then owns Concentration duration, active Sphere effect state, Heavily Obscured projection, one shared once-per-turn save ledger, Constitution save-for-half Poison damage, slot scaling, strong-wind cleanup, and Concentration/duration cleanup. Automatic cloud movement away from the caster, terrain descent, wind derivation, pathfinding, and area membership derivation remain table/spatial and environment boundaries. Focused QNT semantic ownership and QNT-connected parity remain unassessed after retirement of the mixed Ground Command owner.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/cloudkill-area-hazard.ts",
@@ -169,7 +163,7 @@
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
-      "status": "covered",
+      "status": "needs-qnt-owner",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Cloudkill",
         "UBIQUITOUS_LANGUAGE.md#Movement",
@@ -4849,50 +4843,48 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
-        "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE"
+        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE"
       ],
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
       "id": "BattleInsectPlagueAreaHazardSavingThrowOutcomeHole",
-      "reason": "Insect Plague Saving Throw outcomes consume table-triggered appearance, entry, or end-turn area membership witnesses and drive reducer-owned save-for-half damage sequencing for the active spell hazard. Automatic geometry, pathfinding, area membership derivation, visibility obstruction, and area placement remain table/environment-owned boundary facts.",
+      "reason": "Insect Plague Saving Throw outcomes consume table-triggered appearance, entry, or end-turn area membership witnesses and drive generic save-for-half damage sequencing. Automatic geometry, pathfinding, area membership derivation, visibility obstruction, and area placement remain table/environment-owned boundary facts. Focused Insect Plague QNT lifecycle ownership remains unassessed.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
-        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
-        "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE"
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
       ],
       "followUpTaskIds": [],
       "holeKind": "rolledDice",
       "id": "BattleInsectPlagueAreaHazardDamageRollHole",
-      "reason": "Insect Plague damage rolls provide the Piercing damage total after table-triggered active-area membership and Constitution save outcome are known. The spell profile owns the hazard trigger sequencing while shared HP damage and generic damage disposition own damage application.",
+      "reason": "Insect Plague damage rolls provide the Piercing damage total after table-triggered active-area membership and Constitution save outcome are known. Shared HP damage and generic damage disposition own damage application; focused Insect Plague QNT hazard-trigger sequencing remains unassessed.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
-        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES",
+        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE"
       ],
       "followUpTaskIds": [],
       "holeKind": "savingThrowOutcome",
       "id": "BattleCloudkillAreaHazardSavingThrowOutcomeHole",
-      "reason": "Cloudkill Saving Throw outcomes consume table-triggered appearance, cloud movement, entry, or end-turn area membership witnesses and drive reducer-owned save-for-half Poison damage sequencing for the active spell hazard. Automatic cloud movement geometry, pathfinding, area membership derivation, terrain descent, and wind predicate derivation remain table/environment-owned boundary facts.",
+      "reason": "Cloudkill Saving Throw outcomes consume table-triggered appearance, cloud movement, entry, or end-turn area membership witnesses and drive generic save-for-half Poison damage sequencing. Automatic cloud movement geometry, pathfinding, area membership derivation, terrain descent, and wind predicate derivation remain table/environment-owned boundary facts. Focused Cloudkill QNT lifecycle ownership remains unassessed.",
       "subject": "battle-hole-family"
     },
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
-        "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
         "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
         "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
       ],
       "followUpTaskIds": [],
       "holeKind": "rolledDice",
       "id": "BattleCloudkillAreaHazardDamageRollHole",
-      "reason": "Cloudkill damage rolls provide the Poison damage total after table-triggered active-area membership and Constitution save outcome are known. The Cloudkill lifecycle obligation owns hazard trigger sequencing while shared HP damage and generic damage disposition own damage application.",
+      "reason": "Cloudkill damage rolls provide the Poison damage total after table-triggered active-area membership and Constitution save outcome are known. Shared HP damage and generic damage disposition own damage application; focused Cloudkill QNT hazard-trigger sequencing remains unassessed.",
       "subject": "battle-hole-family"
     },
     {
@@ -7655,10 +7647,8 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt is the focused QNT owner carrying reusable reducer-owned area and emanation trigger cadence semantics while keeping area membership and geometry as table-supplied witness facts.",
       "obligationIds": [
-        "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
-        "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
         "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
@@ -8675,11 +8665,7 @@
     },
     {
       "evidence": "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt is the covered obligation QNT owner carrying QCORE10 save-gated damage projection semantics without importing authored Spell Definition records.",
-      "obligationIds": [
-        "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
-        "BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE",
-        "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE"
-      ],
+      "obligationIds": ["BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt",
       "role": "semantic-core"
     },
@@ -12863,69 +12849,19 @@
     },
     {
       "blockedBy": [],
-      "generatorSubset": [
-        "import",
-        "variant",
-        "record",
-        "record-update",
-        "pure-def",
-        "constant-def",
-        "int",
-        "bool",
-        "if-expression",
-        "let-binding",
-        "arithmetic",
-        "comparison",
-        "boolean-connective",
-        "pattern-match",
-        "set",
-        "map",
-        "filter",
-        "fold",
-        "exists",
-        "set-operators",
-        "membership"
-      ],
+      "generatorSubset": [],
       "obligationId": "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-      ],
-      "status": "generation-subset-clean"
+      "semanticCore": [],
+      "status": "not-assessed"
     },
     {
       "blockedBy": [],
-      "generatorSubset": [
-        "import",
-        "variant",
-        "record",
-        "record-update",
-        "pure-def",
-        "constant-def",
-        "int",
-        "bool",
-        "if-expression",
-        "let-binding",
-        "arithmetic",
-        "comparison",
-        "boolean-connective",
-        "pattern-match",
-        "set",
-        "map",
-        "filter",
-        "fold",
-        "exists",
-        "set-operators",
-        "membership"
-      ],
+      "generatorSubset": [],
       "obligationId": "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": [
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-      ],
-      "status": "generation-subset-clean"
+      "semanticCore": [],
+      "status": "not-assessed"
     },
     {
       "blockedBy": [],

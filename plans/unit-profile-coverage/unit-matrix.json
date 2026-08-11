@@ -73,8 +73,8 @@
     },
     "qntProfileModelingCoverage": {
       "denominator": 149,
-      "numerator": 149,
-      "percent": "100%"
+      "numerator": 147,
+      "percent": "98.7%"
     },
     "qntProofCoverage": {
       "denominator": 149,
@@ -83,8 +83,8 @@
     },
     "rulesKernelCoveredProfileCoverage": {
       "denominator": 187,
-      "numerator": 163,
-      "percent": "87.2%"
+      "numerator": 161,
+      "percent": "86.1%"
     },
     "rulesKernelProfileJoinCoverage": {
       "denominator": 187,
@@ -6984,10 +6984,8 @@
     {
       "id": "spell.invocation-insect-plague-area-hazard",
       "profileKind": "spell-invocation",
-      "qntOwners": [
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-      ],
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/insect-plague-area-hazard.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
@@ -6995,7 +6993,7 @@
         "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
-      "sourceBoundary": "Battle runtime admits the authored Insect Plague area-hazard shape, area choice, Concentration effect, Difficult Terrain and Lightly Obscured projections, Constitution Saving Throw outcomes, Piercing save-for-half damage, slot scaling, and once-per-turn save ledger using caller/table supplied area-membership trigger facts. The table/spatial layer remains the owner of automatic Sphere geometry, route derivation, area membership, and environmental swarm presentation.",
+      "sourceBoundary": "Battle runtime admits the authored Insect Plague area-hazard shape, area choice, Concentration effect, Difficult Terrain and Lightly Obscured projections, Constitution Saving Throw outcomes, Piercing save-for-half damage, slot scaling, and once-per-turn save ledger using caller/table supplied area-membership trigger facts. The table/spatial layer remains the owner of automatic Sphere geometry, route derivation, area membership, and environmental swarm presentation. Focused QNT semantics and QNT-connected parity remain unassessed.",
       "taskRefs": [
         "L19E-03-L5-ACTIVE-AREA-HAZARD"
       ],
@@ -7010,10 +7008,8 @@
     {
       "id": "spell.invocation-cloudkill-area-hazard",
       "profileKind": "spell-invocation",
-      "qntOwners": [
-        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-        "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-      ],
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/cloudkill-area-hazard.ts",
         "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
@@ -7023,7 +7019,7 @@
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-subjects.ts"
       ],
-      "sourceBoundary": "Battle runtime admits the authored Cloudkill area-hazard shape, caller-supplied Sphere area identity, Concentration effect, Heavily Obscured projection, Constitution Saving Throw outcomes, Poison save-for-half damage, slot scaling, once-per-turn save ledger, and strong-wind dispersal command using caller/table supplied area-membership and environment facts. The table/spatial layer remains the owner of automatic Sphere geometry, cloud movement away from the caster, terrain descent, area membership derivation, and wind predicate derivation.",
+      "sourceBoundary": "Battle runtime admits the authored Cloudkill area-hazard shape, caller-supplied Sphere area identity, Concentration effect, Heavily Obscured projection, Constitution Saving Throw outcomes, Poison save-for-half damage, slot scaling, once-per-turn save ledger, and strong-wind dispersal command using caller/table supplied area-membership and environment facts. The table/spatial layer remains the owner of automatic Sphere geometry, cloud movement away from the caster, terrain descent, area membership derivation, and wind predicate derivation. Focused QNT semantics and QNT-connected parity remain unassessed.",
       "taskRefs": [
         "L19E-03-L5-ACTIVE-AREA-HAZARD",
         "L19E-03-CLOUDKILL-AREA-HAZARD"
@@ -7244,8 +7240,8 @@
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
         "denominator": 187,
-        "numerator": 163,
-        "percent": "87.2%"
+        "numerator": 161,
+        "percent": "86.1%"
       },
       "rulesKernelProfileJoinCoverage": {
         "denominator": 187,
@@ -10405,38 +10401,32 @@
         ]
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE",
             "runtime": "battle",
-            "status": "covered",
+            "status": "needs-qnt-owner",
             "title": "Battle Insect Plague active Sphere hazard projects Difficult Terrain and Lightly Obscured area facts, resolves table-triggered Constitution saves and Piercing damage, and cleans up on Concentration or duration end"
           }
         ],
         "profileId": "spell.invocation-insect-plague-area-hazard",
         "profileKind": "spell-invocation",
-        "qntOwners": [
-          "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-          "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-        ]
+        "qntOwners": []
       },
       {
-        "joinStatus": "covered",
+        "joinStatus": "mapped-open",
         "obligations": [
           {
             "obligationId": "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
             "runtime": "battle",
-            "status": "covered",
+            "status": "needs-qnt-owner",
             "title": "Battle Cloudkill active Sphere hazard projects Heavily Obscured area facts, resolves table-triggered Constitution saves and Poison damage, and cleans up on Concentration, duration, or strong wind"
           }
         ],
         "profileId": "spell.invocation-cloudkill-area-hazard",
         "profileKind": "spell-invocation",
-        "qntOwners": [
-          "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-          "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-        ]
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -34519,10 +34509,8 @@
         {
           "id": "spell.invocation-cloudkill-area-hazard",
           "profileKind": "spell-invocation",
-          "qntOwners": [
-            "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-            "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-          ],
+          "qntOwners": [],
+          "qntOwnershipStatus": "needs-qnt-owner",
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/cloudkill-area-hazard.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
@@ -34532,7 +34520,7 @@
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
-          "sourceBoundary": "Battle runtime admits the authored Cloudkill area-hazard shape, caller-supplied Sphere area identity, Concentration effect, Heavily Obscured projection, Constitution Saving Throw outcomes, Poison save-for-half damage, slot scaling, once-per-turn save ledger, and strong-wind dispersal command using caller/table supplied area-membership and environment facts. The table/spatial layer remains the owner of automatic Sphere geometry, cloud movement away from the caster, terrain descent, area membership derivation, and wind predicate derivation.",
+          "sourceBoundary": "Battle runtime admits the authored Cloudkill area-hazard shape, caller-supplied Sphere area identity, Concentration effect, Heavily Obscured projection, Constitution Saving Throw outcomes, Poison save-for-half damage, slot scaling, once-per-turn save ledger, and strong-wind dispersal command using caller/table supplied area-membership and environment facts. The table/spatial layer remains the owner of automatic Sphere geometry, cloud movement away from the caster, terrain descent, area membership derivation, and wind predicate derivation. Focused QNT semantics and QNT-connected parity remain unassessed.",
           "taskRefs": [
             "L19E-03-L5-ACTIVE-AREA-HAZARD",
             "L19E-03-CLOUDKILL-AREA-HAZARD"
@@ -39355,10 +39343,8 @@
         {
           "id": "spell.invocation-insect-plague-area-hazard",
           "profileKind": "spell-invocation",
-          "qntOwners": [
-            "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
-            "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
-          ],
+          "qntOwners": [],
+          "qntOwnershipStatus": "needs-qnt-owner",
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/insect-plague-area-hazard.ts",
             "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
@@ -39366,7 +39352,7 @@
             "packages/battle-runtime/src/battle-reducer/turn-boundary-lifecycle.ts",
             "packages/battle-runtime/src/battle-subjects.ts"
           ],
-          "sourceBoundary": "Battle runtime admits the authored Insect Plague area-hazard shape, area choice, Concentration effect, Difficult Terrain and Lightly Obscured projections, Constitution Saving Throw outcomes, Piercing save-for-half damage, slot scaling, and once-per-turn save ledger using caller/table supplied area-membership trigger facts. The table/spatial layer remains the owner of automatic Sphere geometry, route derivation, area membership, and environmental swarm presentation.",
+          "sourceBoundary": "Battle runtime admits the authored Insect Plague area-hazard shape, area choice, Concentration effect, Difficult Terrain and Lightly Obscured projections, Constitution Saving Throw outcomes, Piercing save-for-half damage, slot scaling, and once-per-turn save ledger using caller/table supplied area-membership trigger facts. The table/spatial layer remains the owner of automatic Sphere geometry, route derivation, area membership, and environmental swarm presentation. Focused QNT semantics and QNT-connected parity remain unassessed.",
           "taskRefs": [
             "L19E-03-L5-ACTIVE-AREA-HAZARD"
           ],
