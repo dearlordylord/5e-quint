@@ -369,19 +369,6 @@ export function characterSpellProcedure(
     : { ...executable, sourceProcedureRef: procedureRef };
 }
 
-export function characterSpellProcedureRefsForProcedure(
-  execution: CharacterExecutionState,
-  procedures: ReadonlySet<SpellProcedureExecution["procedure"]>,
-): readonly BattleProcedureExecutionRef[] {
-  return execution.procedureBindings.flatMap((binding) =>
-    (binding.procedure.kind === "spellInvocation" ||
-      binding.procedure.kind === "unavailableSpellInvocation") &&
-    procedures.has(binding.procedure.execution.procedure)
-      ? [binding.procedureRef]
-      : [],
-  );
-}
-
 export function characterSpellProcedureExecution(
   execution: CharacterExecutionState,
   procedureRef: BattleProcedureExecutionRef,
