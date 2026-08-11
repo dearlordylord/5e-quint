@@ -8,6 +8,7 @@
 // creature-state-leaves.ts to break the cluster_state ↔ movement_speed cycle.
 
 import { optionalProperty } from "../optional-property.ts";
+import { isNonEmptyReadonlyArray } from "effect/Array";
 import { Either, Match } from "effect";
 import {
   Hp,
@@ -54,7 +55,6 @@ import {
   type CharacterBattleWeaponMasterySelection,
 } from "../character-creature-execution-facts.ts";
 import {
-  characterBattleInvocationSpellAccessInitIssue,
   characterBattleMetamagicInitIssue,
   characterBattleMetamagicState,
   admitCharacterBattleResources,
@@ -226,7 +226,15 @@ export function battleCreatureStateAdmissionFromInit(
       ],
     };
   }
-  const zeroHpLifecycle = initialZeroHpLifecycleForCreatureOrigin(creatureInit);
+  const zeroHpLifecycleResult =
+    initialZeroHpLifecycleForCreatureOrigin(creatureInit);
+  if (Either.isLeft(zeroHpLifecycleResult)) {
+    return {
+      tag: "invalid",
+      issues: [zeroHpLifecycleResult.left],
+    };
+  }
+  const zeroHpLifecycle = zeroHpLifecycleResult.right;
   const initialConditions =
     creatureInit.kind === "character"
       ? (creatureInit.conditions?.reduce(
@@ -325,41 +333,49 @@ export function battleCreatureStateAdmissionFromInit(
       };
     }
     const classLevels = parsedClassLevels.right;
+    const spellAccessUnits = [
+      ...(creatureInit.resources ?? []),
+      ...(creatureInit.unitFeatures ?? []),
+    ];
+    const characterUnits = spellAccessUnits.map(({ unit }) => unit);
+    const spellcastingAdmission = characterSpellcastingInitAdmission(
+      creatureInit,
+      classLevels,
+      spellAccessUnits,
+    );
     const initIssues = [
       characterResourceInitIssue(creatureInit, classLevels),
       characterDruidWildShapeAvailableFormsInitIssue(creatureInit, classLevels),
-      characterSpellcastingInitIssue(creatureInit, classLevels),
     ].flatMap((issue) =>
       issue !== null && Either.isLeft(issue) ? [issue.left] : [],
     );
-    if (initIssues.length > 0) {
-      const [firstIssue, ...remainingIssues] = initIssues;
+    const initInvariantIssues =
+      characterBattleInitInvariantIssues(creatureInit);
+    const initIssuesWithSupportProfile = initIssues.map((issue) => ({
+      tag: "battleUnitSupportProfileIssue" as const,
+      message: battleStateInitIssueMessage(issue),
+    }));
+    if (spellcastingAdmission.tag === "invalid") {
+      const spellcastingSupportProfileIssue = {
+        tag: "battleUnitSupportProfileIssue" as const,
+        message: battleStateInitIssueMessage(spellcastingAdmission.issue),
+      };
       return {
         tag: "invalid",
         issues: [
-          {
-            tag: "battleUnitSupportProfileIssue",
-            message: battleStateInitIssueMessage(firstIssue!),
-          },
-          ...remainingIssues.map((issue) => ({
-            tag: "battleUnitSupportProfileIssue" as const,
-            message: battleStateInitIssueMessage(issue),
-          })),
+          spellcastingSupportProfileIssue,
+          ...initIssuesWithSupportProfile,
+          ...initInvariantIssues,
         ],
       };
     }
-    assertCharacterBattleLoadoutMatchesHands(creatureInit);
-    assertCharacterBattleResourcesHaveUniqueUnits(creatureInit.resources ?? []);
-    assertCharacterBattleFeaturesHaveUniqueUnits(
-      creatureInit.unitFeatures ?? [],
-    );
-    assertCharacterBattleWeaponMasteriesHaveUniqueWeapons(
-      creatureInit.weaponMasteries,
-    );
-    const characterUnits = [
-      ...(creatureInit.resources ?? []).map((resource) => resource.unit),
-      ...(creatureInit.unitFeatures ?? []).map((feature) => feature.unit),
+    const allInitIssues = [
+      ...initIssuesWithSupportProfile,
+      ...initInvariantIssues,
     ];
+    if (isNonEmptyReadonlyArray(allInitIssues)) {
+      return { tag: "invalid", issues: allInitIssues };
+    }
     const explicitFeatureUnitIds = new Set(
       (creatureInit.unitFeatures ?? []).map((feature) => feature.unit.id),
     );
@@ -401,15 +417,20 @@ export function battleCreatureStateAdmissionFromInit(
       resources,
       resourceOwnership,
     );
-    const spellcastingPresentationSource =
-      creatureInit.spellcasting === undefined
-        ? undefined
-        : characterSpellcastingState(
-            requireCharacterSpellcastingStateInit(creatureInit.spellcasting),
-            classLevels,
-            resources,
-            resourceOwnership,
-          );
+    const spellcastingPresentationSource = Match.value(
+      spellcastingAdmission,
+    ).pipe(
+      Match.when({ tag: "absent" }, () => undefined),
+      Match.when({ tag: "admitted" }, ({ state }) =>
+        characterSpellcastingState(
+          state,
+          classLevels,
+          resources,
+          resourceOwnership,
+        ),
+      ),
+      Match.exhaustive,
+    );
     const admittedCreature = applyInitialZeroHpLifecycle({
       ...base,
       armorClass: creatureInit.armorClass,
@@ -548,65 +569,127 @@ export function hidePrerequisiteReferencedCombatantIds(
     : [combatantId];
 }
 
-export function assertCharacterBattleResourcesHaveUniqueUnits(
+function characterBattleInitInvariantIssues(
+  creatureInit: CharacterBattleCreatureInit,
+): BattleStateInitLeafIssue[] {
+  return [
+    ...duplicateCharacterBattleResourceUnitIssues(creatureInit.resources ?? []),
+    ...duplicateCharacterBattleFeatureUnitIssues(
+      creatureInit.unitFeatures ?? [],
+    ),
+    ...duplicateCharacterBattleWeaponMasteryIssues(
+      creatureInit.weaponMasteries,
+    ),
+    ...characterBattleLoadoutIssues(creatureInit),
+  ];
+}
+
+function duplicateCharacterBattleResourceUnitIssues(
   resources: readonly CharacterBattleResourceInit[],
-): void {
+): BattleStateInitLeafIssue[] {
   const seen = new Set<UnitRecord["id"]>();
+  const issues: BattleStateInitLeafIssue[] = [];
   for (const resource of resources) {
     if (seen.has(resource.unit.id)) {
-      throw new Error(
-        `Duplicate character battle resource unit: ${resource.unit.id}`,
-      );
+      issues.push({
+        tag: "battleStateInitIssue",
+        message: `Duplicate character battle resource unit: ${resource.unit.id}`,
+      });
+      continue;
     }
     seen.add(resource.unit.id);
   }
+  return issues;
 }
 
-export function assertCharacterBattleFeaturesHaveUniqueUnits(
+function duplicateCharacterBattleFeatureUnitIssues(
   features: readonly CharacterBattleFeatureInit[],
-): void {
+): BattleStateInitLeafIssue[] {
   const seen = new Set<string>();
+  const issues: BattleStateInitLeafIssue[] = [];
   for (const feature of features) {
     if (seen.has(feature.unit.id)) {
-      throw new Error(
-        `Duplicate character battle feature unit: ${feature.unit.id}`,
-      );
+      issues.push({
+        tag: "battleStateInitIssue",
+        message: `Duplicate character battle feature unit: ${feature.unit.id}`,
+      });
+      continue;
     }
     seen.add(feature.unit.id);
   }
+  return issues;
 }
 
-export function assertCharacterBattleWeaponMasteriesHaveUniqueWeapons(
+function duplicateCharacterBattleWeaponMasteryIssues(
   weaponMasteries: readonly CharacterBattleWeaponMasterySelection[],
-): void {
+): BattleStateInitLeafIssue[] {
   const seen = new Set<UnitRecord["id"]>();
+  const issues: BattleStateInitLeafIssue[] = [];
   for (const weaponMastery of weaponMasteries) {
     if (seen.has(weaponMastery.weaponUnitId)) {
-      throw new Error(
-        `Duplicate character battle weapon mastery selection: ${weaponMastery.weaponUnitId}`,
-      );
+      issues.push({
+        tag: "battleStateInitIssue",
+        message: `Duplicate character battle weapon mastery selection: ${weaponMastery.weaponUnitId}`,
+      });
+      continue;
     }
     seen.add(weaponMastery.weaponUnitId);
   }
+  return issues;
 }
 
-export function assertCharacterBattleLoadoutMatchesHands(
+function characterBattleLoadoutIssues(
   creatureInit: CharacterBattleCreatureInit,
-): void {
+): BattleStateInitLeafIssue[] {
+  return [
+    ...characterBattleLoadoutShieldOffhandIssues(creatureInit),
+    ...characterBattleLoadoutTwoHandedGripIssues(creatureInit),
+    ...characterBattleLoadoutHandStateIssues(creatureInit),
+  ];
+}
+
+function characterBattleLoadoutShieldOffhandIssues(
+  creatureInit: CharacterBattleCreatureInit,
+): BattleStateInitLeafIssue[] {
+  const shield = creatureInit.selectedLoadout.shield;
+  const offHandWeapon = creatureInit.selectedLoadout.offHandWeapon;
+  return shield !== undefined && offHandWeapon !== undefined
+    ? [
+        {
+          tag: "battleStateInitIssue",
+          message:
+            "Character battle loadout cannot wield shield and off-hand weapon.",
+        },
+      ]
+    : [];
+}
+
+function characterBattleLoadoutTwoHandedGripIssues(
+  creatureInit: CharacterBattleCreatureInit,
+): BattleStateInitLeafIssue[] {
   const shield = creatureInit.selectedLoadout.shield;
   const weapon = creatureInit.selectedLoadout.weapon;
   const offHandWeapon = creatureInit.selectedLoadout.offHandWeapon;
-  if (shield !== undefined && offHandWeapon !== undefined) {
-    throw new Error(
-      "Character battle loadout cannot wield shield and off-hand weapon.",
-    );
-  }
   if (
     weapon?.grip === "two_handed" &&
     (shield !== undefined || offHandWeapon !== undefined)
   ) {
-    throw new Error("Two-handed weapon grip requires both hands free.");
+    return [
+      {
+        tag: "battleStateInitIssue",
+        message: "Two-handed weapon grip requires both hands free.",
+      },
+    ];
   }
+  return [];
+}
+
+function characterBattleLoadoutHandStateIssues(
+  creatureInit: CharacterBattleCreatureInit,
+): BattleStateInitLeafIssue[] {
+  const shield = creatureInit.selectedLoadout.shield;
+  const weapon = creatureInit.selectedLoadout.weapon;
+  const offHandWeapon = creatureInit.selectedLoadout.offHandWeapon;
   const expectedLeftHandUse: HandUse =
     shield === undefined
       ? offHandWeapon === undefined
@@ -619,13 +702,14 @@ export function assertCharacterBattleLoadoutMatchesHands(
     creatureInit.armorClass.leftHandUse !== expectedLeftHandUse ||
     creatureInit.armorClass.rightHandUse !== expectedRightHandUse
   ) {
-    throw new Error(
-      "Character battle loadout must match armor-class hand state.",
-    );
+    return [
+      {
+        tag: "battleStateInitIssue",
+        message: "Character battle loadout must match armor-class hand state.",
+      },
+    ];
   }
-  if (weapon?.grip === "two_handed") {
-    return;
-  }
+  return [];
 }
 
 export function combatantInitiativeInsertionIndex(
@@ -656,13 +740,13 @@ export function combatantInitiativeInsertionIndex(
   return firstTie + tieIndex;
 }
 
-export function initialZeroHpLifecycleForCreatureOrigin(
+function initialZeroHpLifecycleForCreatureOrigin(
   creatureInit: BattleCreatureInit["creatureInit"],
-): ZeroHpLifecycle {
+): Either.Either<ZeroHpLifecycle, BattleStateInitLeafIssue> {
   return Match.value(creatureInit).pipe(
-    Match.when({ kind: "statBlock" }, () => ({
-      policy: "diesAtZeroHp" as const,
-    })),
+    Match.when({ kind: "statBlock" }, () =>
+      Either.right({ policy: "diesAtZeroHp" as const }),
+    ),
     Match.when({ kind: "character" }, (characterInit) => {
       const zeroHpLifecycle = characterInit.zeroHpLifecycle ?? {
         policy: "usesDeathSavingThrows" as const,
@@ -670,18 +754,18 @@ export function initialZeroHpLifecycleForCreatureOrigin(
       };
       if (Number(characterInit.currentHp) > 0) {
         if (characterInit.zeroHpLifecycle !== undefined) {
-          throw new Error(
+          return battleStateInitIssue(
             "Positive-HP character battle initialization cannot carry zero-HP lifecycle state.",
           );
         }
-        return zeroHpLifecycle;
+        return Either.right(zeroHpLifecycle);
       }
       if (!validDeathSaveRuntimeState(zeroHpLifecycle.deathSaves)) {
-        throw new Error(
+        return battleStateInitIssue(
           "Character battle initialization zero-HP lifecycle is invalid.",
         );
       }
-      return zeroHpLifecycle;
+      return Either.right(zeroHpLifecycle);
     }),
     Match.exhaustive,
   );
@@ -765,77 +849,127 @@ export function characterDruidWildShapeAvailableFormsInitIssue(
 }
 /* v8 ignore stop */
 
-export function characterSpellcastingInitIssue(
+type CharacterSpellcastingInitAdmission =
+  | { readonly tag: "absent" }
+  | { readonly tag: "invalid"; readonly issue: BattleStateInitLeafIssue }
+  | {
+      readonly tag: "admitted";
+      readonly state: CharacterBattleSpellcastingStateInit;
+    };
+
+function characterSpellcastingInitAdmission(
   creatureInit: CharacterBattleCreatureInit,
   classLevels: CharacterBattleClassLevels,
-): Either.Either<never, BattleStateInitLeafIssue> | null {
-  if (creatureInit.spellcasting === undefined) {
-    return null;
+  spellAccessUnits: readonly (
+    | CharacterBattleResourceInit
+    | CharacterBattleFeatureInit
+  )[],
+): CharacterSpellcastingInitAdmission {
+  const spellcasting = creatureInit.spellcasting;
+  if (spellcasting === undefined) {
+    return { tag: "absent" };
   }
-  const invocationSpellAccessIssue =
-    characterBattleInvocationSpellAccessInitIssue(
-      creatureInit.spellcasting.invocationSpellAccesses,
-    );
-  if (invocationSpellAccessIssue !== null) {
-    return battleStateInitIssue(invocationSpellAccessIssue);
+  const invocationSpellAccesses = parseCharacterBattleInvocationSpellAccesses(
+    spellcasting.invocationSpellAccesses,
+  );
+  if (invocationSpellAccesses.tag === "issue") {
+    return {
+      tag: "invalid",
+      issue: {
+        tag: "battleStateInitIssue",
+        message: invocationSpellAccesses.message,
+      },
+    };
   }
   const spellbookRitualAccessIssue =
-    characterBattleSpellbookRitualSpellAccessInitIssue(
-      creatureInit.spellcasting.spellbookRitualSpellAccesses,
+    characterSpellbookRitualSpellAccessAdmissionIssue(
+      creatureInit,
+      spellcasting,
     );
   if (spellbookRitualAccessIssue !== null) {
-    return battleStateInitIssue(spellbookRitualAccessIssue);
+    return {
+      tag: "invalid",
+      issue: {
+        tag: "battleStateInitIssue",
+        message: spellbookRitualAccessIssue,
+      },
+    };
+  }
+  const spellcastingStateIssue = characterSpellcastingStateInitIssue(
+    spellcasting,
+    spellAccessUnits,
+  );
+  if (spellcastingStateIssue !== null) {
+    return {
+      tag: "invalid",
+      issue: {
+        tag: "battleStateInitIssue",
+        message: spellcastingStateIssue,
+      },
+    };
+  }
+  const sourceClassIssue = characterSpellcastingSourceClassIssue(
+    spellcasting,
+    classLevels,
+  );
+  if (sourceClassIssue !== null) {
+    return {
+      tag: "invalid",
+      issue: {
+        tag: "battleStateInitIssue",
+        message: sourceClassIssue,
+      },
+    };
+  }
+
+  return {
+    tag: "admitted",
+    state: {
+      ...spellcasting,
+      bookOfShadowsSpellAccesses: spellcasting.bookOfShadowsSpellAccesses ?? [],
+      invocationSpellAccesses: invocationSpellAccesses.invocationSpellAccesses,
+    },
+  };
+}
+
+function characterSpellbookRitualSpellAccessAdmissionIssue(
+  creatureInit: CharacterBattleCreatureInit,
+  spellcasting: NonNullable<CharacterBattleCreatureInit["spellcasting"]>,
+): string | null {
+  const spellbookRitualAccessIssue =
+    characterBattleSpellbookRitualSpellAccessInitIssue(
+      spellcasting.spellbookRitualSpellAccesses,
+    );
+  if (spellbookRitualAccessIssue !== null) {
+    return spellbookRitualAccessIssue;
   }
   if (
-    creatureInit.spellcasting.spellbookRitualSpellAccesses.length > 0 &&
-    creatureInit.spellcasting.sourceClassName !== "wizard"
+    spellcasting.spellbookRitualSpellAccesses.length > 0 &&
+    spellcasting.sourceClassName !== "wizard"
   ) {
-    return battleStateInitIssue(
-      "Spellbook Ritual Spell Access requires Wizard spellcasting.",
-    );
+    return "Spellbook Ritual Spell Access requires Wizard spellcasting.";
   }
-  for (const access of creatureInit.spellcasting.spellbookRitualSpellAccesses) {
+  for (const access of spellcasting.spellbookRitualSpellAccesses) {
     if (
       !creatureInit.characterUnitRefs.some(
         (unitRef) => unitRef.unit.id === access.featureUnitId,
       )
     ) {
-      return battleStateInitIssue(
-        "Spellbook Ritual Spell Access must trace to an owner feature.",
-      );
+      return "Spellbook Ritual Spell Access must trace to an owner feature.";
     }
   }
-  const spellcastingStateIssue = characterSpellcastingStateInitIssue(
-    creatureInit.spellcasting,
-    [...(creatureInit.resources ?? []), ...(creatureInit.unitFeatures ?? [])],
-  );
-  if (spellcastingStateIssue !== null) {
-    return battleStateInitIssue(spellcastingStateIssue);
-  }
-  return classLevels.some(
-    (classLevel) =>
-      classLevel.className === creatureInit.spellcasting?.sourceClassName,
-  )
-    ? null
-    : battleStateInitIssue(
-        "Battle spellcasting source class must match a character class level.",
-      );
+  return null;
 }
 
-function requireCharacterSpellcastingStateInit(
+function characterSpellcastingSourceClassIssue(
   spellcasting: NonNullable<CharacterBattleCreatureInit["spellcasting"]>,
-): CharacterBattleSpellcastingStateInit {
-  const invocationSpellAccesses = parseCharacterBattleInvocationSpellAccesses(
-    spellcasting.invocationSpellAccesses,
-  );
-  if (invocationSpellAccesses.tag === "issue") {
-    throw new Error(invocationSpellAccesses.message);
-  }
-  return {
-    ...spellcasting,
-    bookOfShadowsSpellAccesses: spellcasting.bookOfShadowsSpellAccesses ?? [],
-    invocationSpellAccesses: invocationSpellAccesses.invocationSpellAccesses,
-  };
+  classLevels: CharacterBattleClassLevels,
+): string | null {
+  return classLevels.some(
+    (classLevel) => classLevel.className === spellcasting.sourceClassName,
+  )
+    ? null
+    : "Battle spellcasting source class must match a character class level.";
 }
 
 export function initialKnockOutLifecycleFields(
