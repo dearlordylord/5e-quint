@@ -1,14 +1,46 @@
 # RAW swarm testing harness (slice 1)
 
-Drives the adjudicator MCP SDK the way a user would, records deterministic
-transcripts, replays them to prove determinism, and stores runs in SQLite.
+Tests the adjudicator SDK for SRD 5.2.1 RAW correctness with agents that emulate
+players and DMs. It records deterministic transcripts, replays them, and stores
+runs and adversarial findings in SQLite.
+
+## Purpose and boundaries
+
+The adjudicator SDK is the system under test: `@dnd/battle-runtime` and the
+character runtime packages composed over Surface content. MCP is an interaction
+adapter for agents, not the primary test target. Exercising SDK behavior through
+MCP deliberately adds compound coverage of MCP decoding, session storage, and
+response projection, but an MCP-only defect and an SDK rules defect must be
+classified separately.
+
+Agents can participate in two roles:
+
+- **test author** — write a structured deterministic scenario and expected RAW
+  claims, then let a driver execute it;
+- **player/DM emulator** — make choices live from the SDK's currently available
+  acts and holes, without knowing the implementation.
+
+The first role does not inherently need MCP. A scalable SDK-first swarm may
+generate scenario JSON or code against a thin typed SDK driver. This first slice
+uses `handleToolCall` even for scripted probes because the existing MCP
+composition root was the smallest complete headless facade. Consequently it
+tests the SDK through one adapter rather than directly. The freeplay lane uses
+MCP because Codex needs a live tool protocol while pretending to be a player or
+DM. Neither lane should treat MCP behavior as the RAW oracle.
+
+For later slices, keep the authored scenario vocabulary independent of MCP tool
+names and wire shapes. The preferred expansion is one canonical scenario with a
+direct typed SDK executor as the primary lane and an optional MCP executor for
+adapter parity and live-agent play. Agents may author scenario source, but the
+trusted harness accepts only scenario data decoded through its boundary parser;
+do not compile arbitrary agent-authored TypeScript into the harness.
 
 Two lanes:
 
-- **scripted probes** — `driver.ts` executes a scenario JSON in-process
-  against `handleToolCall` (`packages/mcp/src/server.ts`).
-- **freeplay** — an external agent drives the real MCP stdio server through
-  `mcp-recording-shim.mjs`, a byte-transparent recording proxy.
+- **scripted probes** — deterministic RAW claims authored as scenario JSON and
+  executed in-process through the current MCP composition facade;
+- **freeplay** — an external player/DM-emulating agent drives the same SDK
+  through an MCP stdio adapter and a byte-transparent recording proxy.
 
 Prerequisite: run everything under mise-managed Node 24 from the worktree
 root (see `mise.toml`):
@@ -87,6 +119,28 @@ size. Runtime results are still encoded and validated by those canonical
 Effect codecs. `battle-slice-tools.test.ts` gates the published list size and
 input-schema identity.
 
+### Battle schema boundary
+
+The canonical production SDK schemas remain `BattleSubjectSchema` and
+`BattleFillSchema` in `@dnd/battle-runtime`; SDK callers continue to construct
+and receive typed `BattleSubject` and `BattleFill` values. They were not changed
+to strings.
+
+The production MCP wire contract for `fill_battle_hole` and
+`resolve_battle_act` does use JSON-text envelopes (`subjectJson` and
+`fillJson`). This is not confined to the swarm server. It keeps MCP
+`tools/list` small enough for cold clients, then immediately applies
+`Schema.parseJson(BattleSubjectSchema)` and
+`Schema.parseJson(BattleFillSchema)` at the MCP boundary. Typed handler code
+receives only successfully decoded SDK values. The tradeoff is deliberate:
+MCP clients learn the inner fill shape from returned holes and workflow guidance
+rather than receiving the full approximately 200 KB union in the advertised
+input schema.
+
+Only the omission of optional `outputSchema` metadata from every tool exposed by
+`battle-slice-server.ts` is specific to the swarm server. The normal production
+MCP server still publishes its codec-derived output schemas.
+
 ### `run-freeplay-001.sh` — Codex user-emulation run
 
 Runs the committed freeplay prompt through Codex with the D&D MCP server and
@@ -123,7 +177,57 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts verdict \
 # counts by verdict class
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts summary \
   --db scripts/raw-swarm/out/raw-swarm.db
+
+# list issue observations as JSONL, including GitHub links when triaged
+mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts issues \
+  --db scripts/raw-swarm/out/raw-swarm.db
 ```
+
+## Finding and bug lifecycle
+
+SQLite owns immutable execution and review evidence. GitHub Issues owns triage,
+assignment, priority, discussion, and open/closed status, as required by
+[`docs/agents/issue-tracker.md`](../../docs/agents/issue-tracker.md). Do not
+delete an SQLite issue to represent a fix, and do not add a second local
+open/closed status that can disagree with GitHub.
+
+For each non-pass verdict:
+
+1. Inspect the transcript sequence and local RAW evidence. Decide whether it is
+   an SDK bug, an MCP-adapter bug, an unsupported capability, a scenario defect,
+   or a corpus ambiguity.
+2. Use `report.ts issues` to find its provisional fingerprint. Fingerprints are
+   hashes of the review class and exact claim, so triage—not wording equality—
+   decides whether multiple fingerprints describe one semantic bug.
+3. For an actionable bug, search existing GitHub Issues. Create one only when no
+   semantic duplicate exists. Include the fingerprint, run id, tested Git SHA,
+   transcript sequences, RAW citations, reproduction command, expected behavior,
+   owning package, and required regression level.
+4. Link every matching fingerprint to that GitHub issue:
+
+   ```sh
+   mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts \
+     link-github-issue --db scripts/raw-swarm/out/raw-swarm.db \
+     --fingerprint <sha256> --github-issue <number>
+   ```
+
+5. Fix the canonical SDK owner unless the finding is specifically in an
+   adapter. Add the smallest deterministic regression before relying on another
+   freeplay run.
+6. Generate a new run and adversarial review that explicitly exercises the
+   corrected behavior. Preserve the original run: replay proves determinism for
+   its recorded revision, so an old response hash may intentionally diverge
+   after a behavior fix.
+7. Comment on the GitHub issue with the regression path, fix commit, confirming
+   run/review evidence, and any remaining limits; then close it. GitHub remains
+   the only lifecycle status. A later recurrence links new evidence to the same
+   reopened issue.
+
+SQLite's `githubIssueNumber` is only a stable external reference. It does not
+copy GitHub state. Generated databases and transcripts are gitignored, so a
+long-lived swarm must publish or retain the database outside an ephemeral
+worktree; confirmed fixes belong in committed regression tests even if raw run
+artifacts are later pruned.
 
 ### `run-raw-review.sh` — adversarial RAW review
 

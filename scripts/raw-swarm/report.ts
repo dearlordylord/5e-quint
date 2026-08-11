@@ -18,6 +18,9 @@ import {
   type TranscriptStep,
 } from "./transcript.ts";
 
+const githubIssueNumberSqlCheck =
+  "githubIssueNumber IS NULL OR (typeof(githubIssueNumber) = 'integer' AND githubIssueNumber > 0)";
+
 function fail(message: string): never {
   throw new Error(message);
 }
@@ -65,7 +68,8 @@ function openDb(dbPath: string): DatabaseSync {
       class TEXT,
       claim TEXT,
       firstSeenAt TEXT,
-      lastSeenAt TEXT
+      lastSeenAt TEXT,
+      githubIssueNumber INTEGER CHECK(${githubIssueNumberSqlCheck})
     );
     CREATE TABLE IF NOT EXISTS verdicts(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -105,6 +109,17 @@ function openDb(dbPath: string): DatabaseSync {
   ) {
     db.exec("ALTER TABLE verdicts ADD COLUMN issueFingerprint TEXT");
   }
+  const issueColumns = db.prepare("PRAGMA table_info(issues)").all();
+  if (
+    !issueColumns.some(
+      (column) => isJsonRecord(column) && column.name === "githubIssueNumber",
+    )
+  ) {
+    db.exec(`
+      ALTER TABLE issues ADD COLUMN githubIssueNumber INTEGER
+        CHECK(${githubIssueNumberSqlCheck})
+    `);
+  }
   return db;
 }
 
@@ -133,11 +148,15 @@ function required(value: string | undefined, name: string): string {
   return value ?? fail(`Missing required ${name}`);
 }
 
+function positiveInteger(value: string, label: string): number {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0
+    ? parsed
+    : fail(`${label} must be a positive integer`);
+}
+
 function positiveRunId(value: string): number {
-  const runId = Number(value);
-  return Number.isInteger(runId) && runId > 0
-    ? runId
-    : fail("--run must be a positive integer");
+  return positiveInteger(value, "--run");
 }
 
 function verdictClass(value: string): (typeof VERDICT_CLASSES)[number] {
@@ -384,6 +403,70 @@ function summary(args: readonly string[]): void {
   db.close();
 }
 
+function issues(args: readonly string[]): void {
+  const dbPath = required(flagValue(args, "--db"), "--db");
+  const db = openDb(dbPath);
+  const rows = db
+    .prepare(
+      "SELECT fingerprint, class, claim, firstSeenAt, lastSeenAt, githubIssueNumber FROM issues ORDER BY firstSeenAt, fingerprint",
+    )
+    .all();
+  for (const row of rows) {
+    if (!isIssueRow(row)) {
+      db.close();
+      fail("Report database returned an invalid issue row");
+    }
+    console.log(JSON.stringify(row));
+  }
+  db.close();
+}
+
+function isIssueRow(value: unknown): value is {
+  readonly fingerprint: string;
+  readonly class: string;
+  readonly claim: string;
+  readonly firstSeenAt: string;
+  readonly lastSeenAt: string;
+  readonly githubIssueNumber: number | null;
+} {
+  return (
+    isJsonRecord(value) &&
+    typeof value.fingerprint === "string" &&
+    typeof value.class === "string" &&
+    typeof value.claim === "string" &&
+    typeof value.firstSeenAt === "string" &&
+    typeof value.lastSeenAt === "string" &&
+    (value.githubIssueNumber === null ||
+      (typeof value.githubIssueNumber === "number" &&
+        Number.isInteger(value.githubIssueNumber) &&
+        value.githubIssueNumber > 0))
+  );
+}
+
+function linkGithubIssue(args: readonly string[]): void {
+  const dbPath = required(flagValue(args, "--db"), "--db");
+  const fingerprint = required(
+    flagValue(args, "--fingerprint"),
+    "--fingerprint",
+  );
+  const githubIssueNumber = positiveInteger(
+    required(flagValue(args, "--github-issue"), "--github-issue"),
+    "--github-issue",
+  );
+  const db = openDb(dbPath);
+  const result = db
+    .prepare("UPDATE issues SET githubIssueNumber = ? WHERE fingerprint = ?")
+    .run(githubIssueNumber, fingerprint);
+  if (result.changes !== 1) {
+    db.close();
+    fail(`Unknown issue fingerprint ${fingerprint}`);
+  }
+  console.log(
+    `Linked issue ${fingerprint} to GitHub issue #${githubIssueNumber}`,
+  );
+  db.close();
+}
+
 function main(): void {
   const [command, ...rest] = process.argv.slice(2);
   Match.value(command).pipe(
@@ -391,9 +474,11 @@ function main(): void {
     Match.when("verdict", () => verdict(rest)),
     Match.when("review", () => review(rest)),
     Match.when("summary", () => summary(rest)),
+    Match.when("issues", () => issues(rest)),
+    Match.when("link-github-issue", () => linkGithubIssue(rest)),
     Match.orElse(() =>
       fail(
-        "Usage: report.ts <ingest|verdict|review|summary> ... (see scripts/raw-swarm/README.md)",
+        "Usage: report.ts <ingest|verdict|review|summary|issues|link-github-issue> ... (see scripts/raw-swarm/README.md)",
       ),
     ),
   );

@@ -4,15 +4,19 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 
-import { repoRoot, sha256Canonical } from "./transcript.ts";
+import { isJsonRecord, repoRoot, sha256Canonical } from "./transcript.ts";
 
 const reportScript = resolve(repoRoot, "scripts/raw-swarm/report.ts");
 
 function runReport(args: readonly string[]): void {
-  execFileSync(
+  reportOutput(args);
+}
+
+function reportOutput(args: readonly string[]): string {
+  return execFileSync(
     "mise",
     ["exec", "--", "node", "--experimental-strip-types", reportScript, ...args],
-    { cwd: repoRoot },
+    { cwd: repoRoot, encoding: "utf8" },
   );
 }
 
@@ -34,7 +38,64 @@ function queryOne(dbPath: string, sql: string): unknown {
   return JSON.parse(output);
 }
 
+function executeSql(dbPath: string, sql: string): void {
+  execFileSync(
+    "mise",
+    [
+      "exec",
+      "--",
+      "node",
+      "--input-type=module",
+      "-e",
+      'import { DatabaseSync } from "node:sqlite"; const db = new DatabaseSync(process.argv[1]); db.exec(process.argv[2]); db.close();',
+      dbPath,
+      sql,
+    ],
+    { cwd: repoRoot },
+  );
+}
+
+function queryString(dbPath: string, sql: string, field: string): string {
+  const row = queryOne(dbPath, sql);
+  if (!isJsonRecord(row) || typeof row[field] !== "string") {
+    throw new Error(`Expected query field ${field} to be a string`);
+  }
+  return row[field];
+}
+
 describe("RAW swarm report store", () => {
+  test("migrates issue links with the same domain constraint as a fresh store", () => {
+    const directory = mkdtempSync(
+      join(tmpdir(), "raw-swarm-report-migration-"),
+    );
+    try {
+      const dbPath = join(directory, "report.db");
+      executeSql(
+        dbPath,
+        `CREATE TABLE issues(
+          fingerprint TEXT PRIMARY KEY,
+          class TEXT,
+          claim TEXT,
+          firstSeenAt TEXT,
+          lastSeenAt TEXT
+        )`,
+      );
+      reportOutput(["issues", "--db", dbPath]);
+      const invalidIssue = (githubIssueNumber: number): string => `
+        INSERT INTO issues(
+          fingerprint, class, claim, firstSeenAt, lastSeenAt, githubIssueNumber
+        ) VALUES (
+          'fingerprint-${githubIssueNumber}', 'bug', 'claim', 'first', 'last',
+          ${githubIssueNumber}
+        )
+      `;
+      expect(() => executeSql(dbPath, invalidIssue(0))).toThrow();
+      expect(() => executeSql(dbPath, invalidIssue(1.5))).toThrow();
+    } finally {
+      rmSync(directory, { recursive: true });
+    }
+  });
+
   test("derives scenario identity and kind from the transcript header", () => {
     const directory = mkdtempSync(join(tmpdir(), "raw-swarm-report-"));
     try {
@@ -132,6 +193,36 @@ describe("RAW swarm report store", () => {
       expect(queryOne(dbPath, "SELECT class, claim FROM issues")).toEqual({
         class: "bug",
         claim: "Recorded transition matches its cited rule.",
+      });
+      const fingerprint = queryString(
+        dbPath,
+        "SELECT fingerprint FROM issues",
+        "fingerprint",
+      );
+      runReport([
+        "link-github-issue",
+        "--db",
+        dbPath,
+        "--fingerprint",
+        fingerprint,
+        "--github-issue",
+        "42",
+      ]);
+      expect(queryOne(dbPath, "SELECT githubIssueNumber FROM issues")).toEqual({
+        githubIssueNumber: 42,
+      });
+      expect(() =>
+        executeSql(dbPath, "UPDATE issues SET githubIssueNumber = 0"),
+      ).toThrow();
+      expect(() =>
+        executeSql(dbPath, "UPDATE issues SET githubIssueNumber = 1.5"),
+      ).toThrow();
+      expect(
+        JSON.parse(reportOutput(["issues", "--db", dbPath]).trim()),
+      ).toMatchObject({
+        fingerprint,
+        class: "bug",
+        githubIssueNumber: 42,
       });
       expect(queryOne(dbPath, "PRAGMA journal_mode")).toEqual({
         journal_mode: "wal",
