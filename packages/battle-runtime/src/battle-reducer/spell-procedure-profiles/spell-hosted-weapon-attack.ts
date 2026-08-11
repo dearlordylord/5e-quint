@@ -41,7 +41,7 @@ import {
   sameStringSet,
   supportedDamageAmountExpr,
 } from "../spells-execution-facts.ts";
-import { wildShapeCanUseWornLoadoutObject } from "../wild-shape-equipment.ts";
+import { loadoutHeldWeaponSlotIsUsable } from "../wild-shape-equipment.ts";
 import { battleObjectIsOnGround } from "../battle-object-lifecycle.ts";
 import { attackTargetHole } from "../hole-helpers.ts";
 import { needsHolesResult } from "../needs-holes-result.ts";
@@ -174,14 +174,12 @@ function spellHostedWeaponAttacks(
   return [
     ...(origin.attack === null ||
     (activeWildShape !== null &&
-      (origin.selectedLoadout.weapon === undefined ||
-        !wildShapeCanUseWornLoadoutObject({
-          loadout: origin.selectedLoadout,
-          formLimbs: activeWildShape.formLimbs,
-          equipmentDisposition: activeWildShape.equipmentDisposition,
-          objectKind: "mainWeapon",
-          objectId: origin.attack.weaponObjectId,
-        })))
+      !loadoutHeldWeaponSlotIsUsable({
+        loadout: origin.selectedLoadout,
+        activeWildShape,
+        objectKind: "mainWeapon",
+        itemId: origin.attack.weaponObjectId,
+      }))
       ? []
       : [
           {
@@ -191,14 +189,12 @@ function spellHostedWeaponAttacks(
         ]),
     ...(origin.offHandAttack === undefined ||
     (activeWildShape !== null &&
-      (origin.selectedLoadout.offHandWeapon === undefined ||
-        !wildShapeCanUseWornLoadoutObject({
-          loadout: origin.selectedLoadout,
-          formLimbs: activeWildShape.formLimbs,
-          equipmentDisposition: activeWildShape.equipmentDisposition,
-          objectKind: "offHandWeapon",
-          objectId: origin.offHandAttack.weaponObjectId,
-        })))
+      !loadoutHeldWeaponSlotIsUsable({
+        loadout: origin.selectedLoadout,
+        activeWildShape,
+        objectKind: "offHandWeapon",
+        itemId: origin.offHandAttack.weaponObjectId,
+      }))
       ? []
       : [
           {
