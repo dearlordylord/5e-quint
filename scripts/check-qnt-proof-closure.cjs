@@ -58,10 +58,6 @@ const EXCEPTIONS = {
     maxFiles: 110,
     maxLines: 21_000,
   },
-  "packages/battle-runtime/battle-runtime-see-invisibility-tests.qnt": {
-    maxFiles: 62,
-    maxLines: 12_500,
-  },
 };
 
 function roundedLineCeiling(lines) {
