@@ -19,6 +19,7 @@ import {
   fighterAttackSubject,
   fighterVsGoblinBattle,
   goblinId,
+  recklessAttackFeature,
   resolveBattleSubject,
   startBattleRight,
   statBlockCreatureInit,
@@ -48,6 +49,8 @@ import {
 import { applyHpDamage } from "./battle-reducer/damage-apply.ts";
 import {
   attackRollHole,
+  attackRollOngoingFeatureActivationProfile,
+  attackRollOngoingFeatureActivations,
   attackRollModeWithOptionalOngoingFeature,
   requiredAttackRollMode,
 } from "./battle-reducer/attack-roll.ts";
@@ -422,6 +425,104 @@ describe("battle runtime: attack pipeline boundaries", () => {
     expect(attackRollHole(undefined, attack)).not.toHaveProperty(
       "missToHitReplacement",
     );
+  });
+
+  test("a real first-attack ongoing feature projects and replays its activation profile", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-attack-roll-ongoing-profile"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "barbarian", level: 2 }],
+          unitFeatures: [recklessAttackFeature()],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const fighter = state.combatants.get(fighterId);
+    if (
+      fighter?.origin.kind !== "character" ||
+      fighter.origin.attack === null
+    ) {
+      throw new Error("Expected the Reckless Attack character fixture.");
+    }
+    const attack = fighter.origin.attack;
+    const activations = attackRollOngoingFeatureActivations(
+      state,
+      fighterId,
+      attack,
+    );
+    expect(activations).toHaveLength(1);
+    const activation = activations[0];
+    if (activation === undefined) {
+      throw new Error("Expected the admitted first-attack activation.");
+    }
+    expect(
+      attackRollOngoingFeatureActivationProfile(
+        state,
+        fighterId,
+        attack,
+        activation.procedureRef,
+        false,
+      ),
+    ).toMatchObject({
+      procedureRef: activation.procedureRef,
+      execution: {
+        kind: "ongoingFeature",
+        activationTrigger: "firstAttackRoll",
+      },
+    });
+    expect(
+      attackRollOngoingFeatureActivationProfile(
+        state,
+        fighterId,
+        attack,
+        undefined,
+        false,
+      ),
+    ).toBeNull();
+
+    const subject = fighterAttackSubject(state);
+    const target = attackInitialTargetHole(state, subject);
+    const roll = attackRollHoleAfterTarget(state, target, subject);
+    const activated = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(target, goblinId),
+        attackRollFill(roll, {
+          total: 15,
+          naturalD20: 10,
+          rollMode: "advantage",
+          activatedOngoingFeatureProcedureRef: activation.procedureRef,
+        }),
+      ],
+    });
+    expect(activated.tag).toBe("needsHoles");
+    if (activated.tag !== "needsHoles") {
+      throw new Error("Expected the activated attack to continue to damage.");
+    }
+    expect(
+      attackRollOngoingFeatureActivationProfile(
+        activated.state,
+        fighterId,
+        attack,
+        activation.procedureRef,
+        false,
+      ),
+    ).toBeNull();
+    expect(
+      attackRollOngoingFeatureActivationProfile(
+        activated.state,
+        fighterId,
+        attack,
+        activation.procedureRef,
+        true,
+      ),
+    ).toMatchObject({
+      procedureRef: activation.procedureRef,
+      execution: { kind: "ongoingFeature" },
+    });
   });
 
   test("attack action resources prefer extra attacks, then restricted resources", () => {
