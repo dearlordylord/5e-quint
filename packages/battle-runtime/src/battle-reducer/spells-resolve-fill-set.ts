@@ -63,7 +63,6 @@ import {
 import { validateUniqueAttackSightFacts } from "./attack-fill-set.ts";
 import { isHideousLaughterDamageRepeatSaveFill } from "./hideous-laughter-repeat-save.ts";
 
-type RuntimeSpellProcedure = RuntimeSpellProcedureExecution;
 import { DamageRelationshipDecisionsByHole } from "./damage-relationship-decisions.ts";
 import {
   isMirrorImageDuplicateRollFill,
@@ -110,6 +109,20 @@ import {
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
   THAUMATURGY_ACTIVE_ONE_MINUTE_EFFECT_COUNT_HOLE_ID,
 } from "./domain-constants.ts";
+
+type RuntimeSpellProcedure = RuntimeSpellProcedureExecution;
+
+const MIRROR_IMAGE_DUPLICATE_ROLL_PROCEDURES = [
+  "spellAttackSequence",
+  "spellAttackDamage",
+  "heldLightHurl",
+  "attackBurstSaveDamage",
+  "spiritualWeaponAttackProxy",
+  "spiritualWeaponRepeatAttack",
+] as const satisfies readonly RuntimeSpellProcedure["procedure"][];
+const MIRROR_IMAGE_DUPLICATE_ROLL_PROCEDURE_SET: ReadonlySet<
+  RuntimeSpellProcedure["procedure"]
+> = new Set(MIRROR_IMAGE_DUPLICATE_ROLL_PROCEDURES);
 
 export type SpellAttackSequencePartTargetFill =
   | {
@@ -1881,10 +1894,7 @@ export function spellFillSet(
       if (isMirrorImageDuplicateRollFill(fill)) {
         /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
         if (
-          invocation.procedure !== "spellAttackSequence" &&
-          invocation.procedure !== "spellAttackDamage" &&
-          invocation.procedure !== "heldLightHurl" &&
-          invocation.procedure !== "attackBurstSaveDamage"
+          !MIRROR_IMAGE_DUPLICATE_ROLL_PROCEDURE_SET.has(invocation.procedure)
         ) {
           /* v8 ignore next -- Malformed fill set: discovery is the canonical hole contract; this return rejects a duplicate, wrong-kind, wrong-hole, or contradictory spell fill. */
           return {

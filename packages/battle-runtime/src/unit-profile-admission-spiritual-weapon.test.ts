@@ -132,6 +132,304 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     );
   });
 
+  test("a second discovered cast becomes stale after the first cast commits its slot", () => {
+    const spell = spellRecord(spiritualWeaponUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const firstAct = bonusSpellAct({
+      session,
+      spellId: spiritualWeaponUnitId,
+      slotLevel: 2,
+    });
+    const secondAct = bonusSpellAct({
+      session,
+      spellId: spiritualWeaponUnitId,
+      slotLevel: 2,
+    });
+    const firstForce = requireHole(
+      firstAct.initialHoles,
+      "spiritualWeaponForcePosition",
+    );
+    const firstTarget = requireHole(firstAct.initialHoles, "targetChoice");
+    const firstPositionId = battleTablePositionId(
+      "spiritual-weapon-first-discovery",
+    );
+    const firstForceFill = spiritualWeaponForcePositionFill({
+      hole: firstForce,
+      positionId: firstPositionId,
+    });
+    const firstTargetFill = spiritualWeaponTargetFill(
+      firstTarget,
+      spiritualWeaponUnitId,
+      spellCasterId,
+      spellTargetId,
+      firstPositionId,
+    );
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: firstAct.subject,
+        fills: [firstForceFill, firstTargetFill],
+      }),
+      "attackRoll",
+    );
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: firstAct.subject,
+        fills: [
+          firstForceFill,
+          firstTargetFill,
+          attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const committed = resolveBattleSubject({
+      state: session.state,
+      subject: firstAct.subject,
+      fills: [
+        firstForceFill,
+        firstTargetFill,
+        attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(damageRoll, [[4]]),
+      ],
+    });
+    if (committed.tag !== "resolved") {
+      throw new Error("Expected first Spiritual Weapon discovery to resolve.");
+    }
+    expect(committed.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(
+      committed.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "committed",
+        combatantId: spellCasterId,
+      }),
+    );
+
+    const secondForce = requireHole(
+      secondAct.initialHoles,
+      "spiritualWeaponForcePosition",
+    );
+    const secondTarget = requireHole(secondAct.initialHoles, "targetChoice");
+    const secondPositionId = battleTablePositionId(
+      "spiritual-weapon-second-discovery",
+    );
+    const stale = resolveBattleSubject({
+      state: committed.state,
+      subject: secondAct.subject,
+      fills: [
+        spiritualWeaponForcePositionFill({
+          hole: secondForce,
+          positionId: secondPositionId,
+        }),
+        spiritualWeaponTargetFill(
+          secondTarget,
+          spiritualWeaponUnitId,
+          spellCasterId,
+          spellTargetId,
+          secondPositionId,
+        ),
+      ],
+    });
+    expect(stale).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Bonus Action spell is no longer available for the current actor.",
+    });
+  });
+
+  test("a failed Slow Somatic check stops the Spiritual Weapon Bonus Action before target holes", () => {
+    const spell = spellRecord(spiritualWeaponUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const caster = requireCombatant(session.state, spellCasterId);
+    const slowedState: BattleState = {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: [
+          ...caster.activeEffects,
+          {
+            kind: "slowActivePenalties",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              "synthetic-slow-for-spiritual-weapon",
+            ),
+            sourceCombatantId: spellTargetId,
+            save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+            expiresAt: {
+              kind: "concentration",
+              combatantId: spellTargetId,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        ],
+      }),
+    };
+    const slowedSession = battleRuntimeSessionForTest({
+      ...session,
+      state: slowedState,
+    });
+    const act = bonusSpellAct({
+      session: slowedSession,
+      spellId: spiritualWeaponUnitId,
+      slotLevel: 2,
+    });
+    const slowHole = requireHole(
+      act.initialHoles,
+      "slowSomaticSpellFailureOutcome",
+    );
+    if (slowHole.kind !== "slowSomaticSpellFailureOutcome") {
+      throw new Error("Expected Slow Somatic outcome hole.");
+    }
+
+    const failed = resolveBattleSubject({
+      state: slowedState,
+      subject: act.subject,
+      fills: [
+        {
+          kind: "slowSomaticSpellFailureOutcome",
+          holeId: slowHole.holeId,
+          value: { spellFailed: true },
+        },
+      ],
+    });
+    if (failed.tag !== "resolved") {
+      throw new Error("Expected failed slowed Spiritual Weapon to resolve.");
+    }
+    expect(
+      requireCombatant(failed.state, spellCasterId).activeEffects,
+    ).not.toContainEqual(expect.objectContaining({ kind: "spiritualWeapon" }));
+    expect(failed.state.currentTurnResources.currentHasBonusAction).toBe(false);
+    expect(
+      failed.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "committed",
+        combatantId: spellCasterId,
+      }),
+    );
+  });
+
+  test("Mirror Image redirects an immediate Spiritual Weapon hit after the cast commit", () => {
+    const spell = spellRecord(spiritualWeaponUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const target = requireCombatant(session.state, spellTargetId);
+    const mirrorImageState: BattleState = {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellTargetId, {
+        ...target,
+        activeEffects: [
+          ...target.activeEffects,
+          {
+            kind: "mirrorImageDuplicates",
+            sourceProcedureRef: battleProcedureExecutionRefForTest(
+              "synthetic-mirror-image-for-spiritual-weapon",
+            ),
+            sourceCombatantId: spellTargetId,
+            remainingDuplicates: 3,
+            expiresAt: {
+              kind: "duration",
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        ],
+      }),
+    };
+    const act = bonusSpellAct({
+      session: battleRuntimeSessionForTest({
+        ...session,
+        state: mirrorImageState,
+      }),
+      spellId: spiritualWeaponUnitId,
+      slotLevel: 2,
+    });
+    const force = requireHole(act.initialHoles, "spiritualWeaponForcePosition");
+    const targetChoice = requireHole(act.initialHoles, "targetChoice");
+    const positionId = battleTablePositionId("spiritual-weapon-mirror-force");
+    const forceFill = spiritualWeaponForcePositionFill({
+      hole: force,
+      positionId,
+    });
+    const targetFill = spiritualWeaponTargetFill(
+      targetChoice,
+      spiritualWeaponUnitId,
+      spellCasterId,
+      spellTargetId,
+      positionId,
+    );
+    const attackRoll = requireResultHole(
+      resolveBattleSubject({
+        state: mirrorImageState,
+        subject: act.subject,
+        fills: [forceFill, targetFill],
+      }),
+      "attackRoll",
+    );
+    const mirrorHoleResult = resolveBattleSubject({
+      state: mirrorImageState,
+      subject: act.subject,
+      fills: [
+        forceFill,
+        targetFill,
+        attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+      ],
+    });
+    const mirrorHole = requireResultHole(mirrorHoleResult, "rolledDice");
+    if (!("mirrorImageDuplicateRoll" in mirrorHole)) {
+      throw new Error("Expected Mirror Image duplicate roll hole.");
+    }
+    const resolved = resolveBattleSubject({
+      state: mirrorImageState,
+      subject: act.subject,
+      fills: [
+        forceFill,
+        targetFill,
+        attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+        damageRollFillWithGroups(mirrorHole, [[1, 2, 3]]),
+      ],
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Mirror Image redirected Spiritual Weapon hit.");
+    }
+    expect(Number(requireCombatant(resolved.state, spellTargetId).hp)).toBe(30);
+    expect(
+      requireCombatant(resolved.state, spellTargetId).activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "mirrorImageDuplicates",
+        remainingDuplicates: 2,
+      }),
+    );
+    expect(
+      requireCombatant(resolved.state, spellCasterId).activeEffects,
+    ).toContainEqual(expect.objectContaining({ kind: "spiritualWeapon" }));
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(
+      resolved.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "committed",
+        combatantId: spellCasterId,
+      }),
+    );
+  });
+
   test("rejects public Action spell subjects for the Bonus Action Spiritual Weapon cast", () => {
     const spell = spellRecord(spiritualWeaponUnitId);
     const session = spellBattle({

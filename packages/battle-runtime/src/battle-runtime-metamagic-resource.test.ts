@@ -3290,6 +3290,47 @@ type SaveConditionMetamagicSpellCase =
   (typeof SAVE_CONDITION_METAMAGIC_CASES)[number];
 
 describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
+  test.each([
+    {
+      spellId: "calm_emotions" as const,
+      procedure: "saveGatedConditionImmunity" as const,
+      spellLevel: 2 as const,
+    },
+    {
+      spellId: "faerie_fire" as const,
+      procedure: "saveGatedAttackRollAdvantage" as const,
+      spellLevel: 1 as const,
+    },
+  ])(
+    "Careful $spellId exposes its protected-target hole before the Saving Throw",
+    ({ spellId: selectedSpellId, procedure, spellLevel }) => {
+      const session = saveMetamagicBattle({
+        knownOptions: [carefulMetamagicOption()],
+        preparedSpells: [selectedSpellId],
+        spellSlots: [{ spellLevel, count: 1 }],
+      });
+      const act = carefulSpellAct(session, spellId(selectedSpellId));
+      const invocation = spellHoleInvocation(session, act.initialHoles);
+      expect(invocation.procedure).toBe(procedure);
+
+      const awaitingProtectedTargets = resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [],
+      });
+
+      expect(awaitingProtectedTargets).toMatchObject({
+        tag: "needsHoles",
+        holes: [
+          expect.objectContaining({
+            kind: "spellTargetList",
+            label: "Spell Careful Spell protected targets",
+          }),
+        ],
+      });
+    },
+  );
+
   test("discovers Heightened Burning Hands and spends Sorcery Points after choosing one disadvantaged target", () => {
     const heightenedOption = heightenedMetamagicOption();
     const session = saveMetamagicBattle({

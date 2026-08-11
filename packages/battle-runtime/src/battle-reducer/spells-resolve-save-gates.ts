@@ -1214,7 +1214,6 @@ export function resolveSaveGateDamageSpellAct(input: {
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     input.invocation.targeting.kind !== "singleCombatant" &&
-    input.invocation.targeting.kind !== "targetList" &&
     input.fillSet.targetId !== undefined
   ) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
@@ -1490,6 +1489,7 @@ export function resolveSaveGateDamageSpellAct(input: {
         invocation: input.invocation,
       })
     : null;
+  /* v8 ignore start -- Save-gate admission validates Concentration up-to durations as supported TimeSpan values; when a failed target requires the effect, this null result is only a defensive guard for a future profile-contract drift. */
   if (shouldCreateDurationEffect && failedSaveConcentrationDuration === null) {
     return invalidResult(
       input.input.state,
@@ -1497,6 +1497,7 @@ export function resolveSaveGateDamageSpellAct(input: {
       "Save-gated damage Concentration spells require a supported maximum duration.",
     );
   }
+  /* v8 ignore stop */
   const stateAfterCastConcentrationBreak =
     startsOrdinaryConcentration && saveGatedDamageSpellRequiresConcentration
       ? breakBattleConcentration(input.input.state, input.actorId)
@@ -2006,11 +2007,13 @@ export function resolveSaveGateDamageSpellAct(input: {
     targetId: BattleCreatureState["combatantId"],
   ): BattleCreatureState => {
     const target = state.combatants.get(targetId);
+    /* v8 ignore start -- The sequential damage reducer updates combatant state in place and never removes a validated target; this guard protects the local operation if that invariant changes. */
     if (target == null) {
       throw new Error(
         "A resolved spell damage target must remain in the battle state during sequential application.",
       );
     }
+    /* v8 ignore stop */
     return target;
   };
   const damaged = resolvedTargetDamages.reduce((state, resolvedDamage) => {
@@ -2291,9 +2294,11 @@ function withFailedSaveConcentrationDuration(
     return result;
   }
   const actor = result.state.combatants.get(actorId);
+  /* v8 ignore start -- A resolved spell state preserves the validated caster combatant; this guard protects the concentration projection if a future reducer permits removal. */
   if (actor === undefined) {
     return result;
   }
+  /* v8 ignore stop */
   const state = {
     ...result.state,
     combatants: new Map(result.state.combatants).set(actorId, {
@@ -2493,10 +2498,7 @@ export function resolveSaveGateConditionSpellAct(input: {
   readonly spendsCastResources?: boolean;
 }): BattleResolutionResult {
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (
-    input.invocation.targeting.kind !== "singleCombatant" &&
-    input.fillSet.targetId !== undefined
-  ) {
+  if (input.fillSet.targetId !== undefined) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
     return invalidResult(
       input.input.state,
@@ -2505,33 +2507,6 @@ export function resolveSaveGateConditionSpellAct(input: {
     );
   }
   /* v8 ignore stop */
-  if (input.invocation.targeting.kind === "singleCombatant") {
-    if (input.fillSet.targetId === undefined) {
-      return needsHolesResult(input.input.state, input.input.subject, [
-        spellTargetHole(input.input.state, input.actorId, input.invocation),
-      ]);
-    }
-    const target = input.input.state.combatants.get(input.fillSet.targetId);
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (
-      target === undefined ||
-      !spellTargetIsLegal(
-        input.input.state,
-        input.actorId,
-        target.combatantId,
-        input.invocation,
-        input.fillSet.targetSpatialFacts,
-      )
-    ) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered save-gate holes or current spell constraints. */
-      return invalidResult(
-        input.input.state,
-        "invalidFill",
-        "Spell target must be a combatant within the selected spell's supported range.",
-      );
-    }
-    /* v8 ignore stop */
-  }
   if (input.invocation.targeting.kind === "targetList") {
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (!isTargetListSpellInvocation(input.invocation)) {
@@ -3184,6 +3159,7 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
     return saveFailedReactionWindow;
   }
 
+  assertAreaSavingThrowOutcomes(savingThrowOutcomes);
   const resourced = spendSpellCastResources({
     state: input.input.state,
     actorId: input.actorId,
@@ -3198,7 +3174,7 @@ export function resolveSaveGateAttackRollAdvantageSpellAct(input: {
     resourced.state,
     input.actorId,
     failedTargets,
-    "area" in savingThrowOutcomes ? savingThrowOutcomes.area : undefined,
+    savingThrowOutcomes.area,
     input.invocation,
   );
   const nextState = extendSavingThrowOngoingFeatures(
@@ -3254,10 +3230,15 @@ export function validateSavingThrowOutcomes(
     if (invocation.targeting.kind === "selfAndChosenLegalTargets") {
       return null;
     }
-    return invocation.targeting.maxTargets === "allLegalTargets" ||
+    if (
+      invocation.targeting.maxTargets === "allLegalTargets" ||
       outcomes.length <= invocation.targeting.maxTargets
-      ? null
-      : "Save-gated roll modifier spell Saving Throw outcomes exceed the selected spell's target count.";
+    ) {
+      return null;
+    }
+    /* v8 ignore start -- The save-outcome validator is only called by save-gated procedures; no admitted roll-modifier invocation reaches this malformed target-count arm. */
+    return "Save-gated roll modifier spell Saving Throw outcomes exceed the selected spell's target count.";
+    /* v8 ignore stop */
   }
   const targeting = spellSavingThrowTargeting(invocation);
   if (invocation.procedure === "sleepTargetAdmission") {
@@ -3345,10 +3326,11 @@ export function validateSavingThrowOutcomes(
       heightenedSpellTargetId,
     });
   }
-  /* v8 ignore next -- The public save-gate fill adapter rejects area-less values before this reducer validator; keep this defensive fallback for internal callers. */
+  /* v8 ignore start -- The public save-gate fill adapter rejects area-less values before this reducer validator; keep this defensive fallback for internal callers. */
   if (!("area" in value)) {
     return `Save-gate spell Saving Throw outcomes require area facts for ${targeting.kind}.`;
   }
+  /* v8 ignore stop */
   if ("kind" in value.area && value.area.kind === "greaseGroundArea") {
     return "Grease ground-area facts are only valid for Grease.";
   }
@@ -3369,10 +3351,11 @@ export function validateSavingThrowOutcomes(
     if (invocation.procedure !== "saveGatedAttackRollAdvantage") {
       return "Faerie Fire object area facts are only valid for Faerie Fire.";
     }
-    /* v8 ignore next -- Spell procedure admission only exposes this profile for Faerie Fire; this defensive metadata cross-check has no public counterexample. */
+    /* v8 ignore start -- The typed save-gated attack-advantage procedure admits this area shape only for its corresponding execution facts; this defensive cross-check has no public counterexample. */
     if (!saveGatedAttackRollAdvantageInvocationIsFaerieFire(invocation)) {
       return "Faerie Fire object area facts are only valid for Faerie Fire.";
     }
+    /* v8 ignore stop */
     const affectedObjects = new Set(value.area.affectedObjectIds);
     if (affectedObjects.size !== value.area.affectedObjectIds.length) {
       return "Faerie Fire area affected objects must not duplicate object ids.";
@@ -3535,15 +3518,17 @@ function saveGatedDamageSpellCastTargetIds(
   if (fillSet.targetId !== undefined) {
     return [fillSet.targetId];
   }
-  if (fillSet.targetList !== undefined) {
-    return fillSet.targetList.targetIds;
+  if (fillSet.savingThrowOutcomes === undefined) {
+    return [];
   }
-  if (fillSet.savingThrowOutcomes !== undefined) {
-    return "area" in fillSet.savingThrowOutcomes
-      ? fillSet.savingThrowOutcomes.area.affectedTargetIds
-      : fillSet.savingThrowOutcomes.outcomes.map((outcome) => outcome.targetId);
+  if ("area" in fillSet.savingThrowOutcomes) {
+    return fillSet.savingThrowOutcomes.area.affectedTargetIds;
   }
-  return [];
+  /* v8 ignore start -- The cast interrupt frame is built before outcome validation; this non-area fallback preserves the precise later invalid-fill result for a malformed direct caller, while admitted non-single save-gated profiles supply area facts. */
+  return fillSet.savingThrowOutcomes.outcomes.map(
+    (outcome) => outcome.targetId,
+  );
+  /* v8 ignore stop */
 }
 
 function validatePostSaveAreaEffect(input: {
@@ -3763,11 +3748,16 @@ function validateThunderwaveAreaEffect(input: {
     }
     /* v8 ignore stop */
   }
-  return input.area.audibleBoom.sound === input.effect.audibleBoom.sound &&
+  if (
+    input.area.audibleBoom.sound === input.effect.audibleBoom.sound &&
     input.area.audibleBoom.audibleRadiusFeet ===
       input.effect.audibleBoom.audibleRadiusFeet
-    ? null
-    : "Thunderwave audible-boom fact must match the spell's thunderous boom within 300 feet.";
+  ) {
+    return null;
+  }
+  /* v8 ignore start -- Thunderwave admission supplies the audible-boom witness directly from the typed effect facts; this error arm only rejects a caller-mutated contradiction. */
+  return "Thunderwave audible-boom fact must match the spell's thunderous boom within 300 feet.";
+  /* v8 ignore stop */
 }
 
 function validateThunderwavePushDisposition(
@@ -3857,11 +3847,14 @@ function validateSleepTargetAdmissionSavingThrowOutcomes(input: {
     return "Sleep Saving Throw outcomes must cover every selected target that is not an automatic success.";
   }
   /* v8 ignore stop */
-  return nonAutomaticTargetIds.every((targetId) =>
-    outcomeTargetIds.has(targetId),
-  )
-    ? null
-    : "Sleep Saving Throw outcomes must cover every selected target that is not an automatic success.";
+  if (
+    nonAutomaticTargetIds.every((targetId) => outcomeTargetIds.has(targetId))
+  ) {
+    return null;
+  }
+  /* v8 ignore start -- Sleep admission partitions automatic successes before requesting outcomes, so this error arm only rejects a caller-mutated witness. */
+  return "Sleep Saving Throw outcomes must cover every selected target that is not an automatic success.";
+  /* v8 ignore stop */
 }
 
 function validateGreaseGroundHazardSavingThrowOutcomes(input: {
@@ -3905,9 +3898,12 @@ function validateGreaseGroundHazardSavingThrowOutcomes(input: {
     outcomeTargetIds.add(outcome.targetId);
   }
   /* v8 ignore stop */
-  return outcomeTargetIds.size === selectedTargets.size
-    ? null
-    : "Grease Saving Throw outcomes must cover every table-supplied ground-area affected target.";
+  if (outcomeTargetIds.size === selectedTargets.size) {
+    return null;
+  }
+  /* v8 ignore start -- Grease admission requests one outcome per table-supplied affected target, so this error arm only rejects a caller-mutated witness. */
+  return "Grease Saving Throw outcomes must cover every table-supplied ground-area affected target.";
+  /* v8 ignore stop */
 }
 
 function sleepTargetAutomaticallySucceeds(

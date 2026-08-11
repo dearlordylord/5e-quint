@@ -966,6 +966,37 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(contagionEffect(successState)).toBeUndefined();
   });
 
+  test("contagion requests its failed-save ability choice before the Saving Throw", () => {
+    const spell = spellRecord(contagionUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 5, count: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: contagionUnitId,
+      slotLevel: 5,
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      targetHole,
+      contagionUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+
+    const awaitingAbilityChoice = resolveBattleSubject({
+      state: session.state,
+      subject: act.subject,
+      fills: [targetFill],
+    });
+
+    expect(awaitingAbilityChoice).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "abilityChoice" })],
+    });
+  });
+
   test("contagion locks in after three failed repeated saves", () => {
     const spell = spellRecord(contagionUnitId);
     const session = spellBattle({

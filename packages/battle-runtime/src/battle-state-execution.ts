@@ -257,6 +257,8 @@ import type {
 import type { SpellRuleExecutionFactsOwner } from "./procedure-execution/spell-procedure-execution.ts";
 import type {
   PreparedSpellAccess,
+  SaveGatedConditionSpellTargeting,
+  SaveGatedDamageSpellTargeting,
   SpellSlotInvocationResource,
   SpellTargeting,
 } from "./procedure-execution/spell-invocation-vocabulary.ts";
@@ -284,6 +286,8 @@ export {
 } from "./active-effect/execution-vocabulary.ts";
 export type {
   PreparedSpellAccess,
+  SaveGatedConditionSpellTargeting,
+  SaveGatedDamageSpellTargeting,
   SpellSlotInvocationResource,
   SpellTargeting,
 } from "./procedure-execution/spell-invocation-vocabulary.ts";
@@ -3118,7 +3122,7 @@ type SupportedSpellInvocationSource =
       >;
       readonly ability: Ability;
       readonly dc: DcSource;
-      readonly targeting: SpellTargeting;
+      readonly targeting: SaveGatedDamageSpellTargeting;
       readonly damage: {
         readonly expr: DiceExpr;
         readonly damageType: DamageType;
@@ -3170,7 +3174,7 @@ type SupportedSpellInvocationSource =
       readonly spell: BattleSpellAdmissionSource;
       readonly ability: Ability;
       readonly dc: DcSource;
-      readonly targeting: SpellTargeting;
+      readonly targeting: SaveGatedConditionSpellTargeting;
       readonly targetCreatureTypes: readonly CreatureType[] | null;
       readonly effect: SpellFailedSaveConditionEffect;
       readonly saveRollModeRule: SpellSavingThrowRollModeRule | null;

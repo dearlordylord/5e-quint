@@ -46,6 +46,7 @@ import {
   flamingSphereRepositionAct,
   flamingSphereRepositionMovementFill,
   flamingSphereUnitId,
+  greaseUnitId,
   maybeSpellAct,
   movementFeet,
   requireCombatant,
@@ -666,6 +667,22 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     const act = spellActForActor(targetTurn, spellTargetId, shillelaghUnitId);
     const slowChance = requireSlowSomaticSpellFailureHole(act.initialHoles);
 
+    const failed = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: act.subject,
+      fills: [slowSomaticSpellFailureFill(slowChance, true)],
+    });
+
+    if (failed.tag !== "resolved") {
+      throw new Error("Expected failed slowed Shillelagh to resolve.");
+    }
+    expect(
+      requireCombatant(failed.state, spellTargetId).activeEffects,
+    ).not.toContainEqual(
+      expect.objectContaining({ kind: "spellWeaponAttackOverride" }),
+    );
+    expect(failed.state.currentTurnResources.currentHasBonusAction).toBe(false);
+
     expect(
       resolveBattleSubject({
         state: targetTurn.state,
@@ -695,6 +712,41 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       requireCombatant(resolved.state, spellTargetId).activeEffects,
     ).toContainEqual(
       expect.objectContaining({ kind: "spellWeaponAttackOverride" }),
+    );
+  });
+
+  test("a failed Slow Somatic outcome stops an Action spell before its target holes", () => {
+    const targetTurn = targetTurnAfterFailedSlow(
+      spellBattle({
+        preparedSpells: [spellRecord(slowUnitId)],
+        spellSlots: [{ spellLevel: 3, count: 1 }],
+        targetPreparedSpells: [spellRecord(greaseUnitId)],
+      }),
+    );
+    const act = spellActForActor(targetTurn, spellTargetId, greaseUnitId);
+    const slowChance = requireSlowSomaticSpellFailureHole(act.initialHoles);
+
+    const failed = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: act.subject,
+      fills: [slowSomaticSpellFailureFill(slowChance, true)],
+    });
+    if (failed.tag !== "resolved") {
+      throw new Error("Expected failed slowed Grease cast to resolve.");
+    }
+    expect(
+      requireCombatant(failed.state, spellTargetId).activeEffects,
+    ).not.toContainEqual(
+      expect.objectContaining({ kind: "greaseGroundHazard" }),
+    );
+    expect(failed.state.currentTurnResources.actionResources).toEqual([]);
+    expect(
+      failed.state.currentTurnResources.spellSlotUsesThisTurn,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "committed",
+        combatantId: spellTargetId,
+      }),
     );
   });
 

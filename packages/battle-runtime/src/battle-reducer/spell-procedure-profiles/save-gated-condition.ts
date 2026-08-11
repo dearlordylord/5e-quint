@@ -123,7 +123,6 @@ import {
   saveGatedConditionHasConditionChoice,
   spellConditionChoiceHole,
   spellSavingThrowOutcomeHole,
-  spellTargetHole,
   spellTargetListHole,
 } from "../spells-holes-fills.ts";
 
@@ -157,8 +156,7 @@ function discoverSaveGatedConditionCastAct(
   invocation: BattleExecutableSpellInvocation<SaveGatedConditionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
-  return invocation.targeting.kind === "singleCombatant" ||
-    invocation.targeting.kind === "targetList"
+  return invocation.targeting.kind === "targetList"
     ? discoverTargetedSaveGatedConditionCastActs(
         state,
         actorId,
@@ -174,12 +172,9 @@ function discoverTargetedSaveGatedConditionCastActs(
   actor: BattleCreatureState | undefined,
   invocation: BattleExecutableSpellInvocation<SaveGatedConditionSpellInvocation>,
 ): readonly BattleActDiscoveryCandidate[] {
-  const targetHole =
-    invocation.targeting.kind === "singleCombatant"
-      ? spellTargetHole(state, actorId, invocation)
-      : isTargetListSpellInvocation(invocation)
-        ? spellTargetListHole(state, actorId, invocation)
-        : null;
+  const targetHole = isTargetListSpellInvocation(invocation)
+    ? spellTargetListHole(state, actorId, invocation)
+    : null;
   if (targetHole === null || targetHole.choices.length === 0) {
     return [];
   }
