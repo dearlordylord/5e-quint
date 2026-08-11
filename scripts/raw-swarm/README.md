@@ -13,34 +13,35 @@ MCP deliberately adds compound coverage of MCP decoding, session storage, and
 response projection, but an MCP-only defect and an SDK rules defect must be
 classified separately.
 
-Agents can participate in two roles:
+The harness does not add a second deterministic test layer. Direct SDK tests
+are the repository's existing integration/regression tests: they protect rules
+claims maintainers already know to assert. Swarm testing has a different job:
+discover failures that those anticipated assertions did not name.
 
-- **test author** — write a structured deterministic scenario and expected RAW
-  claims, then let a driver execute it;
-- **player/DM emulator** — make choices live from the SDK's currently available
-  acts and holes, without knowing the implementation.
+The swarm-specific loop is:
 
-The first role does not inherently need MCP. A scalable SDK-first swarm may
-generate scenario JSON or code against a thin typed SDK driver. This first slice
-uses `handleToolCall` even for scripted probes because the existing MCP
-composition root was the smallest complete headless facade. Consequently it
-tests the SDK through one adapter rather than directly. The freeplay lane uses
-MCP because Codex needs a live tool protocol while pretending to be a player or
-DM. Neither lane should treat MCP behavior as the RAW oracle.
+1. A **player/DM emulator** chooses from the SDK's live acts and holes through
+   the MCP interaction adapter.
+2. The recorder captures every concrete call and full result; replay proves
+   that exact interaction can be reproduced.
+3. An **adversarial RAW reviewer** inspects the whole trace, including facts the
+   scenario author did not think to assert.
+4. An actionable finding is promoted into an ordinary direct SDK or adapter
+   regression while it is fixed. That regression then prevents later swarm
+   runs from repeatedly rediscovering the same defect.
 
-For later slices, keep the authored scenario vocabulary independent of MCP tool
-names and wire shapes. The preferred expansion is one canonical scenario with a
-direct typed SDK executor as the primary lane and an optional MCP executor for
-adapter parity and live-agent play. Agents may author scenario source, but the
-trusted harness accepts only scenario data decoded through its boundary parser;
-do not compile arbitrary agent-authored TypeScript into the harness.
+The direct regression supports player-agent testing by preserving discoveries;
+it does not drive or guide the player agent. MCP remains an adapter and not the
+RAW oracle.
 
-Two lanes:
-
-- **scripted probes** — deterministic RAW claims authored as scenario JSON and
-  executed in-process through the current MCP composition facade;
-- **freeplay** — an external player/DM-emulating agent drives the same SDK
-  through an MCP stdio adapter and a byte-transparent recording proxy.
+This first slice retains one transitional JSON scripted probe. Its adversarial
+review found four unanticipated SDK defects now tracked in
+[#255](https://github.com/dearlordylord/5e-quint/issues/255),
+[#256](https://github.com/dearlordylord/5e-quint/issues/256),
+[#257](https://github.com/dearlordylord/5e-quint/issues/257), and
+[#258](https://github.com/dearlordylord/5e-quint/issues/258). That result
+validated full-trace recording, review, reporting, and triage; it does not
+justify keeping the JSON recipe interpreter as another test architecture.
 
 Prerequisite: run everything under mise-managed Node 24 from the worktree
 root (see `mise.toml`):
@@ -51,6 +52,88 @@ mise exec -- <command>
 
 Generated artifacts (transcripts, SQLite DBs) go under
 `scripts/raw-swarm/out/` (gitignored).
+
+## Continuing and expanding the swarm
+
+### Fix-before-width workflow
+
+Do not add broad scenario volume while known SDK defects would make many runs
+repeat the same finding. Process every non-pass observation through the single
+ordered procedure in [Finding and bug lifecycle](#finding-and-bug-lifecycle).
+For an actionable defect, add the smallest regression at its canonical SDK or
+adapter owner before a confirming player-agent run and adversarial review;
+preserve the original failing evidence.
+
+After known defects converge, expand width along independent axes:
+
+- procedure position: discovery, pending holes, resolution, End Turn, round
+  advancement, and session closure;
+- outcome: miss, positive-HP hit, 0 HP, and Knock Out;
+- act family: weapon attack, Unarmed Strike, general Action, Ready, spell, and
+  movement;
+- combatant origin: Stat Block and Character Sheet;
+- input behavior: valid, stale, duplicate, malformed, and contradictory.
+
+Do not build the Cartesian product. Each new scenario should introduce one
+meaningful interaction or counterexample while reusing already-proved facts.
+Every RAW expectation needs a local SRD citation and must be authored before
+observing the runtime result.
+
+### Do not build a scenario language
+
+The SDK owns the D&D vocabulary and semantics through canonical
+`BattleSubject`, `BattleHole`, and `BattleFill` values. Deterministic RAW probes
+belong in ordinary direct SDK tests. Player/DM-emulating agents exercise the
+real act/hole surface. Their concrete calls and results—not a second command
+language—are the replay artifact.
+
+The first slice contains a transitional JSON scenario driver with two scripted
+recipes:
+
+- `meleeAttackHit` means: discover and select a melee attack, supply its target,
+  attack roll, damage dice, and optional 0-HP disposition, then optionally end
+  the turn. It is a bundled driver recipe, not a D&D event or SDK domain term.
+- `isolationPass` means: intentionally take no act in order to isolate the rule
+  under test, record why, then optionally end the turn. It is not the RAW Ready,
+  Dodge, or any other Action, and “pass” is not an SDK combat procedure.
+
+Treat both as frozen slice scaffolding, not extension examples. Do not add
+`spellAttackHit`, `savingThrowFailed`, `grappleSucceeded`, or generic
+runner operations that grow their own sequencing, reference, or templating
+protocol. Once the first probe's findings have direct SDK regressions, retire
+the whole scripted-only slice: `scenario.ts`, `driver.ts`, `replay.ts`, their
+dedicated tests, the probe JSON, and its review prompt. Preserve shared
+transcript/report parsing and the original stored evidence. Keep a scripted-only
+module only if it demonstrates a distinct capability that ordinary tests plus
+recorded player-agent calls cannot.
+
+Only the transitional scenario/driver path decodes and expands these recipes.
+Freeplay agents never see them; those agents choose from acts and holes surfaced
+by the runtime. Replays execute concrete calls stored in transcripts rather
+than reinterpreting recipes.
+
+### Adding scenario width
+
+Use freeplay prompts for discovery, then promote findings into the existing
+test system:
+
+1. Choose one new interaction from the width axes above and cite the local SRD
+   claim before running the SDK.
+2. Add a natural-language prompt under `freeplay/` that gives the setup and
+   player/DM goal without prescribing implementation calls or outcomes.
+3. Record the player's real calls and results, replay the transcript with
+   `replay-freeplay.ts`, and ingest it with `report.ts ingest`.
+4. Add a committed falsifier prompt under `reviews/`, run
+   `run-raw-review.sh`, and import the result with `report.ts review`.
+5. Inspect `report.ts summary` and `report.ts issues --unlinked`; triage each
+   non-pass observation through the GitHub lifecycle below.
+6. For each actionable defect, add the smallest ordinary SDK or adapter
+   regression during the fix; do not create a new harness test abstraction.
+
+Do not copy `run-freeplay-001.sh` for every freeplay. Before adding the second
+freeplay scenario, generalize that launcher to accept the scenario id, prompt,
+transcript, and agent-log paths. Keep model/sandbox/recording policy in the one
+launcher.
 
 ## Scripts
 
@@ -320,7 +403,10 @@ harness bug.
 
 ## Files
 
-- `transcript.ts` — shared canonical-JSON/sha256/header helpers.
-- `driver.ts`, `replay.ts`, `report.ts`, `mcp-recording-shim.mjs` — lanes above.
-- `probes/` — scenario JSON files.
+- Shared evidence infrastructure: `transcript.ts`, `report.ts`,
+  `mcp-recording-shim.mjs`, `replay-freeplay.ts`, and `run-raw-review.sh`.
+- Player-agent inputs: `freeplay/`; adversarial reviewer inputs: `reviews/`.
+- Transitional scripted-only slice: `scenario.ts`, `driver.ts`, `replay.ts`,
+  `scenario.test.ts`, `driver.test.ts`, `probes/`, and the probe-001 review
+  prompt. Do not expand this group.
 - `out/` — generated transcripts and databases (gitignored).
