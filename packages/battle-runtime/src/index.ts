@@ -151,7 +151,6 @@ export {
   CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS,
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
   characterBattleResourceSupportedForUnit,
-  admitCharacterBattleResources,
   characterBattleResourceUsage,
   characterBattleResourceForUnit,
   characterBattleResourceMaxUses,
