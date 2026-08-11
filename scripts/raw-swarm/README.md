@@ -158,6 +158,14 @@ The committed prompt at
 deterministic freeplay input. The agent's choices remain nondeterministic and
 are evidence captured by the transcript, not replay expectations.
 
+`end_battle.closedAt` returns the SDK's canonical Initiative position:
+`roundReached` and `activeTurnActorId`. Reports use the form “Battle session
+closed during round N, during X's turn.” They do not label the highest round
+reached as a duration or convert it to seconds. RAW says a round represents
+about 6 seconds; the runtime's exact six-second tick is a rule-duration
+assumption and does not measure partial-round encounter time. A RAW reviewer
+separately determines when combat ended and why.
+
 ### `report.ts` — SQLite report store
 
 Uses built-in `node:sqlite`. Creates the schema on first use.

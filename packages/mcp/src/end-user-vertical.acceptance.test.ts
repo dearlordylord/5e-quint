@@ -262,6 +262,10 @@ describe("end-user MCP vertical", () => {
     const ended = callTool(root, "end_battle", {});
     expect(ended).toMatchObject({
       endedBattleId: "battle:accepted-vertical",
+      closedAt: {
+        roundReached: 1,
+        activeTurnActorId: "goblin",
+      },
       session: { activeBattle: null },
     });
 

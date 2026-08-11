@@ -1,5 +1,6 @@
 import {
   BattleActPresentationSchema,
+  BattleInitiativePositionSchema,
   BattleInterruptProcedureChoiceSchema,
   BattleSpellPresentationSchema,
   BattleDroppedObjectOutcomeSchema,
@@ -103,6 +104,7 @@ export const BattleResolutionOutputSchema = Schema.Struct({
 
 export const EndBattleOutputSchema = Schema.Struct({
   endedBattleId: Schema.String,
+  closedAt: BattleInitiativePositionSchema,
   characters: Schema.Array(JsonObjectSchema),
   session: McpSessionSummarySchema,
 });

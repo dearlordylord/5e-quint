@@ -96,8 +96,9 @@ The battle-session tool boundary exposes these user-facing tools:
   the returned `BattleState`, and clears transient battle fills.
 - `end_battle` finalizes the stored battle session, projects positive current
   HP from character-origin battle combatants back into the durable character
-  session, clears battle state, and leaves monster combatants behind in the
-  closed battle.
+  session, returns the SDK-derived Initiative position at closure, clears battle
+  state, and leaves monster combatants behind in the closed battle. The closure
+  projection does not infer elapsed seconds or assert a RAW ending condition.
 
 The accepted first end-user MCP vertical is Orc Soldier Fighter
 versus Goblin Warrior, entirely through MCP tools:

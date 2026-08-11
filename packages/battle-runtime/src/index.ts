@@ -38,6 +38,12 @@ export {
   type InitiativeScore,
 } from "./identity.ts";
 
+export {
+  BattleInitiativePositionSchema,
+  battleInitiativePosition,
+  type BattleInitiativePosition,
+} from "./battle-initiative-position.ts";
+
 export type {
   CharacterExecutionAdmission,
   CharacterExecutionState,

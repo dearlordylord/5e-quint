@@ -349,7 +349,7 @@ const agentConversationScenarios = [
     name: "Finish battle and inspect durable character state",
     userSays: "End the battle and show the updated character list.",
     agentReads:
-      "end_battle takes empty args and returns endedBattleId, character sessions, and session snapshot. list_characters returns available characters with current HP and spellSlots.",
+      "end_battle takes empty args and returns endedBattleId, the closedAt SDK-derived Initiative position, character sessions, and session snapshot. list_characters returns available characters with current HP and spellSlots.",
     agentDecision:
       "It calls end_battle only when no transient fills are pending, then list_characters to show durable HP and Spell Slot expenditure handoff.",
     executableCoverage: "verifyBaselineVertical and verifyWidthVertical",
