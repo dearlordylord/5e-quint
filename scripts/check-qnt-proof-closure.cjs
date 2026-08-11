@@ -44,10 +44,6 @@ const EXCEPTIONS = {
     maxFiles: 108,
     maxLines: 20_500,
   },
-  "packages/battle-runtime/battle-runtime-hp-armor-buff-spatial-tests.qnt": {
-    maxFiles: 104,
-    maxLines: 20_500,
-  },
   "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt":
     { maxFiles: 106, maxLines: 21_000 },
   "packages/battle-runtime/battle-runtime-save-spell-tests.qnt": {
