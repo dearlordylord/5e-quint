@@ -60,6 +60,7 @@ import {
   admitCharacterBattleResources,
   characterBattleSpellbookRitualSpellAccessInitIssue,
   characterBattleResourceInitIssue,
+  characterSpellcastingStateInitIssue,
   characterSpellcastingExecutionState,
   characterSpellcastingState,
   parseCharacterBattleInvocationSpellAccesses,
@@ -406,10 +407,6 @@ export function battleCreatureStateAdmissionFromInit(
         : characterSpellcastingState(
             requireCharacterSpellcastingStateInit(creatureInit.spellcasting),
             classLevels,
-            [
-              ...(creatureInit.resources ?? []),
-              ...(creatureInit.unitFeatures ?? []),
-            ],
             resources,
             resourceOwnership,
           );
@@ -768,7 +765,6 @@ export function characterDruidWildShapeAvailableFormsInitIssue(
 }
 /* v8 ignore stop */
 
-/* v8 ignore start -- Malformed character initialization: character admission binds spell access to its owner features and an actual source-class level before battle state construction. */
 export function characterSpellcastingInitIssue(
   creatureInit: CharacterBattleCreatureInit,
   classLevels: CharacterBattleClassLevels,
@@ -809,6 +805,13 @@ export function characterSpellcastingInitIssue(
       );
     }
   }
+  const spellcastingStateIssue = characterSpellcastingStateInitIssue(
+    creatureInit.spellcasting,
+    [...(creatureInit.resources ?? []), ...(creatureInit.unitFeatures ?? [])],
+  );
+  if (spellcastingStateIssue !== null) {
+    return battleStateInitIssue(spellcastingStateIssue);
+  }
   return classLevels.some(
     (classLevel) =>
       classLevel.className === creatureInit.spellcasting?.sourceClassName,
@@ -818,7 +821,6 @@ export function characterSpellcastingInitIssue(
         "Battle spellcasting source class must match a character class level.",
       );
 }
-/* v8 ignore stop */
 
 function requireCharacterSpellcastingStateInit(
   spellcasting: NonNullable<CharacterBattleCreatureInit["spellcasting"]>,

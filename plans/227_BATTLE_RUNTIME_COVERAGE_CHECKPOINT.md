@@ -110,6 +110,12 @@ one total branch, leaving the uncovered branch count unchanged. The pre-edit
 budget was zero added test lines, all ratchets remain green, and functions
 remain 100%.
 
+Integration subsequently synchronized the clean `master` milestone through
+`d844987c4`, including the character-resource admission increment described
+below. That milestone is not present in the M26 lane-local totals above. The
+next exact package baseline must therefore remeasure the combined integration
+HEAD before these remaining-gap figures are used for selection.
+
 ## Remaining static 99% gaps
 
 These are planning gaps at the current denominators. Recompute them after code
@@ -197,6 +203,19 @@ was 121,188 / 124,871 statements and lines, 30,821 / 32,695 branches, and
 4,813 / 4,813 functions. The rejected attack-control helper matrix is not a
 candidate for a later campaign.
 
+A parallel M22 character-resource increment on `master` hardened spellcasting
+and resource admission through public battle-start boundaries. Malformed
+spell-slot expenditure, feature-prepared spell provenance, invocation access,
+ritual access, and source-class mismatch now return typed battle initialization
+issues instead of escaping as projection throws. Redundant post-admission
+resource guards were removed or narrowed to their exact impossible assertion
+arms, and the internal resource-admission projector and result type were
+removed from the public package surface. Commits `97767c00b`, `8c502e379`, and
+`efb1da523` passed focused tests, package typecheck, formatting, and its exact
+package gate. Against its pre-increment measurement at `a757810a1`, statements
+and lines moved from 121,226 / 124,871 to 121,280 / 124,892, branches from
+30,853 / 32,718 to 30,883 / 32,730, and functions remained 4,813 / 4,813.
+
 M21 covered persistent spatial spell and active-effect lifecycles through
 public, reachable battle scenarios: failed-save Reaction continuation for
 Grease, Gust of Wind, Flaming Sphere, and Moonbeam; successful and stale Web
@@ -261,13 +280,23 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting exact battle-runtime metric at 94.32%, with a
-static 99% gap of 1,530. Do not retry the rejected attack-control helper matrix
-or the isolated Spiritual Weapon synthesized-admission conversion.
+Branches remain the limiting exact M26 battle-runtime metric at 94.32%, with a
+lane-local static 99% gap of 1,530 pending the combined post-sync remeasurement.
+Do not retry the rejected attack-control helper matrix or the isolated
+Spiritual Weapon synthesized-admission conversion.
 Rerank the exact uncovered report against public lifecycle coverage before the
 next increment; defensive route/profile behavior remains an independent
 candidate. Admission-proven or schema-impossible guards must be narrowed or
 removed with concrete proof rather than reached through forged states.
+
+A rejected codec audit exposed a correctness issue worth retaining for a later
+cohesive boundary tranche: the open `rolledDice` schema member can accept a
+specialized hole payload and strip its selector fields during decode. A
+disjoint-fallback prototype preserved specialized fields, rejected malformed
+specialized payloads, and kept genuine open placeholders valid, but its focused
+coverage delta was only 23 sites and the prototype was fully reverted under the
+milestone threshold. A future fix must make the generic and specialized schema
+shapes structurally disjoint rather than rely on union-member ordering.
 
 ## Verification and completion
 
