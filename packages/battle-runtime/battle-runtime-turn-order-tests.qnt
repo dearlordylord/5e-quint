@@ -2,6 +2,7 @@ module battleRuntimeTurnOrderTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
+  import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 
   run test_alert_initiative_swap_requires_initial_willing_non_incapacitated_ally = {
     val afterOneTurn = nextInitiative(initialState.initiative)
@@ -84,4 +85,39 @@ module battleRuntimeTurnOrderTests {
     }
   }
 
+  run test_end_turn_advances_current_actor_and_resets_resources = {
+    val result = endTurn({
+      ...initialState,
+      actionAvailable: false,
+      bonusActionAvailable: false,
+      dashMovementBonus: 30,
+      disengaged: true,
+      goblin: {
+        ...initialState.goblin,
+        reactionAvailable: false,
+        movementSpent: 20,
+        dodging: true,
+      },
+    })
+    all {
+      assert(currentActor(result) == Goblin),
+      assert(result.initiative.round == 1),
+      assert(result.actionAvailable),
+      assert(result.bonusActionAvailable),
+      assert(result.goblin.reactionAvailable),
+      assert(result.goblin.movementSpent == 0),
+      assert(not(result.goblin.dodging)),
+      assert(result.dashMovementBonus == 0),
+      assert(not(result.disengaged)),
+    }
+  }
+  run test_end_turn_wraps_to_next_round = {
+    val result = endTurn(endTurn(initialState))
+    all {
+      assert(currentActor(result) == Fighter),
+      assert(result.initiative.round == 2),
+      assert(result.initiative.alreadyActed == []),
+      assert(initiativeStillToActActors(result.initiative) == [Fighter, Goblin]),
+    }
+  }
 }

@@ -23,6 +23,24 @@ module battleRuntimeOngoingSpellDispel {
   ): Set[int] =
     if (dispelMagicCheckSucceeds(checkTotal, sourceSpellLevel)) Set(sourceEffectId) else Set()
 
+  pure def dispelMagicObjectTargetActiveEffects(
+    effects: Set[ActiveEffect],
+    objectId: int,
+    slotLevel: int,
+    successfulCheckEffectIds: Set[int],
+  ): Set[ActiveEffect] =
+    effects.filter(effect => match effect {
+      | HeatMetalObjectContactDamage(data) =>
+          data.objectId != objectId
+          or not(dispelMagicEndsTrackedOngoingSpell(
+            slotLevel,
+            successfulCheckEffectIds,
+            data.effectId,
+            data.sourceSpellLevel,
+          ))
+      | _ => true
+    })
+
   pure def dispelMagicMagicalEffectTargetActiveEffects(
     effects: Set[ActiveEffect],
     activeEffectKind: OngoingSpellActiveEffectKind,

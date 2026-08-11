@@ -4265,6 +4265,10 @@
               "role": "semantic-core"
             },
             {
+              "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+              "role": "semantic-core"
+            },
+            {
               "ownerPath": "packages/battle-runtime/battle-runtime-end-of-turn-light-expiration.qnt",
               "role": "semantic-core"
             }
@@ -12638,6 +12642,10 @@
           "qntOwners": [
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
               "role": "semantic-core"
             },
             {

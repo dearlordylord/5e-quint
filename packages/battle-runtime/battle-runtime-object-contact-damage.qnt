@@ -9,7 +9,6 @@ module battleRuntimeObjectContactDamage {
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeAntimagicSuppression.* from "./battle-runtime-antimagic-suppression"
-  import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeOngoingSpellDispel.* from "./battle-runtime-ongoing-spell-dispel"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
