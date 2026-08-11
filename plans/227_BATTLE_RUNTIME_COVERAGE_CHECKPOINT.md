@@ -20,30 +20,29 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 ## Current authoritative baseline
 
 - Date: 2026-08-11
-- Measured code tree committed as: `ecc4f63aa`
+- Measured code tree committed as: `12040cb53`
 - Command: `pnpm coverage`
 - Result: exit 0; every workspace coverage package completed green
-- Battle-runtime: 219/219 files passed; 2,373 passed and 71 skipped
+- Battle-runtime: 220/220 files passed; 2,378 passed and 81 skipped
 - Every executable package other than battle-runtime remains at or above 99%
   for statements, branches, functions, and lines.
 
 | Metric     |   Covered / total | Coverage | Uncovered | Gap to 99% |
 | ---------- | ----------------: | -------: | --------: | ---------: |
-| Statements | 121,661 / 125,055 |   97.28% |     3,394 |      2,144 |
-| Branches   |   30,994 / 32,782 |   94.54% |     1,788 |      1,461 |
+| Statements | 121,718 / 125,055 |   97.33% |     3,337 |      2,087 |
+| Branches   |   31,064 / 32,826 |   94.63% |     1,762 |      1,434 |
 | Functions  |     4,827 / 4,827 |     100% |         0 |          0 |
-| Lines      | 121,661 / 125,055 |   97.28% |     3,394 |      2,144 |
+| Lines      | 121,718 / 125,055 |   97.33% |     3,337 |      2,087 |
 
-Against M26, uncovered statements/lines are unchanged and uncovered branches
-fell by one. Recompute the 99% gaps after every production-denominator change.
+Recompute the 99% gaps after every production-denominator change.
 
 ## Latest accepted milestone
 
-M27 (`ecc4f63aa`) narrows attack-resolution admission proofs and preserves
-generic dispatcher precedence for stale and unsupported bonus-action commands.
-Focused tests, package typecheck, formatting, lint, and three independent Luna
-reviews passed. This is an architectural prerequisite, not a coverage gain:
-statements stayed flat and branches improved by one.
+M28 (`12040cb53`) covers public Saving Throw outcome validation for Bane,
+Enthrall, Dissonant Whispers, Hold Person, Sleep, Grease, and Thunderwave.
+Focused attribution proved 50 exact residual statements; the public aggregate
+gained 57 covered statements/lines. Focused tests, package typecheck, formatting,
+lint, reviewer-loop convergence, and public coverage passed.
 
 ## Current campaign
 
@@ -55,7 +54,7 @@ statements stayed flat and branches improved by one.
   proof.
 - Avoid owners already marked completed or rejected in
   `/tmp/dnd-work-ownership.md`; that ledger owns live parallel coordination.
-- The current public static gaps are 2,144 statements/lines and 1,461 branches.
+- The current public static gaps are 2,087 statements/lines and 1,434 branches.
 
 ## Verification and completion
 
