@@ -20,33 +20,30 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 ## Current authoritative baseline
 
 - Date: 2026-08-11
-- Measured code HEAD: `0865a38ef`
+- Measured code tree committed as: `ecc4f63aa`
 - Command: `pnpm coverage`
 - Result: exit 0; every workspace coverage package completed green
-- Battle-runtime: 219/219 files passed; 2,371 passed and 71 skipped
+- Battle-runtime: 219/219 files passed; 2,373 passed and 71 skipped
 - Every executable package other than battle-runtime remains at or above 99%
   for statements, branches, functions, and lines.
 
 | Metric     |   Covered / total | Coverage | Uncovered | Gap to 99% |
 | ---------- | ----------------: | -------: | --------: | ---------: |
-| Statements | 121,517 / 124,911 |   97.28% |     3,394 |      2,145 |
-| Branches   |   30,998 / 32,787 |   94.54% |     1,789 |      1,462 |
-| Functions  |     4,815 / 4,815 |     100% |         0 |          0 |
-| Lines      | 121,517 / 124,911 |   97.28% |     3,394 |      2,145 |
+| Statements | 121,661 / 125,055 |   97.28% |     3,394 |      2,144 |
+| Branches   |   30,994 / 32,782 |   94.54% |     1,788 |      1,461 |
+| Functions  |     4,827 / 4,827 |     100% |         0 |          0 |
+| Lines      | 121,661 / 125,055 |   97.28% |     3,394 |      2,144 |
 
-Against the preceding combined baseline at `3c1e061b3`, uncovered
-statements/lines fell by 128 and uncovered branches fell by 32. Recompute the
-99% gaps after every production-denominator change.
+Against M26, uncovered statements/lines are unchanged and uncovered branches
+fell by one. Recompute the 99% gaps after every production-denominator change.
 
 ## Latest accepted milestone
 
-M26 (`0865a38ef`) covers schema-decoded synthetic attack-damage profile
-boundaries through public battle start and action discovery. Its 18 focused
-tests passed alongside package typecheck, formatting, and lint. The focused
-report attributes 34 formerly uncovered statement lines; differing V8 branch
-maps permit only a 17 candidate-only covered-line observation, not an exact
-branch-arm claim. Luna self-review and independent standards/specification
-loops converged before the public aggregate run.
+M27 (`ecc4f63aa`) narrows attack-resolution admission proofs and preserves
+generic dispatcher precedence for stale and unsupported bonus-action commands.
+Focused tests, package typecheck, formatting, lint, and three independent Luna
+reviews passed. This is an architectural prerequisite, not a coverage gain:
+statements stayed flat and branches improved by one.
 
 ## Current campaign
 
@@ -58,7 +55,7 @@ loops converged before the public aggregate run.
   proof.
 - Avoid owners already marked completed or rejected in
   `/tmp/dnd-work-ownership.md`; that ledger owns live parallel coordination.
-- The current public static gaps are 2,145 statements/lines and 1,462 branches.
+- The current public static gaps are 2,144 statements/lines and 1,461 branches.
 
 ## Verification and completion
 
