@@ -20,7 +20,6 @@ export {
   characterProcedureBindingSnapshots,
   characterSpellProcedure,
   characterSpellProcedureExecution,
-  characterSpellProcedureRefsForProcedure,
   characterUnitProcedure,
   characterUnitProcedureBindings,
   unitSupportProfileKind,

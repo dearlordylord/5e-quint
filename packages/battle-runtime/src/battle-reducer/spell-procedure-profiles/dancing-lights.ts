@@ -28,7 +28,6 @@ import {
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { MovementFeet, movementFeet } from "@dnd/shared/types";
 import { Either } from "effect";
-import { characterSpellProcedureRefsForProcedure } from "../../character-execution-queries.ts";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -56,6 +55,7 @@ import type {
   SpellAdmissionContext,
   SpellProcedureDeclaration,
   SpellProcedureProfileResolveInput,
+  SynthesizedSpellProcedureDeclaration,
 } from "./profile.ts";
 import { Schema } from "effect";
 import {
@@ -140,42 +140,6 @@ function admitDancingLightsCombinedCast(
           },
         },
       ];
-}
-
-function admitDancingLightsReposition(
-  spell: BattleSpellAdmissionSource,
-  ctx: SpellAdmissionContext,
-): readonly DancingLightsRepositionInvocation[] {
-  const profile = dancingLightsSpell(spell);
-  if (profile === null) {
-    return [];
-  }
-  const selectedExecutionRefs = new Set(
-    characterSpellProcedureRefsForProcedure(
-      ctx.actor.origin.execution,
-      new Set(["dancingLightsCombinedCast", "dancingLightsSeparateCast"]),
-    ),
-  );
-  return ctx.actor.activeEffects.flatMap((activeEffect) =>
-    activeEffect.kind === "dancingLights" &&
-    activeEffect.sourceCombatantId === ctx.actor.combatantId &&
-    selectedExecutionRefs.has(activeEffect.sourceProcedureRef)
-      ? [
-          {
-            access: { tag: "classCantrip" },
-            resource: { tag: "none" },
-            procedure: "dancingLightsReposition",
-            spell,
-            actionCost: "bonusAction",
-            activeEffectRef: activeEffect.effectRef,
-            sourceDancingLightsProcedureRef: activeEffect.sourceProcedureRef,
-            maxMoveFeet: profile.maxMoveFeet,
-            rangeFeet: profile.rangeFeet,
-            spacingFeet: profile.spacingFeet,
-          },
-        ]
-      : [],
-  );
 }
 
 function dancingLightsCantripBase(
@@ -403,13 +367,11 @@ export const dancingLightsCombinedCastProfile: SpellProcedureDeclaration<
   resolve: resolveDancingLightsCast,
 };
 
-export const dancingLightsRepositionProfile: SpellProcedureDeclaration<
-  "dancingLightsReposition",
-  DancingLightsRepositionInvocation
-> = {
-  procedure: "dancingLightsReposition",
-  executionSchema: DancingLightsRepositionInvocationSchema,
-  admit: admitDancingLightsReposition,
-  discoverCastAct: discoverDancingLightsRepositionAct,
-  resolve: resolveDancingLightsReposition,
-};
+export const dancingLightsRepositionProfile: SynthesizedSpellProcedureDeclaration<"dancingLightsReposition"> =
+  {
+    admission: "synthesized",
+    procedure: "dancingLightsReposition",
+    executionSchema: DancingLightsRepositionInvocationSchema,
+    discoverCastAct: discoverDancingLightsRepositionAct,
+    resolve: resolveDancingLightsReposition,
+  };
