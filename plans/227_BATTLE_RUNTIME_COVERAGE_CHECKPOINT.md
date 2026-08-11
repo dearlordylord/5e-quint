@@ -63,52 +63,46 @@ replace the public root diagnostic above or establish the state of other
 packages.
 
 - Date: 2026-08-11
-- Git HEAD: `c31981a95`
+- Git HEAD: `9bdfb16b8`
 - Command: the checked-in battle-runtime Vitest coverage invocation, with one
   worker and the JSON reporter, under
   `with_resource_lock_owner scripts/with-broad-workspace-lock.sh`
 - Result: exit 0
-- Duration: 63.10 seconds after lock acquisition
+- Duration: 61.18 seconds after lock acquisition
 - Battle-runtime tests: 216/216 files passed; 2,337 tests passed and 53 skipped
   (2,390 total)
 - Coordination note: root confirmed the verification lane was empty before the
   final exact run began. The comm/parent-aware audit found no active verification
   client. The run exited 0 without overlap or SIGKILL. Its JSON report contains
-  the same 407 production files as the exact combined-HEAD M27 baseline at
-  `4d697e6f5`; all checked-in production include/excludes and thresholds were
-  identical, with only the reporter output path changed. Standards review after
-  measurement narrowed the shared identifier to name its spell-slot fallback;
-  commit `a3d15264c` changes only that identifier at its definition and two
-  callers, leaves the measured executable control-flow shape unchanged, and
-  passed the same 41 focused tests plus typecheck, lint, and formatting.
+  the same 407 production files as the exact M28 baseline at `75740ac8d`; all
+  checked-in production include/excludes and thresholds were identical, with
+  only the reporter output path changed. The final process tree was shell
+  `1447335`, broad-lock wrapper `1447344`, pnpm `1447356`, Vitest `1447379`, and
+  worker `1447437`.
 
-| Metric     |   M27 base covered / total |  M27 final covered / total | Covered / total change |    Uncovered change | Percentage change |
-| ---------- | -------------------------: | -------------------------: | ---------------------: | ------------------: | ----------------: |
-| Statements | 121,276 / 124,816 (97.16%) | 121,269 / 124,808 (97.16%) |                -7 / -8 | 3,540 -> 3,539 (-1) |         +0.0006pp |
-| Branches   |   30,898 / 32,739 (94.38%) |   30,898 / 32,739 (94.38%) |                  0 / 0 |  1,841 -> 1,841 (0) |                 0 |
-| Functions  |       4,812 / 4,812 (100%) |       4,811 / 4,811 (100%) |                -1 / -1 |              0 -> 0 |                 0 |
-| Lines      | 121,276 / 124,816 (97.16%) | 121,269 / 124,808 (97.16%) |                -7 / -8 | 3,540 -> 3,539 (-1) |         +0.0006pp |
+| Metric     |   M28 base covered / total |  M28 final covered / total | Covered / total change |     Uncovered change | Percentage change |
+| ---------- | -------------------------: | -------------------------: | ---------------------: | -------------------: | ----------------: |
+| Statements | 121,276 / 124,808 (97.17%) | 121,281 / 124,801 (97.18%) |                 5 / -7 | 3,532 -> 3,520 (-12) |         +0.0095pp |
+| Branches   |   30,888 / 32,728 (94.38%) |   30,900 / 32,734 (94.40%) |                 12 / 6 |  1,840 -> 1,834 (-6) |         +0.0194pp |
+| Functions  |       4,811 / 4,811 (100%) |       4,811 / 4,811 (100%) |                  0 / 0 |               0 -> 0 |                 0 |
+| Lines      | 121,276 / 124,808 (97.17%) | 121,281 / 124,801 (97.18%) |                 5 / -7 | 3,532 -> 3,520 (-12) |         +0.0095pp |
 
 The checked-in battle-runtime ratchets remain 97/97/100/94 for statements,
-lines, functions, and branches. No threshold was lowered. M27 removes two
-duplicate spell-slot-fallback active-effect route next-discovery algorithms.
-Both callers now delegate to one route-protocol owner that exhaustively maps
-`targetChoice`, `attackRoll`, and `rolledDice` holes and retains the same
-action-economy fallback. Each caller's different fill-owner algorithm remains
-local.
+lines, functions, and branches. No threshold was lowered. M28 delegates the
+falling-prone knockout-condition preservation to the canonical creature-state
+operation and extends an existing public Feather Fall scenario through the
+complete fall-damage landing boundary.
 
-This structural increment adds no test lines and changes three production files
-by 19 additions and 26 deletions (net -7). The pre-edit budget was zero added
-test lines for an expected 14 fewer uncovered statements. Exact changed-owner
-measurement instead found eight fewer uncovered statements: condition-immunity
-routes moved from 135 / 142 to 137 / 140, marked-damage routes from 362 / 387
-to 356 / 373, and the shared builders from 115 / 117 to 119 / 125. The measured
-test-line ratio is therefore still 0 / 8 = 0.00. In an unchanged owner,
-`battle-fill-equality.ts` rematerialized from 321 / 322 to 314 / 322, adding
-seven uncovered statements without a source change; this V8 noise masks the
-changed-owner improvement to the truthful package-wide reduction of one.
-Unchanged-owner branch materialization also churned in both directions but
-netted to zero package-wide. Functions remain 100%.
+This increment changes production by 5 additions and 12 deletions (net -7) and
+the existing test by 9 additions and 3 deletions (net +6 test lines). The exact
+changed owner moved from 250 / 262 to 255 / 255 statements and from 41 / 49 to
+47 / 49 branches, eliminating all 12 uncovered statements and six uncovered
+branches. The pre-edit ceiling was 24 net test lines for an expected 11 newly
+covered or eliminated statements; the measured proportionality is 6 / 12 =
+0.50 added test lines per eliminated uncovered statement. Unchanged-owner V8 branch
+materialization churned across the package but netted +6 covered / +6 total,
+leaving its uncovered count unchanged; the package-wide six-branch uncovered
+reduction is exactly the changed-owner movement. Functions remain 100%.
 
 ## Remaining static 99% gaps
 
@@ -117,12 +111,29 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 121,269 | 124,808 |                  123,560 |         2,291 |
-| Branches   |  30,898 |  32,739 |                   32,412 |         1,514 |
+| Statements | 121,281 | 124,801 |                  123,553 |         2,272 |
+| Branches   |  30,900 |  32,734 |                   32,407 |         1,507 |
 | Functions  |   4,811 |   4,811 |                    4,763 |             0 |
-| Lines      | 121,269 | 124,808 |                  123,560 |         2,291 |
+| Lines      | 121,281 | 124,801 |                  123,553 |         2,272 |
 
 ## Milestone context
+
+M28 replaces the environmental-fall owner's duplicate falling-prone
+knockout-condition reconstruction with the canonical creature-state operation.
+For ordinary combatants, both forms add only Prone; for positive-HP unconscious
+combatants, the canonical operation idempotently preserves the existing
+Unconscious condition and the same knockout-state union. An existing public
+Feather Fall test now drives `resolveFallDamageLanding`, proving that its live
+mitigation prevents both fall damage and Falling Prone while retaining the
+public landing result facts. The focused Feather Fall and Slow Fall cohort
+passed 13/13; package typecheck, targeted lint, formatting, and diff checks were
+green. This is structural plus public regression coverage, with no modeled-rule
+or runtime behavior change, so no RAW/QNT update or MBT was required.
+
+The first M28 candidate attribution was rejected before edit: exact
+`statementMap` inspection proved that the public missing-combatant failure
+blocks were already covered. The actual uncovered sites were the fall-damage
+landing owner above, so no redundant missing-combatant table was added.
 
 M27 consolidates the identical next-discovery owner used by marked-damage and
 condition-immunity/temporary-hit-point spell-slot-fallback active-effect routes.
@@ -286,8 +297,8 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting exact M27 battle-runtime metric at 94.38%, with a
-lane-local static 99% gap of 1,514.
+Branches remain the limiting exact M28 battle-runtime metric at 94.40%, with a
+lane-local static 99% gap of 1,507.
 Do not retry the rejected attack-control helper matrix or the isolated
 Spiritual Weapon synthesized-admission conversion.
 Rerank the exact uncovered report against public lifecycle coverage before the
