@@ -4,6 +4,7 @@ import {
   attackExecutionSelectionForSubjectForTest,
   characterAttackSubjectForTest,
 } from "./battle-runtime.test-support.ts";
+import { battleStateWithSyntheticCommandEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
 import {
   commandUnitId,
   spellCasterId,
@@ -32,6 +33,7 @@ import {
   movementFeet,
   resolveBattleInterrupt,
   resolveBattleSubject,
+  snapshotBattle,
 } from "./unit-profile-admission.test-support.ts";
 import type {
   BattleFill,
@@ -688,7 +690,12 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const fleeAct = discoverBattleActCandidates(targetTurn.state)[0];
+    const committedState = battleStateWithSyntheticCommandEndTurnSave(
+      targetTurn.state,
+      spellCasterId,
+      spellTargetId,
+    );
+    const fleeAct = discoverBattleActCandidates(committedState)[0];
     if (
       fleeAct === undefined ||
       fleeAct.subject.tag !== "runtimeCommand" ||
@@ -697,26 +704,25 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       throw new Error("Expected Command Flee act.");
     }
     const movement = requireHole(fleeAct.initialHoles, "movement");
-    const fled = resolveBattleSubject({
-      state: targetTurn.state,
-      subject: fleeAct.subject,
-      fills: [
-        commandFleeMovementFill(movement, {
-          movementCostFeet: 30,
-          provokedOpportunityAttacks: [
-            {
-              reactorId: spellCasterId,
-              ...attackExecutionSelectionForSubjectForTest(
-                characterAttackSubjectForTest(
-                  targetTurn.state,
-                  spellCasterId,
-                  "Unarmed Strike",
-                ),
-              ),
-            },
-          ],
-        }),
+    const movementFill = commandFleeMovementFill(movement, {
+      movementCostFeet: 30,
+      provokedOpportunityAttacks: [
+        {
+          reactorId: spellCasterId,
+          ...attackExecutionSelectionForSubjectForTest(
+            characterAttackSubjectForTest(
+              committedState,
+              spellCasterId,
+              "Unarmed Strike",
+            ),
+          ),
+        },
       ],
+    });
+    const fled = resolveBattleSubject({
+      state: committedState,
+      subject: fleeAct.subject,
+      fills: [movementFill],
     });
     const reaction = requireResultHole(fled, "interruptDecision");
     expect(reaction.trigger).toBe("opportunityAttack");
@@ -731,15 +737,19 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       }),
     });
     expect(afterDecline).toMatchObject({
-      tag: "resolved",
-      snapshot: { currentActorId: spellCasterId },
+      tag: "needsHoles",
+      subject: fleeAct.subject,
+      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
     });
-    if (afterDecline.tag !== "resolved") {
-      throw new Error("Expected Command Flee to resolve after decline.");
+    if (afterDecline.tag !== "needsHoles") {
+      throw new Error("Expected Command Flee End Turn save after decline.");
     }
+    expect(afterDecline.snapshot).toEqual(snapshotBattle(afterDecline.state));
     expect(requireCombatant(afterDecline.state, spellTargetId)).toMatchObject({
-      movementSpentFeet: movementFeet(30),
-      activeEffects: [],
+      movementSpentFeet: movementFeet(0),
+      activeEffects: expect.arrayContaining([
+        expect.objectContaining({ kind: "commandPending", option: "flee" }),
+      ]),
     });
   });
 });

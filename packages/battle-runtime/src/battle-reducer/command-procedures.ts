@@ -211,6 +211,29 @@ function stateWithoutCommandPendingEffect(
   };
 }
 
+function projectDelegatedEndTurnResult(
+  replayRoot: {
+    readonly state: BattleState;
+    readonly subject: CommandFollowUpSubject;
+  },
+  delegatedResult: BattleResolutionResult,
+): BattleResolutionResult {
+  return Match.value(delegatedResult).pipe(
+    Match.when({ tag: "needsHoles" }, (result) => ({
+      ...result,
+      state: replayRoot.state,
+      subject: replayRoot.subject,
+      snapshot: snapshotBattle(replayRoot.state),
+    })),
+    Match.when({ tag: "invalid" }, (result) => ({
+      ...result,
+      snapshot: snapshotBattle(replayRoot.state),
+    })),
+    Match.when({ tag: "resolved" }, (result) => result),
+    Match.exhaustive,
+  );
+}
+
 function resolveCommandGrovelCommand(
   input: BattleResolutionInputForSubject<
     Extract<
@@ -262,9 +285,7 @@ function resolveCommandGrovelCommand(
     },
     fills: input.fills,
   });
-  return endTurnResult.tag === "needsHoles"
-    ? { ...endTurnResult, state: input.state, subject: input.subject }
-    : endTurnResult;
+  return projectDelegatedEndTurnResult(input, endTurnResult);
 }
 
 function resolveCommandDropCommand(
@@ -385,25 +406,26 @@ function resolveCommandDropCommand(
     },
     fills: input.fills.filter((fill) => fill.kind !== "heldObjectFacts"),
   });
-  const droppedObjects: readonly BattleDroppedObjectOutcome[] = objectIds.map(
-    (objectId) => ({
-      kind: "objectDropped",
-      actorId: input.subject.actorId,
-      objectId,
-      source: {
-        kind: "spell",
-        sourceCombatantId: effect.sourceCombatantId,
-        sourceProcedureRef: effect.sourceProcedureRef,
-      },
+  const projectedResult = projectDelegatedEndTurnResult(input, endTurnResult);
+  return Match.value(projectedResult).pipe(
+    Match.when({ tag: "needsHoles" }, (result) => result),
+    Match.when({ tag: "invalid" }, (result) => result),
+    Match.when({ tag: "resolved" }, (result) => {
+      const droppedObjects: readonly BattleDroppedObjectOutcome[] =
+        objectIds.map((objectId) => ({
+          kind: "objectDropped",
+          actorId: input.subject.actorId,
+          objectId,
+          source: {
+            kind: "spell",
+            sourceCombatantId: effect.sourceCombatantId,
+            sourceProcedureRef: effect.sourceProcedureRef,
+          },
+        }));
+      return { ...result, droppedObjects };
     }),
+    Match.exhaustive,
   );
-  if (endTurnResult.tag === "needsHoles") {
-    return { ...endTurnResult, state: input.state, subject: input.subject };
-  }
-  if (endTurnResult.tag === "invalid") {
-    return endTurnResult;
-  }
-  return { ...endTurnResult, droppedObjects };
 }
 
 function resolveCommandApproachCommand(
@@ -599,9 +621,7 @@ function resolveCommandApproachAfterMovement(input: {
     },
     fills: movementEffects.remainingFills,
   });
-  return endTurnResult.tag === "needsHoles"
-    ? { ...endTurnResult, state: input.state, subject: input.subject }
-    : endTurnResult;
+  return projectDelegatedEndTurnResult(input, endTurnResult);
 }
 
 function resolveCommandFleeCommand(
@@ -649,9 +669,7 @@ function resolveCommandFleeCommand(
         },
         fills: input.fills,
       });
-      return endTurnResult.tag === "needsHoles"
-        ? { ...endTurnResult, state: input.state, subject: input.subject }
-        : endTurnResult;
+      return projectDelegatedEndTurnResult(input, endTurnResult);
     }
     return needsHolesResult(input.state, input.subject, [
       movementHole(input.state, input.subject.actorId),
@@ -790,7 +808,5 @@ function resolveCommandFleeAfterMovement(input: {
     },
     fills: movementEffects.remainingFills,
   });
-  return endTurnResult.tag === "needsHoles"
-    ? { ...endTurnResult, state: input.state, subject: input.subject }
-    : endTurnResult;
+  return projectDelegatedEndTurnResult(input, endTurnResult);
 }
