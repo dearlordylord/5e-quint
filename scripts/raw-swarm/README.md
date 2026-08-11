@@ -142,6 +142,12 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts review \
   --run 2 --db scripts/raw-swarm/out/raw-swarm.db
 ```
 
+The runner defaults to Codex's `read-only` sandbox. On hosts that disable the
+user namespaces required by bubblewrap, use
+`RAW_REVIEW_SANDBOX=danger-full-access`; the committed falsifier prompts remain
+read-only and forbid browsing or workspace changes, while the generated agent
+log records the effective sandbox mode.
+
 `reviews/probe-001.prompt.txt` provides the same adversarial lane for the
 scripted probe. Review JSON and agent logs are generated evidence under `out/`.
 

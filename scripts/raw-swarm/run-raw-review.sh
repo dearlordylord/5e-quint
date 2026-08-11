@@ -5,6 +5,7 @@ RAW_REVIEW_ROOT=$(git rev-parse --show-toplevel)
 RAW_REVIEW_PROMPT=${1:?Usage: run-raw-review.sh <prompt.txt> <review.json> <agent.log>}
 RAW_REVIEW_OUTPUT=${2:?Usage: run-raw-review.sh <prompt.txt> <review.json> <agent.log>}
 RAW_REVIEW_LOG=${3:?Usage: run-raw-review.sh <prompt.txt> <review.json> <agent.log>}
+RAW_REVIEW_SANDBOX=${RAW_REVIEW_SANDBOX:-read-only}
 RAW_REVIEW_SCHEMA=$(mktemp)
 trap 'rm -f "$RAW_REVIEW_SCHEMA"' EXIT
 
@@ -13,7 +14,7 @@ pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/review-schema.ts" "$RAW_REVIEW
 
 codex exec \
   -C "$RAW_REVIEW_ROOT" \
-  --sandbox read-only \
+  --sandbox "$RAW_REVIEW_SANDBOX" \
   -m gpt-5.6-sol \
   -c 'model_reasoning_effort="high"' \
   --output-schema "$RAW_REVIEW_SCHEMA" \

@@ -1,3 +1,5 @@
 Adversarially review the completed freeplay transcript at scripts/raw-swarm/out/freeplay-001-transcript.jsonl and agent log at scripts/raw-swarm/out/freeplay-001-agent.log. Reconstruct all MCP tool calls and try to falsify RAW faithfulness and the agent's final claims.
 
 Use only the local SRD 5.2.1 corpus under .references/srd-5.2.1 as rules authority. Consult ASSUMPTIONS.md for registered ambiguity choices and .references/srd-5.2.1-conversion only to detect older-rule leakage. Do not browse. Verify stat-block facts, initiative, attacks versus AC, damage and HP, action economy, turns and rounds, zero-HP handling, knockout disposition, rejected calls, and end-battle timing. Classify findings only as bug, assumption-divergence, corpus-ambiguity, scenario-invalid, reviewer-error, or pass. Cite transcript sequence numbers and local corpus file headings in every evidence field. Use reviewer id "codex-raw-freeplay-review".
+
+This is a read-only review. Do not modify files or run commands that change workspace state.
