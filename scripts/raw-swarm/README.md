@@ -181,6 +181,12 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts summary \
 # list issue observations as JSONL, including GitHub links when triaged
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts issues \
   --db scripts/raw-swarm/out/raw-swarm.db
+
+# select either side of the GitHub-linkage boundary
+mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts issues \
+  --db scripts/raw-swarm/out/raw-swarm.db --unlinked
+mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts issues \
+  --db scripts/raw-swarm/out/raw-swarm.db --linked
 ```
 
 ## Finding and bug lifecycle
@@ -200,9 +206,11 @@ For each non-pass verdict:
    hashes of the review class and exact claim, so triage—not wording equality—
    decides whether multiple fingerprints describe one semantic bug.
 3. For an actionable bug, search existing GitHub Issues. Create one only when no
-   semantic duplicate exists. Include the fingerprint, run id, tested Git SHA,
-   transcript sequences, RAW citations, reproduction command, expected behavior,
-   owning package, and required regression level.
+   semantic duplicate exists. Use the **RAW swarm finding** issue form, which
+   applies the `raw-swarm` and `bug` labels and requires the fingerprint, run id,
+   tested Git SHA, transcript sequences, RAW citations, reproduction command,
+   expected behavior, owning package, and required regression level. Record each
+   fingerprint on its own exact `Raw-Swarm-Fingerprint: <sha256>` line.
 4. Link every matching fingerprint to that GitHub issue:
 
    ```sh
@@ -228,6 +236,44 @@ copy GitHub state. Generated databases and transcripts are gitignored, so a
 long-lived swarm must publish or retain the database outside an ephemeral
 worktree; confirmed fixes belong in committed regression tests even if raw run
 artifacts are later pruned.
+
+### Finding navigation and filtering
+
+The `raw-swarm` label is the canonical GitHub collection marker. It makes the
+collection visible in the issue list and available through the GitHub API; the
+fingerprint lines provide exact reverse lookup from a local observation. The
+issue form at [`.github/ISSUE_TEMPLATE/raw-swarm.yml`](../../.github/ISSUE_TEMPLATE/raw-swarm.yml)
+enforces the human-facing evidence headings and applies that label.
+
+```sh
+# visual GitHub view
+gh issue list --label raw-swarm --state all --web
+
+# programmatic GitHub view
+gh issue list --label raw-swarm --state all \
+  --json number,title,state,url,labels
+
+# reverse lookup: SQLite fingerprint -> GitHub issue
+gh issue list --state all \
+  --search '"Raw-Swarm-Fingerprint: <sha256>" in:body' \
+  --json number,title,state,url
+
+# forward lookup: SQLite issue number -> GitHub
+gh issue view <number> --web
+gh issue view <number> --json number,title,state,url,labels,body
+```
+
+`link-github-issue` idempotently appends the exact fingerprint backlink and
+applies the `raw-swarm` label through `gh`. It verifies both GitHub facts before
+writing the issue number to SQLite, then prints a visual-open command. A failed
+GitHub update therefore remains `--unlinked` locally and can be retried safely.
+Multiple wording fingerprints may point to one semantic GitHub issue; the
+command puts every one in that issue body so either store can recover the
+relationship independently. A fingerprint cannot be silently moved to another
+issue because that would leave an ambiguous reverse backlink; the command
+rejects such a relink before touching GitHub. A per-database workflow lock
+serializes the GitHub operation across local workers; SQLite write transactions
+remain short and never span a network call.
 
 ### `run-raw-review.sh` — adversarial RAW review
 
