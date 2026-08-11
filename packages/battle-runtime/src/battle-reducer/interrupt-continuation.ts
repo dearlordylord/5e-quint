@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 import { Match } from "effect";
 import type { DamageAmount } from "@dnd/shared/types";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
