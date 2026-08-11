@@ -51,7 +51,6 @@ import {
 import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
 import { sacredWeaponHeldMeleeWeapons } from "./battle-reducer/unit-feature-discovery.ts";
 import { combatantHandUses } from "./battle-reducer/creature-state-leaves.ts";
-import { loadoutHasUsableHeldWeaponItem } from "./battle-reducer/wild-shape-equipment.ts";
 import {
   attackInitialTargetHole,
   attackDamageDispositionFill,
@@ -609,39 +608,6 @@ test("derives Wild Shape equipment disposition candidates from selected loadout 
     },
   ]);
   expect(wildShapeLoadoutObjectRefs({})).toEqual([]);
-});
-
-test("accepts duplicate held-weapon item identity when only the off-hand slot is usable", () => {
-  const itemId = battleObjectId("duplicate:held-weapon");
-  expect(
-    loadoutHasUsableHeldWeaponItem({
-      loadout: {
-        weapon: {
-          itemId,
-          unitId: parseSharedUnitId("weapon_quarterstaff"),
-          grip: "one_handed",
-        },
-        offHandWeapon: {
-          itemId,
-          unitId: parseSharedUnitId("weapon_dagger"),
-        },
-      },
-      activeWildShape: {
-        formLimbs: { kind: "canHandleObjects" },
-        equipmentDisposition: [
-          {
-            item: { kind: "mainWeapon", objectId: itemId },
-            disposition: "merges",
-          },
-          {
-            item: { kind: "offHandWeapon", objectId: itemId },
-            disposition: "worn",
-          },
-        ],
-      },
-      itemId,
-    }),
-  ).toBe(true);
 });
 
 test("decodes Wild Shape worn equipment disposition fills for selected loadout objects", () => {
@@ -3305,16 +3271,22 @@ test("Beast Spells admits no-Material spell invocation while Wild Shape is activ
   ).toBe(true);
 });
 
-test("Beast Spells exposes Shillelagh only while its attached weapon remains usable", () => {
+test("Beast Spells exposes only the usable Shillelagh slot when held slots share an item identity", () => {
+  const itemId = battleObjectId("duplicate:weapon_quarterstaff");
   const session = druidWildShapeSession({
     druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
     cantrips: [spellRecord("shillelagh")],
     attack: weakTrueFormWeaponAttack("weapon_quarterstaff"),
+    offHandAttack: weakTrueFormWeaponAttack("weapon_quarterstaff"),
     selectedLoadout: {
       weapon: {
-        itemId: battleObjectId("main:weapon_quarterstaff"),
+        itemId,
         unitId: parseSharedUnitId("weapon_quarterstaff"),
         grip: "one_handed",
+      },
+      offHandWeapon: {
+        itemId,
+        unitId: parseSharedUnitId("weapon_quarterstaff"),
       },
     },
   });
@@ -3339,13 +3311,17 @@ test("Beast Spells exposes Shillelagh only while its attached weapon remains usa
   const mainWeapon = dispositionHole.candidates.find(
     (candidate) => candidate.kind === "mainWeapon",
   );
-  if (mainWeapon === undefined) {
-    throw new Error("Expected Quarterstaff disposition candidate.");
+  const offHandWeapon = dispositionHole.candidates.find(
+    (candidate) => candidate.kind === "offHandWeapon",
+  );
+  if (mainWeapon === undefined || offHandWeapon === undefined) {
+    throw new Error("Expected both Quarterstaff disposition candidates.");
   }
   const merged = requireResolved(
     resolveDruidWildShape(session.state, subject, [
       wildShapeDispositionFill(dispositionHole, [
         { item: mainWeapon, disposition: "merges" },
+        { item: offHandWeapon, disposition: "merges" },
       ]),
     ]),
   );
@@ -3374,8 +3350,9 @@ test("Beast Spells exposes Shillelagh only while its attached weapon remains usa
   const worn = requireResolved(
     resolveDruidWildShape(session.state, subject, [
       wildShapeDispositionFill(dispositionHole, [
+        { item: mainWeapon, disposition: "merges" },
         {
-          item: mainWeapon,
+          item: offHandWeapon,
           disposition: "worn",
           practicality: { kind: "practicalToWear" },
         },
@@ -3383,15 +3360,15 @@ test("Beast Spells exposes Shillelagh only while its attached weapon remains usa
     ]),
   );
   const wornNextTurn = nextDruidTurn(worn.state);
-  expect(
-    hasSpell(
-      battleRuntimeSessionForTest({
-        state: wornNextTurn,
-        context: session.context,
-      }),
-      "shillelagh",
-    ),
-  ).toBe(true);
+  const wornNextTurnSession = battleRuntimeSessionForTest({
+    state: wornNextTurn,
+    context: session.context,
+  });
+  const shillelaghActs = discoverBattleActs(wornNextTurnSession).filter(
+    (act) =>
+      battleActSpellPresentation(act)?.invocation.spellId === shillelaghUnitId,
+  );
+  expect(shillelaghActs).toHaveLength(1);
 });
 
 test("fallen Wild Shape weapons stay unavailable after reversion until picked up and held", () => {

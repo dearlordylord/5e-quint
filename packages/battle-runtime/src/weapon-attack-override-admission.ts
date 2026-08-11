@@ -18,7 +18,7 @@ import { type BattleObjectId, type CombatantId } from "./identity.ts";
 import type { WeaponAttackOverrideProcedureFacts } from "./procedure-facts/weapon-attack-override.ts";
 import { sameStringSet } from "./battle-reducer/spells-execution-facts.ts";
 import {
-  loadoutHasUsableHeldWeaponItem,
+  loadoutHeldWeaponSlotIsUsable,
   wildShapeCanUseWornLoadoutObject,
 } from "./battle-reducer/wild-shape-equipment.ts";
 
@@ -70,12 +70,13 @@ export function admitWeaponAttackOverride(
   }
   const spellcasting = ctx.actor.origin.spellcasting;
   return attachedWeaponAttacksEligibleForOverride(ctx).map(
-    ({ itemId, attack }): WeaponAttackOverrideInvocation => ({
+    ({ itemId, slot, attack }): WeaponAttackOverrideInvocation => ({
       access: { tag: "classCantrip" },
       resource: { tag: "none" },
       procedure: "weaponAttackOverride",
       spell,
       actionCost: "bonusAction",
+      attachedWeaponSlot: slot,
       attachedWeapon: { attack },
       activeEffect: {
         kind: "spellWeaponAttackOverride",
@@ -148,6 +149,7 @@ function attachedWeaponAttacksEligibleForOverride(
   actorContext: WeaponAttackOverrideAdmissionContext,
 ): readonly {
   readonly itemId: BattleObjectId;
+  readonly slot: WeaponAttackOverrideProcedureFacts["attachedWeaponSlot"];
   readonly attack: BoundCharacterWeaponAttackActionOption;
 }[] {
   const actor = actorContext.actor;
@@ -156,29 +158,33 @@ function attachedWeaponAttacksEligibleForOverride(
   return [
     ...(origin.attack === null ||
     origin.selectedLoadout.weapon === undefined ||
-    !loadoutHasUsableHeldWeaponItem({
+    !loadoutHeldWeaponSlotIsUsable({
       loadout: origin.selectedLoadout,
       activeWildShape,
+      objectKind: "mainWeapon",
       itemId: origin.selectedLoadout.weapon.itemId,
     })
       ? []
       : [
           {
             itemId: origin.selectedLoadout.weapon.itemId,
+            slot: "mainWeapon" as const,
             attack: origin.attack,
           },
         ]),
     ...(origin.offHandAttack === undefined ||
     origin.selectedLoadout.offHandWeapon === undefined ||
-    !loadoutHasUsableHeldWeaponItem({
+    !loadoutHeldWeaponSlotIsUsable({
       loadout: origin.selectedLoadout,
       activeWildShape,
+      objectKind: "offHandWeapon",
       itemId: origin.selectedLoadout.offHandWeapon.itemId,
     })
       ? []
       : [
           {
             itemId: origin.selectedLoadout.offHandWeapon.itemId,
+            slot: "offHandWeapon" as const,
             attack: origin.offHandAttack,
           },
         ]),
@@ -187,6 +193,7 @@ function attachedWeaponAttacksEligibleForOverride(
       held,
     ): held is {
       readonly itemId: BattleObjectId;
+      readonly slot: WeaponAttackOverrideProcedureFacts["attachedWeaponSlot"];
       readonly attack: BoundCharacterWeaponAttackActionOption;
     } =>
       held.attack.weapon.usage === "melee" &&

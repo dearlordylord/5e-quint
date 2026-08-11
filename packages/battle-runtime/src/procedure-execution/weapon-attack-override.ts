@@ -4,6 +4,10 @@ import { Match, Schema } from "effect";
 import { DurationBattleActiveEffectExpirationSchema } from "../active-effect/expiration-codecs.ts";
 import type { BattleActiveEffectIdentity } from "../active-effect/source.ts";
 import {
+  HELD_WEAPON_LOADOUT_SLOTS,
+  type HeldWeaponLoadoutSlot,
+} from "../character-creature-execution-facts.ts";
+import {
   BattleObjectId,
   BattleProcedureExecutionRef,
   CombatantId,
@@ -114,9 +118,10 @@ type WeaponAttackOverrideUsabilityRuntime<
     actorId: CombatantId,
     objectId: BattleObjectId,
   ) => boolean;
-  readonly loadoutHasUsableHeldWeaponItem: (input: {
+  readonly loadoutHeldWeaponSlotIsUsable: (input: {
     readonly loadout: SelectedLoadout;
     readonly activeWildShape: ActiveDruidWildShape;
+    readonly objectKind: HeldWeaponLoadoutSlot;
     readonly itemId: BattleObjectId;
   }) => boolean;
 };
@@ -127,7 +132,7 @@ function weaponAttackOverrideWeaponIsUsable<
   Actor extends WeaponAttackOverrideActor<ActiveEffect, SelectedLoadout>,
   Invocation extends Pick<
     WeaponAttackOverrideExecutableInvocation,
-    "activeEffect"
+    "activeEffect" | "attachedWeaponSlot"
   >,
   ActiveDruidWildShape,
   State,
@@ -149,9 +154,10 @@ function weaponAttackOverrideWeaponIsUsable<
       actor.combatantId,
       invocation.activeEffect.weaponItemId,
     ) &&
-    runtime.loadoutHasUsableHeldWeaponItem({
+    runtime.loadoutHeldWeaponSlotIsUsable({
       loadout: actor.origin.selectedLoadout,
       activeWildShape: runtime.activeDruidWildShapeEffect(actor),
+      objectKind: invocation.attachedWeaponSlot,
       itemId: invocation.activeEffect.weaponItemId,
     })
   );
@@ -237,9 +243,10 @@ export function weaponAttackOverrideExecutor<
         actorId: CombatantId,
         objectId: BattleObjectId,
       ) => boolean;
-      readonly loadoutHasUsableHeldWeaponItem: (input: {
+      readonly loadoutHeldWeaponSlotIsUsable: (input: {
         readonly loadout: SelectedLoadout;
         readonly activeWildShape: ActiveDruidWildShape;
+        readonly objectKind: HeldWeaponLoadoutSlot;
         readonly itemId: BattleObjectId;
       }) => boolean;
       readonly spellCastInterruptFrame: (input: {
@@ -434,6 +441,7 @@ export const WeaponAttackOverrideExecutionSchema =
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
       activeEffect: SpellWeaponAttackOverrideTemplateSchema,
+      attachedWeaponSlot: Schema.Literal(...HELD_WEAPON_LOADOUT_SLOTS),
     }),
   );
 

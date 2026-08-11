@@ -1,4 +1,8 @@
-import type { CharacterBattleLoadoutRef } from "../character-creature-execution-facts.ts";
+import {
+  HELD_WEAPON_LOADOUT_SLOTS,
+  type CharacterBattleLoadoutRef,
+  type HeldWeaponLoadoutSlot,
+} from "../character-creature-execution-facts.ts";
 import type { BattleObjectId } from "../identity.ts";
 import {
   type ActiveWildShapeEquipmentDisposition,
@@ -241,30 +245,38 @@ export function loadoutHasUsableHeldWeaponItem(input: {
   } | null;
   readonly itemId: BattleObjectId;
 }): boolean {
-  const heldWeapons = [
-    ...(input.loadout.weapon === undefined
-      ? []
-      : [{ objectKind: "mainWeapon" as const, ...input.loadout.weapon }]),
-    ...(input.loadout.offHandWeapon === undefined
-      ? []
-      : [
-          {
-            objectKind: "offHandWeapon" as const,
-            ...input.loadout.offHandWeapon,
-          },
-        ]),
-  ];
-  return heldWeapons.some(
-    (heldWeapon) =>
-      heldWeapon.itemId === input.itemId &&
-      (input.activeWildShape === null ||
-        wildShapeCanUseWornLoadoutObject({
-          loadout: input.loadout,
-          formLimbs: input.activeWildShape.formLimbs,
-          equipmentDisposition: input.activeWildShape.equipmentDisposition,
-          objectKind: heldWeapon.objectKind,
-          objectId: heldWeapon.itemId,
-        })),
+  return HELD_WEAPON_LOADOUT_SLOTS.some((objectKind) =>
+    loadoutHeldWeaponSlotIsUsable({
+      ...input,
+      objectKind,
+    }),
+  );
+}
+
+export function loadoutHeldWeaponSlotIsUsable(input: {
+  readonly loadout: CharacterBattleLoadoutRef;
+  readonly activeWildShape: {
+    readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
+    readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
+  } | null;
+  readonly objectKind: HeldWeaponLoadoutSlot;
+  readonly itemId: BattleObjectId;
+}): boolean {
+  const slotContainsItem = wildShapeLoadoutObjectRefs(input.loadout).some(
+    (candidate) =>
+      candidate.kind === input.objectKind &&
+      candidate.objectId === input.itemId,
+  );
+  return (
+    slotContainsItem &&
+    (input.activeWildShape === null ||
+      wildShapeCanUseWornLoadoutObject({
+        loadout: input.loadout,
+        formLimbs: input.activeWildShape.formLimbs,
+        equipmentDisposition: input.activeWildShape.equipmentDisposition,
+        objectKind: input.objectKind,
+        objectId: input.itemId,
+      }))
   );
 }
 
