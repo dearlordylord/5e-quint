@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { Either, Schema } from "effect";
 
 export const repoRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
@@ -25,38 +26,67 @@ export function sha256Canonical(value: unknown): string {
   return createHash("sha256").update(canonicalJson(value)).digest("hex");
 }
 
-export function currentGitSha(): string {
-  return execFileSync("git", ["rev-parse", "HEAD"], {
-    cwd: repoRoot,
-    encoding: "utf8",
-  }).trim();
+export interface GitCommandReader {
+  readonly read: (args: readonly string[]) => string;
 }
 
-export type ToolResultContent = {
-  readonly content: readonly { readonly type: string; readonly text: string }[];
-  readonly isError?: boolean;
+const liveGitCommandReader: GitCommandReader = {
+  read: (args) =>
+    execFileSync("git", args, { cwd: repoRoot, encoding: "utf8" }),
 };
 
-export function toolResultPayload(result: ToolResultContent): unknown {
-  const first = result.content[0];
-  if (first === undefined) return null;
-  try {
-    return JSON.parse(first.text);
-  } catch {
-    return first.text;
+export function currentGitRevision(
+  git: GitCommandReader = liveGitCommandReader,
+): { readonly tag: "clean"; readonly sha: string } | { readonly tag: "dirty" } {
+  const status = git.read(["status", "--porcelain"]);
+  if (status.trim().length > 0) {
+    return { tag: "dirty" };
   }
+  return {
+    tag: "clean",
+    sha: git.read(["rev-parse", "HEAD"]).trim(),
+  };
 }
 
-export type TranscriptHeader = {
-  readonly type: "header";
-  readonly scenarioId: string;
-  readonly kind: "scripted-probe" | "freeplay";
-  readonly rawCitations: readonly string[];
-  readonly gitSha: string;
-  readonly startedAt: string;
-};
+const ScenarioIdSchema = Schema.String.pipe(
+  Schema.pattern(/^[a-z0-9][a-z0-9-]*$/),
+  Schema.brand("RawSwarmScenarioId"),
+);
+export type ScenarioId = Schema.Schema.Type<typeof ScenarioIdSchema>;
 
-export type TranscriptStep = {
+export function decodeScenarioId(
+  value: unknown,
+): Either.Either<ScenarioId, string> {
+  return Schema.decodeUnknownEither(ScenarioIdSchema)(value).pipe(
+    Either.mapLeft(
+      () => "scenario id must be lowercase letters, digits, and hyphens",
+    ),
+  );
+}
+const GitShaSchema = Schema.String.pipe(
+  Schema.pattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/),
+  Schema.brand("RawSwarmGitSha"),
+);
+const StartedAtSchema = Schema.String.pipe(
+  Schema.filter(
+    (value) => {
+      const parsed = new Date(value);
+      return !Number.isNaN(parsed.valueOf()) && parsed.toISOString() === value;
+    },
+    { message: () => "startedAt must be a canonical ISO timestamp" },
+  ),
+  Schema.brand("RawSwarmStartedAt"),
+);
+
+const TranscriptHeaderSchema = Schema.Struct({
+  type: Schema.Literal("header"),
+  scenarioId: ScenarioIdSchema,
+  gitSha: GitShaSchema,
+  startedAt: StartedAtSchema,
+});
+type TranscriptHeader = Schema.Schema.Type<typeof TranscriptHeaderSchema>;
+
+type McpToolExchange = {
   readonly seq: number;
   readonly tool: string;
   readonly args: unknown;
@@ -84,8 +114,6 @@ export type McpTranscriptStep =
   | ParsedMcpTranscriptStep
   | UnparsedMcpTranscriptStep;
 
-export type McpToolExchange = TranscriptStep;
-
 type TranscriptParseResult<A> =
   | { readonly tag: "valid"; readonly value: A }
   | { readonly tag: "invalid"; readonly message: string };
@@ -94,30 +122,6 @@ export function isJsonRecord(
   value: unknown,
 ): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-export function isTranscriptHeader(line: unknown): line is TranscriptHeader {
-  if (!isJsonRecord(line)) return false;
-  return (
-    line.type === "header" &&
-    typeof line.scenarioId === "string" &&
-    (line.kind === "scripted-probe" || line.kind === "freeplay") &&
-    Array.isArray(line.rawCitations) &&
-    line.rawCitations.every((citation) => typeof citation === "string") &&
-    typeof line.gitSha === "string" &&
-    typeof line.startedAt === "string"
-  );
-}
-
-export function isTranscriptStep(line: unknown): line is TranscriptStep {
-  if (!isJsonRecord(line)) return false;
-  return (
-    Number.isInteger(line.seq) &&
-    typeof line.tool === "string" &&
-    typeof line.responseSha256 === "string" &&
-    "args" in line &&
-    "response" in line
-  );
 }
 
 export function isMcpTranscriptStep(line: unknown): line is McpTranscriptStep {
@@ -135,7 +139,7 @@ export function isMcpTranscriptStep(line: unknown): line is McpTranscriptStep {
   );
 }
 
-export function validateTranscriptSequence(
+function validateTranscriptSequence(
   steps: readonly { readonly seq: number }[],
 ): TranscriptParseResult<readonly { readonly seq: number }[]> {
   let previousSeq = 0;
@@ -151,36 +155,33 @@ export function validateTranscriptSequence(
   return { tag: "valid", value: steps };
 }
 
-export function parseScriptedTranscript(
+export function parsePlayerTranscript(
   records: readonly unknown[],
 ): TranscriptParseResult<{
-  readonly header: TranscriptHeader & { readonly kind: "scripted-probe" };
-  readonly steps: readonly TranscriptStep[];
+  readonly header: TranscriptHeader;
+  readonly exchanges: readonly McpToolExchange[];
 }> {
-  const [header, ...steps] = records;
-  if (!isTranscriptHeader(header) || header.kind !== "scripted-probe") {
+  const [headerInput, ...steps] = records;
+  const decodedHeader = Schema.decodeUnknownEither(TranscriptHeaderSchema, {
+    onExcessProperty: "error",
+  })(headerInput);
+  if (Either.isLeft(decodedHeader)) {
     return {
       tag: "invalid",
-      message: "Scripted transcript requires one first scripted-probe header",
+      message: "Player transcript requires one first header",
     };
   }
-  if (!steps.every(isTranscriptStep)) {
+  const header = decodedHeader.right;
+  if (!steps.every(isMcpTranscriptStep)) {
     return {
       tag: "invalid",
-      message: "Scripted transcript contains an invalid step",
+      message: "Player transcript contains an invalid MCP record",
     };
   }
-  const sequence = validateTranscriptSequence(steps);
-  if (sequence.tag === "invalid") return sequence;
-  if (
-    steps.some((step) => step.responseSha256 !== sha256Canonical(step.response))
-  ) {
-    return {
-      tag: "invalid",
-      message: "Scripted transcript contains a response hash mismatch",
-    };
-  }
-  return { tag: "valid", value: { header, steps } };
+  const exchanges = mcpToolExchanges(steps);
+  return exchanges.tag === "valid"
+    ? { tag: "valid", value: { header, exchanges: exchanges.exchanges } }
+    : exchanges;
 }
 
 export function mcpToolExchanges(
@@ -219,7 +220,7 @@ export function mcpToolExchanges(
       if (pending.has(id)) {
         return {
           tag: "invalid",
-          message: `Duplicate pending JSON-RPC id ${id} at seq ${step.seq}`,
+          message: `Duplicate pending JSON-RPC id ${JSON.stringify(step.message.id)} at seq ${step.seq}`,
         };
       }
       pending.set(id, {
@@ -235,10 +236,28 @@ export function mcpToolExchanges(
     if (step.direction !== "server->client" || id === undefined) continue;
     const request = pending.get(id);
     if (request === undefined) continue;
-    const response =
-      "result" in step.message
-        ? step.message.result
-        : { error: step.message.error ?? null };
+    const hasResult = "result" in step.message;
+    const hasError = "error" in step.message;
+    if (hasResult === hasError) {
+      return {
+        tag: "invalid",
+        message: `JSON-RPC response at seq ${step.seq} requires exactly one of result or error`,
+      };
+    }
+    if (
+      hasError &&
+      (!isJsonRecord(step.message.error) ||
+        !Number.isInteger(step.message.error.code) ||
+        typeof step.message.error.message !== "string")
+    ) {
+      return {
+        tag: "invalid",
+        message: `JSON-RPC error at seq ${step.seq} requires integer code and string message`,
+      };
+    }
+    const response = hasResult
+      ? step.message.result
+      : { error: step.message.error };
     exchanges.push({
       ...request,
       response,
@@ -257,7 +276,7 @@ export function mcpToolExchanges(
 }
 
 function jsonRpcId(value: unknown): string | undefined {
-  return typeof value === "string" || typeof value === "number"
-    ? String(value)
-    : undefined;
+  if (typeof value === "string") return `string:${value}`;
+  if (typeof value === "number") return `number:${value}`;
+  return undefined;
 }

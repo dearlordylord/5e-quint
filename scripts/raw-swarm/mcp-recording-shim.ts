@@ -2,43 +2,67 @@
 // MCP stdio recording proxy. Bridges stdin/stdout byte-for-byte to the real
 // MCP server while recording each newline-delimited JSON-RPC message.
 
-import { execFileSync, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
 import { createWriteStream, mkdirSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+import { Either } from "effect";
 
-function fail(message) {
+import {
+  currentGitRevision,
+  decodeScenarioId,
+  repoRoot,
+  type ScenarioId,
+} from "./transcript.ts";
+
+function fail(message: string): never {
   console.error(message);
   process.exit(2);
 }
 
-const flag = process.argv.indexOf("--transcript");
-const transcriptPath = flag >= 0 ? process.argv[flag + 1] : undefined;
-const scenarioFlag = process.argv.indexOf("--scenario");
-const scenarioId =
-  scenarioFlag >= 0 ? process.argv[scenarioFlag + 1] : undefined;
-if (transcriptPath === undefined || scenarioId === undefined) {
-  fail(
-    "Usage: node mcp-recording-shim.mjs --transcript <out.jsonl> --scenario <scenario-id>",
-  );
+function parseArgs(args: readonly string[]): {
+  readonly transcriptPath: string;
+  readonly scenarioId: ScenarioId;
+} {
+  const transcriptFlag = args.indexOf("--transcript");
+  const scenarioFlag = args.indexOf("--scenario");
+  const transcriptPath =
+    transcriptFlag >= 0 ? args[transcriptFlag + 1] : undefined;
+  const scenarioIdInput =
+    scenarioFlag >= 0 ? args[scenarioFlag + 1] : undefined;
+  if (
+    args.length !== 4 ||
+    args.filter((argument) => argument === "--transcript").length !== 1 ||
+    args.filter((argument) => argument === "--scenario").length !== 1 ||
+    transcriptPath === undefined ||
+    transcriptPath.startsWith("--") ||
+    scenarioIdInput === undefined ||
+    scenarioIdInput.startsWith("--")
+  ) {
+    fail(
+      "Usage: pnpm exec tsx mcp-recording-shim.ts --transcript <out.jsonl> --scenario <scenario-id>",
+    );
+  }
+  const decodedScenarioId = decodeScenarioId(scenarioIdInput);
+  if (Either.isLeft(decodedScenarioId)) fail(decodedScenarioId.left);
+  return { transcriptPath, scenarioId: decodedScenarioId.right };
 }
 
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const { transcriptPath, scenarioId } = parseArgs(process.argv.slice(2));
+
+const revision = currentGitRevision();
+if (revision.tag === "dirty") {
+  fail(
+    "Player recording requires a clean Git worktree so its SHA identifies the tested code.",
+  );
+}
 mkdirSync(dirname(transcriptPath), { recursive: true });
 const transcript = createWriteStream(transcriptPath, { flags: "w" });
-
-const gitSha = execFileSync("git", ["rev-parse", "HEAD"], {
-  cwd: repoRoot,
-  encoding: "utf8",
-}).trim();
 
 transcript.write(
   JSON.stringify({
     type: "header",
     scenarioId,
-    kind: "freeplay",
-    rawCitations: [],
-    gitSha,
+    gitSha: revision.sha,
     startedAt: new Date().toISOString(),
   }) + "\n",
 );
@@ -53,17 +77,21 @@ const child = spawn(
 );
 
 let seq = 0;
-const buffers = { "client->server": "", "server->client": "" };
+type Direction = "client->server" | "server->client";
+const buffers: Record<Direction, string> = {
+  "client->server": "",
+  "server->client": "",
+};
 
-function feed(direction, chunk) {
+function feed(direction: Direction, chunk: Buffer): void {
   buffers[direction] += chunk.toString("utf8");
-  let newlineAt;
+  let newlineAt: number;
   while ((newlineAt = buffers[direction].indexOf("\n")) >= 0) {
     const line = buffers[direction].slice(0, newlineAt);
     buffers[direction] = buffers[direction].slice(newlineAt + 1);
     if (line.trim().length === 0) continue;
     seq += 1;
-    let entry;
+    let entry: unknown;
     try {
       entry = { seq, direction, message: JSON.parse(line) };
     } catch {
@@ -83,15 +111,15 @@ child.stdout.on("data", (chunk) => {
   feed("server->client", chunk);
 });
 
-let shutdownTimer = null;
+let shutdownTimer: NodeJS.Timeout | null = null;
 
-function terminateChild(signal) {
+function terminateChild(signal: NodeJS.Signals): void {
   if (child.exitCode === null && child.signalCode === null) {
     child.kill(signal);
   }
 }
 
-function endChildStdin() {
+function endChildStdin(): void {
   child.stdin.end();
   // The MCP server runs forever by design; once the client disconnects,
   // allow in-flight responses to flush, then stop the server.
@@ -107,10 +135,12 @@ process.stdin.on("error", endChildStdin);
 process.on("SIGINT", () => terminateChild("SIGINT"));
 process.on("SIGTERM", () => terminateChild("SIGTERM"));
 
-child.on("error", (error) => fail(`Failed to spawn MCP server: ${error}`));
+child.on("error", (error: Error) =>
+  fail(`Failed to spawn MCP server: ${error.message}`),
+);
 
 child.on("exit", (code, signal) => {
-  for (const direction of Object.keys(buffers)) {
+  for (const direction of Object.keys(buffers) as Direction[]) {
     const rest = buffers[direction].trim();
     if (rest.length > 0) {
       seq += 1;

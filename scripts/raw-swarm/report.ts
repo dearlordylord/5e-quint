@@ -1,22 +1,17 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
-import { Either, Match, Schema } from "effect";
+import { Either, Match, Option, Schema } from "effect";
 
 import { ReviewOutputSchema, VERDICT_CLASSES } from "./review-contract.ts";
 
 import {
   isJsonRecord,
-  isMcpTranscriptStep,
-  isTranscriptHeader,
-  mcpToolExchanges,
-  parseScriptedTranscript,
+  parsePlayerTranscript,
   repoRoot,
   sha256Canonical,
-  type TranscriptHeader,
-  type TranscriptStep,
 } from "./transcript.ts";
 
 const githubIssueNumberSqlCheck =
@@ -90,18 +85,12 @@ function openDb(dbPath: string): DatabaseSync {
   db.exec("PRAGMA journal_mode = WAL");
   db.exec("PRAGMA busy_timeout = 5000");
   db.exec(`
-    CREATE TABLE IF NOT EXISTS scenarios(
-      id TEXT PRIMARY KEY,
-      kind TEXT,
-      rawCitations TEXT
-    );
     CREATE TABLE IF NOT EXISTS runs(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       scenarioId TEXT,
       gitSha TEXT,
       startedAt TEXT,
-      transcriptPath TEXT,
-      FOREIGN KEY(scenarioId) REFERENCES scenarios(id)
+      transcriptPath TEXT
     );
     CREATE TABLE IF NOT EXISTS steps(
       runId INT,
@@ -180,20 +169,30 @@ function openDb(dbPath: string): DatabaseSync {
   return db;
 }
 
-function recordIssue(
+function recordBugIssue(
   db: DatabaseSync,
   verdictClass: (typeof VERDICT_CLASSES)[number],
   claim: string,
   createdAt: string,
-): string | null {
-  if (verdictClass === "pass") return null;
-  const fingerprint = sha256Canonical({ class: verdictClass, claim });
-  db.prepare(
-    `INSERT INTO issues(fingerprint, class, claim, firstSeenAt, lastSeenAt)
-     VALUES (?, ?, ?, ?, ?)
-     ON CONFLICT(fingerprint) DO UPDATE SET lastSeenAt = excluded.lastSeenAt`,
-  ).run(fingerprint, verdictClass, claim, createdAt, createdAt);
-  return fingerprint;
+): Option.Option<string> {
+  const noIssue = (): Option.Option<string> => Option.none();
+  return Match.value(verdictClass).pipe(
+    Match.when("bug", () => {
+      const fingerprint = sha256Canonical({ class: verdictClass, claim });
+      db.prepare(
+        `INSERT INTO issues(fingerprint, class, claim, firstSeenAt, lastSeenAt)
+         VALUES (?, ?, ?, ?, ?)
+         ON CONFLICT(fingerprint) DO UPDATE SET lastSeenAt = excluded.lastSeenAt`,
+      ).run(fingerprint, verdictClass, claim, createdAt, createdAt);
+      return Option.some(fingerprint);
+    }),
+    Match.when("assumption-divergence", noIssue),
+    Match.when("corpus-ambiguity", noIssue),
+    Match.when("scenario-invalid", noIssue),
+    Match.when("reviewer-error", noIssue),
+    Match.when("pass", noIssue),
+    Match.exhaustive,
+  );
 }
 
 function flagValue(args: readonly string[], flag: string): string | undefined {
@@ -332,6 +331,19 @@ function runExists(db: DatabaseSync, runId: number): boolean {
   return isJsonRecord(run) && run.id === runId;
 }
 
+function hasRemovedScenarioRegistry(dbPath: string): boolean {
+  const resolved = resolve(repoRoot, dbPath);
+  if (!existsSync(resolved)) return false;
+  const db = new DatabaseSync(resolved, { readOnly: true });
+  const row = db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'scenarios'",
+    )
+    .get();
+  db.close();
+  return isJsonRecord(row) && row.name === "scenarios";
+}
+
 export function ingest(args: readonly string[]): void {
   const [transcriptArg, ...rest] = args;
   const transcriptPath = required(transcriptArg, "<transcript.jsonl>");
@@ -342,16 +354,16 @@ export function ingest(args: readonly string[]): void {
     .filter((line) => line.trim().length > 0)
     .map((line): unknown => JSON.parse(line));
 
-  const [header, ...recordedSteps] = lines;
-  if (!isTranscriptHeader(header)) {
-    fail("Transcript must start with a valid scenario header");
-  }
-  const steps = reportSteps(header, recordedSteps);
+  const parsed = parsePlayerTranscript(lines);
+  if (parsed.tag === "invalid") fail(parsed.message);
+  const { header, exchanges: steps } = parsed.value;
 
+  if (hasRemovedScenarioRegistry(dbPath)) {
+    fail(
+      "This database uses the removed scenario-interpreter registry; preserve it as historical evidence and ingest player runs into a new database",
+    );
+  }
   const db = openDb(dbPath);
-  const insertScenario = db.prepare(
-    "INSERT INTO scenarios(id, kind, rawCitations) VALUES (?, ?, ?) ON CONFLICT(id) DO NOTHING",
-  );
   const insertRun = db.prepare(
     "INSERT INTO runs(scenarioId, gitSha, startedAt, transcriptPath) VALUES (?, ?, ?, ?)",
   );
@@ -362,21 +374,6 @@ export function ingest(args: readonly string[]): void {
   db.exec("BEGIN");
   const runId = (() => {
     try {
-      insertScenario.run(
-        header.scenarioId,
-        header.kind,
-        JSON.stringify(header.rawCitations),
-      );
-      const storedScenario = db
-        .prepare("SELECT kind, rawCitations FROM scenarios WHERE id = ?")
-        .get(header.scenarioId);
-      if (
-        !isJsonRecord(storedScenario) ||
-        storedScenario.kind !== header.kind ||
-        storedScenario.rawCitations !== JSON.stringify(header.rawCitations)
-      ) {
-        fail(`Scenario ${header.scenarioId} conflicts with stored metadata`);
-      }
       const info = insertRun.run(
         header.scenarioId,
         header.gitSha,
@@ -408,23 +405,6 @@ export function ingest(args: readonly string[]): void {
   db.close();
 }
 
-function reportSteps(
-  header: TranscriptHeader,
-  records: readonly unknown[],
-): readonly TranscriptStep[] {
-  if (header.kind === "scripted-probe") {
-    const parsed = parseScriptedTranscript([header, ...records]);
-    return parsed.tag === "valid" ? parsed.value.steps : fail(parsed.message);
-  }
-  if (!records.every(isMcpTranscriptStep)) {
-    return fail("Freeplay transcript contains an invalid MCP record");
-  }
-  const exchanges = mcpToolExchanges(records);
-  return exchanges.tag === "valid"
-    ? exchanges.exchanges
-    : fail(exchanges.message);
-}
-
 function verdict(args: readonly string[]): void {
   const dbPath = required(flagValue(args, "--db"), "--db");
   const runId = positiveRunId(required(flagValue(args, "--run"), "--run"));
@@ -447,7 +427,7 @@ function verdict(args: readonly string[]): void {
   db.exec("BEGIN");
   const info = (() => {
     try {
-      const issueFingerprint = recordIssue(
+      const issueFingerprint = recordBugIssue(
         db,
         parsedVerdictClass,
         claim,
@@ -460,7 +440,7 @@ function verdict(args: readonly string[]): void {
         evidence,
         reviewer,
         createdAt,
-        issueFingerprint,
+        Option.getOrNull(issueFingerprint),
       );
       db.exec("COMMIT");
       return inserted;
@@ -508,7 +488,12 @@ export function review(args: readonly string[]): void {
     );
     const reviewRoundId = Number(reviewRound.lastInsertRowid);
     for (const row of decoded.right.verdicts) {
-      const issueFingerprint = recordIssue(db, row.class, row.claim, createdAt);
+      const issueFingerprint = recordBugIssue(
+        db,
+        row.class,
+        row.claim,
+        createdAt,
+      );
       insert.run(
         runId,
         row.class,
@@ -517,7 +502,7 @@ export function review(args: readonly string[]): void {
         decoded.right.reviewer,
         createdAt,
         reviewRoundId,
-        issueFingerprint,
+        Option.getOrNull(issueFingerprint),
       );
     }
     db.exec("COMMIT");

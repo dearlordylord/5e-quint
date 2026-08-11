@@ -14,13 +14,14 @@ import { describe, expect, test, vi } from "vitest";
 
 import {
   GitHubIssueNumberSchema,
+  ingest,
   linkGithubIssue,
   makeGitHubIssueLinker,
   SwarmFingerprintSchema,
   type GitHubCommandRunner,
   type GitHubIssueLinker,
 } from "./report.ts";
-import { isJsonRecord, repoRoot, sha256Canonical } from "./transcript.ts";
+import { isJsonRecord, repoRoot } from "./transcript.ts";
 
 const reportScript = resolve(repoRoot, "scripts/raw-swarm/report.ts");
 
@@ -118,6 +119,51 @@ function queryString(dbPath: string, sql: string, field: string): string {
 }
 
 describe("RAW swarm report store", () => {
+  test("rejects the removed scenario registry without changing historical evidence", () => {
+    const directory = mkdtempSync(join(tmpdir(), "raw-swarm-old-store-"));
+    try {
+      const dbPath = join(directory, "historical.db");
+      const transcriptPath = join(directory, "player.jsonl");
+      executeSql(
+        dbPath,
+        `PRAGMA foreign_keys = ON;
+         CREATE TABLE scenarios(id TEXT PRIMARY KEY);
+         CREATE TABLE runs(
+           id INTEGER PRIMARY KEY AUTOINCREMENT,
+           scenarioId TEXT,
+           gitSha TEXT,
+           startedAt TEXT,
+           transcriptPath TEXT,
+           FOREIGN KEY(scenarioId) REFERENCES scenarios(id)
+         );`,
+      );
+      writeFileSync(
+        transcriptPath,
+        `${JSON.stringify({
+          type: "header",
+          scenarioId: "new-player-run",
+          gitSha: "0".repeat(40),
+          startedAt: "2026-08-11T00:00:00.000Z",
+        })}\n`,
+      );
+
+      expect(() => ingest([transcriptPath, "--db", dbPath])).toThrow(
+        "preserve it as historical evidence",
+      );
+      expect(queryOne(dbPath, "SELECT COUNT(*) AS count FROM runs")).toEqual({
+        count: 0,
+      });
+      expect(
+        queryOne(
+          dbPath,
+          "SELECT COUNT(*) AS count FROM sqlite_master WHERE type = 'table' AND name = 'issues'",
+        ),
+      ).toEqual({ count: 0 });
+    } finally {
+      rmSync(directory, { recursive: true });
+    }
+  });
+
   test("serializes concurrent CLI links through the production workflow lock", async () => {
     const directory = mkdtempSync(join(tmpdir(), "raw-swarm-link-lock-"));
     try {
@@ -309,7 +355,7 @@ try {
     }
   });
 
-  test("derives scenario identity and kind from the transcript header", () => {
+  test("derives scenario identity from the player transcript header", () => {
     const directory = mkdtempSync(join(tmpdir(), "raw-swarm-report-"));
     try {
       const transcriptPath = join(directory, "run.jsonl");
@@ -320,18 +366,23 @@ try {
         `${[
           {
             type: "header",
-            scenarioId: "probe-from-header",
-            kind: "scripted-probe",
-            rawCitations: ["Rules-Glossary.md#action"],
-            gitSha: "0123456789abcdef",
+            scenarioId: "player-run-from-header",
+            gitSha: "0".repeat(40),
             startedAt: "2026-08-11T00:00:00.000Z",
           },
           {
             seq: 1,
-            tool: "resolve_battle_act",
-            args: {},
-            response,
-            responseSha256: sha256Canonical(response),
+            direction: "client->server",
+            message: {
+              id: 7,
+              method: "tools/call",
+              params: { name: "resolve_battle_act", arguments: {} },
+            },
+          },
+          {
+            seq: 2,
+            direction: "server->client",
+            message: { id: 7, result: response },
           },
         ]
           .map(JSON.stringify)
@@ -371,27 +422,45 @@ try {
               claim: "Recorded transition matches its cited rule.",
               evidence: "Transcript seq 1; Rules-Glossary.md#action.",
             },
+            {
+              class: "reviewer-error",
+              claim: "Reviewer misread a recorded transition.",
+              evidence: "Transcript seq 1; Rules-Glossary.md#action.",
+            },
           ],
         }),
         "utf8",
       );
       runReport(["review", reviewPath, "--run", "1", "--db", dbPath]);
 
-      expect(queryOne(dbPath, "SELECT id, kind FROM scenarios")).toEqual({
-        id: "probe-from-header",
-        kind: "scripted-probe",
-      });
       expect(queryOne(dbPath, "SELECT scenarioId, gitSha FROM runs")).toEqual({
-        scenarioId: "probe-from-header",
-        gitSha: "0123456789abcdef",
+        scenarioId: "player-run-from-header",
+        gitSha: "0".repeat(40),
       });
+      expect(
+        queryOne(
+          dbPath,
+          "SELECT COUNT(*) AS count FROM sqlite_master WHERE type = 'table' AND name = 'scenarios'",
+        ),
+      ).toEqual({ count: 0 });
       expect(queryOne(dbPath, "SELECT tool, response FROM steps")).toEqual({
         tool: "resolve_battle_act",
         response: JSON.stringify(response),
       });
-      expect(queryOne(dbPath, "SELECT class, reviewer FROM verdicts")).toEqual({
+      expect(
+        queryOne(
+          dbPath,
+          "SELECT class, reviewer FROM verdicts WHERE class = 'bug'",
+        ),
+      ).toEqual({
         class: "bug",
         reviewer: "adversarial-reviewer",
+      });
+      expect(
+        queryOne(dbPath, "SELECT COUNT(*) AS count FROM verdicts"),
+      ).toEqual({ count: 2 });
+      expect(queryOne(dbPath, "SELECT COUNT(*) AS count FROM issues")).toEqual({
+        count: 1,
       });
       expect(
         queryOne(

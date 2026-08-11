@@ -1,284 +1,188 @@
-# RAW swarm testing harness (slice 1)
+# RAW player swarm
 
-Tests the adjudicator SDK for SRD 5.2.1 RAW correctness with agents that emulate
-players and DMs. It records deterministic transcripts, replays them, and stores
-runs and adversarial findings in SQLite.
+Uses agents pretending to be players and DMs to discover gaps in the D&D 5e
+SRD 5.2.1 adjudicator SDK. The harness records their real interactions, replays
+the exact calls, and stores adversarial RAW findings in SQLite.
 
-## Purpose and boundaries
+## Architecture
 
-The adjudicator SDK is the system under test: `@dnd/battle-runtime` and the
-character runtime packages composed over Surface content. MCP is an interaction
-adapter for agents, not the primary test target. Exercising SDK behavior through
-MCP deliberately adds compound coverage of MCP decoding, session storage, and
-response projection, but an MCP-only defect and an SDK rules defect must be
-classified separately.
+The SDK is the system under test. The player agent operates it through MCP
+because MCP gives an untrusted agent a discoverable, typed interaction surface.
+This also tests the MCP adapter, but adapter coverage is a consequence rather
+than the purpose. Review findings must distinguish an SDK rules defect from an
+MCP projection or decoding defect.
 
-The harness does not add a second deterministic test layer. Direct SDK tests
-are the repository's existing integration/regression tests: they protect rules
-claims maintainers already know to assert. Swarm testing has a different job:
-discover failures that those anticipated assertions did not name.
+There is no scenario interpreter and no second D&D command vocabulary. The
+only authored input is a natural-language player/DM prompt. During play, the
+agent chooses from the SDK's canonical surfaced acts and holes. The recorder
+captures the resulting concrete MCP calls and full responses; replay executes
+those calls verbatim and does not ask an agent to make the same choices again.
 
-The swarm-specific loop is:
+Ordinary package integration and regression tests remain the deterministic
+regression layer for known claims. The swarm adds discovery:
 
-1. A **player/DM emulator** chooses from the SDK's live acts and holes through
-   the MCP interaction adapter.
-2. The recorder captures every concrete call and full result; replay proves
-   that exact interaction can be reproduced.
-3. An **adversarial RAW reviewer** inspects the whole trace, including facts the
-   scenario author did not think to assert.
-4. An actionable finding is promoted into an ordinary direct SDK or adapter
-   regression while it is fixed. That regression then prevents later swarm
-   runs from repeatedly rediscovering the same defect.
+1. a player/DM agent explores a build, battle, or interaction;
+2. the recorder preserves everything it actually tried and observed;
+3. an adversarial reviewer checks the whole trace against local RAW;
+4. an actionable discovery becomes an ordinary SDK or adapter regression and
+   a linked GitHub issue.
 
-The direct regression supports player-agent testing by preserving discoveries;
-it does not drive or guide the player agent. MCP remains an adapter and not the
-RAW oracle.
+The regression preserves the discovery. It does not drive or guide later
+player agents.
 
-This first slice retains one transitional JSON scripted probe. Its adversarial
-review found four unanticipated SDK defects now tracked in
-[#255](https://github.com/dearlordylord/5e-quint/issues/255),
-[#256](https://github.com/dearlordylord/5e-quint/issues/256),
-[#257](https://github.com/dearlordylord/5e-quint/issues/257), and
-[#258](https://github.com/dearlordylord/5e-quint/issues/258). That result
-validated full-trace recording, review, reporting, and triage; it does not
-justify keeping the JSON recipe interpreter as another test architecture.
-
-Prerequisite: run everything under mise-managed Node 24 from the worktree
-root (see `mise.toml`):
+Run commands under mise-managed Node 24 from the worktree root:
 
 ```sh
 mise exec -- <command>
 ```
 
-Generated artifacts (transcripts, SQLite DBs) go under
-`scripts/raw-swarm/out/` (gitignored).
+Generated transcripts, agent logs, review output, and SQLite databases belong
+under `scripts/raw-swarm/out/` and are gitignored.
 
-## Continuing and expanding the swarm
+## Run the existing player scenario
 
-### Fix-before-width workflow
-
-Do not add broad scenario volume while known SDK defects would make many runs
-repeat the same finding. Process every non-pass observation through the single
-ordered procedure in [Finding and bug lifecycle](#finding-and-bug-lifecycle).
-For an actionable defect, add the smallest regression at its canonical SDK or
-adapter owner before a confirming player-agent run and adversarial review;
-preserve the original failing evidence.
-
-After known defects converge, expand width along independent axes:
-
-- procedure position: discovery, pending holes, resolution, End Turn, round
-  advancement, and session closure;
-- outcome: miss, positive-HP hit, 0 HP, and Knock Out;
-- act family: weapon attack, Unarmed Strike, general Action, Ready, spell, and
-  movement;
-- combatant origin: Stat Block and Character Sheet;
-- input behavior: valid, stale, duplicate, malformed, and contradictory.
-
-Do not build the Cartesian product. Each new scenario should introduce one
-meaningful interaction or counterexample while reusing already-proved facts.
-Every RAW expectation needs a local SRD citation and must be authored before
-observing the runtime result.
-
-### Do not build a scenario language
-
-The SDK owns the D&D vocabulary and semantics through canonical
-`BattleSubject`, `BattleHole`, and `BattleFill` values. Deterministic RAW probes
-belong in ordinary direct SDK tests. Player/DM-emulating agents exercise the
-real act/hole surface. Their concrete calls and results—not a second command
-language—are the replay artifact.
-
-The first slice contains a transitional JSON scenario driver with two scripted
-recipes:
-
-- `meleeAttackHit` means: discover and select a melee attack, supply its target,
-  attack roll, damage dice, and optional 0-HP disposition, then optionally end
-  the turn. It is a bundled driver recipe, not a D&D event or SDK domain term.
-- `isolationPass` means: intentionally take no act in order to isolate the rule
-  under test, record why, then optionally end the turn. It is not the RAW Ready,
-  Dodge, or any other Action, and “pass” is not an SDK combat procedure.
-
-Treat both as frozen slice scaffolding, not extension examples. Do not add
-`spellAttackHit`, `savingThrowFailed`, `grappleSucceeded`, or generic
-runner operations that grow their own sequencing, reference, or templating
-protocol. Once the first probe's findings have direct SDK regressions, retire
-the whole scripted-only slice: `scenario.ts`, `driver.ts`, `replay.ts`, their
-dedicated tests, the probe JSON, and its review prompt. Preserve shared
-transcript/report parsing and the original stored evidence. Keep a scripted-only
-module only if it demonstrates a distinct capability that ordinary tests plus
-recorded player-agent calls cannot.
-
-Only the transitional scenario/driver path decodes and expands these recipes.
-Freeplay agents never see them; those agents choose from acts and holes surfaced
-by the runtime. Replays execute concrete calls stored in transcripts rather
-than reinterpreting recipes.
-
-### Adding scenario width
-
-Use freeplay prompts for discovery, then promote findings into the existing
-test system:
-
-1. Choose one new interaction from the width axes above and cite the local SRD
-   claim before running the SDK.
-2. Add a natural-language prompt under `freeplay/` that gives the setup and
-   player/DM goal without prescribing implementation calls or outcomes.
-3. Record the player's real calls and results, replay the transcript with
-   `replay-freeplay.ts`, and ingest it with `report.ts ingest`.
-4. Add a committed falsifier prompt under `reviews/`, run
-   `run-raw-review.sh`, and import the result with `report.ts review`.
-5. Inspect `report.ts summary` and `report.ts issues --unlinked`; triage each
-   non-pass observation through the GitHub lifecycle below.
-6. For each actionable defect, add the smallest ordinary SDK or adapter
-   regression during the fix; do not create a new harness test abstraction.
-
-Do not copy `run-freeplay-001.sh` for every freeplay. Before adding the second
-freeplay scenario, generalize that launcher to accept the scenario id, prompt,
-transcript, and agent-log paths. Keep model/sandbox/recording policy in the one
-launcher.
-
-## Scripts
-
-### `driver.ts` — scripted probe runner
-
-Executes a scenario JSON: `select_stat_block` for each participant,
-`start_battle`, then per script act `discover_battle_acts` → select the act
-matching `actSelector` (matched against `label`/`summary` and
-`subject.action`/`subject.tag`; if several match, the rolled variant without
-`statBlockDamageNotation` is preferred) → `fill_battle_hole` per requested
-hole (`targetChoice`, `attackRoll`, `rolledDice`, `attackDamageDisposition`)
-or `resolve_battle_act` for no-hole acts → optional `end_turn`. Writes one
-JSONL transcript line per tool call (`seq`, `tool`, `args`, `response`,
-`responseSha256` over canonical sorted-key JSON), preceded by a header line.
-Finally evaluates `expectations` (explicit dot-path resolver with
-`name[selector]` array filters and `.length`) and exits non-zero if any fail.
+The scenario id names a committed prompt at
+`freeplay/<scenario-id>.prompt.txt`. The launcher derives default transcript
+and agent-log paths from the same id:
 
 ```sh
-mise exec -- pnpm exec tsx scripts/raw-swarm/driver.ts \
-  scripts/raw-swarm/probes/probe-001-goblin-scimitar-vs-skeleton.json \
-  --transcript scripts/raw-swarm/out/probe-001.jsonl
-```
+SCENARIO=freeplay-001-goblin-warrior-vs-skeleton
 
-### `replay.ts` — determinism checker
+mise exec -- pnpm exec tsx scripts/raw-swarm/run-freeplay.ts "$SCENARIO"
 
-Rebuilds a fresh composition root, re-executes the recorded tool calls
-verbatim, and asserts each response's canonical-JSON sha256 matches the
-recorded hash. Exits non-zero with the first divergence on mismatch.
-
-```sh
-mise exec -- pnpm exec tsx scripts/raw-swarm/replay.ts \
-  scripts/raw-swarm/out/probe-001.jsonl
-```
-
-### `replay-freeplay.ts` — recorded MCP-call replay
-
-Pairs each recorded freeplay `tools/call` request with its JSON-RPC response,
-replays the tool calls against a fresh in-process composition root, and compares
-canonical response hashes. This verifies the recorded choices deterministically;
-rerunning the agent may make different choices.
-
-```sh
 mise exec -- pnpm exec tsx scripts/raw-swarm/replay-freeplay.ts \
-  scripts/raw-swarm/out/freeplay-001-transcript.jsonl
+  "scripts/raw-swarm/out/$SCENARIO-transcript.jsonl"
+
+mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts ingest \
+  "scripts/raw-swarm/out/$SCENARIO-transcript.jsonl" \
+  --db scripts/raw-swarm/out/player-swarm.db
 ```
 
-### `mcp-recording-shim.mjs` — MCP stdio recording proxy
+`run-freeplay.ts` pins the model, reasoning effort, sandbox, MCP server, and
+recording policy in one place. The scenario id also fixes the prompt,
+transcript, agent-log, and reviewer-prompt naming convention so later steps
+cannot silently inspect another run. Agent choices are intentionally
+nondeterministic; the recorded calls are the deterministic replay input.
+Recording requires a clean worktree so the recorded Git SHA identifies all
+tested code. Replay also requires that exact revision to be checked out.
 
-Spawns `battle-slice-server.ts`, a real SDK server exposing content discovery
-and battle tools, and bridges stdin/stdout byte-for-byte while appending each
-direction's newline-delimited JSON-RPC messages to the transcript as
-`{seq, direction, message}` lines (unparseable lines are forwarded untouched
-and logged with `unparsed: true`). Server stderr passes through. Configure an
-MCP client to launch this script as the server command:
+Run the committed adversarial review and import it as one review round:
 
 ```sh
-node scripts/raw-swarm/mcp-recording-shim.mjs \
-  --transcript scripts/raw-swarm/out/freeplay-001.jsonl \
-  --scenario freeplay-001-goblin-warrior-vs-skeleton
+mise exec -- scripts/raw-swarm/run-raw-review.sh \
+  "scripts/raw-swarm/reviews/$SCENARIO.prompt.txt" \
+  "scripts/raw-swarm/out/$SCENARIO-review.json" \
+  "scripts/raw-swarm/out/$SCENARIO-review-agent.log"
+
+mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts review \
+  "scripts/raw-swarm/out/$SCENARIO-review.json" \
+  --run <run-id> --db scripts/raw-swarm/out/player-swarm.db
 ```
 
-The slice server publishes the canonical tool input schemas. It omits optional
-`outputSchema` metadata because the battle result codecs repeat roughly 1.9 MB
-per tool and Codex 0.147 rejects the whole cold-client registration at that
-size. Runtime results are still encoded and validated by those canonical
-Effect codecs. `battle-slice-tools.test.ts` gates the published list size and
-input-schema identity.
+The reviewer uses only `.references/srd-5.2.1/` as RAW authority and consults
+`ASSUMPTIONS.md` for registered ambiguity choices. `run-raw-review.sh` validates
+the result against JSON Schema generated from the same Effect codec used by
+report ingestion.
 
-### Battle schema boundary
+## Add discovery width
+
+Do not create JSON commands, mechanic recipes, an expectation language, or a
+generic sequencing DSL. Add another player experiment like this:
+
+1. Pick one meaningful build, battle, or interaction and read its relevant
+   local SRD passages before authoring the prompt.
+2. Choose a lowercase hyphenated scenario id and add
+   `freeplay/<scenario-id>.prompt.txt`. Describe the setup and player/DM goal;
+   do not prescribe internal SDK calls or declare the outcome the agent must
+   obtain.
+3. Run `run-freeplay.ts <scenario-id>`, replay the transcript, and ingest it.
+4. Add `reviews/<scenario-id>.prompt.txt` that tries to falsify the whole run,
+   then run and import the review.
+5. Inspect the summary and unlinked bug observations. Classify every non-pass as
+   described in [Finding and bug lifecycle](#finding-and-bug-lifecycle).
+6. When a finding is actionable, put the smallest deterministic regression at
+   its canonical SDK or adapter owner while fixing it. Confirm with a fresh
+   player run and review.
+
+Prefer width over a Cartesian product. A new prompt should add one useful source
+of surprise, such as a different character build, act family, pending-hole
+sequence, outcome, turn position, combatant origin, or malformed/stale player
+choice.
+
+The current swarm server exposes content discovery and battle tools. Character
+build exploration therefore requires widening that MCP interaction surface to
+the canonical character SDK tools. Reuse their existing tool definitions,
+codecs, and handlers; do not model builds in the harness. MCP is the means by
+which the player agent reaches SDK capabilities, so adding a capability means
+surfacing the owning SDK operation, not inventing a scenario instruction for it.
+
+## Evidence tools
+
+### Player transcript recording and replay
+
+`mcp-recording-shim.ts` starts `battle-slice-server.ts`, bridges MCP stdio, and
+records each newline-delimited JSON-RPC message as `{seq, direction, message}`.
+Unparseable lines are still forwarded and recorded explicitly. The transcript
+header carries the scenario id, tested Git SHA, and start time.
+
+`replay-freeplay.ts` pairs every recorded `tools/call` with its response,
+replays the calls against a fresh in-process SDK composition root, and compares
+canonical response hashes. It proves determinism of the concrete recorded
+interaction when replayed from its recorded clean revision; rerunning the agent
+can legitimately choose a different path.
+
+```sh
+mise exec -- pnpm exec tsx scripts/raw-swarm/mcp-recording-shim.ts \
+  --transcript scripts/raw-swarm/out/example-transcript.jsonl \
+  --scenario example
+```
+
+### MCP schema boundary
 
 The canonical production SDK schemas remain `BattleSubjectSchema` and
-`BattleFillSchema` in `@dnd/battle-runtime`; SDK callers continue to construct
-and receive typed `BattleSubject` and `BattleFill` values. They were not changed
-to strings.
+`BattleFillSchema` in `@dnd/battle-runtime`; SDK callers construct and receive
+typed `BattleSubject` and `BattleFill` values.
 
 The production MCP wire contract for `fill_battle_hole` and
-`resolve_battle_act` does use JSON-text envelopes (`subjectJson` and
-`fillJson`). This is not confined to the swarm server. It keeps MCP
-`tools/list` small enough for cold clients, then immediately applies
-`Schema.parseJson(BattleSubjectSchema)` and
-`Schema.parseJson(BattleFillSchema)` at the MCP boundary. Typed handler code
-receives only successfully decoded SDK values. The tradeoff is deliberate:
-MCP clients learn the inner fill shape from returned holes and workflow guidance
-rather than receiving the full approximately 200 KB union in the advertised
-input schema.
+`resolve_battle_act` uses JSON-text envelopes (`subjectJson` and `fillJson`) to
+keep `tools/list` below cold-client limits. The MCP boundary immediately applies
+`Schema.parseJson(BattleSubjectSchema)` and `Schema.parseJson(BattleFillSchema)`,
+so typed handlers receive only decoded SDK values. The inner schema is not
+weakened; only its MCP representation is compact.
 
-Only the omission of optional `outputSchema` metadata from every tool exposed by
-`battle-slice-server.ts` is specific to the swarm server. The normal production
-MCP server still publishes its codec-derived output schemas.
+The swarm server also omits optional `outputSchema` metadata from its exposed
+tools because repeated battle result codecs make cold registration too large.
+Runtime results are still encoded and validated by the canonical Effect codecs.
+The normal production MCP server continues to publish its codec-derived output
+schemas. `battle-slice-tools.test.ts` gates the swarm tool list size and input
+schema identity.
 
-### `run-freeplay-001.sh` — Codex user-emulation run
+`end_battle.closedAt` is the SDK's canonical Initiative position:
+`roundReached` and `activeTurnActorId`. Report it as “Battle session closed
+during round N, during X's turn.” Session closure does not prove the RAW reason
+combat ended, the highest round reached is not elapsed duration, and it must not
+be converted to seconds. The reviewer determines when and why combat ended.
 
-Runs the committed freeplay prompt through Codex with the D&D MCP server and
-records both the protocol transcript and the agent log. Codex 0.147 requires
-the MCP elicitation feature to be disabled in non-interactive `exec`; otherwise
-mutating MCP calls are cancelled before reaching the server. The script pins
-the model and reasoning effort and accepts optional transcript and log paths.
+### SQLite report store
 
-```sh
-mise exec -- scripts/raw-swarm/run-freeplay-001.sh
-```
-
-The committed prompt at
-`freeplay/freeplay-001-goblin-warrior-vs-skeleton.prompt.txt` is the
-deterministic freeplay input. The agent's choices remain nondeterministic and
-are evidence captured by the transcript, not replay expectations.
-
-`end_battle.closedAt` returns the SDK's canonical Initiative position:
-`roundReached` and `activeTurnActorId`. Reports use the form “Battle session
-closed during round N, during X's turn.” They do not label the highest round
-reached as a duration or convert it to seconds. RAW says a round represents
-about 6 seconds; the runtime's exact six-second tick is a rule-duration
-assumption and does not measure partial-round encounter time. A RAW reviewer
-separately determines when combat ended and why.
-
-### `report.ts` — SQLite report store
-
-Uses built-in `node:sqlite`. Creates the schema on first use.
+`report.ts` creates a WAL-mode SQLite store on first use.
 
 ```sh
-# ingest a transcript
-mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts \
-  ingest scripts/raw-swarm/out/probe-001.jsonl \
-  --db scripts/raw-swarm/out/raw-swarm.db
-
-# record a verdict (class: bug | assumption-divergence | corpus-ambiguity |
-#                      scenario-invalid | reviewer-error | pass)
-mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts verdict \
-  --db scripts/raw-swarm/out/raw-swarm.db --run 1 --class pass \
-  --claim "<text>" --evidence "<srd anchor + quote>" --reviewer "<id>"
-
-# counts by verdict class
+# summary by verdict class
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts summary \
-  --db scripts/raw-swarm/out/raw-swarm.db
+  --db scripts/raw-swarm/out/player-swarm.db
 
-# list issue observations as JSONL, including GitHub links when triaged
+# all, unlinked, or linked issue observations as JSONL
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts issues \
-  --db scripts/raw-swarm/out/raw-swarm.db
-
-# select either side of the GitHub-linkage boundary
+  --db scripts/raw-swarm/out/player-swarm.db
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts issues \
-  --db scripts/raw-swarm/out/raw-swarm.db --unlinked
+  --db scripts/raw-swarm/out/player-swarm.db --unlinked
 mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts issues \
-  --db scripts/raw-swarm/out/raw-swarm.db --linked
+  --db scripts/raw-swarm/out/player-swarm.db --linked
 ```
+
+Verdict classes are `bug`, `assumption-divergence`, `corpus-ambiguity`,
+`scenario-invalid`, `reviewer-error`, and `pass`.
 
 ## Finding and bug lifecycle
 
@@ -288,125 +192,84 @@ assignment, priority, discussion, and open/closed status, as required by
 delete an SQLite issue to represent a fix, and do not add a second local
 open/closed status that can disagree with GitHub.
 
-For each non-pass verdict:
+Every verdict remains immutable run evidence. For each non-pass verdict, first
+classify and disposition it:
 
-1. Inspect the transcript sequence and local RAW evidence. Decide whether it is
-   an SDK bug, an MCP-adapter bug, an unsupported capability, a scenario defect,
-   or a corpus ambiguity.
-2. Use `report.ts issues` to find its provisional fingerprint. Fingerprints are
-   hashes of the review class and exact claim, so triage—not wording equality—
-   decides whether multiple fingerprints describe one semantic bug.
-3. For an actionable bug, search existing GitHub Issues. Create one only when no
-   semantic duplicate exists. Use the **RAW swarm finding** issue form, which
-   applies the `raw-swarm` and `bug` labels and requires the fingerprint, run id,
-   tested Git SHA, transcript sequences, RAW citations, reproduction command,
-   expected behavior, owning package, and required regression level. Record each
-   fingerprint on its own exact `Raw-Swarm-Fingerprint: <sha256>` line.
-4. Link every matching fingerprint to that GitHub issue:
+1. Inspect the transcript sequence and local RAW evidence. Classify it as an SDK
+   bug, MCP-adapter bug, unsupported capability, invalid player setup/reviewer
+   claim, or corpus ambiguity.
+2. Correct invalid setups or reviewer claims in their owning prompt/review.
+   Record unsupported capability and corpus ambiguity for the appropriate
+   product or corpus decision; do not label them SDK bugs.
+
+Only a reviewer-classified `bug` verdict enters the remaining bug-observation
+lifecycle. `report.ts` adds those observations to the `issues` collection for
+human triage; this is not independent confirmation. Other classes remain in the
+review evidence without an issue fingerprint.
+
+3. Use `report.ts issues` to obtain the bug observation's fingerprint.
+   Fingerprints hash the review class and exact claim; triage decides whether
+   different wording is one semantic issue.
+4. Search existing GitHub Issues. Create one only when no semantic duplicate
+   exists. Use the **RAW swarm finding** issue form, which applies `raw-swarm`
+   and `bug` labels and requires the fingerprint, run id, tested Git SHA,
+   transcript sequences, RAW citations, reproduction, expected behavior,
+   owning package, and regression level. Put each fingerprint on an exact
+   `Raw-Swarm-Fingerprint: <sha256>` line.
+5. Link every matching fingerprint:
 
    ```sh
    mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts \
-     link-github-issue --db scripts/raw-swarm/out/raw-swarm.db \
+     link-github-issue --db scripts/raw-swarm/out/player-swarm.db \
      --fingerprint <sha256> --github-issue <number>
    ```
 
-5. Fix the canonical SDK owner unless the finding is specifically in an
-   adapter. Add the smallest deterministic regression before relying on another
-   freeplay run.
-6. Generate a new run and adversarial review that explicitly exercises the
-   corrected behavior. Preserve the original run: replay proves determinism for
-   its recorded revision, so an old response hash may intentionally diverge
-   after a behavior fix.
-7. Comment on the GitHub issue with the regression path, fix commit, confirming
-   run/review evidence, and any remaining limits; then close it. GitHub remains
-   the only lifecycle status. A later recurrence links new evidence to the same
-   reopened issue.
+6. Fix the canonical SDK owner unless the defect is specifically in the MCP
+   adapter. Add the smallest deterministic regression at that owner.
+7. Generate a fresh player run and adversarial review for the corrected
+   behavior. Preserve the original evidence; replaying an old revision can
+   intentionally diverge after a behavior fix.
+8. Comment on the GitHub issue with the regression, fix commit, confirming
+   run/review, and remaining limits, then close it. A recurrence links new
+   evidence to the same reopened issue.
 
-SQLite's `githubIssueNumber` is only a stable external reference. It does not
-copy GitHub state. Generated databases and transcripts are gitignored, so a
-long-lived swarm must publish or retain the database outside an ephemeral
-worktree; confirmed fixes belong in committed regression tests even if raw run
-artifacts are later pruned.
+SQLite stores only `githubIssueNumber`, not GitHub lifecycle state. Generated
+evidence must be retained outside an ephemeral worktree for a long-lived swarm;
+confirmed fixes live in committed regression tests.
 
-### Finding navigation and filtering
+### Navigate findings in both directions
 
-The `raw-swarm` label is the canonical GitHub collection marker. It makes the
-collection visible in the issue list and available through the GitHub API; the
-fingerprint lines provide exact reverse lookup from a local observation. The
-issue form at [`.github/ISSUE_TEMPLATE/raw-swarm.yml`](../../.github/ISSUE_TEMPLATE/raw-swarm.yml)
-enforces the human-facing evidence headings and applies that label.
+The `raw-swarm` label is the canonical visual and API collection marker. Exact
+fingerprint lines provide reverse lookup from SQLite.
 
 ```sh
-# visual GitHub view
+# visual and programmatic collection views
 gh issue list --label raw-swarm --state all --web
-
-# programmatic GitHub view
 gh issue list --label raw-swarm --state all \
   --json number,title,state,url,labels
 
-# reverse lookup: SQLite fingerprint -> GitHub issue
+# SQLite fingerprint -> GitHub issue
 gh issue list --state all \
   --search '"Raw-Swarm-Fingerprint: <sha256>" in:body' \
   --json number,title,state,url
 
-# forward lookup: SQLite issue number -> GitHub
+# SQLite issue number -> GitHub issue
 gh issue view <number> --web
 gh issue view <number> --json number,title,state,url,labels,body
 ```
 
-`link-github-issue` idempotently appends the exact fingerprint backlink and
-applies the `raw-swarm` label through `gh`. It verifies both GitHub facts before
-writing the issue number to SQLite, then prints a visual-open command. A failed
-GitHub update therefore remains `--unlinked` locally and can be retried safely.
-Multiple wording fingerprints may point to one semantic GitHub issue; the
-command puts every one in that issue body so either store can recover the
-relationship independently. A fingerprint cannot be silently moved to another
-issue because that would leave an ambiguous reverse backlink; the command
-rejects such a relink before touching GitHub. A per-database workflow lock
-serializes the GitHub operation across local workers; SQLite write transactions
-remain short and never span a network call.
-
-### `run-raw-review.sh` — adversarial RAW review
-
-Runs a committed falsifier prompt under a pinned Codex model and validates its
-final response against a temporary JSON Schema generated from the same Effect
-codec used by report ingestion. Import the result as one atomic review round:
-
-```sh
-mise exec -- scripts/raw-swarm/run-raw-review.sh \
-  scripts/raw-swarm/reviews/freeplay-001.prompt.txt \
-  scripts/raw-swarm/out/freeplay-001-review.json \
-  scripts/raw-swarm/out/freeplay-001-review-agent.log
-
-mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts review \
-  scripts/raw-swarm/out/freeplay-001-review.json \
-  --run 2 --db scripts/raw-swarm/out/raw-swarm.db
-```
-
-The runner defaults to Codex's `read-only` sandbox. On hosts that disable the
-user namespaces required by bubblewrap, use
-`RAW_REVIEW_SANDBOX=danger-full-access`; the committed falsifier prompts remain
-read-only and forbid browsing or workspace changes, while the generated agent
-log records the effective sandbox mode.
-
-`reviews/probe-001.prompt.txt` provides the same adversarial lane for the
-scripted probe. Review JSON and agent logs are generated evidence under `out/`.
-
-### `probes/probe-001-goblin-scimitar-vs-skeleton.json`
-
-Goblin Warrior (initiative 15) vs Skeleton (initiative 10). Expectations are
-derived from SRD 5.2.1 stat blocks, not from observing the engine: Skeleton
-HP 13 (`Monsters-P-S.md#skeleton`), Scimitar 1d6+2 slashing
-(`Monsters-E-G.md#goblin-warrior`), one action per turn
-(`Rules-Glossary.md#action`). A FAIL here is an engine-vs-SRD finding, not a
-harness bug.
+`link-github-issue` appends and verifies the exact fingerprint backlink and
+`raw-swarm` label before writing the issue number to SQLite. Failed updates stay
+unlinked and can be retried. Multiple fingerprints may point to one semantic
+issue; ambiguous relinking is rejected. A per-database workflow lock serializes
+local link workers while keeping SQLite transactions short.
 
 ## Files
 
-- Shared evidence infrastructure: `transcript.ts`, `report.ts`,
-  `mcp-recording-shim.mjs`, `replay-freeplay.ts`, and `run-raw-review.sh`.
-- Player-agent inputs: `freeplay/`; adversarial reviewer inputs: `reviews/`.
-- Transitional scripted-only slice: `scenario.ts`, `driver.ts`, `replay.ts`,
-  `scenario.test.ts`, `driver.test.ts`, `probes/`, and the probe-001 review
-  prompt. Do not expand this group.
-- `out/` — generated transcripts and databases (gitignored).
+- Player inputs: `freeplay/` and `run-freeplay.ts`.
+- Reviewer inputs: `reviews/` and `run-raw-review.sh`.
+- Evidence: `mcp-recording-shim.ts`, `transcript.ts`,
+  `replay-freeplay.ts`, and `report.ts`.
+- Agent-facing SDK interaction: `battle-slice-server.ts` and
+  `battle-slice-tools.ts`.
+- Generated evidence: `out/` (gitignored).

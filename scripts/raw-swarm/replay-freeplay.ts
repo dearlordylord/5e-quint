@@ -7,9 +7,8 @@ import {
 } from "../../packages/mcp/src/server.ts";
 
 import {
-  isMcpTranscriptStep,
-  isTranscriptHeader,
-  mcpToolExchanges,
+  currentGitRevision,
+  parsePlayerTranscript,
   repoRoot,
   sha256Canonical,
 } from "./transcript.ts";
@@ -27,18 +26,20 @@ function main(): void {
     .split("\n")
     .filter((line) => line.trim().length > 0)
     .map((line): unknown => JSON.parse(line));
-  const [header, ...steps] = records;
-  if (!isTranscriptHeader(header) || header.kind !== "freeplay") {
-    fail("Freeplay replay requires a valid freeplay transcript header");
-  }
-  if (!steps.every(isMcpTranscriptStep)) {
-    fail("Freeplay transcript contains an invalid MCP record");
-  }
-  const parsed = mcpToolExchanges(steps);
+  const parsed = parsePlayerTranscript(records);
   if (parsed.tag === "invalid") fail(parsed.message);
+  const revision = currentGitRevision();
+  if (revision.tag === "dirty") {
+    fail("Player replay requires a clean Git worktree");
+  }
+  if (parsed.value.header.gitSha !== revision.sha) {
+    fail(
+      `Replay requires recorded revision ${parsed.value.header.gitSha}; current checkout is ${revision.sha}`,
+    );
+  }
 
   const root = createMcpCompositionRoot();
-  for (const exchange of parsed.exchanges) {
+  for (const exchange of parsed.value.exchanges) {
     const actual = handleToolCall(root, exchange.tool, exchange.args);
     const actualSha = sha256Canonical(actual);
     if (actualSha !== exchange.responseSha256) {
@@ -48,7 +49,7 @@ function main(): void {
     }
   }
   console.log(
-    `Freeplay replay deterministic: ${parsed.exchanges.length} tool call(s) matched recorded responses.`,
+    `Player replay deterministic: ${parsed.value.exchanges.length} tool call(s) matched recorded responses.`,
   );
 }
 

@@ -1,16 +1,32 @@
 import fc from "fast-check";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import {
   canonicalJson,
+  currentGitRevision,
   isMcpTranscriptStep,
   mcpToolExchanges,
-  parseScriptedTranscript,
+  parsePlayerTranscript,
   sha256Canonical,
   type McpTranscriptStep,
 } from "./transcript.ts";
 
 describe("RAW swarm transcript canonicalization", () => {
+  test("reads a SHA only for a clean worktree", () => {
+    const cleanRead = vi.fn((args: readonly string[]) =>
+      args[0] === "status" ? "" : "a".repeat(40),
+    );
+    expect(currentGitRevision({ read: cleanRead })).toEqual({
+      tag: "clean",
+      sha: "a".repeat(40),
+    });
+    expect(cleanRead).toHaveBeenCalledTimes(2);
+
+    const dirtyRead = vi.fn(() => " M changed.ts");
+    expect(currentGitRevision({ read: dirtyRead })).toEqual({ tag: "dirty" });
+    expect(dirtyRead).toHaveBeenCalledTimes(1);
+  });
+
   test("round-trips JSON values and is idempotent", () => {
     fc.assert(
       fc.property(fc.jsonValue(), (value) => {
@@ -88,6 +104,40 @@ describe("RAW swarm transcript canonicalization", () => {
     });
   });
 
+  test("keeps numeric and string JSON-RPC ids distinct", () => {
+    const call = (seq: number, id: number | string, name: string) => ({
+      seq,
+      direction: "client->server" as const,
+      message: {
+        id,
+        method: "tools/call",
+        params: { name, arguments: {} },
+      },
+    });
+    const parsed = mcpToolExchanges([
+      call(1, 1, "numeric"),
+      call(2, "1", "string"),
+      {
+        seq: 3,
+        direction: "server->client",
+        message: { id: "1", result: "string response" },
+      },
+      {
+        seq: 4,
+        direction: "server->client",
+        message: { id: 1, result: "numeric response" },
+      },
+    ]);
+
+    expect(parsed).toMatchObject({
+      tag: "valid",
+      exchanges: [
+        { tool: "string", response: "string response" },
+        { tool: "numeric", response: "numeric response" },
+      ],
+    });
+  });
+
   test("rejects records that claim both parsed and unparsed payloads", () => {
     expect(
       isMcpTranscriptStep({
@@ -100,36 +150,79 @@ describe("RAW swarm transcript canonicalization", () => {
     ).toBe(false);
   });
 
-  test("requires a first scripted header and strictly increasing sequence", () => {
-    const response = { tag: "resolved" };
-    const step = {
+  test("requires a first player header and strictly increasing MCP records", () => {
+    const call = {
       seq: 1,
-      tool: "example",
-      args: {},
-      response,
-      responseSha256: sha256Canonical(response),
+      direction: "client->server" as const,
+      message: {
+        id: 1,
+        method: "tools/call",
+        params: { name: "example", arguments: {} },
+      },
     };
     const header = {
       type: "header",
       scenarioId: "probe",
-      kind: "scripted-probe",
-      rawCitations: [],
-      gitSha: "0123456789abcdef",
+      gitSha: "0".repeat(40),
       startedAt: "2026-08-11T00:00:00.000Z",
     };
 
-    expect(parseScriptedTranscript([step])).toMatchObject({ tag: "invalid" });
+    expect(parsePlayerTranscript([call])).toMatchObject({ tag: "invalid" });
+    expect(parsePlayerTranscript([{ ...header, unexpected: true }])).toEqual({
+      tag: "invalid",
+      message: "Player transcript requires one first header",
+    });
     expect(
-      parseScriptedTranscript([header, step, { ...step, tool: "duplicate" }]),
-    ).toEqual({
+      parsePlayerTranscript([{ ...header, scenarioId: "" }]),
+    ).toMatchObject({ tag: "invalid" });
+    expect(
+      parsePlayerTranscript([{ ...header, gitSha: "not-a-sha" }]),
+    ).toMatchObject({ tag: "invalid" });
+    expect(
+      parsePlayerTranscript([{ ...header, startedAt: "not-a-time" }]),
+    ).toMatchObject({ tag: "invalid" });
+    expect(parsePlayerTranscript([header, call, { ...call, seq: 1 }])).toEqual({
       tag: "invalid",
       message: "Transcript seq 1 must be a positive integer greater than 1",
     });
-    expect(
-      parseScriptedTranscript([header, { ...step, seq: 2 }, step]),
-    ).toEqual({
+    expect(parsePlayerTranscript([header, { ...call, seq: 2 }, call])).toEqual({
       tag: "invalid",
       message: "Transcript seq 1 must be a positive integer greater than 2",
+    });
+  });
+
+  test("rejects contradictory and incomplete JSON-RPC responses", () => {
+    const call: McpTranscriptStep = {
+      seq: 1,
+      direction: "client->server",
+      message: {
+        id: 4,
+        method: "tools/call",
+        params: { name: "example", arguments: {} },
+      },
+    };
+    const response = (message: Readonly<Record<string, unknown>>) =>
+      mcpToolExchanges([
+        call,
+        { seq: 2, direction: "server->client", message: { id: 4, ...message } },
+      ]);
+
+    expect(
+      response({ result: {}, error: { code: -1, message: "bad" } }),
+    ).toEqual({
+      tag: "invalid",
+      message:
+        "JSON-RPC response at seq 2 requires exactly one of result or error",
+    });
+    expect(response({})).toEqual({
+      tag: "invalid",
+      message:
+        "JSON-RPC response at seq 2 requires exactly one of result or error",
+    });
+    expect(response({ error: { code: "bad", message: 7 } })).toEqual({
+      tag: "invalid",
+      message:
+        "JSON-RPC error at seq 2 requires integer code and string message",
     });
   });
 });
