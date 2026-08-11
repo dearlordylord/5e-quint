@@ -1,4 +1,3 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 // RAW trace:
 // - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting-Time:
 //   Reaction casting time uses a spell-defined trigger.
@@ -30,9 +29,14 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
 import { describe, expect, it } from "vitest";
-import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
+import {
+  battleProcedureExecutionRefForSpellHoleForTest,
+  requireCharacterSpellProcedureRefForTest,
+  resolveBattleSubject,
+  spellSlotInvocationRef,
+  startBattleSessionRight,
+} from "./battle-runtime.test-support.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -51,7 +55,6 @@ import {
   stateCheck,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleId,
   battleReducerStartRouteEvent,
@@ -63,13 +66,13 @@ import {
   resolveBattleInterrupt,
   snapshotBattle,
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
-  startBattle,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type BattleSubject,
   type CombatantId,
@@ -284,7 +287,7 @@ function initialRuntimeState(): ReactionCastingTimeRuntimeState {
       triggerCreatureSpellSlots: [{ spellLevel: 1, count: 1 }],
       reactorPreparedSpells: [srdSpellRecord(counterspellUnitId)],
       reactorSpellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
-    }),
+    }).state,
     triggerKind: "none",
     continuationKind: "none",
     lastResult: "init",
@@ -292,23 +295,28 @@ function initialRuntimeState(): ReactionCastingTimeRuntimeState {
 }
 
 function counterspellEndsSpellCast(): ReactionCastingTimeRuntimeState {
-  const state = reactionCastingTimeBattle({
+  const session = reactionCastingTimeBattle({
     triggerCreaturePreparedSpells: [srdSpellRecord(magicMissileUnitId)],
     triggerCreatureSpellSlots: [{ spellLevel: 1, count: 1 }],
     reactorPreparedSpells: [srdSpellRecord(counterspellUnitId)],
     reactorSpellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
   });
   const awaitingReaction = startMagicMissileWithCounterspell({
-    state,
+    session,
     slotLevel: magicMissileFirstSlotLevel,
     dartCount: firstLevelMagicMissileDartCount,
   });
   const choice = requireCounterspellChoice(awaitingReaction);
+  const save = requireHole(choice.initialHoles, "savingThrowOutcome");
   const resolved = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
       requireHole(awaitingReaction.holes, "interruptDecision"),
-      triggeredReactionSpellDecision(reactorId, choice, []),
+      triggeredReactionSpellDecision(reactorId, choice, [
+        savingThrowOutcomeFill(save, [
+          { targetId: triggerCreatureId, succeeded: false },
+        ]),
+      ]),
     ),
   });
   if (resolved.tag !== "resolved") {
@@ -323,7 +331,7 @@ function counterspellEndsSpellCast(): ReactionCastingTimeRuntimeState {
 }
 
 function counterspellAllowsSpellCastResume(): ReactionCastingTimeRuntimeState {
-  const state = reactionCastingTimeBattle({
+  const session = reactionCastingTimeBattle({
     triggerCreaturePreparedSpells: [srdSpellRecord(magicMissileUnitId)],
     triggerCreatureSpellSlots: [
       { spellLevel: magicMissileFourthSlotLevel, count: 1 },
@@ -332,7 +340,7 @@ function counterspellAllowsSpellCastResume(): ReactionCastingTimeRuntimeState {
     reactorSpellSlots: [{ spellLevel: counterspellSlotLevel, count: 1 }],
   });
   const awaitingReaction = startMagicMissileWithCounterspell({
-    state,
+    session,
     slotLevel: magicMissileFourthSlotLevel,
     dartCount: fourthLevelMagicMissileDartCount,
   });
@@ -372,7 +380,7 @@ function counterspellAllowsSpellCastResume(): ReactionCastingTimeRuntimeState {
 }
 
 function hellishRebukeAfterDamage(): ReactionCastingTimeRuntimeState {
-  const state = reactionCastingTimeBattle({
+  const session = reactionCastingTimeBattle({
     triggerCreaturePreparedSpells: [],
     triggerCreatureSpellSlots: [],
     reactorPreparedSpells: [srdSpellRecord(hellishRebukeUnitId)],
@@ -382,7 +390,7 @@ function hellishRebukeAfterDamage(): ReactionCastingTimeRuntimeState {
       { spellLevel: hellishRebukeSlotLevel, count: 1 },
     ],
   });
-  const awaitingReaction = resolveUnarmedStrikeAgainstReactor(state);
+  const awaitingReaction = resolveUnarmedStrikeAgainstReactor(session);
   if (awaitingReaction.tag !== "needsHoles") {
     throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
   }
@@ -413,7 +421,7 @@ function hellishRebukeAfterDamage(): ReactionCastingTimeRuntimeState {
 }
 
 function hellishRebukeAfterDamagePublicRoute(): readonly BattleReducerRouteEvent[] {
-  const state = reactionCastingTimeBattle({
+  const session = reactionCastingTimeBattle({
     triggerCreaturePreparedSpells: [],
     triggerCreatureSpellSlots: [],
     reactorPreparedSpells: [srdSpellRecord(hellishRebukeUnitId)],
@@ -423,7 +431,7 @@ function hellishRebukeAfterDamagePublicRoute(): readonly BattleReducerRouteEvent
       { spellLevel: hellishRebukeSlotLevel, count: 1 },
     ],
   });
-  const awaitingReaction = resolveUnarmedStrikeAgainstReactor(state);
+  const awaitingReaction = resolveUnarmedStrikeAgainstReactor(session);
   if (awaitingReaction.tag !== "needsHoles") {
     throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
   }
@@ -519,8 +527,8 @@ function reactionCastingTimeBattle(input: {
     | CharacterSpellcastingInit["sourceClassName"]
     | undefined;
   readonly reactorSpellSlots: CharacterSpellcastingInit["spellSlots"];
-}): BattleState {
-  const result = startBattle({
+}): BattleRuntimeSession {
+  return startBattleSessionRight({
     battleId: battleId("reaction-casting-time"),
     combatants: [
       reactionCastingTimeCreature({
@@ -547,10 +555,6 @@ function reactionCastingTimeBattle(input: {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
-  }
-  return result.right.state;
 }
 
 function characterSpellcasting(input: {
@@ -628,13 +632,13 @@ type StartedMagicMissile = NeedsHolesResult & {
 };
 
 function startMagicMissileWithCounterspell(input: {
-  readonly state: BattleState;
+  readonly session: BattleRuntimeSession;
   readonly slotLevel: number;
   readonly dartCount: number;
 }): StartedMagicMissile {
-  const subject = magicMissileSubject(input.state, input.slotLevel);
+  const subject = magicMissileSubject(input.session, input.slotLevel);
   const targetAllocationResult = resolveBattleSubject({
-    state: input.state,
+    state: input.session.state,
     subject,
     fills: [],
   });
@@ -650,14 +654,14 @@ function startMagicMissileWithCounterspell(input: {
     dartCount: input.dartCount,
   });
   const result = resolveBattleSubject({
-    state: input.state,
+    state: input.session.state,
     subject,
     fills: [
       targetAllocationFill,
       {
         kind: "targetSpatialFacts",
         holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
-        spatialFacts: [counterspellTriggerFact()],
+        spatialFacts: [counterspellTriggerFact(input.session)],
       },
     ],
   });
@@ -691,9 +695,9 @@ function finishMagicMissile(input: {
 }
 
 function resolveUnarmedStrikeAgainstReactor(
-  state: BattleState,
+  session: BattleRuntimeSession,
 ): ReturnType<typeof resolveBattleSubject> {
-  const attackAct = discoverBattleActCandidates(state).find(
+  const attackAct = discoverBattleActCandidates(session.state).find(
     (act) =>
       act.subject.tag === "action" &&
       act.subject.action === "attack" &&
@@ -723,15 +727,21 @@ function resolveUnarmedStrikeAgainstReactor(
         kind: "reactionSpellDamagerVisibleWithinRange" as const,
         reactorId,
         damageSourceId: triggerCreatureId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(hellishRebukeUnitId),
+        sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+          session,
+          reactorId,
+          spellSlotInvocationRef(
+            hellishRebukeUnitId,
+            hellishRebukeSlotLevel,
+            "saveGatedDamage",
+          ),
         ),
         rangeFeet: movementFeet(60),
       },
     ],
   };
   const awaitingAttackRoll = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: attackAct.subject,
     fills: [targetFill],
   });
@@ -740,7 +750,7 @@ function resolveUnarmedStrikeAgainstReactor(
   }
   const attackRoll = requireHole(awaitingAttackRoll.holes, "attackRoll");
   const result = resolveBattleSubject({
-    state,
+    state: session.state,
     subject: attackAct.subject,
     fills: [
       targetFill,
@@ -758,31 +768,23 @@ function resolveUnarmedStrikeAgainstReactor(
 }
 
 function magicMissileSubject(
-  state: BattleState,
+  session: BattleRuntimeSession,
   slotLevel: number,
 ): BattleSubject {
-  const actor = state.combatants.get(triggerCreatureId);
-  if (actor?.origin.kind !== "character") {
-    throw new Error("Expected Magic Missile character caster.");
-  }
-  const actorExecution = actor.origin.execution;
-  const act = discoverBattleActCandidates(state).find(
+  const procedureRef = requireCharacterSpellProcedureRefForTest(
+    session,
+    triggerCreatureId,
+    spellSlotInvocationRef(
+      magicMissileUnitId,
+      slotLevel,
+      "repeatedDamageAllocation",
+    ),
+  );
+  const act = discoverBattleActCandidates(session.state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === triggerCreatureId &&
-      (() => {
-        const binding = characterProcedureBinding(
-          actorExecution,
-          candidate.subject.procedureRef,
-        );
-        if (binding?.procedure.kind !== "spellInvocation") return false;
-        const execution = binding.procedure.execution;
-        if (execution.procedure !== "repeatedDamageAllocation") return false;
-        return (
-          execution.resource.tag === "spellSlot" &&
-          Number(execution.resource.slotLevel) === slotLevel
-        );
-      })(),
+      candidate.subject.procedureRef === procedureRef,
   );
   if (act === undefined) {
     throw new Error("Expected bound Magic Missile action spell.");
@@ -806,8 +808,8 @@ function magicMissileTargetAllocationFill(input: {
         kind: "spellTarget",
         casterId: triggerCreatureId,
         targetId: reactorId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(magicMissileUnitId),
+        sourceProcedureRef: battleProcedureExecutionRefForSpellHoleForTest(
+          input.hole,
         ),
       },
     ],
@@ -822,13 +824,21 @@ type CounterspellTriggerFact = Extract<
   { readonly kind: "counterspellTriggerCasterVisibleWithinRange" }
 >;
 
-function counterspellTriggerFact(): CounterspellTriggerFact {
+function counterspellTriggerFact(
+  session: BattleRuntimeSession,
+): CounterspellTriggerFact {
   return {
     kind: "counterspellTriggerCasterVisibleWithinRange",
     reactorId,
     casterId: triggerCreatureId,
-    sourceProcedureRef: battleProcedureExecutionRefForTest(
-      String(counterspellUnitId),
+    sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+      session,
+      reactorId,
+      spellSlotInvocationRef(
+        counterspellUnitId,
+        counterspellSlotLevel,
+        "counterspell",
+      ),
     ),
     rangeFeet: movementFeet(60),
   };

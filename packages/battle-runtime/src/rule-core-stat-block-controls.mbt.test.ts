@@ -1,6 +1,7 @@
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
   resolveBattleSubject,
+  startBattleRight,
   statBlockProcedurePresentationsForStateForTest,
 } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
@@ -31,7 +32,6 @@ import { describe, it } from "vitest";
 
 import { Hp, DieRollResult, movementFeet } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 import {
   battleId,
@@ -39,7 +39,6 @@ import {
   discoverBattleActCandidates,
   initiativeScore,
   snapshotBattle,
-  startBattle,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
@@ -304,16 +303,6 @@ function statBlockControlBattle(): BattleState {
       }),
     ],
   });
-}
-
-function startBattleRight(
-  input: Parameters<typeof startBattle>[0],
-): BattleState {
-  const result = startBattle(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
-  }
-  return result.right.state;
 }
 
 function statBlockCreature(input: {
