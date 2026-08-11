@@ -1,5 +1,6 @@
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   startBattleRight,
   startBattleSessionRight,
@@ -22,11 +23,15 @@ import {
   attackDamageDispositionHoleAfterDamage,
   attackDamageDispositionHoleAfterFills,
   attackDamageDispositionFill,
+  attackExecutionSelectionForSubjectForTest,
   battleProcedureExecutionRefForTest,
+  battleTablePositionId,
   characterSeed,
+  combatantId,
   concentrationSavingThrowFill,
   concentrationSavingThrowDc,
   heavyArmorClassState,
+  masterySapUnitRefs,
   testLongswordAttack,
   testUnarmedStrikeDamageAttack,
   testUnarmedStrikeDieAttack,
@@ -41,22 +46,60 @@ import {
   DieRollResult,
   discoverBattleActs,
   goblinTurnBattle,
+  longswordWeaponMasterySelections,
+  movementFeet,
   resolveBattleSubject,
   snapshotBattle,
+  tacticalMasterReplacementUnitRefs,
+  unitFeatureDecisionFill,
 } from "./battle-runtime.test-support.ts";
 import type {
   BattleState,
   BattleSubject,
 } from "./battle-runtime.test-support.ts";
 import type { AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
-import type { AttackDamageRider } from "./battle-state-execution.ts";
+import type {
+  AttackDamageRider,
+  BattleFill,
+  SpellAttackDamageComponent,
+} from "./battle-state-execution.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 import {
+  attackActionBonus,
+  attackActionOptionName,
+  attackActionVariantOptions,
+  attackDamage,
+  attackDamageModifier,
   attackDamageComponents,
   attackPotentialDamageTypes,
+  frenzyDamageTypeSelection,
+  passiveRangedAttackRollBonus,
   selectedAttackDamageRiders,
+  statBlockAttackTargetConstraint,
+  targetHasAdjacentNonIncapacitatedAlly,
+  unarmedStrikeAttackDamage,
+  unarmedStrikeDamageDiceExpr,
+  weaponAttackDamageExpression,
+  weaponAttackSupportsFinesseOrRanged,
   weaponDamageComponent,
 } from "./battle-reducer/statblock-attacks.ts";
+import {
+  applyWeaponMasterySapOnHit,
+  applyWeaponMasteryPushOnHit,
+  applyWeaponMasterySlowAfterDamage,
+  consumeOneShotAttackRollEffects,
+  consumeSelfAttackRollEffects,
+  recordHuntersPreyHordeBreakerUsed,
+  recordWeaponMasteryCleaveUsed,
+  tacticalMasterAttackWithReplacement,
+  tacticalMasterReplacementDecisionHole,
+} from "./battle-reducer/attack-roll.ts";
+import {
+  abilityCheckFill as resolutionAbilityCheckFill,
+  grappleFillSet,
+  shoveFillSet,
+  validateAttackDamageFill,
+} from "./battle-reducer/attack-resolution.ts";
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: attack rolls and damage", () => {
@@ -172,6 +215,512 @@ describe("battle runtime: attack rolls and damage", () => {
         [battleProcedureExecutionRefForTest("unknown-rider")],
       ),
     ).toBeNull();
+  });
+
+  test("attack-control projections keep weapon, Unarmed Strike, and Stat Block shapes distinct", () => {
+    const state = goblinTurnBattle();
+    const fighter = state.combatants.get(fighterId);
+    const goblin = state.combatants.get(goblinId);
+    if (
+      fighter?.origin.kind !== "character" ||
+      fighter.origin.attack === null ||
+      fighter.origin.unarmedStrike === null ||
+      goblin?.origin.kind !== "statBlock"
+    ) {
+      throw new Error("Expected character and Stat Block attack projections.");
+    }
+    const statBlockOptions = statBlockAttackActionOptions(
+      goblin.origin.execution,
+    );
+    const scimitar = statBlockOptions.find(
+      (option) =>
+        option.attack.attackType === "melee" &&
+        option.damageNotation === "rolled",
+    );
+    const shortbow = statBlockOptions.find(
+      (option) => option.attack.attackType === "ranged",
+    );
+    if (scimitar === undefined || shortbow === undefined) {
+      throw new Error("Expected Goblin melee and ranged attacks.");
+    }
+
+    expect(attackActionOptionName(fighter.origin.attack)).toBe(
+      "weapon_longsword",
+    );
+    expect(attackActionOptionName(fighter.origin.unarmedStrike)).toBe(
+      "Unarmed Strike",
+    );
+    expect(attackActionOptionName(scimitar)).toBe("Stat Block Attack");
+    expect(attackActionVariantOptions(fighter.origin.unarmedStrike)).toEqual([
+      fighter.origin.unarmedStrike,
+    ]);
+    expect(attackActionVariantOptions(scimitar)).toEqual([scimitar]);
+
+    expect(attackDamage(fighter.origin.attack)).toEqual({
+      kind: "dice",
+      dice: 1,
+      dieSize: 8,
+      damageType: "slashing",
+    });
+    expect(attackDamage(fighter.origin.unarmedStrike)).toEqual({
+      dice: 0,
+      dieSize: 1,
+      flat: 1,
+      damageType: "bludgeoning",
+    });
+    expect(attackDamage(scimitar)).toEqual({
+      dice: 1,
+      dieSize: 6,
+      flat: 2,
+      damageType: "slashing",
+    });
+    expect(attackDamageModifier(fighter.origin.attack)).toBe(3);
+    expect(attackDamageModifier(fighter.origin.unarmedStrike)).toBe(4);
+    expect(attackDamageModifier(scimitar)).toBe(0);
+    expect(Number(attackActionBonus(fighter.origin.attack))).toBe(3);
+    expect(Number(attackActionBonus(scimitar))).toBe(4);
+    expect(weaponAttackSupportsFinesseOrRanged(fighter.origin.attack)).toBe(
+      false,
+    );
+    expect(weaponAttackSupportsFinesseOrRanged(shortbow)).toBe(false);
+    expect(passiveRangedAttackRollBonus(undefined, shortbow)).toBe(0);
+
+    expect(statBlockAttackTargetConstraint(scimitar)).toEqual({
+      kind: "meleeReach",
+      reachFeet: movementFeet(5),
+    });
+    expect(statBlockAttackTargetConstraint(shortbow)).toEqual({
+      kind: "rangedRange",
+      normalFeet: movementFeet(80),
+      longFeet: movementFeet(320),
+    });
+    expect(unarmedStrikeAttackDamage(fighter.origin.unarmedStrike)).toEqual({
+      dice: 0,
+      dieSize: 1,
+      flat: 1,
+      damageType: "bludgeoning",
+    });
+    expect(
+      unarmedStrikeDamageDiceExpr(fighter.origin.unarmedStrike, false),
+    ).toBeNull();
+    expect(
+      unarmedStrikeDamageDiceExpr(fighter.origin.unarmedStrike, true),
+    ).toBeNull();
+
+    const subtractRider: SpellAttackDamageComponent = {
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "attack-control-subtract-rider",
+      ),
+      sourceCombatantId: goblinId,
+      damage: { expr: { dice: 1, dieSize: 4 }, damageType: "fire" },
+      operation: "subtract",
+    };
+    expect(
+      weaponAttackDamageExpression(
+        scimitar,
+        false,
+        { total: 14, naturalD20: DieRollResult(10) },
+        [],
+        [subtractRider],
+      ),
+    ).toBe("1d6+2-slashing-1d4-fire");
+  });
+
+  test("Frenzy and adjacent-ally projections distinguish automatic, selected, and blocked choices", () => {
+    expect(
+      frenzyDamageTypeSelection({
+        authoredDamageTypes: ["slashing"],
+        selectedDamageType: undefined,
+      }),
+    ).toEqual({ tag: "automatic", damageType: "slashing" });
+    expect(
+      frenzyDamageTypeSelection({
+        authoredDamageTypes: ["slashing"],
+        selectedDamageType: "slashing",
+      }),
+    ).toEqual({ tag: "invalid", reason: "selectionForAutomaticType" });
+    expect(
+      frenzyDamageTypeSelection({
+        authoredDamageTypes: ["slashing", "fire", "slashing"],
+        selectedDamageType: undefined,
+      }),
+    ).toEqual({ tag: "decisionRequired", choices: ["slashing", "fire"] });
+    expect(
+      frenzyDamageTypeSelection({
+        authoredDamageTypes: ["slashing", "fire"],
+        selectedDamageType: "fire",
+      }),
+    ).toEqual({ tag: "selected", damageType: "fire" });
+    expect(
+      frenzyDamageTypeSelection({
+        authoredDamageTypes: ["slashing", "fire"],
+        selectedDamageType: "cold",
+      }),
+    ).toEqual({ tag: "invalid", reason: "outsideOfferedTypes" });
+
+    const allyId = combatantId("attack-control-ally");
+    const stateWithAlly = startBattleRight({
+      battleId: battleId("attack-control-adjacent-ally"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: allyId,
+          displayName: "Adjacent Ally",
+          initiative: 15,
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const allyFact = {
+      kind: "attackerAllyWithin5FeetOfTarget" as const,
+      attackerId: fighterId,
+      targetId: goblinId,
+      allyId,
+    };
+    expect(
+      targetHasAdjacentNonIncapacitatedAlly(
+        stateWithAlly,
+        fighterId,
+        goblinId,
+        [allyFact],
+      ),
+    ).toBe(true);
+    expect(
+      targetHasAdjacentNonIncapacitatedAlly(
+        stateWithAlly,
+        fighterId,
+        goblinId,
+        [{ ...allyFact, attackerId: goblinId }],
+      ),
+    ).toBe(false);
+    expect(
+      targetHasAdjacentNonIncapacitatedAlly(
+        stateWithAlly,
+        fighterId,
+        goblinId,
+        [{ ...allyFact, allyId: fighterId }],
+      ),
+    ).toBe(false);
+    const incapacitatedState = startBattleRight({
+      battleId: battleId("attack-control-incapacitated-ally"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        characterSeed({
+          combatantId: allyId,
+          displayName: "Incapacitated Ally",
+          initiative: 15,
+          conditions: ["incapacitated"],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    expect(
+      targetHasAdjacentNonIncapacitatedAlly(
+        incapacitatedState,
+        fighterId,
+        goblinId,
+        [allyFact],
+      ),
+    ).toBe(false);
+  });
+
+  test("mastery replay helpers preserve identity and reject stale one-shot replays", () => {
+    const state = fighterVsGoblinBattle({
+      characterUnitRefs: tacticalMasterReplacementUnitRefs(),
+      weaponMasteries: longswordWeaponMasterySelections(),
+    });
+    const fighter = state.combatants.get(fighterId);
+    if (
+      fighter?.origin.kind !== "character" ||
+      fighter.origin.attack === null
+    ) {
+      throw new Error("Expected Tactical Master weapon attack.");
+    }
+    const subject = fighterAttackSubject(state);
+    const decisionHole = tacticalMasterReplacementDecisionHole(
+      state,
+      fighterId,
+      fighter.origin.attack,
+    );
+    if (decisionHole === null) {
+      throw new Error("Expected Tactical Master replacement decision.");
+    }
+    const pushDecision = unitFeatureDecisionFill(decisionHole, "push");
+    if (pushDecision.kind !== "unitFeatureDecision") {
+      throw new Error("Expected Tactical Master decision fill.");
+    }
+    const pushed = tacticalMasterAttackWithReplacement({
+      state,
+      attackerId: fighterId,
+      attack: fighter.origin.attack,
+      decision: pushDecision,
+    });
+    expect(pushed).toMatchObject({
+      tag: "ok",
+      attack: { kind: "weapon", weapon: { mastery: "push" } },
+    });
+    const declineDecision = unitFeatureDecisionFill(decisionHole, "decline");
+    if (declineDecision.kind !== "unitFeatureDecision") {
+      throw new Error("Expected Tactical Master decline decision fill.");
+    }
+    expect(
+      tacticalMasterAttackWithReplacement({
+        state,
+        attackerId: fighterId,
+        attack: fighter.origin.attack,
+        decision: declineDecision,
+      }),
+    ).toMatchObject({
+      tag: "ok",
+      attack: { kind: "weapon", weapon: { mastery: "sap" } },
+    });
+
+    const unsupportedState = fighterVsGoblinBattle({
+      weaponMasteries: longswordWeaponMasterySelections(),
+    });
+    const unsupportedFighter = unsupportedState.combatants.get(fighterId);
+    if (
+      unsupportedFighter?.origin.kind !== "character" ||
+      unsupportedFighter.origin.attack === null
+    ) {
+      throw new Error("Expected unsupported Tactical Master weapon attack.");
+    }
+    expect(
+      tacticalMasterAttackWithReplacement({
+        state: unsupportedState,
+        attackerId: fighterId,
+        attack: unsupportedFighter.origin.attack,
+        decision: pushDecision,
+      }),
+    ).toEqual({
+      tag: "invalid",
+      message:
+        "Tactical Master replacement is only valid for an eligible weapon mastery attack.",
+    });
+
+    const pushedAttack =
+      pushed.tag === "ok" ? pushed.attack : fighter.origin.attack;
+    const pushWithMissingTarget = applyWeaponMasteryPushOnHit({
+      state,
+      attackerId: fighterId,
+      targetId: combatantId("missing-push-target"),
+      attack: pushedAttack,
+      targetSpatialFacts: [],
+    });
+    expect(pushWithMissingTarget).toMatchObject({
+      tag: "ok",
+      shovePushes: [],
+    });
+    expect(
+      applyWeaponMasteryPushOnHit({
+        state,
+        attackerId: fighterId,
+        targetId: goblinId,
+        attack: pushedAttack,
+        targetSpatialFacts: [],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      message:
+        "Weapon Mastery Push requires caller-supplied straight-away push disposition.",
+    });
+    const pushDispositionFact = {
+      kind: "weaponMasteryPushDisposition" as const,
+      attackerId: fighterId,
+      targetId: goblinId,
+      ...attackExecutionSelectionForSubjectForTest(subject),
+      disposition: {
+        kind: "pushed" as const,
+        distanceFeet: movementFeet(10),
+        destinationId: battleTablePositionId("attack-control-push-destination"),
+        provokesOpportunityAttacks: false as const,
+      },
+    };
+    const validPush = applyWeaponMasteryPushOnHit({
+      state,
+      attackerId: fighterId,
+      targetId: goblinId,
+      attack: pushedAttack,
+      targetSpatialFacts: [pushDispositionFact],
+    });
+    expect(validPush).toMatchObject({
+      tag: "ok",
+      shovePushes: [
+        { targetId: goblinId, disposition: pushDispositionFact.disposition },
+      ],
+    });
+
+    const slowDecision = unitFeatureDecisionFill(decisionHole, "slow");
+    if (slowDecision.kind !== "unitFeatureDecision") {
+      throw new Error("Expected Tactical Master Slow decision fill.");
+    }
+    const slowedAttackResult = tacticalMasterAttackWithReplacement({
+      state,
+      attackerId: fighterId,
+      attack: fighter.origin.attack,
+      decision: slowDecision,
+    });
+    if (slowedAttackResult.tag !== "ok") {
+      throw new Error("Expected Tactical Master Slow replacement.");
+    }
+    const slowedOnce = applyWeaponMasterySlowAfterDamage({
+      state,
+      attackerId: fighterId,
+      targetId: goblinId,
+      attack: slowedAttackResult.attack,
+      damageAmount: 4,
+    });
+    const slowedTwice = applyWeaponMasterySlowAfterDamage({
+      state: slowedOnce,
+      attackerId: fighterId,
+      targetId: goblinId,
+      attack: slowedAttackResult.attack,
+      damageAmount: 4,
+    });
+    expect(slowedTwice.combatants.get(goblinId)?.activeEffects).toHaveLength(1);
+    expect(
+      applyWeaponMasterySlowAfterDamage({
+        state: slowedTwice,
+        attackerId: fighterId,
+        targetId: goblinId,
+        attack: slowedAttackResult.attack,
+        damageAmount: 0,
+      }),
+    ).toBe(slowedTwice);
+
+    const sapState = fighterVsGoblinBattle({
+      characterUnitRefs: masterySapUnitRefs(),
+      weaponMasteries: longswordWeaponMasterySelections(),
+    });
+    const sapFighter = sapState.combatants.get(fighterId);
+    if (
+      sapFighter?.origin.kind !== "character" ||
+      sapFighter.origin.attack === null
+    ) {
+      throw new Error("Expected Sap weapon attack.");
+    }
+    const sapOnce = applyWeaponMasterySapOnHit(
+      sapState,
+      fighterId,
+      goblinId,
+      sapFighter.origin.attack,
+    );
+    const sapTwice = applyWeaponMasterySapOnHit(
+      sapOnce,
+      fighterId,
+      goblinId,
+      sapFighter.origin.attack,
+    );
+    expect(sapTwice.combatants.get(goblinId)?.activeEffects).toHaveLength(1);
+
+    expect(
+      consumeSelfAttackRollEffects(state, combatantId("missing-attacker")),
+    ).toBe(state);
+    expect(
+      consumeOneShotAttackRollEffects(
+        state,
+        fighterId,
+        combatantId("missing-target"),
+      ),
+    ).toBe(state);
+
+    const usageRef = battleProcedureExecutionRefForTest("attack-control-usage");
+    const hordeUsed = recordHuntersPreyHordeBreakerUsed(
+      state,
+      fighterId,
+      usageRef,
+    );
+    expect(
+      recordHuntersPreyHordeBreakerUsed(hordeUsed, fighterId, usageRef),
+    ).toBe(hordeUsed);
+    const cleaveUsed = recordWeaponMasteryCleaveUsed(state, fighterId);
+    expect(recordWeaponMasteryCleaveUsed(cleaveUsed, fighterId)).toBe(
+      cleaveUsed,
+    );
+  });
+
+  test("attack replay parsers reject cross-family, duplicate, and critical-hole fills", () => {
+    const state = fighterVsGoblinBattle();
+    const subject = fighterAttackSubject(state);
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+    const attackFill = attackRollFill(rollHole, {
+      total: 15,
+      naturalD20: 10,
+    });
+    const targetOnly = {
+      kind: "targetChoice" as const,
+      holeId: holeId("attack-control-target-only"),
+      value: goblinId,
+    } satisfies BattleFill;
+    const abilityOnly = {
+      kind: "abilityCheck" as const,
+      holeId: holeId("attack-control-ability"),
+      value: { total: 12 },
+    } satisfies BattleFill;
+
+    expect(
+      resolutionAbilityCheckFill(
+        [attackFill],
+        holeId("attack-control-ability-hole"),
+        "Athletics",
+      ),
+    ).toEqual({
+      tag: "invalid",
+      message: "Fill attackRoll does not match the Athletics replay holes.",
+    });
+    expect(
+      resolutionAbilityCheckFill(
+        [abilityOnly, abilityOnly],
+        abilityOnly.holeId,
+        "Athletics",
+      ),
+    ).toEqual({ tag: "invalid", message: "Athletics check was filled twice." });
+    expect(grappleFillSet([attackFill])).toEqual({
+      tag: "invalid",
+      message: "Fill attackRoll does not match the Grapple replay holes.",
+    });
+    expect(grappleFillSet([targetOnly, targetOnly])).toEqual({
+      tag: "invalid",
+      message: "Grapple target was filled twice.",
+    });
+    expect(shoveFillSet([attackFill])).toEqual({
+      tag: "invalid",
+      message: "Fill attackRoll does not match the Shove replay holes.",
+    });
+    expect(shoveFillSet([targetOnly, targetOnly])).toEqual({
+      tag: "invalid",
+      message: "Shove target was filled twice.",
+    });
+
+    const fighter = state.combatants.get(fighterId);
+    if (
+      fighter?.origin.kind !== "character" ||
+      fighter.origin.attack === null
+    ) {
+      throw new Error("Expected fighter weapon attack.");
+    }
+    const normalDamageHole = attackDamageHoleAfterHit(
+      state,
+      targetHole,
+      rollHole,
+      { total: 15, naturalD20: 10 },
+      subject,
+      goblinId,
+    );
+    const normalDamageFill = damageRollFill(normalDamageHole, 4);
+    if (normalDamageFill.kind !== "rolledDice") {
+      throw new Error("Expected rolled weapon damage fill.");
+    }
+    expect(
+      validateAttackDamageFill(
+        normalDamageFill,
+        fighter.origin.attack,
+        true,
+        { total: 20, naturalD20: DieRollResult(20) },
+        [],
+      ),
+    ).toBe("Critical hit damage must use the critical damage hole.");
   });
 
   test("attack miss spends the action without asking for weapon damage", () => {
