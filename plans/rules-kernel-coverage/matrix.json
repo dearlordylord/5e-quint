@@ -1674,6 +1674,7 @@
       "profiles": ["spell.invocation-object-light"],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt",
         "packages/battle-runtime/battle-runtime-end-of-turn-light-expiration.qnt"
       ],
       "runtime": "battle",
@@ -8155,6 +8156,7 @@
         "BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE",
         "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
         "BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE",
+        "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
@@ -14112,6 +14114,7 @@
       "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt",
         "packages/battle-runtime/battle-runtime-end-of-turn-light-expiration.qnt"
       ],
       "status": "generation-subset-clean"

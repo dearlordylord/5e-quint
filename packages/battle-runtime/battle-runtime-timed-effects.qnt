@@ -1,5 +1,5 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle unit-feature.weapon-mastery-sap
 
@@ -7,11 +7,41 @@ module battleRuntimeTimedEffects {
   import battleRuntimeSpellLifecycleBridge.* from "./battle-runtime-spell-lifecycle-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeEndOfTurnRiderExpiration.* from "./battle-runtime-end-of-turn-rider-expiration"
   import battleRuntimeEndOfTurnLightExpiration.* from "./battle-runtime-end-of-turn-light-expiration"
+
+  pure def tickDurationLightEmitters(emitters: Set[LightEmitter]): Set[LightEmitter] =
+    emitters
+      .map(emitter => match emitter {
+        | SpellLightEmitter(data) => match data.expiresAt {
+          | DurationLightEmitterExpiration(expiresAt) =>
+            if (expiresAt.durationTicks > 0)
+              SpellLightEmitter({
+                ...data,
+                expiresAt: DurationLightEmitterExpiration({
+                  durationTicks: battleRuntimeTimedSpellEffectDurationAfterRoundTick(expiresAt.durationTicks),
+                }),
+              })
+            else
+              emitter
+          | EndOfTurnLightEmitterExpiration(_) => emitter
+          | ConcentrationLightEmitterExpiration(_) => emitter
+          | UntilDispelledLightEmitterExpiration => emitter
+        }
+        | ObjectInvisibleRevealLightEmitter(_) => emitter
+      })
+      .filter(emitter => match emitter {
+        | SpellLightEmitter(data) => match data.expiresAt {
+          | DurationLightEmitterExpiration(expiresAt) =>
+            battleRuntimeTimedSpellEffectRemainsActive(expiresAt.durationTicks)
+          | EndOfTurnLightEmitterExpiration(_) => true
+          | ConcentrationLightEmitterExpiration(_) => true
+          | UntilDispelledLightEmitterExpiration => true
+        }
+        | ObjectInvisibleRevealLightEmitter(_) => true
+      })
 
   pure def activeEffectsContainTimedLevitatedCreatureFrom(effects: Set[ActiveEffect], source: Actor): bool =
     effects.exists(effect => match effect {
