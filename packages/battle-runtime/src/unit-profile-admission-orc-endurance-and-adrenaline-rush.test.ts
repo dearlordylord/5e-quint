@@ -567,7 +567,7 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
   });
 
   test("Adrenaline Rush is unavailable without uses", () => {
-    const session = adrenalineRushBattle({ usesRemaining: 0 });
+    const session = adrenalineRushBattle({ resource: { usesRemaining: 0 } });
     expect(
       discoverBattleActs(session).some(
         (act) =>
@@ -590,6 +590,49 @@ describe("QMBT53 deterministic Adrenaline Rush admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
+    });
+  });
+
+  test("Adrenaline Rush rejects replay when its procedure has no resource binding", () => {
+    const session = adrenalineRushBattle({ resource: null });
+    const procedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      spellCasterId,
+      orcAdrenalineRushUnitId,
+    );
+
+    expect(
+      discoverBattleActs(session).some(
+        (act) =>
+          act.subject.tag === "bonusActionStandardAction" &&
+          act.subject.procedureRef === procedureRef,
+      ),
+    ).toBe(false);
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: adrenalineRushDashSubject(procedureRef),
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Bonus Action Dash Temporary Hit Points is no longer available.",
+    });
+
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: {
+          ...adrenalineRushDashSubject(procedureRef),
+          speedKind: "fly",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message: "Dash speed kind is not represented for this combatant.",
     });
   });
 

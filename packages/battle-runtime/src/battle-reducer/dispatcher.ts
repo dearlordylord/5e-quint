@@ -28,6 +28,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
+import { Match } from "effect";
+
 import { currentInterruptFrame, snapshotBattle } from "./battle-snapshot.ts";
 export {
   attackDamageContinuationConcentrationFrame,
@@ -70,6 +72,7 @@ import { currentActorId } from "./creature-state-leaves.ts";
 import { resolveCreatureAttack } from "./creature-attack-procedures.ts";
 import {
   battleSubjectActorId,
+  combatantCanTakeActions,
   isLegendaryAttackSubject,
   normalizeEarlyEndedOngoingFeatures,
   statBlockLegendaryActionWindowIsOpen,
@@ -124,6 +127,7 @@ import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles
 import {
   currentActorHasOpenStatBlockMultiattackDispatch,
   subjectAllowedDuringStatBlockMultiattackDispatch,
+  isStatBlockBattleCreatureState,
 } from "./battle-discovery.ts";
 import {
   resolveBonusActionDashSpellAct,
@@ -134,7 +138,8 @@ import { resolveReleaseSpellCreatedHeldObjectCommand } from "./spells-resolve-re
 import { resolveDragonsBreathExhaleCommand } from "./dragons-breath.ts";
 import type { BattleAttackRouteResolvers } from "./attack-resolvers.ts";
 import {
-  resolveBonusActionStandardAction,
+  resolveBonusActionDash,
+  resolveBonusActionDisengage,
   resolveDash,
   resolveDisengage,
   resolveDodge,
@@ -152,6 +157,11 @@ import {
   resolveShove,
   resolveStatBlockBonusActionOption,
 } from "./attack-resolution.ts";
+import {
+  statBlockBonusActionOptionBindings,
+  statBlockMultiattackBindings,
+  statBlockProcedureResourcesAvailable,
+} from "../stat-block-execution-state.ts";
 import {
   resolveMartialArtsBonusUnarmedStrike,
   resolveOffHandAttack,
@@ -187,11 +197,13 @@ import { resolveMonkFocusOption } from "./monk-focus.ts";
 import { resolveOpportunityAttackCommand } from "./opportunity-attacks.ts";
 import type {
   AdmittedBattleResolutionInput,
+  AdmittedBonusActionStandardActionBattleResolutionInput,
   BattleInterruptRouteOptions,
   BattleFill,
   BattleResolutionResult,
   BattleState,
 } from "../battle-state-execution.ts";
+import { bonusActionDashTemporaryHitPointsProfilesForActor } from "./hole-helpers.ts";
 import { admitBattleResolutionInput } from "./resolution-admission.ts";
 import { battleSubjectActionEligibilityIssue } from "./action-eligibility.ts";
 
@@ -463,11 +475,8 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     return invalidResult(input.state, "staleSubject", actionEligibilityIssue);
   }
   const result = (() => {
-    if (input.admissionKind === "unitFeature") {
-      return resolveUnitFeature(input);
-    }
-    if (input.admissionKind === "druidWildShape") {
-      return resolveDruidWildShapeUnitFeature(input);
+    if (input.admissionKind !== "general") {
+      return resolveSpecializedAdmission(input);
     }
     const subject = input.subject;
     if (
@@ -500,7 +509,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         return resolveHide({ ...input, subject: actionHideSubject(subject) });
       }
       if (subject.action === "multiattack") {
-        return resolveMultiattack({ ...input, subject });
+        return resolveMultiattackSubject(input, subject);
       }
       if (subject.action === "ready") {
         return resolveReady({ ...input, subject });
@@ -559,9 +568,6 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         ...interruptRouteOptions,
       });
     }
-    if (subject.tag === "bonusActionStandardAction") {
-      return resolveBonusActionStandardAction({ ...input, subject });
-    }
     if (subject.tag === "monkFocusOption") {
       return resolveMonkFocusOption({ ...input, subject });
     }
@@ -576,7 +582,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       subject.tag === "bonusAction" &&
       subject.action === "statBlockActionOption"
     ) {
-      return resolveStatBlockBonusActionOption({ ...input, subject });
+      return resolveStatBlockBonusActionOptionSubject(input, subject);
     }
     if (subject.tag === "companionLifecycle") {
       return resolveCompanionLifecycleSubject({ ...input, subject });
@@ -781,6 +787,234 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     /* v8 ignore stop */
   })();
   return consumeOrCloseLegendaryActionWindow(input.subject, result);
+}
+
+function resolveSpecializedAdmission(
+  input: Exclude<
+    AdmittedBattleResolutionInput,
+    { readonly admissionKind: "general" }
+  >,
+): BattleResolutionResult {
+  return Match.value(input).pipe(
+    Match.when({ admissionKind: "unitFeature" }, resolveUnitFeature),
+    Match.when(
+      { admissionKind: "druidWildShape" },
+      resolveDruidWildShapeUnitFeature,
+    ),
+    Match.when(
+      { admissionKind: "bonusActionStandardAction" },
+      resolveBonusActionStandardActionSubject,
+    ),
+    Match.when(
+      { admissionKind: "bonusActionStandardActionRejection" },
+      (rejectionInput) =>
+        invalidResult(
+          rejectionInput.state,
+          rejectionInput.bonusActionStandardActionRejection.reason,
+          rejectionInput.bonusActionStandardActionRejection.message,
+        ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function resolveBonusActionStandardActionSubject(
+  input: AdmittedBonusActionStandardActionBattleResolutionInput,
+): BattleResolutionResult {
+  return Match.value(input).pipe(
+    Match.when(
+      {
+        bonusActionStandardActionAdmission: {
+          procedure: { kind: "expeditiousRetreatDash" },
+        },
+      },
+      (dashInput) =>
+        resolveBonusActionDash({
+          ...dashInput,
+          actor: dashInput.bonusActionStandardActionAdmission.actor,
+          dashTemporaryHitPoints: { kind: "notGranted" },
+        }),
+    ),
+    Match.when(
+      {
+        bonusActionStandardActionAdmission: {
+          procedure: { kind: "dashTemporaryHitPoints" },
+        },
+      },
+      (dashInput) => {
+        const actor = dashInput.bonusActionStandardActionAdmission.actor;
+        const resource = bonusActionDashTemporaryHitPointsProfilesForActor(
+          actor,
+        ).find(
+          (entry) => entry.procedureRef === dashInput.subject.procedureRef,
+        )?.resource;
+        return resolveBonusActionDash({
+          ...dashInput,
+          actor,
+          dashTemporaryHitPoints:
+            resource === undefined
+              ? { kind: "unavailable" }
+              : { kind: "available", resource },
+        });
+      },
+    ),
+    Match.when(
+      {
+        bonusActionStandardActionAdmission: {
+          procedure: { kind: "supportedAlternateActionCost" },
+        },
+      },
+      (alternateActionInput) =>
+        resolveSupportedAlternateActionCost(alternateActionInput),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function resolveSupportedAlternateActionCost(
+  input: Extract<
+    AdmittedBonusActionStandardActionBattleResolutionInput,
+    {
+      readonly bonusActionStandardActionAdmission: {
+        readonly procedure: {
+          readonly kind: "supportedAlternateActionCost";
+        };
+      };
+    }
+  >,
+): BattleResolutionResult {
+  const actor = input.bonusActionStandardActionAdmission.actor;
+  const subject = input.subject;
+  return Match.value(subject).pipe(
+    Match.when({ action: "dash" }, (dashSubject) =>
+      resolveBonusActionDash({
+        ...input,
+        subject: dashSubject,
+        actor,
+        dashTemporaryHitPoints: { kind: "notGranted" },
+      }),
+    ),
+    Match.when({ action: "disengage" }, (disengageSubject) =>
+      resolveBonusActionDisengage({
+        ...input,
+        subject: disengageSubject,
+        actor,
+      }),
+    ),
+    Match.when({ action: "hide" }, (hideSubject) =>
+      resolveHide({ ...input, subject: hideSubject, actor }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function resolveMultiattackSubject(
+  input: Extract<
+    AdmittedBattleResolutionInput,
+    { readonly admissionKind: "general" }
+  >,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "multiattack" }
+  >,
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Multiattack accepts no fills.",
+    );
+  }
+  const actor = input.state.combatants.get(subject.actorId);
+  if (
+    !isStatBlockBattleCreatureState(actor) ||
+    !combatantCanTakeActions(actor)
+  ) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Multiattack requires an admitted Stat Block Multiattack.",
+    );
+  }
+  const multiattackBinding = statBlockMultiattackBindings(
+    actor.origin.execution,
+  ).find((binding) => binding.procedureRef === subject.procedureRef);
+  if (multiattackBinding === undefined) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Multiattack requires an admitted Stat Block Multiattack.",
+    );
+  }
+  return resolveMultiattack({
+    ...input,
+    subject,
+    fills: [],
+    actor,
+    multiattackBinding,
+  });
+}
+
+function resolveStatBlockBonusActionOptionSubject(
+  input: Extract<
+    AdmittedBattleResolutionInput,
+    { readonly admissionKind: "general" }
+  >,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "bonusAction"; readonly action: "statBlockActionOption" }
+  >,
+): BattleResolutionResult {
+  const actor = input.state.combatants.get(subject.actorId);
+  if (
+    !isStatBlockBattleCreatureState(actor) ||
+    !combatantCanTakeActions(actor)
+  ) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Stat Block Bonus Action requires an admitted Stat Block action option.",
+    );
+  }
+  const optionBinding = statBlockBonusActionOptionBindings(
+    actor.origin.execution,
+  ).find((binding) => binding.procedureRef === subject.procedureRef);
+  if (optionBinding === undefined) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Stat Block Bonus Action requires an admitted Stat Block action option.",
+    );
+  }
+  const standardAction = optionBinding.procedure.standardActions.find(
+    (candidate) => candidate === subject.standardAction,
+  );
+  if (standardAction === undefined) {
+    return invalidResult(
+      input.state,
+      "unsupportedActOption",
+      "Stat Block Bonus Action requires an admitted Stat Block action option.",
+    );
+  }
+  if (
+    !statBlockProcedureResourcesAvailable(
+      actor.origin.execution,
+      optionBinding.procedureRef,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Stat Block Bonus Action resource is no longer available.",
+    );
+  }
+  return resolveStatBlockBonusActionOption({
+    ...input,
+    subject,
+    actor,
+    optionBinding,
+    standardAction,
+  });
 }
 
 function actionHideSubject(subject: {

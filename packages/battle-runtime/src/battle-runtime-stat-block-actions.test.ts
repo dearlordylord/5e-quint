@@ -1203,6 +1203,40 @@ describe("battle runtime: Stat Block actions", () => {
     });
   });
 
+  test("Stat Block Multiattack rejects malformed fills before an unsupported procedure reference", () => {
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-monster-multiattack-invalid-fill"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock: monsterMultiattackStatBlock(),
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const unrelatedTargetHole = attackInitialTargetHole(
+      goblinTurn,
+      goblinAttackSubject(goblinTurn, "Scimitar"),
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: unavailableMultiattackSubject(goblinTurn),
+        fills: [targetFill(unrelatedTargetHole, fighterId)],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Multiattack accepts no fills.",
+    });
+  });
+
   test("Stat Block Multiattack spends the Attack action and grants named dispatch attacks", () => {
     const goblinTurn = requireResolved(
       endTurn({
@@ -1225,6 +1259,7 @@ describe("battle runtime: Stat Block actions", () => {
     expect(
       discoverStatBlockActs(goblinTurn).map((act) => act.subject),
     ).toContainEqual(subject);
+
     const multiattackState = requireResolved(
       resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
     ).state;

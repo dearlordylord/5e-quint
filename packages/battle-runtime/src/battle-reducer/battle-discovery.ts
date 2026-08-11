@@ -25,7 +25,6 @@ import {
   canSpendUnarmedStrikeActionResource,
   spendActionResourceAtIndex,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import { type StandardActionKind } from "@dnd/shared/game-facts";
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
 import * as Either from "effect/Either";
 import { BATTLE_INTERRUPT_TRIGGERS } from "../battle-interrupt-triggers.ts";
@@ -142,7 +141,6 @@ import {
   wardingBondSeparationFactsHole,
 } from "./warding-bond.ts";
 import { SELF_TRANSFORMATION_MODE_KINDS } from "./domain-constants.ts";
-import { SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS } from "./battle-runtime-protocol.ts";
 import { discoverLegendaryActionActs } from "./unit-feature-discovery.ts";
 import { characterSpellProcedure } from "../character-execution-queries.ts";
 import {
@@ -162,7 +160,6 @@ import type {
   BattleState,
   StatBlockBattleCreatureState,
 } from "../battle-state-execution.ts";
-import type { SupportedStatBlockBonusActionStandardAction } from "./battle-runtime-protocol.ts";
 import type { SelfTransformationModeKind } from "./domain-constants.ts";
 
 type FogCloudObscurementEffect = Extract<
@@ -1714,14 +1711,6 @@ export function statBlockBonusActionOptionActs(
           },
         ];
       }),
-  );
-}
-
-export function supportedStatBlockBonusActionStandardAction(
-  standardAction: StandardActionKind,
-): standardAction is SupportedStatBlockBonusActionStandardAction {
-  return SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS.some(
-    (supported) => supported === standardAction,
   );
 }
 
