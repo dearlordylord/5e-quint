@@ -76,11 +76,20 @@ coverage without merging the two denominators.
 ## Running It
 
 ```sh
-pnpm quality                    # coverage gates, lint, circular checks, and typecheck
+pnpm quality                    # coverage, lint, complexity, circular, tests, and typecheck
 pnpm proof:qnt                  # conscious QNT proof lanes: inventory, closure, run-block proofs, and QNT slice parity
 pnpm test                       # workspace package tests
 pnpm dev                        # React UI
 ```
+
+`pnpm check:complexity` applies classic cyclomatic complexity with a maximum of
+8 to production-package source. Existing violations are recorded as an exact,
+descending per-file complexity vector, so a new violation, a higher ranked
+value, or an obsolete baseline fails the gate. Tests, generated files, test
+support, and throwaway prototypes are excluded. Inline ESLint configuration is
+disabled for this analysis; complexity exceptions cannot be hidden in source.
+After reducing existing debt, run `pnpm check:complexity:prune` to ratchet the
+baseline downward. That command refuses to record regressions.
 
 ## SRD parity
 

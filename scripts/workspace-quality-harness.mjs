@@ -9,11 +9,22 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import {
+  CYCLOMATIC_COMPLEXITY_THRESHOLD,
+  CYCLOMATIC_COMPLEXITY_VARIANT,
+  complexityBaselineIssues,
+  complexityMeasurementsFromEslint,
+  complexityRegressionsAgainstBaseline,
+} from "./cyclomatic-complexity-policy.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const PACKAGE_ROOT = join(ROOT, "packages");
+const COMPLEXITY_BASELINE_PATH = join(
+  ROOT,
+  "cyclomatic-complexity-baseline.json",
+);
 const PRODUCTION_INCLUDE = "src/**/*.{ts,tsx}";
 const COMMON_COVERAGE_EXCLUDES = [
   "src/**/*.test.ts",
@@ -257,6 +268,90 @@ function checkDuplication() {
   }
 }
 
+async function checkCyclomaticComplexity(pruneBaseline) {
+  checkInventory();
+  const { ESLint } = await import("eslint");
+  const eslint = new ESLint({
+    cwd: ROOT,
+    overrideConfigFile: join(ROOT, "eslint.complexity.config.mjs"),
+    errorOnUnmatchedPattern: false,
+  });
+  const results = await eslint.lintFiles(
+    Object.keys(PACKAGE_POLICIES).map(
+      (packageName) => `packages/${packageName}/src/**/*.{ts,tsx,mts,cts}`,
+    ),
+  );
+  const fatalDiagnostics = results.flatMap((result) =>
+    result.messages
+      .filter((message) => message.fatal === true)
+      .map(
+        (message) =>
+          `${relative(ROOT, result.filePath)}:${message.line ?? 0}:${message.column ?? 0}: ${message.message}`,
+      ),
+  );
+  if (fatalDiagnostics.length > 0) {
+    throw new Error(
+      `Cyclomatic complexity analysis failed:\n${fatalDiagnostics.join("\n")}`,
+    );
+  }
+
+  const measurements = complexityMeasurementsFromEslint(ROOT, results);
+  const baseline = JSON.parse(readFileSync(COMPLEXITY_BASELINE_PATH, "utf8"));
+  if (pruneBaseline) {
+    const policyIssues = complexityBaselineIssues(
+      { ...baseline, files: measurements },
+      CYCLOMATIC_COMPLEXITY_THRESHOLD,
+      CYCLOMATIC_COMPLEXITY_VARIANT,
+      measurements,
+    );
+    const regressions = complexityRegressionsAgainstBaseline(
+      baseline,
+      measurements,
+    );
+    if (policyIssues.length > 0 || regressions.length > 0) {
+      throw new Error(
+        `Cyclomatic complexity baseline cannot be pruned:\n${[
+          ...policyIssues,
+          ...regressions,
+        ].join("\n")}`,
+      );
+    }
+    writeFileSync(
+      COMPLEXITY_BASELINE_PATH,
+      `${JSON.stringify(
+        {
+          threshold: CYCLOMATIC_COMPLEXITY_THRESHOLD,
+          variant: CYCLOMATIC_COMPLEXITY_VARIANT,
+          files: measurements,
+        },
+        undefined,
+        2,
+      )}\n`,
+    );
+    process.stdout.write("Pruned the cyclomatic complexity baseline.\n");
+    return;
+  }
+
+  const issues = complexityBaselineIssues(
+    baseline,
+    CYCLOMATIC_COMPLEXITY_THRESHOLD,
+    CYCLOMATIC_COMPLEXITY_VARIANT,
+    measurements,
+  );
+  if (issues.length > 0) {
+    throw new Error(
+      `Cyclomatic complexity baseline is out of sync:\n${issues.join("\n")}\nReduce regressions; after improvements, run pnpm check:complexity:prune.`,
+    );
+  }
+  const violationCount = Object.values(measurements).reduce(
+    (count, values) => count + values.length,
+    0,
+  );
+  process.stdout.write(
+    `Cyclomatic complexity is within the exact baseline: ${violationCount} existing violations across ${Object.keys(measurements).length} files; new production functions must be at most ${CYCLOMATIC_COMPLEXITY_THRESHOLD}.\n`,
+  );
+}
+
 function coverageArguments(coverage) {
   return [
     "exec",
@@ -396,10 +491,12 @@ const command = process.argv[2];
 if (command === "--self-test") selfTest();
 else if (command === "inventory") checkInventory();
 else if (command === "circular") checkCircularDependencies();
+else if (command === "complexity") await checkCyclomaticComplexity(false);
+else if (command === "complexity:prune") await checkCyclomaticComplexity(true);
 else if (command === "duplication") checkDuplication();
 else if (command === "coverage") checkCoverage();
 else {
   throw new Error(
-    "Usage: workspace-quality-harness.mjs --self-test|inventory|circular|duplication|coverage",
+    "Usage: workspace-quality-harness.mjs --self-test|inventory|circular|complexity|complexity:prune|duplication|coverage",
   );
 }
