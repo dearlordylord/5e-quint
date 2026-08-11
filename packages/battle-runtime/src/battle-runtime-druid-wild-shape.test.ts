@@ -3271,7 +3271,7 @@ test("Beast Spells admits no-Material spell invocation while Wild Shape is activ
   ).toBe(true);
 });
 
-test("Beast Spells exposes only the usable Shillelagh slot when held slots share an item identity", () => {
+test("Beast Spells retains the usable Shillelagh slot through resolution when held slots share an item identity", () => {
   const itemId = battleObjectId("duplicate:weapon_quarterstaff");
   const session = druidWildShapeSession({
     druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
@@ -3369,6 +3369,40 @@ test("Beast Spells exposes only the usable Shillelagh slot when held slots share
       battleActSpellPresentation(act)?.invocation.spellId === shillelaghUnitId,
   );
   expect(shillelaghActs).toHaveLength(1);
+  const offHandShillelagh = shillelaghActs[0];
+  if (offHandShillelagh?.subject.tag !== "bonusActionSpell") {
+    throw new Error("Expected off-hand Shillelagh act.");
+  }
+
+  const mainWorn = requireResolved(
+    resolveDruidWildShape(session.state, subject, [
+      wildShapeDispositionFill(dispositionHole, [
+        {
+          item: mainWeapon,
+          disposition: "worn",
+          practicality: { kind: "practicalToWear" },
+        },
+        { item: offHandWeapon, disposition: "merges" },
+      ]),
+    ]),
+  );
+  const mainWornNextTurn = nextDruidTurn(mainWorn.state);
+  expect(
+    hasSpell(
+      battleRuntimeSessionForTest({
+        state: mainWornNextTurn,
+        context: session.context,
+      }),
+      "shillelagh",
+    ),
+  ).toBe(true);
+  expect(
+    resolveBattleSubject({
+      state: mainWornNextTurn,
+      subject: offHandShillelagh.subject,
+      fills: [],
+    }),
+  ).toMatchObject({ tag: "invalid", reason: "unsupportedSubject" });
 });
 
 test("fallen Wild Shape weapons stay unavailable after reversion until picked up and held", () => {
