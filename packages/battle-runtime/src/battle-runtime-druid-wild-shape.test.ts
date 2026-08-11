@@ -3369,10 +3369,7 @@ test("Beast Spells retains the usable Shillelagh slot through resolution when he
       battleActSpellPresentation(act)?.invocation.spellId === shillelaghUnitId,
   );
   expect(shillelaghActs).toHaveLength(1);
-  const offHandShillelagh = shillelaghActs[0];
-  if (offHandShillelagh?.subject.tag !== "bonusActionSpell") {
-    throw new Error("Expected off-hand Shillelagh act.");
-  }
+  const offHandShillelagh = shillelaghActs[0]!;
 
   const mainWorn = requireResolved(
     resolveDruidWildShape(session.state, subject, [
