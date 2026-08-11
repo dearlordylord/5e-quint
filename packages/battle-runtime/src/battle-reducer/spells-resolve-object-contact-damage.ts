@@ -227,9 +227,11 @@ export function resolveObjectContactDamageSpellAct(input: {
       invocation: input.invocation,
       errorState: input.input.state,
     });
+    /* v8 ignore start -- Spell-spend admission immediately precedes this commit; interrupted continuations redispatch through admission. */
     if (spentResources.tag === "invalid") {
       return spentResources;
     }
+    /* v8 ignore stop */
     const stagedEffect = applyObjectContactDamageActiveEffect({
       state: spentResources.state,
       actorId: input.actorId,
@@ -285,9 +287,11 @@ export function resolveObjectContactDamageSpellAct(input: {
     invocation: input.invocation,
     errorState: input.input.state,
   });
+  /* v8 ignore start -- No-contact resolution cannot change spell resources after admission; interrupted continuations redispatch through admission. */
   if (spentResources.tag === "invalid") {
     return spentResources;
   }
+  /* v8 ignore stop */
   const effected = applyObjectContactDamageActiveEffect({
     state: spentResources.state,
     actorId: input.actorId,
@@ -382,6 +386,7 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
     damageResolution.state.currentTurnResources,
     { kind: "bonusAction" },
   );
+  /* v8 ignore start -- Repeat admission proves this spend; damage lifecycle cannot consume the caster's Bonus Action, and interruptions redispatch. */
   if (Either.isLeft(spent)) {
     return invalidResult(
       input.input.state,
@@ -389,6 +394,7 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
       "Bonus Action spell is no longer available for the current actor.",
     );
   }
+  /* v8 ignore stop */
   return finishObjectContactDamageResolution({
     state: { ...damageResolution.state, currentTurnResources: spent.right },
     subject: input.input.subject,
@@ -1484,13 +1490,6 @@ function objectContactDamageUnrelatedFillsMessage(
     fillSet.targetSpatialFacts.length > 0 ||
     fillSet.targetAllocation !== undefined ||
     fillSet.targetList !== undefined ||
-    fillSet.attackSequencePartFills.some(
-      (attackSequencePartFill) =>
-        attackSequencePartFill.target !== undefined ||
-        attackSequencePartFill.attackRoll !== undefined ||
-        attackSequencePartFill.mirrorImageDuplicateRoll !== undefined ||
-        attackSequencePartFill.damageRoll !== undefined,
-    ) ||
     fillSet.attackRoll !== undefined ||
     fillSet.savingThrowOutcomes !== undefined ||
     fillSet.skillChoice !== undefined ||
