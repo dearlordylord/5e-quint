@@ -62,37 +62,46 @@ under the broad workspace lock. It is exact package evidence, but it does not
 replace the public root diagnostic above or establish the state of other
 packages.
 
-- Date: 2026-08-10
-- Git HEAD: `5c4ea30d5`
+- Date: 2026-08-11
+- Git HEAD: `acb3d9a40`
 - Command: the checked-in battle-runtime Vitest coverage invocation, with one
   worker and the JSON reporter, under
   `with_resource_lock_owner scripts/with-broad-workspace-lock.sh`
 - Result: exit 0
-- Duration: 68.60 seconds after lock acquisition
-- Battle-runtime tests: 214/214 files passed; 2,322 tests passed and 53 skipped
-  (2,375 total)
+- Duration: 109.95 seconds after lock acquisition
+- Battle-runtime tests: 216/216 files passed; 2,331 tests passed and 53 skipped
+  (2,384 total)
 - Coordination note: root confirmed the external Battle Runtime coverage lane
   was empty before this final exact run began. The run exited 0 without overlap
-  or SIGKILL. Follow-up `caf1c4dff` only removes three defensive lines from the
-  causal test after its length assertion; production, executed scenario, test
-  count, and the coverage instrumentation boundary are unchanged.
+  or SIGKILL. The JSON report contains the same 407 production files as the
+  exact M24 base at `26cf9c757`; all checked-in production include/excludes and
+  thresholds were identical, with only the reporter output path changed.
 
-| Metric     |  M22 exact covered / total |  M23 exact covered / total | Covered / total change |     Uncovered change | Percentage change |
+| Metric     |   M24 base covered / total |  M24 final covered / total | Covered / total change |     Uncovered change | Percentage change |
 | ---------- | -------------------------: | -------------------------: | ---------------------: | -------------------: | ----------------: |
-| Statements | 121,188 / 124,871 (97.05%) | 121,209 / 124,862 (97.07%) |                21 / -9 | 3,683 -> 3,653 (-30) |           +0.02pp |
-| Branches   |   30,821 / 32,695 (94.27%) |   30,826 / 32,694 (94.29%) |                 5 / -1 |  1,874 -> 1,868 (-6) |           +0.02pp |
-| Functions  |       4,813 / 4,813 (100%) |       4,814 / 4,814 (100%) |                  1 / 1 |               0 -> 0 |                 0 |
-| Lines      | 121,188 / 124,871 (97.05%) | 121,209 / 124,862 (97.07%) |                21 / -9 | 3,683 -> 3,653 (-30) |           +0.02pp |
+| Statements | 121,249 / 124,862 (97.11%) | 121,222 / 124,814 (97.12%) |              -27 / -48 | 3,613 -> 3,592 (-21) |           +0.02pp |
+| Branches   |   30,876 / 32,733 (94.33%) |   30,863 / 32,721 (94.32%) |              -13 / -12 |  1,857 -> 1,858 (+1) |           -0.01pp |
+| Functions  |       4,814 / 4,814 (100%) |       4,812 / 4,812 (100%) |                -2 / -2 |               0 -> 0 |                 0 |
+| Lines      | 121,249 / 124,862 (97.11%) | 121,222 / 124,814 (97.12%) |              -27 / -48 | 3,613 -> 3,592 (-21) |           +0.02pp |
 
 The checked-in battle-runtime ratchets remain 97/97/100/94 for statements,
-lines, functions, and branches. No threshold was lowered. M23 replaces Magic
-Weapon's duplicate held-weapon and Wild Shape usability branches with the
-canonical item-level `loadoutHasUsableHeldWeaponItem` owner. Shillelagh uses
-the slot-level `loadoutHeldWeaponSlotIsUsable` protocol, so duplicate item
-identities cannot make one held occurrence admit or execute another. The final
-execution-correlation scenario materialized and covered 15 additional branch
-points relative to the prior exact run. Against M22, covered branches increased
-by 5 while uncovered branches fell by 6 and the denominator fell by 1.
+lines, functions, and branches. No threshold was lowered. M24 marks Dancing
+Lights reposition as the synthesized follow-up it already is: cast execution
+creates the correlated procedure, so the authored-character admission path was
+dead and duplicated the wrong lifecycle owner. Removing it exposed an unused
+procedure-reference query, which was also deleted with its barrel export.
+
+This structural increment adds no test lines, deletes 61 production lines, and
+adds 9 (net -52).
+In the two changed production owners, uncovered statements fell by 23 (18 in
+the Dancing Lights profile and 5 in the dead query) while uncovered branches
+did not increase. Across the complete package, unchanged owners had small V8
+branch-materialization shifts despite identical tests and instrumentation; the
+net exact branch result is one more uncovered branch and a 0.01 percentage-point
+movement after rounding. The threshold remains green, and no changed owner
+introduced an uncovered branch. The acceptance basis is structural ownership
+and dead-code removal, not a marginal covered-statement claim; the pre-edit
+budget was zero added test lines.
 
 ## Remaining static 99% gaps
 
@@ -101,12 +110,23 @@ or instrumentation changes rather than treating them as a fixed work quota.
 
 | Metric     | Covered |   Total | Covered required for 99% | Remaining gap |
 | ---------- | ------: | ------: | -----------------------: | ------------: |
-| Statements | 121,209 | 124,862 |                  123,614 |         2,405 |
-| Branches   |  30,826 |  32,694 |                   32,368 |         1,542 |
-| Functions  |   4,814 |   4,814 |                    4,766 |             0 |
-| Lines      | 121,209 | 124,862 |                  123,614 |         2,405 |
+| Statements | 121,222 | 124,814 |                  123,566 |         2,344 |
+| Branches   |  30,863 |  32,721 |                   32,394 |         1,531 |
+| Functions  |   4,812 |   4,812 |                    4,764 |             0 |
+| Lines      | 121,222 | 124,814 |                  123,566 |         2,344 |
 
 ## Milestone context
+
+M24 removes the obsolete authored-character admission algorithm for Dancing
+Lights reposition. The cast lifecycle in `spells-active-effects.ts` remains the
+canonical creator of the correlated reposition procedure, and the profile now
+declares that ownership with `admission: "synthesized"`, matching other
+cast-created follow-ups. The repository-wide consumer search also proved that
+`characterSpellProcedureRefsForProcedure` became dead after this consolidation,
+so its definition and barrel export were removed atomically. Existing public
+Dancing Lights lifecycle tests continue to prove cast creation, correlated
+movement, stale-subject rejection, duration, and cleanup. This is structural
+only: RAW, QNT, runtime protocol behavior, and tests are unchanged.
 
 M23 removed a duplicate Magic Weapon target-usability algorithm and delegated
 to the canonical held-loadout/Wild Shape owner. Item-level Magic Weapon
@@ -204,8 +224,8 @@ and remeasure only after the next coherent increment.
 
 ## Next campaign
 
-Branches remain the limiting exact battle-runtime metric at 94.29%, with a
-static 99% gap of 1,542. Do not retry the rejected attack-control helper matrix.
+Branches remain the limiting exact battle-runtime metric at 94.32%, with a
+static 99% gap of 1,531. Do not retry the rejected attack-control helper matrix.
 Rerank the exact uncovered report against public lifecycle coverage before the
 next increment; defensive route/profile behavior remains an independent
 candidate. Admission-proven or schema-impossible guards must be narrowed or
