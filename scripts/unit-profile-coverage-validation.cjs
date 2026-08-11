@@ -366,6 +366,7 @@ function validateProfiles(profiles, root) {
   const issues = [];
   const seen = new Set();
   const qntOwnerRolesByPath = readQntOwnerRolesByPath(root);
+  const qntOwnershipStatuses = new Set(["covered", "needs-qnt-owner"]);
   for (const profile of profiles) {
     issues.push(
       ...forbiddenRulesKernelJoinFieldIssues(
@@ -388,6 +389,12 @@ function validateProfiles(profiles, root) {
     if (!Array.isArray(profile.verificationOwners)) {
       issues.push(`${profile.id} must declare verificationOwners.`);
     }
+    const qntOwnershipStatus = profile.qntOwnershipStatus ?? "covered";
+    if (!qntOwnershipStatuses.has(qntOwnershipStatus)) {
+      issues.push(
+        `${profile.id} has unknown qntOwnershipStatus ${qntOwnershipStatus}.`,
+      );
+    }
     for (const owner of profile.verificationOwners ?? []) {
       if (owner.kind !== "qnt-proof") continue;
       if (owner.ownerPath.endsWith(".mbt.qnt")) {
@@ -406,11 +413,22 @@ function validateProfiles(profiles, root) {
       executableProfileKinds.has(profile.profileKind) &&
       profile.profileKind !== "stat-block-control"
     ) {
-      if ((profile.qntOwners ?? []).length === 0) {
+      if (
+        (profile.qntOwners ?? []).length === 0 &&
+        qntOwnershipStatus !== "needs-qnt-owner"
+      ) {
         issues.push(
           `${profile.id} claims executable semantics but has no QNT owner.`,
         );
       }
+    }
+    if (
+      qntOwnershipStatus === "needs-qnt-owner" &&
+      (profile.qntOwners ?? []).length > 0
+    ) {
+      issues.push(
+        `${profile.id} qntOwnershipStatus needs-qnt-owner requires empty qntOwners.`,
+      );
     }
   }
   return issues;

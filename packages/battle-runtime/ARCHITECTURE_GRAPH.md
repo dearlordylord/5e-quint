@@ -165,7 +165,16 @@ and `battle-runtime-bardic-inspiration.qnt`, and `battle-runtime-hit-points.qnt`
 `battle-runtime-restoration-and-buffs.qnt`, and
 `battle-runtime-sleep-hideous-laughter.qnt`, and
 `battle-runtime-turn-advancement.qnt`, and
-`battle-runtime-ground-command.qnt`, and
+`battle-runtime-command-next-turn.qnt`,
+`battle-runtime-command-control-next-turn.qnt`,
+`battle-runtime-command-movement-next-turn.qnt`,
+`battle-runtime-grease-ground-hazard.qnt`,
+`battle-runtime-web-restraint-area-hazard.qnt`,
+`battle-runtime-spike-growth-movement-hazard.qnt`,
+`battle-runtime-sleet-storm-area-hazard.qnt`,
+`battle-runtime-obscuring-area-effects.qnt`, and
+the focused `battle-runtime-flaming-sphere-*.qnt` and
+`battle-runtime-moonbeam-*.qnt` semantic families, and
 `battle-runtime-weapon-attacks.qnt`, when the split follows SRD language and
 avoids duplicate state names or compatibility-wrapper churn.
 Package-local `battle-runtime-*-tests.qnt` files group QNT self-tests by domain

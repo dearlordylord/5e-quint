@@ -2,10 +2,13 @@
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 module battleRuntimeMovementBridge {
+  import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
+  import battleRuntimeHidden.* from "./battle-runtime-hidden"
   import attackDamageComposition.* from "../shared-algebras/proofs/rule-core/attack-damage-composition"
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
   import creatureSizeOrder.* from "../shared-algebras/proofs/rule-core/creature-size-order"
-  import movementSpatialGrapple.* from "../shared-algebras/proofs/rule-core/movement-spatial-grapple"
+  import movementSpatialGrapple as MovementRule from "../shared-algebras/proofs/rule-core/movement-spatial-grapple"
 
   type BattleRuntimeMovementProjection = {
     currentActorOwnsTurn: bool,
@@ -59,7 +62,7 @@ module battleRuntimeMovementBridge {
     readiedMovementHeld: turn.readiedMovementHeld,
     movementSpentFeet: projection.movementSpentFeet,
     prone: projection.prone,
-    grappleActive: legalGrappleEscapeDc(projection.grappleEscapeDc),
+    grappleActive: MovementRule::legalGrappleEscapeDc(projection.grappleEscapeDc),
   }
 
   pure def battleRuntimeTurnProjection(projection: BattleRuntimeMovementProjection): TurnProcedureState = {
@@ -77,10 +80,13 @@ module battleRuntimeMovementBridge {
     currentActorOwnsTurn: projection.currentActorOwnsTurn,
   }
 
-  pure def battleRuntimeGrappleProjection(projection: BattleRuntimeMovementProjection): GrappleState =
-    if (legalGrappleEscapeDc(projection.grappleEscapeDc)) Grappled({ escapeDc: projection.grappleEscapeDc }) else NoGrapple
+  pure def battleRuntimeGrappleProjection(projection: BattleRuntimeMovementProjection): MovementRule::GrappleState =
+    if (MovementRule::legalGrappleEscapeDc(projection.grappleEscapeDc))
+      MovementRule::Grappled({ escapeDc: projection.grappleEscapeDc })
+    else
+      MovementRule::NoGrapple
 
-  pure def battleRuntimeMovementProjection(projection: BattleRuntimeMovementProjection): MovementGrappleState = {
+  pure def battleRuntimeMovementProjection(projection: BattleRuntimeMovementProjection): MovementRule::MovementGrappleState = {
     turn: battleRuntimeTurnProjection(projection),
     speedFeet: projection.speedFeet,
     movementSpentFeet: projection.movementSpentFeet,
@@ -89,10 +95,10 @@ module battleRuntimeMovementBridge {
   }
 
   pure def battleRuntimeMovementRemaining(projection: BattleRuntimeMovementProjection): int =
-    movementRemainingFeet(battleRuntimeMovementProjection(projection))
+    MovementRule::movementRemainingFeet(battleRuntimeMovementProjection(projection))
 
   pure def battleRuntimeCanSpendMovement(projection: BattleRuntimeMovementProjection, movementCost: int): bool =
-    canSpendMovement(battleRuntimeMovementProjection(projection), {
+    MovementRule::canSpendMovement(battleRuntimeMovementProjection(projection), {
       distanceFeet: movementCost,
       extraCostFeet: 0,
     })
@@ -103,7 +109,7 @@ module battleRuntimeMovementBridge {
   }
 
   pure def battleRuntimeSpendMovement(projection: BattleRuntimeMovementProjection, movementCost: int): BattleRuntimeMovementStep = {
-    val spent = spendMovement(battleRuntimeMovementProjection(projection), {
+    val spent = MovementRule::spendMovement(battleRuntimeMovementProjection(projection), {
       distanceFeet: movementCost,
       extraCostFeet: 0,
     })
@@ -119,12 +125,12 @@ module battleRuntimeMovementBridge {
       readiedMovementHeld: spent.turn.readiedMovementHeld,
       movementSpentFeet: spent.movementSpentFeet,
       prone: spent.prone,
-      grappleActive: activeGrapple(spent.grapple),
+      grappleActive: MovementRule::activeGrapple(spent.grapple),
     }
   }
 
   pure def battleRuntimeStandFromProne(projection: BattleRuntimeMovementProjection): BattleRuntimeMovementStep = {
-    val stood = standFromProne(battleRuntimeMovementProjection(projection))
+    val stood = MovementRule::standFromProne(battleRuntimeMovementProjection(projection))
     {
       actionAvailable: stood.turn.actionQuota == ActionAvailable,
       bonusActionAvailable: stood.turn.bonusActionAvailable,
@@ -137,7 +143,7 @@ module battleRuntimeMovementBridge {
       readiedMovementHeld: stood.turn.readiedMovementHeld,
       movementSpentFeet: stood.movementSpentFeet,
       prone: stood.prone,
-      grappleActive: activeGrapple(stood.grapple),
+      grappleActive: MovementRule::activeGrapple(stood.grapple),
     }
   }
 
@@ -289,13 +295,17 @@ module battleRuntimeMovementBridge {
     leavesReach: bool,
     usesOwnMovementResource: bool
   ): bool =
-    opportunityAttackTriggered(
+    MovementRule::opportunityAttackTriggered(
       battleRuntimeTurnProjection(projection),
       {
         hostileCreature: hostileCreature,
         observerCanSee: observerCanSee,
         leavesReach: leavesReach,
-        movementResource: if (usesOwnMovementResource) OwnMovementActionBonusReactionOrSpeed else ForcedMovementNoOwnResource,
+        movementResource:
+          if (usesOwnMovementResource)
+            MovementRule::OwnMovementActionBonusReactionOrSpeed
+          else
+            MovementRule::ForcedMovementNoOwnResource,
       }
     )
 
@@ -306,7 +316,7 @@ module battleRuntimeMovementBridge {
     targetSaveTotal: int,
     escapeDc: int
   ): bool =
-    activeGrapple(applyGrappleAttempt(NoGrapple, {
+    MovementRule::activeGrapple(MovementRule::applyGrappleAttempt(MovementRule::NoGrapple, {
       grapplerSize: grapplerSize,
       targetSize: targetSize,
       hasFreeHand: hasFreeHand,
@@ -321,7 +331,7 @@ module battleRuntimeMovementBridge {
     targetSaveTotal: int,
     escapeDc: int
   ): bool = all {
-    legalGrappleEscapeDc(escapeDc),
+    MovementRule::legalGrappleEscapeDc(escapeDc),
     hasFreeHand,
     targetSizeRank <= grapplerSizeRank + 1,
     targetSaveTotal < escapeDc,
@@ -333,13 +343,13 @@ module battleRuntimeMovementBridge {
     hasFreeHand: bool,
     escapeDc: int
   ): bool = all {
-    legalGrappleEscapeDc(escapeDc),
+    MovementRule::legalGrappleEscapeDc(escapeDc),
     hasFreeHand,
     targetSizeRank <= grapplerSizeRank + 1,
   }
 
   pure def battleRuntimeEscapeGrapple(projection: BattleRuntimeMovementProjection, checkTotal: int): BattleRuntimeMovementStep = {
-    val escaped = escapeGrapple(
+    val escaped = MovementRule::escapeGrapple(
       battleRuntimeTurnProjection(projection),
       battleRuntimeGrappleProjection(projection),
       checkTotal,
@@ -356,13 +366,95 @@ module battleRuntimeMovementBridge {
       readiedMovementHeld: escaped.turn.readiedMovementHeld,
       movementSpentFeet: projection.movementSpentFeet,
       prone: projection.prone,
-      grappleActive: activeGrapple(escaped.grapple),
+      grappleActive: MovementRule::activeGrapple(escaped.grapple),
     }
   }
 
   pure def battleRuntimeGrappledAttackRollHasDisadvantage(grappleActive: bool, targetIsGrappler: bool): bool =
-    grappledAttackRollHasDisadvantage(
-      if (grappleActive) Grappled({ escapeDc: minimumGrappleEscapeDc }) else NoGrapple,
+    MovementRule::grappledAttackRollHasDisadvantage(
+      if (grappleActive)
+        MovementRule::Grappled({ escapeDc: MovementRule::minimumGrappleEscapeDc })
+      else
+        MovementRule::NoGrapple,
       targetIsGrappler,
     )
+
+  pure def battleRuntimeDifficultTerrainMovementCost(active: bool, totalDistanceFeet: int, difficultTerrainDistanceFeet: int): int =
+    if (active and totalDistanceFeet > 0 and difficultTerrainDistanceFeet > 0 and difficultTerrainDistanceFeet <= totalDistanceFeet)
+      totalDistanceFeet + difficultTerrainDistanceFeet
+    else
+      0
+
+  pure def movementSpeed(combatant: Combatant, speedKind: MovementSpeedKind): int = {
+    val speedDelta = if (combatant.activeEffects.contains(LongstriderSpeedDelta)) 10 else 0
+    val walkSpeed = combatant.speed + speedDelta
+    val hasSpiderClimbSpeedGrant = combatant.activeEffects.exists(effect => match effect {
+      | SpiderClimbClimbSpeedGrant(_) => true
+      | _ => false
+    })
+    val hasSelfTransformationSwimSpeedGrant = combatant.activeEffects.exists(effect => match effect {
+      | SelfTransformationModeEffect(data) => data.mode == AquaticAdaptationMode
+      | _ => false
+    })
+    val hasFlySpeedGrant = combatant.activeEffects.exists(effect => match effect {
+      | FlySpeedHoverGrant(_) => true
+      | _ => false
+    })
+    match speedKind {
+      | WalkSpeedKind => walkSpeed
+      | ClimbSpeedKind => if (combatant.hasRovingSpeedKindGrants or hasSpiderClimbSpeedGrant) walkSpeed else 0
+      | SwimSpeedKind => if (combatant.hasRovingSpeedKindGrants or hasSelfTransformationSwimSpeedGrant) walkSpeed else 0
+      | FlySpeedKind => if (hasFlySpeedGrant) 60 + speedDelta else 0
+    }
+  }
+
+  pure def movementProjectionForFighter(state: BattleState, speedKind: MovementSpeedKind): BattleRuntimeMovementProjection = {
+    currentActorOwnsTurn: currentActor(state) == Fighter and not(state.fighter.unconscious) and not(state.fighter.incapacitated),
+    actionAvailable: state.actionAvailable,
+    bonusActionAvailable: state.bonusActionAvailable,
+    reactionAvailable: state.fighter.reactionAvailable,
+    dashMovementBonus: state.dashMovementBonus,
+    disengaged: state.disengaged,
+    dodging: state.fighter.dodging,
+    hidden: fighterIsHidden(state),
+    helpAttackHeld: state.fighterHelpAttackGoblinForGoblin,
+    readiedMovementHeld: state.fighter.readiedMovementHeld,
+    speedFeet: movementSpeed(state.fighter, speedKind),
+    movementSpentFeet: state.fighter.movementSpent,
+    prone: state.fighter.prone,
+    grappleEscapeDc: 0,
+  }
+
+  pure def movementProjectionForGoblin(state: BattleState, speedKind: MovementSpeedKind): BattleRuntimeMovementProjection = {
+    currentActorOwnsTurn: currentActor(state) == Goblin and not(state.goblin.unconscious) and not(state.goblin.incapacitated),
+    actionAvailable: state.actionAvailable,
+    bonusActionAvailable: state.bonusActionAvailable,
+    reactionAvailable: state.goblin.reactionAvailable,
+    dashMovementBonus: state.dashMovementBonus,
+    disengaged: state.disengaged,
+    dodging: state.goblin.dodging,
+    hidden: false,
+    helpAttackHeld: false,
+    readiedMovementHeld: false,
+    speedFeet: movementSpeed(state.goblin, speedKind),
+    movementSpentFeet: state.goblin.movementSpent,
+    prone: state.goblin.prone,
+    grappleEscapeDc: 0,
+  }
+
+  pure def movementProjectionForActor(
+    state: BattleState,
+    actor: Actor,
+    speedKind: MovementSpeedKind,
+  ): BattleRuntimeMovementProjection =
+    match actor {
+      | Fighter => movementProjectionForFighter(state, speedKind)
+      | Goblin => movementProjectionForGoblin(state, speedKind)
+    }
+
+  pure def movementProjectionForGrappledGoblin(state: BattleState): BattleRuntimeMovementProjection =
+    match state.grapple {
+      | NoGrapple => { ...movementProjectionForGoblin(state, WalkSpeedKind), grappleEscapeDc: 0 }
+      | FighterGrapplesGoblin(link) => { ...movementProjectionForGoblin(state, WalkSpeedKind), grappleEscapeDc: link.escapeDc }
+    }
 }

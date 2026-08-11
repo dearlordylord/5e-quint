@@ -21,7 +21,23 @@ module battleRuntimeFeatureBridge {
   import unitFeatureSaveDamageCore.* from "../shared-algebras/proofs/rule-core/unit-feature-save-damage-core"
   import unitFeatureReactionReductionCore.* from "../shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core"
   import unitFeatureMartialArtsCore.* from "../shared-algebras/proofs/rule-core/unit-feature-martial-arts-core"
-  import battleRuntimeFeatureTurnEndEffects.* from "./battle-runtime-feature-turn-end-effects"
+  pure def battleRuntimeAttackCountState(
+    actionAvailable: bool,
+    extraAttackSlotsRemaining: AttackActionAdditionalAttacks
+  ): AttackActionAttackCountState = {
+    actionAvailable: actionAvailable,
+    additionalAttacksRemaining: extraAttackSlotsRemaining,
+    attacksResolved: 0,
+    movementSegmentsTaken: 0,
+    turnEnded: false,
+  }
+
+  pure def battleRuntimeExtraAttackSlotsAfterEndTurn(
+    extraAttackSlotsRemaining: AttackActionAdditionalAttacks
+  ): AttackActionAdditionalAttacks = {
+    val ended = endTurnDuringAttackActionAttackCount(battleRuntimeAttackCountState(false, extraAttackSlotsRemaining))
+    ended.additionalAttacksRemaining
+  }
 
   type BattleRuntimeRageResistanceProjection = {
     bludgeoning: bool,

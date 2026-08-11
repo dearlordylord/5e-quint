@@ -18991,7 +18991,6 @@
             "profileId": "unit-feature.attack-action-attack-count-scaling",
             "profileKind": "passive",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
               "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
             ]
           }
@@ -19718,7 +19717,8 @@
             "profileId": "spell.invocation-command-halt-grovel",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-ground-command.qnt"
+              "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+              "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
             ]
           },
           {
@@ -19734,7 +19734,8 @@
             "profileId": "spell.invocation-command-drop-held-object",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-ground-command.qnt"
+              "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+              "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
             ]
           },
           {
@@ -19750,7 +19751,8 @@
             "profileId": "spell.invocation-command-approach-route",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-ground-command.qnt"
+              "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
+              "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
             ]
           },
           {
@@ -19766,7 +19768,8 @@
             "profileId": "spell.invocation-command-flee-route",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-ground-command.qnt"
+              "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
+              "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
             ]
           }
         ],
@@ -20305,7 +20308,6 @@
             "profileId": "unit-feature.attack-action-attack-count-scaling",
             "profileKind": "passive",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
               "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
             ]
           }
@@ -20672,7 +20674,14 @@
             "profileId": "spell.invocation-flaming-sphere-hazard-ram",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt"
+              "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
+              "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
+              "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
+              "packages/battle-runtime/battle-runtime-flaming-sphere-hazard-ram.qnt",
+              "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
+              "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
+              "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
+              "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt"
             ]
           }
         ],
@@ -20694,7 +20703,7 @@
             "profileId": "spell.invocation-fog-cloud-obscurement",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-ground-command.qnt"
+              "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
             ]
           }
         ],
@@ -20722,7 +20731,7 @@
             "profileId": "spell.invocation-grease-ground-hazard",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-ground-command.qnt"
+              "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
             ]
           }
         ],
@@ -21637,7 +21646,6 @@
             "profileId": "unit-feature.attack-action-attack-count-scaling",
             "profileKind": "passive",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
               "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
             ]
           }
@@ -21919,7 +21927,6 @@
             "profileId": "unit-feature.attack-action-attack-count-scaling",
             "profileKind": "passive",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
               "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
             ]
           }
@@ -22335,7 +22342,6 @@
             "profileId": "unit-feature.attack-action-attack-count-scaling",
             "profileKind": "passive",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
               "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
             ]
           }
@@ -23732,7 +23738,7 @@
             "profileId": "spell.invocation-web-restraint-hazard",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-ground-command.qnt"
+              "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt"
             ]
           }
         ],

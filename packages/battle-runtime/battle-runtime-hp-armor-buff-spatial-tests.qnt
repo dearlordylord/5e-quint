@@ -65,7 +65,6 @@ module battleRuntimeHpArmorBuffSpatialTests {
   import battleRuntimeRestorationAndBuffs.* from "./battle-runtime-restoration-and-buffs"
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
-  import battleRuntimeGroundCommand.* from "./battle-runtime-ground-command"
   import battleRuntimeDragonsBreath.* from "./battle-runtime-dragons-breath"
   import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
@@ -325,40 +324,6 @@ module battleRuntimeHpArmorBuffSpatialTests {
       assert(result.hp == 0),
       assert(result.unconscious),
       assert(result.deathFailures == 3),
-    }
-  }
-
-  run test_start_turn_death_save_failure_adds_one_failure = {
-    val result = endTurnWithDeathSave(withFighterHp(endTurn(initialState), 0, 0), 5)
-    all {
-      assert(currentActor(result) == Fighter),
-      assert(result.fighter.hp == 0),
-      assert(result.fighter.unconscious),
-      assert(result.fighter.deathFailures == 1),
-    }
-  }
-
-  run test_start_turn_death_save_success_three_stabilizes = {
-    val fighter = { ...withFighterHp(initialState, 0, 0).fighter, unconscious: true, deathSuccesses: 2, deathFailures: 1 }
-    val result = endTurnWithDeathSave({ ...endTurn(initialState), fighter: fighter }, 10)
-    all {
-      assert(result.fighter.hp == 0),
-      assert(result.fighter.unconscious),
-      assert(result.fighter.stable),
-      assert(result.fighter.deathSuccesses == 0),
-      assert(result.fighter.deathFailures == 0),
-    }
-  }
-
-  run test_start_turn_death_save_natural_twenty_restores_one_hp = {
-    val fighter = { ...withFighterHp(initialState, 0, 0).fighter, deathSuccesses: 1, deathFailures: 2 }
-    val result = endTurnWithDeathSave({ ...endTurn(initialState), fighter: fighter }, 20)
-    all {
-      assert(result.fighter.hp == 1),
-      assert(not(result.fighter.unconscious)),
-      assert(not(result.fighter.stable)),
-      assert(result.fighter.deathSuccesses == 0),
-      assert(result.fighter.deathFailures == 0),
     }
   }
 

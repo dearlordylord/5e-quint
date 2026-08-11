@@ -5778,7 +5778,8 @@
             "profileId": "spell.invocation-command-halt-grovel",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-ground-command.qnt"
+              "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+              "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
             ]
           },
           {
@@ -5794,7 +5795,8 @@
             "profileId": "spell.invocation-command-drop-held-object",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-ground-command.qnt"
+              "packages/battle-runtime/battle-runtime-command-control-next-turn.qnt",
+              "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
             ]
           },
           {
@@ -5810,7 +5812,8 @@
             "profileId": "spell.invocation-command-approach-route",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-ground-command.qnt"
+              "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
+              "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
             ]
           },
           {
@@ -5826,7 +5829,8 @@
             "profileId": "spell.invocation-command-flee-route",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-ground-command.qnt"
+              "packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt",
+              "packages/battle-runtime/battle-runtime-command-next-turn.qnt"
             ]
           }
         ],
@@ -6365,7 +6369,7 @@
             "profileId": "spell.invocation-fog-cloud-obscurement",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-ground-command.qnt"
+              "packages/battle-runtime/battle-runtime-obscuring-area-effects.qnt"
             ]
           }
         ],
@@ -6393,7 +6397,7 @@
             "profileId": "spell.invocation-grease-ground-hazard",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-ground-command.qnt"
+              "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt"
             ]
           }
         ],
