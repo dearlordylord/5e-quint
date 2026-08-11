@@ -4,6 +4,7 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 module battleRuntimeCommandNextTurn {
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
@@ -70,6 +71,19 @@ module battleRuntimeCommandNextTurn {
             data.option == option and data.expiresAtActor == actor and data.expiresAtRound == state.initiative.round
         | _ => false
       })
+
+  pure def stateWithoutCommandPendingForActor(
+    state: BattleState,
+    actor: Actor,
+    option: CommandOption,
+  ): BattleState = {
+    val combatant = combatantForActor(state, actor)
+    stateWithActorCombatant(state, actor, {
+      ...combatant,
+      activeEffects: combatant.activeEffects.exclude(commandPendingEffectsForActor(state, actor, option)),
+    })
+  }
+
   type CommandGrovelFollowOutcome =
     | CommandGrovelIgnored
     | CommandGrovelAppliesProneEndsTurn

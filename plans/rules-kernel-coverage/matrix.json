@@ -10273,49 +10273,49 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-command-approach-next-turn-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused run-test proof owner for Command Approach next-turn movement and early turn termination.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-command-approach-next-turn-tests.qnt",
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-command-flee-next-turn-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused run-test proof owner for Command Flee movement, reaction continuation, and turn termination.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-command-flee-next-turn-tests.qnt",
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Flaming Sphere cast-state and Concentration lifecycle owner.",
       "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-cast.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Flaming Sphere fire-damage and half-save arithmetic owner.",
       "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-damage-core.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-lifecycle-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused run-test proof owner for Flaming Sphere cast, reposition, and Concentration lifecycle semantics.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-lifecycle-tests.qnt",
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused run-test proof owner for Flaming Sphere ram damage and slot scaling.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage-tests.qnt",
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Flaming Sphere ram targeting, save, and damage integration owner.",
       "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-ram-damage.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Flaming Sphere bonus-action reposition owner.",
       "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-reposition.qnt",
       "role": "semantic-core"
@@ -10327,97 +10327,97 @@
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Flaming Sphere Dexterity-save damage application owner.",
       "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-save-damage.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Flaming Sphere slot, duration, range, and area vocabulary owner.",
       "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-facts.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Flaming Sphere end-within-five-feet damage plus canonical End Turn composition owner.",
       "obligationIds": ["BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-flaming-sphere-turn-end.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-grease-ground-hazard-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused run-test proof owner for Grease entry, turn-start save, prone, and terrain lifecycle semantics.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard-tests.qnt",
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Grease BattleState area-entry, turn-start save, prone, and terrain lifecycle owner.",
       "obligationIds": ["BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-grease-ground-hazard.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Moonbeam cast-state and Concentration lifecycle owner.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-cast.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Moonbeam radiant-damage, slot scaling, and half-save arithmetic owner.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-damage-core.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-lifecycle-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused run-test proof owner for Moonbeam cast, reposition, and Concentration lifecycle semantics.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-lifecycle-tests.qnt",
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Moonbeam action-based area reposition owner.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-reposition.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-save-damage-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused run-test proof owner for Moonbeam save, damage, and once-per-turn gating.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-damage-tests.qnt",
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Moonbeam Constitution-save damage and once-per-turn integration owner.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-damage.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused composition owner for Moonbeam save damage followed by its Shape-Shift rider.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-save-with-shape-shift.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused run-test proof owner for Moonbeam Shape-Shift rider semantics.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider-tests.qnt",
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Moonbeam Shape-Shift revert and retained-damage result owner.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-shape-shift-rider.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-state.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Moonbeam BattleState active-area and once-per-turn save state owner.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-state.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Moonbeam once-per-turn reset plus canonical End Turn composition owner.",
       "obligationIds": ["BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-moonbeam-turn-end.qnt",
       "role": "semantic-core"
@@ -10429,19 +10429,19 @@
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt is a focused semantic owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused Web BattleState area-entry, restraint, recurring save, and Concentration lifecycle owner.",
       "obligationIds": ["BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-area-hazard.qnt",
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-web-restraint-lifecycle-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused run-test proof owner for Web cast, area-entry, restraint, and Concentration lifecycle semantics.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-lifecycle-tests.qnt",
       "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-web-restraint-recurring-save-tests.qnt is a focused run-test proof owner extracted from the former mixed Ground Command closure.",
+      "evidence": "Focused run-test proof owner for Web recurring save and restraint-release semantics.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-web-restraint-recurring-save-tests.qnt",
       "role": "proof-only"

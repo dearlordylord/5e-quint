@@ -149,6 +149,16 @@ module battleRuntimeMovement {
       },
     }
 
+  pure def stateWithActorMovementStep(
+    state: BattleState,
+    actor: Actor,
+    step: BattleRuntimeMovementStep,
+  ): BattleState =
+    match actor {
+      | Fighter => stateWithFighterMovementStep(state, step)
+      | Goblin => stateWithGoblinMovementStep(state, step)
+    }
+
   pure def dashFighterWithSpeedKind(state: BattleState, speedKind: MovementSpeedKind): BattleState = {
     val step = battleRuntimeDash(movementProjectionForFighter(state, speedKind), movementSpeed(state.fighter, speedKind))
     stateWithFighterMovementStep(state, step)

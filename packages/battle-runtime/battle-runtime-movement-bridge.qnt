@@ -442,6 +442,16 @@ module battleRuntimeMovementBridge {
     grappleEscapeDc: 0,
   }
 
+  pure def movementProjectionForActor(
+    state: BattleState,
+    actor: Actor,
+    speedKind: MovementSpeedKind,
+  ): BattleRuntimeMovementProjection =
+    match actor {
+      | Fighter => movementProjectionForFighter(state, speedKind)
+      | Goblin => movementProjectionForGoblin(state, speedKind)
+    }
+
   pure def movementProjectionForGrappledGoblin(state: BattleState): BattleRuntimeMovementProjection =
     match state.grapple {
       | NoGrapple => { ...movementProjectionForGoblin(state, WalkSpeedKind), grappleEscapeDc: 0 }

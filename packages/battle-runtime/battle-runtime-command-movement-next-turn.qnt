@@ -11,15 +11,10 @@ module battleRuntimeCommandMovementNextTurn {
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeCommandNextTurn.* from "./battle-runtime-command-next-turn"
 
-  pure def commandApproachFighterHasMovementAvailable(state: BattleState): bool =
-    battleRuntimeCanSpendMovement(movementProjectionForFighter(state, WalkSpeedKind), 1)
-      or battleRuntimeCanSpendMovement(movementProjectionForFighter(state, ClimbSpeedKind), 1)
-      or battleRuntimeCanSpendMovement(movementProjectionForFighter(state, SwimSpeedKind), 1)
-
-  pure def commandApproachGoblinHasMovementAvailable(state: BattleState): bool =
-    battleRuntimeCanSpendMovement(movementProjectionForGoblin(state, WalkSpeedKind), 1)
-      or battleRuntimeCanSpendMovement(movementProjectionForGoblin(state, ClimbSpeedKind), 1)
-      or battleRuntimeCanSpendMovement(movementProjectionForGoblin(state, SwimSpeedKind), 1)
+  pure def commandActorHasMovementAvailable(state: BattleState, actor: Actor): bool =
+    battleRuntimeCanSpendMovement(movementProjectionForActor(state, actor, WalkSpeedKind), 1)
+      or battleRuntimeCanSpendMovement(movementProjectionForActor(state, actor, ClimbSpeedKind), 1)
+      or battleRuntimeCanSpendMovement(movementProjectionForActor(state, actor, SwimSpeedKind), 1)
 
   pure def followCommandApproach(
     state: BattleState,
@@ -27,71 +22,24 @@ module battleRuntimeCommandMovementNextTurn {
     movementCost: int,
     movedWithinFiveFeetOfCaster: bool,
   ): BattleState =
-    if (commandPendingEffectsForActor(state, currentActor(state), CommandApproachOption).size() > 0)
-      match currentActor(state) {
-        | Fighter => {
-            val withoutPending = {
-              ...state,
-              fighter: {
-                ...state.fighter,
-                activeEffects: state.fighter.activeEffects.exclude(commandPendingEffectsForActor(state, Fighter, CommandApproachOption)),
-              },
-            }
-            match commandApproachFollowOutcome(
-              commandApproachFighterHasMovementAvailable(state),
-              battleRuntimeCanSpendMovement(movementProjectionForFighter(state, speedKind), movementCost),
-              movedWithinFiveFeetOfCaster,
-            ) {
-              | CommandApproachNoMovement => withoutPending
-              | CommandApproachMovementRejected => state
-              | CommandApproachMovementContinues =>
-                  stateWithFighterMovementStep(
-                    withoutPending,
-                    battleRuntimeSpendMovement(movementProjectionForFighter(state, speedKind), movementCost),
-                  )
-              | CommandApproachMovementEndsTurn =>
-                  endTurn(stateWithFighterMovementStep(
-                    withoutPending,
-                    battleRuntimeSpendMovement(movementProjectionForFighter(state, speedKind), movementCost),
-                  ))
-            }
-          }
-        | Goblin => {
-            val withoutPending = {
-              ...state,
-              goblin: {
-                ...state.goblin,
-                activeEffects: state.goblin.activeEffects.exclude(commandPendingEffectsForActor(state, Goblin, CommandApproachOption)),
-              },
-            }
-            match commandApproachFollowOutcome(
-              commandApproachGoblinHasMovementAvailable(state),
-              battleRuntimeCanSpendMovement(movementProjectionForGoblin(state, speedKind), movementCost),
-              movedWithinFiveFeetOfCaster,
-            ) {
-              | CommandApproachNoMovement => withoutPending
-              | CommandApproachMovementRejected => state
-              | CommandApproachMovementContinues =>
-                  stateWithGoblinMovementStep(
-                    withoutPending,
-                    battleRuntimeSpendMovement(movementProjectionForGoblin(state, speedKind), movementCost),
-                  )
-              | CommandApproachMovementEndsTurn =>
-                  endTurn(stateWithGoblinMovementStep(
-                    withoutPending,
-                    battleRuntimeSpendMovement(movementProjectionForGoblin(state, speedKind), movementCost),
-                  ))
-            }
-          }
+    if (commandPendingEffectsForActor(state, currentActor(state), CommandApproachOption).size() > 0) {
+      val actor = currentActor(state)
+      val withoutPending = stateWithoutCommandPendingForActor(state, actor, CommandApproachOption)
+      match commandApproachFollowOutcome(
+        commandActorHasMovementAvailable(state, actor),
+        battleRuntimeCanSpendMovement(movementProjectionForActor(state, actor, speedKind), movementCost),
+        movedWithinFiveFeetOfCaster,
+      ) {
+        | CommandApproachNoMovement => withoutPending
+        | CommandApproachMovementRejected => state
+        | CommandApproachMovementContinues => stateWithCommandMovement(withoutPending, actor, speedKind, movementCost)
+        | CommandApproachMovementEndsTurn => endTurn(stateWithCommandMovement(withoutPending, actor, speedKind, movementCost))
       }
-    else
+    } else
       state
 
   pure def commandFleeMovementRemaining(state: BattleState, actor: Actor, speedKind: MovementSpeedKind): int =
-    match actor {
-      | Fighter => battleRuntimeMovementRemaining(movementProjectionForFighter(state, speedKind))
-      | Goblin => battleRuntimeMovementRemaining(movementProjectionForGoblin(state, speedKind))
-    }
+    battleRuntimeMovementRemaining(movementProjectionForActor(state, actor, speedKind))
 
   pure def commandFleeCanSpendMovement(
     state: BattleState,
@@ -99,47 +47,19 @@ module battleRuntimeCommandMovementNextTurn {
     speedKind: MovementSpeedKind,
     movementCost: int,
   ): bool =
-    match actor {
-      | Fighter => battleRuntimeCanSpendMovement(movementProjectionForFighter(state, speedKind), movementCost)
-      | Goblin => battleRuntimeCanSpendMovement(movementProjectionForGoblin(state, speedKind), movementCost)
-    }
+    battleRuntimeCanSpendMovement(movementProjectionForActor(state, actor, speedKind), movementCost)
 
   pure def commandFleeActorHasMovementAvailable(state: BattleState, actor: Actor): bool =
     commandFleeCanSpendMovement(state, actor, WalkSpeedKind, 1)
       or commandFleeCanSpendMovement(state, actor, ClimbSpeedKind, 1)
       or commandFleeCanSpendMovement(state, actor, SwimSpeedKind, 1)
 
-  pure def stateWithoutCommandFleePending(state: BattleState, actor: Actor): BattleState =
-    match actor {
-      | Fighter => {
-          ...state,
-          fighter: {
-            ...state.fighter,
-            activeEffects: state.fighter.activeEffects.exclude(commandPendingEffectsForActor(state, Fighter, CommandFleeOption)),
-          },
-        }
-      | Goblin => {
-          ...state,
-          goblin: {
-            ...state.goblin,
-            activeEffects: state.goblin.activeEffects.exclude(commandPendingEffectsForActor(state, Goblin, CommandFleeOption)),
-          },
-        }
-    }
-
-  pure def stateWithCommandFleeMovement(state: BattleState, actor: Actor, speedKind: MovementSpeedKind, movementCost: int): BattleState =
-    match actor {
-      | Fighter =>
-          stateWithFighterMovementStep(
-            state,
-            battleRuntimeSpendMovement(movementProjectionForFighter(state, speedKind), movementCost),
-          )
-      | Goblin =>
-          stateWithGoblinMovementStep(
-            state,
-            battleRuntimeSpendMovement(movementProjectionForGoblin(state, speedKind), movementCost),
-          )
-    }
+  pure def stateWithCommandMovement(state: BattleState, actor: Actor, speedKind: MovementSpeedKind, movementCost: int): BattleState =
+    stateWithActorMovementStep(
+      state,
+      actor,
+      battleRuntimeSpendMovement(movementProjectionForActor(state, actor, speedKind), movementCost),
+    )
 
   pure def followCommandFlee(
     state: BattleState,
@@ -149,7 +69,7 @@ module battleRuntimeCommandMovementNextTurn {
   ): BattleState =
     if (commandPendingEffectsForActor(state, currentActor(state), CommandFleeOption).size() > 0) {
       val actor = currentActor(state)
-      val withoutPending = stateWithoutCommandFleePending(state, actor)
+      val withoutPending = stateWithoutCommandPendingForActor(state, actor, CommandFleeOption)
       match commandFleeFollowOutcome(
         commandFleeActorHasMovementAvailable(state, actor),
         movementCost,
@@ -171,7 +91,7 @@ module battleRuntimeCommandMovementNextTurn {
               }),
             })
         | CommandFleeMovementEndsTurn =>
-            endTurn(stateWithCommandFleeMovement(withoutPending, actor, speedKind, movementCost))
+            endTurn(stateWithCommandMovement(withoutPending, actor, speedKind, movementCost))
       }
     } else {
       state
