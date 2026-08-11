@@ -7,6 +7,7 @@ import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra
 import {
   abilityModifier,
   attackBonus,
+  damageAmount,
   Hp,
   movementFeet,
   proficiencyBonus,
@@ -27,6 +28,7 @@ import {
   openCreatureFallsRuntimeInterruptWindow,
   resolveBattleInterrupt,
   resolveBattleRuntimeInterrupt,
+  resolveFallDamageLanding,
   resolveFeatherFallLanding,
   startBattle,
   type BattleCreatureInit,
@@ -202,18 +204,22 @@ describe("Feather Fall Reaction spell", () => {
   test("clears mitigation on landing and prevents fall damage plus Falling Prone", () => {
     const mitigatedState = castFeatherFallOn([fallingAId, fallingBId]);
 
-    const landing = resolveFeatherFallLanding({
+    const landing = resolveFallDamageLanding({
       state: mitigatedState,
       targetId: fallingAId,
+      fallDamage: { kind: "rawFallDamage", amount: damageAmount(20) },
     });
 
     expect(landing).toMatchObject({
-      tag: "mitigated",
+      tag: "landed",
       targetId: fallingAId,
+      effectiveFallDamage: damageAmount(0),
       fallDamagePrevented: true,
       fallingPronePrevented: true,
+      slowFallReductionAmount: damageAmount(0),
+      featherFallMitigated: true,
     });
-    if (landing.tag !== "mitigated") {
+    if (landing.tag !== "landed") {
       throw new Error("Expected Feather Fall landing mitigation.");
     }
     const landedTarget = requireCombatant(landing.state, fallingAId);

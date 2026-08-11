@@ -14,8 +14,8 @@ import type {
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
+import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-hit-point-state.ts";
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
-import { KnockedOutConditionState } from "./knocked-out-state.ts";
 import {
   battleReducerRouteForCreatureFallsInterruptWindow,
   battleReducerRouteForFeatherFallLanding,
@@ -350,15 +350,8 @@ function battleStateWithoutInterruptStackFrame(
 function battleCreatureAfterFallingProne(
   combatant: BattleCreatureState,
 ): BattleCreatureState {
-  return combatant.positiveHpUnconscious === null
-    ? {
-        ...combatant,
-        conditions: applyCondition(combatant.conditions, "prone"),
-      }
-    : {
-        ...combatant,
-        conditions: KnockedOutConditionState(
-          applyCondition(combatant.conditions, "prone"),
-        ),
-      };
+  return battleCreatureStateWithKnockOutPreservedConditions(
+    combatant,
+    applyCondition(combatant.conditions, "prone"),
+  );
 }
