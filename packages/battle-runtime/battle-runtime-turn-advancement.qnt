@@ -4,7 +4,7 @@
 module battleRuntimeTurnAdvancement {
   import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
-  import battleRuntimeFeatureTurnEndEffects.* from "./battle-runtime-feature-turn-end-effects"
+  import battleRuntimeFighterOngoingFeatureLifecycle.* from "./battle-runtime-fighter-ongoing-feature-lifecycle"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"

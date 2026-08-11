@@ -13,7 +13,6 @@ module battleRuntimeFeatureBridgeExamples {
   import unitFeatureSaveDamageCore.* from "../shared-algebras/proofs/rule-core/unit-feature-save-damage-core"
   import unitFeatureReactionReductionCore.* from "../shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core"
   import unitFeatureMartialArtsCore.* from "../shared-algebras/proofs/rule-core/unit-feature-martial-arts-core"
-  import battleRuntimeFeatureTurnEndEffects.* from "./battle-runtime-feature-turn-end-effects"
   import battleRuntimeFeatureBridge.* from "./battle-runtime-feature-bridge"
 
   run test_rage_runtime_projection_uses_feature_profile = {

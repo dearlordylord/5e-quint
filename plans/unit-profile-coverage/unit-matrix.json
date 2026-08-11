@@ -379,8 +379,7 @@
       "id": "unit-feature.attack-action-attack-count-scaling",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-        "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -7347,7 +7346,6 @@
         "profileId": "unit-feature.attack-action-attack-count-scaling",
         "profileKind": "passive",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
           "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
         ]
       },
@@ -10730,7 +10728,6 @@
               "profileId": "unit-feature.attack-action-attack-count-scaling",
               "profileKind": "passive",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
               ]
             }
@@ -12241,7 +12238,6 @@
               "profileId": "unit-feature.attack-action-attack-count-scaling",
               "profileKind": "passive",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
               ]
             }
@@ -13669,7 +13665,6 @@
               "profileId": "unit-feature.attack-action-attack-count-scaling",
               "profileKind": "passive",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
               ]
             }
@@ -14018,7 +14013,6 @@
               "profileId": "unit-feature.attack-action-attack-count-scaling",
               "profileKind": "passive",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
               ]
             }
@@ -14434,7 +14428,6 @@
               "profileId": "unit-feature.attack-action-attack-count-scaling",
               "profileKind": "passive",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
                 "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
               ]
             }
@@ -21582,8 +21575,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -22447,8 +22439,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -25061,8 +25052,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -30239,8 +30229,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -30482,8 +30471,7 @@
           "id": "unit-feature.attack-action-attack-count-scaling",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-            "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",

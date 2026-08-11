@@ -368,7 +368,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt",
-        "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+        "packages/battle-runtime/battle-runtime-fighter-ongoing-feature-lifecycle.qnt",
         "packages/battle-runtime/battle-runtime-movement.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus.qnt",
         "packages/battle-runtime/battle-runtime-retaliation.qnt",
@@ -4497,7 +4497,7 @@
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-turn-advancement.qnt",
         "packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt",
-        "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+        "packages/battle-runtime/battle-runtime-fighter-ongoing-feature-lifecycle.qnt"
       ],
       "reason": "Task PPW-T13 adds a bounded focused MBT witness for the existing reducer order: one source/target fixture carries target start-turn damage/save, target end-turn damage-and-expiry, source until-next-turn expiry, source start-turn ongoing-feature expiry, and target end-turn ongoing-feature expiry across two turn advancements. The witness asserts hole frontier order and state projection only for that fixture; it does not claim exhaustive same-timing ordering. Death Saving Throw ordering is outside this covered seam; the fixture does not assert that same-timing lifecycle.",
       "runtime": "battle",
@@ -7810,18 +7810,12 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt is the focused QNT owner carrying Unit feature turn-end attack-slot cleanup semantics without geometry ownership.",
+      "evidence": "Focused Fighter Rage and Reckless Attack end-turn, start-turn, and early-ending lifecycle owner.",
       "obligationIds": [
         "BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING",
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-      "profileScopes": [
-        {
-          "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
-          "profileId": "unit-feature.attack-action-attack-count-scaling"
-        }
-      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-fighter-ongoing-feature-lifecycle.qnt",
       "role": "semantic-core"
     },
     {
@@ -10663,7 +10657,7 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-fighter-ongoing-feature-lifecycle.qnt",
       "role": "semantic-core"
     },
     {
@@ -12251,11 +12245,6 @@
           "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
           "role": "semantic-core"
-        },
-        {
-          "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
-          "ownerPath": "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
-          "role": "semantic-core"
         }
       ]
     },
@@ -13196,7 +13185,7 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt",
-        "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
+        "packages/battle-runtime/battle-runtime-fighter-ongoing-feature-lifecycle.qnt",
         "packages/battle-runtime/battle-runtime-movement.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus.qnt",
         "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
@@ -16016,7 +16005,7 @@
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-turn-advancement.qnt",
         "packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt",
-        "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt"
+        "packages/battle-runtime/battle-runtime-fighter-ongoing-feature-lifecycle.qnt"
       ],
       "status": "generation-subset-clean"
     },

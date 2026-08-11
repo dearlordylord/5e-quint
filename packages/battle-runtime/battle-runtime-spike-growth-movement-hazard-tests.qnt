@@ -14,7 +14,7 @@ module battleRuntimeSpikeGrowthMovementHazardTests {
       assert(resolved.fighter.activeEffects.contains(SpikeGrowthMovementHazard({
         areaId: spikeGrowthAreaId,
         damageDice: 2,
-        damagePerFeet: spikeGrowthDamagePerFeet,
+        damagePerFeet: spikeGrowthDamageIntervalFeet,
         durationTicks: spikeGrowthDurationTicks,
       }))),
       assert(resolved.fighter.concentrating),
@@ -62,7 +62,7 @@ module battleRuntimeSpikeGrowthMovementHazardTests {
         activeEffects: Set(SpikeGrowthMovementHazard({
           areaId: spikeGrowthAreaId,
           damageDice: 2,
-          damagePerFeet: spikeGrowthDamagePerFeet,
+          damagePerFeet: spikeGrowthDamageIntervalFeet,
           durationTicks: 1,
         })),
       },

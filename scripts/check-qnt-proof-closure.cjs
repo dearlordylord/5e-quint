@@ -59,7 +59,7 @@ const EXCEPTIONS = {
     maxLines: 21_000,
   },
   "packages/battle-runtime/battle-runtime-see-invisibility-tests.qnt": {
-    maxFiles: 63,
+    maxFiles: 62,
     maxLines: 12_500,
   },
 };

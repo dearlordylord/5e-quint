@@ -15,7 +15,7 @@ module battleRuntimeSpikeGrowthMovementHazard {
 
   pure val spikeGrowthDurationTicks = 100
   pure val spikeGrowthAreaId = 7
-  pure val spikeGrowthDamagePerFeet = 5
+  pure val spikeGrowthDamageIntervalFeet = 5
 
   pure def spikeGrowthMovementHazardActive(state: BattleState, areaId: int): bool =
     state.fighter.activeEffects.exists(effect => match effect { | SpikeGrowthMovementHazard(data) => data.areaId == areaId | _ => false })
@@ -54,7 +54,7 @@ module battleRuntimeSpikeGrowthMovementHazard {
             .union(Set(SpikeGrowthMovementHazard({
               areaId: areaId,
               damageDice: 2,
-              damagePerFeet: spikeGrowthDamagePerFeet,
+              damagePerFeet: spikeGrowthDamageIntervalFeet,
               durationTicks: spikeGrowthDurationTicks,
             }))),
         },
@@ -63,7 +63,7 @@ module battleRuntimeSpikeGrowthMovementHazard {
     }
 
   pure def spikeGrowthMovementDamageAmount(rolledDamage: int, movementFeet: int): int =
-    rolledDamage * (movementFeet / spikeGrowthDamagePerFeet)
+    rolledDamage * (movementFeet / spikeGrowthDamageIntervalFeet)
 
   pure def combatantWithSpikeGrowthDamage(
     target: Combatant,
