@@ -49,9 +49,10 @@ Canonical mechanical vocabulary may still come from Surface or shared owners.
 Do not duplicate abilities, damage types, dice, ranges, or durations merely to
 avoid a package import.
 
-`pnpm check:battle-runtime-import-ownership` resolves the complete execution-root
-import graph and rejects paths into admission or presentation. Unresolved local
-imports and non-literal dynamic loading fail the gate.
+`pnpm check:battle-runtime-import-ownership` starts from the declared execution
+entry points, checks their complete reachable import closure, and rejects paths
+into admission or presentation. Unresolved local imports and non-literal
+dynamic loading fail the gate.
 
 ## Reducer extensibility
 
