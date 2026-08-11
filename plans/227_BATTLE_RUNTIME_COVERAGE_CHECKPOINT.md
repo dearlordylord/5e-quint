@@ -20,30 +20,28 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 ## Current authoritative baseline
 
 - Date: 2026-08-11
-- Measured code tree committed as: `d8ce0c853`
+- Measured code tree committed as: `dbd1699cf`
 - Command: `pnpm coverage`
 - Result: exit 0; every workspace coverage package completed green
-- Battle-runtime: 222/222 files passed; 2,386 passed and 81 skipped
+- Battle-runtime: 224/224 files passed; 2,399 passed and 81 skipped
 - Every executable package other than battle-runtime remains at or above 99%
   for statements, branches, functions, and lines.
 
 | Metric     |   Covered / total | Coverage | Uncovered | Gap to 99% |
 | ---------- | ----------------: | -------: | --------: | ---------: |
-| Statements | 121,771 / 125,055 |   97.37% |     3,284 |      2,034 |
-| Branches   |   31,105 / 32,853 |   94.67% |     1,748 |      1,420 |
+| Statements | 121,810 / 125,035 |   97.42% |     3,225 |      1,975 |
+| Branches   |   31,170 / 32,903 |   94.73% |     1,733 |      1,404 |
 | Functions  |     4,827 / 4,827 |     100% |         0 |          0 |
-| Lines      | 121,771 / 125,055 |   97.37% |     3,284 |      2,034 |
+| Lines      | 121,810 / 125,035 |   97.42% |     3,225 |      1,975 |
 
 Recompute the 99% gaps after every production-denominator change.
 
 ## Latest accepted milestone
 
-M29 (`d8ce0c853`) covers public creature/object spell attack-sequence rerolls,
-interrupts, relationship decisions, critical movement, misses, and source
-damage penalties. Focused attribution proved 50 exact residual statements (48
-attack-sequence and 2 Ready-release); the public aggregate gained 53 covered
-statements/lines. Focused checks, reviewer convergence, and public coverage
-passed.
+M30 (`23b0bf6f0`) covers public Heat Metal entry, repeat, damage, reaction,
+Antimagic, concentration, and cross-spell lifecycle boundaries. Focused
+attribution addressed 51 exact residual statements (37 covered and 14 proven
+dead guards pruned); the public aggregate reduced uncovered statements/lines by 59. Focused checks, reviewer convergence, and public coverage passed.
 
 ## Current campaign
 
@@ -55,7 +53,7 @@ passed.
   proof.
 - Avoid owners already marked completed or rejected in
   `/tmp/dnd-work-ownership.md`; that ledger owns live parallel coordination.
-- The current public static gaps are 2,034 statements/lines and 1,420 branches.
+- The current public static gaps are 1,975 statements/lines and 1,404 branches.
 
 ## Verification and completion
 
