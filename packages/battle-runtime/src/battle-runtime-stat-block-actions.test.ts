@@ -597,6 +597,142 @@ describe("battle runtime: Stat Block actions", () => {
     );
   });
 
+  test("a character cannot execute a Stat Block Multiattack subject", () => {
+    const state = fighterVsGoblinBattle();
+    const statBlockProcedureRef = procedureRefForAttack(state, "Scimitar");
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "action",
+          actorId: fighterId,
+          action: "multiattack",
+          procedureRef: statBlockProcedureRef,
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message: "Multiattack requires an admitted Stat Block Multiattack.",
+    });
+  });
+
+  test("a character cannot execute a Stat Block Bonus Action subject", () => {
+    const state = fighterVsGoblinBattle();
+    const statBlockProcedureRef = procedureRefForAttack(state, "Scimitar");
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "bonusAction",
+          actorId: fighterId,
+          action: "statBlockActionOption",
+          procedureRef: statBlockProcedureRef,
+          standardAction: "disengage",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message:
+        "Stat Block Bonus Action requires an admitted Stat Block action option.",
+    });
+  });
+
+  test("a Stat Block Bonus Action rejects another procedure's execution reference", () => {
+    const goblinTurn = requireResolved(
+      endTurn({ state: fighterVsGoblinBattle(), actorId: fighterId }),
+    ).state;
+    const subject = discoveredStatBlockBonusActionSubject(
+      goblinTurn,
+      "disengage",
+    );
+    if (
+      subject.tag !== "bonusAction" ||
+      subject.action !== "statBlockActionOption"
+    ) {
+      throw new Error("Expected a Stat Block Bonus Action subject.");
+    }
+
+    expect(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: {
+          ...subject,
+          procedureRef: procedureRefForAttack(goblinTurn, "Scimitar"),
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message:
+        "Stat Block Bonus Action requires an admitted Stat Block action option.",
+    });
+  });
+
+  test("a Stat Block Bonus Action rejects a standard action outside its admitted options", () => {
+    const goblinTurn = requireResolved(
+      endTurn({ state: fighterVsGoblinBattle(), actorId: fighterId }),
+    ).state;
+    const subject = discoveredStatBlockBonusActionSubject(
+      goblinTurn,
+      "disengage",
+    );
+    if (
+      subject.tag !== "bonusAction" ||
+      subject.action !== "statBlockActionOption"
+    ) {
+      throw new Error("Expected a Stat Block Bonus Action subject.");
+    }
+
+    expect(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: { ...subject, standardAction: "dash" },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+      message:
+        "Stat Block Bonus Action requires an admitted Stat Block action option.",
+    });
+  });
+
+  test("ordinary Stat Blocks do not gain Naturally Stealthy from a larger obscuring creature", () => {
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: fighterVsGoblinBattle({
+          hidePrerequisites: hidePrerequisites([
+            [
+              goblinId,
+              {
+                kind: "obscuredOnlyByCreatureOutOfEnemyLineOfSight",
+                obscuringCreatureId: fighterId,
+              },
+            ],
+          ]),
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const standardActions = discoverStatBlockActs(goblinTurn).flatMap(
+      (candidate) =>
+        candidate.subject.tag === "bonusAction" &&
+        candidate.subject.action === "statBlockActionOption"
+          ? [candidate.subject.standardAction]
+          : [],
+    );
+
+    expect(standardActions).toContain("disengage");
+    expect(standardActions).not.toContain("hide");
+  });
+
   test("Stat Block attacks preserve multiple rolled hit damage components by type", () => {
     const monsterTurn = requireResolved(
       endTurn({

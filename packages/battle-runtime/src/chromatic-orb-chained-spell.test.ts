@@ -10,6 +10,7 @@ import {
   combatantId,
   discoverBattleActCandidates,
   discoverBattleActs,
+  endTurn,
   initiativeScore,
   startBattle,
   type BattleActiveEffect,
@@ -40,6 +41,7 @@ import {
   srdStatBlockCollection,
 } from "@dnd/surface/surface/stat-block-catalog";
 import chromaticOrbInput from "../../surface/content/chromatic_orb.json";
+import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import {
@@ -48,7 +50,10 @@ import {
   battleProcedureExecutionRefForSpellHoleForTest,
   characterBattleFeatureInitForTest,
   characterSpellInvocationForProcedureRefForTest,
+  cantripSpellInvocationRef,
+  requireCharacterSpellProcedureRefForTest,
   requireCharacterUnitProcedureRefForTest,
+  resolveReadySpellForTest,
   resolveBattleSubject,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 } from "./battle-runtime.test-support.ts";
@@ -57,6 +62,7 @@ import { battleD20TestNaturalOneRerollSupportForUnit } from "./unit-feature-supp
 import { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import { chainedSpellFillSet } from "./battle-reducer/spells-resolve-chained.ts";
 import { damageRelationshipQuestionId } from "./battle-reducer/damage-relationship-question-id.ts";
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 
 const spellCasterId = combatantId("chromatic-orb-caster");
 const firstTargetId = combatantId("chromatic-orb-first-target");
@@ -174,6 +180,44 @@ describe("Chromatic Orb chained spell attack", () => {
     expect(requireHole(awaitingAttack.holes, "attackRoll").holeId).not.toEqual(
       targetHole.holeId,
     );
+  });
+
+  test("opens a spell-cast Reaction window before the first chained attack", () => {
+    const session = chromaticOrbSessionWithReadiedResponse("spellCast");
+    const act = chromaticOrbAct(session.state);
+    const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
+    const typeFill = damageTypeFill(damageTypeHole, "fire");
+    const targetHole = requireHole(
+      resolveNeedsHoles(session.state, act.subject, [typeFill]).holes,
+      "targetChoice",
+    );
+
+    expect(
+      resolveNeedsHoles(session.state, act.subject, [
+        typeFill,
+        spellTargetFill(targetHole, firstTargetId),
+      ]),
+    ).toMatchObject({
+      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
+      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
+    });
+  });
+
+  test("opens an attack-hit Reaction window after a chained attack hits", () => {
+    const session = chromaticOrbSessionWithReadiedResponse("attackHit");
+    const attack = chromaticOrbAttackFills(session.state, {
+      damageType: "thunder",
+      targetId: firstTargetId,
+      attackTotal: 18,
+      naturalD20: 12,
+    });
+
+    expect(
+      resolveNeedsHoles(session.state, attack.subject, attack.fills),
+    ).toMatchObject({
+      holes: [{ kind: "interruptDecision", trigger: "attackHit" }],
+      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
+    });
   });
 
   test("offers the D20 Test natural-one reroll before advancing the chain", () => {
@@ -798,8 +842,38 @@ function chromaticOrbBattle(input: {
   readonly casterNaturalOneRerollUnit?: UnitRecord;
   readonly secondTargetKind?: "character" | "poisonImmuneSkeleton";
   readonly spell?: SpellRecord;
+  readonly readiedResponseCantrip?: boolean;
 }): BattleState {
   return chromaticOrbSession(input).state;
+}
+
+function chromaticOrbSessionWithReadiedResponse(
+  trigger: "spellCast" | "attackHit",
+): BattleRuntimeSession {
+  const session = chromaticOrbSession({
+    spellLevel: 1,
+    readiedResponseCantrip: true,
+  });
+  const firstTargetTurn = resolveEndTurn(session.state, spellCasterId);
+  const secondTargetTurn = resolveEndTurn(firstTargetTurn, firstTargetId);
+  const responderTurn = resolveEndTurn(secondTargetTurn, secondTargetId);
+  const readied = resolveReadySpellForTest({
+    state: responderTurn,
+    actorId: thirdTargetId,
+    procedureRef: requireCharacterSpellProcedureRefForTest(
+      session,
+      thirdTargetId,
+      cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+    ),
+    trigger,
+  });
+  if (readied.tag !== "resolved") {
+    throw new Error(`Expected readied response, got ${readied.tag}.`);
+  }
+  return battleRuntimeSessionForTest({
+    context: session.context,
+    state: resolveEndTurn(readied.state, thirdTargetId),
+  });
 }
 
 function chromaticOrbSession(input: {
@@ -809,6 +883,7 @@ function chromaticOrbSession(input: {
   readonly casterNaturalOneRerollUnit?: UnitRecord;
   readonly secondTargetKind?: "character" | "poisonImmuneSkeleton";
   readonly spell?: SpellRecord;
+  readonly readiedResponseCantrip?: boolean;
 }): BattleRuntimeSession {
   const casterNaturalOneRerollSupport =
     input.casterNaturalOneRerollUnit === undefined
@@ -887,6 +962,22 @@ function chromaticOrbSession(input: {
         combatantId: thirdTargetId,
         displayName: "Third target",
         initiative: 8,
+        ...(input.readiedResponseCantrip === true
+          ? {
+              spellcasting: {
+                sourceClassName: "wizard" as const,
+                spellcastingAbilityModifier: abilityModifier(3),
+                proficiencyBonus: proficiencyBonus(2),
+                canCastSpells: true,
+                cantrips: [decodeSpellRecord(rayOfFrostInput)],
+                preparedSpells: [],
+                featurePreparedSpells: [],
+                spellbookRitualSpellAccesses: [],
+                invocationSpellAccesses: [],
+                spellSlots: [],
+              },
+            }
+          : {}),
       }),
     ],
   });
@@ -1036,6 +1127,14 @@ function resolveInvalid(
     throw new Error(`Expected invalid, got ${result.tag}.`);
   }
   return result;
+}
+
+function resolveEndTurn(state: BattleState, actorId: CombatantId): BattleState {
+  const result = endTurn({ state, actorId });
+  if (result.tag !== "resolved") {
+    throw new Error(`Expected End Turn to resolve, got ${result.tag}.`);
+  }
+  return result.state;
 }
 
 function withTargetConcentration(state: BattleState): BattleState {

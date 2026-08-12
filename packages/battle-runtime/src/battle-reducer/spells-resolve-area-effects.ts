@@ -103,7 +103,6 @@ function areaOngoingSpellReleaseResourceState(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
   readonly invocation: BattleExecutableSpellInvocation;
-  readonly errorState: BattleState;
   readonly resource: AreaOngoingSpellReleaseResource;
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
   if (input.resource.kind === "storedGlyphSpellRelease") {
@@ -117,12 +116,31 @@ function areaOngoingSpellReleaseResourceState(input: {
     state: input.state,
     actorId: input.actorId,
     invocation: input.invocation,
-    errorState: input.errorState,
+    errorState: input.state,
     ...optionalProperty(
       "metamagicApplications",
       input.resource.metamagicApplications,
     ),
   });
+}
+
+function resolveAreaOngoingSpellEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly invocation: BattleExecutableSpellInvocation;
+  readonly resource: AreaOngoingSpellReleaseResource;
+  readonly applyEffect: (state: BattleState) => BattleState;
+}): BattleResolutionResult {
+  const resourced = areaOngoingSpellReleaseResourceState(input);
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const nextState = input.applyEffect(resourced.state);
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
 }
 
 function invalidStoredGlyphAreaCenterResult(input: {
@@ -271,36 +289,29 @@ export function resolveFogCloudObscurementSpellAct(input: {
     );
   }
   /* v8 ignore stop */
+  const areaChoice = input.fillSet.areaChoice;
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
-    areaChoice: input.fillSet.areaChoice,
+    areaChoice,
     releaseResource: input.releaseResource,
   });
   if (invalidStoredGlyphCenter !== null) {
     return invalidStoredGlyphCenter;
   }
 
-  const resourced = areaOngoingSpellReleaseResourceState({
+  return resolveAreaOngoingSpellEffect({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
-    errorState: input.input.state,
     resource: input.releaseResource ?? ordinarySpellCastResource(),
+    applyEffect: (state) =>
+      applyFogCloudObscurementCastEffect({
+        state,
+        actorId: input.actorId,
+        areaId: areaChoice.areaId,
+        invocation: input.invocation,
+      }),
   });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const nextState = applyFogCloudObscurementCastEffect({
-    state: resourced.state,
-    actorId: input.actorId,
-    areaId: input.fillSet.areaChoice.areaId,
-    invocation: input.invocation,
-  });
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 export function resolveMagicalDarknessPointOriginSpellAct(input: {
@@ -358,9 +369,10 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
     );
   }
   /* v8 ignore stop */
+  const areaChoice = input.fillSet.areaChoice;
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
-    areaChoice: input.fillSet.areaChoice,
+    areaChoice,
     releaseResource: input.releaseResource,
   });
   if (invalidStoredGlyphCenter !== null) {
@@ -368,7 +380,7 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
   }
   const invalidOverlap = magicalDarknessAreaChoiceInvalidReason(
     input.input.state,
-    input.fillSet.areaChoice,
+    areaChoice,
     input.invocation,
   );
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -377,27 +389,19 @@ export function resolveMagicalDarknessPointOriginSpellAct(input: {
   }
   /* v8 ignore stop */
 
-  const resourced = areaOngoingSpellReleaseResourceState({
+  return resolveAreaOngoingSpellEffect({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
-    errorState: input.input.state,
     resource: input.releaseResource ?? ordinarySpellCastResource(),
+    applyEffect: (state) =>
+      applyMagicalDarknessPointOriginCastEffect({
+        state,
+        actorId: input.actorId,
+        areaChoice,
+        invocation: input.invocation,
+      }),
   });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const nextState = applyMagicalDarknessPointOriginCastEffect({
-    state: resourced.state,
-    actorId: input.actorId,
-    areaChoice: input.fillSet.areaChoice,
-    invocation: input.invocation,
-  });
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 function magicalDarknessAreaChoiceInvalidReason(
@@ -494,36 +498,29 @@ export function resolveFlamingSphereSpellAct(input: {
     );
   }
   /* v8 ignore stop */
+  const areaChoice = input.fillSet.areaChoice;
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
-    areaChoice: input.fillSet.areaChoice,
+    areaChoice,
     releaseResource: input.releaseResource,
   });
   if (invalidStoredGlyphCenter !== null) {
     return invalidStoredGlyphCenter;
   }
 
-  const resourced = areaOngoingSpellReleaseResourceState({
+  return resolveAreaOngoingSpellEffect({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
-    errorState: input.input.state,
     resource: input.releaseResource ?? ordinarySpellCastResource(),
+    applyEffect: (state) =>
+      applyFlamingSphereCastEffect({
+        state,
+        actorId: input.actorId,
+        areaId: areaChoice.areaId,
+        invocation: input.invocation,
+      }),
   });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const nextState = applyFlamingSphereCastEffect({
-    state: resourced.state,
-    actorId: input.actorId,
-    areaId: input.fillSet.areaChoice.areaId,
-    invocation: input.invocation,
-  });
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 export function resolveSpikeGrowthMovementHazardSpellAct(input: {
@@ -581,36 +578,29 @@ export function resolveSpikeGrowthMovementHazardSpellAct(input: {
     );
   }
   /* v8 ignore stop */
+  const areaChoice = input.fillSet.areaChoice;
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
-    areaChoice: input.fillSet.areaChoice,
+    areaChoice,
     releaseResource: input.releaseResource,
   });
   if (invalidStoredGlyphCenter !== null) {
     return invalidStoredGlyphCenter;
   }
 
-  const resourced = areaOngoingSpellReleaseResourceState({
+  return resolveAreaOngoingSpellEffect({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
-    errorState: input.input.state,
     resource: input.releaseResource ?? ordinarySpellCastResource(),
+    applyEffect: (state) =>
+      applySpikeGrowthMovementHazardCastEffect({
+        state,
+        actorId: input.actorId,
+        areaId: areaChoice.areaId,
+        invocation: input.invocation,
+      }),
   });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const nextState = applySpikeGrowthMovementHazardCastEffect({
-    state: resourced.state,
-    actorId: input.actorId,
-    areaId: input.fillSet.areaChoice.areaId,
-    invocation: input.invocation,
-  });
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 export function resolveMoonbeamSpellAct(input: {
@@ -668,36 +658,29 @@ export function resolveMoonbeamSpellAct(input: {
     );
   }
   /* v8 ignore stop */
+  const areaChoice = input.fillSet.areaChoice;
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
-    areaChoice: input.fillSet.areaChoice,
+    areaChoice,
     releaseResource: input.releaseResource,
   });
   if (invalidStoredGlyphCenter !== null) {
     return invalidStoredGlyphCenter;
   }
 
-  const resourced = areaOngoingSpellReleaseResourceState({
+  return resolveAreaOngoingSpellEffect({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
-    errorState: input.input.state,
     resource: input.releaseResource ?? ordinarySpellCastResource(),
+    applyEffect: (state) =>
+      applyMoonbeamCastEffect({
+        state,
+        actorId: input.actorId,
+        areaId: areaChoice.areaId,
+        invocation: input.invocation,
+      }),
   });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const nextState = applyMoonbeamCastEffect({
-    state: resourced.state,
-    actorId: input.actorId,
-    areaId: input.fillSet.areaChoice.areaId,
-    invocation: input.invocation,
-  });
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 export function resolveWebRestraintHazardSpellAct(input: {
@@ -755,36 +738,29 @@ export function resolveWebRestraintHazardSpellAct(input: {
     );
   }
   /* v8 ignore stop */
+  const areaChoice = input.fillSet.areaChoice;
   const invalidStoredGlyphCenter = invalidStoredGlyphAreaCenterResult({
     state: input.input.state,
-    areaChoice: input.fillSet.areaChoice,
+    areaChoice,
     releaseResource: input.releaseResource,
   });
   if (invalidStoredGlyphCenter !== null) {
     return invalidStoredGlyphCenter;
   }
 
-  const resourced = areaOngoingSpellReleaseResourceState({
+  return resolveAreaOngoingSpellEffect({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
-    errorState: input.input.state,
     resource: input.releaseResource ?? ordinarySpellCastResource(),
+    applyEffect: (state) =>
+      applyWebRestraintHazardCastEffect({
+        state,
+        actorId: input.actorId,
+        areaId: areaChoice.areaId,
+        invocation: input.invocation,
+      }),
   });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const nextState = applyWebRestraintHazardCastEffect({
-    state: resourced.state,
-    actorId: input.actorId,
-    areaId: input.fillSet.areaChoice.areaId,
-    invocation: input.invocation,
-  });
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 export function resolveSleetStormAreaHazardSpellAct(input: {
@@ -841,27 +817,21 @@ export function resolveSleetStormAreaHazardSpellAct(input: {
     );
   }
   /* v8 ignore stop */
+  const areaChoice = input.fillSet.areaChoice;
 
-  const resourced = spendSpellCastResources({
+  return resolveAreaOngoingSpellEffect({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
-    errorState: input.input.state,
+    resource: ordinarySpellCastResource(),
+    applyEffect: (state) =>
+      applySleetStormAreaHazardCastEffect({
+        state,
+        actorId: input.actorId,
+        areaId: areaChoice.areaId,
+        invocation: input.invocation,
+      }),
   });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const nextState = applySleetStormAreaHazardCastEffect({
-    state: resourced.state,
-    actorId: input.actorId,
-    areaId: input.fillSet.areaChoice.areaId,
-    invocation: input.invocation,
-  });
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 export function resolveInsectPlagueAreaHazardSpellAct(input: {
@@ -919,28 +889,21 @@ export function resolveInsectPlagueAreaHazardSpellAct(input: {
     );
   }
   /* v8 ignore stop */
+  const areaChoice = input.fillSet.areaChoice;
 
-  const resourced = areaOngoingSpellReleaseResourceState({
+  return resolveAreaOngoingSpellEffect({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
-    errorState: input.input.state,
     resource: input.releaseResource ?? ordinarySpellCastResource(),
+    applyEffect: (state) =>
+      applyInsectPlagueAreaHazardCastEffect({
+        state,
+        actorId: input.actorId,
+        areaId: areaChoice.areaId,
+        invocation: input.invocation,
+      }),
   });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const nextState = applyInsectPlagueAreaHazardCastEffect({
-    state: resourced.state,
-    actorId: input.actorId,
-    areaId: input.fillSet.areaChoice.areaId,
-    invocation: input.invocation,
-  });
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 export function resolveCloudkillAreaHazardSpellAct(input: {
@@ -998,28 +961,21 @@ export function resolveCloudkillAreaHazardSpellAct(input: {
     );
   }
   /* v8 ignore stop */
+  const areaChoice = input.fillSet.areaChoice;
 
-  const resourced = areaOngoingSpellReleaseResourceState({
+  return resolveAreaOngoingSpellEffect({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
-    errorState: input.input.state,
     resource: input.releaseResource ?? ordinarySpellCastResource(),
+    applyEffect: (state) =>
+      applyCloudkillAreaHazardCastEffect({
+        state,
+        actorId: input.actorId,
+        areaId: areaChoice.areaId,
+        invocation: input.invocation,
+      }),
   });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const nextState = applyCloudkillAreaHazardCastEffect({
-    state: resourced.state,
-    actorId: input.actorId,
-    areaId: input.fillSet.areaChoice.areaId,
-    invocation: input.invocation,
-  });
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
 
 export function resolveGustOfWindLineSpellAct(input: {
@@ -1167,29 +1123,21 @@ export function resolveGustOfWindLineSpellAct(input: {
     }
   }
 
-  const resourced = areaOngoingSpellReleaseResourceState({
+  return resolveAreaOngoingSpellEffect({
     state: input.input.state,
     actorId: input.actorId,
     invocation: input.invocation,
-    errorState: input.input.state,
     resource:
       input.releaseResource ??
       ordinarySpellCastResource(input.metamagicApplications),
+    applyEffect: (state) =>
+      applyGustOfWindLineCastEffect({
+        state,
+        actorId: input.actorId,
+        area,
+        invocation: input.invocation,
+        heightenedSpellTargetId:
+          metamagicSelections.heightenedSpellTargetId ?? null,
+      }),
   });
-  if (resourced.tag === "invalid") {
-    return resourced;
-  }
-  const nextState = applyGustOfWindLineCastEffect({
-    state: resourced.state,
-    actorId: input.actorId,
-    area,
-    invocation: input.invocation,
-    heightenedSpellTargetId:
-      metamagicSelections.heightenedSpellTargetId ?? null,
-  });
-  return {
-    tag: "resolved",
-    state: nextState,
-    snapshot: snapshotBattle(nextState),
-  };
 }
