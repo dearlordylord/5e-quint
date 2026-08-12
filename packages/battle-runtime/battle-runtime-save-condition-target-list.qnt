@@ -7,6 +7,7 @@ module battleRuntimeSaveConditionTargetList {
 
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeCreatureTypeProtection.* from "./battle-runtime-creature-type-protection"
+  import battleRuntimeConcentration.* from "./battle-runtime-concentration"
 
   pure def saveGatedConditionTarget(
     invocation: SaveGatedConditionInvocation,
@@ -31,4 +32,17 @@ module battleRuntimeSaveConditionTargetList {
           target.activeEffects
         { ...target, activeEffects: baseEffects.union(saveGatedConditionFailedSaveActiveEffects(invocation, state, source)) }
       }
+
+  pure def saveGatedConditionTargetAfterDamage(
+    target: Combatant,
+    damage: int,
+    damageSource: Actor,
+  ): Combatant =
+    if (damage > 0)
+      {
+        ...target,
+        activeEffects: activeEffectsAfterTargetDamagedByCasterOrAlly(target.activeEffects, damageSource, Set()),
+      }
+    else
+      target
 }

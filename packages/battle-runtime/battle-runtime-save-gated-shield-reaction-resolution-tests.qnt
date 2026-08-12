@@ -25,6 +25,22 @@ module battleRuntimeSaveGatedShieldReactionResolutionTests {
     }
   }
 
+  run test_ice_knife_spell_attack_hit_opens_shield_reaction_before_damage = {
+    val awaiting = resolveIceKnife(initialState, 15, 10, 4, false, false, false, 6, true, true)
+    all {
+      assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
+        trigger: AttackHit,
+        procedure: ShieldReactionProcedure,
+        eligibleReactors: Set(Goblin),
+        offeredReactors: Set(),
+        continuation: ResumeIceKnife,
+      })),
+      assert(awaiting.goblin.hp == 10),
+      assert(awaiting.actionAvailable),
+      assert(not(battleActorHasSpellSlotUse(awaiting, Fighter))),
+    }
+  }
+
   run test_save_gated_shield_rejects_non_ice_knife_continuation_without_spend = {
     val awaiting = openReactionWindow(initialState, {
       trigger: AttackHit,
