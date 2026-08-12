@@ -42,6 +42,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   decodeReducerRoute,
@@ -1276,7 +1277,8 @@ function actionSpellAct(
 ): ActionSpellAct {
   const act = discoverBattleActCandidates(state).find(
     (candidate): candidate is ActionSpellAct =>
-      candidate.subject.tag === "actionSpell",
+      candidate.subject.tag === "actionSpell" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
     throw new Error(`Expected action spell act for ${spellId}.`);
