@@ -1053,7 +1053,7 @@
       "profiles": ["spell.invocation-ongoing-spell-ending"],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt",
-        "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
         "packages/battle-runtime/battle-runtime-object-contact-damage.qnt"
       ],
       "runtime": "battle",
@@ -1684,7 +1684,7 @@
       ],
       "profiles": ["spell.invocation-object-light"],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt",
         "packages/battle-runtime/battle-runtime-end-of-turn-light-expiration.qnt"
       ],
@@ -1753,7 +1753,11 @@
         }
       ],
       "profiles": ["spell.invocation-held-light-emitter"],
-      "qntOwners": ["packages/battle-runtime/battle-runtime-light.qnt"],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt"
+      ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -1780,7 +1784,11 @@
         }
       ],
       "profiles": ["spell.invocation-spell-created-held-object"],
-      "qntOwners": ["packages/battle-runtime/battle-runtime-light.qnt"],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt"
+      ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -1805,7 +1813,10 @@
         }
       ],
       "profiles": ["spell.invocation-dancing-lights-movable-dim-light"],
-      "qntOwners": ["packages/battle-runtime/battle-runtime-light.qnt"],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
+      ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -2653,8 +2664,9 @@
       "profiles": ["spell.invocation-sanctuary-targeting-interdiction"],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-sanctuary.qnt",
-        "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt",
-        "packages/battle-runtime/battle-runtime-actor-combatants.qnt"
+        "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
+        "packages/battle-runtime/battle-runtime-direct-condition-action-lifecycle.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -7888,14 +7900,7 @@
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-light.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
-      "obligationIds": [
-        "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
-        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
-        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
-      ],
+      "obligationIds": ["BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"],
       "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
       "role": "semantic-core"
     },
@@ -9275,10 +9280,10 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt is profile-scoped QNT proof support for Sanctuary spell resolution; direct-condition semantics belong to the focused Invisibility owner.",
+      "evidence": "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt owns Sanctuary spell activation and target ward application semantics.",
       "obligationIds": ["BATTLE.SANCTUARY.TARGETING_INTERDICTION"],
-      "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt",
-      "role": "proof-only"
+      "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
+      "role": "semantic-core"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-hunters-prey.qnt carries Hunter's Prey option admission and battle hit-rider semantics for the broad Unit feature procedure obligation.",
@@ -10573,8 +10578,11 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-direct-condition-action-lifecycle.qnt owns shared direct-condition target-action and source-action early-ending lifecycle semantics.",
-      "obligationIds": ["BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"],
+      "evidence": "packages/battle-runtime/battle-runtime-direct-condition-action-lifecycle.qnt owns shared direct-condition and Sanctuary target-action/source-action early-ending lifecycle semantics.",
+      "obligationIds": [
+        "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
+        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"
+      ],
       "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-action-lifecycle.qnt",
       "role": "semantic-core"
     },
@@ -10591,6 +10599,37 @@
         "BATTLE.SPELL.REACTION_CASTING_TIME"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Master-owned Light emitter source slice for object, held, spell-created, Dancing Lights projection, and tracked ongoing-spell ending semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
+        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Master-owned Light spell lifecycle source slice for Dancing Lights, object Light, Continual Flame, Produce Flame held state, and Flame Blade lifecycle semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Master-owned Light spell attack source slice for Produce Flame hurl and Flame Blade attack continuation semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
       "role": "semantic-core"
     }
   ],
@@ -10705,11 +10744,6 @@
       "classification": "exempt",
       "evidence": "Generic condition-rider route fact vocabulary leaf imported by the focused route connector without owning reducer semantics.",
       "ownerPath": "packages/battle-runtime/battle-runtime-condition-rider-route-facts.qnt"
-    },
-    {
-      "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt",
-      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -10944,7 +10978,22 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
       "role": "semantic-core"
     },
     {
@@ -11309,6 +11358,11 @@
       "classification": "exempt",
       "evidence": "Exact reducer-route choice payload vocabulary leaf imported by focused route connector MBT drivers without owning reducer semantics.",
       "ownerPath": "packages/battle-runtime/battle-runtime-route-choice-payloads.qnt"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -13824,7 +13878,7 @@
       "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt",
-        "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
         "packages/battle-runtime/battle-runtime-object-contact-damage.qnt"
       ],
       "status": "generation-subset-clean"
@@ -14327,7 +14381,7 @@
       "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt",
         "packages/battle-runtime/battle-runtime-end-of-turn-light-expiration.qnt"
       ],
@@ -14396,7 +14450,11 @@
       ],
       "obligationId": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": ["packages/battle-runtime/battle-runtime-light.qnt"],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt"
+      ],
       "status": "generation-subset-clean"
     },
     {
@@ -14426,7 +14484,11 @@
       ],
       "obligationId": "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": ["packages/battle-runtime/battle-runtime-light.qnt"],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt"
+      ],
       "status": "generation-subset-clean"
     },
     {
@@ -14456,7 +14518,10 @@
       ],
       "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": ["packages/battle-runtime/battle-runtime-light.qnt"],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
+      ],
       "status": "generation-subset-clean"
     },
     {
@@ -15163,7 +15228,11 @@
       ],
       "obligationId": "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
       "proofOnly": [],
-      "semanticCore": ["packages/battle-runtime/battle-runtime-sanctuary.qnt"],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-sanctuary.qnt",
+        "packages/battle-runtime/battle-runtime-direct-condition-action-lifecycle.qnt",
+        "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt"
+      ],
       "status": "generation-subset-clean"
     },
     {

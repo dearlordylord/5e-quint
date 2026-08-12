@@ -39,12 +39,7 @@ const PURE_VOCABULARY_LEAVES = new Map([
 
 // Existing integration proofs may only retain their current closure size. A
 // root that reaches the defaults must graduate by deleting its entry.
-const EXCEPTIONS = {
-  "packages/battle-runtime/battle-runtime-save-spell-residual-tests.qnt": {
-    maxFiles: 66,
-    maxLines: 13_000,
-  },
-};
+const EXCEPTIONS = {};
 
 function roundedLineCeiling(lines) {
   return Math.ceil(lines / 500) * 500;
