@@ -166,7 +166,10 @@ scratch consumer. It may project scenario-fixed facts only; delegated player or
 GM choices and unresolved Table Decisions remain with their owners. If the
 setup API cannot defer them, the setup returns an obstruction. Only the
 resulting setup source is retained. This is the same code-consumer boundary as
-play, not a scenario interpreter or generated build schema.
+play, not a scenario interpreter or generated build schema. When the optional
+Codex filesystem profile is unavailable, this cooperative authoring step falls
+back to explicit scratch-only instructions; it does not claim hostile-code
+isolation.
 
 ### Execute through the public SDK
 
