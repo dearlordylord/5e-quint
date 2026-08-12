@@ -180,6 +180,7 @@ describe("end-user MCP vertical", () => {
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
+      "Ready",
       "End Turn",
     ]);
     const fighterLongswordAttack = requireAttackAct(
@@ -219,9 +220,13 @@ describe("end-user MCP vertical", () => {
       "Attack",
       "Attack",
       "Attack",
+      "Attack",
       ...GENERIC_COMBAT_ACTION_LABELS,
+      "Unarmed Strike (Grapple)",
+      "Unarmed Strike (Shove)",
       "Nimble Escape",
       "Move",
+      "Ready",
       "End Turn",
     ]);
 
@@ -418,6 +423,7 @@ describe("end-user MCP vertical", () => {
       "Second Wind",
       "Action Surge",
       "Move",
+      "Ready",
       "End Turn",
     ]);
     const fighterFlailAttack = requireAttackAct(
@@ -477,6 +483,7 @@ describe("end-user MCP vertical", () => {
       "Adrenaline Rush: Dash",
       "Second Wind",
       "Move",
+      "Ready",
       "End Turn",
     ]);
 
@@ -599,53 +606,46 @@ describe("end-user MCP vertical", () => {
     });
 
     const skeletonActs = callTool(root, "discover_battle_acts", {});
+    const skeletonAttack = requireAttackAct(
+      root,
+      "skeleton-b",
+      "Shortsword",
+    ).subject;
     expect(skeletonActs.availableActs).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
-          subject: requireAttackAct(root, "skeleton-b", "Shortsword").subject,
+          subject: skeletonAttack,
         }),
       ]),
     );
-    const skeletonTarget = fillBattleSubject(
-      root,
-      requireAttackAct(root, "skeleton-b", "Shortsword").subject,
-      {
-        kind: "targetChoice",
-        holeId: "battle:attack:target",
-        value: "fighter",
-      },
-    );
+    const skeletonTarget = fillBattleSubject(root, skeletonAttack, {
+      kind: "targetChoice",
+      holeId: "battle:attack:target",
+      value: "fighter",
+    });
     const skeletonAttackRoll = skeletonTarget.result.holes.find(
       (hole: { readonly kind?: string }) => hole.kind === "attackRoll",
     );
     if (skeletonAttackRoll === undefined) {
       throw new Error("Expected Skeleton attack roll hole.");
     }
-    fillBattleSubject(
-      root,
-      requireAttackAct(root, "skeleton-b", "Shortsword").subject,
-      {
-        kind: "attackRoll",
-        holeId: skeletonAttackRoll.holeId,
-        value: {
-          total: 20,
-          naturalD20: 15,
-          ...("rollMode" in skeletonAttackRoll
-            ? { rollMode: skeletonAttackRoll.rollMode }
-            : {}),
-        },
+    fillBattleSubject(root, skeletonAttack, {
+      kind: "attackRoll",
+      holeId: skeletonAttackRoll.holeId,
+      value: {
+        total: 20,
+        naturalD20: 15,
+        ...("rollMode" in skeletonAttackRoll
+          ? { rollMode: skeletonAttackRoll.rollMode }
+          : {}),
       },
-    );
-    const afterSkeletonAttack = fillBattleSubject(
-      root,
-      requireAttackAct(root, "skeleton-b", "Shortsword").subject,
-      {
-        kind: "rolledDice",
-        holeId: "battle:attack:damage-result:1d6+3-piercing",
-        value: [{ results: [1] }],
-      },
-    );
+    });
+    const afterSkeletonAttack = fillBattleSubject(root, skeletonAttack, {
+      kind: "rolledDice",
+      holeId: "battle:attack:damage-result:1d6+3-piercing",
+      value: [{ results: [1] }],
+    });
     expect(afterSkeletonAttack.snapshot.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 16 }),
       expect.objectContaining({ combatantId: "wizard", hp: 14 }),
