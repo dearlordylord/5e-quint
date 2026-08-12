@@ -48,6 +48,7 @@ import {
   elapsedTimeTicks,
   endTurn,
   movementFeet,
+  movementDeltaFeet,
   resolveBattleSubject,
   spellSlotInvocationRef,
   type AvailableBattleAct,
@@ -501,7 +502,24 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
           act.subject.command === "gustOfWindLineDirectionChange",
       ),
     ).toBe(false);
-    const laterTurn = advanceToCasterLaterTurn(cast.state);
+    const laterTurnBase = advanceToCasterLaterTurn(cast.state);
+    const caster = requireCombatant(laterTurnBase, spellCasterId);
+    const unrelatedEffect = {
+      kind: "speedDelta",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic-gust-of-wind-composition",
+      ),
+      sourceCombatantId: spellCasterId,
+      deltaFeet: movementDeltaFeet(10),
+      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
+    } as const;
+    const laterTurn: BattleState = {
+      ...laterTurnBase,
+      combatants: new Map(laterTurnBase.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: [...caster.activeEffects, unrelatedEffect],
+      }),
+    };
     const directionAct = gustOfWindLineDirectionChangeAct(laterTurn);
     const directionHole = requireHole(
       directionAct.initialHoles,
@@ -542,6 +560,9 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
         },
       }),
     );
+    expect(
+      requireCombatant(resolved.state, spellCasterId).activeEffects,
+    ).toEqual(expect.arrayContaining([unrelatedEffect]));
   });
 
   test("Heightened Gust of Wind stores the selected target on the Line occurrence", () => {
