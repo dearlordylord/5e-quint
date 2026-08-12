@@ -157,7 +157,12 @@ const actionSurgeGrants = [
   "ActionSurgeActionSpent",
 ] as const;
 type ActionSurgeGrant = (typeof actionSurgeGrants)[number];
-const frenzyMbtDamageTypes = ["bludgeoning", "piercing", "fire"] as const;
+const frenzyMbtDamageTypes = [
+  "bludgeoning",
+  "slashing",
+  "piercing",
+  "fire",
+] as const;
 type FrenzyMbtDamageType = (typeof frenzyMbtDamageTypes)[number];
 type FrenzyDamageTypeSelectionProjection =
   | { readonly tag: "notObserved" }
@@ -567,7 +572,7 @@ const selectedUnitIdentityReplays = [
           lastDamageAmount: 2,
           frenzyDamageTypeSelection: {
             tag: "automatic",
-            damageType: "bludgeoning",
+            damageType: "slashing",
           },
           lastResult: "resolved",
         }),
@@ -778,6 +783,7 @@ function projectFrenzyMbtDamageType(
 ): FrenzyMbtDamageType {
   if (
     damageType === "bludgeoning" ||
+    damageType === "slashing" ||
     damageType === "piercing" ||
     damageType === "fire"
   ) {
@@ -1171,7 +1177,7 @@ function createRuleCoreFeatureDriver(
         featureUsesRemaining = resourceUsesRemaining(state);
         lastDamageAmount = 2;
         recordFrenzyDamageTypeSelection({
-          choices: ["bludgeoning"],
+          choices: ["slashing"],
           selectedDamageType: undefined,
         });
       },
