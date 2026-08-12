@@ -314,7 +314,7 @@ export function resolveAttackDamageReductionZeroDamageRedirectAfterReduction(inp
     extendSavingThrowOngoingFeatures(
       input.state,
       offer.reactorId,
-      input.redirectTarget === undefined ? [] : [input.redirectTarget.value],
+      [selection.value.targetId],
       relationshipFacts,
     ),
     offer.reactorId,
@@ -475,7 +475,6 @@ export function attackDamageReductionZeroDamageRedirectTargetChoices(
   return [...state.combatants]
     .filter(
       ([targetId, target]) =>
-        targetId !== reactorId &&
         !zeroHpLifecycleIsTerminal(target) &&
         combatantCanSee(state, reactorId, targetId),
     )

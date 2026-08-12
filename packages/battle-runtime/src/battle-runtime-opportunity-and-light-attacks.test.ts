@@ -28,6 +28,7 @@ import {
   statBlockRecord,
   damageRollFill,
   damageRollFillWithGroups,
+  concentrationSavingThrowFill,
   attackDamageDispositionFill,
   rolledDiceGroup,
   characterSeed,
@@ -60,6 +61,7 @@ import {
   withResistanceEffect,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
+  resistanceUnitId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
@@ -268,7 +270,253 @@ function statBlockAttackProcedureRef(
   return BattleStatBlockProcedureExecutionRef.make(subject.procedureRef);
 }
 
+function lightPropertyAttackState(
+  ...additionalCombatants: Parameters<typeof startBattleRight>[0]["combatants"]
+) {
+  return startBattleRight({
+    battleId: battleId("battle-off-hand-boundaries"),
+    combatants: [
+      characterSeed({
+        initiative: 20,
+        attack: testShortswordAttack(),
+        offHandAttack: testDaggerAttack(),
+        selectedLoadout: {
+          weapon: {
+            itemId: battleObjectId("main:weapon_shortsword"),
+            unitId: parseSharedUnitId("weapon_shortsword"),
+            grip: "one_handed",
+          },
+          offHandWeapon: {
+            itemId: battleObjectId("off:weapon_dagger"),
+            unitId: parseSharedUnitId("weapon_dagger"),
+          },
+        },
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+      ...additionalCombatants,
+    ],
+  });
+}
+
+function lightPropertyAttackPrefix(state: BattleState, targetId = goblinId) {
+  const qualifyingSubject = fighterAttackSubject(state, "Shortsword");
+  const qualifyingTarget = requireHole(
+    resolveBattleSubject({ state, subject: qualifyingSubject, fills: [] }),
+    "targetChoice",
+  );
+  const qualifyingRoll = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: qualifyingSubject,
+      fills: [targetFill(qualifyingTarget, goblinId)],
+    }),
+    "attackRoll",
+  );
+  const qualifiedState = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: qualifyingSubject,
+      fills: [
+        targetFill(qualifyingTarget, goblinId),
+        attackRollFill(qualifyingRoll, { total: 1, naturalD20: 1 }),
+      ],
+    }),
+  ).state;
+  const subject = characterBonusAttackSubjectForTest(
+    qualifiedState,
+    fighterId,
+    "offHandAttack",
+  );
+  const target = requireHole(
+    resolveBattleSubject({ state: qualifiedState, subject, fills: [] }),
+    "targetChoice",
+  );
+  const attackRoll = requireHole(
+    resolveBattleSubject({
+      state: qualifiedState,
+      subject,
+      fills: [targetFill(target, targetId)],
+    }),
+    "attackRoll",
+  );
+  return { state: qualifiedState, subject, target, attackRoll };
+}
+
 describe("battle runtime: Light property and Opportunity Attacks", () => {
+  test("Light Property Bonus Action Attack applies spell reduction before damage and still spends the Bonus Action at zero damage", () => {
+    const resistanceProcedureRef =
+      battleProcedureExecutionRefForTest(resistanceUnitId);
+    const base = lightPropertyAttackState(
+      characterSeed({ combatantId: spellCasterId, initiative: 5 }),
+    );
+    const caster = base.combatants.get(spellCasterId);
+    if (caster === undefined) {
+      throw new Error("Expected the synthetic Resistance caster.");
+    }
+    const concentratingBase: BattleState = {
+      ...base,
+      combatants: new Map(base.combatants).set(spellCasterId, {
+        ...caster,
+        concentration: {
+          sourceProcedureRef: resistanceProcedureRef,
+          effectKind: "spellEffect",
+        },
+      }),
+    };
+    const prefix = lightPropertyAttackPrefix(
+      withResistanceEffect(concentratingBase, goblinId, "piercing", false),
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: prefix.state,
+        subject: prefix.subject,
+        fills: [
+          targetFill(prefix.target, goblinId),
+          attackRollFill(prefix.attackRoll, {
+            total: 15,
+            naturalD20: 10,
+          }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const needsReduction = resolveBattleSubject({
+      state: prefix.state,
+      subject: prefix.subject,
+      fills: [
+        targetFill(prefix.target, goblinId),
+        attackRollFill(prefix.attackRoll, { total: 15, naturalD20: 10 }),
+        damageRollFill(damage, 4),
+      ],
+    });
+    if (needsReduction.tag !== "needsHoles") {
+      throw new Error("Expected spell damage reduction roll.");
+    }
+    const reduction = requireSpellDamageReductionHole(needsReduction.holes);
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: needsReduction.state,
+        subject: prefix.subject,
+        fills: [
+          targetFill(prefix.target, goblinId),
+          attackRollFill(prefix.attackRoll, {
+            total: 15,
+            naturalD20: 10,
+          }),
+          damageRollFill(damage, 4),
+          damageRollFillWithGroups(reduction, [[4]]),
+        ],
+      }),
+    );
+
+    expect(resolved.snapshot.turn.bonusActionAvailable).toBe(false);
+    expect(resolved.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ combatantId: goblinId, hp: 10 }),
+      ]),
+    );
+  });
+
+  test("Light Property Bonus Action Attack resolves a target Concentration save before applying damage", () => {
+    const base = lightPropertyAttackState(
+      characterSeed({ combatantId: wizardId, initiative: 5 }),
+    );
+    const concentrator = base.combatants.get(wizardId);
+    if (concentrator === undefined) {
+      throw new Error("Expected synthetic concentrator.");
+    }
+    const state: BattleState = {
+      ...base,
+      combatants: new Map(base.combatants).set(wizardId, {
+        ...concentrator,
+        concentration: {
+          sourceProcedureRef: battleProcedureExecutionRefForTest(
+            "synthetic-offhand-concentration",
+          ),
+          effectKind: "spellEffect",
+        },
+      }),
+    };
+    const prefix = lightPropertyAttackPrefix(state, wizardId);
+    const damage = requireHole(
+      resolveBattleSubject({
+        state: prefix.state,
+        subject: prefix.subject,
+        fills: [
+          targetFill(prefix.target, wizardId),
+          attackRollFill(prefix.attackRoll, {
+            total: 15,
+            naturalD20: 10,
+          }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const needsSave = resolveBattleSubject({
+      state: prefix.state,
+      subject: prefix.subject,
+      fills: [
+        targetFill(prefix.target, wizardId),
+        attackRollFill(prefix.attackRoll, { total: 15, naturalD20: 10 }),
+        damageRollFill(damage, 4),
+      ],
+    });
+    if (needsSave.tag !== "needsHoles") {
+      throw new Error("Expected Concentration Saving Throw.");
+    }
+    const concentration = findHole(needsSave.holes, "concentrationSavingThrow");
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: needsSave.state,
+        subject: prefix.subject,
+        fills: [
+          targetFill(prefix.target, wizardId),
+          attackRollFill(prefix.attackRoll, {
+            total: 15,
+            naturalD20: 10,
+          }),
+          damageRollFill(damage, 4),
+          concentrationSavingThrowFill(concentration, false),
+        ],
+      }),
+    );
+
+    expect(resolved.snapshot.turn.bonusActionAvailable).toBe(false);
+    expect(resolved.state.combatants.get(wizardId)).toMatchObject({
+      hp: 8,
+      concentration: null,
+    });
+  });
+
+  test("a completed Light Property Bonus Action Attack subject is stale", () => {
+    const prefix = lightPropertyAttackPrefix(lightPropertyAttackState());
+    const miss = [
+      targetFill(prefix.target, goblinId),
+      attackRollFill(prefix.attackRoll, { total: 1, naturalD20: 1 }),
+    ];
+    const completed = requireResolved(
+      resolveBattleSubject({
+        state: prefix.state,
+        subject: prefix.subject,
+        fills: miss,
+      }),
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: completed.state,
+        subject: prefix.subject,
+        fills: miss,
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Bonus Action is no longer available for the current actor.",
+    });
+  });
+
   test("Light Property Bonus Action Attack requires a prior Attack action Light weapon attack and omits a positive damage modifier", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-off-hand"),
