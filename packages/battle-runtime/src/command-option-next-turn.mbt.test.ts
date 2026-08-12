@@ -127,7 +127,7 @@ type CommandOptionNextTurnProjection = {
   readonly targetProne: boolean;
   readonly targetEffectCount: number;
   readonly actionAvailable: boolean;
-  readonly bonusActionAvailable: boolean;
+  readonly currentTurnBonusActionUnspent: boolean;
   readonly movementSpentFeet: number;
   readonly currentActor: "Fighter" | "Goblin";
   readonly pendingCommandOption: PendingCommandOption;
@@ -156,7 +156,7 @@ const initialProjection: CommandOptionNextTurnProjection = {
   targetProne: false,
   targetEffectCount: 0,
   actionAvailable: true,
-  bonusActionAvailable: true,
+  currentTurnBonusActionUnspent: true,
   movementSpentFeet: 0,
   currentActor: "Fighter",
   pendingCommandOption: "none",
@@ -826,7 +826,8 @@ function projectState(input: {
     targetProne: hasCondition(target.conditions, "prone"),
     targetEffectCount: target.activeEffects.length,
     actionAvailable: snapshot.turn.actionResources.length > 0,
-    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    currentTurnBonusActionUnspent:
+      input.state.currentTurnResources.currentHasBonusAction,
     movementSpentFeet: Number(targetSnapshot.movement.spentFeet),
     currentActor: actorName(snapshot.currentActorId),
     pendingCommandOption: pendingCommandOption(target.activeEffects),
@@ -911,9 +912,9 @@ function normalizeQuintState(raw: unknown): CommandOptionNextTurnProjection {
       state["qActionAvailable"],
       "qActionAvailable",
     ),
-    bonusActionAvailable: booleanValue(
-      state["qBonusActionAvailable"],
-      "qBonusActionAvailable",
+    currentTurnBonusActionUnspent: booleanValue(
+      state["qCurrentTurnBonusActionUnspent"],
+      "qCurrentTurnBonusActionUnspent",
     ),
     movementSpentFeet: numberFromQuintInt(
       state["qMovementSpentFeet"],

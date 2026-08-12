@@ -34,7 +34,7 @@ module battleRuntimeCommandOptionNextTurnMbt {
   var qTargetProne: bool
   var qTargetEffectCount: int
   var qActionAvailable: bool
-  var qBonusActionAvailable: bool
+  var qCurrentTurnBonusActionUnspent: bool
   var qMovementSpentFeet: int
   var qCurrentActor: str
   var qPendingCommandOption: str
@@ -91,7 +91,7 @@ module battleRuntimeCommandOptionNextTurnMbt {
     targetProne: bool,
     targetEffectCount: int,
     actionAvailable: bool,
-    bonusActionAvailable: bool,
+    currentTurnBonusActionUnspent: bool,
     movementSpentFeet: int,
     currentActorName: str,
     pendingOption: str,
@@ -105,7 +105,7 @@ module battleRuntimeCommandOptionNextTurnMbt {
     qTargetProne' = targetProne,
     qTargetEffectCount' = targetEffectCount,
     qActionAvailable' = actionAvailable,
-    qBonusActionAvailable' = bonusActionAvailable,
+    qCurrentTurnBonusActionUnspent' = currentTurnBonusActionUnspent,
     qMovementSpentFeet' = movementSpentFeet,
     qCurrentActor' = currentActorName,
     qPendingCommandOption' = pendingOption,
@@ -504,7 +504,7 @@ module battleRuntimeCommandOptionNextTurnMbt {
       qTargetProne,
       qTargetEffectCount,
       qActionAvailable,
-      qBonusActionAvailable,
+      qCurrentTurnBonusActionUnspent,
       qMovementSpentFeet,
       qCurrentActor,
       qPendingCommandOption,
