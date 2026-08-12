@@ -2,7 +2,7 @@ import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
-import { NonNegativeInteger } from "@dnd/shared/types";
+import { NonNegativeInteger, resourceCount } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 import {
@@ -58,6 +58,7 @@ import {
   statBlockProcedureBinding,
   statBlockExecutionAdmissionCohort,
   statBlockExecutionSnapshot,
+  statBlockBonusActionOptionBindings,
   type StatBlockExecutionAdmission,
   type StatBlockExecutionState,
 } from "./stat-block-execution.ts";
@@ -484,6 +485,81 @@ describe("Stat Block execution references", () => {
         fills: [],
       }).tag,
     ).toBe("invalid");
+  });
+
+  test("admits only fully supported Bonus Action options and allocates rest-recharge ownership", () => {
+    const base = statBlockRecord();
+    const statBlock: StatBlockRecord = {
+      ...base,
+      id: parseSharedStatBlockId("synthetic_rest_recharge_action_options"),
+      name: "Synthetic Rest-Recharge Action Options",
+      provenance: {
+        kind: "synthetic-test",
+        section: "rest-recharge-action-options",
+      },
+      statBlock: {
+        ...base.statBlock,
+        displayName: "Synthetic Rest-Recharge Action Options",
+        bonusActions: {
+          actionOptions: [
+            {
+              name: "Withdraw",
+              options: ["disengage"],
+              limitedUse: { kind: "recharge_after_rest" },
+            },
+            {
+              name: "Overextended Withdrawal",
+              options: ["disengage", "dash"],
+            },
+          ],
+        },
+      },
+    };
+    const actorId = combatantId("execution-ref-rest-recharge-owner");
+    const admission = isolatedStatBlockAdmissions(actorId, [statBlock])[0];
+    if (admission === undefined) {
+      throw new Error("Expected the synthetic Stat Block admission.");
+    }
+
+    const [binding] = statBlockBonusActionOptionBindings(admission.execution);
+    if (binding === undefined) {
+      throw new Error("Expected the supported Bonus Action binding.");
+    }
+    expect(binding.procedure.standardActions).toEqual(["disengage"]);
+    expect(
+      admission.execution.procedureBindings.filter(
+        (candidate) => candidate.procedure.kind === "bonusActionOption",
+      ),
+    ).toHaveLength(1);
+    expect(binding.resourcePoolRefs).toHaveLength(1);
+    expect(admission.execution.resourcePools).toContainEqual({
+      resourcePoolRef: binding.resourcePoolRefs[0],
+      kind: "recharge_after_rest",
+      available: true,
+    });
+
+    const spentExecution = spendStatBlockProcedureResources(
+      admission.execution,
+      binding.procedureRef,
+    );
+    expect(spentExecution.resourcePools).toContainEqual({
+      resourcePoolRef: binding.resourcePoolRefs[0],
+      kind: "recharge_after_rest",
+      available: false,
+    });
+    const restored = restoreStatBlockExecutionAdmission(
+      isolatedExecutionBattleId,
+      actorId,
+      statBlock,
+      statBlockExecutionSnapshot(spentExecution),
+    );
+    expect(Either.isRight(restored)).toBe(true);
+    if (Either.isLeft(restored)) {
+      throw new Error("Expected the spent rest-recharge state to restore.");
+    }
+    expect(restored.right.execution.resourcePools).toEqual(
+      spentExecution.resourcePools,
+    );
   });
 
   test("does not reuse an execution scope when a combatant id is re-admitted", () => {
@@ -2067,6 +2143,105 @@ describe("Stat Block execution references", () => {
         reason: "procedureBindingsMismatch",
       }),
     );
+  });
+
+  test("reports every structurally mismatched resource pool without partial restoration", () => {
+    const actorId = combatantId("execution-ref-resource-structure-mismatch");
+    const statBlocks = [
+      monsterResourceStatBlock(),
+      monsterResourceStatBlock(),
+      monsterResourceStatBlock(),
+    ] as const;
+    const [kindAdmission, maximumAdmission, rechargeAdmission] =
+      isolatedStatBlockAdmissions(actorId, statBlocks);
+    if (
+      kindAdmission === undefined ||
+      maximumAdmission === undefined ||
+      rechargeAdmission === undefined
+    ) {
+      throw new Error("Expected three admitted resource graphs.");
+    }
+
+    const kindSnapshot = statBlockExecutionSnapshot(kindAdmission.execution);
+    const maximumSnapshot = statBlockExecutionSnapshot(
+      maximumAdmission.execution,
+    );
+    const rechargeSnapshot = statBlockExecutionSnapshot(
+      rechargeAdmission.execution,
+    );
+    const kindRechargePool = kindSnapshot.resourcePools.find(
+      (pool) => pool.kind === "recharge",
+    );
+    const maximumDailyPool = maximumSnapshot.resourcePools.find(
+      (pool) => pool.kind === "daily",
+    );
+    const thresholdRechargePool = rechargeSnapshot.resourcePools.find(
+      (pool) => pool.kind === "recharge",
+    );
+    if (
+      kindRechargePool === undefined ||
+      maximumDailyPool === undefined ||
+      thresholdRechargePool === undefined
+    ) {
+      throw new Error("Expected Recharge and daily resource pools.");
+    }
+
+    const restored = restoreStatBlockExecutionAdmissions(
+      isolatedExecutionBattleId,
+      actorId,
+      [
+        {
+          statBlock: statBlocks[0],
+          snapshot: {
+            ...kindSnapshot,
+            resourcePools: kindSnapshot.resourcePools.map((pool) =>
+              pool === kindRechargePool
+                ? {
+                    resourcePoolRef: pool.resourcePoolRef,
+                    kind: "recharge_after_rest" as const,
+                    available: pool.available,
+                  }
+                : pool,
+            ),
+          },
+        },
+        {
+          statBlock: statBlocks[1],
+          snapshot: {
+            ...maximumSnapshot,
+            resourcePools: maximumSnapshot.resourcePools.map((pool) =>
+              pool === maximumDailyPool
+                ? {
+                    ...pool,
+                    usesMax: resourceCount(Number(pool.usesMax) + 1),
+                  }
+                : pool,
+            ),
+          },
+        },
+        {
+          statBlock: statBlocks[2],
+          snapshot: {
+            ...rechargeSnapshot,
+            resourcePools: rechargeSnapshot.resourcePools.map((pool) =>
+              pool === thresholdRechargePool
+                ? { ...pool, minimumRoll: 6 }
+                : pool,
+            ),
+          },
+        },
+      ],
+    );
+
+    expect(Either.isLeft(restored)).toBe(true);
+    if (Either.isRight(restored)) {
+      throw new Error("Expected every resource mismatch to be reported.");
+    }
+    expect(restored.left).toMatchObject([
+      { restorationIndex: 0, reason: "resourcePoolsMismatch" },
+      { restorationIndex: 1, reason: "resourcePoolsMismatch" },
+      { restorationIndex: 2, reason: "resourcePoolsMismatch" },
+    ]);
   });
 
   test("restores an ordered cohort without resetting later-form execution scopes", () => {
