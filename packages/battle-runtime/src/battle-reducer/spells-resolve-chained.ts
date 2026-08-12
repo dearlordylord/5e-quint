@@ -126,8 +126,16 @@ import {
   parseSpellCastReactionFactsFill,
   type SpellCastReactionFact,
 } from "./spells-resolve-fill-set.ts";
+
+type ChainedSpellTargetChoiceFill = Omit<
+  BattleAttackTargetChoiceFill,
+  "spatialFacts"
+> & {
+  readonly spatialFacts: readonly BattleTargetSpatialFact[];
+};
+
 export type ChainedSpellStepFills = {
-  readonly target: BattleAttackTargetChoiceFill | undefined;
+  readonly target: ChainedSpellTargetChoiceFill | undefined;
   readonly attackRoll:
     | Extract<BattleFill, { readonly kind: "attackRoll" }>
     | undefined;
@@ -274,13 +282,13 @@ export function resolveChainedSpellAttackDamageAct(input: {
             input.actorId,
             target.combatantId,
             input.invocation,
-            step.target.spatialFacts ?? [],
+            step.target.spatialFacts,
           )
         : !chainedSpellLeapTargetIsLegal(
             input.invocation,
             targeted[stepIndex - 1],
             target.combatantId,
-            step.target.spatialFacts ?? [],
+            step.target.spatialFacts,
           )
     ) {
       /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
@@ -448,7 +456,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       input.actorId,
       target.combatantId,
       input.invocation,
-      step.target.spatialFacts ?? [],
+      step.target.spatialFacts,
     );
     if (step.attackRoll === undefined) {
       return needsHolesResult(replayState, input.input.subject, [
@@ -850,7 +858,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
                 damageDisposition,
               },
             ],
-      spatialFacts: step.target.spatialFacts ?? [],
+      spatialFacts: step.target.spatialFacts,
       decisionsByRelationshipHole: fillSet.damageRelationshipDecisions,
     });
     if (relationshipCheck.tag === "needsHoles") {
@@ -883,7 +891,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
         hideousLaughterDamageRepeatSaves: hideousLaughterLifecycleFills,
         hideousLaughterDamageRepeatSaveEventKey: damageEventKey,
         damageSourceId: input.actorId,
-        spatialFacts: step.target.spatialFacts ?? [],
+        spatialFacts: step.target.spatialFacts,
         ...optionalProperty(
           "relationshipDecisions",
           relationshipCheck.decisions,
@@ -895,7 +903,7 @@ export function resolveChainedSpellAttackDamageAct(input: {
       damagedId: target.combatantId,
       damageAmount: toDamageAmount(damageAmount),
       reactionSpellTargetFacts: reactionSpellTargetFactsForAfterDamage({
-        facts: step.target.spatialFacts ?? [],
+        facts: step.target.spatialFacts,
         damagedId: target.combatantId,
         damageSourceId: input.actorId,
       }),
@@ -1212,11 +1220,14 @@ export function chainedSpellFillSet(
           };
         }
         /* v8 ignore stop */
-        const sightFactValidation = chainedSpellAttackSightFactValidation(
-          fill.spatialFacts ?? [],
-        );
+        const spatialFacts = fill.spatialFacts ?? [];
+        const sightFactValidation =
+          chainedSpellAttackSightFactValidation(spatialFacts);
         if (sightFactValidation !== null) return sightFactValidation;
-        steps[stepIndex] = { ...step, target: parsed.fill };
+        steps[stepIndex] = {
+          ...step,
+          target: { ...parsed.fill, spatialFacts },
+        };
         continue;
       }
       if (fill.kind === "attackRoll") {
