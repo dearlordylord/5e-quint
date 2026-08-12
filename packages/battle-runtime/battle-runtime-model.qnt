@@ -416,7 +416,7 @@ module battleRuntimeModel {
   // wider battle projections; this bounded summary is the two-actor parity
   // projection, not an SRD limit.
   type PendingCounterspellSpellCastReaction =
-    | CounterspellSpellCastNotCountered
+    | CounterspellSpellCastNoNestedReactionAttempt
     | CounterspellSpellCastNestedReactionAttempt({
         nestedCounterspellCasterConSaveSucceeded: bool,
       })

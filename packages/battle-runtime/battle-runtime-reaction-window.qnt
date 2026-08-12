@@ -250,7 +250,7 @@ module battleRuntimeReactionWindow {
     reaction: PendingCounterspellSpellCastReaction,
   ): bool =
     match reaction {
-      | CounterspellSpellCastNotCountered => false
+      | CounterspellSpellCastNoNestedReactionAttempt => false
       | CounterspellSpellCastNestedReactionAttempt(attempt) =>
           not(attempt.nestedCounterspellCasterConSaveSucceeded)
     }
@@ -268,7 +268,7 @@ module battleRuntimeReactionWindow {
     val nestedReactor = nestedCounterspellReactionReactor(counterspell)
     val afterCounterspellPending = claimPendingActorSpellSlotUse(state, reactor)
     match counterspell.counterspellSpellCastReaction {
-      | CounterspellSpellCastNotCountered => false
+      | CounterspellSpellCastNoNestedReactionAttempt => false
       | CounterspellSpellCastNestedReactionAttempt(_) =>
           reactorCanReact(afterCounterspellPending, nestedReactor) and
             canActorExpendSpellSlotThisTurn(afterCounterspellPending, nestedReactor)
@@ -305,7 +305,7 @@ module battleRuntimeReactionWindow {
     val nestedCounterspellCanCast = counterspellNestedReactionCanCast(state, counterspell)
     val afterNestedCounterspell =
       match counterspell.counterspellSpellCastReaction {
-        | CounterspellSpellCastNotCountered => afterCounterspellPending
+        | CounterspellSpellCastNoNestedReactionAttempt => afterCounterspellPending
         | CounterspellSpellCastNestedReactionAttempt(_) =>
             if (nestedCounterspellCanCast)
               spendReaction(

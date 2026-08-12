@@ -112,7 +112,7 @@ module battleRuntimeReactionSpellResolutionTests {
         triggeringCastingResource: CounterspellMagicAction,
         triggeringSpellUsesSlot: true,
         triggeringCasterConSaveSucceeded: false,
-        counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
+        counterspellSpellCastReaction: CounterspellSpellCastNoNestedReactionAttempt,
       })
     all {
       assert(reactionFrameTrigger(shieldFrame) == AttackHit),
@@ -129,7 +129,7 @@ module battleRuntimeReactionSpellResolutionTests {
         triggeringCastingResource: CounterspellMagicAction,
         triggeringSpellUsesSlot: true,
         triggeringCasterConSaveSucceeded: false,
-        counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
+        counterspellSpellCastReaction: CounterspellSpellCastNoNestedReactionAttempt,
       }))
     val resolved = resolveDirectSpellReactionOffer(awaiting)
     all {
@@ -148,7 +148,7 @@ module battleRuntimeReactionSpellResolutionTests {
         triggeringCastingResource: CounterspellMagicAction,
         triggeringSpellUsesSlot: true,
         triggeringCasterConSaveSucceeded: true,
-        counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
+        counterspellSpellCastReaction: CounterspellSpellCastNoNestedReactionAttempt,
       }))
     val resolved = resolveDirectSpellReactionOffer(awaiting)
     all {
@@ -167,7 +167,7 @@ module battleRuntimeReactionSpellResolutionTests {
         triggeringCastingResource: CounterspellMagicAction,
         triggeringSpellUsesSlot: true,
         triggeringCasterConSaveSucceeded: true,
-        counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
+        counterspellSpellCastReaction: CounterspellSpellCastNoNestedReactionAttempt,
       }))
     val resumed = declineDirectSpellReactionOfferAndResume(awaiting)
     all {
@@ -186,7 +186,7 @@ module battleRuntimeReactionSpellResolutionTests {
       triggeringCastingResource: CounterspellMagicAction,
       triggeringSpellUsesSlot: true,
       triggeringCasterConSaveSucceeded: true,
-      counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
+      counterspellSpellCastReaction: CounterspellSpellCastNoNestedReactionAttempt,
     })
     val reactorSlotSpent = commitActorSpellSlotUse(initialState, Goblin)
     val triggeringSlotSpent = commitActorSpellSlotUse(initialState, Fighter)

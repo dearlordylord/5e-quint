@@ -106,7 +106,7 @@ module battleRuntimeReactionWindowTests {
           triggeringCastingResource: CounterspellMagicAction,
           triggeringSpellUsesSlot: true,
           triggeringCasterConSaveSucceeded: true,
-          counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
+          counterspellSpellCastReaction: CounterspellSpellCastNoNestedReactionAttempt,
         },
         continuation: CounterspellResumesRayOfFrost,
       }),
