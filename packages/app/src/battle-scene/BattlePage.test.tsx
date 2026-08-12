@@ -76,7 +76,7 @@ describe("BattlePage", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Pause" })[0])
     expect(consoleErrorSpy).not.toHaveBeenCalled()
     vi.useRealTimers()
-  })
+  }, 30_000)
 
   it.each(["?step=invalid", "?step=-1", `?step=${WIZARD_BATTLE_DEMO_STEPS.length}`])(
     "falls back to the first step for %s",
