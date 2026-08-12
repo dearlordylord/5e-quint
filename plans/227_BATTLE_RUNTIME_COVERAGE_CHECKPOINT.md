@@ -20,28 +20,28 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 ## Current authoritative baseline
 
 - Date: 2026-08-12
-- Measured code tree committed as: `e50f910d7`
+- Measured code tree committed as: `78d9c8a28`
 - Command: `pnpm coverage`
 - Result: exit 0 under the original package timeouts
-- Battle-runtime: 230/230 files passed; 2,443 passed and 115 skipped
+- Battle-runtime: 231/231 files passed; 2,463 passed and 115 skipped
 - Every executable package other than battle-runtime remains at or above 99%
   for statements, branches, functions, and lines.
 
 | Metric     |   Covered / total | Coverage | Uncovered | Gap to 99% |
 | ---------- | ----------------: | -------: | --------: | ---------: |
-| Statements | 122,468 / 125,596 |   97.50% |     3,128 |      1,873 |
-| Branches   |   31,386 / 33,085 |   94.86% |     1,699 |      1,369 |
+| Statements | 122,500 / 125,486 |   97.62% |     2,986 |      1,732 |
+| Branches   |   31,443 / 33,093 |   95.01% |     1,650 |      1,320 |
 | Functions  |     4,855 / 4,855 |  100.00% |         0 |          0 |
-| Lines      | 122,468 / 125,596 |   97.50% |     3,128 |      1,873 |
+| Lines      | 122,500 / 125,486 |   97.62% |     2,986 |      1,732 |
 
 Recompute the 99% gaps after every production-denominator change.
 
 ## Latest accepted production milestone
 
-M37 (`a04f2de74`, `3a49fb52d`, `7199532a6`) restores Battle Runtime's
-100% function ratchet through the public codec boundary, removes one orphan
-parser, and reconciles the Ready/Goblin MCP boundary. Independent reviews
-converged; temporary app timeout increases were fully restored at `e50f910d7`.
+M38-M40 (`10ad5d806`, `a89f47219`, `78d9c8a28`) add public transformation,
+hosted-weapon, defensive-spell, Monk, attack, and save-gate lifecycles while
+narrowing only locally proved impossible paths. Independent reviews converged;
+all focused and public verification used the original performance budgets.
 
 ## Current campaign
 
@@ -54,7 +54,7 @@ converged; temporary app timeout increases were fully restored at `e50f910d7`.
   proof.
 - Avoid owners already marked completed or rejected in
   `/tmp/dnd-work-ownership.md`; that ledger owns live parallel coordination.
-- The current public gaps are 1,873 statements/lines and 1,369 branches.
+- The current public gaps are 1,732 statements/lines and 1,320 branches.
 
 ## Verification and completion
 
