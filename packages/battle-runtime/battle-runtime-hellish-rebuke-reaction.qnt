@@ -122,8 +122,8 @@ module battleRuntimeHellishRebukeReaction {
   ): BattleState = {
     val decision = battleRuntimeTakeReactionDecision(
       battleRuntimeReactionTrigger(AfterDamage),
-      battleRuntimeReactionProcedure(HellishRebukeReactionProcedure),
-      reactor == continuation.damaged,
+      BattleRuntimeAfterDamageSpellReactionProcedure,
+      reactor == continuation.damaged and reactionFrameCanOffer(frame, reactor),
       frame.offeredReactors.contains(reactor),
       reactorCanReact(state, reactor),
       canActorExpendSpellSlotThisTurn(state, reactor),

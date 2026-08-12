@@ -39,14 +39,17 @@ module battleRuntimeCounterspellReactionDecision {
   ): PendingCounterspellReactionOption =
     match frame.request {
       | SpellCastCounterspellReactionRequest(request) =>
-          HasPendingCounterspellReaction({
-            context: {
-              counterspell: request.counterspell,
-              eligibleReactors: request.eligibleReactors,
-              offeredReactors: frame.offeredReactors,
-            },
-            continuation: request.continuation,
-          })
+          if (pendingReactionFrameIsCanonical(frame))
+            HasPendingCounterspellReaction({
+              context: {
+                counterspell: request.counterspell,
+                eligibleReactors: request.eligibleReactors,
+                offeredReactors: frame.offeredReactors,
+              },
+              continuation: request.continuation,
+            })
+          else
+            NoPendingCounterspellReaction
       | _ => NoPendingCounterspellReaction
     }
 
@@ -127,7 +130,7 @@ module battleRuntimeCounterspellReactionDecision {
   ): CounterspellReactionResolution =
     if (battleRuntimeReactionDecisionWasTaken(battleRuntimeTakeReactionDecision(
       battleRuntimeReactionTrigger(SpellCast),
-      battleRuntimeReactionProcedure(CounterspellReactionProcedure(context.counterspell)),
+      BattleRuntimeCounterspellReactionProcedure,
       context.eligibleReactors.contains(reactor),
       context.offeredReactors.contains(reactor),
       reactorCanReact(state, reactor),

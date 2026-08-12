@@ -44,29 +44,25 @@ module battleRuntimeAttackDamageConcentrationReaction {
 
   pure def resumeAttackDamageReactionContinuation(
     state: BattleState,
-    continuation: ReactionContinuation,
+    damage: int,
   ): BattleState =
-    match continuation {
-      | ResumeAttack(attack) =>
-          if (state.goblin.concentrating and attack.damage > 0)
-            openBattleAttackDamageConcentration(
-              state,
-              ResumeAttackDamageToGoblin,
-              attack.damage,
-            )
-          else
-            {
-              ...state,
-              goblin: applyDamageFromSource(
-                state.goblin,
-                attack.damage,
-                1,
-                true,
-                OrdinaryDamage,
-                Fighter,
-              ),
-              actionAvailable: false,
-            }
-      | _ => state
-    }
+    if (state.goblin.concentrating and damage > 0)
+      openBattleAttackDamageConcentration(
+        state,
+        ResumeAttackDamageToGoblin,
+        damage,
+      )
+    else
+      {
+        ...state,
+        goblin: applyDamageFromSource(
+          state.goblin,
+          damage,
+          1,
+          true,
+          OrdinaryDamage,
+          Fighter,
+        ),
+        actionAvailable: false,
+      }
 }

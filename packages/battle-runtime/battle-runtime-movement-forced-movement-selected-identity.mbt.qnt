@@ -3,6 +3,8 @@
 module battleRuntimeMovementCompelledMovementSelectedIdentityMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
+  pure val dissonantExistingTurnMovementSpentFeet: int = 7
+
   type WitnessHole = | WitnessProtocolHole
 
   type MovementCompelledMovementSelectedIdentityScenarioOutcome = | Init | DissonantWhispers | CommandFlee | ExpeditiousRetreat | RangerRoving | BarbarianFastMovement | MonkUnarmoredMovement
@@ -112,7 +114,7 @@ module battleRuntimeMovementCompelledMovementSelectedIdentityMbt {
     scenarioOutcome == Init,
     recordProjection(
       30, 30, 0, true, false, true, 1, 0,
-      18, false, true, 0, false, false, 0, 0, 0,
+      18, false, true, dissonantExistingTurnMovementSpentFeet, false, false, 0, 0, 0,
       DissonantWhispers,
     ),
   }

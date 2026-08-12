@@ -51,10 +51,7 @@ module battleRuntimeMovement {
   }
 
   pure def dissonantWhispersGoblinCanTakeReaction(state: BattleState): bool =
-    state.goblin.reactionAvailable
-      and state.goblin.hp > 0
-      and not(state.goblin.unconscious)
-      and not(state.goblin.incapacitated)
+    reactorCanReact(state, Goblin)
 
   pure def dissonantWhispersGoblinCanMoveWithSpeedKind(
     state: BattleState,
@@ -78,21 +75,13 @@ module battleRuntimeMovement {
     if (not(dissonantWhispersGoblinCanTakeReaction(state))) {
       match replay {
         | DissonantWhispersMovementMissing =>
-            DissonantWhispersResolvedAfterDamage(
-              openDissonantWhispersAfterDamageSequence(state, Fighter, Goblin)
-            )
+            DissonantWhispersResolvedAfterDamage(state)
         | DissonantWhispersMovementFilled(_) => DissonantWhispersInvalidMovementFill
       }
     } else if (not(dissonantWhispersGoblinHasMovementAvailable(state))) {
       match replay {
         | DissonantWhispersMovementMissing =>
-            DissonantWhispersResolvedAfterDamage(
-              openDissonantWhispersAfterDamageSequence(
-                spendReaction(state, Goblin),
-                Fighter,
-                Goblin,
-              )
-            )
+            DissonantWhispersResolvedAfterDamage(spendReaction(state, Goblin))
         | DissonantWhispersMovementFilled(_) => DissonantWhispersInvalidMovementFill
       }
     } else {
@@ -119,13 +108,7 @@ module battleRuntimeMovement {
                   })
                 )
               else
-                DissonantWhispersResolvedAfterDamage(
-                  openDissonantWhispersAfterDamageSequence(
-                    afterReactionSpend,
-                    Fighter,
-                    Goblin,
-                  )
-                )
+                DissonantWhispersResolvedAfterDamage(afterReactionSpend)
             }
       }
     }
@@ -483,8 +466,7 @@ module battleRuntimeMovement {
       state
 
   pure def goblinCanOpportunityAttack(state: BattleState, provokedByTable: bool): bool =
-    state.goblin.hp > 0 and
-    state.goblin.reactionAvailable and
+    reactorCanReact(state, Goblin) and
     battleRuntimeOpportunityAttackTriggered(
       movementProjectionForFighter(state, WalkSpeedKind),
       true,
@@ -512,19 +494,6 @@ module battleRuntimeMovement {
       actor,
       battleRuntimeSpendMovement(
         movementProjectionForActor(state, actor, speedKind),
-        movementCost,
-      ),
-    )
-
-  pure def applyDissonantWhispersGoblinMovement(
-    state: BattleState,
-    speedKind: MovementSpeedKind,
-    movementCost: int,
-  ): BattleState =
-    stateWithGoblinMovementStep(
-      state,
-      battleRuntimeSpendMovement(
-        dissonantWhispersGoblinMovementProjection(state, speedKind),
         movementCost,
       ),
     )

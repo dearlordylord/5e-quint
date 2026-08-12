@@ -7,6 +7,12 @@ module battleRuntimeDissonantWhispersTests {
   import battleRuntimeTriggeredReactionResolution.* from "./battle-runtime-triggered-reaction-resolution"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
 
+  // Historical scenario identifiers that mention "opens after damage" are
+  // retained for proof-ledger continuity. Their former generic after-damage
+  // Reaction frame was an invalid phantom Reaction: Dissonant Whispers has
+  // already dealt its damage, and only the target's forced-movement Reaction
+  // (plus any Opportunity Attack it provokes) belongs in this sequence.
+
   run test_dissonant_whispers_forced_reaction_requires_movement_fill_when_available = {
     assert(
       resolveDissonantWhispersGoblinForcedReactionMovement(initialState, DissonantWhispersMovementMissing)
@@ -23,15 +29,8 @@ module battleRuntimeDissonantWhispersTests {
       | DissonantWhispersResolvedAfterDamage(result) =>
           all {
             assert(not(result.goblin.reactionAvailable)),
-            assert(result.interruptStack.length() == 1),
-            assert(pendingReactionFrame(result.interruptStack[0]) == HasPendingReactionFrame({
-              request: AfterDamageInterruptionReactionRequest({
-                damageSource: Fighter,
-                damaged: Goblin,
-                eligibleReactors: Set(Fighter),
-              }),
-              offeredReactors: Set(),
-            })),
+            assert(result.fighter.reactionAvailable),
+            assert(result.interruptStack == []),
           }
       | _ => assert(false)
     }
@@ -43,15 +42,8 @@ module battleRuntimeDissonantWhispersTests {
       | DissonantWhispersResolvedAfterDamage(result) =>
           all {
             assert(not(result.goblin.reactionAvailable)),
-            assert(result.interruptStack.length() == 1),
-            assert(pendingReactionFrame(result.interruptStack[0]) == HasPendingReactionFrame({
-              request: AfterDamageInterruptionReactionRequest({
-                damageSource: Fighter,
-                damaged: Goblin,
-                eligibleReactors: Set(Fighter),
-              }),
-              offeredReactors: Set(),
-            })),
+            assert(result.fighter.reactionAvailable),
+            assert(result.interruptStack == []),
           }
       | _ => assert(false)
     }
@@ -83,16 +75,9 @@ module battleRuntimeDissonantWhispersTests {
       | DissonantWhispersResolvedAfterDamage(result) =>
           all {
             assert(not(result.goblin.reactionAvailable)),
-            assert(result.goblin.movementSpent == 0),
-            assert(result.interruptStack.length() == 1),
-            assert(pendingReactionFrame(result.interruptStack[0]) == HasPendingReactionFrame({
-              request: AfterDamageInterruptionReactionRequest({
-                damageSource: Fighter,
-                damaged: Goblin,
-                eligibleReactors: Set(Fighter),
-              }),
-              offeredReactors: Set(),
-            })),
+            assert(result.goblin.movementSpent == initialState.goblin.movementSpent),
+            assert(result.fighter.reactionAvailable),
+            assert(result.interruptStack == []),
           }
       | _ => assert(false)
     }
@@ -110,6 +95,7 @@ module battleRuntimeDissonantWhispersTests {
       | DissonantWhispersOpportunityAttackWindow(result) =>
           all {
             assert(not(result.goblin.reactionAvailable)),
+            assert(result.goblin.movementSpent == initialState.goblin.movementSpent),
             assert(result.interruptStack.length() == 1),
             assert(pendingReactionFrame(result.interruptStack[0]) == HasPendingReactionFrame({
               request: OpportunityAttackReactionRequest({
@@ -142,16 +128,8 @@ module battleRuntimeDissonantWhispersTests {
           all {
             assert(resumed.fighter.reactionAvailable),
             assert(not(resumed.goblin.reactionAvailable)),
-            assert(resumed.goblin.movementSpent == 10),
-            assert(resumed.interruptStack.length() == 1),
-            assert(pendingReactionFrame(resumed.interruptStack[0]) == HasPendingReactionFrame({
-              request: AfterDamageInterruptionReactionRequest({
-                damageSource: Fighter,
-                damaged: Goblin,
-                eligibleReactors: Set(Fighter),
-              }),
-              offeredReactors: Set(),
-            })),
+            assert(resumed.goblin.movementSpent == initialState.goblin.movementSpent),
+            assert(resumed.interruptStack == []),
           }
         }
       | _ => assert(false)
@@ -174,16 +152,8 @@ module battleRuntimeDissonantWhispersTests {
             assert(not(resolved.goblin.reactionAvailable)),
             assert(resolved.fighter.hp == initialState.fighter.hp),
             assert(resolved.goblin.hp == 3),
-            assert(resolved.goblin.movementSpent == 10),
-            assert(resolved.interruptStack.length() == 1),
-            assert(pendingReactionFrame(resolved.interruptStack[0]) == HasPendingReactionFrame({
-              request: AfterDamageInterruptionReactionRequest({
-                damageSource: Fighter,
-                damaged: Goblin,
-                eligibleReactors: Set(Fighter),
-              }),
-              offeredReactors: Set(),
-            })),
+            assert(resolved.goblin.movementSpent == initialState.goblin.movementSpent),
+            assert(resolved.interruptStack == []),
           }
         }
       | _ => assert(false)

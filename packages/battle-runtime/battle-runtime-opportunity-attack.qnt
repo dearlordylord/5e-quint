@@ -104,15 +104,6 @@ module battleRuntimeOpportunityAttack {
     }
   }
 
-  pure def resolveGoblinOpportunityAttack(
-    state: BattleState,
-    attackTotal: int,
-    naturalD20: int,
-    damageRoll: int,
-    concentrationSaveSucceeded: bool,
-  ): BattleState =
-    resolveGoblinOpportunityAttackWithDisposition(state, attackTotal, naturalD20, damageRoll, concentrationSaveSucceeded, OrdinaryDamage)
-
   pure def resolveGoblinOpportunityAttackWithDisposition(
     state: BattleState,
     attackTotal: int,

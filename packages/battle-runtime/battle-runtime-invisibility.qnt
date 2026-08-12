@@ -8,7 +8,6 @@ module battleRuntimeInvisibility {
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
   import battleRuntimeTargetActionEffectEarlyEnd.* from "./battle-runtime-target-action-effect-early-end"
 
   pure def invisibilityConditionActiveEffect(source: Actor): ActiveEffect =

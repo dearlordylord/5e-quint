@@ -22,6 +22,19 @@ module battleRuntimeReactionSpellResolutionTests {
     offeredReactors: Set(),
   }
 
+  run test_reaction_continuations_have_battle_runtime_contract_kinds = {
+    // The former omnibus continuation union admitted trigger/procedure/replay
+    // combinations that no request owner could truthfully resume. These
+    // assertions preserve the historical contract scenario at narrowed owner
+    // boundaries.
+    all {
+      assert(directSpellAttackContinuationForShield(ShieldResumesRayOfFrost) == HasDirectSpellAttackReactionContinuation(DirectSpellAttackRayOfFrost)),
+      assert(directSpellAttackContinuationForShield(ShieldResumesTrueStrikeWeaponAttack) == NoDirectSpellAttackReactionContinuation),
+      assert(directSpellAttackContinuationForCounterspell(CounterspellResumesPoisonSpray) == HasDirectSpellAttackReactionContinuation(DirectSpellAttackPoisonSpray)),
+      assert(directSpellAttackContinuationForCounterspell(CounterspellResumesSaveGateDamage) == NoDirectSpellAttackReactionContinuation),
+    }
+  }
+
   run test_shield_reaction_spell_interrupts_spell_attack_hit = {
     val awaiting = resolveRayOfFrost(initialState, 15, 10, 4, true)
     val resolved = resolveDirectShieldReactionOffer(awaiting, Goblin)
@@ -66,15 +79,12 @@ module battleRuntimeReactionSpellResolutionTests {
     }
   }
 
-  run test_direct_shield_rejects_malformed_continuation_without_spend = {
-    // The former Shield + after-damage continuation frame is now
-    // unconstructable. An AfterDamage request preserves this historical
-    // scenario's owner-boundary rejection and no-spend assertions.
+  run test_direct_shield_owner_ignores_typed_hellish_rebuke_frame_without_spend = {
     val awaiting = openReactionWindow(initialState, {
-      request: AfterDamageInterruptionReactionRequest({
-        damageSource: Goblin,
+      request: AfterDamageHellishRebukeReactionRequest({
+        damager: Goblin,
         damaged: Fighter,
-        eligibleReactors: Set(Fighter),
+        slotLevel: 1,
       }),
       offeredReactors: Set(),
     })
@@ -84,10 +94,7 @@ module battleRuntimeReactionSpellResolutionTests {
     }
   }
 
-  run test_reaction_spell_trigger_procedure_matrix_rejects_mismatched_frames = {
-    // Trigger/procedure mismatches are now unconstructable. The historical
-    // scenario instead proves each request discriminator derives its one
-    // canonical trigger and procedure.
+  run test_reaction_spell_requests_derive_canonical_trigger_and_narrowed_owner = {
     val shieldFrame = {
       request: AttackHitShieldReactionRequest({
         eligibleReactors: Set(Fighter),
@@ -106,17 +113,9 @@ module battleRuntimeReactionSpellResolutionTests {
       }, Set(Fighter))
     all {
       assert(reactionFrameTrigger(shieldFrame) == AttackHit),
-      assert(reactionFrameProcedure(shieldFrame) == ShieldReactionProcedure),
+      assert(match directShieldReactionCandidate(shieldFrame) { | HasDirectShieldReactionCandidate(_) => true | _ => false }),
       assert(reactionFrameTrigger(counterspellFrame) == SpellCast),
-      assert(reactionFrameProcedure(counterspellFrame) == CounterspellReactionProcedure({
-        triggeringCaster: Goblin,
-        triggeringCastingResource: CounterspellMagicAction,
-        triggeringSpellLevel: 1,
-        triggeringSpellUsesSlot: true,
-        counterspellSlotLevel: 3,
-        triggeringCasterConSaveSucceeded: false,
-        counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
-      })),
+      assert(match directSpellReactionCandidate(counterspellFrame) { | HasDirectSpellReactionCandidate(_) => true | _ => false }),
     }
   }
 

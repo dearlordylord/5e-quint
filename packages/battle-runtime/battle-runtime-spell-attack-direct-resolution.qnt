@@ -121,15 +121,28 @@ module battleRuntimeSpellAttackDirectResolution {
     | NoDirectSpellAttackReactionContinuation
     | HasDirectSpellAttackReactionContinuation(DirectSpellAttackReactionContinuation)
 
-  pure def directSpellAttackReactionContinuation(
-    continuation: ReactionContinuation,
+  pure def directSpellAttackContinuationForShield(
+    continuation: ShieldReactionContinuation,
   ): DirectSpellAttackReactionContinuationOption =
     match continuation {
-      | ResumeRayOfFrost =>
+      | ShieldResumesRayOfFrost =>
           HasDirectSpellAttackReactionContinuation(DirectSpellAttackRayOfFrost)
-      | ResumePoisonSpray =>
+      | ShieldResumesPoisonSpray =>
           HasDirectSpellAttackReactionContinuation(DirectSpellAttackPoisonSpray)
-      | ResumeChillTouch =>
+      | ShieldResumesChillTouch =>
+          HasDirectSpellAttackReactionContinuation(DirectSpellAttackChillTouch)
+      | _ => NoDirectSpellAttackReactionContinuation
+    }
+
+  pure def directSpellAttackContinuationForCounterspell(
+    continuation: CounterspellReactionContinuation,
+  ): DirectSpellAttackReactionContinuationOption =
+    match continuation {
+      | CounterspellResumesRayOfFrost =>
+          HasDirectSpellAttackReactionContinuation(DirectSpellAttackRayOfFrost)
+      | CounterspellResumesPoisonSpray =>
+          HasDirectSpellAttackReactionContinuation(DirectSpellAttackPoisonSpray)
+      | CounterspellResumesChillTouch =>
           HasDirectSpellAttackReactionContinuation(DirectSpellAttackChillTouch)
       | _ => NoDirectSpellAttackReactionContinuation
     }

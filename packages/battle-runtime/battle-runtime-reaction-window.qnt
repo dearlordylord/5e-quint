@@ -7,6 +7,7 @@ module battleRuntimeReactionWindow {
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
+  import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import reactionsContinuationsConcentration.* from "../shared-algebras/proofs/rule-core/reactions-continuations-concentration"
 
   pure def counterspellFrameClaimsTriggeringSlot(frame: PendingReactionFrame): bool =
@@ -16,6 +17,9 @@ module battleRuntimeReactionWindow {
       | _ => false
     }
 
+  pure def fighterCanReleaseReadiedSpell(state: BattleState): bool =
+    state.fighter.readiedSpellHeld and not(fighterHasRage(state))
+
   pure def reactionWindowCanOpen(state: BattleState, frame: PendingReactionFrame): bool =
     match frame.request {
       | SpellCastCounterspellReactionRequest(request) =>
@@ -24,6 +28,8 @@ module battleRuntimeReactionWindow {
               state,
               request.counterspell.triggeringCaster,
             )
+      | AttackHitFighterReadiedSpellReleaseReactionRequest(_) =>
+          fighterCanReleaseReadiedSpell(state)
       | _ => true
     }
 
@@ -40,8 +46,28 @@ module battleRuntimeReactionWindow {
       | _ => state
     }
 
+  pure def reactionRequestHasCanonicalParticipants(request: PendingReactionRequest): bool =
+    match request {
+      | AttackHitShieldReactionRequest(data) => data.eligibleReactors.size() == 1
+      | SpellCastCounterspellReactionRequest(data) =>
+          data.eligibleReactors.size() == 1 and
+            not(data.eligibleReactors.contains(data.counterspell.triggeringCaster))
+      | OpportunityAttackReactionRequest(data) =>
+          data.threats.size() > 0 and not(data.threats.contains(data.mover))
+      | AttackHitFighterReadiedSpellReleaseReactionRequest(_) => true
+      | AfterDamageHellishRebukeReactionRequest(data) =>
+          data.damager != data.damaged and data.slotLevel >= 1
+    }
+
+  pure def pendingReactionFrameIsCanonical(frame: PendingReactionFrame): bool = {
+    val eligibleReactors = reactionFrameEligibleReactors(frame)
+    reactionRequestHasCanonicalParticipants(frame.request) and
+      frame.offeredReactors.subseteq(eligibleReactors) and
+      frame.offeredReactors != eligibleReactors
+  }
+
   pure def openReactionWindow(state: BattleState, frame: PendingReactionFrame): BattleState =
-    if (reactionWindowCanOpen(state, frame)) {
+    if (pendingReactionFrameIsCanonical(frame) and reactionWindowCanOpen(state, frame)) {
       val openingState = stateAfterOpeningReactionWindow(state, frame)
       { ...openingState, interruptStack: openingState.interruptStack.append(PendingReaction(frame)) }
     }
@@ -65,10 +91,16 @@ module battleRuntimeReactionWindow {
       reactor,
     )
 
+  pure def combatantCanReact(combatant: Combatant): bool =
+    combatant.reactionAvailable and
+      not(combatantIsDead(combatant)) and
+      not(combatant.unconscious) and
+      not(combatant.incapacitated)
+
   pure def reactorCanReact(state: BattleState, reactor: Actor): bool =
     match reactor {
-      | Fighter => state.fighter.reactionAvailable
-      | Goblin => state.goblin.reactionAvailable
+      | Fighter => combatantCanReact(state.fighter)
+      | Goblin => combatantCanReact(state.goblin)
     }
 
   pure def spendReaction(state: BattleState, reactor: Actor): BattleState =
@@ -85,7 +117,8 @@ module battleRuntimeReactionWindow {
     }
 
   pure def reactionFrameCanOffer(frame: PendingReactionFrame, reactor: Actor): bool =
-    reactionFrameEligibleReactors(frame).contains(reactor) and
+    pendingReactionFrameIsCanonical(frame) and
+      reactionFrameEligibleReactors(frame).contains(reactor) and
       not(frame.offeredReactors.contains(reactor))
 
   pure def reactionFrameAfterOffering(
@@ -104,21 +137,25 @@ module battleRuntimeReactionWindow {
       val top = state.interruptStack[state.interruptStack.length() - 1]
       match top {
         | PendingReaction(frame) => {
-            val updatedFrame = reactionFrameAfterOffering(frame, reactor)
-            val decision = battleRuntimeDeclineReactionDecision(
-              reactionFrameEligibleReactors(frame).contains(reactor),
-              frame.offeredReactors.contains(reactor),
-              reactionFrameComplete(updatedFrame),
-            )
-            match (decision) {
-              | BattleRuntimeDeclinedReaction(result) => {
-                  val rest = state.interruptStack.slice(0, state.interruptStack.length() - 1)
-                  if (result.frameComplete)
-                    { ...state, interruptStack: rest }
-                  else
-                    { ...state, interruptStack: rest.append(PendingReaction(updatedFrame)) }
-                }
-              | _ => state
+            if (not(reactionFrameCanOffer(frame, reactor)))
+              state
+            else {
+              val updatedFrame = reactionFrameAfterOffering(frame, reactor)
+              val decision = battleRuntimeDeclineReactionDecision(
+                true,
+                false,
+                reactionFrameComplete(updatedFrame),
+              )
+              match (decision) {
+                | BattleRuntimeDeclinedReaction(result) => {
+                    val rest = state.interruptStack.slice(0, state.interruptStack.length() - 1)
+                    if (result.frameComplete)
+                      { ...state, interruptStack: rest }
+                    else
+                      { ...state, interruptStack: rest.append(PendingReaction(updatedFrame)) }
+                  }
+                | _ => state
+              }
             }
           }
         | _ => state
@@ -199,20 +236,6 @@ module battleRuntimeReactionWindow {
     not(battleRuntimeActiveEffectsChangedBetween(before, after)) or
       battleRuntimeInterruptStackReactionWindow(before.interruptStack) ==
         battleRuntimeInterruptStackReactionWindow(after.interruptStack)
-
-  pure def openDissonantWhispersAfterDamageSequence(
-    state: BattleState,
-    damageSource: Actor,
-    damaged: Actor,
-  ): BattleState =
-    openReactionWindow(state, {
-      request: AfterDamageInterruptionReactionRequest({
-        damageSource: damageSource,
-        damaged: damaged,
-        eligibleReactors: Set(damageSource),
-      }),
-      offeredReactors: Set(),
-    })
 
   pure def applyShieldReactionSpell(state: BattleState, reactor: Actor): BattleState =
     match reactor {
@@ -359,7 +382,7 @@ module battleRuntimeReactionWindow {
       }
 
   pure def releaseFighterReadiedSpell(state: BattleState): BattleState =
-    if (state.fighter.readiedSpellHeld and not(fighterHasRage(state)))
+    if (fighterCanReleaseReadiedSpell(state))
       {
         ...state,
         fighter: {

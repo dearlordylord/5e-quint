@@ -35,16 +35,11 @@ module battleRuntimeTriggeredReactionResolution {
             state
       | OpportunityAttackResumesDissonantWhispersMovementThenAfterDamage(movement) =>
           if (request.mover == Goblin and movement.damageSource != request.mover) {
-            val afterMovement = applyDissonantWhispersGoblinMovement(
-              state,
-              movement.speedKind,
-              movement.movementCost,
-            )
-            openDissonantWhispersAfterDamageSequence(
-              afterMovement,
-              movement.damageSource,
-              request.mover,
-            )
+            // The frame records the already-validated Reaction movement fill.
+            // Spatial displacement remains table/runtime state in this slice,
+            // and its completion spends neither turn movement nor a phantom
+            // second Reaction after Dissonant Whispers damage.
+            state
           }
           else
             state
@@ -73,12 +68,13 @@ module battleRuntimeTriggeredReactionResolution {
     else
       resumeAttackDamageReactionContinuation(
         afterDecision,
-        ResumeAttack({ damage: damage }),
+        damage,
       )
   }
 
   // Shield, Counterspell, and Hellish Rebuke have narrowed resolution owners.
-  // This dispatcher deliberately owns only the three request branches below.
+  // This dispatcher deliberately owns only Opportunity Attack and the
+  // Fighter's readied-spell release branches below.
   pure def declineTriggeredReactionOfferAndResume(
     state: BattleState,
     reactor: Actor,
@@ -99,14 +95,12 @@ module battleRuntimeTriggeredReactionResolution {
                     reactor,
                     request,
                   )
-              | AttackHitReadiedSpellReleaseReactionRequest(request) =>
+              | AttackHitFighterReadiedSpellReleaseReactionRequest(request) =>
                   declineReadiedSpellReleaseReactionOfferAndResume(
                     state,
                     reactor,
                     request.damage,
                   )
-              | AfterDamageInterruptionReactionRequest(_) =>
-                  stateAfterDecliningReactionOffer(state, reactor)
             }
         | _ => state
       }
@@ -128,8 +122,8 @@ module battleRuntimeTriggeredReactionResolution {
               | OpportunityAttackReactionRequest(request) => {
                   val decision = battleRuntimeTakeReactionDecision(
                     battleRuntimeReactionTrigger(OpportunityAttack),
-                    battleRuntimeReactionProcedure(OpportunityAttackReactionProcedure),
-                    reactor != request.mover and request.threats.contains(reactor),
+                    BattleRuntimeOpportunityAttackProcedure,
+                    reactor != request.mover and reactionFrameCanOffer(frame, reactor),
                     frame.offeredReactors.contains(reactor),
                     reactorCanReact(state, reactor),
                     true,
@@ -162,14 +156,14 @@ module battleRuntimeTriggeredReactionResolution {
                     | _ => state
                   }
                 }
-              | AttackHitReadiedSpellReleaseReactionRequest(request) => {
+              | AttackHitFighterReadiedSpellReleaseReactionRequest(request) => {
                   val decision = battleRuntimeTakeReactionDecision(
                     battleRuntimeReactionTrigger(AttackHit),
-                    battleRuntimeReactionProcedure(ReadiedSpellReleaseReactionProcedure),
-                    request.eligibleReactors.contains(reactor),
+                    BattleRuntimeReadiedSpellReleaseProcedure,
+                    reactor == Fighter and reactionFrameCanOffer(frame, reactor),
                     frame.offeredReactors.contains(reactor),
                     reactorCanReact(state, reactor),
-                    true,
+                    fighterCanReleaseReadiedSpell(state),
                     reactionFrameCompleteAfterOffering(frame, reactor),
                   )
                   match decision {
@@ -184,30 +178,11 @@ module battleRuntimeTriggeredReactionResolution {
                         if (reactionDecisionClosedFrame(state, afterDecision))
                           resumeAttackDamageReactionContinuation(
                             afterDecision,
-                            ResumeAttack({ damage: request.damage }),
+                            request.damage,
                           )
                         else
                           afterDecision
                       }
-                    | _ => state
-                  }
-                }
-              | AfterDamageInterruptionReactionRequest(request) => {
-                  val decision = battleRuntimeTakeReactionDecision(
-                    battleRuntimeReactionTrigger(AfterDamage),
-                    battleRuntimeReactionProcedure(DamageInterruptionReactionProcedure),
-                    request.eligibleReactors.contains(reactor),
-                    frame.offeredReactors.contains(reactor),
-                    reactorCanReact(state, reactor),
-                    true,
-                    reactionFrameCompleteAfterOffering(frame, reactor),
-                  )
-                  match decision {
-                    | BattleRuntimeTookReaction(_) =>
-                        stateAfterDecliningReactionOffer(
-                          spendReaction(state, reactor),
-                          reactor,
-                        )
                     | _ => state
                   }
                 }

@@ -29,9 +29,7 @@ module battleRuntimeDirectShieldReactionResolution {
           if (not(shieldReactionFrameIsFreshGoblinTarget(frame)))
             NoDirectShieldReactionCandidate
           else
-            match directSpellAttackReactionContinuation(
-              shieldReactionContinuation(request.continuation),
-            ) {
+            match directSpellAttackContinuationForShield(request.continuation) {
               | NoDirectSpellAttackReactionContinuation =>
                   NoDirectShieldReactionCandidate
               | HasDirectSpellAttackReactionContinuation(continuation) =>

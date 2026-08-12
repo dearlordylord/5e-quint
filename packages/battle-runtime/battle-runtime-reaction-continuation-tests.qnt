@@ -2,30 +2,11 @@
 
 module battleRuntimeReactionContinuationTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeTriggeredReactionResolution.* from "./battle-runtime-triggered-reaction-resolution"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeOpportunityAttack.* from "./battle-runtime-opportunity-attack"
-
-  run test_reaction_continuations_have_battle_runtime_contract_kinds = {
-    all {
-      assert(reactionContinuationKind(ResumeAttack({ damage: 7 })) == BattleRuntimeAttackDamageContinuation),
-      assert(reactionContinuationKind(ResumeRayOfFrost) == BattleRuntimeSpellAttackContinuation),
-      assert(reactionContinuationKind(ResumePoisonSpray) == BattleRuntimeSpellAttackContinuation),
-      assert(reactionContinuationKind(ResumeChillTouch) == BattleRuntimeSpellAttackContinuation),
-      assert(reactionContinuationKind(ResumeTrueStrikeWeaponAttack) == BattleRuntimeSpellAttackContinuation),
-      assert(reactionContinuationKind(ResumeProduceFlameHurl) == BattleRuntimeSpellAttackContinuation),
-      assert(reactionContinuationKind(ResumeFlameBladeAttack) == BattleRuntimeSpellAttackContinuation),
-      assert(reactionContinuationKind(ResumeIceKnife) == BattleRuntimeSpellAttackContinuation),
-      assert(reactionContinuationKind(ResumeSaveGateDamage) == BattleRuntimeSaveGateContinuation),
-      assert(reactionContinuationKind(ResumeAfterDamage) == BattleRuntimeAfterDamageContinuation),
-      assert(reactionContinuationKind(ResumeHellishRebukeAfterDamage({ damager: Goblin, damaged: Fighter, slotLevel: 1 })) == BattleRuntimeAfterDamageContinuation),
-      assert(reactionContinuationKind(ResumeMovement({ speedKind: WalkSpeedKind, movementCost: 5 })) == BattleRuntimeMovementContinuation),
-      assert(reactionContinuationKind(ResumeDissonantWhispersMovementThenAfterDamage({ speedKind: WalkSpeedKind, movementCost: 5 })) == BattleRuntimeMovementContinuation),
-    }
-  }
 
   run test_reaction_decision_contract_rejects_unavailable_reaction = {
     val awaiting = moveFighter(
@@ -59,22 +40,6 @@ module battleRuntimeReactionContinuationTests {
     }
   }
 
-  run test_after_damage_reaction_resolves_through_damage_interruption_contract = {
-    val awaitingReaction = openReactionWindow(initialState, {
-      request: AfterDamageInterruptionReactionRequest({
-        damageSource: Goblin,
-        damaged: Fighter,
-        eligibleReactors: Set(Fighter),
-      }),
-      offeredReactors: Set(),
-    })
-    val resolved = resolveTriggeredReactionOffer(awaitingReaction, Fighter)
-    all {
-      assert(resolved.interruptStack == []),
-      assert(not(resolved.fighter.reactionAvailable)),
-    }
-  }
-
   run test_declined_opportunity_attack_resumes_movement = {
     val awaiting = moveFighter(initialState, 5, movementProvokesOpportunityAttack)
     val resumed = declineTriggeredReactionOfferAndResume(awaiting, Goblin)
@@ -96,6 +61,34 @@ module battleRuntimeReactionContinuationTests {
     }
   }
 
+  run test_opportunity_attack_rejects_incapacitated_or_terminal_reactor = {
+    val awaiting = moveFighter(initialState, 5, movementProvokesOpportunityAttack)
+    val incapacitatedAwaiting = {
+      ...awaiting,
+      goblin: { ...awaiting.goblin, incapacitated: true },
+    }
+    val terminalAwaiting = {
+      ...awaiting,
+      goblin: { ...awaiting.goblin, hp: 0 },
+    }
+    val incapacitatedBeforeTrigger = {
+      ...initialState,
+      goblin: { ...initialState.goblin, incapacitated: true },
+    }
+    val movedWithoutWindow = moveFighter(
+      incapacitatedBeforeTrigger,
+      5,
+      movementProvokesOpportunityAttack,
+    )
+    all {
+      assert(awaiting.interruptStack.length() == 1),
+      assert(resolveTriggeredReactionOffer(incapacitatedAwaiting, Goblin) == incapacitatedAwaiting),
+      assert(resolveTriggeredReactionOffer(terminalAwaiting, Goblin) == terminalAwaiting),
+      assert(movedWithoutWindow.interruptStack == []),
+      assert(movedWithoutWindow.fighter.movementSpent == 5),
+    }
+  }
+
   run test_goblin_opportunity_attack_can_knock_out = {
     val result = resolveGoblinOpportunityAttackWithDisposition(withFighterHp(initialState, 3, 0), 20, 18, 1, true, KnockOut)
     all {
@@ -107,14 +100,15 @@ module battleRuntimeReactionContinuationTests {
   run test_resolved_reaction_releases_readied_spell_and_resumes_attack_continuation = {
     val readied = { ...readyFighterReadiedSpell(initialState), actionAvailable: true }
     val awaitingReaction = openReactionWindow(readied, {
-      request: AttackHitReadiedSpellReleaseReactionRequest({
-        eligibleReactors: Set(Fighter),
+      request: AttackHitFighterReadiedSpellReleaseReactionRequest({
         damage: 7,
       }),
       offeredReactors: Set(),
     })
+    val wrongReactor = resolveTriggeredReactionOffer(awaitingReaction, Goblin)
     val resolved = resolveTriggeredReactionOffer(awaitingReaction, Fighter)
     all {
+      assert(wrongReactor == awaitingReaction),
       assert(not(resolved.fighter.readiedSpellHeld)),
       assert(not(resolved.fighter.concentrating)),
       assert(not(resolved.fighter.reactionAvailable)),

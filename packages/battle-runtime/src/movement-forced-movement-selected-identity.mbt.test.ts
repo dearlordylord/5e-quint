@@ -19,6 +19,7 @@ import {
   attackBonus,
   movementFeet,
   proficiencyBonus,
+  type MovementFeet,
 } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
@@ -143,6 +144,7 @@ type DashAct = AvailableBattleAct & {
 
 const casterId = combatantId("movement-forced-movement-caster");
 const targetId = combatantId("movement-forced-movement-target");
+const dissonantExistingTurnMovementSpentFeet = movementFeet(7);
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -1247,18 +1249,34 @@ function resolvedProjection(
 
 function dissonantWhispersForcedReactionMovement(): MovementCompelledMovementSelectedIdentityProjection {
   let dissonantMovementFillRequired = false;
-  const state = movementCompelledMovementSpellBattle({
-    sourceClassName: "bard",
-    preparedSpells: [spellRecord("dissonant_whispers")],
-    targetHp: 30,
-    targetMaxHp: 30,
-  });
+  const state = withTargetTurnMovementSpent(
+    movementCompelledMovementSpellBattle({
+      sourceClassName: "bard",
+      preparedSpells: [spellRecord("dissonant_whispers")],
+      targetHp: 30,
+      targetMaxHp: 30,
+    }),
+    dissonantExistingTurnMovementSpentFeet,
+  );
   return resolvedProjection(
     resolveDissonantWhispersForcedReactionMovement(state, () => {
       dissonantMovementFillRequired = true;
     }),
     { lastResult: "dissonantWhispers", dissonantMovementFillRequired },
   );
+}
+
+function withTargetTurnMovementSpent(
+  state: BattleState,
+  movementSpentFeet: MovementFeet,
+): BattleState {
+  const target = state.combatants.get(targetId);
+  if (target === undefined) {
+    throw new Error("Expected Dissonant Whispers movement target.");
+  }
+  const combatants = new Map(state.combatants);
+  combatants.set(targetId, { ...target, movementSpentFeet });
+  return { ...state, combatants };
 }
 
 function commandFleeTargetTurn(): MovementCompelledMovementSelectedIdentityProjection {

@@ -26,21 +26,22 @@ module battleRuntimeSpellCastReactionResolution {
   ): DirectSpellReactionCandidate =
     match frame.request {
       | SpellCastCounterspellReactionRequest(request) =>
-          match directSpellAttackReactionContinuation(
-            counterspellReactionContinuation(request.continuation),
-          ) {
-            | NoDirectSpellAttackReactionContinuation =>
-                NoDirectSpellReactionCandidate
-            | HasDirectSpellAttackReactionContinuation(continuation) =>
-                HasDirectSpellReactionCandidate({
-                  context: {
-                    counterspell: request.counterspell,
-                    eligibleReactors: request.eligibleReactors,
-                    offeredReactors: frame.offeredReactors,
-                  },
-                  continuation: continuation,
-                })
-          }
+          if (not(pendingReactionFrameIsCanonical(frame)))
+            NoDirectSpellReactionCandidate
+          else
+            match directSpellAttackContinuationForCounterspell(request.continuation) {
+              | NoDirectSpellAttackReactionContinuation =>
+                  NoDirectSpellReactionCandidate
+              | HasDirectSpellAttackReactionContinuation(continuation) =>
+                  HasDirectSpellReactionCandidate({
+                    context: {
+                      counterspell: request.counterspell,
+                      eligibleReactors: request.eligibleReactors,
+                      offeredReactors: frame.offeredReactors,
+                    },
+                    continuation: continuation,
+                  })
+            }
       | _ => NoDirectSpellReactionCandidate
     }
 

@@ -133,6 +133,92 @@ module battleRuntimeHellishRebukeTests {
     }
   }
 
+  run test_after_damage_reaction_resolves_through_damage_interruption_contract = {
+    // After-damage spell Reactions use their specific typed owner; there is no
+    // generic no-op Reaction procedure that can consume an unrelated reactor.
+    val awaiting = openHellishRebukeAfterDamageReactionWindow(
+      initialState,
+      Goblin,
+      Fighter,
+      HellishRebukeDamageFromVisibleCreatureWithin60Feet,
+      true,
+      1,
+    )
+    val resolved = resolveHellishRebukeReactionOffer(
+      awaiting,
+      Fighter,
+      false,
+      3,
+      true,
+    )
+    all {
+      assert(resolved.interruptStack == []),
+      assert(not(resolved.fighter.reactionAvailable)),
+      assert(battleActorHasCommittedSpellSlotUse(resolved, Fighter)),
+      assert(resolved.goblin.hp == 7),
+    }
+  }
+
+  run test_hellish_rebuke_decline_closes_frame_without_spending_reaction_slot_or_damage = {
+    val awaiting = openHellishRebukeAfterDamageReactionWindow(
+      initialState,
+      Goblin,
+      Fighter,
+      HellishRebukeDamageFromVisibleCreatureWithin60Feet,
+      true,
+      1,
+    )
+    val declined = declineHellishRebukeReactionOffer(awaiting, Fighter)
+    all {
+      assert(awaiting.interruptStack.length() == 1),
+      assert(declined.interruptStack == []),
+      assert(declined.fighter == initialState.fighter),
+      assert(declined.goblin == initialState.goblin),
+      assert(not(battleActorHasCommittedSpellSlotUse(declined, Fighter))),
+    }
+  }
+
+  run test_hellish_rebuke_rejects_incapacitated_or_terminal_reactor = {
+    val incapacitated = {
+      ...initialState,
+      fighter: { ...initialState.fighter, incapacitated: true },
+    }
+    val terminal = {
+      ...initialState,
+      fighter: {
+        ...initialState.fighter,
+        hp: 0,
+        deathFailures: 3,
+      },
+    }
+    val awaiting = openHellishRebukeAfterDamageReactionWindow(
+      initialState,
+      Goblin,
+      Fighter,
+      HellishRebukeDamageFromVisibleCreatureWithin60Feet,
+      true,
+      1,
+    )
+    val incapacitatedAwaiting = {
+      ...awaiting,
+      fighter: { ...awaiting.fighter, incapacitated: true },
+    }
+    val terminalAwaiting = {
+      ...awaiting,
+      fighter: {
+        ...awaiting.fighter,
+        hp: 0,
+        deathFailures: 3,
+      },
+    }
+    all {
+      assert(openHellishRebukeAfterDamageReactionWindow(incapacitated, Goblin, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, true, 1) == incapacitated),
+      assert(openHellishRebukeAfterDamageReactionWindow(terminal, Goblin, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, true, 1) == terminal),
+      assert(resolveHellishRebukeReactionOffer(incapacitatedAwaiting, Fighter, false, 3, true) == incapacitatedAwaiting),
+      assert(resolveHellishRebukeReactionOffer(terminalAwaiting, Fighter, false, 3, true) == terminalAwaiting),
+    }
+  }
+
   run test_hellish_rebuke_after_damage_reaction_rejects_invalid_continuation = {
     val noReaction = {
       ...initialState,
