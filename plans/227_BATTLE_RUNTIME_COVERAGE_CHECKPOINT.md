@@ -20,28 +20,27 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 ## Current authoritative baseline
 
 - Date: 2026-08-12
-- Measured code tree committed as: `1a0427e28`
+- Measured code tree committed as: `3fc44a30b`
 - Command: `pnpm coverage`
 - Result: exit 0 under the original package timeouts
-- Battle-runtime: 233/233 files passed; 2,479 passed and 115 skipped
+- Battle-runtime: 235/235 files passed; 2,491 passed and 115 skipped
 - Every executable package other than battle-runtime remains at or above 99%
   for statements, branches, functions, and lines.
 
 | Metric     |   Covered / total | Coverage | Uncovered | Gap to 99% |
 | ---------- | ----------------: | -------: | --------: | ---------: |
-| Statements | 122,535 / 125,457 |   97.67% |     2,922 |      1,668 |
-| Branches   |   31,525 / 33,135 |   95.14% |     1,610 |      1,279 |
+| Statements | 122,581 / 125,427 |   97.73% |     2,846 |      1,592 |
+| Branches   |   31,574 / 33,149 |   95.24% |     1,575 |      1,244 |
 | Functions  |     4,854 / 4,854 |  100.00% |         0 |          0 |
-| Lines      | 122,535 / 125,457 |   97.67% |     2,922 |      1,668 |
+| Lines      | 122,581 / 125,427 |   97.73% |     2,846 |      1,592 |
 
 Recompute the 99% gaps after every production-denominator change.
 
 ## Latest accepted production milestone
 
-M41-M43 (`7350fd3b1`, `99aa56aa7`, `1a0427e28`) add public damage,
-active-effect, turn-boundary, spell, attack-roll, and save-gate boundaries;
-they also reject invalid creature-target/repetition shapes at admission.
-Independent reviews converged under the original performance budgets.
+M44-M45 (`06a2d7682`, `3fc44a30b`) add public offhand, redirected-damage,
+Dragon's Breath, and marked-damage lifecycle/admission boundaries. Independent
+reviews converged under the original performance budgets.
 
 ## Current campaign
 
@@ -54,7 +53,7 @@ Independent reviews converged under the original performance budgets.
   proof.
 - Avoid owners already marked completed or rejected in
   `/tmp/dnd-work-ownership.md`; that ledger owns live parallel coordination.
-- The current public gaps are 1,668 statements/lines and 1,279 branches.
+- The current public gaps are 1,592 statements/lines and 1,244 branches.
 
 ## Verification and completion
 
