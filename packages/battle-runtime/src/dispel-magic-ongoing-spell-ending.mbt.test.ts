@@ -108,21 +108,38 @@ type DispelMagicOngoingSpellEndingProjection = {
   readonly lastResult: LastResult;
 };
 
-type DispelMagicRuntimeState = {
-  readonly battle: BattleRuntimeSession;
-  readonly pendingHigherLevelCheck: {
-    readonly subject: ActionSpellAct["subject"];
-    readonly targetFill: Extract<
-      BattleFill,
-      { readonly kind: "ongoingSpellTargetChoice" }
-    >;
-    readonly checkHole: Extract<
-      BattleHole,
-      { readonly kind: "spellcastingAbilityCheck" }
-    >;
-  } | null;
-  readonly lastResult: LastResult;
+type PendingHigherLevelCheck = {
+  readonly subject: ActionSpellAct["subject"];
+  readonly targetFill: Extract<
+    BattleFill,
+    { readonly kind: "ongoingSpellTargetChoice" }
+  >;
+  readonly checkHole: Extract<
+    BattleHole,
+    { readonly kind: "spellcastingAbilityCheck" }
+  >;
 };
+
+type DispelMagicInitialRuntimeState = {
+  readonly battle: BattleRuntimeSession;
+  readonly lastResult: "init";
+};
+
+type DispelMagicPendingHigherLevelCheckState = {
+  readonly battle: BattleRuntimeSession;
+  readonly pendingHigherLevelCheck: PendingHigherLevelCheck;
+  readonly lastResult: "needsHigherLevelCheck";
+};
+
+type DispelMagicCompletedRuntimeState = {
+  readonly battle: BattleRuntimeSession;
+  readonly lastResult: Exclude<LastResult, "init" | "needsHigherLevelCheck">;
+};
+
+type DispelMagicRuntimeState =
+  | DispelMagicInitialRuntimeState
+  | DispelMagicPendingHigherLevelCheckState
+  | DispelMagicCompletedRuntimeState;
 
 const dispelledObjectId = battleObjectId("focused-dispel-magic-object");
 const lowLevelEffectId = battleSpellEffectOccurrenceId(
@@ -152,7 +169,7 @@ const driverSchema = {
 
 function createDispelMagicOngoingSpellEndingDriver() {
   return defineDriver(driverSchema, () => {
-    let state = initialRuntimeState();
+    let state: DispelMagicRuntimeState = initialRuntimeState();
     return {
       init: () => {
         state = initialRuntimeState();
@@ -162,14 +179,14 @@ function createDispelMagicOngoingSpellEndingDriver() {
       },
       doFailHigherLevelCheck: () => {
         state = resolveHigherLevelCheck(
-          state,
+          requirePendingHigherLevelCheckState(state),
           FAILED_HIGHER_LEVEL_CHECK_TOTAL,
           "failedHigherLevelCheck",
         );
       },
       doSucceedHigherLevelCheck: () => {
         state = resolveHigherLevelCheck(
-          state,
+          requirePendingHigherLevelCheckState(state),
           SUCCESSFUL_HIGHER_LEVEL_CHECK_TOTAL,
           "succeededHigherLevelCheck",
         );
@@ -303,7 +320,7 @@ describe("Dispel Magic ongoing spell ending MBT parity", () => {
   );
 });
 
-function initialRuntimeState(): DispelMagicRuntimeState {
+function initialRuntimeState(): DispelMagicInitialRuntimeState {
   const base = spellBattle({
     preparedSpells: [spellRecord(dispelMagicUnitId)],
     spellSlots: [
@@ -348,14 +365,13 @@ function initialRuntimeState(): DispelMagicRuntimeState {
         lightEmitters: [lowLevelObjectLightEmitter()],
       },
     }),
-    pendingHigherLevelCheck: null,
     lastResult: "init",
   };
 }
 
 function requestHigherLevelCheck(
   state: DispelMagicRuntimeState,
-): DispelMagicRuntimeState {
+): DispelMagicPendingHigherLevelCheckState {
   const act = spellAct({
     session: state.battle,
     spellId: dispelMagicUnitId,
@@ -415,18 +431,14 @@ function requestHigherLevelCheck(
 }
 
 function resolveHigherLevelCheck(
-  state: DispelMagicRuntimeState,
+  state: DispelMagicPendingHigherLevelCheckState,
   total: number,
   lastResult: Extract<
     LastResult,
     "failedHigherLevelCheck" | "succeededHigherLevelCheck"
   >,
-): DispelMagicRuntimeState {
+): DispelMagicCompletedRuntimeState {
   const pendingCheck = state.pendingHigherLevelCheck;
-  expect(pendingCheck).not.toBeNull();
-  if (pendingCheck === null) {
-    throw new Error("Expected pending higher-level Dispel Magic check.");
-  }
   const resolved = requireResolved(
     resolveBattleSubject({
       state: state.battle.state,
@@ -443,14 +455,13 @@ function resolveHigherLevelCheck(
       ...state.battle,
       state: resolved.state,
     }),
-    pendingHigherLevelCheck: null,
     lastResult,
   };
 }
 
 function upcastAutoEnd(
   state: DispelMagicRuntimeState,
-): DispelMagicRuntimeState {
+): DispelMagicCompletedRuntimeState {
   const act = spellAct({
     session: state.battle,
     spellId: dispelMagicUnitId,
@@ -474,14 +485,13 @@ function upcastAutoEnd(
       ...state.battle,
       state: resolved.state,
     }),
-    pendingHigherLevelCheck: null,
     lastResult: "upcastAutoEnded",
   };
 }
 
 function targetAntimagicAura(
   state: DispelMagicRuntimeState,
-): DispelMagicRuntimeState {
+): DispelMagicCompletedRuntimeState {
   const act = spellAct({
     session: state.battle,
     spellId: dispelMagicUnitId,
@@ -517,7 +527,6 @@ function targetAntimagicAura(
       ...state.battle,
       state: resolved.state,
     }),
-    pendingHigherLevelCheck: null,
     lastResult: "antimagicAuraUnaffected",
   };
 }
@@ -525,7 +534,6 @@ function targetAntimagicAura(
 function dispelProjection(
   state: DispelMagicRuntimeState,
 ): DispelMagicOngoingSpellEndingProjection {
-  const pendingCheck = state.pendingHigherLevelCheck;
   const caster = requireCharacterCombatant(state.battle.state, spellCasterId);
   const highLevelEffect = caster.activeEffects.find(
     (effect) => effect.kind === "spellObjectContactDamage",
@@ -554,8 +562,12 @@ function dispelProjection(
         effect.kind === "antimagicFieldOngoingSpellSuppression" &&
         effect.areaId === antimagicFieldAreaId,
     ),
-    higherLevelCheckHoleCount: pendingCheck === null ? 0 : 1,
-    higherLevelCheckDc: pendingCheck?.checkHole.dc ?? 0,
+    higherLevelCheckHoleCount:
+      state.lastResult === "needsHigherLevelCheck" ? 1 : 0,
+    higherLevelCheckDc:
+      state.lastResult === "needsHigherLevelCheck"
+        ? state.pendingHigherLevelCheck.checkHole.dc
+        : 0,
     highLevelCasterConcentrating:
       highLevelEffect !== undefined &&
       caster.concentration?.sourceProcedureRef ===
@@ -563,6 +575,17 @@ function dispelProjection(
     lastResult: state.lastResult,
   };
   return projection;
+}
+
+function requirePendingHigherLevelCheckState(
+  state: DispelMagicRuntimeState,
+): DispelMagicPendingHigherLevelCheckState {
+  if (state.lastResult !== "needsHigherLevelCheck") {
+    throw new Error(
+      "Expected the MBT driver to resolve a pending higher-level Dispel Magic check.",
+    );
+  }
+  return state;
 }
 
 function antimagicFieldAuraEffect(): Extract<
