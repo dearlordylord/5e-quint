@@ -153,15 +153,17 @@ export function executeStoredGlyphSpellProcedure(
       }),
     ),
     byReleaseKind("ordinaryArea", (release) =>
-      resolveSpellRelease(glyphInput, release.invocation, {
-        selfOriginAreaAnchorId: release.anchorId,
-        opensSpellCastReactionWindow: false,
+      resolveSpellRelease(glyphInput, {
+        kind: "storedGlyphArea",
+        invocation: release.invocation,
+        anchorId: release.anchorId,
       }),
     ),
     byReleaseKind("ordinaryTriggeringCreature", (release) =>
-      resolveSpellRelease(glyphInput, release.invocation, {
-        storedGlyphTriggeringCreatureTargetId: release.targetId,
-        opensSpellCastReactionWindow: false,
+      resolveSpellRelease(glyphInput, {
+        kind: "storedGlyphTriggeringCreature",
+        invocation: release.invocation,
+        targetId: release.targetId,
       }),
     ),
     Match.exhaustive,

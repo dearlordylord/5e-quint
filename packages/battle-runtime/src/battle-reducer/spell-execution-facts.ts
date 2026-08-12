@@ -441,16 +441,22 @@ const READIED_SPELL_RUNTIME_LANE_PROCEDURES = [
   "saveGatedDamage",
   "spellAttackDamage",
 ] as const satisfies ReadonlyArray<ReadiedSpellInvocation["procedure"]>;
+export type ReadiedSpellRuntimeLaneInvocation = ReadiedSpellInvocation & {
+  readonly procedure: (typeof READIED_SPELL_RUNTIME_LANE_PROCEDURES)[number];
+};
 const READIED_SPELL_RUNTIME_LANE_PROCEDURE_SET: ReadonlySet<
   SpellProcedureExecution["procedure"]
 > = new Set(READIED_SPELL_RUNTIME_LANE_PROCEDURES);
 
-export function spellInvocationHasReadiedSpellExecutionShape(
-  invocation:
+export function spellInvocationHasReadiedSpellExecutionShape<
+  Invocation extends
     | SupportedSpellInvocation
     | RuntimeSpellProcedureExecution
     | SpellProcedureExecution,
-): boolean {
+>(
+  invocation: Invocation,
+): invocation is Invocation &
+  SpellProcedureExecution<ReadiedSpellRuntimeLaneInvocation> {
   if (!READIED_SPELL_RUNTIME_LANE_PROCEDURE_SET.has(invocation.procedure)) {
     return false;
   }

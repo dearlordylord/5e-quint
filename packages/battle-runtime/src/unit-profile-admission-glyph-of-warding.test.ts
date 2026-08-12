@@ -74,6 +74,7 @@ import {
   type GlyphStoredSpellReleaseProfile,
 } from "./battle-reducer/glyph-durable-occurrence.ts";
 import { glyphDurableOccurrenceEffectFromCompletedInscription } from "./glyph-durable-occurrence-admission.ts";
+import { battleCreatureWithSpellActiveEffects } from "./active-effect/lifecycle.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
@@ -183,6 +184,8 @@ import {
 } from "./identity.ts";
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
+  battleActiveEffectExecutionRefForTest,
+  combatantId,
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
   requireCharacterUnitProcedureRefForTest,
@@ -217,6 +220,9 @@ const glyphCloseableObjectId = battleObjectId("glyph-closeable-object");
 const glyphCastLocationId = battleTablePositionId("glyph-cast-location");
 const glyphHarmfulObjectPositionId = battleTablePositionId(
   "glyph-harmful-object-position",
+);
+const spiritualWeaponRelationshipSourceId = combatantId(
+  "spiritual-weapon-relationship-source",
 );
 const fogCloudUnitId = "fog_cloud";
 const glyphStoredFogCloudAreaId = battleAreaId("glyph-stored-fog-cloud-area");
@@ -3242,6 +3248,229 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
   });
 
+  test("stored Spiritual Weapon fixes the triggering-creature target after force placement", () => {
+    const release = spiritualWeaponGlyphReleaseDriver();
+    const needsForcePosition = release.resolve([]);
+    const forcePosition = requireReleaseHole(
+      expectNeedsReleaseHoles(needsForcePosition),
+      "spiritualWeaponForcePosition",
+    );
+    const forcePositionFill = spiritualWeaponForcePositionFill({
+      hole: forcePosition,
+      positionId: glyphHarmfulObjectPositionId,
+    });
+
+    const needsAttackRoll = release.resolve(
+      [forcePositionFill],
+      needsForcePosition.state,
+    );
+
+    expect(expectNeedsReleaseHoles(needsAttackRoll)).toEqual([
+      expect.objectContaining({ kind: "attackRoll" }),
+    ]);
+    expect(glyphEffects(needsAttackRoll.state)).toHaveLength(1);
+  });
+
+  test("stored Spiritual Weapon damage ends a relationship-gated condition", () => {
+    const release = spiritualWeaponGlyphReleaseDriver({
+      targetHp: 20,
+      targetMaxHp: 20,
+      extraTargetIds: [spiritualWeaponRelationshipSourceId],
+    });
+    const target = requireCombatant(release.state, spellTargetId);
+    const relationshipEffect = {
+      kind: "spellCondition" as const,
+      effectRef: battleActiveEffectExecutionRefForTest(
+        "spiritual-weapon-relationship-condition",
+      ),
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "spiritual-weapon-relationship-source",
+      ),
+      sourceCombatantId: spiritualWeaponRelationshipSourceId,
+      condition: "charmed" as const,
+      conditionHadNonSpellSource: false,
+      escape: { kind: "targetDamagedByCasterOrAlly" as const },
+      turnStartDamage: null,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(1),
+      },
+    } satisfies BattleActiveEffect;
+    const state: BattleState = {
+      ...release.state,
+      combatants: new Map(release.state.combatants).set(
+        spellTargetId,
+        battleCreatureWithSpellActiveEffects(target, [
+          ...target.activeEffects,
+          relationshipEffect,
+        ]),
+      ),
+    };
+    expect(
+      hasCondition(
+        requireCombatant(state, spellTargetId).conditions,
+        "charmed",
+      ),
+    ).toBe(true);
+    const damageFrontier = storedSpiritualWeaponDamageFrontier(release, state);
+    const relationship = requireReleaseHole(
+      expectNeedsReleaseHoles(damageFrontier.result),
+      "damageRelationshipDecisions",
+    );
+    expect(relationship.questions).toEqual([
+      expect.objectContaining({
+        kind: "targetDamagedByCasterOrAlly",
+        targetId: spellTargetId,
+      }),
+    ]);
+    const resolved = release.resolve(
+      [...damageFrontier.fills, relationshipDecisionFill(relationship, true)],
+      state,
+    );
+
+    expect(resolved.tag).toBe("released");
+    if (resolved.tag !== "released") return;
+    const damagedTarget = requireCombatant(resolved.state, spellTargetId);
+    expect(Number(damagedTarget.hp)).toBe(12);
+    expect(hasCondition(damagedTarget.conditions, "charmed")).toBe(false);
+    expect(
+      damagedTarget.activeEffects.some(
+        (effect) =>
+          effect.kind === "spellCondition" &&
+          effect.effectRef === relationshipEffect.effectRef,
+      ),
+    ).toBe(false);
+    expect(glyphEffects(resolved.state)).toEqual([]);
+  });
+
+  test("stored Spiritual Weapon damage breaks target Concentration after a failed save", () => {
+    const release = spiritualWeaponGlyphReleaseDriver({
+      targetHp: 20,
+      targetMaxHp: 20,
+    });
+    const state = stateWithTargetConcentration(release.state, spellTargetId);
+    const damageFrontier = storedSpiritualWeaponDamageFrontier(release, state);
+    const concentration = requireReleaseHole(
+      expectNeedsReleaseHoles(damageFrontier.result),
+      "concentrationSavingThrow",
+    );
+    expect(concentration.combatantId).toBe(spellTargetId);
+    expect(glyphEffects(damageFrontier.result.state)).toHaveLength(1);
+
+    const released = release.resolve(
+      [
+        ...damageFrontier.fills,
+        concentrationSavingThrowFill(concentration, false),
+      ],
+      state,
+    );
+
+    expect(released.tag).toBe("released");
+    if (released.tag !== "released") return;
+    const damagedTarget = requireCombatant(released.state, spellTargetId);
+    expect(Number(damagedTarget.hp)).toBe(12);
+    expect(damagedTarget.concentration).toBeNull();
+    expect(glyphEffects(released.state)).toEqual([]);
+    expect(
+      requireCombatant(released.state, spellCasterId).concentration,
+    ).toBeNull();
+    expect(
+      requireCombatant(released.state, spellCasterId).activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "spiritualWeapon",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(10),
+        },
+      }),
+    );
+  });
+
+  test("stored Spiritual Weapon damage uses and consumes a zero-HP replacement", () => {
+    const targetResource = unitLibrary.requireUnit(
+      orcRelentlessEnduranceUnitId,
+    );
+    const release = spiritualWeaponGlyphReleaseDriver({
+      targetHp: 1,
+      targetMaxHp: 20,
+      targetResources: [{ unit: targetResource }],
+      targetUnitRefs: [
+        {
+          unit: targetResource,
+          supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
+        },
+      ],
+    });
+    const damageFrontier = storedSpiritualWeaponDamageFrontier(release);
+    const disposition = requireReleaseHole(
+      expectNeedsReleaseHoles(damageFrontier.result),
+      "attackDamageDisposition",
+    );
+    expect(disposition.targetId).toBe(spellTargetId);
+    expect(disposition.choices).toContainEqual(
+      expect.objectContaining({ kind: "zeroHitPointReplacement" }),
+    );
+    const replacement = disposition.choices.find(
+      (choice) => choice.kind === "zeroHitPointReplacement",
+    );
+    if (replacement === undefined) return;
+    const resolved = release.resolve([
+      ...damageFrontier.fills,
+      attackDamageDispositionFill(disposition, replacement),
+    ]);
+
+    expect(resolved.tag).toBe("released");
+    if (resolved.tag !== "released") return;
+    const target = requireCombatant(resolved.state, spellTargetId);
+    expect(Number(target.hp)).toBe(1);
+    expect(hasCondition(target.conditions, "unconscious")).toBe(false);
+    if (target.origin.kind !== "character") {
+      throw new Error("Expected Relentless Endurance target character.");
+    }
+    const resourcePoolRef = release.session.context.characters
+      .get(spellTargetId)
+      ?.resourceOwnership.find(
+        (ownership) => ownership.unit.id === orcRelentlessEnduranceUnitId,
+      )?.resourcePoolRef;
+    expect(
+      target.origin.resources.find(
+        (resource) => resource.resourcePoolRef === resourcePoolRef,
+      )?.usesRemaining,
+    ).toBe(0);
+    expect(glyphEffects(resolved.state)).toEqual([]);
+    expect(casterSpellSlotExpended(resolved.state, 2)).toBe(0);
+  });
+
+  test("stored Spiritual Weapon force damage leaves an immune target's HP unchanged", () => {
+    const release = spiritualWeaponGlyphReleaseDriver({
+      targetStatBlock: damageImmuneHumanoidStatBlock("force"),
+    });
+    const initialTargetHp = requireCombatant(release.state, spellTargetId).hp;
+    const resolved = storedSpiritualWeaponDamageFrontier(release).result;
+
+    expect(resolved.tag).toBe("released");
+    if (resolved.tag !== "released") return;
+    expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(
+      initialTargetHp,
+    );
+    expect(glyphEffects(resolved.state)).toEqual([]);
+    expect(
+      requireCombatant(resolved.state, spellCasterId).concentration,
+    ).toBeNull();
+    expect(
+      requireCombatant(resolved.state, spellCasterId).activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "spiritualWeapon",
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(10),
+        },
+      }),
+    );
+  });
+
   test("stored area release requires the area origin to be centered on the triggering creature", () => {
     const state = stateWithGlyphEffect(
       requireCompletedGlyphEffect({
@@ -3389,7 +3618,9 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     {
       scenario: "zero damage after immunity",
       createBattle: () =>
-        glyphBattle({ targetStatBlock: thunderImmuneHumanoidStatBlock() }),
+        glyphBattle({
+          targetStatBlock: damageImmuneHumanoidStatBlock("thunder"),
+        }),
       damagePips: [1, 1, 1, 1, 1] as const,
       expectedDamage: 0,
     },
@@ -4904,7 +5135,7 @@ function stateWithSpellDamageReduction(
   };
 }
 
-function thunderImmuneHumanoidStatBlock() {
+function damageImmuneHumanoidStatBlock(damageType: "force" | "thunder") {
   const target = statBlockWithCreatureType("humanoid");
   return {
     ...target,
@@ -4912,7 +5143,7 @@ function thunderImmuneHumanoidStatBlock() {
       ...target.statBlock,
       immunities: {
         kind: "fixed" as const,
-        damageTypes: ["thunder"] as const,
+        damageTypes: [damageType] as const,
       },
     },
   };
@@ -4948,6 +5179,109 @@ function expectNeedsReleaseHoles(
     throw new Error("Expected stored Glyph release to need holes.");
   }
   return result.holes;
+}
+
+function relationshipDecisionFill(
+  hole: Extract<BattleHole, { readonly kind: "damageRelationshipDecisions" }>,
+  answer: boolean,
+): Extract<BattleFill, { readonly kind: "damageRelationshipDecisions" }> {
+  const [firstQuestion, ...remainingQuestions] = hole.questions;
+  if (firstQuestion === undefined) {
+    throw new Error("Expected a relationship decision question.");
+  }
+  return {
+    kind: "damageRelationshipDecisions",
+    holeId: hole.holeId,
+    answers: [
+      { questionId: firstQuestion.questionId, answer },
+      ...remainingQuestions.map((question) => ({
+        questionId: question.questionId,
+        answer,
+      })),
+    ],
+  };
+}
+
+function spiritualWeaponGlyphReleaseDriver(
+  input: Parameters<typeof spellBattle>[0] = {},
+) {
+  const storedInvocation = storedSpellInvocation(spiritualWeaponUnitId, 2);
+  const effect = requireCompletedGlyphEffect({
+    anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+    release: { kind: "spellGlyph", storedInvocation },
+  });
+  const session = sessionWithGlyphEffect(effect, {
+    casterClassLevels: [{ className: "cleric", level: 5 }],
+    preparedSpells: [spellRecord(spiritualWeaponUnitId)],
+    spellSlots: [{ spellLevel: 2, count: 1 }],
+    ...input,
+  });
+  const state = session.state;
+  const procedureRef = storedSpellProcedureRefInState(state, storedInvocation);
+  return {
+    session,
+    state,
+    resolve: (
+      fills: readonly BattleFill[],
+      releaseState: BattleState = state,
+    ) =>
+      releaseGlyphStoredSpell({
+        executionRegistry,
+        state: releaseState,
+        profile: requireGlyphStoredSpellProfile(),
+        witness: storedSingleCreatureReleaseWitness(
+          fills,
+          spellTargetId,
+          storedSpiritualWeaponTargetFacts(
+            spellTargetId,
+            glyphHarmfulObjectPositionId,
+            procedureRef,
+          ),
+          storedHarmfulObjectPlacementWitness(),
+        ),
+      }),
+  };
+}
+
+function storedSpiritualWeaponDamageFrontier(
+  release: ReturnType<typeof spiritualWeaponGlyphReleaseDriver>,
+  state: BattleState = release.state,
+) {
+  const needsForcePosition = release.resolve([], state);
+  const forcePosition = requireReleaseHole(
+    expectNeedsReleaseHoles(needsForcePosition),
+    "spiritualWeaponForcePosition",
+  );
+  const forcePositionFill = spiritualWeaponForcePositionFill({
+    hole: forcePosition,
+    positionId: glyphHarmfulObjectPositionId,
+  });
+  const needsAttackRoll = release.resolve(
+    [forcePositionFill],
+    needsForcePosition.state,
+  );
+  const attackRoll = requireReleaseHole(
+    expectNeedsReleaseHoles(needsAttackRoll),
+    "attackRoll",
+  );
+  const attackFill = attackRollFill(attackRoll, {
+    total: 18,
+    naturalD20: 12,
+  });
+  const needsDamageRoll = release.resolve(
+    [forcePositionFill, attackFill],
+    needsAttackRoll.state,
+  );
+  const damageRoll = requireReleaseHole(
+    expectNeedsReleaseHoles(needsDamageRoll),
+    "rolledDice",
+  );
+  const damageFill = glyphDamageRollFill(damageRoll, [[5]]);
+  const fills = [forcePositionFill, attackFill, damageFill] as const;
+  return {
+    fills,
+    result: release.resolve(fills, needsDamageRoll.state),
+  };
 }
 
 function levitateInitialRiseFill(

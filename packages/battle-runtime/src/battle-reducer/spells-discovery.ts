@@ -31,7 +31,10 @@ import {
   type RegisteredSpellProcedure,
   type SpellProcedureExecutionRegistry,
 } from "./spell-procedure-profiles/execution-registry.ts";
-import { spellInvocationHasReadiedSpellExecutionShape } from "./spell-execution-facts.ts";
+import {
+  spellInvocationHasReadiedSpellExecutionShape,
+  type ReadiedSpellRuntimeLaneInvocation,
+} from "./spell-execution-facts.ts";
 import { spellCastReactionFactsHole } from "./spell-cast-interrupt-frame.ts";
 import {
   combatantInsideActiveAntimagicFieldAura,
@@ -49,7 +52,6 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleHole,
   type BattleState,
-  type ReadiedSpellInvocation,
   type SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
 import {
@@ -669,7 +671,8 @@ export function isReadiedSpellInvocation<
   I extends SupportedSpellInvocation | RuntimeSpellProcedureExecution,
 >(
   invocation: I,
-): invocation is I & SpellProcedureExecution<ReadiedSpellInvocation> {
+): invocation is I &
+  SpellProcedureExecution<ReadiedSpellRuntimeLaneInvocation> {
   return spellInvocationHasReadiedSpellExecutionShape(invocation);
 }
 
