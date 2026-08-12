@@ -95,10 +95,10 @@ module battleRuntimeLightSpellAttacks {
     }
     else if (shieldOfferBoundary == LightShieldOfferPending and
              not(state.goblin.activeEffects.contains(ShieldArmorClassBonus)) and
-             shieldReactionWindowCanOpen(state, Goblin, ShieldResumesProduceFlameHurl)) {
+             shieldReactionWindowCanOpen(state, ShieldResumesProduceFlameHurl)) {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       val reactionBase = { ...rolled, fighter: fighterWithoutProduceFlameHeldLight(rolled) }
-      openShieldReactionWindow(reactionBase, Goblin, ShieldResumesProduceFlameHurl)
+      openShieldReactionWindow(reactionBase, ShieldResumesProduceFlameHurl)
     }
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
@@ -126,10 +126,10 @@ module battleRuntimeLightSpellAttacks {
     else if (
       shieldOfferBoundary == LightShieldOfferPending and
       not(state.goblin.activeEffects.contains(ShieldArmorClassBonus)) and
-      shieldReactionWindowCanOpen(state, Goblin, ShieldResumesFlameBladeAttack)
+      shieldReactionWindowCanOpen(state, ShieldResumesFlameBladeAttack)
     ) {
       val reactionBase = recordFighterAttackRoll(revealFighterHidden(state))
-      openShieldReactionWindow(reactionBase, Goblin, ShieldResumesFlameBladeAttack)
+      openShieldReactionWindow(reactionBase, ShieldResumesFlameBladeAttack)
     }
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))

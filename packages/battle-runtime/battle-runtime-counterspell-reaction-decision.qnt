@@ -42,7 +42,7 @@ module battleRuntimeCounterspellReactionDecision {
             HasPendingCounterspellReaction({
               context: {
                 counterspell: request.counterspell,
-                reactor: request.reactor,
+                reactor: reactionFrameReactor(frame),
               },
               continuation: request.continuation,
             })
@@ -130,10 +130,8 @@ module battleRuntimeCounterspellReactionDecision {
       battleRuntimeReactionTrigger(SpellCast),
       BattleRuntimeCounterspellReactionProcedure,
       context.reactor == reactor,
-      false,
       reactorCanReact(state, reactor),
       canActorExpendSpellSlotThisTurn(state, reactor),
-      true,
     ))) {
       val afterReactionSpend = spendReaction(state, reactor)
       val afterReactionProcedure = castCounterspellReactionSpell(

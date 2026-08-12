@@ -16139,6 +16139,7 @@
             "profileId": "spell.invocation-sanctuary-targeting-interdiction",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
               "packages/battle-runtime/battle-runtime-sanctuary.qnt"
             ]
           }

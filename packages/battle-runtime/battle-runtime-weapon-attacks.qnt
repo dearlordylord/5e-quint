@@ -241,10 +241,10 @@ module battleRuntimeWeaponAttacks {
     else if (
       shieldOfferBoundary == TrueStrikeShieldOfferPending and
       not(defender.activeEffects.contains(ShieldArmorClassBonus)) and
-      shieldReactionWindowCanOpen(state, Goblin, ShieldResumesTrueStrikeWeaponAttack)
+      shieldReactionWindowCanOpen(state, ShieldResumesTrueStrikeWeaponAttack)
     ) {
       val reactionBase = recordFighterAttackRoll(revealFighterHidden(state))
-      openShieldReactionWindow(reactionBase, Goblin, ShieldResumesTrueStrikeWeaponAttack)
+      openShieldReactionWindow(reactionBase, ShieldResumesTrueStrikeWeaponAttack)
     }
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))

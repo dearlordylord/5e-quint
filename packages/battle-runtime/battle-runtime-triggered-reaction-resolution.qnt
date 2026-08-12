@@ -33,16 +33,12 @@ module battleRuntimeTriggeredReactionResolution {
             )
           else
             state
-      | OpportunityAttackResumesDissonantWhispersReactionMovement(continuation) =>
-          if (request.mover == Goblin and continuation.damageSource != request.mover) {
-            // The frame records the already-validated Reaction movement fill.
-            // Spatial displacement remains table/runtime state in this slice,
-            // and its completion spends neither turn movement nor a phantom
-            // second Reaction after Dissonant Whispers damage.
-            state
-          }
-          else
-            state
+      | OpportunityAttackResumesDissonantWhispersReactionMovement =>
+          // The frame records the already-validated Reaction movement fill.
+          // Spatial displacement remains table/runtime state in this slice,
+          // and its completion spends neither turn movement nor a phantom
+          // second Reaction after Dissonant Whispers damage.
+          state
     }
 
   pure def declineOpportunityAttackReactionOfferAndResume(
@@ -124,9 +120,7 @@ module battleRuntimeTriggeredReactionResolution {
                     battleRuntimeReactionTrigger(OpportunityAttack),
                     BattleRuntimeOpportunityAttackProcedure,
                     reactor != request.mover and reactionFrameCanOffer(frame, reactor),
-                    false,
                     reactorCanReact(state, reactor),
-                    true,
                     true,
                   )
                   match decision {
@@ -161,10 +155,8 @@ module battleRuntimeTriggeredReactionResolution {
                     battleRuntimeReactionTrigger(AttackHit),
                     BattleRuntimeReadiedSpellReleaseProcedure,
                     reactor == Fighter and reactionFrameCanOffer(frame, reactor),
-                    false,
                     reactorCanReact(state, reactor),
                     fighterCanReleaseReadiedSpell(state),
-                    true,
                   )
                   match decision {
                     | BattleRuntimeTookReaction(_) => {

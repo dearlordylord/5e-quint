@@ -104,4 +104,18 @@ module battleRuntimeWeaponCounterspellResolution {
           declinePendingWeaponCounterspellReaction(state, reactor, counterspellFrame)
     }
 
+  pure def declineWeaponCounterspellReactionOfferAndResume(
+    state: BattleState,
+    reactor: Actor,
+  ): BattleState =
+    if (state.interruptStack.length() == 0)
+      state
+    else {
+      match state.interruptStack[state.interruptStack.length() - 1] {
+        | PendingReaction(frame) =>
+            declinePendingWeaponCounterspellFrame(state, reactor, frame)
+        | _ => state
+      }
+    }
+
 }

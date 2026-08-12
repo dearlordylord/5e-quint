@@ -67,7 +67,6 @@ module battleRuntimeCommandFleeNextTurnTests {
       assert(pendingReactionFrame(followed.interruptStack[0]) == HasPendingReactionFrame({
         request: OpportunityAttackReactionRequest({
           mover: Goblin,
-          threat: Fighter,
           continuation: OpportunityAttackResumesCommandFleeMovement({
             speedKind: WalkSpeedKind,
             movementCost: 30,

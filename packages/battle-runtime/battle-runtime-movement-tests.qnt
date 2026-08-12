@@ -146,7 +146,6 @@ module battleRuntimeMovementTests {
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
         request: OpportunityAttackReactionRequest({
           mover: Fighter,
-          threat: Goblin,
           continuation: OpportunityAttackResumesMovement({
             speedKind: WalkSpeedKind,
             movementCost: 5,

@@ -28,7 +28,7 @@ module battleRuntimeLightShieldReactionResolution {
           if (not(shieldReactionFrameIsFreshGoblinTarget(frame)))
             NoLightShieldReactionCandidate
           else
-            match request.continuation {
+            match request {
               | ShieldResumesProduceFlameHurl =>
                   HasLightShieldReactionCandidate({
                     continuation: LightShieldProduceFlameHurl,

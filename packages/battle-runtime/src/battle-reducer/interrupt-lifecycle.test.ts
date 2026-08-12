@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { movementFeet } from "@dnd/shared/types";
 import type {
   BattleInterruptCheckpointInput,
   BattleResolutionResult,
@@ -11,6 +12,7 @@ import {
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
   battleProcedureExecutionRefForTest,
   fighterAttackSubject,
+  fighterId,
   secondWizardId,
   targetFill,
   wizardId,
@@ -26,6 +28,7 @@ import {
   opportunityAttackReactionChoices,
   spendReaction,
 } from "./interrupt-execution.ts";
+import { opportunityAttackThreatsForMovement } from "./movement-speed.ts";
 import {
   InterruptLifecycleExecution,
   resolveActiveInterruptProcedure,
@@ -433,6 +436,51 @@ describe("interrupt lifecycle", () => {
           attackAbility: attackSubject.attackAbility,
           attackDamageType: attackSubject.attackDamageType,
         },
+      ]),
+    ).toEqual([]);
+  });
+
+  test("does not admit an incapacitated opportunity-attack reactor", () => {
+    const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
+    const fighter = state.combatants.get(fighterId);
+    if (fighter === undefined || fighter.positiveHpUnconscious !== null) {
+      throw new Error(
+        "Expected a conscious fighter opportunity-attack reactor.",
+      );
+    }
+    const attackSubject = fighterAttackSubject(state);
+    if (
+      attackSubject.attackAbility === undefined ||
+      attackSubject.attackDamageType === undefined
+    ) {
+      throw new Error("Expected the fighter attack selection facts.");
+    }
+    const threat = {
+      reactorId: fighterId,
+      procedureRef: attackSubject.procedureRef,
+      attackAbility: attackSubject.attackAbility,
+      attackDamageType: attackSubject.attackDamageType,
+    };
+    const unavailableState: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(fighterId, {
+        ...fighter,
+        conditions: applyCondition(fighter.conditions, "incapacitated"),
+      }),
+    };
+
+    expect(
+      opportunityAttackThreatsForMovement(unavailableState, {
+        moverId: secondWizardId,
+        speedKind: "walk",
+        movementCostFeet: movementFeet(5),
+        provokedOpportunityAttacks: [threat],
+        spendsTurnMovement: false,
+      }),
+    ).toEqual([]);
+    expect(
+      opportunityAttackReactionChoices(unavailableState, secondWizardId, [
+        threat,
       ]),
     ).toEqual([]);
   });

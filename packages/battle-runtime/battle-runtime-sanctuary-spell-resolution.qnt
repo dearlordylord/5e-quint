@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SANCTUARY.TARGETING_INTERDICTION
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-sanctuary-targeting-interdiction
 
 module battleRuntimeSanctuarySpellResolution {
   import battleRuntimeModel.* from "./battle-runtime-model"

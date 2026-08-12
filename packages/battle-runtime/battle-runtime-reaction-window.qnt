@@ -22,15 +22,23 @@ module battleRuntimeReactionWindow {
 
   pure def reactionRequestProcedureCanOpen(state: BattleState, frame: PendingReactionFrame): bool =
     match frame.request {
+      | AttackHitShieldReactionRequest(_) =>
+          canActorExpendSpellSlotThisTurn(state, Goblin)
       | SpellCastCounterspellReactionRequest(request) =>
-          not(counterspellFrameClaimsTriggeringSlot(frame)) or
-            canActorExpendSpellSlotThisTurn(
-              state,
-              request.counterspell.triggeringCaster,
-            )
+          canActorExpendSpellSlotThisTurn(
+            state,
+            opposingActor(request.counterspell.triggeringCaster),
+          ) and
+            (not(counterspellFrameClaimsTriggeringSlot(frame)) or
+              canActorExpendSpellSlotThisTurn(
+                state,
+                request.counterspell.triggeringCaster,
+              ))
       | AttackHitFighterReadiedSpellReleaseReactionRequest(_) =>
           fighterCanReleaseReadiedSpell(state)
-      | _ => true
+      | AfterDamageHellishRebukeReactionRequest(request) =>
+          canActorExpendSpellSlotThisTurn(state, request.damaged)
+      | OpportunityAttackReactionRequest(_) => true
     }
 
   pure def stateAfterOpeningReactionWindow(state: BattleState, frame: PendingReactionFrame): BattleState =
@@ -46,20 +54,11 @@ module battleRuntimeReactionWindow {
       | _ => state
     }
 
-  pure def reactionRequestHasCanonicalParticipants(request: PendingReactionRequest): bool =
-    match request {
-      | AttackHitShieldReactionRequest(_) => true
-      | SpellCastCounterspellReactionRequest(data) =>
-          data.reactor != data.counterspell.triggeringCaster
-      | OpportunityAttackReactionRequest(data) =>
-          data.threat != data.mover
-      | AttackHitFighterReadiedSpellReleaseReactionRequest(_) => true
-      | AfterDamageHellishRebukeReactionRequest(data) =>
-          data.damager != data.damaged and data.slotLevel >= 1
-    }
-
   pure def pendingReactionFrameIsCanonical(frame: PendingReactionFrame): bool =
-    reactionRequestHasCanonicalParticipants(frame.request)
+    match frame.request {
+      | AfterDamageHellishRebukeReactionRequest(data) => data.slotLevel >= 1
+      | _ => true
+    }
 
   pure def reactionWindowCanOpen(state: BattleState, frame: PendingReactionFrame): bool =
     pendingReactionFrameIsCanonical(frame) and
@@ -78,28 +77,22 @@ module battleRuntimeReactionWindow {
     after.interruptStack.length() > before.interruptStack.length()
 
   pure def shieldReactionFrame(
-    reactor: Actor,
     continuation: ShieldReactionContinuation,
   ): PendingReactionFrame = {
-    request: AttackHitShieldReactionRequest({
-      reactor: reactor,
-      continuation: continuation,
-    }),
+    request: AttackHitShieldReactionRequest(continuation),
   }
 
   pure def shieldReactionWindowCanOpen(
     state: BattleState,
-    reactor: Actor,
     continuation: ShieldReactionContinuation,
   ): bool =
-    reactionWindowCanOpen(state, shieldReactionFrame(reactor, continuation))
+    reactionWindowCanOpen(state, shieldReactionFrame(continuation))
 
   pure def openShieldReactionWindow(
     state: BattleState,
-    reactor: Actor,
     continuation: ShieldReactionContinuation,
   ): BattleState =
-    openReactionWindow(state, shieldReactionFrame(reactor, continuation))
+    openReactionWindow(state, shieldReactionFrame(continuation))
 
   pure def combatantCanReact(combatant: Combatant): bool =
     combatant.reactionAvailable and
@@ -143,18 +136,11 @@ module battleRuntimeReactionWindow {
             if (not(reactionFrameCanOffer(frame, reactor)))
               state
             else {
-              val decision = battleRuntimeDeclineReactionDecision(
-                true,
-                false,
-                true,
-              )
+              val decision = battleRuntimeDeclineReactionDecision(true)
               match (decision) {
-                | BattleRuntimeDeclinedReaction(result) => {
+                | BattleRuntimeDeclinedReaction => {
                     val rest = state.interruptStack.slice(0, state.interruptStack.length() - 1)
-                    if (result.frameComplete)
-                      { ...state, interruptStack: rest }
-                    else
-                      state
+                    { ...state, interruptStack: rest }
                   }
                 | _ => state
               }

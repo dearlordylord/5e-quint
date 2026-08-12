@@ -15,6 +15,12 @@ module battleRuntimeModel {
   import battleRuntimeSorcerousBurstDamageChoice.* from "./battle-runtime-sorcerous-burst-damage-choice"
 
   type Actor = Fighter | Goblin
+
+  pure def opposingActor(actor: Actor): Actor =
+    match actor {
+      | Fighter => Goblin
+      | Goblin => Fighter
+    }
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
   type Ability = StrAbility | DexAbility | ConAbility | IntAbility | WisAbility | ChaAbility
@@ -383,7 +389,6 @@ module battleRuntimeModel {
     | HellishRebukeDamagerOutside60Feet
 
   type HellishRebukeAfterDamageContinuation = {
-    damager: Actor,
     damaged: Actor,
     slotLevel: int,
   }
@@ -451,23 +456,16 @@ module battleRuntimeModel {
   type OpportunityAttackReactionContinuation =
     | OpportunityAttackResumesMovement({ speedKind: MovementSpeedKind, movementCost: int })
     | OpportunityAttackResumesCommandFleeMovement({ speedKind: MovementSpeedKind, movementCost: int })
-    | OpportunityAttackResumesDissonantWhispersReactionMovement({
-        damageSource: Actor,
-      })
+    | OpportunityAttackResumesDissonantWhispersReactionMovement
 
   type OpportunityAttackReactionRequestData = {
     mover: Actor,
-    threat: Actor,
     continuation: OpportunityAttackReactionContinuation,
   }
 
   type PendingReactionRequest =
-    | AttackHitShieldReactionRequest({
-        reactor: Actor,
-        continuation: ShieldReactionContinuation,
-      })
+    | AttackHitShieldReactionRequest(ShieldReactionContinuation)
     | SpellCastCounterspellReactionRequest({
-        reactor: Actor,
         counterspell: PendingCounterspellReaction,
         continuation: CounterspellReactionContinuation,
       })
@@ -525,9 +523,9 @@ module battleRuntimeModel {
 
   pure def reactionFrameReactor(frame: PendingReactionFrame): Actor =
     match frame.request {
-      | AttackHitShieldReactionRequest(request) => request.reactor
-      | SpellCastCounterspellReactionRequest(request) => request.reactor
-      | OpportunityAttackReactionRequest(request) => request.threat
+      | AttackHitShieldReactionRequest(_) => Goblin
+      | SpellCastCounterspellReactionRequest(request) => opposingActor(request.counterspell.triggeringCaster)
+      | OpportunityAttackReactionRequest(request) => opposingActor(request.mover)
       | AttackHitFighterReadiedSpellReleaseReactionRequest(_) => Fighter
       | AfterDamageHellishRebukeReactionRequest(request) => request.damaged
     }

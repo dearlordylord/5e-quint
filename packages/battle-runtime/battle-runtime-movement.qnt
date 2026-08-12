@@ -96,10 +96,7 @@ module battleRuntimeMovement {
                   val awaitingReaction = openReactionWindow(afterReactionSpend, {
                     request: OpportunityAttackReactionRequest({
                       mover: Goblin,
-                      threat: Fighter,
-                      continuation: OpportunityAttackResumesDissonantWhispersReactionMovement({
-                        damageSource: Fighter,
-                      }),
+                      continuation: OpportunityAttackResumesDissonantWhispersReactionMovement,
                     }),
                   })
                   if (reactionWindowOpened(afterReactionSpend, awaitingReaction))
@@ -496,7 +493,6 @@ module battleRuntimeMovement {
       openReactionWindow(state, {
         request: OpportunityAttackReactionRequest({
           mover: Fighter,
-          threat: Goblin,
           continuation: OpportunityAttackResumesMovement({
             speedKind: speedKind,
             movementCost: movementCost,

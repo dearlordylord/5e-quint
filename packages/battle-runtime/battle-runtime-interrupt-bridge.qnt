@@ -11,9 +11,8 @@ module battleRuntimeInterruptBridge {
 
   type BattleRuntimeReactionDecision =
     | BattleRuntimeInvalidReactionDecision
-    | BattleRuntimeDeclinedReaction({ frameComplete: bool })
+    | BattleRuntimeDeclinedReaction
     | BattleRuntimeTookReaction({
-        frameComplete: bool,
         reactionAvailableAfterChoice: bool,
       })
 
@@ -47,24 +46,20 @@ module battleRuntimeInterruptBridge {
 
   pure def battleRuntimeDeclineReactionDecision(
     eligible: bool,
-    alreadyOffered: bool,
-    frameCompleteAfterDecision: bool
   ): BattleRuntimeReactionDecision =
-    if (not(eligible) or alreadyOffered)
+    if (not(eligible))
       BattleRuntimeInvalidReactionDecision
     else
-      BattleRuntimeDeclinedReaction({ frameComplete: frameCompleteAfterDecision })
+      BattleRuntimeDeclinedReaction
 
   pure def battleRuntimeTakeReactionDecision(
     trigger: BattleRuntimeReactionTrigger,
     procedure: BattleRuntimeReactionProcedure,
     eligible: bool,
-    alreadyOffered: bool,
     reactionAvailable: bool,
     procedureAdmitted: bool,
-    frameCompleteAfterDecision: bool
   ): BattleRuntimeReactionDecision =
-    if (not(eligible) or alreadyOffered or not(procedureAdmitted))
+    if (not(eligible) or not(procedureAdmitted))
       BattleRuntimeInvalidReactionDecision
     else {
       val turn = {
@@ -90,7 +85,6 @@ module battleRuntimeInterruptBridge {
         BattleRuntimeInvalidReactionDecision
       else
         BattleRuntimeTookReaction({
-          frameComplete: frameCompleteAfterDecision,
           reactionAvailableAfterChoice: choice.turn.reactionAvailable,
         })
     }

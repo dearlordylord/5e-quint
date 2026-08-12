@@ -43,7 +43,6 @@ module battleRuntimeHellishRebukeReaction {
     )
       openReactionWindow(state, {
         request: AfterDamageHellishRebukeReactionRequest({
-          damager: damager,
           damaged: damaged,
           slotLevel: slotLevel,
         }),
@@ -62,7 +61,6 @@ module battleRuntimeHellishRebukeReaction {
     concentrationSaveSucceeded: bool,
   ): BattleState =
     if (
-      continuation.damaged == continuation.damager or
       continuation.slotLevel < 1 or
       not(reactorCanReact(state, continuation.damaged)) or
       not(canActorExpendSpellSlotThisTurn(state, continuation.damaged))
@@ -70,7 +68,7 @@ module battleRuntimeHellishRebukeReaction {
       state
     else {
       val afterReactionSpend = spendReaction(state, continuation.damaged)
-      val damagedTarget = match continuation.damager {
+      val damagedTarget = match opposingActor(continuation.damaged) {
         | Fighter => {
             ...afterReactionSpend,
             fighter: saveGatedDamageTarget(
@@ -123,10 +121,8 @@ module battleRuntimeHellishRebukeReaction {
       battleRuntimeReactionTrigger(AfterDamage),
       BattleRuntimeAfterDamageSpellReactionProcedure,
       reactor == continuation.damaged and reactionFrameCanOffer(frame, reactor),
-      false,
       reactorCanReact(state, reactor),
       canActorExpendSpellSlotThisTurn(state, reactor),
-      true,
     )
     match decision {
       | BattleRuntimeTookReaction(_) =>

@@ -25,7 +25,7 @@ module battleRuntimeWeaponShieldReactionResolution {
     match frame.request {
       | AttackHitShieldReactionRequest(request) =>
           if (shieldReactionFrameIsFreshGoblinTarget(frame) and
-              request.continuation == ShieldResumesTrueStrikeWeaponAttack)
+              request == ShieldResumesTrueStrikeWeaponAttack)
             HasWeaponShieldReactionCandidate({
               continuation: WeaponShieldTrueStrikeAttack,
             })

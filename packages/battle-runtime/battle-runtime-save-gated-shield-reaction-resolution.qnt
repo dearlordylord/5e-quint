@@ -25,7 +25,7 @@ module battleRuntimeSaveGatedShieldReactionResolution {
     match frame.request {
       | AttackHitShieldReactionRequest(request) =>
           if (shieldReactionFrameIsFreshGoblinTarget(frame) and
-              request.continuation == ShieldResumesIceKnife)
+              request == ShieldResumesIceKnife)
             HasSaveGatedShieldReactionCandidate({
               continuation: SaveGatedShieldIceKnife,
             })

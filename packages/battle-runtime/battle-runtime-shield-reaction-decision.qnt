@@ -41,10 +41,8 @@ module battleRuntimeShieldReactionDecision {
       battleRuntimeReactionTrigger(AttackHit),
       BattleRuntimeShieldReactionProcedure,
       reactorIsGoblin,
-      false,
       reactorCanReact(state, reactor),
       canActorExpendSpellSlotThisTurn(state, reactor),
-      reactorIsGoblin,
     )
     match decision {
       | BattleRuntimeTookReaction(_) => {

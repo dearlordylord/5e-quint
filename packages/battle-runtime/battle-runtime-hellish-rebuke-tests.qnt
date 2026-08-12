@@ -21,7 +21,6 @@ module battleRuntimeHellishRebukeTests {
       assert(awaiting.interruptStack.length() == 1),
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
         request: AfterDamageHellishRebukeReactionRequest({
-          damager: Goblin,
           damaged: Fighter,
           slotLevel: 1,
         }),
@@ -218,18 +217,17 @@ module battleRuntimeHellishRebukeTests {
     }
   }
 
-  run test_hellish_rebuke_after_damage_reaction_rejects_invalid_continuation = {
+  run test_hellish_rebuke_after_damage_reaction_rejects_unavailable_or_invalid_slot = {
     val noReaction = {
       ...initialState,
       fighter: { ...initialState.fighter, reactionAvailable: false },
     }
     val noSlot = commitActorSpellSlotUse(initialState, Fighter)
-    val continuation = { damager: Goblin, damaged: Fighter, slotLevel: 1 }
+    val continuation = { damaged: Fighter, slotLevel: 1 }
     all {
       assert(resolveHellishRebukeAfterDamage(noReaction, continuation, false, 3, true) == noReaction),
       assert(resolveHellishRebukeAfterDamage(noSlot, continuation, false, 3, true) == noSlot),
-      assert(resolveHellishRebukeAfterDamage(initialState, { damager: Fighter, damaged: Fighter, slotLevel: 1 }, false, 3, true) == initialState),
-      assert(resolveHellishRebukeAfterDamage(initialState, { damager: Goblin, damaged: Fighter, slotLevel: 0 }, false, 3, true) == initialState),
+      assert(resolveHellishRebukeAfterDamage(initialState, { damaged: Fighter, slotLevel: 0 }, false, 3, true) == initialState),
     }
   }
 

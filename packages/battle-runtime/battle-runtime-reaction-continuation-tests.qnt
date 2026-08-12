@@ -8,15 +8,16 @@ module battleRuntimeReactionContinuationTests {
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeOpportunityAttack.* from "./battle-runtime-opportunity-attack"
 
-  run test_reaction_decision_contract_rejects_unavailable_reaction = {
-    val awaiting = moveFighter(
+  run test_unavailable_reactor_prevents_opportunity_attack_window_admission = {
+    val moved = moveFighter(
       { ...initialState, goblin: { ...initialState.goblin, reactionAvailable: false } },
       5,
       movementProvokesOpportunityAttack,
     )
     all {
-      assert(resolveTriggeredReactionOffer(awaiting, Goblin) == awaiting),
-      assert(declineTriggeredReactionOfferAndResume(awaiting, Goblin).fighter.movementSpent == 5),
+      assert(moved.interruptStack == []),
+      assert(moved.fighter.movementSpent == 5),
+      assert(not(moved.goblin.reactionAvailable)),
     }
   }
 
@@ -25,17 +26,14 @@ module battleRuntimeReactionContinuationTests {
     // unconstructable. A valid Shield request remains unsupported by this
     // generic triggered-reaction owner and must be left to its narrowed owner.
     val awaiting = openReactionWindow(initialState, {
-      request: AttackHitShieldReactionRequest({
-        reactor: Fighter,
-        continuation: ShieldResumesRayOfFrost,
-      }),
+      request: AttackHitShieldReactionRequest(ShieldResumesRayOfFrost),
     })
-    val resolved = resolveTriggeredReactionOffer(awaiting, Fighter)
-    val declined = declineTriggeredReactionOfferAndResume(awaiting, Fighter)
+    val resolved = resolveTriggeredReactionOffer(awaiting, Goblin)
+    val declined = declineTriggeredReactionOfferAndResume(awaiting, Goblin)
     all {
       assert(resolved == awaiting),
       assert(declined == awaiting),
-      assert(resolved.fighter.reactionAvailable),
+      assert(resolved.goblin.reactionAvailable),
     }
   }
 

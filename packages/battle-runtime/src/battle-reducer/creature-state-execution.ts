@@ -10,7 +10,6 @@ import {
 } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   hasCondition,
-  isIncapacitated,
   type ConditionState,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { type Condition } from "@dnd/shared/types";
@@ -71,7 +70,11 @@ import {
   combatantInvisibleBenefitDenied,
   currentActorId,
   grappledBy,
-  zeroHpLifecycleIsTerminal,
+} from "./creature-state-leaves.ts";
+
+export {
+  combatantCanTakeActions,
+  combatantCanTakeReactions,
 } from "./creature-state-leaves.ts";
 
 import {
@@ -407,28 +410,6 @@ export function combatantZeroHpLifecycleSnapshot(
       dead: lifecycle.deathSaves.dead,
     })),
     Match.exhaustive,
-  );
-}
-
-export function combatantCanTakeActions(
-  combatant: BattleCreatureState | undefined,
-): combatant is BattleCreatureState {
-  return (
-    combatant != null &&
-    !isIncapacitated(combatant.conditions) &&
-    !zeroHpLifecycleIsTerminal(combatant)
-  );
-}
-
-export function combatantCanTakeReactions(
-  combatant: BattleCreatureState | undefined,
-): boolean {
-  return (
-    combatantCanTakeActions(combatant) &&
-    combatant.reactionAvailable &&
-    !combatant.activeEffects.some(
-      (effect) => effect.kind === "slowActivePenalties",
-    )
   );
 }
 

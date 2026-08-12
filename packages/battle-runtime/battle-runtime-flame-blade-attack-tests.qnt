@@ -36,10 +36,7 @@ module battleRuntimeFlameBladeAttackTests {
     all {
       assert(awaiting.interruptStack.length() == 1),
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
-        request: AttackHitShieldReactionRequest({
-          reactor: Goblin,
-          continuation: ShieldResumesFlameBladeAttack,
-        }),
+        request: AttackHitShieldReactionRequest(ShieldResumesFlameBladeAttack),
       })),
       assert(activeEffectsContainHeldFlameBlade(awaiting.fighter.activeEffects)),
       assert(battleRuntimeLightEmitters(awaiting).contains(flameBladeHeldLightEmitter)),

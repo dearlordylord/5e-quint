@@ -874,7 +874,7 @@ export function opportunityAttackReactionChoices(
   return threats.flatMap((threat) => {
     const reactorId = threat.reactorId;
     const reactor = state.combatants.get(reactorId);
-    if (reactor === undefined) {
+    if (!combatantCanTakeReactions(reactor)) {
       return [];
     }
     const selection = opportunityAttackSelectionForReactor(

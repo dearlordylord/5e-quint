@@ -94,10 +94,7 @@ module battleRuntimeDissonantWhispersTests {
             assert(pendingReactionFrame(result.interruptStack[0]) == HasPendingReactionFrame({
               request: OpportunityAttackReactionRequest({
                 mover: Goblin,
-                threat: Fighter,
-                continuation: OpportunityAttackResumesDissonantWhispersReactionMovement({
-                  damageSource: Fighter,
-                }),
+                continuation: OpportunityAttackResumesDissonantWhispersReactionMovement,
               }),
             })),
           }

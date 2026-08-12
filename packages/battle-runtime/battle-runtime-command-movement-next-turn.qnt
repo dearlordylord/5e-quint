@@ -83,7 +83,6 @@ module battleRuntimeCommandMovementNextTurn {
             val awaitingReaction = openReactionWindow(state, {
               request: OpportunityAttackReactionRequest({
                 mover: actor,
-                threat: if (actor == Fighter) Goblin else Fighter,
                 continuation: OpportunityAttackResumesCommandFleeMovement({
                   speedKind: speedKind,
                   movementCost: movementCost,

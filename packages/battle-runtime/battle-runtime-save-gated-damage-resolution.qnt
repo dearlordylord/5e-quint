@@ -309,9 +309,9 @@ module battleRuntimeSaveGatedDamageResolution {
         not(mirrorImageRedirects) and
         shieldOfferBoundary == IceKnifeShieldOfferPending and
         not(state.goblin.activeEffects.contains(ShieldArmorClassBonus)) and
-        shieldReactionWindowCanOpen(state, Goblin, ShieldResumesIceKnife)
+        shieldReactionWindowCanOpen(state, ShieldResumesIceKnife)
       ) {
-        openShieldReactionWindow(rolled, Goblin, ShieldResumesIceKnife)
+        openShieldReactionWindow(rolled, ShieldResumesIceKnife)
       } else {
         val attackResolvedGoblin =
           if (mirrorImageRedirects)
