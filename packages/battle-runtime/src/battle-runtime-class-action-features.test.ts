@@ -3598,6 +3598,7 @@ describe("battle runtime: class action features", () => {
             ...grapplerUnitRefs(),
           ],
         }),
+        characterSeed({ combatantId: wizardId, initiative: 15 }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
@@ -3750,6 +3751,33 @@ describe("battle runtime: class action features", () => {
       "unitFeatureDecision",
     );
     expect(movementDecision.choices).toEqual(["use", "decline"]);
+
+    const zeroSpeedState = {
+      ...afterPunchAndGrab.state,
+      grapples: [
+        ...afterPunchAndGrab.state.grapples,
+        {
+          grapplerId: wizardId,
+          targetId: fighterId,
+          escapeDc: difficultyClass(10),
+          reachFeet: movementFeet(5),
+          hand: "left" as const,
+        },
+      ],
+    } satisfies BattleState;
+    const zeroSpeedResolution = requireResolved(
+      resolveBattleSubject({
+        state: zeroSpeedState,
+        subject: attackSubject,
+        fills: fillsThroughPunchAndGrab,
+      }),
+    );
+    expect(zeroSpeedResolution.shovePushes).toEqual([
+      expect.objectContaining({ targetId: goblinId }),
+    ]);
+    expect(
+      zeroSpeedResolution.state.combatants.get(fighterId)?.movementSpentFeet,
+    ).toBe(movementFeet(0));
 
     const declined = requireResolved(
       resolveBattleSubject({

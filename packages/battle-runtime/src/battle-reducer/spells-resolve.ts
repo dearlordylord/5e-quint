@@ -67,6 +67,7 @@ import {
   type CharacterBattleCreatureState,
   type SpellMarkedDamageRider,
   type SupportedSpellInvocation,
+  spellAttackDamagePayloadIsResolved,
 } from "../battle-state-execution.ts";
 import {
   ATTACK_ROLL_HOLE_ID,
@@ -1573,21 +1574,11 @@ function sharedSpellAttackDamageInvocationFor(
 }
 
 function isSupportedDamageSpellInvocation<
-  I extends BattleExecutableSpellInvocation,
+  I extends SharedSpellAttackDamageInvocation,
 >(invocation: I): invocation is I & RuntimeDamageSpellProcedure {
   return (
-    invocation.procedure === "heldLightHurl" ||
-    invocation.procedure === "spellCreatedHeldObjectAttack" ||
-    invocation.procedure === "objectContactDamage" ||
-    invocation.procedure === "objectContactDamageRepeat" ||
-    invocation.procedure === "spiritualWeaponAttackProxy" ||
-    invocation.procedure === "spiritualWeaponRepeatAttack" ||
-    invocation.procedure === "repeatedDamageAllocation" ||
-    (invocation.procedure === "spellAttackDamage" &&
-      invocation.damage.kind !== "sorcerousBurstDamageTypeChoice") ||
-    invocation.procedure === "spellAttackSequence" ||
-    invocation.procedure === "saveGatedDamage" ||
-    invocation.procedure === "attackBurstSaveDamage"
+    invocation.procedure !== "spellAttackDamage" ||
+    spellAttackDamagePayloadIsResolved(invocation.damage)
   );
 }
 

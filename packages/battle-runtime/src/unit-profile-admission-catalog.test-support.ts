@@ -291,6 +291,8 @@ export const acidSplashUnitId = "acid_splash";
 
 export const acidArrowUnitId = "acid_arrow";
 
+export const rayOfEnfeeblementUnitId = "ray_of_enfeeblement";
+
 export const animalFriendshipUnitId = "animal_friendship";
 
 export const antimagicFieldUnitId = "antimagic_field";

@@ -619,6 +619,93 @@ describe("SRDINV52 deterministic Dissonant Whispers Spell Unit admission", () =>
     ).toBe(true);
   });
 
+  test("dissonant whispers rejects stale movement after the save or Reaction changes", () => {
+    const spell = spellRecord(dissonantWhispersUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      targetHp: 30,
+      targetMaxHp: 30,
+    });
+    const act = spellAct({ session, spellId: dissonantWhispersUnitId });
+    const target = requireHole(act.initialHoles, "targetChoice");
+    const targetFill = spellTargetFill(
+      target,
+      dissonantWhispersUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const savingThrow = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [targetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const failedSave = savingThrowOutcomeFill(savingThrow, [
+      { targetId: spellTargetId, succeeded: false },
+    ]);
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [targetFill, failedSave],
+      }),
+      "rolledDice",
+    );
+    const damageFill = damageRollFillWithGroups(damageRoll, [[3, 4, 5]]);
+    const movement = requireResultHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [targetFill, failedSave, damageFill],
+      }),
+      "movement",
+    );
+    const staleMovement = movementFill(movement, {
+      movementCostFeet: 30,
+      provokedOpportunityAttacks: [],
+    });
+
+    const successfulSave = savingThrowOutcomeFill(savingThrow, [
+      { targetId: spellTargetId, succeeded: true },
+    ]);
+    expect(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [targetFill, successfulSave, damageFill, staleMovement],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message: "Dissonant Whispers movement is only valid after a failed save.",
+    });
+
+    const targetWithoutReaction = {
+      ...requireCombatant(session.state, spellTargetId),
+      reactionAvailable: false,
+    };
+    expect(
+      resolveBattleSubject({
+        state: {
+          ...session.state,
+          combatants: new Map(session.state.combatants).set(
+            spellTargetId,
+            targetWithoutReaction,
+          ),
+        },
+        subject: act.subject,
+        fills: [targetFill, failedSave, damageFill, staleMovement],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Dissonant Whispers movement is unavailable when the failed target has no Reaction.",
+    });
+  });
+
   test("dissonant whispers failed save does not request movement when the target has no Reaction", () => {
     const spell = spellRecord(dissonantWhispersUnitId);
     const battle = spellBattle({ preparedSpells: [spell] });

@@ -49,6 +49,7 @@ import {
   endTurn,
   Hp,
   movementFeet,
+  movementDeltaFeet,
   proficiencyBonus,
   resolveBattleInterrupt,
   resolveBattleSubject,
@@ -1127,7 +1128,23 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       targetHp: 30,
       targetMaxHp: 30,
     });
-    const state = session.state;
+    const casterBeforeCast = requireCombatant(session.state, spellCasterId);
+    const unrelatedEffect = {
+      kind: "speedDelta",
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic-spiritual-weapon-composition",
+      ),
+      sourceCombatantId: spellCasterId,
+      deltaFeet: movementDeltaFeet(10),
+      expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
+    } as const satisfies BattleActiveEffect;
+    const state: BattleState = {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellCasterId, {
+        ...casterBeforeCast,
+        activeEffects: [...casterBeforeCast.activeEffects, unrelatedEffect],
+      }),
+    };
     const castAct = bonusSpellAct({
       session,
       spellId: spiritualWeaponUnitId,
@@ -1179,10 +1196,11 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     if (casterTurn.tag !== "resolved") {
       throw new Error("Expected target End Turn to resolve.");
     }
+    const repeatReadyState = casterTurn.state;
 
     const repeatAct = discoverBattleActs(
       battleRuntimeSessionForTest({
-        state: casterTurn.state,
+        state: repeatReadyState,
         context: session.context,
       }),
     ).find(
@@ -1215,7 +1233,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       movedForceId,
     );
     const overlongMove = resolveBattleSubject({
-      state: casterTurn.state,
+      state: repeatReadyState,
       subject: repeatAct.subject,
       fills: [
         spiritualWeaponForcePositionFill({
@@ -1284,9 +1302,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(
       resolveBattleSubject({
         state: {
-          ...casterTurn.state,
+          ...repeatReadyState,
           currentTurnResources: {
-            ...casterTurn.state.currentTurnResources,
+            ...repeatReadyState.currentTurnResources,
             currentHasBonusAction: false,
           },
         },
@@ -1299,8 +1317,21 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       message:
         "Bonus Action spell is no longer available for the current actor.",
     });
+    const unrelatedEffectBeforeRepeat = requireCombatant(
+      repeatReadyState,
+      spellCasterId,
+    ).activeEffects.find(
+      (effect) =>
+        "sourceProcedureRef" in effect &&
+        effect.sourceProcedureRef === unrelatedEffect.sourceProcedureRef,
+    );
+    if (unrelatedEffectBeforeRepeat === undefined) {
+      throw new Error(
+        "Expected the unrelated effect before the repeat attack.",
+      );
+    }
     const repeated = resolveBattleSubject({
-      state: casterTurn.state,
+      state: repeatReadyState,
       subject: repeatAct.subject,
       fills: completedRepeatFills,
     });
@@ -1314,11 +1345,14 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     );
     expect(
       requireCombatant(repeated.state, spellCasterId).activeEffects,
-    ).toContainEqual(
-      expect.objectContaining({
-        kind: "spiritualWeapon",
-        forcePositionId: movedForceId,
-      }),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "spiritualWeapon",
+          forcePositionId: movedForceId,
+        }),
+        unrelatedEffectBeforeRepeat,
+      ]),
     );
   });
 
