@@ -1213,55 +1213,30 @@ export function validateSpellTargetList(
     invocation.procedure === "directHitPointRestoration" &&
     invocation.targeting.kind === "pointOriginSphereTargetList"
   ) {
-    return validatePointOriginSphereSpellTargetList(
-      state,
-      actorId,
-      invocation,
-      targetIds,
-      facts,
+    const expectedRadiusFeet = invocation.targeting.area.radiusFeet;
+    const matchingAreaFacts = facts.filter(
+      (fact) =>
+        fact.kind === "spellTargetsInPointOriginSphere" &&
+        fact.casterId === actorId &&
+        fact.sourceProcedureRef === invocation.sourceProcedureRef &&
+        fact.areaId.length > 0 &&
+        fact.radiusFeet === expectedRadiusFeet &&
+        sameCombatantIdSet(fact.targetIds, targetIds),
     );
-  }
-  return null;
-}
-
-export function validatePointOriginSphereSpellTargetList(
-  state: BattleState,
-  actorId: CombatantId,
-  invocation: BattleExecutableSpellInvocation<
-    Extract<
-      RuntimeSpellProcedure,
-      { readonly procedure: "directHitPointRestoration" }
-    >
-  >,
-  targetIds: readonly CombatantId[],
-  facts: readonly BattleSpellTargetListSpatialFact[],
-): string | null {
-  if (invocation.targeting.kind !== "pointOriginSphereTargetList") {
-    return "Area healing targets must use a point-origin Sphere target list.";
-  }
-  const expectedRadiusFeet = invocation.targeting.area.radiusFeet;
-  const matchingAreaFacts = facts.filter(
-    (fact) =>
-      fact.kind === "spellTargetsInPointOriginSphere" &&
-      fact.casterId === actorId &&
-      fact.sourceProcedureRef === invocation.sourceProcedureRef &&
-      fact.areaId.length > 0 &&
-      fact.radiusFeet === expectedRadiusFeet &&
-      sameCombatantIdSet(fact.targetIds, targetIds),
-  );
-  if (matchingAreaFacts.length !== 1) {
-    return "Area healing targets must share one selected point-origin Sphere.";
-  }
-  for (const targetId of targetIds) {
-    if (
-      !spellTargetHasNonSpatialPrerequisites(
-        state,
-        actorId,
-        targetId,
-        invocation,
-      )
-    ) {
-      return "Spell targets must be combatants within the selected spell's supported range.";
+    if (matchingAreaFacts.length !== 1) {
+      return "Area healing targets must share one selected point-origin Sphere.";
+    }
+    for (const targetId of targetIds) {
+      if (
+        !spellTargetHasNonSpatialPrerequisites(
+          state,
+          actorId,
+          targetId,
+          invocation,
+        )
+      ) {
+        return "Spell targets must be combatants within the selected spell's supported range.";
+      }
     }
   }
   return null;

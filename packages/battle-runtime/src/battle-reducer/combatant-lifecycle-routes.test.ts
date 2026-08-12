@@ -9,6 +9,7 @@ import {
   endTurn,
   fighterId,
   findAct,
+  holeId,
   magicSubject,
   requireHole as requireBattleHole,
   requireResolved,
@@ -174,6 +175,23 @@ describe("combatant lifecycle route boundary", () => {
         owner: "battleHitPointAndZeroHpLifecycle",
       }),
     ]);
+
+    const mismatchedFill = {
+      ...fill,
+      holeId: holeId("mismatched-death-save-route-hole"),
+    };
+    const rejected = endTurn({
+      state,
+      actorId: fighterId,
+      fills: [mismatchedFill],
+    });
+    expect(rejected).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    expect(
+      deathSavingThrowRouteForResolution(
+        { state, subject, fills: [mismatchedFill] },
+        rejected,
+      ),
+    ).toBeUndefined();
   });
 
   test("routes direct healing, Blur, and Heroism Concentration lifecycle owners", () => {

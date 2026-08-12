@@ -55,13 +55,72 @@ import { requireHole } from "../unit-profile-admission-creature-fixture.test-sup
 import {
   blessUnitId,
   baneUnitId,
+  hideousLaughterUnitId,
   longstriderUnitId,
   resistanceUnitId,
   spellCasterId,
   spellTargetId,
 } from "../unit-profile-admission-catalog.test-support.ts";
 
+// RAW traces for focused lifecycle behavior:
+// - .references/srd-5.2.1/Playing-the-Game.md#Death-Saving-Throws
+// - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Hideous-Laughter
+
 describe("effect lifecycle route boundary", () => {
+  test("leaves incomplete effect casts unclaimed", () => {
+    const blessSession = spellBattle({
+      casterClassLevels: [{ className: "cleric", level: 1 }],
+      casterSpellcastingSourceClassName: "cleric",
+      preparedSpells: [spellRecord(blessUnitId)],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const blessAct = spellAct({
+      session: blessSession,
+      spellId: blessUnitId,
+      slotLevel: 1,
+    });
+    const blessAwaitingTargets = resolveBattleSubject({
+      state: blessSession.state,
+      subject: blessAct.subject,
+      fills: [],
+    });
+    expect(blessAwaitingTargets.tag).toBe("needsHoles");
+    expect(
+      rollModifierRouteForResolution(
+        { state: blessSession.state, subject: blessAct.subject, fills: [] },
+        blessAwaitingTargets,
+      ),
+    ).toBeUndefined();
+
+    const resistanceSession = spellBattle({
+      casterClassLevels: [{ className: "cleric", level: 1 }],
+      casterSpellcastingSourceClassName: "cleric",
+      cantrips: [spellRecord(resistanceUnitId)],
+      preparedSpells: [],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const resistanceAct = spellAct({
+      session: resistanceSession,
+      spellId: resistanceUnitId,
+    });
+    const resistanceAwaitingTarget = resolveBattleSubject({
+      state: resistanceSession.state,
+      subject: resistanceAct.subject,
+      fills: [],
+    });
+    expect(resistanceAwaitingTarget.tag).toBe("needsHoles");
+    expect(
+      spellDamageReductionRouteForResolution(
+        {
+          state: resistanceSession.state,
+          subject: resistanceAct.subject,
+          fills: [],
+        },
+        resistanceAwaitingTarget,
+      ),
+    ).toBeUndefined();
+  });
+
   test("does not claim an ordinary weapon attack without a roll modifier effect", () => {
     const state = fighterVsGoblinBattle();
 
@@ -404,6 +463,102 @@ describe("effect lifecycle route boundary", () => {
         expect.objectContaining({ owner: "battleActiveEffect" }),
       ]),
     );
+  });
+
+  test("routes Hideous Laughter end-turn repeat-save discovery and failed-save lifecycle", () => {
+    const session = spellBattle({
+      preparedSpells: [spellRecord(hideousLaughterUnitId)],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: hideousLaughterUnitId,
+      slotLevel: 1,
+    });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const target = spellTargetListFill(
+      targetHole,
+      spellCasterId,
+      hideousLaughterUnitId,
+      [spellTargetId],
+    );
+    const initialSave = requireBattleHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [target],
+      }),
+      "savingThrowOutcome",
+    );
+    const failedInitialSave = savingThrowOutcomeFill(initialSave, [
+      { targetId: spellTargetId, succeeded: false },
+    ]);
+    const affected = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: act.subject,
+        fills: [target, failedInitialSave],
+      }),
+    ).state;
+    const targetTurn = requireResolved(
+      endTurn({ state: affected, actorId: spellCasterId }),
+    ).state;
+    const subject = {
+      tag: "runtimeCommand" as const,
+      actorId: spellTargetId,
+      command: "endTurn" as const,
+    };
+    const awaitingRepeatSave = endTurn({
+      state: targetTurn,
+      actorId: spellTargetId,
+    });
+    expect(
+      repeatSaveConditionEffectRouteForResolution(
+        { state: targetTurn, subject, fills: [] },
+        awaitingRepeatSave,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        kind: "discoverBattleActs",
+        subject: "repeatSaveConditionEffect",
+        holes: ["savingThrowOutcome"],
+        owner: "battleTurnBoundary",
+      }),
+    ]);
+
+    const repeatSave = requireBattleHole(
+      awaitingRepeatSave,
+      "savingThrowOutcome",
+    );
+    const failedRepeatSave = savingThrowOutcomeFill(repeatSave, [
+      { targetId: spellTargetId, succeeded: false },
+    ]);
+    const retained = endTurn({
+      state: targetTurn,
+      actorId: spellTargetId,
+      fills: [failedRepeatSave],
+    });
+    if (retained.tag !== "resolved") {
+      throw new Error(
+        "Expected failed Hideous Laughter repeat save to resolve.",
+      );
+    }
+    expect(
+      repeatSaveConditionEffectRouteForResolution(
+        { state: targetTurn, subject, fills: [failedRepeatSave] },
+        retained,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        subject: "repeatSaveConditionEffect",
+        owner: "battleActiveEffect",
+      }),
+    ]);
+    expect(
+      retained.state.combatants
+        .get(spellTargetId)
+        ?.activeEffects.some((effect) => effect.kind === "hideousLaughter"),
+    ).toBe(true);
   });
 
   test("routes turn-end damage and base armor expiration from resolved boundaries", () => {

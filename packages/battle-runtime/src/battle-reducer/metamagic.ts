@@ -207,7 +207,6 @@ export function admitSpellMetamagicApplications(input: {
   if (quickenedSelected) {
     const quickenedIssue = quickenedSpellAdmissionIssue({
       state: input.state,
-      actor: input.actor,
       actorId: input.actorId,
       invocation: input.invocation,
       subject: input.subject,
@@ -789,9 +788,7 @@ function castPropertyMetamagicSupportIssue(
   if (effectKinds.has(EXTENDED_METAMAGIC_EFFECT_KIND)) {
     return extendedSpellDurationProjectionIssue(input);
   }
-  return effectKinds.has(SUBTLE_METAMAGIC_EFFECT_KIND)
-    ? subtleSpellComponentProjectionIssue(input)
-    : null;
+  return subtleSpellComponentProjectionIssue(input);
 }
 
 function damageShapeMetamagicSupportIssue(
@@ -883,7 +880,6 @@ function rerollMetamagicSupportIssue(
 
 function quickenedSpellAdmissionIssue(input: {
   readonly state: BattleState;
-  readonly actor: BattleCreatureState;
   readonly actorId: CombatantId;
   readonly invocation: RuntimeSpellProcedure;
   readonly subject: SpellMetamagicSubject;
@@ -902,10 +898,5 @@ function quickenedSpellAdmissionIssue(input: {
   ) {
     return "Quickened Spell cannot modify a spell after this turn has already cast a level 1+ spell.";
   }
-  return input.actor.origin.kind === "character" &&
-    input.actor.origin.metamagic?.knownOptions.some(
-      (option) => option.effectKind === QUICKENED_METAMAGIC_EFFECT_KIND,
-    )
-    ? null
-    : "Quickened Spell selection requires the actor to know Quickened Spell.";
+  return null;
 }

@@ -20,6 +20,7 @@ import {
   movementFeet,
   resourceCount,
   spellSlotLevel,
+  type DamageType,
   type MovementFeet,
   type ResourceCount,
 } from "@dnd/shared/types";
@@ -436,9 +437,7 @@ export function transmutedSpellSelectionTargetDamageType(
       { readonly effectKind: typeof TRANSMUTED_METAMAGIC_EFFECT_KIND }
     > => candidate.effectKind === TRANSMUTED_METAMAGIC_EFFECT_KIND,
   );
-  return isTransmutedSpellDamageType(selection?.targetDamageType)
-    ? selection.targetDamageType
-    : undefined;
+  return selection?.targetDamageType;
 }
 
 export function saveMetamagicSupportIssue(input: {
@@ -919,11 +918,8 @@ export function isSpellMetamagicApplicationFactWithoutSelectionPayload(
 }
 
 function isTransmutedSpellDamageType(
-  damageType: unknown,
+  damageType: DamageType,
 ): damageType is TransmutedSpellDamageType {
-  if (typeof damageType !== "string") {
-    return false;
-  }
   return TRANSMUTED_SPELL_DAMAGE_TYPES.some(
     (candidate) => candidate === damageType,
   );

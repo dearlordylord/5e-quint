@@ -48,6 +48,7 @@ import {
   effectiveEmpoweredSpellDamageRoll,
   EXTENDED_METAMAGIC_EFFECT_KIND,
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
+  QUICKENED_ACTION_SPELL_PROCEDURE_UNSUPPORTED_MESSAGE,
   QUICKENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_SPELL_METAMAGIC_SELECTION,
   SEEKING_METAMAGIC_EFFECT_KIND,
@@ -89,6 +90,7 @@ import {
   fighterVsGoblinBattle,
   findHole,
   goblinId,
+  innateSorceryResource,
   requireCharacterSpellProcedureRefForTest,
   requireResolved,
   resolveBattleSubject,
@@ -295,10 +297,22 @@ describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
 
 describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell", () => {
   test("discovers Quickened Cure Wounds as a Bonus Action and spends Sorcery Points without spending the Magic action", () => {
-    const session = metamagicBattle();
+    const session = clericSorcererQuickenedCureWoundsBattle();
     const state = session.state;
     assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(state));
     const act = quickenedCureWoundsAct(session);
+    const actorBefore = requireBattleCreature(state, wizardId);
+    if (actorBefore.origin.kind !== "character") {
+      throw new Error("Expected Quickened Spell character.");
+    }
+    const sorceryPointResourcePoolRef =
+      actorBefore.origin.metamagic?.sorceryPointResourcePoolRef;
+    const unrelatedResource = actorBefore.origin.resources.find(
+      (resource) => resource.resourcePoolRef !== sorceryPointResourcePoolRef,
+    );
+    if (unrelatedResource === undefined) {
+      throw new Error("Expected Innate Sorcery resource.");
+    }
 
     expect({
       ...act.subject,
@@ -314,6 +328,9 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       mode: { tag: "cast" },
       metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
     });
+    expect(
+      resolveBattleSubject({ state, subject: act.subject, fills: [] }),
+    ).toMatchObject({ tag: "needsHoles", holes: [{ kind: "targetChoice" }] });
 
     const resolved = resolveQuickenedCureWounds(state, act);
     expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
@@ -334,6 +351,11 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     ).toContain(wizardId);
     expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
     expect(resolved.state.combatants.get(fighterId)?.hp).toBe(14);
+    const actorAfter = requireBattleCreature(resolved.state, wizardId);
+    if (actorAfter.origin.kind !== "character") {
+      throw new Error("Expected resolved Quickened Spell character.");
+    }
+    expect(actorAfter.origin.resources).toContainEqual(unrelatedResource);
     expect(
       discoverBattleActs(battleSessionAtState(session, resolved.state)).some(
         (candidate) =>
@@ -430,6 +452,44 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     ).toContain(wizardId);
     expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(1);
+  });
+
+  test("resolves Quickened save-gated damage at the save boundary when its area has no affected targets", () => {
+    const session = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption()],
+    });
+    const state = session.state;
+    const initialTargetHp = requireBattleCreature(state, skeletonId).hp;
+    const act = quickenedBurningHandsAct(session);
+    const saveHole = findHole(act.initialHoles, "savingThrowOutcome");
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [savingThrowOutcomeFill(saveHole, [])],
+      }),
+    );
+
+    expect(requireBattleCreature(resolved.state, skeletonId).hp).toBe(
+      initialTargetHp,
+    );
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(2));
+    expect(sorcererSpellSlots(resolved.state)).toEqual([
+      { spellLevel: 1, count: 2, expended: 1 },
+    ]);
+    expect(resolved.routeEvents).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "metamagicBonusActionCastingTime",
+          holes: [],
+          owner: "battleConditionLifecycle",
+        },
+      ]),
+    );
   });
 
   test("discovers Quickened spell attacks as Bonus Action casts and preserves hit damage", () => {
@@ -1451,6 +1511,29 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
 
+  test("rejects Distant Spell for a spell without an admitted range projection", () => {
+    const session = saveMetamagicBattle({
+      knownOptions: [distantMetamagicOption()],
+    });
+    const state = session.state;
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          ...burningHandsActionSubject(session),
+          metamagic: [{ effectKind: DISTANT_METAMAGIC_EFFECT_KIND }],
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Distant Spell is supported only for spell procedures with a Touch range or a distance range of at least 5 feet.",
+    });
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
   test("projects selected Subtle Spell components at the Spell Invocation boundary", () => {
     const session = metamagicBattle({
       knownOptions: [subtleMetamagicOption()],
@@ -1518,6 +1601,50 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         },
       ],
     });
+  });
+
+  test("resolves Subtle False Life through component projection and resource commitment", () => {
+    const session = metamagicBattle({
+      knownOptions: [subtleMetamagicOption()],
+      preparedSpells: ["false_life"],
+    });
+    const state = session.state;
+    const act = discoverBattleActs(session).find(
+      (candidate) =>
+        candidate.subject.tag === "actionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "false_life" &&
+        candidate.subject.metamagic?.some(
+          (selection) => selection.effectKind === SUBTLE_METAMAGIC_EFFECT_KIND,
+        ) === true,
+    );
+    if (act === undefined || act.subject.tag !== "actionSpell") {
+      throw new Error("Expected Subtle False Life act.");
+    }
+    const roll = findHole(act.initialHoles, "rolledDice");
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [damageRollFillWithGroups(roll, [[4, 3]])],
+      }),
+    );
+
+    expect(resolved.state.combatants.get(wizardId)?.tempHp).toBe(11);
+    expect(sorceryPointsRemaining(resolved.state)).toBe(resourceCount(3));
+    expect(sorcererSpellSlots(resolved.state)).toEqual([
+      { spellLevel: 1, count: 2, expended: 1 },
+    ]);
+    expect(resolved.routeEvents).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "metamagicSpellComponentProjection",
+          holes: [],
+          owner: "battleSpellSlotAndActionEconomy",
+        },
+      ]),
+    );
   });
 
   test("keeps selected Subtle Spell out of payloadless Metamagic applications", () => {
@@ -1644,6 +1771,12 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       ),
       mode: { tag: "cast" },
       metamagic: [{ effectKind: TWINNED_METAMAGIC_EFFECT_KIND }],
+    });
+    expect(
+      resolveBattleSubject({ state, subject: act.subject, fills: [] }),
+    ).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "spellTargetList" }],
     });
     expect(targetHole).toMatchObject({
       minTargets: 1,
@@ -2338,7 +2471,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     expect(sorceryPointsRemaining(resolved)).toBe(resourceCount(1));
   });
 
-  test("Empowered Spell damage reroll fill rejects unknown, unaffordable, mismatched, and over-limit selections before spending", () => {
+  test("Empowered Spell damage reroll fill rejects unknown, unaffordable, mismatched, out-of-range, and over-limit selections before spending", () => {
     const cases = [
       {
         state: saveMetamagicBattle({
@@ -2388,6 +2521,22 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         expectedSorceryPoints: resourceCount(4),
         message:
           "Empowered Spell selected original dice must match the pending spell damage roll.",
+      },
+      {
+        state: saveMetamagicBattle({
+          knownOptions: [empoweredMetamagicOption()],
+        }),
+        attack: { total: 15, naturalD20: 10 },
+        roll: [[4, 3]],
+        rerolledDice: [
+          {
+            original: DieRollResult(4),
+            replacement: DieRollResult(9),
+          },
+        ],
+        expectedSorceryPoints: resourceCount(4),
+        message:
+          "Empowered Spell replacement rolls must fit the spell damage die size.",
       },
       {
         state: saveMetamagicBattle({
@@ -3152,6 +3301,50 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       tag: "invalid",
       message:
         "Quickened Spell can modify only spells with a casting time of an action.",
+    });
+    expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
+  });
+
+  test("rejects Quickened subjects that bypass the admitted Bonus Action rewrite", () => {
+    const session = metamagicBattle({
+      knownOptions: [quickenedMetamagicOption()],
+      preparedSpells: ["false_life", "light"],
+    });
+    const state = session.state;
+    const quickenedFalseLife = quickenedFalseLifeAct(session);
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          ...quickenedFalseLife.subject,
+          tag: "actionSpell",
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: "Quickened Spell must use the Bonus Action spell subject.",
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject: {
+          tag: "bonusActionSpell",
+          actorId: wizardId,
+          procedureRef: requireCharacterSpellProcedureRefForTest(
+            session,
+            wizardId,
+            cantripSpellInvocationRef("light", "objectLight"),
+          ),
+          mode: { tag: "cast" },
+          metamagic: QUICKENED_SPELL_METAMAGIC_SELECTION,
+        },
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message: QUICKENED_ACTION_SPELL_PROCEDURE_UNSUPPORTED_MESSAGE,
     });
     expect(sorceryPointsRemaining(state)).toBe(resourceCount(4));
   });
@@ -4626,6 +4819,55 @@ function mirrorImageDuplicatesRemaining(
   return effect?.remainingDuplicates ?? null;
 }
 
+function clericSorcererQuickenedCureWoundsBattle(): BattleRuntimeSession {
+  return startBattleSessionRight({
+    battleId: battleId("battle:cleric-sorcerer-metamagic-quickened"),
+    combatants: [
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Cleric/Sorcerer",
+        initiative: 20,
+        attack: null,
+        classLevels: [
+          { className: "cleric", level: 1 },
+          { className: "sorcerer", level: 5 },
+        ],
+        resources: [
+          innateSorceryResource(),
+          {
+            unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+            pointsRemaining: resourceCount(4),
+          },
+        ],
+        metamagic: {
+          sorceryPointResourceUnitId: parseSharedUnitId(
+            "sorcerer_font_of_magic",
+          ),
+          spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+          knownOptions: [
+            quickenedMetamagicOption(),
+            empoweredMetamagicOption(),
+          ],
+        },
+        spellcasting: {
+          ...wizardSpellcasting({
+            preparedSpells: [spellRecord("cure_wounds")],
+            spellSlots: [{ spellLevel: 1, count: 2 }],
+          }),
+          sourceClassName: "cleric",
+        },
+      }),
+      characterSeed({
+        combatantId: fighterId,
+        displayName: "Wounded Ally",
+        initiative: 10,
+        currentHp: 4,
+        maxHp: 20,
+      }),
+    ],
+  });
+}
+
 function metamagicBattle(input?: {
   readonly sorceryPoints?: number;
   readonly knownOptions?: readonly MetamagicOptionFixture[];
@@ -4916,10 +5158,13 @@ function twinnedTargetCountBattle(
     combatants: [
       characterSeed({
         combatantId: wizardId,
-        displayName: "Sorcerer",
+        displayName: "Cleric/Sorcerer",
         initiative: 20,
         attack: null,
-        classLevels: [{ className: "sorcerer", level: 5 }],
+        classLevels: [
+          { className: "cleric", level: 1 },
+          { className: "sorcerer", level: 5 },
+        ],
         currentHp: 18,
         maxHp: 18,
         resources: [
@@ -4940,7 +5185,7 @@ function twinnedTargetCountBattle(
             preparedSpells: [spellRecord("bless")],
             spellSlots: [{ spellLevel: 1, count: 1 }],
           }),
-          sourceClassName: "sorcerer",
+          sourceClassName: "cleric",
         },
       }),
       characterSeed({
