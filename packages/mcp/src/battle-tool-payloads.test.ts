@@ -50,6 +50,18 @@ describe("battle tool payload boundaries", () => {
     });
   });
 
+  test("projects an active session without an interrupt window", () => {
+    const { root, session } = startedStatBlockBattle();
+
+    expect(battleSessionPayload(root, session)).toMatchObject({
+      _tag: "Right",
+      right: {
+        snapshot: { pendingInterrupt: null },
+        presentedInterruptChoices: [],
+      },
+    });
+  });
+
   test("returns typed snapshot-presentation issues as tool errors", () => {
     const issue = {
       tag: "battleSnapshotPresentationIssue",
