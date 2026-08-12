@@ -46,7 +46,7 @@ module battleRuntimeSaveGatedCounterspellResolutionTests {
     val resumed = declineSaveGatedCounterspellReactionOfferAndResume(awaiting)
     all {
       assert(battleActorHasCommittedSpellSlotUse(resumed, Fighter)),
-      assert(not(battleActorHasCommittedSpellSlotUse(resumed, Goblin))),
+      assert(not(battleActorHasSpellSlotUse(resumed, Goblin))),
       assert(resumed.interruptStack == [PendingReaction({
         request: AttackHitShieldReactionRequest(ShieldResumesIceKnife),
       })]),

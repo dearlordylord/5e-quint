@@ -161,22 +161,24 @@ module battleRuntimeReactionSpellResolutionTests {
     }
   }
 
-  run test_declining_direct_counterspell_resumes_triggering_spell_without_reaction_slot_spend = {
+  run test_declining_direct_counterspell_resumes_triggering_spell_into_shield_window = {
     val awaiting = openReactionWindow(initialState, directCounterspellFrame({
         triggeringCaster: Fighter,
         triggeringCastingResource: CounterspellMagicAction,
-        triggeringSpellUsesSlot: true,
+        triggeringSpellUsesSlot: false,
         triggeringCasterConSaveSucceeded: true,
         counterspellSpellCastReaction: CounterspellSpellCastNoNestedReactionAttempt,
       }))
     val resumed = declineDirectSpellReactionOfferAndResume(awaiting)
     all {
-      assert(resumed.interruptStack == []),
+      assert(resumed.interruptStack == [PendingReaction({
+        request: AttackHitShieldReactionRequest(ShieldResumesRayOfFrost),
+      })]),
       assert(resumed.goblin.reactionAvailable),
-      assert(not(battleActorHasCommittedSpellSlotUse(resumed, Goblin))),
-      assert(battleActorHasCommittedSpellSlotUse(resumed, Fighter)),
-      assert(resumed.goblin.hp == 6),
-      assert(not(resumed.actionAvailable)),
+      assert(not(battleActorHasSpellSlotUse(resumed, Goblin))),
+      assert(not(battleActorHasSpellSlotUse(resumed, Fighter))),
+      assert(resumed.goblin.hp == 10),
+      assert(resumed.actionAvailable),
     }
   }
 
