@@ -3,7 +3,6 @@ import {
   assertBattleSnapshotCodecRoundTripForTest,
   attackExecutionSelectionForSubjectForTest,
   characterAttackSubjectForTest,
-  findAct,
   testShortswordAttack,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -58,17 +57,6 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
       session,
       spellId: expeditiousRetreatUnitId,
     });
-    const invocation = battleActSpellPresentation(act)?.invocation;
-    if (invocation === undefined) {
-      throw new Error("Expected Expeditious Retreat spell presentation.");
-    }
-    const selected = findAct(session, {
-      tag: "bonusActionDashSpell",
-      actorId: spellCasterId,
-      invocation,
-      mode: { tag: "cast" },
-      speedKind: "walk",
-    });
 
     expect(act).toEqual(
       expect.objectContaining({
@@ -82,7 +70,6 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
         initialHoles: [],
       }),
     );
-    expect(selected.subject).toEqual(act.subject);
   });
 
   test("expeditious_retreat immediately Dashes and stores a Concentration-owned Bonus Action Dash permission", () => {

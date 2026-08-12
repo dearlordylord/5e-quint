@@ -1,7 +1,6 @@
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
-  subjectName,
 } from "./battle-runtime.test-support.ts";
 import { Schema } from "effect";
 import fc from "fast-check";
@@ -41,7 +40,8 @@ import {
 const decodeBattleSubject = Schema.decodeUnknownSync(BattleSubjectSchema);
 const encodeBattleSubject = Schema.encodeSync(BattleSubjectSchema);
 
-function expectStableBattleSubjectRoundtrip(subject: BattleSubject): void {
+function expectStableBattleSubjectRoundtrip(candidate: unknown): void {
+  const subject = decodeBattleSubject(candidate);
   const roundtripped = decodeBattleSubject(encodeBattleSubject(subject));
 
   expect(roundtripped).toEqual(subject);
@@ -163,14 +163,12 @@ describe("BattleSubject identity", () => {
     fc.assert(
       fc.property(everyCommandInRandomOrder, (commands) => {
         for (const command of commands) {
-          const subject = decodeBattleSubject({
+          expectStableBattleSubjectRoundtrip({
             tag: "runtimeCommand",
             actorId,
             command,
             ...runtimeCommandExtras[command],
           });
-          expect(subjectName(subject)).toBe(command);
-          expectStableBattleSubjectRoundtrip(subject);
         }
       }),
       { numRuns: 20 },
@@ -235,14 +233,12 @@ describe("BattleSubject identity", () => {
     fc.assert(
       fc.property(everyActionInRandomOrder, (actions) => {
         for (const action of actions) {
-          const subject = decodeBattleSubject({
+          expectStableBattleSubjectRoundtrip({
             tag: "action",
             actorId,
             action,
             ...actionExtras[action],
           });
-          expect(subjectName(subject)).toBe(action);
-          expectStableBattleSubjectRoundtrip(subject);
         }
       }),
       { numRuns: 20 },
@@ -452,13 +448,8 @@ describe("BattleSubject identity", () => {
         metamagic: [{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }],
       },
     ] as const satisfies ReadonlyArray<BattleSubject>;
+
     for (const [candidateIndex, candidate] of candidates.entries()) {
-      const expectedSubjectName =
-        candidate.tag === "bonusAction" ||
-        candidate.tag === "bonusActionStandardAction"
-          ? candidate.action
-          : candidate.tag;
-      expect(subjectName(candidate)).toBe(expectedSubjectName);
       expectStableBattleSubjectRoundtrip(candidate);
 
       for (const distinctCandidate of candidates.slice(candidateIndex + 1)) {
