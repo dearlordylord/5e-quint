@@ -418,7 +418,6 @@ module battleRuntimeModel {
   type PendingCounterspellSpellCastReaction =
     | CounterspellSpellCastNotCountered
     | CounterspellSpellCastCounteredByReaction({
-        reactor: Actor,
         counterspellSlotLevel: int,
         counterspellCasterConSaveSucceeded: bool,
       })
@@ -432,6 +431,12 @@ module battleRuntimeModel {
     triggeringCasterConSaveSucceeded: bool,
     counterspellSpellCastReaction: PendingCounterspellSpellCastReaction,
   }
+
+  pure def counterspellReactionReactor(counterspell: PendingCounterspellReaction): Actor =
+    opposingActor(counterspell.triggeringCaster)
+
+  pure def nestedCounterspellReactionReactor(counterspell: PendingCounterspellReaction): Actor =
+    counterspell.triggeringCaster
 
   type LastTurnActor = NoTurnEnded | LastTurnFighter | LastTurnGoblin
   type FighterCriticalRange = DefaultCriticalRange | ImprovedCriticalRange19
@@ -524,7 +529,7 @@ module battleRuntimeModel {
   pure def reactionFrameReactor(frame: PendingReactionFrame): Actor =
     match frame.request {
       | AttackHitShieldReactionRequest(_) => Goblin
-      | SpellCastCounterspellReactionRequest(request) => opposingActor(request.counterspell.triggeringCaster)
+      | SpellCastCounterspellReactionRequest(request) => counterspellReactionReactor(request.counterspell)
       | OpportunityAttackReactionRequest(request) => opposingActor(request.mover)
       | AttackHitFighterReadiedSpellReleaseReactionRequest(_) => Fighter
       | AfterDamageHellishRebukeReactionRequest(request) => request.damaged

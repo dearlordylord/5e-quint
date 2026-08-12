@@ -21,7 +21,6 @@ module battleRuntimeCounterspellReactionDecision {
 
   type CounterspellReactionContext = {
     counterspell: PendingCounterspellReaction,
-    reactor: Actor,
   }
 
   type CounterspellReactionCandidate = {
@@ -42,7 +41,6 @@ module battleRuntimeCounterspellReactionDecision {
             HasPendingCounterspellReaction({
               context: {
                 counterspell: request.counterspell,
-                reactor: reactionFrameReactor(frame),
               },
               continuation: request.continuation,
             })
@@ -108,9 +106,9 @@ module battleRuntimeCounterspellReactionDecision {
 
   pure def declineCounterspellReaction(
     state: BattleState,
-    reactor: Actor,
     context: CounterspellReactionContext,
   ): CounterspellReactionResolution = {
+    val reactor = counterspellReactionReactor(context.counterspell)
     val afterDecision = stateAfterDecliningReactionOffer(state, reactor)
     if (reactionDecisionClosedFrame(state, afterDecision))
       CounterspellReactionDeclinedResume({
@@ -123,25 +121,23 @@ module battleRuntimeCounterspellReactionDecision {
 
   pure def resolveCounterspellReaction(
     state: BattleState,
-    reactor: Actor,
     context: CounterspellReactionContext,
-  ): CounterspellReactionResolution =
+  ): CounterspellReactionResolution = {
+    val reactor = counterspellReactionReactor(context.counterspell)
     if (battleRuntimeReactionDecisionWasTaken(battleRuntimeTakeReactionDecision(
       battleRuntimeReactionTrigger(SpellCast),
       BattleRuntimeCounterspellReactionProcedure,
-      context.reactor == reactor,
+      true,
       reactorCanReact(state, reactor),
       canActorExpendSpellSlotThisTurn(state, reactor),
     ))) {
       val afterReactionSpend = spendReaction(state, reactor)
       val afterReactionProcedure = castCounterspellReactionSpell(
         afterReactionSpend,
-        reactor,
         context.counterspell,
       )
       val spellCastEnded = counterspellEndsSpellCastInState(
         afterReactionSpend,
-        reactor,
         context.counterspell,
       )
       val afterDecision =
@@ -165,5 +161,6 @@ module battleRuntimeCounterspellReactionDecision {
     }
     else
       CounterspellReactionState({ state: state })
+  }
 
 }

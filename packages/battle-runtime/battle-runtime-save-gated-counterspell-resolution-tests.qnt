@@ -22,7 +22,7 @@ module battleRuntimeSaveGatedCounterspellResolutionTests {
         continuation: CounterspellResumesIceKnife,
       }),
     })
-    val resolved = resolveSaveGatedCounterspellReactionOffer(awaiting, Goblin)
+    val resolved = resolveSaveGatedCounterspellReactionOffer(awaiting)
     all {
       assert(resolved.interruptStack == []),
       assert(not(resolved.goblin.reactionAvailable)),
@@ -47,10 +47,7 @@ module battleRuntimeSaveGatedCounterspellResolutionTests {
         continuation: CounterspellResumesIceKnife,
       }),
     })
-    val resumed = declineSaveGatedCounterspellReactionOfferAndResume(
-      awaiting,
-      Goblin,
-    )
+    val resumed = declineSaveGatedCounterspellReactionOfferAndResume(awaiting)
     all {
       assert(battleActorHasCommittedSpellSlotUse(resumed, Fighter)),
       assert(not(battleActorHasCommittedSpellSlotUse(resumed, Goblin))),

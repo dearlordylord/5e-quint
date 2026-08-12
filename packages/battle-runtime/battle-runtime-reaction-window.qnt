@@ -27,7 +27,7 @@ module battleRuntimeReactionWindow {
       | SpellCastCounterspellReactionRequest(request) =>
           canActorExpendSpellSlotThisTurn(
             state,
-            opposingActor(request.counterspell.triggeringCaster),
+            reactionFrameReactor(frame),
           ) and
             (not(counterspellFrameClaimsTriggeringSlot(frame)) or
               canActorExpendSpellSlotThisTurn(
@@ -262,24 +262,24 @@ module battleRuntimeReactionWindow {
 
   pure def counterspellNestedReactionCanCast(
     state: BattleState,
-    reactor: Actor,
     counterspell: PendingCounterspellReaction,
   ): bool = {
+    val reactor = counterspellReactionReactor(counterspell)
+    val nestedReactor = nestedCounterspellReactionReactor(counterspell)
     val afterCounterspellPending = claimPendingActorSpellSlotUse(state, reactor)
     match counterspell.counterspellSpellCastReaction {
       | CounterspellSpellCastNotCountered => false
-      | CounterspellSpellCastCounteredByReaction(nested) =>
-          reactorCanReact(afterCounterspellPending, nested.reactor) and
-            canActorExpendSpellSlotThisTurn(afterCounterspellPending, nested.reactor)
+      | CounterspellSpellCastCounteredByReaction(_) =>
+          reactorCanReact(afterCounterspellPending, nestedReactor) and
+            canActorExpendSpellSlotThisTurn(afterCounterspellPending, nestedReactor)
     }
   }
 
   pure def pendingCounterspellTakesEffectInState(
     state: BattleState,
-    reactor: Actor,
     counterspell: PendingCounterspellReaction,
   ): bool =
-    not(counterspellNestedReactionCanCast(state, reactor, counterspell) and
+    not(counterspellNestedReactionCanCast(state, counterspell) and
       counterspellSpellCastReactionEndsCounterspell(
         counterspell.counterspellSpellCastReaction,
       ))
@@ -297,19 +297,20 @@ module battleRuntimeReactionWindow {
 
   pure def castCounterspellReactionSpell(
     state: BattleState,
-    reactor: Actor,
     counterspell: PendingCounterspellReaction,
   ): BattleState = {
+    val reactor = counterspellReactionReactor(counterspell)
+    val nestedReactor = nestedCounterspellReactionReactor(counterspell)
     val afterCounterspellPending = claimPendingActorSpellSlotUse(state, reactor)
-    val nestedCounterspellCanCast = counterspellNestedReactionCanCast(state, reactor, counterspell)
+    val nestedCounterspellCanCast = counterspellNestedReactionCanCast(state, counterspell)
     val afterNestedCounterspell =
       match counterspell.counterspellSpellCastReaction {
         | CounterspellSpellCastNotCountered => afterCounterspellPending
-        | CounterspellSpellCastCounteredByReaction(nested) =>
+        | CounterspellSpellCastCounteredByReaction(_) =>
             if (nestedCounterspellCanCast)
               spendReaction(
-                commitActorSpellSlotUse(afterCounterspellPending, nested.reactor),
-                nested.reactor,
+                commitActorSpellSlotUse(afterCounterspellPending, nestedReactor),
+                nestedReactor,
               )
             else
               afterCounterspellPending
@@ -342,10 +343,9 @@ module battleRuntimeReactionWindow {
 
   pure def counterspellEndsSpellCastInState(
     state: BattleState,
-    reactor: Actor,
     counterspell: PendingCounterspellReaction,
   ): bool =
-    pendingCounterspellTakesEffectInState(state, reactor, counterspell) and
+    pendingCounterspellTakesEffectInState(state, counterspell) and
       pendingCounterspellEndsTriggeringSpell(counterspell)
 
   pure def readyFighterReadiedSpell(state: BattleState): BattleState =

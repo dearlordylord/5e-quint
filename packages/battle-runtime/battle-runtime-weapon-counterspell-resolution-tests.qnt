@@ -22,7 +22,7 @@ module battleRuntimeWeaponCounterspellResolutionTests {
         continuation: CounterspellResumesTrueStrikeWeaponAttack,
       }),
     })
-    val resolved = resolveWeaponCounterspellReactionOffer(awaiting, Goblin)
+    val resolved = resolveWeaponCounterspellReactionOffer(awaiting)
     all {
       assert(resolved.interruptStack == []),
       assert(not(resolved.goblin.reactionAvailable)),
@@ -48,7 +48,7 @@ module battleRuntimeWeaponCounterspellResolutionTests {
         continuation: CounterspellResumesTrueStrikeWeaponAttack,
       }),
     })
-    val resumed = declineWeaponCounterspellReactionOfferAndResume(awaiting, Goblin)
+    val resumed = declineWeaponCounterspellReactionOfferAndResume(awaiting)
     all {
       assert(resumed.interruptStack == []),
       assert(resumed.goblin.reactionAvailable),

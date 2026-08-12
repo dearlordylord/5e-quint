@@ -50,7 +50,7 @@ module battleRuntimeLightEmitters {
 
   pure def dancingLightsDimLightRadiusFeet: int = 10
 
-  pure def dancingLightsDurationTicks: int = 600
+  pure def dancingLightsDurationTicks: int = 10
 
   pure def dancingLightsRangeFeet: int = 120
 

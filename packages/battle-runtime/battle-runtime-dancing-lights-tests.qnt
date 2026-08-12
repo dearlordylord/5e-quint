@@ -12,11 +12,12 @@ module battleRuntimeDancingLightsTests {
     val cast = resolveDancingLightsSeparateCast(initialState, 3, 60, 20)
     val recast = resolveDancingLightsCombinedCast({ ...cast, actionAvailable: true }, 40)
     val moved = resolveDancingLightsReposition(cast, false, 3, 60, 20, 70)
+    val partiallyElapsedDurationTicks = dancingLightsDurationTicks - 3
     val partiallyElapsed = {
       ...cast,
       fighter: {
         ...cast.fighter,
-        activeEffects: Set(dancingLightsActiveEffect(false, 3, 1, 2, 3, 4, 37)),
+        activeEffects: Set(dancingLightsActiveEffect(false, 3, 1, 2, 3, 4, partiallyElapsedDurationTicks)),
       },
     }
     val movedAfterElapsed = resolveDancingLightsReposition(partiallyElapsed, false, 3, 60, 20, 70)
@@ -33,7 +34,7 @@ module battleRuntimeDancingLightsTests {
     val nextRound = endTurn(stillSameRound)
     all {
       assert(dancingLightsDimLightRadiusFeet == 10),
-      assert(dancingLightsDurationTicks == 600),
+      assert(dancingLightsDurationTicks == 10),
       assert(dancingLightsCastPlacementAllowed(1, 120, 99)),
       assert(dancingLightsCastPlacementAllowed(3, 60, 20)),
       assert(not(dancingLightsCastPlacementAllowed(0, 60, 20))),
@@ -54,7 +55,7 @@ module battleRuntimeDancingLightsTests {
       assert(recast.fighter.activeEffects == Set(dancingLightsActiveEffect(true, 1, 1, 0, 0, 0, dancingLightsDurationTicks))),
       assert(battleRuntimeLightEmitters(recast) == dancingLightsEmitters(true, 1)),
       assert(moved.fighter.activeEffects.contains(dancingLightsActiveEffect(false, 3, 11, 12, 13, 14, dancingLightsDurationTicks))),
-      assert(movedAfterElapsed.fighter.activeEffects.contains(dancingLightsActiveEffect(false, 3, 11, 12, 13, 14, 37))),
+      assert(movedAfterElapsed.fighter.activeEffects.contains(dancingLightsActiveEffect(false, 3, 11, 12, 13, 14, partiallyElapsedDurationTicks))),
       assert(not(moved.bonusActionAvailable)),
       assert(battleRuntimeLightEmitters(moved).contains(dancingLightsEmitter(1, 11, false))),
       assert(not(activeEffectsContainDancingLights(vanished.fighter.activeEffects))),
