@@ -4,6 +4,7 @@
 module battleRuntimeTriggeredReactionResolution {
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeCommandMovementNextTurn.* from "./battle-runtime-command-movement-next-turn"
