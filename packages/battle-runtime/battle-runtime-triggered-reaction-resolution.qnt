@@ -12,6 +12,7 @@ module battleRuntimeTriggeredReactionResolution {
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeCommandMovementNextTurn.* from "./battle-runtime-command-movement-next-turn"
   import battleRuntimeAttackDamageConcentrationReaction.* from "./battle-runtime-attack-damage-concentration-reaction"
+  import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
 
   pure def resumeNonSpellReactionContinuation(
     state: BattleState,
