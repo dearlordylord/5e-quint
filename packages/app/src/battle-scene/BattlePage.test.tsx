@@ -33,7 +33,7 @@ describe("BattlePage", () => {
       expect(container.innerHTML).toContain("/sprites/5.png")
       expect(consoleErrorSpy).not.toHaveBeenCalled()
     }
-  }, 120_000)
+  }, 30_000)
 
   it("highlights the current reaction creature in the initiative tracker", () => {
     window.history.replaceState(null, "", "/battle?step=4")
@@ -76,7 +76,7 @@ describe("BattlePage", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Pause" })[0])
     expect(consoleErrorSpy).not.toHaveBeenCalled()
     vi.useRealTimers()
-  }, 30_000)
+  })
 
   it.each(["?step=invalid", "?step=-1", `?step=${WIZARD_BATTLE_DEMO_STEPS.length}`])(
     "falls back to the first step for %s",
