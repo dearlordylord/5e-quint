@@ -203,7 +203,7 @@ module battleRuntimeReactionSpellResolutionTests {
         triggeringSpellUsesSlot: false,
         triggeringCasterConSaveSucceeded: true,
         counterspellSpellCastReaction: CounterspellSpellCastNestedReactionAttempt({
-          nestedCounterspellCasterConSaveSucceeded: false,
+          outerCounterspellCasterConSaveSucceeded: false,
         }),
       }))
     val resolved = resolveDirectSpellReactionOffer(awaiting)
@@ -229,7 +229,7 @@ module battleRuntimeReactionSpellResolutionTests {
         triggeringSpellUsesSlot: true,
         triggeringCasterConSaveSucceeded: true,
         counterspellSpellCastReaction: CounterspellSpellCastNestedReactionAttempt({
-          nestedCounterspellCasterConSaveSucceeded: true,
+          outerCounterspellCasterConSaveSucceeded: true,
         }),
       }))
     val resolved = resolveDirectSpellReactionOffer(awaiting)

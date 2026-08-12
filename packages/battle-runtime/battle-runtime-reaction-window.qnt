@@ -252,7 +252,7 @@ module battleRuntimeReactionWindow {
     match reaction {
       | CounterspellSpellCastNoNestedReactionAttempt => false
       | CounterspellSpellCastNestedReactionAttempt(attempt) =>
-          not(attempt.nestedCounterspellCasterConSaveSucceeded)
+          not(attempt.outerCounterspellCasterConSaveSucceeded)
     }
 
   pure def pendingCounterspellTakesEffect(counterspell: PendingCounterspellReaction): bool =

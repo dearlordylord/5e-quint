@@ -418,7 +418,7 @@ module battleRuntimeModel {
   type PendingCounterspellSpellCastReaction =
     | CounterspellSpellCastNoNestedReactionAttempt
     | CounterspellSpellCastNestedReactionAttempt({
-        nestedCounterspellCasterConSaveSucceeded: bool,
+        outerCounterspellCasterConSaveSucceeded: bool,
       })
 
   type PendingCounterspellReaction = {
