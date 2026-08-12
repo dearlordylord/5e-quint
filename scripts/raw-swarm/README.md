@@ -233,7 +233,10 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts review \
 The reviewer uses only `.references/srd-5.2.1/` as RAW authority and consults
 `ASSUMPTIONS.md` for registered ambiguity choices. `run-raw-review.sh` validates
 the result against JSON Schema generated from the same Effect codec used by
-report ingestion.
+report ingestion. The reviewer process uses `danger-full-access` because a
+nested Codex read-only sandbox cannot initialize in the worker environment.
+Read-only behavior is therefore an explicit reviewer-instruction contract, not
+a filesystem-enforced sandbox guarantee.
 
 ## Add width to the existing MCP prototype
 

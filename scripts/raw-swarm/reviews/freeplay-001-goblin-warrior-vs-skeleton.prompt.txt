@@ -2,4 +2,8 @@ Adversarially review the completed player transcript at scripts/raw-swarm/out/fr
 
 Use only the local SRD 5.2.1 corpus under .references/srd-5.2.1 as rules authority. Consult ASSUMPTIONS.md for registered ambiguity choices and .references/srd-5.2.1-conversion only to detect older-rule leakage. Do not browse. Verify stat-block facts, initiative, attacks versus AC, damage and HP, action economy, turns and rounds, zero-HP handling, knockout disposition, rejected calls, and session-closure position. Classify findings only as bug, assumption-divergence, corpus-ambiguity, scenario-invalid, reviewer-error, or pass. Cite transcript sequence numbers and local corpus file headings in every evidence field. Use reviewer id "codex-raw-player-review".
 
-This is a read-only review. Do not modify files or run commands that change workspace state.
+This is a read-only review. The launcher grants unsandboxed filesystem access
+because nested Codex read-only sandbox initialization is unavailable in the
+worker environment. Use that access only to read the named evidence, local RAW,
+and assumptions. Do not modify files or run commands that change workspace
+state.
