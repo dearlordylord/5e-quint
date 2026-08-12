@@ -14,8 +14,10 @@ import {
   abilityModifier,
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
+import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import {
   attackBonus,
+  damageAmount,
   DieRollResult,
   Hp,
   movementFeet,
@@ -29,6 +31,8 @@ import {
 
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
+import { openAfterDamageSequenceInterruptWindow } from "./battle-reducer/interrupt-execution.ts";
 import {
   battleProcedureExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
@@ -37,11 +41,18 @@ import {
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
+import { hideousLaughterDurationTicks } from "./unit-profile-admission-catalog.test-support.ts";
+import { requireCombatant } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import {
+  spellAct,
+  spellTargetListFill,
+} from "./unit-profile-admission-spell-fill.test-support.ts";
 import {
   battleId,
   characterId,
   combatantId,
   discoverBattleActs,
+  endTurn,
   initiativeScore,
   resolveBattleInterrupt,
   spellSlotInvocationRef,
@@ -70,8 +81,10 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 const hellishRebukeUnitId = "hellish_rebuke";
+const hideousLaughterUnitId = "hideous_laughter";
 const magicMissileUnitId = "magic_missile";
 const spellCasterId = combatantId("hellish-rebuke-caster");
+const laughterCasterId = combatantId("hideous-laughter-caster");
 const damagerId = combatantId("hellish-rebuke-damager");
 
 type AttackAct = AvailableBattleAct & {
@@ -363,6 +376,183 @@ describe("Hellish Rebuke Reaction spell", () => {
         }),
       ]),
     );
+  });
+
+  test("Hellish Rebuke requests an advantaged Hideous Laughter save after the affected creature's delayed damage", () => {
+    const hellishRebuke = srdSpellRecord(hellishRebukeUnitId);
+    const session = battleWithThirdPartyHideousLaughter(hellishRebuke);
+    const laughterAct = spellAct({
+      session,
+      spellId: hideousLaughterUnitId,
+      slotLevel: 1,
+    });
+    expect(laughterAct.subject.actorId).toBe(laughterCasterId);
+    const targetList = spellTargetListFill(
+      requireHole(laughterAct.initialHoles, "spellTargetList"),
+      laughterCasterId,
+      hideousLaughterUnitId,
+      [damagerId],
+    );
+    const awaitingInitialSave = resolveBattleSubject({
+      state: session.state,
+      subject: laughterAct.subject,
+      fills: [targetList],
+    });
+    if (awaitingInitialSave.tag !== "needsHoles") {
+      throw new Error("Expected Hideous Laughter's initial Wisdom save.");
+    }
+    const initialSave = requireHole(
+      awaitingInitialSave.holes,
+      "savingThrowOutcome",
+    );
+    const laughed = resolveBattleSubject({
+      state: session.state,
+      subject: laughterAct.subject,
+      fills: [
+        targetList,
+        savingThrowOutcomeFill(initialSave, [
+          { targetId: damagerId, succeeded: false },
+        ]),
+      ],
+    });
+    if (laughed.tag !== "resolved") {
+      throw new Error("Expected Hideous Laughter to affect the damager.");
+    }
+    const laughterCaster = requireCombatant(laughed.state, laughterCasterId);
+    const laughingDamager = requireCombatant(laughed.state, damagerId);
+    const laughterEffect = laughingDamager.activeEffects.find(
+      (effect) => effect.kind === "hideousLaughter",
+    );
+    expect(laughterCaster.concentration).toMatchObject({
+      sourceProcedureRef: laughterAct.subject.procedureRef,
+      effectKind: "spellEffect",
+    });
+    expect(
+      requireCombatant(laughed.state, spellCasterId).concentration,
+    ).toBeNull();
+    expect(hasCondition(laughingDamager.conditions, "prone")).toBe(true);
+    expect(hasCondition(laughingDamager.conditions, "incapacitated")).toBe(
+      true,
+    );
+    expect(laughterEffect).toMatchObject({
+      sourceProcedureRef: laughterAct.subject.procedureRef,
+      sourceCombatantId: laughterCasterId,
+      expiresAt: {
+        kind: "concentration",
+        combatantId: laughterCasterId,
+        durationTicks: hideousLaughterDurationTicks,
+      },
+    });
+
+    const hellishRebukeCasterTurn = endTurn({
+      state: laughed.state,
+      actorId: laughterCasterId,
+    });
+    if (hellishRebukeCasterTurn.tag !== "resolved") {
+      throw new Error("Expected the Hideous Laughter caster's turn to end.");
+    }
+    const damagerTurn = endTurn({
+      state: hellishRebukeCasterTurn.state,
+      actorId: spellCasterId,
+    });
+    if (damagerTurn.tag !== "resolved") {
+      throw new Error("Expected the Hellish Rebuke caster's turn to end.");
+    }
+    const delayedDamageAmount = damageAmount(1);
+    const afterDelayedDamage = applyBattleHitPointDamage({
+      state: damagerTurn.state,
+      target: requireCombatant(damagerTurn.state, spellCasterId),
+      damageAmount: delayedDamageAmount,
+      deathFailuresAtZeroHp: 1,
+      damageSourceId: damagerId,
+    });
+    expect(requireCombatant(afterDelayedDamage, spellCasterId).hp).toBe(Hp(11));
+    expect(
+      requireCombatant(afterDelayedDamage, laughterCasterId).concentration,
+    ).toMatchObject({
+      sourceProcedureRef: laughterAct.subject.procedureRef,
+      effectKind: "spellEffect",
+    });
+
+    // The damage comes from an effect created before the source became
+    // Incapacitated, so resolving it doesn't require the source to act.
+    const awaitingReaction = openAfterDamageSequenceInterruptWindow({
+      state: afterDelayedDamage,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: damagerId,
+        command: "endTurn",
+      },
+      events: [
+        {
+          damageSourceId: damagerId,
+          damagedId: spellCasterId,
+          damageAmount: delayedDamageAmount,
+          reactionSpellTargetFacts: [
+            {
+              kind: "reactionSpellDamagerVisibleWithinRange",
+              reactorId: spellCasterId,
+              damageSourceId: damagerId,
+              sourceProcedureRef: hellishRebukeProcedureRef(
+                afterDelayedDamage,
+                spellCasterId,
+              ),
+              rangeFeet: movementFeet(60),
+            },
+          ],
+        },
+      ],
+      objectDamages: [],
+      objectIgnitions: [],
+      droppedObjects: [],
+      handledInterruptTrigger: undefined,
+    });
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
+    }
+    const choice = requireHellishRebukeChoice(
+      awaitingReaction,
+      spellCasterId,
+      battleRuntimeSessionForTest({
+        ...session,
+        state: awaitingReaction.state,
+      }),
+    );
+    const save = requireHole(choice.initialHoles, "savingThrowOutcome");
+    const damage = requireHole(choice.initialHoles, "rolledDice");
+    const pendingRepeatSave = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
+        {
+          kind: "resolve",
+          responderId: spellCasterId,
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            procedureRef: choice.subject.procedureRef,
+            fills: [
+              savingThrowOutcomeFill(save, [
+                { targetId: damagerId, succeeded: false },
+              ]),
+              damageRollFillWithGroups(damage, [[1, 1, 1]]),
+            ],
+          },
+        },
+      ),
+    });
+    expect(pendingRepeatSave).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "savingThrowOutcome",
+          hideousLaughterRepeatSave: {
+            targetId: damagerId,
+            trigger: "damage",
+          },
+          targetRollModes: [{ targetId: damagerId, rollMode: "advantage" }],
+        },
+      ],
+    });
   });
 
   test("declining the offered Reaction leaves the damaging creature and resources unchanged", () => {
@@ -1014,32 +1204,85 @@ function battleWithHellishRebuke(
 function battleWithHellishRebukeOnCasterTurn(
   spell: SpellRecord,
 ): BattleRuntimeSession {
+  return startDirectSpellLaneBattle([
+    characterCreature({
+      combatantId: spellCasterId,
+      displayName: "Hellish Rebuke caster",
+      initiative: 20,
+      spellcasting: {
+        sourceClassName: "wizard",
+        spellcastingAbilityModifier: abilityModifier(3),
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [spell],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      },
+    }),
+    characterCreature({
+      combatantId: damagerId,
+      displayName: "Damager",
+      initiative: 10,
+    }),
+  ]);
+}
+
+function battleWithThirdPartyHideousLaughter(
+  hellishRebuke: SpellRecord,
+): BattleRuntimeSession {
+  return startDirectSpellLaneBattle([
+    characterCreature({
+      combatantId: laughterCasterId,
+      displayName: "Hideous Laughter caster",
+      initiative: 30,
+      spellcasting: {
+        sourceClassName: "wizard",
+        spellcastingAbilityModifier: abilityModifier(3),
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [srdSpellRecord(hideousLaughterUnitId)],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 1, count: 1 }],
+      },
+    }),
+    characterCreature({
+      combatantId: spellCasterId,
+      displayName: "Hellish Rebuke caster",
+      initiative: 20,
+      classLevels: [{ className: "warlock", level: 3 }],
+      spellcasting: {
+        sourceClassName: "warlock",
+        spellcastingAbilityModifier: abilityModifier(3),
+        proficiencyBonus: proficiencyBonus(2),
+        canCastSpells: true,
+        cantrips: [],
+        preparedSpells: [hellishRebuke],
+        featurePreparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+        invocationSpellAccesses: [],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      },
+    }),
+    characterCreature({
+      combatantId: damagerId,
+      displayName: "Damager",
+      initiative: 10,
+    }),
+  ]);
+}
+
+function startDirectSpellLaneBattle(
+  combatants: readonly [BattleCreatureInit, ...BattleCreatureInit[]],
+): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("hellish-rebuke-direct-spell-lane"),
-    combatants: [
-      characterCreature({
-        combatantId: spellCasterId,
-        displayName: "Hellish Rebuke caster",
-        initiative: 20,
-        spellcasting: {
-          sourceClassName: "wizard",
-          spellcastingAbilityModifier: abilityModifier(3),
-          proficiencyBonus: proficiencyBonus(2),
-          canCastSpells: true,
-          cantrips: [],
-          preparedSpells: [spell],
-          featurePreparedSpells: [],
-          spellbookRitualSpellAccesses: [],
-          invocationSpellAccesses: [],
-          spellSlots: [{ spellLevel: 1, count: 1 }],
-        },
-      }),
-      characterCreature({
-        combatantId: damagerId,
-        displayName: "Damager",
-        initiative: 10,
-      }),
-    ],
+    combatants,
   });
   expect(Either.isRight(result)).toBe(true);
   if (Either.isLeft(result)) {
@@ -1052,6 +1295,10 @@ function characterCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
   readonly initiative: number;
+  readonly classLevels?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["classLevels"];
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -1065,7 +1312,7 @@ function characterCreature(input: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
-      classLevels: [{ className: "wizard", level: 3 }],
+      classLevels: input.classLevels ?? [{ className: "wizard", level: 3 }],
       knownLanguages: ["Common"],
       d20Statistics: testCharacterD20Statistics(),
       weaponMasteries: [],

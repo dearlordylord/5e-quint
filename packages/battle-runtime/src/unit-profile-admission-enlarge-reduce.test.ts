@@ -74,6 +74,7 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { decodeSpellRecordForTest } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   breakBattleConcentration,
   discoverBattleActs,
@@ -229,6 +230,124 @@ function quickenedCreatureSizeAct(input?: {
 }
 
 describe("L12G deterministic Enlarge/Reduce creature admission", () => {
+  test("rejects synthetic near-misses at the creature size-change admission boundary", () => {
+    const spell = spellRecord(enlargeReduceUnitId);
+    if (spell.mechanics.family !== "activation") {
+      throw new Error("Expected creature size-change activation mechanics.");
+    }
+    const phase = spell.mechanics.phases[0];
+    if (
+      phase?.kind !== "save_gate" ||
+      phase.onFail.kind !== "choose_effect_mode" ||
+      phase.attachment.kind !== "hole" ||
+      phase.attachment.value.kind !== "target" ||
+      !("objectFilter" in phase.attachment.value.selection)
+    ) {
+      throw new Error("Expected creature size-change save-gate mechanics.");
+    }
+    const firstMode = phase.onFail.options[0];
+    if (firstMode === undefined) {
+      throw new Error("Expected a creature size-change effect mode.");
+    }
+    const syntheticSpells = [
+      decodeSpellRecordForTest({
+        ...spell,
+        id: "synthetic_size_change_extra_phase",
+        name: "Synthetic Size Change Extra Phase",
+        provenance: {
+          kind: "synthetic-test",
+          section: "synthetic-size-change-extra-phase",
+        },
+        mechanics: {
+          ...spell.mechanics,
+          phases: [phase, phase],
+        },
+      }),
+      decodeSpellRecordForTest({
+        ...spell,
+        id: "synthetic_size_change_target_contract",
+        name: "Synthetic Size Change Target Contract",
+        provenance: {
+          kind: "synthetic-test",
+          section: "synthetic-size-change-target-contract",
+        },
+        mechanics: {
+          ...spell.mechanics,
+          phases: [
+            {
+              ...phase,
+              attachment: {
+                ...phase.attachment,
+                value: {
+                  ...phase.attachment.value,
+                  selection: {
+                    ...phase.attachment.value.selection,
+                    objectFilter: {
+                      ...phase.attachment.value.selection.objectFilter,
+                      targetRelation: "loose",
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      }),
+      decodeSpellRecordForTest({
+        ...spell,
+        id: "synthetic_size_change_incomplete_mode",
+        name: "Synthetic Size Change Incomplete Mode",
+        provenance: {
+          kind: "synthetic-test",
+          section: "synthetic-size-change-incomplete-mode",
+        },
+        mechanics: {
+          ...spell.mechanics,
+          phases: [
+            {
+              ...phase,
+              onFail: {
+                ...phase.onFail,
+                options: [
+                  {
+                    ...firstMode,
+                    effects: firstMode.effects.map((effect) =>
+                      effect.kind === "modify_damage_numeric"
+                        ? {
+                            ...effect,
+                            delta: {
+                              ...effect.delta,
+                              dieSize: 6,
+                            },
+                          }
+                        : effect,
+                    ),
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      }),
+    ];
+
+    for (const unsupported of syntheticSpells) {
+      const session = spellBattle({
+        preparedSpells: [unsupported],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      });
+      expect(
+        discoverBattleActs(session).some((candidate) => {
+          const invocation = battleActSpellPresentation(candidate)?.invocation;
+          return (
+            invocation?.procedure === "creatureSizeIncrease" ||
+            invocation?.procedure === "creatureSizeDecrease"
+          );
+        }),
+      ).toBe(false);
+    }
+  });
+
   test("Quickened Enlarge spends the Bonus Action, Spell Slot, and shared Sorcery Points without spending the Magic Action", () => {
     const { session, act } = quickenedCreatureSizeAct();
     const target = requireHole(act.initialHoles, "targetChoice");

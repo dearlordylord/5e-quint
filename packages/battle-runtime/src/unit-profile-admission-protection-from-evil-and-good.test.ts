@@ -199,6 +199,29 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         expiresAt: { kind: "concentration", combatantId: spellCasterId },
       }),
     );
+    expect(resolved.routeEvents).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "resolveBattleSubject",
+          subject: "protectionCharmActiveEffect",
+          fill: "targetChoice",
+          holes: [],
+          owner: "battleTargetSelection",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "protectionCharmActiveEffect",
+          holes: [],
+          owner: "battleActiveEffect",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "protectionCharmActiveEffect",
+          holes: [],
+          owner: "battleConcentration",
+        },
+      ]),
+    );
 
     const undeadTurn = endTurn({
       state: resolved.state,
@@ -222,15 +245,29 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       }),
       "targetChoice",
     );
-    const undeadRoll = requireResultHole(
-      resolveBattleSubject({
-        state: undeadTurn.state,
-        subject: undeadAttack.subject,
-        fills: [attackTargetFill(undeadTarget, undeadId, spellTargetId)],
-      }),
-      "attackRoll",
-    );
+    const undeadTargetResult = resolveBattleSubject({
+      state: undeadTurn.state,
+      subject: undeadAttack.subject,
+      fills: [attackTargetFill(undeadTarget, undeadId, spellTargetId)],
+    });
+    const undeadRoll = requireResultHole(undeadTargetResult, "attackRoll");
     expect(undeadRoll.rollMode).toBe("disadvantage");
+    expect(undeadTargetResult).toMatchObject({
+      routeEvents: expect.arrayContaining([
+        {
+          kind: "discoverBattleActs",
+          subject: "protectionCharmActiveEffect",
+          holes: [],
+          owner: "battleActiveEffect",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "protectionCharmActiveEffect",
+          holes: [],
+          owner: "battleAttackRoll",
+        },
+      ]),
+    });
 
     const humanoidTurn = endTurn({
       state: undeadTurn.state,
@@ -355,6 +392,20 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     }
     expect(conditionAttempt).toMatchObject({
       tag: "resolved",
+      routeEvents: expect.arrayContaining([
+        {
+          kind: "discoverBattleActs",
+          subject: "protectionCharmActiveEffect",
+          holes: [],
+          owner: "battleActiveEffect",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "protectionCharmActiveEffect",
+          holes: [],
+          owner: "battleConditionLifecycle",
+        },
+      ]),
     });
     expect(
       resolveBattlePossessionAttempt({
@@ -385,6 +436,20 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     }
     expect(possessionAttempt).toMatchObject({
       tag: "resolved",
+      routeEvents: expect.arrayContaining([
+        {
+          kind: "discoverBattleActs",
+          subject: "protectionCharmActiveEffect",
+          holes: [],
+          owner: "battleActiveEffect",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "protectionCharmActiveEffect",
+          holes: [],
+          owner: "battleCreatureState",
+        },
+      ]),
     });
     expect(
       resolveBattlePossessionAttempt({
@@ -847,6 +912,20 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
             ],
           }),
         ],
+        routeEvents: expect.arrayContaining([
+          {
+            kind: "discoverBattleActs",
+            subject: "protectionCharmActiveEffect",
+            holes: [],
+            owner: "battleActiveEffect",
+          },
+          {
+            kind: "resolveBattleSubjectWithoutFill",
+            subject: "protectionCharmActiveEffect",
+            holes: [],
+            owner: "battleSavingThrowRollMode",
+          },
+        ]),
       });
     }
     expect(humanoidCharmSave).toMatchObject({

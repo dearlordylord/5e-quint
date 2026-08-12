@@ -646,7 +646,7 @@ export function stateWithMonkFocusResource(
   resource: CharacterBattleUseCountResourceState,
 ): BattleState {
   const currentActor = state.combatants.get(actor.combatantId);
-  if (currentActor?.origin.kind !== "character") return state;
+  if (!isCharacterBattleCreatureState(currentActor)) return state;
   const nextActor: BattleCreatureState = {
     ...currentActor,
     origin: {

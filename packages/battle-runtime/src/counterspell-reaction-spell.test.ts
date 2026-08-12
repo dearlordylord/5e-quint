@@ -170,6 +170,41 @@ describe("Counterspell Reaction spell", () => {
     });
   });
 
+  test("routes an incomplete Counterspell selection to its saving throw frontier", () => {
+    const session = battleWithCounterspell();
+    const awaitingReaction = startMagicMissile({
+      session,
+      state: session.state,
+      slotLevel: 1,
+      targetId: counterspellerId,
+      counterspellFacts: [
+        counterspellTriggerFact({
+          session,
+          reactorId: counterspellerId,
+          casterId,
+        }),
+      ],
+    });
+    const choice = requireCounterspellChoice(
+      awaitingReaction,
+      counterspellerId,
+      3,
+      session,
+    );
+    const incomplete = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
+        triggeredReactionSpellDecision(counterspellerId, choice, []),
+      ),
+    });
+    expect(incomplete).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "savingThrowOutcome" }],
+      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
+    });
+  });
+
   test("closes the spell-cast window after the first successful Counterspell", () => {
     const session = battleWithCounterspell({
       includeSecondCounterspeller: true,
@@ -618,6 +653,109 @@ describe("Counterspell Reaction spell", () => {
         spellcasting: expect.objectContaining({
           spellSlots: expect.arrayContaining([
             expect.objectContaining({ spellLevel: 3, expended: 1 }),
+          ]),
+        }),
+      }),
+    });
+  });
+
+  test("declining nested Counterspell replays Shield without reopening its spell-cast window", () => {
+    const session = battleWithCounterspell({
+      casterSlots: [{ spellLevel: 1, count: 1 }],
+      counterspellerPreparedSpells: [srdSpellRecord(shieldUnitId)],
+      counterspellerSlots: [{ spellLevel: 1, count: 1 }],
+      includeSecondCounterspeller: true,
+    });
+    const awaitingShield = startMagicMissile({
+      session,
+      state: session.state,
+      slotLevel: 1,
+      targetId: counterspellerId,
+      counterspellFacts: [],
+    });
+    const shieldChoice = requireTriggeredReactionSpellChoice({
+      session,
+      result: awaitingShield,
+      reactorId: counterspellerId,
+      spellId: shieldUnitId,
+      procedure: "shieldReaction",
+      slotLevel: 1,
+    });
+
+    const awaitingCounterspell = resolveBattleInterrupt({
+      state: awaitingShield.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingShield.holes, "interruptDecision"),
+        triggeredReactionSpellDecision(counterspellerId, shieldChoice, [
+          spellCastReactionFactsFill([
+            counterspellTriggerFact({
+              session,
+              reactorId: secondCounterspellerId,
+              casterId: counterspellerId,
+            }),
+          ]),
+        ]),
+      ),
+    });
+    expect(awaitingCounterspell).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
+    });
+    if (awaitingCounterspell.tag !== "needsHoles") {
+      throw new Error("Expected Counterspell to interrupt Shield casting.");
+    }
+
+    requireCounterspellChoice(
+      awaitingCounterspell,
+      secondCounterspellerId,
+      3,
+      session,
+    );
+    const afterDecline = resolveBattleInterrupt({
+      state: awaitingCounterspell.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingCounterspell.holes, "interruptDecision"),
+        { kind: "decline", responderId: secondCounterspellerId },
+      ),
+    });
+    expect(afterDecline).toMatchObject({
+      tag: "needsHoles",
+      snapshot: { pendingInterrupt: null },
+    });
+    if (afterDecline.tag !== "needsHoles") {
+      throw new Error("Expected Shield to replay after Counterspell decline.");
+    }
+
+    const damage = requireHole(afterDecline.holes, "rolledDice");
+    const resolved = finishMagicMissile({
+      state: afterDecline.state,
+      subject: awaitingShield.subject,
+      slotLevel: 1,
+      damage,
+      dartCount: 3,
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Magic Missile to resolve after Shield replay.");
+    }
+    expect(snapshotCombatant(resolved, counterspellerId)).toMatchObject({
+      hp: 30,
+      reactionAvailable: false,
+      armorClass: 15,
+      origin: expect.objectContaining({
+        spellcasting: expect.objectContaining({
+          spellSlots: expect.arrayContaining([
+            expect.objectContaining({ spellLevel: 1, expended: 1 }),
+          ]),
+        }),
+      }),
+    });
+    expect(snapshotCombatant(resolved, secondCounterspellerId)).toMatchObject({
+      reactionAvailable: true,
+      origin: expect.objectContaining({
+        spellcasting: expect.objectContaining({
+          spellSlots: expect.arrayContaining([
+            expect.objectContaining({ spellLevel: 3, expended: 0 }),
           ]),
         }),
       }),

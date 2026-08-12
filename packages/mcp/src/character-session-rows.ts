@@ -47,6 +47,7 @@ function characterListRow(
       return Either.left(hitPointMaximum.left.message);
     }
     const hitDice = characterSheetHitDice(session, unitLibrary);
+    /* v8 ignore next -- The immediately preceding HP maximum projection already proved the same build/catalog Hit Die facts. */
     if (Either.isLeft(hitDice)) return Either.left(hitDice.left.message);
     const resources = characterSheetResources(session, unitLibrary);
     if (Either.isLeft(resources)) return Either.left(resources.left.message);

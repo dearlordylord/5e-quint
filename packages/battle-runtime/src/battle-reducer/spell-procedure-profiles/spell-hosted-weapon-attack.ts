@@ -129,16 +129,19 @@ function spellHostedWeaponAttackProjection(
   ) {
     return null;
   }
-  const phase = spell.mechanics.phases[0];
-  const effects = phase?.kind === "direct" ? phase.effects : undefined;
-  const effect = effects?.[0];
-  const bonusDamage =
-    effect?.kind === "make_weapon_attack" ? effect.bonusDamage : undefined;
+  const [phase] = spell.mechanics.phases;
   if (
-    phase?.kind !== "direct" ||
-    effects === undefined ||
-    effects.length !== 1 ||
-    effect?.kind !== "make_weapon_attack" ||
+    phase.kind !== "direct" ||
+    phase.effects === undefined ||
+    phase.effects.length !== 1
+  ) {
+    return null;
+  }
+  const [effect] = phase.effects;
+  const bonusDamage =
+    effect.kind === "make_weapon_attack" ? effect.bonusDamage : undefined;
+  if (
+    effect.kind !== "make_weapon_attack" ||
     effect.damageTypeChoice === undefined ||
     bonusDamage === undefined ||
     typeof bonusDamage.damageType !== "string" ||

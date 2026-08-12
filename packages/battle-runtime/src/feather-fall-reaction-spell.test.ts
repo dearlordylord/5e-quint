@@ -288,6 +288,45 @@ describe("Feather Fall Reaction spell", () => {
     });
   });
 
+  test("requests the target list when a Feather Fall Reaction omits it", () => {
+    const awaitingReaction = openFeatherFallWindow(
+      battleWithFeatherFall(),
+      fallingAId,
+      true,
+    );
+    if (awaitingReaction.tag !== "needsHoles") {
+      throw new Error("Expected Feather Fall falling-trigger Reaction window.");
+    }
+    const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
+      (candidate) => candidate.kind === "castTriggeredReactionSpell",
+    );
+    if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
+      throw new Error("Expected Feather Fall Reaction choice.");
+    }
+
+    const result = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(
+        requireHole(awaitingReaction.holes, "interruptDecision"),
+        {
+          kind: "resolve",
+          responderId: casterId,
+          choice: {
+            kind: "castTriggeredReactionSpell",
+            procedureRef: choice.subject.procedureRef,
+            fills: [],
+          },
+        },
+      ),
+    });
+
+    expect(result).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "spellTargetList" }],
+      snapshot: { pendingInterrupt: { trigger: "creatureFalls" } },
+    });
+  });
+
   test("rejects non-falling targets and more than five falling targets", () => {
     const awaitingReaction = openFeatherFallWindow(
       battleWithFeatherFall(),

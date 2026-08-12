@@ -97,6 +97,38 @@ describe("battle runtime: Open Hand Technique", () => {
     );
   });
 
+  test("decline and Addle reject a Saving Throw outcome from a replaced rider choice", () => {
+    for (const choice of ["decline", "denyOpportunityAttacks"] as const) {
+      const window = openHandTechniqueHitWindow();
+      const save = requireHole(
+        resolveBattleSubject({
+          state: window.state,
+          subject: window.subject,
+          fills: [
+            ...window.hitFills,
+            unitFeatureDecisionFill(
+              window.decision,
+              "applyConditionOnFailedSave",
+            ),
+          ],
+        }),
+        "savingThrowOutcome",
+      );
+
+      expect(
+        resolveBattleSubject({
+          state: window.state,
+          subject: window.subject,
+          fills: [
+            ...window.hitFills,
+            unitFeatureDecisionFill(window.decision, choice),
+            openHandSavingThrowFill(save, false),
+          ],
+        }),
+      ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
+    }
+  });
+
   test("Push validates the Strength save and caller-supplied forced movement", () => {
     const success = resolveOpenHandSave("pushAwayOnFailedSave", true);
     expect(success.resolved.shovePushes).toBeUndefined();
@@ -109,6 +141,38 @@ describe("battle runtime: Open Hand Technique", () => {
     );
     expect(failure.resolved.shovePushes).toEqual([shorterLegalPush]);
     expect(hasCondition(failure.target.conditions, "prone")).toBe(false);
+  });
+
+  test("a successful Push save rejects a stale failed-save disposition", () => {
+    const window = openHandTechniqueHitWindow();
+    const save = requireHole(
+      resolveBattleSubject({
+        state: window.state,
+        subject: window.subject,
+        fills: [
+          ...window.hitFills,
+          unitFeatureDecisionFill(window.decision, "pushAwayOnFailedSave"),
+        ],
+      }),
+      "savingThrowOutcome",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: window.state,
+        subject: window.subject,
+        fills: [
+          ...window.hitFills,
+          unitFeatureDecisionFill(window.decision, "pushAwayOnFailedSave"),
+          openHandSavingThrowFill(save, true, openHandPush(10)),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Open Hand Technique Push disposition is only valid after a failed save.",
+    });
   });
 
   test("Push result is preserved through rolled damage resolution", () => {

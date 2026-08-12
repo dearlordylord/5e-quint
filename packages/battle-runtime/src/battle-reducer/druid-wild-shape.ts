@@ -32,6 +32,7 @@ import {
   refreshStatBlockStartTurnExecution,
   spendStatBlockProcedureResources,
   type StatBlockExecutionState,
+  type StatBlockExecutionAdmission,
 } from "../stat-block-execution-state.ts";
 import type { BattleDruidWildShapeKnownForm } from "../druid-wild-shape-known-form-execution.ts";
 import type {
@@ -309,7 +310,7 @@ export function assumeDruidWildShapeForm(input: {
   readonly state: BattleState;
   readonly actor: CharacterBattleCreatureState;
   readonly procedureRef: BattleProcedureExecutionRef;
-  readonly form: BattleDruidWildShapeKnownForm;
+  readonly formAdmission: StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>;
   readonly formLimbs: WildShapeFormLimbObjectHandlingWitness;
   readonly equipmentDisposition: readonly ActiveWildShapeEquipmentDisposition[];
   readonly profile: BattleDruidWildShapeKnownFormSupportProfile;
@@ -319,20 +320,6 @@ export function assumeDruidWildShapeForm(input: {
   );
   if (Either.isLeft(durationTicks)) {
     throw new Error("Druid Wild Shape duration must use whole-hour ticks.");
-  }
-  const availableForms = input.actor.origin.druidWildShapeAvailableForms;
-  if (availableForms === undefined) {
-    throw new Error(
-      "Wild Shape form selection requires admitted available forms.",
-    );
-  }
-  const selectedAdmission = availableForms.find(
-    (admission) => admission.statBlock === input.form,
-  );
-  if (selectedAdmission === undefined) {
-    throw new Error(
-      "Wild Shape form selection must come from the admitted available forms.",
-    );
   }
   const nextActor: CharacterBattleCreatureState = {
     ...input.actor,
@@ -345,7 +332,7 @@ export function assumeDruidWildShapeForm(input: {
         kind: "druidWildShapeForm",
         sourceProcedureRef: input.procedureRef,
         sourceCombatantId: input.actor.combatantId,
-        formScopeRef: selectedAdmission.execution.scopeRef,
+        formScopeRef: input.formAdmission.execution.scopeRef,
         formLimbs: input.formLimbs,
         equipmentDisposition: input.equipmentDisposition,
         expiresAt: { kind: "duration", durationTicks: durationTicks.right },
