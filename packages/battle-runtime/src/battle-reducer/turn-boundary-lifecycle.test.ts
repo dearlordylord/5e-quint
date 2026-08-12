@@ -1,13 +1,23 @@
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { difficultyClass, movementDeltaFeet } from "@dnd/shared/types";
+import {
+  difficultyClass,
+  movementDeltaFeet,
+  movementFeet,
+} from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import {
+  battleActiveEffectExecutionRefForTest,
+  battleId,
   battleProcedureExecutionRefForTest,
+  characterSeed,
   fighterId,
   fighterVsGoblinBattle,
   goblinTurnBattle,
   goblinId,
+  KNOCKED_OUT_UNCONSCIOUS,
   savingThrowOutcomeFill,
+  startBattleRight,
+  wizardId,
 } from "../battle-runtime.test-support.ts";
 import type {
   BattleActiveEffect,
@@ -137,6 +147,153 @@ describe("turn-boundary active-effect occurrence updates", () => {
     ]);
     expect(ticked.value.get(fighterId)?.concentration).toBeNull();
     expect(ticked.flySpeedGrantEndFallCleanupFrames).toEqual([]);
+  });
+
+  test("duration expiry preserves a knocked-out target while ending its caster's concentration", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-knockout-duration-expiry"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Synthetic Caster",
+          initiative: 20,
+          attack: null,
+        }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Knocked-Out Target",
+          initiative: 10,
+          currentHp: 1,
+          conditions: ["unconscious"],
+          positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
+          attack: null,
+        }),
+      ],
+    });
+    const caster = state.combatants.get(wizardId);
+    const target = state.combatants.get(fighterId);
+    if (caster === undefined || target === undefined) {
+      throw new Error("Expected the caster and knocked-out target.");
+    }
+    const sourceProcedureRef = battleProcedureExecutionRefForTest(
+      "knockout-duration-expiry",
+    );
+    const effect = {
+      kind: "speedDelta" as const,
+      sourceProcedureRef,
+      sourceCombatantId: wizardId,
+      deltaFeet: movementDeltaFeet(10),
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: wizardId,
+        durationTicks: elapsedTimeTicks(1),
+      },
+    } as const satisfies BattleActiveEffect;
+    const combatants = new Map(state.combatants)
+      .set(wizardId, {
+        ...caster,
+        concentration: { sourceProcedureRef, effectKind: "spellEffect" },
+      })
+      .set(fighterId, { ...target, activeEffects: [effect] });
+
+    const expired = tickDurationEffects(combatants).value;
+
+    expect(expired.get(wizardId)?.concentration).toBeNull();
+    expect(expired.get(fighterId)).toMatchObject({
+      hp: 1,
+      positiveHpUnconscious: KNOCKED_OUT_UNCONSCIOUS,
+      activeEffects: [],
+    });
+    expect(expired.get(fighterId)?.conditions).toEqual(target.conditions);
+  });
+
+  test("starting a new turn refreshes spell reduction and jump use markers", () => {
+    const state = startBattleRight({
+      battleId: battleId("battle-turn-start-spell-use-refresh"),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Synthetic Caster",
+          initiative: 20,
+          attack: null,
+        }),
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Allied Target",
+          initiative: 10,
+          attack: null,
+        }),
+      ],
+    });
+    const caster = state.combatants.get(wizardId);
+    const target = state.combatants.get(fighterId);
+    if (caster === undefined || target === undefined) {
+      throw new Error("Expected the caster and incoming allied target.");
+    }
+    const resistanceProcedureRef = battleProcedureExecutionRefForTest(
+      "turn-start-marker-refresh",
+    );
+    const jumpProcedureRef = battleProcedureExecutionRefForTest(
+      "turn-start-jump-refresh",
+    );
+    const activeEffects = [
+      {
+        kind: "spellDamageReduction" as const,
+        sourceProcedureRef: resistanceProcedureRef,
+        sourceCombatantId: wizardId,
+        damageType: "slashing" as const,
+        amount: { dice: 1 as const, dieSize: 4 as const },
+        usedThisTurn: true,
+        expiresAt: {
+          kind: "concentration" as const,
+          combatantId: wizardId,
+        },
+      },
+      {
+        kind: "jumpMovementReplacement" as const,
+        effectRef: battleActiveEffectExecutionRefForTest(
+          "turn-start-jump-refresh",
+        ),
+        sourceProcedureRef: jumpProcedureRef,
+        sourceCombatantId: wizardId,
+        movementCostFeet: movementFeet(10),
+        maxJumpDistanceFeet: movementFeet(30),
+        usedThisTurn: true,
+        expiresAt: {
+          kind: "duration" as const,
+          durationTicks: elapsedTimeTicks(10),
+        },
+      },
+    ] as const satisfies readonly BattleActiveEffect[];
+    const stateWithUsedMarkers: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants)
+        .set(wizardId, {
+          ...caster,
+          concentration: {
+            sourceProcedureRef: resistanceProcedureRef,
+            effectKind: "spellEffect",
+          },
+        })
+        .set(fighterId, { ...target, activeEffects }),
+    };
+
+    const result = resolveEndTurnCommand({
+      state: stateWithUsedMarkers,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: wizardId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag !== "resolved") return;
+    expect(result.state.combatants.get(fighterId)?.activeEffects).toEqual([
+      { ...activeEffects[0], usedThisTurn: false },
+      { ...activeEffects[1], usedThisTurn: false },
+    ]);
   });
 
   test("resolves a reachable sleep repeat-save frontier at turn end", () => {
