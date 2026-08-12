@@ -10,8 +10,16 @@ import {
   characterSeed,
   combatantId,
   endTurn,
+  fighterId,
+  fighterVsGoblinBattle,
+  findAct,
+  goblinId,
+  interruptDecisionFill,
   monsterMultiattackStatBlock,
+  readyDeclarationFillForTest,
   requireHole,
+  requireResolved,
+  resolveBattleInterrupt,
   skeletonCreatureInit,
   snapshotBattle,
   startBattleSessionRight,
@@ -29,6 +37,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import {
   battleAreaId,
+  battleLineDirectionId,
   battleObjectId,
   battleSpellEffectOccurrenceId,
 } from "./identity.ts";
@@ -431,6 +440,49 @@ const rolledDiceCases: readonly CodecCase[] = [
 const invalidSource = battleProcedureExecutionRefForTest(
   "codec-unbound-source",
 );
+const sourceOwningHoleCases: readonly EncodedHole[] = [
+  hole("skillChoice", {
+    kind: "skillChoice",
+    sourceProcedureRef: invalidSource,
+    choices: ["stealth"],
+  }),
+  hole("thaumaturgyActiveOneMinuteEffectCount", {
+    kind: "thaumaturgyActiveOneMinuteEffectCount",
+    sourceProcedureRef: invalidSource,
+    maximumActiveOneMinuteEffects: 3,
+    requiresTableSpellEffectCount: true,
+  }),
+  hole("commandOptionChoice", {
+    kind: "commandOptionChoice",
+    sourceProcedureRef: invalidSource,
+    choices: ["approach"],
+  }),
+  hole("spiritualWeaponForcePosition", {
+    kind: "spiritualWeaponForcePosition",
+    sourceProcedureRef: invalidSource,
+    mode: "cast",
+    maxDistanceFeet: 60,
+    requiresTableSpatialFact: true,
+  }),
+  hole("gustOfWindLineDirectionChoice", {
+    kind: "gustOfWindLineDirectionChoice",
+    sourceCombatantId: wizardId,
+    sourceProcedureRef: invalidSource,
+    areaId: battleAreaId("area:codec-gust-of-wind"),
+    directionId: battleLineDirectionId("direction:codec-north"),
+    requiresTableSpatialFact: true,
+  }),
+  hole("movableZoneRepositionMovement", {
+    kind: "movableZoneRepositionMovement",
+    movableZone: {
+      sourceCombatantId: wizardId,
+      sourceProcedureRef: invalidSource,
+      areaId: battleAreaId("area:codec-movable-zone"),
+      maxMoveFeet: 30,
+    },
+    requiresTableSpatialFact: true,
+  }),
+];
 const cases: readonly CodecCase[] = [
   ...savingThrowCases,
   ...rolledDiceCases,
@@ -451,6 +503,9 @@ const cases: readonly CodecCase[] = [
       targetFlatBonuses: [],
     }),
   ),
+  ...sourceOwningHoleCases.map((replacement) =>
+    left(`${replacement.kind}UnboundSource`, replacement),
+  ),
 ];
 
 describe("battle codec execution-reference boundaries", () => {
@@ -463,6 +518,75 @@ describe("battle codec execution-reference boundaries", () => {
 });
 
 describe("battle codec act ownership boundaries", () => {
+  test("round-trips a pending release of a readied ordinary action", () => {
+    const state = fighterVsGoblinBattle();
+    const readySubject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "ready" as const,
+    };
+    const declarationHole = findAct(state, readySubject).initialHoles[0];
+    if (declarationHole?.kind !== "readyDeclaration") {
+      throw new Error("Expected a Ready declaration hole.");
+    }
+    const dodgeResponse = declarationHole.responseChoices.find(
+      (response) =>
+        response.kind === "action" && response.subject.action === "dodge",
+    );
+    if (dodgeResponse?.kind !== "action") {
+      throw new Error("Expected Ready to offer Dodge as an ordinary action.");
+    }
+    const readied = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: readySubject,
+        fills: [
+          readyDeclarationFillForTest(
+            declarationHole,
+            "the goblin raises its weapon",
+            dodgeResponse,
+          ),
+        ],
+      }),
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state: readied.state, actorId: fighterId }),
+    );
+    const reported = resolveBattleSubject({
+      state: goblinTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: goblinId,
+        command: "reportReadyTrigger",
+        readiedActorId: fighterId,
+      },
+      fills: [],
+    });
+    if (reported.tag !== "needsHoles") {
+      throw new Error("Expected a pending readied-action interrupt.");
+    }
+
+    const encoded = Schema.encodeSync(BattleSnapshotSchema)(reported.snapshot);
+    expect(Schema.decodeUnknownSync(BattleSnapshotSchema)(encoded)).toEqual(
+      reported.snapshot,
+    );
+
+    const decision = requireHole(reported, "interruptDecision");
+    expect(
+      resolveBattleInterrupt({
+        state: reported.state,
+        fill: interruptDecisionFill(decision, {
+          kind: "resolve",
+          responderId: fighterId,
+          choice: {
+            kind: "releaseReadiedAction",
+            reactorId: fighterId,
+            fills: [],
+          },
+        }),
+      }),
+    ).toMatchObject({ tag: "resolved" });
+  });
   test("rejects an action spell act with an unknown owner", () => {
     const malformed = replaceActOwner(
       fixture.snapshot,

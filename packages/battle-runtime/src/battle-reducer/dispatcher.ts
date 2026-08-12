@@ -1142,7 +1142,6 @@ export function endTurn(
 export {
   battleAttackHostParticipantId,
   attackDamageInterruptionFrame,
-  parseAttackDamageInterruptionFrame,
   attackDamageEventAfterPendingReduction,
   attackDamageEventAfterPendingReductions,
   attackDamageEventAmountBeforeTargetAdjustments,
