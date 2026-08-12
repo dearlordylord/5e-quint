@@ -67,16 +67,14 @@ export function admitBattleStatBlockCombatantSource(input: {
     );
   }
   const from = input.startingScopeOrdinal;
+  const statBlocks: readonly [typeof statBlock] = [statBlock];
   const cohort = statBlockExecutionAdmissionCohort(
     input.battleId,
     input.combatantId,
-    [statBlock],
+    statBlocks,
     from,
   );
   const allocation = cohort.admissions[0];
-  if (allocation === undefined) {
-    return issue("Stat Block execution admission is missing.");
-  }
   return Either.right(
     AdmittedBattleStatBlockCombatant({
       battleId: input.battleId,

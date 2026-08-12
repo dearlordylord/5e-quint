@@ -100,6 +100,9 @@ export type AdmittedMultiattackOccurrence = {
   }>;
 };
 
+type AdmittedMultiattackDispatch =
+  AdmittedMultiattackOccurrence["dispatches"][number];
+
 export type AdmittedBonusActionOccurrence = {
   readonly kind: "bonusActionOption";
   readonly source: CreatureNamedActionOption;
@@ -116,6 +119,30 @@ export type AdmittedStatBlockOccurrences = {
 
 type AdmittedStatBlock = {
   readonly occurrences: AdmittedStatBlockOccurrences;
+};
+
+export function statBlockExecutionAdmissionCohort<
+  TStatBlock extends BattleStatBlockExecutionSource,
+>(
+  battleId: BattleId,
+  combatantId: CombatantId,
+  statBlocks: readonly [TStatBlock],
+  startingScopeOrdinal: BattleExecutionScopeOrdinal,
+): {
+  readonly admissions: readonly [StatBlockExecutionAdmission<TStatBlock>];
+  readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
+};
+
+export function statBlockExecutionAdmissionCohort<
+  TStatBlock extends BattleStatBlockExecutionSource,
+>(
+  battleId: BattleId,
+  combatantId: CombatantId,
+  statBlocks: readonly TStatBlock[],
+  startingScopeOrdinal: BattleExecutionScopeOrdinal,
+): {
+  readonly admissions: readonly StatBlockExecutionAdmission<TStatBlock>[];
+  readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
 };
 
 export function statBlockExecutionAdmissionCohort<
@@ -215,8 +242,8 @@ function admitStatBlock(
     ) {
       continue;
     }
-    const admittedStandardActions = nonEmpty(standardActions);
-    if (admittedStandardActions === null) continue;
+    const admittedStandardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction> =
+      [standardActions[0], ...standardActions.slice(1)];
     const occurrence: AdmittedBonusActionOccurrence = {
       kind: "bonusActionOption",
       source: option,
@@ -247,41 +274,61 @@ function admittedMultiattackDispatches(
   multiattack: CreatureNamedMultiattack,
   actionAttacks: readonly AdmittedAttackOccurrence[],
 ): AdmittedMultiattackOccurrence["dispatches"] | null {
-  if (multiattack.dispatches.length === 0) return null;
-  const admittedDispatches: {
-    readonly attack: AdmittedAttackOccurrence;
-    readonly count: PositiveInteger;
-  }[] = [];
+  const [firstDispatch, ...remainingDispatches] = multiattack.dispatches;
   const limitedUseDispatchCountByAttack = new Map<
     AdmittedAttackOccurrence,
     number
   >();
-  for (const dispatch of multiattack.dispatches) {
-    if (
-      dispatch.count.kind !== "literal" ||
-      dispatch.count.value < 1 ||
-      !Number.isInteger(dispatch.count.value)
-    ) {
-      return null;
-    }
-    const candidates = actionAttacks.filter(
-      (attack) => attack.source.name === dispatch.name,
+  const firstAdmittedDispatch = admittedMultiattackDispatch(
+    firstDispatch,
+    actionAttacks,
+    limitedUseDispatchCountByAttack,
+  );
+  if (firstAdmittedDispatch === null) return null;
+  const admittedDispatches: [
+    AdmittedMultiattackDispatch,
+    ...AdmittedMultiattackDispatch[],
+  ] = [firstAdmittedDispatch];
+  for (const dispatch of remainingDispatches) {
+    const admittedDispatch = admittedMultiattackDispatch(
+      dispatch,
+      actionAttacks,
+      limitedUseDispatchCountByAttack,
     );
-    const [candidate] = candidates;
-    if (candidate === undefined || candidates.length !== 1) return null;
-    if (candidate.limitedUse !== undefined) {
-      const totalDispatchCount =
-        (limitedUseDispatchCountByAttack.get(candidate) ?? 0) +
-        dispatch.count.value;
-      if (totalDispatchCount > 1) return null;
-      limitedUseDispatchCountByAttack.set(candidate, totalDispatchCount);
-    }
-    admittedDispatches.push({
-      attack: candidate,
-      count: PositiveInteger(dispatch.count.value),
-    });
+    if (admittedDispatch === null) return null;
+    admittedDispatches.push(admittedDispatch);
   }
-  return nonEmpty(admittedDispatches);
+  return admittedDispatches;
+}
+
+function admittedMultiattackDispatch(
+  dispatch: CreatureNamedMultiattack["dispatches"][number],
+  actionAttacks: readonly AdmittedAttackOccurrence[],
+  limitedUseDispatchCountByAttack: Map<AdmittedAttackOccurrence, number>,
+): AdmittedMultiattackDispatch | null {
+  if (
+    dispatch.count.kind !== "literal" ||
+    dispatch.count.value < 1 ||
+    !Number.isInteger(dispatch.count.value)
+  ) {
+    return null;
+  }
+  const candidates = actionAttacks.filter(
+    (attack) => attack.source.name === dispatch.name,
+  );
+  const [candidate] = candidates;
+  if (candidate === undefined || candidates.length !== 1) return null;
+  if (candidate.limitedUse !== undefined) {
+    const totalDispatchCount =
+      (limitedUseDispatchCountByAttack.get(candidate) ?? 0) +
+      dispatch.count.value;
+    if (totalDispatchCount > 1) return null;
+    limitedUseDispatchCountByAttack.set(candidate, totalDispatchCount);
+  }
+  return {
+    attack: candidate,
+    count: PositiveInteger(dispatch.count.value),
+  };
 }
 
 function allocateStatBlockExecution(
@@ -346,18 +393,14 @@ function allocateStatBlockExecution(
   }
 
   for (const multiattack of admitted.multiattacks) {
-    const dispatchProcedureRefs = nonEmpty(
-      multiattack.dispatches.flatMap((dispatch) =>
-        Array.from({ length: dispatch.count }, () =>
+    const dispatchProcedureRefs = flatMapNonEmpty(
+      multiattack.dispatches,
+      (dispatch) =>
+        repeatedNonEmpty(
           requireAllocatedAttackRef(attackProcedureRefs, dispatch.attack),
+          dispatch.count,
         ),
-      ),
     );
-    if (dispatchProcedureRefs === null) {
-      throw new Error(
-        "An admitted Multiattack always dispatches at least one procedure.",
-      );
-    }
     const procedureRef = allocateProcedureRef(allocator);
     procedureRefs.set(multiattack, procedureRef);
     procedureBindings.push({
@@ -425,20 +468,6 @@ export function statBlockPresentationAllocation(
   };
 }
 
-function requireAllocatedAttackRef(
-  refs: ReadonlyMap<
-    AdmittedAttackOccurrence,
-    BattleStatBlockProcedureExecutionRef
-  >,
-  attack: AdmittedAttackOccurrence,
-): BattleStatBlockProcedureExecutionRef {
-  const procedureRef = refs.get(attack);
-  if (procedureRef === undefined) {
-    throw new Error("Every admitted multiattack dispatch must be allocated.");
-  }
-  return procedureRef;
-}
-
 function statBlockProcedureBindingSnapshots(
   execution: StatBlockExecutionState,
 ): readonly StatBlockProcedureBindingSnapshot[] {
@@ -452,6 +481,28 @@ export type StatBlockExecutionRestoration<
   readonly statBlock: TStatBlock;
   readonly snapshot: StatBlockExecutionSnapshot;
 };
+
+export function restoreStatBlockExecutionAdmissions<
+  TStatBlock extends BattleStatBlockExecutionSource,
+>(
+  battleId: BattleId,
+  combatantId: CombatantId,
+  restorations: readonly [StatBlockExecutionRestoration<TStatBlock>],
+): Either.Either<
+  readonly [StatBlockExecutionAdmission<TStatBlock>],
+  ReadonlyNonEmptyArray<StatBlockExecutionRestoreIssue>
+>;
+
+export function restoreStatBlockExecutionAdmissions<
+  TStatBlock extends BattleStatBlockExecutionSource,
+>(
+  battleId: BattleId,
+  combatantId: CombatantId,
+  restorations: readonly StatBlockExecutionRestoration<TStatBlock>[],
+): Either.Either<
+  readonly StatBlockExecutionAdmission<TStatBlock>[],
+  ReadonlyNonEmptyArray<StatBlockExecutionRestoreIssue>
+>;
 
 export function restoreStatBlockExecutionAdmissions<
   TStatBlock extends BattleStatBlockExecutionSource,
@@ -583,15 +634,16 @@ export function restoreStatBlockExecutionAdmission<
   StatBlockExecutionAdmission<TStatBlock>,
   StatBlockExecutionRestoreIssue
 > {
-  const restored = restoreStatBlockExecutionAdmissions(battleId, combatantId, [
+  const restoration: readonly [StatBlockExecutionRestoration<TStatBlock>] = [
     { statBlock, snapshot },
-  ]);
+  ];
+  const restored = restoreStatBlockExecutionAdmissions(
+    battleId,
+    combatantId,
+    restoration,
+  );
   if (Either.isLeft(restored)) return Either.left(restored.left[0]);
-  const admission = restored.right[0];
-  if (admission === undefined) {
-    throw new Error("A successful single restoration produces one admission.");
-  }
-  return Either.right(admission);
+  return Either.right(restored.right[0]);
 }
 
 function resourcePoolStateIsOutOfBounds(
@@ -629,6 +681,20 @@ function procedureBindingSnapshotsEqual(
       return persistedValuesEqual(binding.procedure, expectedBinding.procedure);
     })
   );
+}
+
+function requireAllocatedAttackRef(
+  refs: ReadonlyMap<
+    AdmittedAttackOccurrence,
+    BattleStatBlockProcedureExecutionRef
+  >,
+  attack: AdmittedAttackOccurrence,
+): BattleStatBlockProcedureExecutionRef {
+  const procedureRef = refs.get(attack);
+  if (procedureRef === undefined) {
+    throw new Error("Every admitted multiattack dispatch must be allocated.");
+  }
+  return procedureRef;
 }
 
 function restoredResourcePoolsInExecutionOrder(
@@ -685,9 +751,19 @@ function persistedValuesEqual(actual: unknown, expected: unknown): boolean {
   );
 }
 
-function nonEmpty<T>(values: readonly T[]): ReadonlyNonEmptyArray<T> | null {
+function flatMapNonEmpty<T, U>(
+  values: ReadonlyNonEmptyArray<T>,
+  project: (value: T) => ReadonlyNonEmptyArray<U>,
+): ReadonlyNonEmptyArray<U> {
   const [first, ...rest] = values;
-  return first === undefined ? null : [first, ...rest];
+  return [...project(first), ...rest.flatMap(project)];
+}
+
+function repeatedNonEmpty<T>(
+  value: T,
+  count: PositiveInteger,
+): ReadonlyNonEmptyArray<T> {
+  return [value, ...Array.from({ length: count - 1 }, () => value)];
 }
 
 function resourcePoolStructuresEqual(

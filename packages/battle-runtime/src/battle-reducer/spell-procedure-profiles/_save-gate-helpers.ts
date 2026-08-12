@@ -9,7 +9,6 @@ import {
   ABILITIES,
   DAMAGE_TYPES,
   movementFeet,
-  spellSlotLevel,
   type Ability,
   type Condition,
   type DamageType,
@@ -90,6 +89,29 @@ type ModifyRollAdvantageEffect = Extract<
   SaveGateFailedEffect,
   { readonly kind: "modify_roll_advantage" }
 >;
+type AbilityChoiceHoleFilter = {
+  readonly kind: "hole";
+  readonly value: {
+    readonly kind: "choice";
+    readonly options: readonly [Ability, ...Ability[]];
+  };
+};
+type ContagionChosenAbilitySaveDisadvantageEffect =
+  ModifyRollAdvantageEffect & {
+    readonly saveAbilityFilter: AbilityChoiceHoleFilter;
+  };
+type TimedBattleSpell = BattleSpellAdmissionSource & {
+  readonly mechanics: BattleSpellAdmissionSource["mechanics"] & {
+    readonly duration: Extract<
+      BattleSpellAdmissionSource["mechanics"]["duration"],
+      { readonly kind: "timed" }
+    >;
+  };
+};
+type SupportedDamageComponent = {
+  readonly expr: NonNullable<ReturnType<typeof supportedDamageAmountExpr>>;
+  readonly damageType: DamageType;
+};
 type RayOfEnfeeblementPhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
@@ -780,8 +802,7 @@ export function blindnessDeafnessSaveGateConditionSpell(
   if (
     targetCountBySlot === null ||
     (targetSelection.targetKinds !== undefined &&
-      !sameStringSet(targetSelection.targetKinds, ["creature"])) ||
-    targetCountBySlot(spellSlotLevel(spell.mechanics.level)) !== 1
+      !sameStringSet(targetSelection.targetKinds, ["creature"]))
   ) {
     return null;
   }
@@ -893,10 +914,7 @@ function paralyzedTargetListSaveGateConditionSpell(input: {
     targetSelection,
     spell.mechanics.level,
   );
-  if (
-    targetCountBySlot === null ||
-    targetCountBySlot(spellSlotLevel(spell.mechanics.level)) !== 1
-  ) {
+  if (targetCountBySlot === null) {
     return null;
   }
 
@@ -1191,14 +1209,24 @@ export function supportedSaveGateDamageProfile(
   ) {
     return [];
   }
-  const damageComponents: {
-    readonly expr: NonNullable<ReturnType<typeof supportedDamageAmountExpr>>;
-    readonly damageType: DamageType;
-  }[] = [];
-  for (const damage of [
-    failedSaveEffects.damage,
-    ...failedSaveEffects.additionalDamageComponents,
-  ]) {
+  const primaryDamage = failedSaveEffects.damage;
+  if (!isDamageType(primaryDamage.damageType)) {
+    return [];
+  }
+  const primaryDamageExpr = supportedDamageAmountExpr({
+    amount: primaryDamage.amount,
+    spellLevel: spell.mechanics.level,
+    slotLevel: input.slotLevel,
+    characterLevel: input.characterLevel,
+  });
+  if (primaryDamageExpr === null) {
+    return [];
+  }
+  const damageComponents: [
+    SupportedDamageComponent,
+    ...SupportedDamageComponent[],
+  ] = [{ expr: primaryDamageExpr, damageType: primaryDamage.damageType }];
+  for (const damage of failedSaveEffects.additionalDamageComponents) {
     if (!isDamageType(damage.damageType)) {
       return [];
     }
@@ -1213,10 +1241,8 @@ export function supportedSaveGateDamageProfile(
     }
     damageComponents.push({ expr, damageType: damage.damageType });
   }
-  const [primaryDamage, ...additionalDamageComponents] = damageComponents;
-  if (primaryDamage === undefined) {
-    return [];
-  }
+  const [resolvedPrimaryDamage, ...additionalDamageComponents] =
+    damageComponents;
 
   const saveGatedInvocation = {
     procedure: "saveGatedDamage" as const,
@@ -1226,8 +1252,8 @@ export function supportedSaveGateDamageProfile(
     dc: phase.dc,
     targeting,
     damage: {
-      expr: primaryDamage.expr,
-      damageType: primaryDamage.damageType,
+      expr: resolvedPrimaryDamage.expr,
+      damageType: resolvedPrimaryDamage.damageType,
     },
     additionalDamageComponents,
     successDamage: (phase.onSuccess.kind === "half_damage"
@@ -1595,10 +1621,7 @@ function contagionFailedSaveConditionSupport(
   ) {
     return null;
   }
-  const abilityChoices = chosenAbilitySaveDisadvantageChoices(disadvantage);
-  if (abilityChoices === null) {
-    return null;
-  }
+  const abilityChoices = disadvantage.saveAbilityFilter.value.options;
   const repeatSave = phase.repeatSaves?.[0];
   if (
     repeatSave === undefined ||
@@ -1609,9 +1632,6 @@ function contagionFailedSaveConditionSupport(
     repeatSave.failuresRequired !== 3 ||
     repeatSave.onFailureThreshold !== "locks_duration"
   ) {
-    return null;
-  }
-  if (spell.mechanics.duration.kind !== "timed") {
     return null;
   }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
@@ -1625,7 +1645,10 @@ function contagionFailedSaveConditionSupport(
       {
         kind: "fixed",
         condition: "poisoned",
-        expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: durationTicks.right,
+        },
         escape: null,
         turnStartDamage: null,
         repeatSave: {
@@ -1645,7 +1668,7 @@ function contagionFailedSaveConditionSupport(
 function isContagionSaveGateSpellShape(
   spell: BattleSpellAdmissionSource,
   phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
-): boolean {
+): spell is TimedBattleSpell {
   return (
     spell.mechanics.level === 5 &&
     spellHasActionCastingTime(spell) &&
@@ -1661,7 +1684,7 @@ function isContagionSaveGateSpellShape(
 
 function isContagionChosenAbilitySaveDisadvantage(
   effect: SaveGateFailureEffect,
-): effect is ModifyRollAdvantageEffect {
+): effect is ContagionChosenAbilitySaveDisadvantageEffect {
   return (
     effect.kind === "modify_roll_advantage" &&
     effect.mode === "disadvantage" &&
@@ -1678,20 +1701,8 @@ function chosenAbilitySaveDisadvantageChoices(
   if (!isAbilityChoiceHoleFilter(filter)) {
     return null;
   }
-  const choices = filter.value.options;
-  if (choices.length === 0 || choices.some((choice) => !isAbility(choice))) {
-    return null;
-  }
-  return choices as readonly [Ability, ...Ability[]];
+  return filter.value.options;
 }
-
-type AbilityChoiceHoleFilter = {
-  readonly kind: "hole";
-  readonly value: {
-    readonly kind: "choice";
-    readonly options: readonly unknown[];
-  };
-};
 
 function isAbilityChoiceHoleFilter(
   value: unknown,
@@ -1715,14 +1726,16 @@ function isAbilityChoiceHoleFilter(
     readonly kind?: unknown;
     readonly options?: unknown;
   };
-  return choice.kind === "choice" && Array.isArray(choice.options);
+  return (
+    choice.kind === "choice" &&
+    Array.isArray(choice.options) &&
+    choice.options.length > 0 &&
+    choice.options.every(isAbility)
+  );
 }
 
 function isAbility(value: unknown): value is Ability {
-  return (
-    typeof value === "string" &&
-    ABILITIES.includes(value as (typeof ABILITIES)[number])
-  );
+  return ABILITIES.some((ability) => ability === value);
 }
 
 export function supportedFailedSavePostDamageRiders(
