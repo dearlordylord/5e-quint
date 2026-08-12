@@ -5,6 +5,8 @@
     "../replay-sdk-player.ts",
     "../report.ts",
     "../review-preflight.ts",
+    "../generate-scenario.ts",
+    "../scenario-campaign.ts",
     "../transcript.ts"
   ],
   "exclude": ["**/*.test.ts"],

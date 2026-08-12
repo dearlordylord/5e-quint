@@ -43,10 +43,12 @@ under `scripts/raw-swarm/out/` and are gitignored.
 
 ## Target discovery workflow
 
-This section specifies the intended workflow. The checked-in direct-SDK tracer
-implements its single-controller execution and evidence seam for one scenario;
-stochastic scenario generation, multiple controllers, and branching remain
-future workflow increments.
+This section owns the intended workflow. The checked-in campaign runner
+implements stochastic whole-prose generation plus final RAW and artifact-policy
+review. The direct-SDK tracer implements the single-controller execution and
+evidence seam for one fixed composition. Connecting arbitrary generated prose
+to SDK setup, multiple controllers, and branching remain later workflow
+increments.
 
 ### Generate battle scenarios as prose
 
@@ -107,17 +109,39 @@ before play. The RAW classification remains distinct from the campaign's
 decision to admit a scenario for play.
 
 An impossible or partially unsupported scenario can still be valuable evidence.
-After preserving the RAW reviewer's unsupported or contradictory verdict, the
-campaign may admit the scenario when attempting it could reveal an SDK
-capability gap or unclear interaction boundary rather than mere nonsense. The
-player must make a serious attempt, use the closest legal path when appropriate,
-and report where progress became impossible. It must not fabricate support or
-force an unavailable outcome.
+After preserving the RAW reviewer's unsupported verdict, the campaign may admit
+the scenario when attempting it could reveal an SDK capability gap or unclear
+interaction boundary rather than mere nonsense. A contradictory scenario is
+retained only as rejected authoring evidence. The player must make a serious
+attempt, use the closest legal path when appropriate, and report where progress
+became impossible. It must not fabricate support or force an unavailable
+outcome.
 
 A final scenario is one prose document. It may contain a public setup and
 controller-specific briefs. Separate opposing agents receive the public setup
 and only their own brief; a single agent controlling every combatant may receive
 the whole document. These prose sections do not constitute a scenario DSL.
+
+The executable campaign boundary is a small JSON authoring configuration, not a
+D&D scenario model. It contains only the distribution preference, iteration
+bounds, candidate count, RAW-review milestones, and whether a reviewed
+unsupported result may be admitted. Start from
+[`scenario-campaign.example.json`](scenario-campaign.example.json), then run
+from a clean revision:
+
+```sh
+mise exec -- pnpm exec tsx scripts/raw-swarm/generate-scenario.ts \
+  scripts/raw-swarm/scenario-campaign.example.json
+```
+
+The command refuses to overwrite either output. It retains only the selected
+final prose and its adjacent `.scenario-review.json`; candidate batches, random
+indices, readiness decisions, milestone reviews, and agent process output are
+discarded. Separate final RAW and public-artifact policy reviews record the
+scenario id, clean Git revision, and a hash of the exact final prose bytes. The
+command derives both output filenames from the validated scenario id. Admitted
+artifacts go under `sdk-player/scenarios/`; rejected diagnostic output goes
+under ignored `out/rejected-scenarios/` and is not playable input.
 
 ### Execute through the public SDK
 
