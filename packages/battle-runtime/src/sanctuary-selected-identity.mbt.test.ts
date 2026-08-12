@@ -36,13 +36,19 @@ import {
   type BattleHole,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
+  type BattleRuntimeSession,
   type BattleState,
   type BattleProcedureExecutionRef,
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import {
+  battleActSpellPresentation,
+  discoverBattleActs,
+} from "./battle-act-composition.ts";
+import { battleRuntimeSessionWithState } from "./battle-runtime-context.ts";
+import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   decodeReducerRoute,
@@ -133,7 +139,7 @@ type SelectedUnitIdentityReplay = {
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
-type BonusActionSpellAct = AvailableBattleAct & {
+type BonusActionSpellAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "bonusActionSpell" }
@@ -142,10 +148,10 @@ type BonusActionSpellAct = AvailableBattleAct & {
 type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
 };
-type AttackAct = AvailableBattleAct & {
+type AttackAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<BattleSubject, { readonly tag: "action" }>;
 };
-type FlamingSphereRamAct = AvailableBattleAct & {
+type FlamingSphereRamAct = BattleActDiscoveryCandidate & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "runtimeCommand"; readonly command: "movableZoneRam" }
@@ -512,8 +518,12 @@ function observeDirectAttackLostRoute(): SanctuaryRouteProjection {
 }
 
 function observeDirectSpellSuccessfulSaveRoute(): SanctuaryRouteProjection {
-  const warded = castSanctuary(battleWithSanctuary(), wardedId);
-  const act = actionSpellAct(warded, fireBoltUnitId);
+  const battle = battleSessionWithSanctuary();
+  const warded = castSanctuary(battle.state, wardedId);
+  const act = actionSpellAct(
+    battleRuntimeSessionWithState(battle, warded),
+    fireBoltUnitId,
+  );
   const targetFill = spellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
     act.subject.procedureRef,
@@ -636,10 +646,12 @@ function observeIllegalReplacementTargetRoute(): SanctuaryRouteProjection {
 }
 
 function observeAreaEffectExclusionRoute(): SanctuaryRouteProjection {
-  const warded = advanceRoundToCaster(
-    castSanctuary(battleWithSanctuary(), wardedId),
+  const battle = battleSessionWithSanctuary();
+  const warded = advanceRoundToCaster(castSanctuary(battle.state, wardedId));
+  const act = actionSpellAct(
+    battleRuntimeSessionWithState(battle, warded),
+    burningHandsUnitId,
   );
-  const act = actionSpellAct(warded, burningHandsUnitId);
   const needsDamage = requireNeedsHoles(
     resolveBattleSubject({
       state: warded,
@@ -705,10 +717,14 @@ function observeAttackRollEarlyEndRoute(): SanctuaryRouteProjection {
 }
 
 function observeSpellCastEarlyEndRoute(): SanctuaryRouteProjection {
+  const battle = battleSessionWithSanctuary();
   const selfWarded = advanceRoundToCaster(
-    castSanctuary(battleWithSanctuary(), casterId),
+    castSanctuary(battle.state, casterId),
   );
-  const act = actionSpellAct(selfWarded, longstriderUnitId);
+  const act = actionSpellAct(
+    battleRuntimeSessionWithState(battle, selfWarded),
+    longstriderUnitId,
+  );
   const resolved = requireResolved(
     resolveBattleSubject({
       state: selfWarded,
@@ -875,8 +891,12 @@ function projectDirectAttackLost(): SanctuarySelectedIdentityProjection {
 }
 
 function projectDirectSpellSuccessfulSave(): SanctuarySelectedIdentityProjection {
-  const warded = castSanctuary(battleWithSanctuary(), wardedId);
-  const act = actionSpellAct(warded, fireBoltUnitId);
+  const battle = battleSessionWithSanctuary();
+  const warded = castSanctuary(battle.state, wardedId);
+  const act = actionSpellAct(
+    battleRuntimeSessionWithState(battle, warded),
+    fireBoltUnitId,
+  );
   const targetFill = spellTargetFill(
     requireHole(act.initialHoles, "targetChoice"),
     act.subject.procedureRef,
@@ -1013,10 +1033,12 @@ function projectIllegalReplacementTarget(): SanctuarySelectedIdentityProjection 
 }
 
 function projectAreaEffectExclusion(): SanctuarySelectedIdentityProjection {
-  const warded = advanceRoundToCaster(
-    castSanctuary(battleWithSanctuary(), wardedId),
+  const battle = battleSessionWithSanctuary();
+  const warded = advanceRoundToCaster(castSanctuary(battle.state, wardedId));
+  const act = actionSpellAct(
+    battleRuntimeSessionWithState(battle, warded),
+    burningHandsUnitId,
   );
-  const act = actionSpellAct(warded, burningHandsUnitId);
   const needsDamage = requireNeedsHoles(
     resolveBattleSubject({
       state: warded,
@@ -1082,10 +1104,14 @@ function projectAttackRollEarlyEnd(): SanctuarySelectedIdentityProjection {
 }
 
 function projectSpellCastEarlyEnd(): SanctuarySelectedIdentityProjection {
+  const battle = battleSessionWithSanctuary();
   const selfWarded = advanceRoundToCaster(
-    castSanctuary(battleWithSanctuary(), casterId),
+    castSanctuary(battle.state, casterId),
   );
-  const act = actionSpellAct(selfWarded, longstriderUnitId);
+  const act = actionSpellAct(
+    battleRuntimeSessionWithState(battle, selfWarded),
+    longstriderUnitId,
+  );
   const resolved = requireResolved(
     resolveBattleSubject({
       state: selfWarded,
@@ -1150,6 +1176,10 @@ function srdSpellRecord(
 }
 
 function battleWithSanctuary(): BattleState {
+  return battleSessionWithSanctuary().state;
+}
+
+function battleSessionWithSanctuary(): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("sanctuary-selected-identity"),
     combatants: [
@@ -1188,7 +1218,7 @@ function battleWithSanctuary(): BattleState {
   if (Either.isLeft(result)) {
     throw new Error(battleStateInitIssueMessage(result.left));
   }
-  return result.right.state;
+  return result.right;
 }
 
 function characterCreature(
@@ -1272,10 +1302,10 @@ function bonusActionSanctuaryAct(state: BattleState): BonusActionSpellAct {
 }
 
 function actionSpellAct(
-  state: BattleState,
+  session: BattleRuntimeSession,
   spellId: SanctuarySelectedIdentityActionSpellUnitId,
 ): ActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = discoverBattleActs(session).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell" &&
       battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
@@ -1302,18 +1332,21 @@ function attackAct(state: BattleState, targetId: CombatantId): AttackAct {
 }
 
 function wardedFlamingSphereRamState(): BattleState {
+  const battle = battleSessionWithSanctuary();
   const afterFlamingSphere = castFlamingSphereAsAttacker(
-    advanceToAttacker(battleWithSanctuary()),
+    battleRuntimeSessionWithState(battle, advanceToAttacker(battle.state)),
   );
   const nextCasterTurn = advanceFromAttackerToCaster(afterFlamingSphere);
   return advanceToAttacker(castSanctuary(nextCasterTurn, attackerId));
 }
 
-function castFlamingSphereAsAttacker(state: BattleState): BattleState {
-  const act = actionSpellAct(state, flamingSphereUnitId);
+function castFlamingSphereAsAttacker(
+  session: BattleRuntimeSession,
+): BattleState {
+  const act = actionSpellAct(session, flamingSphereUnitId);
   const resolved = requireResolved(
     resolveBattleSubject({
-      state,
+      state: session.state,
       subject: act.subject,
       fills: [
         flamingSphereAreaFill(requireHole(act.initialHoles, "spellAreaChoice")),
