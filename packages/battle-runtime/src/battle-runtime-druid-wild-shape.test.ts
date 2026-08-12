@@ -100,7 +100,9 @@ import {
   combatantSavingThrowModifier,
   combatantSkillModifier,
   parseSupportedUnitFeatureProfile,
+  removeBattleRuntimeCombatants,
   revertShapeShiftedCombatantToTrueForm,
+  revertShapeShiftedRuntimeState,
   startBattle,
   validateWildShapeEquipmentDispositionFill,
   wildShapeFormActionSurfaceInventory,
@@ -209,6 +211,21 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
   expect(Number(activeDruid.tempHp)).toBe(2);
   expect(druidWildShapeUsesRemaining(activeDruid)).toBe(1);
   expect(assumed.state.currentTurnResources.currentHasBonusAction).toBe(false);
+  expect(
+    assumed.routeEvents?.filter(
+      (event) => "subject" in event && event.subject === "activeFormLifecycle",
+    ),
+  ).toEqual([
+    expect.objectContaining({
+      fill: "wildShapeEquipmentDisposition",
+      owner: "battleActionEconomy",
+    }),
+    expect.objectContaining({ owner: "battleFeatureResource" }),
+    expect.objectContaining({ owner: "battleTemporaryHitPoint" }),
+    expect.objectContaining({ owner: "battleActiveEffect" }),
+    expect.objectContaining({ owner: "battleCreatureState" }),
+    expect.objectContaining({ owner: "battleMovementResource" }),
+  ]);
 
   const activeSnapshot = snapshotCreature(assumed.snapshot, druidId);
   expect(activeSnapshot.size).toBe("large");
@@ -268,10 +285,49 @@ test("assumes, reuses, and dismisses a known Beast Wild Shape form", () => {
   const dismissedDruid = requireCharacter(dismissed.state, druidId);
   expect(combatantHasActiveDruidWildShape(dismissedDruid)).toBe(false);
   expect(druidWildShapeUsesRemaining(dismissedDruid)).toBe(0);
+  expect(
+    dismissed.routeEvents?.filter(
+      (event) => "subject" in event && event.subject === "activeFormLifecycle",
+    ),
+  ).toEqual([
+    expect.objectContaining({ owner: "battleActionEconomy" }),
+    expect.objectContaining({ owner: "battleActiveEffect" }),
+    expect.objectContaining({ owner: "battleCreatureState" }),
+    expect.objectContaining({ owner: "battleMovementResource" }),
+  ]);
 
   const dismissedSnapshot = snapshotCreature(dismissed.snapshot, druidId);
   expect(dismissedSnapshot.size).toBe("medium");
   expect(Number(dismissedSnapshot.movement.speedFeet)).toBe(30);
+});
+
+test("projects active Wild Shape lifecycle ownership when turn control returns to the druid", () => {
+  const initial = druidWildShapeBattle();
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
+      initial,
+      wildShapeSubject(initial, {
+        action: "assumeForm",
+        formStatBlockId: ridingHorseId,
+      }),
+    ),
+  );
+  const targetTurn = requireResolved(
+    endTurn({ state: assumed.state, actorId: druidId }),
+  );
+  const druidTurn = requireResolved(
+    endTurn({ state: targetTurn.state, actorId: goblinId }),
+  );
+
+  expect(
+    druidTurn.routeEvents?.filter(
+      (event) => "subject" in event && event.subject === "activeFormLifecycle",
+    ),
+  ).toEqual([
+    expect.objectContaining({ owner: "battleTurnBoundary" }),
+    expect.objectContaining({ owner: "battleTurnBoundary" }),
+    expect.objectContaining({ owner: "battleActionEconomy" }),
+  ]);
 });
 
 test("rejects Wild Shape subjects when their form lifecycle becomes stale", () => {
@@ -3214,6 +3270,44 @@ test("shape-shift reversion reports a missing combatant distinctly", () => {
   expect(result).toMatchObject({
     tag: "missingCombatant",
     combatantId: missingId,
+  });
+});
+
+test("active Wild Shape reversion reports an owner removed through the public roster lifecycle", () => {
+  const session = druidWildShapeSession();
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
+      session.state,
+      wildShapeSubject(session.state, {
+        action: "assumeForm",
+        formStatBlockId: ridingHorseId,
+      }),
+    ),
+  );
+  const druid = requireCharacter(assumed.state, druidId);
+  const shapeShift = battleShapeShiftedRuntimeState(druid);
+  if (shapeShift.kind !== "shapeShifted") {
+    throw new Error("Expected active Wild Shape runtime state.");
+  }
+  const removed = removeBattleRuntimeCombatants({
+    session: battleRuntimeSessionForTest({
+      state: assumed.state,
+      context: session.context,
+    }),
+    combatantIds: [druidId],
+  });
+  if (Either.isLeft(removed)) {
+    throw new Error(JSON.stringify(removed.left));
+  }
+
+  expect(
+    revertShapeShiftedRuntimeState({
+      state: removed.right.state,
+      shapeShift,
+    }),
+  ).toMatchObject({
+    tag: "missingCombatant",
+    combatantId: druidId,
   });
 });
 

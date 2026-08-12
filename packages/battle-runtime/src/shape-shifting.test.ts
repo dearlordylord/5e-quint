@@ -1,12 +1,15 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
+import { Either } from "effect";
 import { expect, test } from "vitest";
 
 import {
   battleShapeShiftedRuntimeState,
   battleSpellEffectOccurrenceId,
   revertShapeShiftedCombatantToTrueForm,
+  revertShapeShiftedRuntimeState,
+  removeBattleRuntimeCombatants,
   spellShapeShiftedRuntimeState,
   shapeShiftedRuntimeState,
   trueFormRuntimeState,
@@ -25,6 +28,10 @@ import {
   battleStatBlockExecutionScopeRef,
 } from "./identity.ts";
 import { battleCreatureWithSpellActiveEffects } from "./active-effect/lifecycle.ts";
+import {
+  battleRuntimeContextForTest,
+  battleRuntimeSessionForTest,
+} from "./battle-runtime-session.test-support.ts";
 
 const spellShapeCasterId = combatantId("synthetic-shape-spell-caster");
 const spellShapeTargetId = combatantId("synthetic-shape-spell-target");
@@ -173,6 +180,38 @@ test("spell-effect shape-shift reversion removes the active effect and returns t
   expect(battleShapeShiftedRuntimeState(target)).toEqual(
     trueFormRuntimeState(),
   );
+});
+
+test("spell-effect shape-shift reversion reports a target removed through the public roster lifecycle", () => {
+  const state = spellShapeShiftBattle();
+  const target = state.combatants.get(spellShapeTargetId);
+  if (target === undefined) {
+    throw new Error("Expected synthetic shape-shift target.");
+  }
+  const shapeShift = battleShapeShiftedRuntimeState(target);
+  if (shapeShift.kind !== "shapeShifted") {
+    throw new Error("Expected spell-effect shape-shift runtime state.");
+  }
+  const removed = removeBattleRuntimeCombatants({
+    session: battleRuntimeSessionForTest({
+      state,
+      context: battleRuntimeContextForTest(new Map()),
+    }),
+    combatantIds: [spellShapeTargetId],
+  });
+  if (Either.isLeft(removed)) {
+    throw new Error(JSON.stringify(removed.left));
+  }
+
+  expect(
+    revertShapeShiftedRuntimeState({
+      state: removed.right.state,
+      shapeShift,
+    }),
+  ).toMatchObject({
+    tag: "missingCombatant",
+    combatantId: spellShapeTargetId,
+  });
 });
 
 test("shape-shift reversion clears the whole owner slot from pre-boundary mixed-owner state", () => {

@@ -23,6 +23,7 @@ import {
   spellSlotInvocationRef,
   spellTargetId,
 } from "./unit-profile-admission.test-support.ts";
+import { decodeSpellRecordForTest } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   requireCharacterSpellProcedureRefForTest,
   attackRollFill,
@@ -31,6 +32,71 @@ import {
 } from "./battle-runtime.test-support.ts";
 
 describe("L12G Alter Self self-transformation Spell Unit admission", () => {
+  test("rejects synthetic near-misses at the self-transformation admission boundary", () => {
+    const spell = spellRecord(alterSelfUnitId);
+    if (spell.mechanics.family !== "activation") {
+      throw new Error("Expected self-transformation activation mechanics.");
+    }
+    const phase = spell.mechanics.phases[0];
+    if (phase?.kind !== "direct" || phase.mode === undefined) {
+      throw new Error("Expected self-transformation mode mechanics.");
+    }
+    const unsupportedSpells = [
+      decodeSpellRecordForTest({
+        ...spell,
+        id: "synthetic_extended_self_transformation",
+        name: "Synthetic Extended Self Transformation",
+        provenance: {
+          kind: "synthetic-test",
+          section: "synthetic-extended-self-transformation",
+        },
+        mechanics: {
+          ...spell.mechanics,
+          duration: {
+            kind: "concentration",
+            upTo: { amount: 2, unit: "hour" },
+          },
+        },
+      }),
+      decodeSpellRecordForTest({
+        ...spell,
+        id: "synthetic_incomplete_self_transformation",
+        name: "Synthetic Incomplete Self Transformation",
+        provenance: {
+          kind: "synthetic-test",
+          section: "synthetic-incomplete-self-transformation",
+        },
+        mechanics: {
+          ...spell.mechanics,
+          phases: [
+            {
+              ...phase,
+              mode: {
+                ...phase.mode,
+                options: phase.mode.options.slice(1),
+              },
+            },
+          ],
+        },
+      }),
+    ];
+
+    for (const unsupported of unsupportedSpells) {
+      const session = spellBattle({
+        preparedSpells: [unsupported],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      });
+      expect(
+        discoverBattleActs(session).some(
+          (candidate) =>
+            candidate.subject.tag === "actionSpell" &&
+            battleActSpellPresentation(candidate)?.invocation.procedure ===
+              "selfTransformationMode",
+        ),
+      ).toBe(false);
+    }
+  });
+
   test("Aquatic Adaptation grants water breathing and a Swim Speed linked to Speed", () => {
     const spell = spellRecord(alterSelfUnitId);
     const state = spellBattle({
