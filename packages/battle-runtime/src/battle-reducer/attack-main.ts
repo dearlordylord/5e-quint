@@ -982,22 +982,22 @@ function grappleFactsForUnarmedStrikeHit(input: {
   ) {
     return input.targetSpatialFacts;
   }
-  return input.targetSpatialFacts.some(
+  const hasAdmittedMeleeReach = input.targetSpatialFacts.some(
     (fact) =>
       fact.kind === "attackTargetInMeleeReach" &&
       fact.actorId === input.attackerId &&
       fact.targetId === input.targetId &&
       attackExecutionSelectionMatchesOption(fact, input.attack),
-  )
-    ? [
-        ...input.targetSpatialFacts,
-        {
-          kind: "grappleTargetWithinReach" as const,
-          grapplerId: input.attackerId,
-          targetId: input.targetId,
-        },
-      ]
-    : input.targetSpatialFacts;
+  );
+  if (!hasAdmittedMeleeReach) return input.targetSpatialFacts;
+  return [
+    ...input.targetSpatialFacts,
+    {
+      kind: "grappleTargetWithinReach" as const,
+      grapplerId: input.attackerId,
+      targetId: input.targetId,
+    },
+  ];
 }
 
 function resolveGrapplerPunchAndGrabAfterHit(input: {
@@ -1760,7 +1760,7 @@ export function resolveSelectedAttackProcedure<
     const mirrorImageCheck = mirrorImageHitInterceptionCheck({
       state: attackRolledState,
       attacker: mirrorImageAttacker,
-      target: attackRolledState.combatants.get(target.combatantId) ?? target,
+      target: requireCurrentAttackTarget(attackRolledState, target),
       targetSpatialFacts: fillSet.targetSpatialFacts,
       triggeringAttackRollHoleId: ATTACK_ROLL_HOLE_ID,
       fill: fillSet.mirrorImageDuplicateRoll,
@@ -2152,8 +2152,7 @@ export function resolveSelectedAttackProcedure<
           attack,
         })
       : weaponHitAppliedState;
-  const damageTarget =
-    hitAppliedState.combatants.get(target.combatantId) ?? target;
+  const damageTarget = requireCurrentAttackTarget(hitAppliedState, target);
   if (
     hit &&
     fixedDamageAmount !== null &&
