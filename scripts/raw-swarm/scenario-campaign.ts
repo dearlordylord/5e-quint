@@ -204,12 +204,13 @@ export function finalScenarioDisposition(
         ),
         Match.when(
           {
-            contentReview: {
-              classification: Match.or(
-                "invalidUnavailableSelection",
-                "missingUnavailableProbe",
-              ),
-            },
+            contentReview: { classification: "invalidUnavailableSelection" },
+          },
+          () => "rejected" as const,
+        ),
+        Match.when(
+          {
+            contentReview: { classification: "missingUnavailableProbe" },
           },
           () => "rejected" as const,
         ),
@@ -439,18 +440,16 @@ export async function runScenarioCampaign(
       }
       Match.value(contentAdmission.right.contentReview).pipe(
         Match.when(
-          {
-            classification: Match.or(
-              "invalidUnavailableSelection",
-              "missingUnavailableProbe",
-            ),
-          },
+          { classification: "invalidUnavailableSelection" },
           ({ critique }) => critiques.push(critique),
         ),
         Match.when(
-          {
-            classification: Match.or("supplied", "explicitUnavailableProbe"),
-          },
+          { classification: "missingUnavailableProbe" },
+          ({ critique }) => critiques.push(critique),
+        ),
+        Match.when({ classification: "supplied" }, () => undefined),
+        Match.when(
+          { classification: "explicitUnavailableProbe" },
           () => undefined,
         ),
         Match.exhaustive,
