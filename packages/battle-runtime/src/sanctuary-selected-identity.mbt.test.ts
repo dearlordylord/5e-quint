@@ -139,7 +139,13 @@ type SelectedUnitIdentityReplay = {
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
 
-type BonusActionSpellAct = BattleActDiscoveryCandidate & {
+type BonusActionSpellCandidate = BattleActDiscoveryCandidate & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "bonusActionSpell" }
+  >;
+};
+type PresentedBonusActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "bonusActionSpell" }
@@ -461,11 +467,11 @@ function initialSanctuaryRouteProjection(): SanctuaryRouteProjection {
 }
 
 function observeWardCreationRoute(): SanctuaryRouteProjection {
-  const state = battleWithSanctuary();
-  const act = bonusActionSanctuaryAct(state);
+  const battle = battleSessionWithSanctuary();
+  const act = presentedBonusActionSanctuaryAct(battle);
   const resolved = requireResolved(
     resolveBattleSubject({
-      state,
+      state: battle.state,
       subject: act.subject,
       fills: [
         sanctuaryTargetListFill(
@@ -1290,13 +1296,30 @@ function castSanctuary(state: BattleState, targetId: CombatantId): BattleState {
   return resolved.state;
 }
 
-function bonusActionSanctuaryAct(state: BattleState): BonusActionSpellAct {
+function bonusActionSanctuaryAct(
+  state: BattleState,
+): BonusActionSpellCandidate {
   const act = discoverBattleActCandidates(state).find(
-    (candidate): candidate is BonusActionSpellAct =>
+    (candidate): candidate is BonusActionSpellCandidate =>
       candidate.subject.tag === "bonusActionSpell",
   );
   if (act === undefined) {
     throw new Error("Expected Sanctuary Bonus Action spell act.");
+  }
+  return act;
+}
+
+function presentedBonusActionSanctuaryAct(
+  session: BattleRuntimeSession,
+): PresentedBonusActionSpellAct {
+  const act = discoverBattleActs(session).find(
+    (candidate): candidate is PresentedBonusActionSpellAct =>
+      candidate.subject.tag === "bonusActionSpell" &&
+      battleActSpellPresentation(candidate)?.invocation.spellId ===
+        sanctuaryUnitId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected presented Sanctuary Bonus Action spell act.");
   }
   return act;
 }
