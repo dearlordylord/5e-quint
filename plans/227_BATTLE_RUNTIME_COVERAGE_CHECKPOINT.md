@@ -20,29 +20,29 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 ## Current authoritative baseline
 
 - Date: 2026-08-11
-- Measured code tree committed as: `3f2f6471a`
+- Measured code tree committed as: `c928bb502`
 - Command: `pnpm coverage`
 - Result: exit 0; every workspace coverage package completed green
-- Battle-runtime: 229/229 files passed; 2,427 passed and 116 skipped
+- Battle-runtime: 230/230 files passed; 2,428 passed and 116 skipped
 - Every executable package other than battle-runtime remains at or above 99%
   for statements, branches, functions, and lines.
 
 | Metric     |   Covered / total | Coverage | Uncovered | Gap to 99% |
 | ---------- | ----------------: | -------: | --------: | ---------: |
-| Statements | 121,957 / 125,042 |   97.53% |     3,085 |      1,835 |
+| Statements | 122,010 / 125,042 |   97.57% |     3,032 |      1,782 |
 | Branches   |   31,286 / 32,973 |   94.88% |     1,687 |      1,358 |
 | Functions  |     4,829 / 4,829 |     100% |         0 |          0 |
-| Lines      | 121,957 / 125,042 |   97.53% |     3,085 |      1,835 |
+| Lines      | 122,010 / 125,042 |   97.57% |     3,032 |      1,782 |
 
 Recompute the 99% gaps after every production-denominator change.
 
 ## Latest accepted milestone
 
-M33 (`3f2f6471a`) encodes schema- and admission-proven save-gate and Stat Block
-cardinality invariants while retaining live-state, allocation, restoration, and
-presentation-pairing checks. The public aggregate reduced uncovered
-statements/lines by 14 and branches by 9. Focused checks, reviewer convergence,
-and public coverage passed.
+M34 (`c928bb502`) routes the existing Fog Cloud behavior test through its
+canonical setup/cast helpers and covers exact subject/procedure selector
+projections. Focused attribution closed 53 exact residual statements without
+duplicating the Fog Cloud scenario. Reviewer convergence and public coverage
+passed.
 
 ## Current campaign
 
@@ -54,7 +54,7 @@ and public coverage passed.
   proof.
 - Avoid owners already marked completed or rejected in
   `/tmp/dnd-work-ownership.md`; that ledger owns live parallel coordination.
-- The current public static gaps are 1,835 statements/lines and 1,358 branches.
+- The current public static gaps are 1,782 statements/lines and 1,358 branches.
 
 ## Verification and completion
 
