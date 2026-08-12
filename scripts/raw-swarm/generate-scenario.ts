@@ -16,17 +16,21 @@ import { Either, Schema } from "effect";
 
 import {
   codexOutputJsonSchema,
+  finalScenarioDisposition,
   FinalScenarioReviewSchema,
   retentionRevisionMatches,
   runScenarioCampaign,
   ScenarioCandidateBatchSchema,
   ScenarioCampaignConfigSchema,
+  ScenarioContentReviewSchema,
   ScenarioPolicyReviewSchema,
   ScenarioRawReviewSchema,
   ScenarioReadinessSchema,
   verifyFinalScenarioReview,
+  type ContentAvailabilityIntent,
   type ScenarioCampaignAgents,
 } from "./scenario-campaign.ts";
+import { scenarioSetupStatBlocks } from "./sdk-player/scenario-setup-runtime.ts";
 import { currentGitRevision, GitShaSchema, repoRoot } from "./transcript.ts";
 
 function fail(message: string): never {
@@ -85,14 +89,31 @@ function runCodexJson<A, I>(
   }
 }
 
-const generationPreamble = `You generate battle-testing scenarios for an SRD 5.2.1 adjudicator SDK.
-Return complete prose scenario revisions, not outlines or patches. Bias toward combat, serious attempts to win, and materially different or changing tactics. Keep story to mechanically consequential terrain, visibility, distance, objectives, builds, and encounter facts. Mix exact constraints with delegated player choices naturally in prose. Do not invent a stage system, command language, or expected result. Use only SRD identity or visibly synthetic unsupported material; never copy non-SRD official D&D identity or expression.`;
+function generationPreamble(
+  statBlockNames: readonly string[],
+  contentAvailabilityIntent: ContentAvailabilityIntent,
+): string {
+  return `You generate battle-testing scenarios for an SRD 5.2.1 adjudicator SDK.
+Return complete prose scenario revisions, not outlines or patches. Bias toward combat, serious attempts to win, and materially different or changing tactics. Keep story to mechanically consequential terrain, visibility, distance, objectives, builds, and encounter facts. Mix exact constraints with delegated player choices naturally in prose. Do not invent a stage system, command language, or expected result. Use only SRD identity or visibly synthetic unsupported material; never copy non-SRD official D&D identity or expression.
+
+Available canonical stat-block identities:
+${statBlockNames.join(", ")}
+
+Content-availability intent: ${contentAvailabilityIntent}
+
+${contentAvailabilityIntent === "availableOnly" ? "Use canonical stat blocks only from that availability list. An absent SRD record is a scenario-authoring error, not an implied product request." : "This campaign deliberately probes unavailable content. The prose must explicitly name content availability as the intended unsupported boundary so setup obstruction is interpretable."}`;
+}
 
 function liveAgents(): ScenarioCampaignAgents {
+  const statBlocks = scenarioSetupStatBlocks();
+  if (statBlocks.tag === "invalid") fail(statBlocks.message);
   return {
     generate: async (input) =>
       runCodexJson(
-        `${generationPreamble}
+        `${generationPreamble(
+          statBlocks.statBlocks.map(({ name }) => name),
+          input.contentAvailabilityIntent,
+        )}
 
 Distribution preference:
 ${input.distributionPreference}
@@ -110,9 +131,20 @@ Produce exactly ${input.candidateCount} materially different complete prose revi
         ScenarioCandidateBatchSchema,
         "medium",
       ),
-    reviewReadiness: async ({ scenario, distributionPreference }) =>
+    reviewReadiness: async ({
+      scenario,
+      distributionPreference,
+      contentAvailabilityIntent,
+    }) =>
       runCodexJson(
         `Independently judge whether this battle-testing scenario is ready. It is ready only if the setup is mechanically meaningful, every represented combatant or group has a serious strategy-bearing objective to win, and its fixed versus delegated choices fit the campaign's distribution preference. Do not impose a generic balance: a deliberately loose or highly prescribed scenario can be ready. Do not judge RAW legality, choose tactics, predict the winner, rewrite prose, or stop merely because the document is coherent. Return ready or one concise critique that would materially improve the next whole revision.
+
+Available canonical stat-block identities:
+${statBlocks.statBlocks.map(({ name }) => name).join(", ")}
+
+Content-availability intent: ${contentAvailabilityIntent}
+
+An availableOnly scenario is not ready when it selects a canonical stat block absent from that list. A probeUnavailableContent scenario is ready on this axis only when its prose states that unsupported intent.
 
 Campaign distribution preference:
 ${distributionPreference}
@@ -129,6 +161,22 @@ ${scenario}`,
 Scenario:
 ${scenario}`,
         ScenarioRawReviewSchema,
+        "high",
+      ),
+    reviewContent: async ({ scenario, contentAvailabilityIntent }) =>
+      runCodexJson(
+        `Independently review scenario content identity against the supplied canonical stat-block availability profile. Do not judge RAW legality, tactics, balance, or public-artifact policy.
+
+Content-availability intent: ${contentAvailabilityIntent}
+
+Available canonical stat-block identities:
+${statBlocks.statBlocks.map(({ name }) => name).join(", ")}
+
+For availableOnly intent, return supplied when every selected canonical stat block is supplied; otherwise return invalidUnavailableSelection with evidence and a correction critique. For probeUnavailableContent intent, return explicitUnavailableProbe only when the prose explicitly names unavailable content as its intended probe; return missingUnavailableProbe with a correction critique when it uses only supplied content, and invalidUnavailableSelection when it selects unavailable content without explicitly identifying the probe. Do not infer a product obligation from an accidental unavailable selection.
+
+Scenario:
+${scenario}`,
+        ScenarioContentReviewSchema,
         "high",
       ),
     reviewPolicy: async (scenario) =>
@@ -222,12 +270,6 @@ async function main(args: readonly string[]): Promise<void> {
       "Git revision changed during scenario generation; nothing was retained.",
     );
   }
-  const outputDirectory =
-    result.right.disposition === "admitted"
-      ? admittedDirectory
-      : rejectedDirectory;
-  const outputPath = resolve(outputDirectory, `${result.right.scenarioId}.md`);
-  const reviewPath = `${outputPath}.scenario-review.json`;
   const scenarioBytes = `${result.right.scenario.trim()}\n`;
   const review = Schema.decodeUnknownEither(FinalScenarioReviewSchema, {
     onExcessProperty: "error",
@@ -235,13 +277,20 @@ async function main(args: readonly string[]): Promise<void> {
     scenarioId: result.right.scenarioId,
     scenarioSha256: createHash("sha256").update(scenarioBytes).digest("hex"),
     gitSha: gitSha.right,
-    disposition: result.right.disposition,
-    rawReview: result.right.finalRawReview,
-    policyReview: result.right.finalPolicyReview,
+    contentAvailabilityIntent: result.right.contentAvailabilityIntent,
+    admitReviewedUnsupported: result.right.admitReviewedUnsupported,
+    rawReview: result.right.rawReview,
+    contentReview: result.right.contentReview,
+    policyReview: result.right.policyReview,
   });
   if (Either.isLeft(review)) {
     fail(`Invalid final scenario review: ${review.left.message}`);
   }
+  const disposition = finalScenarioDisposition(review.right);
+  const outputDirectory =
+    disposition === "admitted" ? admittedDirectory : rejectedDirectory;
+  const outputPath = resolve(outputDirectory, `${result.right.scenarioId}.md`);
+  const reviewPath = `${outputPath}.scenario-review.json`;
   mkdirSync(outputDirectory, { recursive: true });
   const staging = mkdtempSync(resolve(outputDirectory, ".scenario-stage-"));
   const stagedScenario = resolve(staging, "scenario.md");
@@ -268,7 +317,7 @@ async function main(args: readonly string[]): Promise<void> {
     gitSha.right,
   );
   console.log(
-    `Generated ${outputPath} in ${result.right.iterations} iteration(s), stopped by ${result.right.stopReason}, ${result.right.disposition}.`,
+    `Generated ${outputPath} in ${result.right.iterations} iteration(s), stopped by ${result.right.stopReason}, ${disposition}.`,
   );
 }
 

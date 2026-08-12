@@ -20,6 +20,11 @@ Distinguish an SDK/runtime bug from a direct-SDK adapter defect, invalid player
 continuation, invalid scenario, unsupported capability, corpus ambiguity,
 assumption divergence, or reviewer error.
 
+A scenario that selects a canonical record absent from the supplied setup
+catalog is scenario-invalid unless its prose explicitly identifies content
+availability as the deliberate probe. The resulting setup may be obstructed,
+but that does not by itself make the absent record an upstream capability gap.
+
 Copy scenarioId and gitSha exactly from the first transcript line. Set
 transcriptSha256 to the lowercase SHA-256 of the exact transcript file bytes.
 Classify invalid or implausible player-authored decisions as player-invalid;

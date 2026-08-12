@@ -50,6 +50,59 @@ export const ScenarioRawReviewSchema = Schema.Union(
   ContradictoryScenarioRawReviewSchema,
 );
 
+const SuppliedScenarioContentReviewSchema = Schema.Struct({
+  classification: Schema.Literal("supplied"),
+  evidence: Schema.NonEmptyTrimmedString,
+});
+const ExplicitUnavailableProbeReviewSchema = Schema.Struct({
+  classification: Schema.Literal("explicitUnavailableProbe"),
+  evidence: Schema.NonEmptyTrimmedString,
+});
+const MissingUnavailableProbeReviewSchema = Schema.Struct({
+  classification: Schema.Literal("missingUnavailableProbe"),
+  evidence: Schema.NonEmptyTrimmedString,
+  critique: Schema.NonEmptyTrimmedString,
+});
+const InvalidUnavailableSelectionReviewSchema = Schema.Struct({
+  classification: Schema.Literal("invalidUnavailableSelection"),
+  evidence: Schema.NonEmptyTrimmedString,
+  critique: Schema.NonEmptyTrimmedString,
+});
+export const ScenarioContentReviewSchema = Schema.Union(
+  SuppliedScenarioContentReviewSchema,
+  ExplicitUnavailableProbeReviewSchema,
+  MissingUnavailableProbeReviewSchema,
+  InvalidUnavailableSelectionReviewSchema,
+);
+
+const CONTENT_AVAILABILITY_INTENTS = [
+  "availableOnly",
+  "probeUnavailableContent",
+] as const;
+const ContentAvailabilityIntentSchema = Schema.Literal(
+  ...CONTENT_AVAILABILITY_INTENTS,
+);
+export type ContentAvailabilityIntent =
+  (typeof CONTENT_AVAILABILITY_INTENTS)[number];
+
+const ScenarioContentAdmissionSchema = Schema.Union(
+  Schema.Struct({
+    contentAvailabilityIntent: Schema.Literal("availableOnly"),
+    contentReview: Schema.Union(
+      SuppliedScenarioContentReviewSchema,
+      InvalidUnavailableSelectionReviewSchema,
+    ),
+  }),
+  Schema.Struct({
+    contentAvailabilityIntent: Schema.Literal("probeUnavailableContent"),
+    contentReview: Schema.Union(
+      ExplicitUnavailableProbeReviewSchema,
+      MissingUnavailableProbeReviewSchema,
+      InvalidUnavailableSelectionReviewSchema,
+    ),
+  }),
+);
+
 const SafeScenarioPolicyReviewSchema = Schema.Struct({
   classification: Schema.Literal("safe"),
   evidence: Schema.NonEmptyTrimmedString,
@@ -75,32 +128,97 @@ const FinalScenarioIdentitySchema = Schema.Struct({
   gitSha: GitShaSchema,
 });
 
-export const FinalScenarioReviewSchema = Schema.Union(
-  Schema.Struct({
-    ...FinalScenarioIdentitySchema.fields,
-    disposition: Schema.Literal("admitted"),
-    rawReview: Schema.Union(
-      SupportedScenarioRawReviewSchema,
-      UnsupportedScenarioRawReviewSchema,
+export const FinalScenarioReviewSchema = Schema.Struct({
+  ...FinalScenarioIdentitySchema.fields,
+  admitReviewedUnsupported: Schema.Boolean,
+  rawReview: ScenarioRawReviewSchema,
+  policyReview: ScenarioPolicyReviewSchema,
+}).pipe(Schema.extend(ScenarioContentAdmissionSchema));
+
+type ScenarioAdmissionReviews = Pick<
+  Schema.Schema.Type<typeof FinalScenarioReviewSchema>,
+  | "contentAvailabilityIntent"
+  | "admitReviewedUnsupported"
+  | "rawReview"
+  | "contentReview"
+  | "policyReview"
+>;
+
+type ScenarioContentAdmission = Schema.Schema.Type<
+  typeof ScenarioContentAdmissionSchema
+>;
+
+function decodeScenarioContentAdmission(input: {
+  readonly contentAvailabilityIntent: ContentAvailabilityIntent;
+  readonly contentReview: ScenarioContentReview;
+}): Either.Either<ScenarioContentAdmission, string> {
+  const decoded = Schema.decodeUnknownEither(ScenarioContentAdmissionSchema, {
+    onExcessProperty: "error",
+  })(input);
+  return Either.isRight(decoded)
+    ? Either.right(decoded.right)
+    : Either.left(
+        "Scenario content reviewer returned a result inconsistent with the campaign intent.",
+      );
+}
+
+function rawDisposition(
+  review: ScenarioRawReview,
+  admitReviewedUnsupported: boolean,
+): "admitted" | "rejected" {
+  return Match.value(review).pipe(
+    Match.when({ classification: "supported" }, () => "admitted" as const),
+    Match.when({ classification: "unsupported" }, () =>
+      admitReviewedUnsupported ? ("admitted" as const) : ("rejected" as const),
     ),
-    policyReview: SafeScenarioPolicyReviewSchema,
-  }),
-  Schema.Struct({
-    ...FinalScenarioIdentitySchema.fields,
-    disposition: Schema.Literal("rejected"),
-    rawReview: ScenarioRawReviewSchema,
-    policyReview: ViolatingScenarioPolicyReviewSchema,
-  }),
-  Schema.Struct({
-    ...FinalScenarioIdentitySchema.fields,
-    disposition: Schema.Literal("rejected"),
-    rawReview: Schema.Union(
-      UnsupportedScenarioRawReviewSchema,
-      ContradictoryScenarioRawReviewSchema,
+    Match.when({ classification: "contradictory" }, () => "rejected" as const),
+    Match.exhaustive,
+  );
+}
+
+export function finalScenarioDisposition(
+  review: ScenarioAdmissionReviews,
+): "admitted" | "rejected" {
+  return Match.value(review.policyReview).pipe(
+    Match.when({ classification: "violation" }, () => "rejected" as const),
+    Match.when({ classification: "safe" }, () =>
+      Match.value({
+        contentAvailabilityIntent: review.contentAvailabilityIntent,
+        contentReview: review.contentReview,
+      }).pipe(
+        Match.when(
+          {
+            contentAvailabilityIntent: "availableOnly",
+            contentReview: { classification: "supplied" },
+          },
+          () =>
+            rawDisposition(review.rawReview, review.admitReviewedUnsupported),
+        ),
+        Match.when(
+          {
+            contentAvailabilityIntent: "probeUnavailableContent",
+            contentReview: { classification: "explicitUnavailableProbe" },
+          },
+          () =>
+            rawDisposition(review.rawReview, review.admitReviewedUnsupported),
+        ),
+        Match.when(
+          {
+            contentReview: {
+              classification: Match.or(
+                "invalidUnavailableSelection",
+                "missingUnavailableProbe",
+              ),
+            },
+          },
+          () => "rejected" as const,
+        ),
+        Match.exhaustive,
+      ),
     ),
-    policyReview: SafeScenarioPolicyReviewSchema,
-  }),
-);
+    Match.exhaustive,
+  );
+}
 
 export function verifyFinalScenarioReview(
   input: unknown,
@@ -141,6 +259,7 @@ export function retentionRevisionMatches(
 export const ScenarioCampaignConfigSchema = Schema.Struct({
   scenarioId: ScenarioIdSchema,
   distributionPreference: Schema.NonEmptyTrimmedString,
+  contentAvailabilityIntent: ContentAvailabilityIntentSchema,
   minimumIterations: PositiveIntegerSchema,
   maximumIterations: PositiveIntegerSchema,
   candidatesPerIteration: PositiveIntegerSchema.pipe(Schema.greaterThan(1)),
@@ -177,10 +296,14 @@ export type ScenarioRawReview = Schema.Schema.Type<
 export type ScenarioPolicyReview = Schema.Schema.Type<
   typeof ScenarioPolicyReviewSchema
 >;
+export type ScenarioContentReview = Schema.Schema.Type<
+  typeof ScenarioContentReviewSchema
+>;
 
 export type ScenarioGenerationInput = {
   readonly iteration: number;
   readonly distributionPreference: string;
+  readonly contentAvailabilityIntent: ScenarioCampaignConfig["contentAvailabilityIntent"];
   readonly priorRevision:
     | { readonly tag: "initial" }
     | {
@@ -198,11 +321,16 @@ export interface ScenarioCampaignAgents {
   readonly reviewReadiness: (input: {
     readonly scenario: string;
     readonly distributionPreference: string;
+    readonly contentAvailabilityIntent: ScenarioCampaignConfig["contentAvailabilityIntent"];
   }) => Promise<ScenarioReadiness>;
   readonly reviewRaw: (
     scenario: string,
     finalReview: boolean,
   ) => Promise<ScenarioRawReview>;
+  readonly reviewContent: (input: {
+    readonly scenario: string;
+    readonly contentAvailabilityIntent: ScenarioCampaignConfig["contentAvailabilityIntent"];
+  }) => Promise<ScenarioContentReview>;
   readonly reviewPolicy: (scenario: string) => Promise<ScenarioPolicyReview>;
 }
 
@@ -210,43 +338,18 @@ export interface ScenarioCandidateSelector {
   readonly select: (candidateCount: number) => number;
 }
 
-export type ScenarioCampaignResult = {
+type ScenarioCampaignResultBase = {
   readonly scenarioId: ScenarioCampaignConfig["scenarioId"];
   readonly scenario: string;
   readonly iterations: number;
   readonly stopReason: "ready" | "maximum";
-} & (
-  | {
-      readonly disposition: "admitted";
-      readonly finalRawReview: Extract<
-        ScenarioRawReview,
-        { readonly classification: "supported" | "unsupported" }
-      >;
-      readonly finalPolicyReview: Extract<
-        ScenarioPolicyReview,
-        { readonly classification: "safe" }
-      >;
-    }
-  | {
-      readonly disposition: "rejected";
-      readonly finalRawReview: ScenarioRawReview;
-      readonly finalPolicyReview: Extract<
-        ScenarioPolicyReview,
-        { readonly classification: "violation" }
-      >;
-    }
-  | {
-      readonly disposition: "rejected";
-      readonly finalRawReview: Extract<
-        ScenarioRawReview,
-        { readonly classification: "unsupported" | "contradictory" }
-      >;
-      readonly finalPolicyReview: Extract<
-        ScenarioPolicyReview,
-        { readonly classification: "safe" }
-      >;
-    }
-);
+  readonly admitReviewedUnsupported: boolean;
+  readonly rawReview: ScenarioRawReview;
+  readonly policyReview: ScenarioPolicyReview;
+};
+
+export type ScenarioCampaignResult = ScenarioCampaignResultBase &
+  ScenarioContentAdmission;
 
 export async function runScenarioCampaign(
   configInput: unknown,
@@ -277,6 +380,7 @@ export async function runScenarioCampaign(
     const batch = await agents.generate({
       iteration,
       distributionPreference: config.distributionPreference,
+      contentAvailabilityIntent: config.contentAvailabilityIntent,
       priorRevision:
         draft.tag === "unstarted"
           ? { tag: "initial" }
@@ -322,6 +426,35 @@ export async function runScenarioCampaign(
       if (review.classification !== "supported") {
         critiques.push(review.critique);
       }
+      const contentReview = await agents.reviewContent({
+        scenario: prose,
+        contentAvailabilityIntent: config.contentAvailabilityIntent,
+      });
+      const contentAdmission = decodeScenarioContentAdmission({
+        contentAvailabilityIntent: config.contentAvailabilityIntent,
+        contentReview,
+      });
+      if (Either.isLeft(contentAdmission)) {
+        return Either.left(contentAdmission.left);
+      }
+      Match.value(contentAdmission.right.contentReview).pipe(
+        Match.when(
+          {
+            classification: Match.or(
+              "invalidUnavailableSelection",
+              "missingUnavailableProbe",
+            ),
+          },
+          ({ critique }) => critiques.push(critique),
+        ),
+        Match.when(
+          {
+            classification: Match.or("supplied", "explicitUnavailableProbe"),
+          },
+          () => undefined,
+        ),
+        Match.exhaustive,
+      );
     }
     draft = { tag: "selected", prose, iteration, critiques };
     if (iteration === config.maximumIterations) {
@@ -331,6 +464,7 @@ export async function runScenarioCampaign(
       const readiness = await agents.reviewReadiness({
         scenario: prose,
         distributionPreference: config.distributionPreference,
+        contentAvailabilityIntent: config.contentAvailabilityIntent,
       });
       if (readiness.decision === "ready") {
         break;
@@ -346,6 +480,17 @@ export async function runScenarioCampaign(
     return Either.left("Scenario campaign produced no scenario.");
   }
   const finalRawReview = await agents.reviewRaw(draft.prose, true);
+  const finalContentReview = await agents.reviewContent({
+    scenario: draft.prose,
+    contentAvailabilityIntent: config.contentAvailabilityIntent,
+  });
+  const finalContentAdmission = decodeScenarioContentAdmission({
+    contentAvailabilityIntent: config.contentAvailabilityIntent,
+    contentReview: finalContentReview,
+  });
+  if (Either.isLeft(finalContentAdmission)) {
+    return Either.left(finalContentAdmission.left);
+  }
   const finalPolicyReview = await agents.reviewPolicy(draft.prose);
   const resultBase = {
     scenarioId: config.scenarioId,
@@ -353,58 +498,10 @@ export async function runScenarioCampaign(
     iterations: draft.iteration,
     stopReason:
       draft.iteration === config.maximumIterations ? "maximum" : "ready",
+    admitReviewedUnsupported: config.admitReviewedUnsupported,
+    rawReview: finalRawReview,
+    policyReview: finalPolicyReview,
+    ...finalContentAdmission.right,
   } as const;
-  return Match.value(finalPolicyReview).pipe(
-    Match.when({ classification: "violation" }, (policy) =>
-      Either.right({
-        ...resultBase,
-        disposition: "rejected" as const,
-        finalRawReview,
-        finalPolicyReview: policy,
-      }),
-    ),
-    Match.when({ classification: "safe" }, (policy) =>
-      Match.value(finalRawReview).pipe(
-        Match.when({ classification: "supported" }, (raw) =>
-          Either.right({
-            ...resultBase,
-            disposition: "admitted" as const,
-            finalRawReview: raw,
-            finalPolicyReview: policy,
-          }),
-        ),
-        Match.when({ classification: "unsupported" }, (raw) =>
-          Match.value(config.admitReviewedUnsupported).pipe(
-            Match.when(true, () =>
-              Either.right({
-                ...resultBase,
-                disposition: "admitted" as const,
-                finalRawReview: raw,
-                finalPolicyReview: policy,
-              }),
-            ),
-            Match.when(false, () =>
-              Either.right({
-                ...resultBase,
-                disposition: "rejected" as const,
-                finalRawReview: raw,
-                finalPolicyReview: policy,
-              }),
-            ),
-            Match.exhaustive,
-          ),
-        ),
-        Match.when({ classification: "contradictory" }, (raw) =>
-          Either.right({
-            ...resultBase,
-            disposition: "rejected" as const,
-            finalRawReview: raw,
-            finalPolicyReview: policy,
-          }),
-        ),
-        Match.exhaustive,
-      ),
-    ),
-    Match.exhaustive,
-  );
+  return Either.right(resultBase);
 }

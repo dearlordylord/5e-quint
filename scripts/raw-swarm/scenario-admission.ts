@@ -1,7 +1,10 @@
 import { readFileSync } from "node:fs";
 import { Either, Schema } from "effect";
 
-import { FinalScenarioReviewSchema } from "./scenario-campaign.ts";
+import {
+  finalScenarioDisposition,
+  FinalScenarioReviewSchema,
+} from "./scenario-campaign.ts";
 import { sha256Text, type ScenarioId } from "./transcript.ts";
 
 export type AdmittedScenarioIdentity = {
@@ -30,7 +33,7 @@ export function admittedScenarioIdentity(input: {
   )(reviewBytes);
   if (
     Either.isLeft(decoded) ||
-    decoded.right.disposition !== "admitted" ||
+    finalScenarioDisposition(decoded.right) !== "admitted" ||
     decoded.right.scenarioId !== input.scenarioId ||
     decoded.right.scenarioSha256 !== sha256Text(scenarioBytes)
   ) {
