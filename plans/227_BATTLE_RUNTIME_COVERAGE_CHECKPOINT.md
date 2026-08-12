@@ -20,27 +20,21 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 ## Current authoritative baseline
 
 - Date: 2026-08-12
-- Measured code tree committed as: `3fc44a30b`
+- Measured code tree committed as: `09335bc93`
 - Command: `pnpm coverage`
 - Result: exit 0 under the original package timeouts
-- Battle-runtime: 235/235 files passed; 2,491 passed and 115 skipped
+- Battle-runtime: 236/236 files passed; 2,515 passed and 115 skipped
 - Every executable package other than battle-runtime remains at or above 99%
   for statements, branches, functions, and lines.
 
 | Metric     |   Covered / total | Coverage | Uncovered | Gap to 99% |
 | ---------- | ----------------: | -------: | --------: | ---------: |
-| Statements | 122,581 / 125,427 |   97.73% |     2,846 |      1,592 |
-| Branches   |   31,574 / 33,149 |   95.24% |     1,575 |      1,244 |
-| Functions  |     4,854 / 4,854 |  100.00% |         0 |          0 |
-| Lines      | 122,581 / 125,427 |   97.73% |     2,846 |      1,592 |
+| Statements | 122,624 / 125,323 |   97.84% |     2,699 |      1,446 |
+| Branches   |   31,687 / 33,201 |   95.43% |     1,514 |      1,182 |
+| Functions  |     4,868 / 4,868 |  100.00% |         0 |          0 |
+| Lines      | 122,624 / 125,323 |   97.84% |     2,699 |      1,446 |
 
 Recompute the 99% gaps after every production-denominator change.
-
-## Latest accepted production milestone
-
-M44-M45 (`06a2d7682`, `3fc44a30b`) add public offhand, redirected-damage,
-Dragon's Breath, and marked-damage lifecycle/admission boundaries. Independent
-reviews converged under the original performance budgets.
 
 ## Current campaign
 
@@ -53,7 +47,7 @@ reviews converged under the original performance budgets.
   proof.
 - Avoid owners already marked completed or rejected in
   `/tmp/dnd-work-ownership.md`; that ledger owns live parallel coordination.
-- The current public gaps are 1,592 statements/lines and 1,244 branches.
+- The current public gaps are 1,446 statements/lines and 1,182 branches.
 
 ## Verification and completion
 
