@@ -23,7 +23,7 @@ module battleRuntimeReactionWindow {
   pure def reactionRequestProcedureCanOpen(state: BattleState, frame: PendingReactionFrame): bool =
     match frame.request {
       | AttackHitShieldReactionRequest(_) =>
-          canActorExpendSpellSlotThisTurn(state, Goblin)
+          canActorExpendSpellSlotThisTurn(state, reactionFrameReactor(frame))
       | SpellCastCounterspellReactionRequest(request) =>
           canActorExpendSpellSlotThisTurn(
             state,
@@ -36,8 +36,8 @@ module battleRuntimeReactionWindow {
               ))
       | AttackHitFighterReadiedSpellReleaseReactionRequest(_) =>
           fighterCanReleaseReadiedSpell(state)
-      | AfterDamageHellishRebukeReactionRequest(request) =>
-          canActorExpendSpellSlotThisTurn(state, request.damaged)
+      | AfterDamageHellishRebukeReactionRequest(_) =>
+          canActorExpendSpellSlotThisTurn(state, reactionFrameReactor(frame))
       | OpportunityAttackReactionRequest(_) => true
     }
 
@@ -251,8 +251,8 @@ module battleRuntimeReactionWindow {
   ): bool =
     match reaction {
       | CounterspellSpellCastNotCountered => false
-      | CounterspellSpellCastCounteredByReaction(counterspell) =>
-          not(counterspell.counterspellCasterConSaveSucceeded)
+      | CounterspellSpellCastNestedReactionAttempt(attempt) =>
+          not(attempt.nestedCounterspellCasterConSaveSucceeded)
     }
 
   pure def pendingCounterspellTakesEffect(counterspell: PendingCounterspellReaction): bool =
@@ -269,7 +269,7 @@ module battleRuntimeReactionWindow {
     val afterCounterspellPending = claimPendingActorSpellSlotUse(state, reactor)
     match counterspell.counterspellSpellCastReaction {
       | CounterspellSpellCastNotCountered => false
-      | CounterspellSpellCastCounteredByReaction(_) =>
+      | CounterspellSpellCastNestedReactionAttempt(_) =>
           reactorCanReact(afterCounterspellPending, nestedReactor) and
             canActorExpendSpellSlotThisTurn(afterCounterspellPending, nestedReactor)
     }
@@ -306,7 +306,7 @@ module battleRuntimeReactionWindow {
     val afterNestedCounterspell =
       match counterspell.counterspellSpellCastReaction {
         | CounterspellSpellCastNotCountered => afterCounterspellPending
-        | CounterspellSpellCastCounteredByReaction(_) =>
+        | CounterspellSpellCastNestedReactionAttempt(_) =>
             if (nestedCounterspellCanCast)
               spendReaction(
                 commitActorSpellSlotUse(afterCounterspellPending, nestedReactor),

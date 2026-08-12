@@ -417,17 +417,14 @@ module battleRuntimeModel {
   // projection, not an SRD limit.
   type PendingCounterspellSpellCastReaction =
     | CounterspellSpellCastNotCountered
-    | CounterspellSpellCastCounteredByReaction({
-        counterspellSlotLevel: int,
-        counterspellCasterConSaveSucceeded: bool,
+    | CounterspellSpellCastNestedReactionAttempt({
+        nestedCounterspellCasterConSaveSucceeded: bool,
       })
 
   type PendingCounterspellReaction = {
     triggeringCaster: Actor,
     triggeringCastingResource: CounterspellCastingResource,
-    triggeringSpellLevel: int,
     triggeringSpellUsesSlot: bool,
-    counterspellSlotLevel: int,
     triggeringCasterConSaveSucceeded: bool,
     counterspellSpellCastReaction: PendingCounterspellSpellCastReaction,
   }

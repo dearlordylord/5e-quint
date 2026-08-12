@@ -104,9 +104,7 @@ module battleRuntimeReactionWindowTests {
         counterspell: {
           triggeringCaster: Fighter,
           triggeringCastingResource: CounterspellMagicAction,
-          triggeringSpellLevel: 1,
           triggeringSpellUsesSlot: true,
-          counterspellSlotLevel: 3,
           triggeringCasterConSaveSucceeded: true,
           counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
         },

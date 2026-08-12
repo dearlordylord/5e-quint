@@ -13,9 +13,7 @@ module battleRuntimeWeaponCounterspellResolutionTests {
         counterspell: {
           triggeringCaster: Fighter,
           triggeringCastingResource: CounterspellMagicAction,
-          triggeringSpellLevel: 0,
           triggeringSpellUsesSlot: false,
-          counterspellSlotLevel: 3,
           triggeringCasterConSaveSucceeded: true,
           counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
         },
@@ -39,9 +37,7 @@ module battleRuntimeWeaponCounterspellResolutionTests {
         counterspell: {
           triggeringCaster: Fighter,
           triggeringCastingResource: CounterspellMagicAction,
-          triggeringSpellLevel: 0,
           triggeringSpellUsesSlot: false,
-          counterspellSlotLevel: 3,
           triggeringCasterConSaveSucceeded: true,
           counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
         },

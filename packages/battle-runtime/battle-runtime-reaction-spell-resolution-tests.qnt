@@ -110,9 +110,7 @@ module battleRuntimeReactionSpellResolutionTests {
     val counterspellFrame = directCounterspellFrame({
         triggeringCaster: Goblin,
         triggeringCastingResource: CounterspellMagicAction,
-        triggeringSpellLevel: 1,
         triggeringSpellUsesSlot: true,
-        counterspellSlotLevel: 3,
         triggeringCasterConSaveSucceeded: false,
         counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
       })
@@ -129,9 +127,7 @@ module battleRuntimeReactionSpellResolutionTests {
     val awaiting = openReactionWindow(initialState, directCounterspellFrame({
         triggeringCaster: Fighter,
         triggeringCastingResource: CounterspellMagicAction,
-        triggeringSpellLevel: 1,
         triggeringSpellUsesSlot: true,
-        counterspellSlotLevel: 3,
         triggeringCasterConSaveSucceeded: false,
         counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
       }))
@@ -150,9 +146,7 @@ module battleRuntimeReactionSpellResolutionTests {
     val awaiting = openReactionWindow(initialState, directCounterspellFrame({
         triggeringCaster: Fighter,
         triggeringCastingResource: CounterspellMagicAction,
-        triggeringSpellLevel: 1,
         triggeringSpellUsesSlot: true,
-        counterspellSlotLevel: 3,
         triggeringCasterConSaveSucceeded: true,
         counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
       }))
@@ -171,9 +165,7 @@ module battleRuntimeReactionSpellResolutionTests {
     val awaiting = openReactionWindow(initialState, directCounterspellFrame({
         triggeringCaster: Fighter,
         triggeringCastingResource: CounterspellMagicAction,
-        triggeringSpellLevel: 1,
         triggeringSpellUsesSlot: true,
-        counterspellSlotLevel: 3,
         triggeringCasterConSaveSucceeded: true,
         counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
       }))
@@ -192,9 +184,7 @@ module battleRuntimeReactionSpellResolutionTests {
     val frame = directCounterspellFrame({
       triggeringCaster: Fighter,
       triggeringCastingResource: CounterspellMagicAction,
-      triggeringSpellLevel: 1,
       triggeringSpellUsesSlot: true,
-      counterspellSlotLevel: 3,
       triggeringCasterConSaveSucceeded: true,
       counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
     })
@@ -210,13 +200,10 @@ module battleRuntimeReactionSpellResolutionTests {
     val awaiting = openReactionWindow(initialState, directCounterspellFrame({
         triggeringCaster: Fighter,
         triggeringCastingResource: CounterspellMagicAction,
-        triggeringSpellLevel: 1,
         triggeringSpellUsesSlot: false,
-        counterspellSlotLevel: 3,
         triggeringCasterConSaveSucceeded: true,
-        counterspellSpellCastReaction: CounterspellSpellCastCounteredByReaction({
-          counterspellSlotLevel: 3,
-          counterspellCasterConSaveSucceeded: false,
+        counterspellSpellCastReaction: CounterspellSpellCastNestedReactionAttempt({
+          nestedCounterspellCasterConSaveSucceeded: false,
         }),
       }))
     val resolved = resolveDirectSpellReactionOffer(awaiting)
@@ -239,13 +226,10 @@ module battleRuntimeReactionSpellResolutionTests {
     val awaiting = openReactionWindow(reactionSpellState, directCounterspellFrame({
         triggeringCaster: Fighter,
         triggeringCastingResource: CounterspellReaction,
-        triggeringSpellLevel: 3,
         triggeringSpellUsesSlot: true,
-        counterspellSlotLevel: 3,
         triggeringCasterConSaveSucceeded: true,
-        counterspellSpellCastReaction: CounterspellSpellCastCounteredByReaction({
-          counterspellSlotLevel: 3,
-          counterspellCasterConSaveSucceeded: true,
+        counterspellSpellCastReaction: CounterspellSpellCastNestedReactionAttempt({
+          nestedCounterspellCasterConSaveSucceeded: true,
         }),
       }))
     val resolved = resolveDirectSpellReactionOffer(awaiting)
