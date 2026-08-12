@@ -54,11 +54,11 @@ module battleRuntimeWeaponShieldReactionResolutionTests {
 
   run test_weapon_shield_rejects_non_weapon_continuation_without_spend = {
     val awaiting = openReactionWindow(initialState, {
-      trigger: AttackHit,
-      procedure: ShieldReactionProcedure,
-      eligibleReactors: Set(Goblin),
+      request: AttackHitShieldReactionRequest({
+        eligibleReactors: Set(Goblin),
+        continuation: ShieldResumesRayOfFrost,
+      }),
       offeredReactors: Set(),
-      continuation: ResumeRayOfFrost,
     })
     all {
       assert(resolveWeaponShieldReactionOffer(awaiting, Goblin) == awaiting),

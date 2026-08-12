@@ -98,11 +98,11 @@ module battleRuntimeLightSpellAttacks {
              not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       openReactionWindow({ ...rolled, fighter: fighterWithoutProduceFlameHeldLight(rolled) }, {
-        trigger: AttackHit,
-        procedure: ShieldReactionProcedure,
-        eligibleReactors: Set(Goblin),
+        request: AttackHitShieldReactionRequest({
+          eligibleReactors: Set(Goblin),
+          continuation: ShieldResumesProduceFlameHurl,
+        }),
         offeredReactors: Set(),
-        continuation: ResumeProduceFlameHurl,
       })
     }
     else {
@@ -130,11 +130,11 @@ module battleRuntimeLightSpellAttacks {
     }
     else if (shieldOfferBoundary == LightShieldOfferPending and state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
-        trigger: AttackHit,
-        procedure: ShieldReactionProcedure,
-        eligibleReactors: Set(Goblin),
+        request: AttackHitShieldReactionRequest({
+          eligibleReactors: Set(Goblin),
+          continuation: ShieldResumesFlameBladeAttack,
+        }),
         offeredReactors: Set(),
-        continuation: ResumeFlameBladeAttack,
       })
     }
     else {
@@ -149,5 +149,4 @@ module battleRuntimeLightSpellAttacks {
       val damaged = applyDamageFromSource(state.goblin, adjustedDamage, if (attackIsCritical(naturalD20, 20)) 2 else 1, concentrationSaveSucceeded, OrdinaryDamage, Fighter)
       { ...rolled, goblin: damaged, actionAvailable: false }
     }
-}
 }

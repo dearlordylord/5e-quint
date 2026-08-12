@@ -1,6 +1,5 @@
 // -*- mode: Bluespec; -*-
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-condition-save
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-damage-reduction
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-ray-of-enfeeblement-damage-penalty
@@ -92,8 +91,6 @@ module battleRuntimeSpellSaveAndRiderFactsTests {
           assert(not(rayOfEnfeeblementD20LifecycleConcentratingAfterEffectsChange(rayAfterRepeatSaveEffects, Fighter, rayFailure.fighter.concentrating))),
           assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(ProtectionFromEvilAndGoodCreatureTypeProtection), true) == DisadvantageSpellAttackRoll),
           assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(GuidingBoltNextAttackAdvantage, ProtectionFromEvilAndGoodCreatureTypeProtection), false) == NormalSpellAttackRoll),
-          assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection), true) == NormalSpellAttackRoll),
-          assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection), false) == DisadvantageSpellAttackRoll),
           assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(shiningSmiteIllumination, ProtectionFromEvilAndGoodCreatureTypeProtection), true) == NormalSpellAttackRoll),
           assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(shiningSmiteIllumination, ProtectionFromEvilAndGoodCreatureTypeProtection), false) == NormalSpellAttackRoll),
           assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(HumanoidCreature, Set(), Set(ProtectionFromEvilAndGoodCreatureTypeProtection), true) == NormalSpellAttackRoll),
@@ -140,17 +137,13 @@ module battleRuntimeSpellSaveAndRiderFactsTests {
           assert(not(saveGatedConditionRequiresConditionChoice(HoldPersonSaveGate))),
           assert(not(saveGatedConditionRequiresConditionChoice(HoldMonsterSaveGate))),
           assert(spellAttackRollModeFromActiveEffects(Set(), Set(GuidingBoltNextAttackAdvantage), false) == AdvantageSpellAttackRoll),
-          assert(spellAttackRollModeFromActiveEffects(Set(), Set(FaerieFireOutline), true) == AdvantageSpellAttackRoll),
-          assert(spellAttackRollModeFromActiveEffects(Set(), Set(FaerieFireOutline), false) == NormalSpellAttackRoll),
           assert(spellAttackRollModeFromActiveEffects(Set(), Set(shiningSmiteIllumination), true) == AdvantageSpellAttackRoll),
           assert(spellAttackRollModeFromActiveEffects(Set(), Set(shiningSmiteIllumination), false) == AdvantageSpellAttackRoll),
           assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(), true) == DisadvantageSpellAttackRoll),
           assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(GuidingBoltNextAttackAdvantage), true) == NormalSpellAttackRoll),
-          assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(FaerieFireOutline), true) == NormalSpellAttackRoll),
           assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), Set(shiningSmiteIllumination), true) == NormalSpellAttackRoll),
           assert(spellAttackRollModeFromBlurredActiveEffects(Set(), Set(Blurred), true, false) == DisadvantageSpellAttackRoll),
           assert(spellAttackRollModeFromBlurredActiveEffects(Set(), Set(Blurred), true, true) == NormalSpellAttackRoll),
-          assert(spellAttackRollModeFromBlurredActiveEffects(Set(), Set(Blurred, FaerieFireOutline), true, false) == NormalSpellAttackRoll),
           assert(activeEffectsWithoutSpellEffectConcentration(Set(Blurred)) == Set()),
           assert(activeEffectsWithoutSpellEffectConcentration(Set(RayOfEnfeeblementNextAttackDisadvantage({ source: Fighter }))) == Set()),
         }
@@ -161,9 +154,6 @@ module battleRuntimeSpellSaveAndRiderFactsTests {
         val shiningSmiteIllumination = ShiningSmiteIllumination({ durationTicks: 10 })
         all {
           assert(saveGatedConditionFailedSaveActiveEffects(EntangleSaveGate, initialState, Fighter) == Set(EntangleRestrained)),
-          assert(saveGatedAttackRollAdvantageTargeting(FaerieFireSaveGate) == AreaSaveTargets),
-          assert(saveGatedAttackRollAdvantageFailedSaveActiveEffects(FaerieFireSaveGate) == Set(FaerieFireOutline)),
-          assert(activeEffectsDenyInvisibleBenefit(Set(FaerieFireOutline))),
           assert(activeEffectsDenyInvisibleBenefit(Set(shiningSmiteIllumination))),
           assert(activeEffectsDenyInvisibleBenefit(Set(StarryWispInvisibleBenefitDenied({ source: Fighter, expiresAtRound: 2 })))),
           assert(not(activeEffectsDenyInvisibleBenefit(Set(GuidingBoltNextAttackAdvantage)))),

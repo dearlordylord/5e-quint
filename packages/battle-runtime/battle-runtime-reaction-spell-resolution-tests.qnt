@@ -10,17 +10,28 @@ module battleRuntimeReactionSpellResolutionTests {
   import battleRuntimeSpellSlotClassification.* from "./battle-runtime-spell-slot-classification"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
 
+  pure def directCounterspellFrame(
+    counterspell: PendingCounterspellReaction,
+    eligibleReactors: Set[Actor],
+  ): PendingReactionFrame = {
+    request: SpellCastCounterspellReactionRequest({
+      eligibleReactors: eligibleReactors,
+      counterspell: counterspell,
+      continuation: CounterspellResumesRayOfFrost,
+    }),
+    offeredReactors: Set(),
+  }
 
   run test_shield_reaction_spell_interrupts_spell_attack_hit = {
     val awaiting = resolveRayOfFrost(initialState, 15, 10, 4, true)
     val resolved = resolveDirectShieldReactionOffer(awaiting, Goblin)
     all {
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
-        trigger: AttackHit,
-        procedure: ShieldReactionProcedure,
-        eligibleReactors: Set(Goblin),
+        request: AttackHitShieldReactionRequest({
+          eligibleReactors: Set(Goblin),
+          continuation: ShieldResumesRayOfFrost,
+        }),
         offeredReactors: Set(),
-        continuation: ResumeRayOfFrost,
       })),
       assert(resolved.goblin.activeEffects.contains(ShieldArmorClassBonus)),
       assert(not(resolved.goblin.reactionAvailable)),
@@ -56,12 +67,16 @@ module battleRuntimeReactionSpellResolutionTests {
   }
 
   run test_direct_shield_rejects_malformed_continuation_without_spend = {
+    // The former Shield + after-damage continuation frame is now
+    // unconstructable. An AfterDamage request preserves this historical
+    // scenario's owner-boundary rejection and no-spend assertions.
     val awaiting = openReactionWindow(initialState, {
-      trigger: AttackHit,
-      procedure: ShieldReactionProcedure,
-      eligibleReactors: Set(Fighter),
+      request: AfterDamageInterruptionReactionRequest({
+        damageSource: Goblin,
+        damaged: Fighter,
+        eligibleReactors: Set(Fighter),
+      }),
       offeredReactors: Set(),
-      continuation: ResumeAfterDamage,
     })
     all {
       assert(resolveDirectShieldReactionOffer(awaiting, Fighter) == awaiting),
@@ -70,16 +85,17 @@ module battleRuntimeReactionSpellResolutionTests {
   }
 
   run test_reaction_spell_trigger_procedure_matrix_rejects_mismatched_frames = {
-    val spellCastShield = openReactionWindow(initialState, {
-      trigger: SpellCast,
-      procedure: ShieldReactionProcedure,
-      eligibleReactors: Set(Fighter),
+    // Trigger/procedure mismatches are now unconstructable. The historical
+    // scenario instead proves each request discriminator derives its one
+    // canonical trigger and procedure.
+    val shieldFrame = {
+      request: AttackHitShieldReactionRequest({
+        eligibleReactors: Set(Fighter),
+        continuation: ShieldResumesRayOfFrost,
+      }),
       offeredReactors: Set(),
-      continuation: ResumeRayOfFrost,
-    })
-    val attackHitCounterspell = openReactionWindow(initialState, {
-      trigger: AttackHit,
-      procedure: CounterspellReactionProcedure({
+    }
+    val counterspellFrame = directCounterspellFrame({
         triggeringCaster: Goblin,
         triggeringCastingResource: CounterspellMagicAction,
         triggeringSpellLevel: 1,
@@ -87,21 +103,25 @@ module battleRuntimeReactionSpellResolutionTests {
         counterspellSlotLevel: 3,
         triggeringCasterConSaveSucceeded: false,
         counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
-      }),
-      eligibleReactors: Set(Fighter),
-      offeredReactors: Set(),
-      continuation: ResumeRayOfFrost,
-    })
+      }, Set(Fighter))
     all {
-      assert(spellCastShield == initialState),
-      assert(attackHitCounterspell == initialState),
+      assert(reactionFrameTrigger(shieldFrame) == AttackHit),
+      assert(reactionFrameProcedure(shieldFrame) == ShieldReactionProcedure),
+      assert(reactionFrameTrigger(counterspellFrame) == SpellCast),
+      assert(reactionFrameProcedure(counterspellFrame) == CounterspellReactionProcedure({
+        triggeringCaster: Goblin,
+        triggeringCastingResource: CounterspellMagicAction,
+        triggeringSpellLevel: 1,
+        triggeringSpellUsesSlot: true,
+        counterspellSlotLevel: 3,
+        triggeringCasterConSaveSucceeded: false,
+        counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
+      })),
     }
   }
 
   run test_counterspell_reaction_spell_failed_save_ends_spell_cast_window_and_wastes_casting_action = {
-    val awaiting = openReactionWindow(initialState, {
-      trigger: SpellCast,
-      procedure: CounterspellReactionProcedure({
+    val awaiting = openReactionWindow(initialState, directCounterspellFrame({
         triggeringCaster: Fighter,
         triggeringCastingResource: CounterspellMagicAction,
         triggeringSpellLevel: 1,
@@ -109,11 +129,7 @@ module battleRuntimeReactionSpellResolutionTests {
         counterspellSlotLevel: 3,
         triggeringCasterConSaveSucceeded: false,
         counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
-      }),
-      eligibleReactors: Set(Goblin),
-      offeredReactors: Set(),
-      continuation: ResumeRayOfFrost,
-    })
+      }, Set(Goblin)))
     val resolved = resolveDirectSpellReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
@@ -126,9 +142,7 @@ module battleRuntimeReactionSpellResolutionTests {
   }
 
   run test_counterspell_reaction_spell_successful_save_resumes_lower_level_triggering_spell = {
-    val awaiting = openReactionWindow(initialState, {
-      trigger: SpellCast,
-      procedure: CounterspellReactionProcedure({
+    val awaiting = openReactionWindow(initialState, directCounterspellFrame({
         triggeringCaster: Fighter,
         triggeringCastingResource: CounterspellMagicAction,
         triggeringSpellLevel: 1,
@@ -136,11 +150,7 @@ module battleRuntimeReactionSpellResolutionTests {
         counterspellSlotLevel: 3,
         triggeringCasterConSaveSucceeded: true,
         counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
-      }),
-      eligibleReactors: Set(Goblin),
-      offeredReactors: Set(),
-      continuation: ResumeRayOfFrost,
-    })
+      }, Set(Goblin)))
     val resolved = resolveDirectSpellReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
@@ -153,9 +163,7 @@ module battleRuntimeReactionSpellResolutionTests {
   }
 
   run test_counterspell_reaction_spell_can_be_counterspelled_before_slot_commit = {
-    val awaiting = openReactionWindow(initialState, {
-      trigger: SpellCast,
-      procedure: CounterspellReactionProcedure({
+    val awaiting = openReactionWindow(initialState, directCounterspellFrame({
         triggeringCaster: Fighter,
         triggeringCastingResource: CounterspellMagicAction,
         triggeringSpellLevel: 1,
@@ -167,11 +175,7 @@ module battleRuntimeReactionSpellResolutionTests {
           counterspellSlotLevel: 3,
           counterspellCasterConSaveSucceeded: false,
         }),
-      }),
-      eligibleReactors: Set(Goblin),
-      offeredReactors: Set(),
-      continuation: ResumeRayOfFrost,
-    })
+      }, Set(Goblin)))
     val resolved = resolveDirectSpellReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
@@ -189,9 +193,7 @@ module battleRuntimeReactionSpellResolutionTests {
       ...initialState,
       fighter: { ...initialState.fighter, reactionAvailable: false },
     }
-    val awaiting = openReactionWindow(reactionSpellState, {
-      trigger: SpellCast,
-      procedure: CounterspellReactionProcedure({
+    val awaiting = openReactionWindow(reactionSpellState, directCounterspellFrame({
         triggeringCaster: Fighter,
         triggeringCastingResource: CounterspellReaction,
         triggeringSpellLevel: 3,
@@ -203,11 +205,7 @@ module battleRuntimeReactionSpellResolutionTests {
           counterspellSlotLevel: 3,
           counterspellCasterConSaveSucceeded: true,
         }),
-      }),
-      eligibleReactors: Set(Goblin),
-      offeredReactors: Set(),
-      continuation: ResumeRayOfFrost,
-    })
+      }, Set(Goblin)))
     val resolved = resolveDirectSpellReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),

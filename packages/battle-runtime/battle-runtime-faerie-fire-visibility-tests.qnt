@@ -3,10 +3,12 @@
 
 module battleRuntimeFaerieFireVisibilityTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeSpellAttackRollAndVisibilityFacts.* from "./battle-runtime-spell-attack-roll-and-visibility-facts"
   import battleRuntimeSaveConditionFaerieFire.* from "./battle-runtime-save-condition-faerie-fire"
+  import battleRuntimeSaveGatedFacts.* from "./battle-runtime-save-gated-facts"
+  import battleRuntimeCreatureTypeProtectionAttackRoll.* from "./battle-runtime-creature-type-protection-attack-roll"
   import battleRuntimeLightEmitters.* from "./battle-runtime-light-emitters"
 
   run test_faerie_fire_applies_outline_until_concentration_break = {
@@ -31,6 +33,12 @@ module battleRuntimeFaerieFireVisibilityTests {
       assert(activeEffectsDenyInvisibleBenefit(lit.goblin.activeEffects)),
       assert(spellAttackRollModeFromActiveEffects(Set(), lit.goblin.activeEffects, true) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(), lit.goblin.activeEffects, false) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), lit.goblin.activeEffects, true) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromBlurredActiveEffects(Set(), Set(Blurred, FaerieFireOutline), true, false) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection), true) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection), false) == DisadvantageSpellAttackRoll),
+      assert(saveGatedAttackRollAdvantageTargeting(FaerieFireSaveGate) == AreaSaveTargets),
+      assert(saveGatedAttackRollAdvantageFailedSaveActiveEffects(FaerieFireSaveGate) == Set(FaerieFireOutline)),
       assert(not(broken.goblin.activeEffects.contains(FaerieFireOutline))),
       assert(not(battleRuntimeLightEmitters(broken).contains(SpellLightEmitter({
         source: Fighter,

@@ -8,7 +8,6 @@ module battleRuntimeFlameBladeAttackTests {
   import battleRuntimeLightSpellAttacks.* from "./battle-runtime-light-spell-attacks"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
-  import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 
   run test_flame_blade_attack_uses_magic_action_without_second_slot_or_cleanup = {
@@ -37,11 +36,11 @@ module battleRuntimeFlameBladeAttackTests {
     all {
       assert(awaiting.interruptStack.length() == 1),
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
-        trigger: AttackHit,
-        procedure: ShieldReactionProcedure,
-        eligibleReactors: Set(Goblin),
+        request: AttackHitShieldReactionRequest({
+          eligibleReactors: Set(Goblin),
+          continuation: ShieldResumesFlameBladeAttack,
+        }),
         offeredReactors: Set(),
-        continuation: ResumeFlameBladeAttack,
       })),
       assert(activeEffectsContainHeldFlameBlade(awaiting.fighter.activeEffects)),
       assert(battleRuntimeLightEmitters(awaiting).contains(flameBladeHeldLightEmitter)),

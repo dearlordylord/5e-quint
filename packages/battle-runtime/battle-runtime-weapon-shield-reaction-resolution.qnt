@@ -22,11 +22,10 @@ module battleRuntimeWeaponShieldReactionResolution {
   pure def weaponShieldReactionCandidate(
     frame: PendingReactionFrame,
   ): WeaponShieldReactionCandidate =
-    match frame.procedure {
-      | ShieldReactionProcedure =>
+    match frame.request {
+      | AttackHitShieldReactionRequest(request) =>
           if (shieldReactionFrameIsFreshGoblinTarget(frame) and
-              frame.trigger == AttackHit and
-              frame.continuation == ResumeTrueStrikeWeaponAttack)
+              request.continuation == ShieldResumesTrueStrikeWeaponAttack)
             HasWeaponShieldReactionCandidate({
               continuation: WeaponShieldTrueStrikeAttack,
             })

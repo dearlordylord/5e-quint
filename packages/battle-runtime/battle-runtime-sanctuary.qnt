@@ -5,7 +5,7 @@
 module battleRuntimeSanctuary {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
-  import battleRuntimeDirectConditionActionLifecycle.* from "./battle-runtime-direct-condition-action-lifecycle"
+  import battleRuntimeTargetActionEffectEarlyEnd.* from "./battle-runtime-target-action-effect-early-end"
 
   pure def sanctuaryWardActiveEffect(source: Actor): ActiveEffect =
     SanctuaryWard({ source: source, durationTicks: 10 })

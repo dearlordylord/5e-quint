@@ -20,7 +20,8 @@ module battleRuntimeShieldReactionDecision {
   pure def shieldReactionFrameIsFreshGoblinTarget(
     frame: PendingReactionFrame,
   ): bool =
-    frame.eligibleReactors == Set(Goblin) and frame.offeredReactors == Set()
+    reactionFrameEligibleReactors(frame) == Set(Goblin) and
+      frame.offeredReactors == Set()
 
   pure def declineShieldReactionDecision(
     state: BattleState,

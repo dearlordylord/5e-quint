@@ -24,12 +24,12 @@ module battleRuntimeSaveGatedCounterspellResolution {
     candidate: CounterspellReactionCandidate,
   ): SaveGatedCounterspellContinuationOption =
     match candidate.continuation {
-      | ResumeIceKnife =>
+      | CounterspellResumesIceKnife =>
           HasSaveGatedCounterspellContinuation({
             context: candidate.context,
             continuation: SaveGatedCounterspellIceKnife,
           })
-      | ResumeSaveGateDamage =>
+      | CounterspellResumesSaveGateDamage =>
           HasSaveGatedCounterspellContinuation({
             context: candidate.context,
             continuation: SaveGatedCounterspellDamage,

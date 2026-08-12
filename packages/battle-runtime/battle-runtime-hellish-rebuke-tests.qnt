@@ -20,15 +20,12 @@ module battleRuntimeHellishRebukeTests {
     all {
       assert(awaiting.interruptStack.length() == 1),
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
-        trigger: AfterDamage,
-        procedure: DamageInterruptionReactionProcedure,
-        eligibleReactors: Set(Fighter),
-        offeredReactors: Set(),
-        continuation: ResumeHellishRebukeAfterDamage({
+        request: AfterDamageHellishRebukeReactionRequest({
           damager: Goblin,
           damaged: Fighter,
           slotLevel: 1,
         }),
+        offeredReactors: Set(),
       })),
     }
   }
@@ -66,16 +63,59 @@ module battleRuntimeHellishRebukeTests {
       assert(openHellishRebukeAfterDamageReactionWindow(noReaction, Goblin, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, true, 1) == noReaction),
       assert(openHellishRebukeAfterDamageReactionWindow(noSlot, Goblin, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, true, 1) == noSlot),
       assert(openHellishRebukeAfterDamageReactionWindow(initialState, Goblin, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, false, 1) == initialState),
+      assert(openHellishRebukeAfterDamageReactionWindow(initialState, Fighter, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, true, 1) == initialState),
+      assert(openHellishRebukeAfterDamageReactionWindow(initialState, Goblin, Fighter, HellishRebukeDamageFromVisibleCreatureWithin60Feet, true, 0) == initialState),
       assert(offTurnWindow.interruptStack.length() == 1),
     }
   }
 
   run test_hellish_rebuke_after_damage_reaction_resolves_save_damage_and_spend = {
-    val continuation = { damager: Goblin, damaged: Fighter, slotLevel: 2 }
-    val failedSave = resolveHellishRebukeAfterDamage(initialState, continuation, false, 3, true)
-    val successfulSave = resolveHellishRebukeAfterDamage(initialState, continuation, true, 5, true)
+    val failedWindow = openHellishRebukeAfterDamageReactionWindow(
+      initialState,
+      Goblin,
+      Fighter,
+      HellishRebukeDamageFromVisibleCreatureWithin60Feet,
+      true,
+      2,
+    )
+    val failedSave = resolveHellishRebukeReactionOffer(
+      failedWindow,
+      Fighter,
+      false,
+      3,
+      true,
+    )
+    val successfulWindow = openHellishRebukeAfterDamageReactionWindow(
+      initialState,
+      Goblin,
+      Fighter,
+      HellishRebukeDamageFromVisibleCreatureWithin60Feet,
+      true,
+      2,
+    )
+    val successfulSave = resolveHellishRebukeReactionOffer(
+      successfulWindow,
+      Fighter,
+      true,
+      5,
+      true,
+    )
     val goblinTurnSpentSlot = commitActorSpellSlotUse(endTurn(initialState), Goblin)
-    val offTurnResolved = resolveHellishRebukeAfterDamage(goblinTurnSpentSlot, continuation, false, 3, true)
+    val offTurnWindow = openHellishRebukeAfterDamageReactionWindow(
+      goblinTurnSpentSlot,
+      Goblin,
+      Fighter,
+      HellishRebukeDamageFromVisibleCreatureWithin60Feet,
+      true,
+      2,
+    )
+    val offTurnResolved = resolveHellishRebukeReactionOffer(
+      offTurnWindow,
+      Fighter,
+      false,
+      3,
+      true,
+    )
     all {
       assert(hellishRebukeDamageDice(1) == 2),
       assert(hellishRebukeDamageDice(2) == 3),
@@ -87,6 +127,9 @@ module battleRuntimeHellishRebukeTests {
       assert(battleActorHasCommittedSpellSlotUse(successfulSave, Fighter)),
       assert(battleActorHasCommittedSpellSlotUse(offTurnResolved, Goblin)),
       assert(battleActorHasCommittedSpellSlotUse(offTurnResolved, Fighter)),
+      assert(failedSave.interruptStack == []),
+      assert(successfulSave.interruptStack == []),
+      assert(offTurnResolved.interruptStack == []),
     }
   }
 

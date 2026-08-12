@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE BATTLE.SANCTUARY.TARGETING_INTERDICTION
 
-module battleRuntimeDirectConditionActionLifecycle {
+module battleRuntimeTargetActionEffectEarlyEnd {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
 
@@ -18,15 +18,12 @@ module battleRuntimeDirectConditionActionLifecycle {
     })
 
   pure def activeEffectsInvisibilitySources(effects: Set[ActiveEffect]): Set[Actor] =
-    effects
-      .filter(effect => match effect {
-        | InvisibilityCondition(_) => true
-        | _ => false
-      })
-      .map(effect => match effect {
-        | InvisibilityCondition(data) => data.source
-        | _ => Fighter
-      })
+    effects.fold(Set(), (sources, effect) =>
+      match effect {
+        | InvisibilityCondition(data) => sources.union(Set(data.source))
+        | _ => sources
+      }
+    )
 
   pure def battleStateAfterInvisibilitySourceEarlyEnd(state: BattleState, source: Actor): BattleState =
     match source {

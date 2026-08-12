@@ -8,22 +8,27 @@ module battleRuntimeReactionWindowTests {
     eligibleReactors: Set[Actor],
     offeredReactors: Set[Actor],
   ): PendingReactionFrame = {
-    trigger: OpportunityAttack,
-    procedure: OpportunityAttackReactionProcedure,
-    eligibleReactors: eligibleReactors,
+    request: OpportunityAttackReactionRequest({
+      mover: Goblin,
+      threats: eligibleReactors,
+      continuation: OpportunityAttackResumesMovement({
+        speedKind: WalkSpeedKind,
+        movementCost: 10,
+      }),
+    }),
     offeredReactors: offeredReactors,
-    continuation: ResumeMovement({ speedKind: WalkSpeedKind, movementCost: 10 }),
   }
 
   pure def damageInterruptionOfferFrame(
     eligibleReactors: Set[Actor],
     offeredReactors: Set[Actor],
   ): PendingReactionFrame = {
-    trigger: AfterDamage,
-    procedure: DamageInterruptionReactionProcedure,
-    eligibleReactors: eligibleReactors,
+    request: AfterDamageInterruptionReactionRequest({
+      damageSource: Fighter,
+      damaged: Goblin,
+      eligibleReactors: eligibleReactors,
+    }),
     offeredReactors: offeredReactors,
-    continuation: ResumeAfterDamage,
   }
 
   run test_reaction_offer_opens_decision_frame = {

@@ -153,7 +153,7 @@ and `battle-runtime-bardic-inspiration.qnt`, and `battle-runtime-hit-points.qnt`
 `battle-runtime-reaction-window.qnt`, `battle-runtime-concentration.qnt`,
 `battle-runtime-actor-combatants.qnt`, and
 `battle-runtime-sanctuary.qnt`, `battle-runtime-invisibility.qnt`,
-`battle-runtime-direct-condition-action-lifecycle.qnt`,
+`battle-runtime-target-action-effect-early-end.qnt`,
 `battle-runtime-hellish-rebuke-reaction.qnt`,
 `battle-runtime-opportunity-attack.qnt`,
 `battle-runtime-fighter-rage-resistances.qnt`,

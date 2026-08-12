@@ -3166,7 +3166,9 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt"
+        "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt",
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -8923,14 +8925,16 @@
             "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application and Attack Roll projection"
+            "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application, Dim Light emitter projection, and Attack Roll projection"
           }
         ],
         "profileId": "spell.invocation-attack-roll-advantage-save",
         "profileKind": "spell-invocation",
         "qntOwners": [
+          "packages/battle-runtime/battle-runtime-light-emitters.qnt",
           "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
-          "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt"
+          "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
+          "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt"
         ]
       },
       {
@@ -12110,14 +12114,16 @@
                   "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application and Attack Roll projection"
+                  "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application, Dim Light emitter projection, and Attack Roll projection"
                 }
               ],
               "profileId": "spell.invocation-attack-roll-advantage-save",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/battle-runtime/battle-runtime-light-emitters.qnt",
                 "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
-                "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt"
+                "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
+                "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt"
               ]
             }
           ],
@@ -37473,7 +37479,9 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
-            "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt"
+            "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
+            "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt",
+            "packages/battle-runtime/battle-runtime-light-emitters.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"

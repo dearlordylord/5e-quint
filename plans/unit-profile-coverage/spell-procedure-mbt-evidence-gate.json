@@ -2486,7 +2486,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application and Attack Roll projection",
+          "obligationTitle": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application, Dim Light emitter projection, and Attack Roll projection",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -2516,6 +2516,10 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-emitters.qnt",
               "role": "semantic-core"
             }
           ],
@@ -7196,7 +7200,7 @@
               "role": "proof-only"
             },
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-action-lifecycle.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt",
               "role": "semantic-core"
             }
           ],
@@ -11314,7 +11318,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application and Attack Roll projection",
+          "obligationTitle": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application, Dim Light emitter projection, and Attack Roll projection",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -11344,6 +11348,10 @@
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-emitters.qnt",
               "role": "semantic-core"
             }
           ],
@@ -16091,7 +16099,7 @@
               "role": "proof-only"
             },
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-action-lifecycle.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt",
               "role": "semantic-core"
             }
           ],

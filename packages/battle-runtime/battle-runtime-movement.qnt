@@ -18,6 +18,9 @@ module battleRuntimeMovement {
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
 
+  pure val movementProvokesOpportunityAttack: bool = true
+  pure val movementDoesNotProvokeOpportunityAttack: bool = false
+
   pure def dashFighter(state: BattleState): BattleState =
     dashFighterWithSpeedKind(state, WalkSpeedKind)
 
@@ -75,14 +78,20 @@ module battleRuntimeMovement {
     if (not(dissonantWhispersGoblinCanTakeReaction(state))) {
       match replay {
         | DissonantWhispersMovementMissing =>
-            DissonantWhispersResolvedAfterDamage(openDissonantWhispersAfterDamageSequence(state))
+            DissonantWhispersResolvedAfterDamage(
+              openDissonantWhispersAfterDamageSequence(state, Fighter, Goblin)
+            )
         | DissonantWhispersMovementFilled(_) => DissonantWhispersInvalidMovementFill
       }
     } else if (not(dissonantWhispersGoblinHasMovementAvailable(state))) {
       match replay {
         | DissonantWhispersMovementMissing =>
             DissonantWhispersResolvedAfterDamage(
-              openDissonantWhispersAfterDamageSequence(spendReaction(state, Goblin))
+              openDissonantWhispersAfterDamageSequence(
+                spendReaction(state, Goblin),
+                Fighter,
+                Goblin,
+              )
             )
         | DissonantWhispersMovementFilled(_) => DissonantWhispersInvalidMovementFill
       }
@@ -97,19 +106,25 @@ module battleRuntimeMovement {
               if (fill.provokesOpportunityAttack)
                 DissonantWhispersOpportunityAttackWindow(
                   openReactionWindow(afterReactionSpend, {
-                    trigger: OpportunityAttack,
-                    procedure: OpportunityAttackReactionProcedure,
-                    eligibleReactors: Set(Fighter),
-                    offeredReactors: Set(),
-                    continuation: ResumeDissonantWhispersMovementThenAfterDamage({
-                      speedKind: fill.speedKind,
-                      movementCost: fill.movementCost,
+                    request: OpportunityAttackReactionRequest({
+                      mover: Goblin,
+                      threats: Set(Fighter),
+                      continuation: OpportunityAttackResumesDissonantWhispersMovementThenAfterDamage({
+                        damageSource: Fighter,
+                        speedKind: fill.speedKind,
+                        movementCost: fill.movementCost,
+                      }),
                     }),
+                    offeredReactors: Set(),
                   })
                 )
               else
                 DissonantWhispersResolvedAfterDamage(
-                  openDissonantWhispersAfterDamageSequence(afterReactionSpend)
+                  openDissonantWhispersAfterDamageSequence(
+                    afterReactionSpend,
+                    Fighter,
+                    Goblin,
+                  )
                 )
             }
       }
@@ -486,6 +501,34 @@ module battleRuntimeMovement {
     stateWithFighterMovementStep(state, step)
   }
 
+  pure def applyActorMovementWithSpeedKind(
+    state: BattleState,
+    actor: Actor,
+    speedKind: MovementSpeedKind,
+    movementCost: int,
+  ): BattleState =
+    stateWithActorMovementStep(
+      state,
+      actor,
+      battleRuntimeSpendMovement(
+        movementProjectionForActor(state, actor, speedKind),
+        movementCost,
+      ),
+    )
+
+  pure def applyDissonantWhispersGoblinMovement(
+    state: BattleState,
+    speedKind: MovementSpeedKind,
+    movementCost: int,
+  ): BattleState =
+    stateWithGoblinMovementStep(
+      state,
+      battleRuntimeSpendMovement(
+        dissonantWhispersGoblinMovementProjection(state, speedKind),
+        movementCost,
+      ),
+    )
+
   pure def moveFighter(state: BattleState, movementCost: int, provokedByTable: bool): BattleState =
     moveFighterWithSpeedKind(state, WalkSpeedKind, movementCost, provokedByTable)
 
@@ -494,11 +537,15 @@ module battleRuntimeMovement {
       state
     else if (goblinCanOpportunityAttack(state, provokedByTable))
       openReactionWindow(state, {
-        trigger: OpportunityAttack,
-        procedure: OpportunityAttackReactionProcedure,
-        eligibleReactors: Set(Goblin),
+        request: OpportunityAttackReactionRequest({
+          mover: Fighter,
+          threats: Set(Goblin),
+          continuation: OpportunityAttackResumesMovement({
+            speedKind: speedKind,
+            movementCost: movementCost,
+          }),
+        }),
         offeredReactors: Set(),
-        continuation: ResumeMovement({ speedKind: speedKind, movementCost: movementCost }),
       })
     else
       applyFighterMovementWithSpeedKind(state, speedKind, movementCost)

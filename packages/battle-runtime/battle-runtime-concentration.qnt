@@ -261,6 +261,29 @@ module battleRuntimeConcentration {
     else
       { ...state, fighter: damagedFighter }
 
+  pure def stateWithActorDamage(
+    state: BattleState,
+    actor: Actor,
+    damagedActor: Combatant,
+  ): BattleState =
+    match actor {
+      | Fighter => stateWithFighterDamage(state, damagedActor)
+      | Goblin =>
+          if (state.goblin.concentrating and not(damagedActor.concentrating))
+            {
+              ...state,
+              goblin: damagedActor,
+              fighter: {
+                ...state.fighter,
+                activeEffects: activeEffectsWithoutSpellEffectConcentration(
+                  state.fighter.activeEffects,
+                ),
+              },
+            }
+          else
+            { ...state, goblin: damagedActor }
+    }
+
   pure def activeEffectsAfterTargetDamagedByCasterOrAlly(
     effects: Set[ActiveEffect],
     damageSource: Actor,

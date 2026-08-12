@@ -7,7 +7,7 @@ module battleRuntimeDirectConditionRemoval {
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
-  import battleRuntimeDirectConditionActionLifecycle.* from "./battle-runtime-direct-condition-action-lifecycle"
+  import battleRuntimeTargetActionEffectEarlyEnd.* from "./battle-runtime-target-action-effect-early-end"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
 

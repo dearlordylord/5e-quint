@@ -289,11 +289,11 @@ module battleRuntimeSpellAttackDirectResolution {
              state.goblin.reactionAvailable and
              not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
-        trigger: AttackHit,
-        procedure: ShieldReactionProcedure,
-        eligibleReactors: Set(Goblin),
+        request: AttackHitShieldReactionRequest({
+          eligibleReactors: Set(Goblin),
+          continuation: ShieldResumesRayOfFrost,
+        }),
         offeredReactors: Set(),
-        continuation: ResumeRayOfFrost,
       })
     }
     else {
@@ -341,11 +341,11 @@ module battleRuntimeSpellAttackDirectResolution {
              state.goblin.reactionAvailable and
              not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
-        trigger: AttackHit,
-        procedure: ShieldReactionProcedure,
-        eligibleReactors: Set(Goblin),
+        request: AttackHitShieldReactionRequest({
+          eligibleReactors: Set(Goblin),
+          continuation: ShieldResumesPoisonSpray,
+        }),
         offeredReactors: Set(),
-        continuation: ResumePoisonSpray,
       })
     }
     else {
@@ -393,11 +393,11 @@ module battleRuntimeSpellAttackDirectResolution {
              state.goblin.reactionAvailable and
              not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
-        trigger: AttackHit,
-        procedure: ShieldReactionProcedure,
-        eligibleReactors: Set(Goblin),
+        request: AttackHitShieldReactionRequest({
+          eligibleReactors: Set(Goblin),
+          continuation: ShieldResumesChillTouch,
+        }),
         offeredReactors: Set(),
-        continuation: ResumeChillTouch,
       })
     }
     else {

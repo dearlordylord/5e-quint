@@ -24,24 +24,23 @@ module battleRuntimeSpellCastReactionResolution {
   pure def directSpellReactionCandidate(
     frame: PendingReactionFrame,
   ): DirectSpellReactionCandidate =
-    match frame.procedure {
-      | CounterspellReactionProcedure(counterspell) =>
-          if (reactionProcedureMatchesTrigger(frame.trigger, frame.procedure))
-            match directSpellAttackReactionContinuation(frame.continuation) {
-              | NoDirectSpellAttackReactionContinuation =>
-                  NoDirectSpellReactionCandidate
-              | HasDirectSpellAttackReactionContinuation(continuation) =>
-                  HasDirectSpellReactionCandidate({
-                    context: {
-                      counterspell: counterspell,
-                      eligibleReactors: frame.eligibleReactors,
-                      offeredReactors: frame.offeredReactors,
-                    },
-                    continuation: continuation,
-                  })
-            }
-          else
-            NoDirectSpellReactionCandidate
+    match frame.request {
+      | SpellCastCounterspellReactionRequest(request) =>
+          match directSpellAttackReactionContinuation(
+            counterspellReactionContinuation(request.continuation),
+          ) {
+            | NoDirectSpellAttackReactionContinuation =>
+                NoDirectSpellReactionCandidate
+            | HasDirectSpellAttackReactionContinuation(continuation) =>
+                HasDirectSpellReactionCandidate({
+                  context: {
+                    counterspell: request.counterspell,
+                    eligibleReactors: request.eligibleReactors,
+                    offeredReactors: frame.offeredReactors,
+                  },
+                  continuation: continuation,
+                })
+          }
       | _ => NoDirectSpellReactionCandidate
     }
 

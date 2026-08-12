@@ -65,14 +65,15 @@ module battleRuntimeCommandFleeNextTurnTests {
       assert(currentActor(followed) == Goblin),
       assert(followed.interruptStack.length() == 1),
       assert(pendingReactionFrame(followed.interruptStack[0]) == HasPendingReactionFrame({
-        trigger: OpportunityAttack,
-        procedure: OpportunityAttackReactionProcedure,
-        eligibleReactors: Set(Fighter),
-        offeredReactors: Set(),
-        continuation: ResumeCommandFleeMovement({
-          speedKind: WalkSpeedKind,
-          movementCost: 30,
+        request: OpportunityAttackReactionRequest({
+          mover: Goblin,
+          threats: Set(Fighter),
+          continuation: OpportunityAttackResumesCommandFleeMovement({
+            speedKind: WalkSpeedKind,
+            movementCost: 30,
+          }),
         }),
+        offeredReactors: Set(),
       })),
     }
   }

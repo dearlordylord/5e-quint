@@ -27,7 +27,7 @@ module battleRuntimeCounterspellReactionDecision {
 
   type CounterspellReactionCandidate = {
     context: CounterspellReactionContext,
-    continuation: ReactionContinuation,
+    continuation: CounterspellReactionContinuation,
   }
 
   type PendingCounterspellReactionOption =
@@ -37,19 +37,16 @@ module battleRuntimeCounterspellReactionDecision {
   pure def pendingCounterspellReaction(
     frame: PendingReactionFrame,
   ): PendingCounterspellReactionOption =
-    match frame.procedure {
-      | CounterspellReactionProcedure(counterspell) =>
-          if (reactionProcedureMatchesTrigger(frame.trigger, frame.procedure))
-            HasPendingCounterspellReaction({
-              context: {
-                counterspell: counterspell,
-                eligibleReactors: frame.eligibleReactors,
-                offeredReactors: frame.offeredReactors,
-              },
-              continuation: frame.continuation,
-            })
-          else
-            NoPendingCounterspellReaction
+    match frame.request {
+      | SpellCastCounterspellReactionRequest(request) =>
+          HasPendingCounterspellReaction({
+            context: {
+              counterspell: request.counterspell,
+              eligibleReactors: request.eligibleReactors,
+              offeredReactors: frame.offeredReactors,
+            },
+            continuation: request.continuation,
+          })
       | _ => NoPendingCounterspellReaction
     }
 

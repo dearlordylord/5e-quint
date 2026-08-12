@@ -5,6 +5,7 @@ module battleRuntimeConcentrationTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+  import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 
   run test_concentration_damage_dc_is_capped = {

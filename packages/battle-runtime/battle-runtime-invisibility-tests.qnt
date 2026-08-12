@@ -4,7 +4,7 @@
 module battleRuntimeInvisibilityTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeInvisibility.* from "./battle-runtime-invisibility"
-  import battleRuntimeDirectConditionActionLifecycle.* from "./battle-runtime-direct-condition-action-lifecycle"
+  import battleRuntimeTargetActionEffectEarlyEnd.* from "./battle-runtime-target-action-effect-early-end"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeFighterOngoingFeatures.* from "./battle-runtime-fighter-ongoing-features"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"

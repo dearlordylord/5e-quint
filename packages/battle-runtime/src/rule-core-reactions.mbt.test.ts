@@ -1,12 +1,14 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.reaction-roll-or-damage-reduction spell.reaction-shield
 // KERNEL-COVERAGE: parity-witness BATTLE.REACTION.OFFER_DECLINE_RESUME
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { isDeepStrictEqual } from "node:util";
 import {
+  battleProcedureExecutionRefForTest,
   resolveBattleSubject,
   attackExecutionSelectionForSubjectForTest,
+  attackRollFill,
   characterAttackSubjectForTest,
+  opportunityAttackProcedureSelectionForTest,
   readyDeclarationFillForTest,
 } from "./battle-runtime.test-support.ts";
 
@@ -83,7 +85,9 @@ type RuleCoreReactionTrigger = (typeof ruleCoreReactionTriggers)[number];
 
 type RuleCoreReactionProjection = RuleCoreComponentRoutedProjection & {
   readonly interruptedMovementSpentFeet: number;
+  readonly interruptedHitPoints: number;
   readonly reactorReactionAvailable: boolean;
+  readonly reactorHitPoints: number;
   readonly reactorReadiedMovementHeld: boolean;
   readonly reactorReadiedSpellHeld: boolean;
   readonly reactorMovementSpentFeet: number;
@@ -110,6 +114,7 @@ const driverSchema = {
   init: {},
   doOfferOpportunityAttack: {},
   doDeclineOpportunityAttack: {},
+  doTakeOpportunityAttack: {},
   doReadyMovementFixture: {},
   doOfferReadiedMovement: {},
   doDeclineReadiedMovement: {},
@@ -240,6 +245,40 @@ function createRuleCoreReactionDriver() {
             }),
           }),
         ),
+      doTakeOpportunityAttack: () => {
+        const pendingInterrupt = snapshotBattle(state).pendingInterrupt;
+        const choice = pendingInterrupt?.choices.find(
+          (candidate) =>
+            candidate.kind === "opportunityAttack" &&
+            candidate.reactorId === reactorId &&
+            candidate.subject.targetId === interruptedId,
+        );
+        if (pendingInterrupt === null || choice === undefined) {
+          throw new Error(
+            "Expected the reactor-to-interrupted Opportunity Attack choice.",
+          );
+        }
+        const started = resolveBattleInterrupt({
+          state,
+          fill: interruptDecisionFill(requireReactionDecisionHole(holes), {
+            kind: "resolve",
+            responderId: reactorId,
+            choice: opportunityAttackProcedureSelectionForTest(choice),
+          }),
+        });
+        if (started.tag !== "needsHoles") {
+          recordResult(started);
+          return;
+        }
+        const attackRoll = requireAttackRollHole(started.holes);
+        recordResult(
+          resolveBattleSubject({
+            state: started.state,
+            subject: choice.subject,
+            fills: [attackRollFill(attackRoll, { total: 20, naturalD20: 18 })],
+          }),
+        );
+      },
       doReadyMovementFixture: () => {
         state = ruleCoreReadiedMovementBattle();
         lastConcentrationSaveDc = 0;
@@ -522,7 +561,9 @@ function projectRuleCoreReactionState(input: {
   }
   return withRuleCoreComponentRoute(componentOwner, {
     interruptedMovementSpentFeet: interrupted.movement.spentFeet,
+    interruptedHitPoints: Number(interrupted.hp),
     reactorReactionAvailable: reactor.reactionAvailable,
+    reactorHitPoints: Number(reactor.hp),
     reactorReadiedMovementHeld:
       snapshot.readiedResponses.actionsOrMovements.some(
         (readied) => readied.actorId === reactorId,
@@ -598,6 +639,16 @@ function requireReactionDecisionHole(
   return hole;
 }
 
+function requireAttackRollHole(
+  holes: readonly BattleHole[],
+): Extract<BattleHole, { readonly kind: "attackRoll" }> {
+  const hole = holes.find((candidate) => candidate.kind === "attackRoll");
+  if (hole === undefined) {
+    throw new Error("Expected Opportunity Attack roll hole.");
+  }
+  return hole;
+}
+
 function projectReactionHole(hole: BattleHole): RuleCoreReactionMbtHole {
   if (hole.kind === "interruptDecision") return "ReactionDecision";
   if (hole.kind === "rolledDice") return "DamageRoll";
@@ -620,7 +671,15 @@ function normalizeRuleCoreReactionQuintState(
       state["qInterruptedMovementSpentFeet"],
       "qInterruptedMovementSpentFeet",
     ),
+    interruptedHitPoints: numberFromQuintInt(
+      state["qInterruptedHitPoints"],
+      "qInterruptedHitPoints",
+    ),
     reactorReactionAvailable: booleanField(state, "qReactorReactionAvailable"),
+    reactorHitPoints: numberFromQuintInt(
+      state["qReactorHitPoints"],
+      "qReactorHitPoints",
+    ),
     reactorReadiedMovementHeld: booleanField(
       state,
       "qReactorReadiedMovementHeld",

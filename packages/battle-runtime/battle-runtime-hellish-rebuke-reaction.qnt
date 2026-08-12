@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.reaction-hellish-rebuke
 
 module battleRuntimeHellishRebukeReaction {
+  import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
@@ -28,24 +29,25 @@ module battleRuntimeHellishRebukeReaction {
     hellishRebukeAvailable: bool,
     slotLevel: int,
   ): BattleState =
-    if (hellishRebukeAfterDamageReactionEligible(
-      triggerFacts,
-      {
-        hellishRebukeAvailable: hellishRebukeAvailable,
-        reactionAvailable: reactorCanReact(state, damaged),
-        spellSlotAvailable: canActorExpendSpellSlotThisTurn(state, damaged),
-      },
-    ))
+    if (
+      damager != damaged and
+      slotLevel >= 1 and
+      hellishRebukeAfterDamageReactionEligible(
+        triggerFacts,
+        {
+          hellishRebukeAvailable: hellishRebukeAvailable,
+          reactionAvailable: reactorCanReact(state, damaged),
+          spellSlotAvailable: canActorExpendSpellSlotThisTurn(state, damaged),
+        },
+      )
+    )
       openReactionWindow(state, {
-        trigger: AfterDamage,
-        procedure: DamageInterruptionReactionProcedure,
-        eligibleReactors: Set(damaged),
-        offeredReactors: Set(),
-        continuation: ResumeHellishRebukeAfterDamage({
+        request: AfterDamageHellishRebukeReactionRequest({
           damager: damager,
           damaged: damaged,
           slotLevel: slotLevel,
         }),
+        offeredReactors: Set(),
       })
     else
       state
@@ -95,4 +97,100 @@ module battleRuntimeHellishRebukeReaction {
       }
       commitActorSpellSlotUse(damagedTarget, continuation.damaged)
     }
+
+  type PendingHellishRebukeReactionOption =
+    | NoPendingHellishRebukeReaction
+    | HasPendingHellishRebukeReaction(HellishRebukeAfterDamageContinuation)
+
+  pure def pendingHellishRebukeReaction(
+    frame: PendingReactionFrame,
+  ): PendingHellishRebukeReactionOption =
+    match frame.request {
+      | AfterDamageHellishRebukeReactionRequest(continuation) =>
+          HasPendingHellishRebukeReaction(continuation)
+      | _ => NoPendingHellishRebukeReaction
+    }
+
+  pure def resolveHellishRebukeReactionFrame(
+    state: BattleState,
+    frame: PendingReactionFrame,
+    continuation: HellishRebukeAfterDamageContinuation,
+    reactor: Actor,
+    savingThrowSucceeded: bool,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState = {
+    val decision = battleRuntimeTakeReactionDecision(
+      battleRuntimeReactionTrigger(AfterDamage),
+      battleRuntimeReactionProcedure(HellishRebukeReactionProcedure),
+      reactor == continuation.damaged,
+      frame.offeredReactors.contains(reactor),
+      reactorCanReact(state, reactor),
+      canActorExpendSpellSlotThisTurn(state, reactor),
+      reactionOfferCompletesFrame(
+        Set(continuation.damaged),
+        frame.offeredReactors,
+        reactor,
+      ),
+    )
+    match decision {
+      | BattleRuntimeTookReaction(_) =>
+          stateAfterDecliningReactionOffer(
+            resolveHellishRebukeAfterDamage(
+              state,
+              continuation,
+              savingThrowSucceeded,
+              damageRoll,
+              concentrationSaveSucceeded,
+            ),
+            reactor,
+          )
+      | _ => state
+    }
+  }
+
+  pure def resolveHellishRebukeReactionOffer(
+    state: BattleState,
+    reactor: Actor,
+    savingThrowSucceeded: bool,
+    damageRoll: int,
+    concentrationSaveSucceeded: bool,
+  ): BattleState =
+    if (state.interruptStack.length() == 0)
+      state
+    else
+      match state.interruptStack[state.interruptStack.length() - 1] {
+        | PendingReaction(frame) =>
+            match pendingHellishRebukeReaction(frame) {
+              | NoPendingHellishRebukeReaction => state
+              | HasPendingHellishRebukeReaction(continuation) =>
+                  resolveHellishRebukeReactionFrame(
+                    state,
+                    frame,
+                    continuation,
+                    reactor,
+                    savingThrowSucceeded,
+                    damageRoll,
+                    concentrationSaveSucceeded,
+                  )
+            }
+        | _ => state
+      }
+
+  pure def declineHellishRebukeReactionOffer(
+    state: BattleState,
+    reactor: Actor,
+  ): BattleState =
+    if (state.interruptStack.length() == 0)
+      state
+    else
+      match state.interruptStack[state.interruptStack.length() - 1] {
+        | PendingReaction(frame) =>
+            match pendingHellishRebukeReaction(frame) {
+              | NoPendingHellishRebukeReaction => state
+              | HasPendingHellishRebukeReaction(_) =>
+                  stateAfterDecliningReactionOffer(state, reactor)
+            }
+        | _ => state
+      }
 }

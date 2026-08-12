@@ -81,14 +81,15 @@ module battleRuntimeCommandMovementNextTurn {
         | CommandFleeMovementRejected => state
         | CommandFleeOpportunityAttackContinuation =>
             openReactionWindow(state, {
-              trigger: OpportunityAttack,
-              procedure: OpportunityAttackReactionProcedure,
-              eligibleReactors: if (actor == Fighter) Set(Goblin) else Set(Fighter),
-              offeredReactors: Set(),
-              continuation: ResumeCommandFleeMovement({
-                speedKind: speedKind,
-                movementCost: movementCost,
+              request: OpportunityAttackReactionRequest({
+                mover: actor,
+                threats: if (actor == Fighter) Set(Goblin) else Set(Fighter),
+                continuation: OpportunityAttackResumesCommandFleeMovement({
+                  speedKind: speedKind,
+                  movementCost: movementCost,
+                }),
               }),
+              offeredReactors: Set(),
             })
         | CommandFleeMovementEndsTurn =>
             endTurn(stateWithCommandMovement(withoutPending, actor, speedKind, movementCost))

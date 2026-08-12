@@ -9,19 +9,20 @@ module battleRuntimeSaveGatedCounterspellResolutionTests {
 
   run test_counterspell_successful_save_resumes_ice_knife = {
     val awaiting = openReactionWindow(initialState, {
-      trigger: SpellCast,
-      procedure: CounterspellReactionProcedure({
-        triggeringCaster: Fighter,
-        triggeringCastingResource: CounterspellMagicAction,
-        triggeringSpellLevel: 1,
-        triggeringSpellUsesSlot: true,
-        counterspellSlotLevel: 3,
-        triggeringCasterConSaveSucceeded: true,
-        counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
+      request: SpellCastCounterspellReactionRequest({
+        eligibleReactors: Set(Goblin),
+        counterspell: {
+          triggeringCaster: Fighter,
+          triggeringCastingResource: CounterspellMagicAction,
+          triggeringSpellLevel: 1,
+          triggeringSpellUsesSlot: true,
+          counterspellSlotLevel: 3,
+          triggeringCasterConSaveSucceeded: true,
+          counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
+        },
+        continuation: CounterspellResumesIceKnife,
       }),
-      eligibleReactors: Set(Goblin),
       offeredReactors: Set(),
-      continuation: ResumeIceKnife,
     })
     val resolved = resolveSaveGatedCounterspellReactionOffer(awaiting, Goblin)
     all {
@@ -35,19 +36,20 @@ module battleRuntimeSaveGatedCounterspellResolutionTests {
 
   run test_declined_counterspell_resumes_ice_knife_into_shield_window = {
     val awaiting = openReactionWindow(initialState, {
-      trigger: SpellCast,
-      procedure: CounterspellReactionProcedure({
-        triggeringCaster: Fighter,
-        triggeringCastingResource: CounterspellMagicAction,
-        triggeringSpellLevel: 1,
-        triggeringSpellUsesSlot: true,
-        counterspellSlotLevel: 3,
-        triggeringCasterConSaveSucceeded: false,
-        counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
+      request: SpellCastCounterspellReactionRequest({
+        eligibleReactors: Set(Goblin),
+        counterspell: {
+          triggeringCaster: Fighter,
+          triggeringCastingResource: CounterspellMagicAction,
+          triggeringSpellLevel: 1,
+          triggeringSpellUsesSlot: true,
+          counterspellSlotLevel: 3,
+          triggeringCasterConSaveSucceeded: false,
+          counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
+        },
+        continuation: CounterspellResumesIceKnife,
       }),
-      eligibleReactors: Set(Goblin),
       offeredReactors: Set(),
-      continuation: ResumeIceKnife,
     })
     val resumed = declineSaveGatedCounterspellReactionOfferAndResume(
       awaiting,
@@ -57,11 +59,11 @@ module battleRuntimeSaveGatedCounterspellResolutionTests {
       assert(battleActorHasCommittedSpellSlotUse(resumed, Fighter)),
       assert(not(battleActorHasCommittedSpellSlotUse(resumed, Goblin))),
       assert(resumed.interruptStack == [PendingReaction({
-        trigger: AttackHit,
-        procedure: ShieldReactionProcedure,
-        eligibleReactors: Set(Goblin),
+        request: AttackHitShieldReactionRequest({
+          eligibleReactors: Set(Goblin),
+          continuation: ShieldResumesIceKnife,
+        }),
         offeredReactors: Set(),
-        continuation: ResumeIceKnife,
       })]),
       assert(resumed.actionAvailable),
       assert(resumed.goblin.reactionAvailable),

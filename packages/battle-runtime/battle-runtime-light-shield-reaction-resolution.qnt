@@ -23,18 +23,17 @@ module battleRuntimeLightShieldReactionResolution {
   pure def lightShieldReactionCandidate(
     frame: PendingReactionFrame,
   ): LightShieldReactionCandidate =
-    match frame.procedure {
-      | ShieldReactionProcedure =>
-          if (not(shieldReactionFrameIsFreshGoblinTarget(frame)) or
-              frame.trigger != AttackHit)
+    match frame.request {
+      | AttackHitShieldReactionRequest(request) =>
+          if (not(shieldReactionFrameIsFreshGoblinTarget(frame)))
             NoLightShieldReactionCandidate
           else
-            match frame.continuation {
-              | ResumeProduceFlameHurl =>
+            match request.continuation {
+              | ShieldResumesProduceFlameHurl =>
                   HasLightShieldReactionCandidate({
                     continuation: LightShieldProduceFlameHurl,
                   })
-              | ResumeFlameBladeAttack =>
+              | ShieldResumesFlameBladeAttack =>
                   HasLightShieldReactionCandidate({
                     continuation: LightShieldFlameBladeAttack,
                   })

@@ -240,11 +240,11 @@ module battleRuntimeWeaponAttacks {
     }
     else if (shieldOfferBoundary == TrueStrikeShieldOfferPending and defender.reactionAvailable and not(defender.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
-        trigger: AttackHit,
-        procedure: ShieldReactionProcedure,
-        eligibleReactors: Set(Goblin),
+        request: AttackHitShieldReactionRequest({
+          eligibleReactors: Set(Goblin),
+          continuation: ShieldResumesTrueStrikeWeaponAttack,
+        }),
         offeredReactors: Set(),
-        continuation: ResumeTrueStrikeWeaponAttack,
       })
     }
     else {

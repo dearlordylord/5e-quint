@@ -22,11 +22,10 @@ module battleRuntimeSaveGatedShieldReactionResolution {
   pure def saveGatedShieldReactionCandidate(
     frame: PendingReactionFrame,
   ): SaveGatedShieldReactionCandidate =
-    match frame.procedure {
-      | ShieldReactionProcedure =>
+    match frame.request {
+      | AttackHitShieldReactionRequest(request) =>
           if (shieldReactionFrameIsFreshGoblinTarget(frame) and
-              frame.trigger == AttackHit and
-              frame.continuation == ResumeIceKnife)
+              request.continuation == ShieldResumesIceKnife)
             HasSaveGatedShieldReactionCandidate({
               continuation: SaveGatedShieldIceKnife,
             })

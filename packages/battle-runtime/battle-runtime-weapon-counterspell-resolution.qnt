@@ -19,7 +19,7 @@ module battleRuntimeWeaponCounterspellResolution {
     candidate: CounterspellReactionCandidate,
   ): WeaponCounterspellContinuationOption =
     match candidate.continuation {
-      | ResumeTrueStrikeWeaponAttack =>
+      | CounterspellResumesTrueStrikeWeaponAttack =>
           HasWeaponCounterspellContinuation({
             context: candidate.context,
           })

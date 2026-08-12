@@ -66,11 +66,11 @@ module battleRuntimeHeldLightEmitterTests {
     all {
       assert(awaiting.interruptStack.length() == 1),
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
-        trigger: AttackHit,
-        procedure: ShieldReactionProcedure,
-        eligibleReactors: Set(Goblin),
+        request: AttackHitShieldReactionRequest({
+          eligibleReactors: Set(Goblin),
+          continuation: ShieldResumesProduceFlameHurl,
+        }),
         offeredReactors: Set(),
-        continuation: ResumeProduceFlameHurl,
       })),
       assert(not(activeEffectsContainProduceFlameHeldLight(awaiting.fighter.activeEffects))),
       assert(not(battleRuntimeLightEmitters(awaiting).contains(produceFlameHeldLightEmitter(produceFlameDurationTicks)))),

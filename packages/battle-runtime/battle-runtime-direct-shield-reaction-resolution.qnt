@@ -24,13 +24,14 @@ module battleRuntimeDirectShieldReactionResolution {
   pure def directShieldReactionCandidate(
     frame: PendingReactionFrame,
   ): DirectShieldReactionCandidate =
-    match frame.procedure {
-      | ShieldReactionProcedure =>
-          if (not(shieldReactionFrameIsFreshGoblinTarget(frame)) or
-              frame.trigger != AttackHit)
+    match frame.request {
+      | AttackHitShieldReactionRequest(request) =>
+          if (not(shieldReactionFrameIsFreshGoblinTarget(frame)))
             NoDirectShieldReactionCandidate
           else
-            match directSpellAttackReactionContinuation(frame.continuation) {
+            match directSpellAttackReactionContinuation(
+              shieldReactionContinuation(request.continuation),
+            ) {
               | NoDirectSpellAttackReactionContinuation =>
                   NoDirectShieldReactionCandidate
               | HasDirectSpellAttackReactionContinuation(continuation) =>

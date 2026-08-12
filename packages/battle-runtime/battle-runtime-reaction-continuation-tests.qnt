@@ -1,7 +1,6 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeReactionContinuationTests {
-  import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
@@ -29,23 +28,30 @@ module battleRuntimeReactionContinuationTests {
   }
 
   run test_reaction_decision_contract_rejects_unavailable_reaction = {
-    val awaiting = moveFighter({ ...initialState, goblin: { ...initialState.goblin, reactionAvailable: false } }, 5, 10 > 5)
+    val awaiting = moveFighter(
+      { ...initialState, goblin: { ...initialState.goblin, reactionAvailable: false } },
+      5,
+      movementProvokesOpportunityAttack,
+    )
     all {
-      assert(resolveNonSpellReactionOffer(awaiting, Goblin) == awaiting),
-      assert(declineNonSpellReactionOfferAndResume(awaiting, Goblin).fighter.movementSpent == 5),
+      assert(resolveTriggeredReactionOffer(awaiting, Goblin) == awaiting),
+      assert(declineTriggeredReactionOfferAndResume(awaiting, Goblin).fighter.movementSpent == 5),
     }
   }
 
   run test_unsupported_shield_continuation_is_rejected_without_reaction_spend = {
+    // The former Shield + after-damage continuation frame is now
+    // unconstructable. A valid Shield request remains unsupported by this
+    // generic triggered-reaction owner and must be left to its narrowed owner.
     val awaiting = openReactionWindow(initialState, {
-      trigger: AttackHit,
-      procedure: ShieldReactionProcedure,
-      eligibleReactors: Set(Fighter),
+      request: AttackHitShieldReactionRequest({
+        eligibleReactors: Set(Fighter),
+        continuation: ShieldResumesRayOfFrost,
+      }),
       offeredReactors: Set(),
-      continuation: ResumeAfterDamage,
     })
-    val resolved = resolveNonSpellReactionOffer(awaiting, Fighter)
-    val declined = declineNonSpellReactionOfferAndResume(awaiting, Fighter)
+    val resolved = resolveTriggeredReactionOffer(awaiting, Fighter)
+    val declined = declineTriggeredReactionOfferAndResume(awaiting, Fighter)
     all {
       assert(resolved == awaiting),
       assert(declined == awaiting),
@@ -55,13 +61,14 @@ module battleRuntimeReactionContinuationTests {
 
   run test_after_damage_reaction_resolves_through_damage_interruption_contract = {
     val awaitingReaction = openReactionWindow(initialState, {
-      trigger: AfterDamage,
-      procedure: DamageInterruptionReactionProcedure,
-      eligibleReactors: Set(Fighter),
+      request: AfterDamageInterruptionReactionRequest({
+        damageSource: Goblin,
+        damaged: Fighter,
+        eligibleReactors: Set(Fighter),
+      }),
       offeredReactors: Set(),
-      continuation: ResumeAfterDamage,
     })
-    val resolved = resolveNonSpellReactionOffer(awaitingReaction, Fighter)
+    val resolved = resolveTriggeredReactionOffer(awaitingReaction, Fighter)
     all {
       assert(resolved.interruptStack == []),
       assert(not(resolved.fighter.reactionAvailable)),
@@ -69,8 +76,8 @@ module battleRuntimeReactionContinuationTests {
   }
 
   run test_declined_opportunity_attack_resumes_movement = {
-    val awaiting = moveFighter(initialState, 5, 10 > 5)
-    val resumed = declineNonSpellReactionOfferAndResume(awaiting, Goblin)
+    val awaiting = moveFighter(initialState, 5, movementProvokesOpportunityAttack)
+    val resumed = declineTriggeredReactionOfferAndResume(awaiting, Goblin)
     all {
       assert(resumed.interruptStack == []),
       assert(resumed.fighter.movementSpent == 5),
@@ -79,8 +86,8 @@ module battleRuntimeReactionContinuationTests {
   }
 
   run test_resolved_opportunity_attack_spends_reaction_damages_then_resumes_movement = {
-    val awaiting = moveFighter(initialState, 5, 10 > 5)
-    val resolved = resolveNonSpellReactionOffer(awaiting, Goblin)
+    val awaiting = moveFighter(initialState, 5, movementProvokesOpportunityAttack)
+    val resolved = resolveTriggeredReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
       assert(resolved.goblin.reactionAvailable == false),
@@ -100,13 +107,13 @@ module battleRuntimeReactionContinuationTests {
   run test_resolved_reaction_releases_readied_spell_and_resumes_attack_continuation = {
     val readied = { ...readyFighterReadiedSpell(initialState), actionAvailable: true }
     val awaitingReaction = openReactionWindow(readied, {
-      trigger: AttackHit,
-      procedure: ReadiedSpellReleaseReactionProcedure,
-      eligibleReactors: Set(Fighter),
+      request: AttackHitReadiedSpellReleaseReactionRequest({
+        eligibleReactors: Set(Fighter),
+        damage: 7,
+      }),
       offeredReactors: Set(),
-      continuation: ResumeAttack({ damage: 7 }),
     })
-    val resolved = resolveNonSpellReactionOffer(awaitingReaction, Fighter)
+    val resolved = resolveTriggeredReactionOffer(awaitingReaction, Fighter)
     all {
       assert(not(resolved.fighter.readiedSpellHeld)),
       assert(not(resolved.fighter.concentrating)),

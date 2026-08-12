@@ -9,7 +9,7 @@ module battleRuntimeInvisibility {
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
-  import battleRuntimeDirectConditionActionLifecycle.* from "./battle-runtime-direct-condition-action-lifecycle"
+  import battleRuntimeTargetActionEffectEarlyEnd.* from "./battle-runtime-target-action-effect-early-end"
 
   pure def invisibilityConditionActiveEffect(source: Actor): ActiveEffect =
     InvisibilityCondition({ source: source, durationTicks: 600 })

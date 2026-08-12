@@ -9,7 +9,11 @@ module battleRuntimeMovementTests {
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 
   run test_movement_spends_budget = {
-    val moved = moveFighter(initialState, 10, 4 > 5)
+    val moved = moveFighter(
+      initialState,
+      10,
+      movementDoesNotProvokeOpportunityAttack,
+    )
     all {
       assert(moved.fighter.movementSpent == 10),
       assert(movementRemaining(moved.fighter) == 20),
@@ -25,10 +29,10 @@ module battleRuntimeMovementTests {
         hasRovingSpeedKindGrants: true,
       },
     }
-    val climbed = moveFighterWithSpeedKind(roving, ClimbSpeedKind, 15, false)
-    val swam = moveFighterWithSpeedKind(climbed, SwimSpeedKind, 25, false)
+    val climbed = moveFighterWithSpeedKind(roving, ClimbSpeedKind, 15, movementDoesNotProvokeOpportunityAttack)
+    val swam = moveFighterWithSpeedKind(climbed, SwimSpeedKind, 25, movementDoesNotProvokeOpportunityAttack)
     val dashed = dashFighterWithSpeedKind(roving, SwimSpeedKind)
-    val unsupportedClimb = moveFighterWithSpeedKind(initialState, ClimbSpeedKind, 1, false)
+    val unsupportedClimb = moveFighterWithSpeedKind(initialState, ClimbSpeedKind, 1, movementDoesNotProvokeOpportunityAttack)
     all {
       assert(movementSpeed(roving.fighter, ClimbSpeedKind) == 40),
       assert(climbed.fighter.movementSpent == 15),
@@ -93,7 +97,7 @@ module battleRuntimeMovementTests {
 
   run test_disengage_suppresses_opportunity_attack_window = {
     val disengaged = disengageFighter({ ...initialState, actionAvailable: true })
-    val moved = moveFighter(disengaged, 5, 10 > 5)
+    val moved = moveFighter(disengaged, 5, movementProvokesOpportunityAttack)
     all {
       assert(moved.interruptStack == []),
       assert(moved.fighter.movementSpent == 5),
@@ -101,7 +105,7 @@ module battleRuntimeMovementTests {
   }
 
   run test_movement_over_budget_is_rejected = {
-    assert(moveFighter(initialState, 35, 40 > 5) == initialState)
+    assert(moveFighter(initialState, 35, movementProvokesOpportunityAttack) == initialState)
   }
 
   run test_grapple_release_and_escape_update_link_state = {
@@ -126,8 +130,8 @@ module battleRuntimeMovementTests {
 
   run test_grapple_drag_cost_is_table_supplied = {
     val grappled = grappleFighterGoblin(initialState, 12)
-    val oneFootCost = moveFighter(grappled, 1, false)
-    val tenFootCost = moveFighter(grappled, 10, false)
+    val oneFootCost = moveFighter(grappled, 1, movementDoesNotProvokeOpportunityAttack)
+    val tenFootCost = moveFighter(grappled, 10, movementDoesNotProvokeOpportunityAttack)
     all {
       assert(oneFootCost.fighter.movementSpent == 1),
       assert(tenFootCost.fighter.movementSpent == 10),
@@ -135,16 +139,20 @@ module battleRuntimeMovementTests {
   }
 
   run test_movement_leaving_reach_opens_opportunity_attack_window_before_position_commit = {
-    val awaiting = moveFighter(initialState, 5, 10 > 5)
+    val awaiting = moveFighter(initialState, 5, movementProvokesOpportunityAttack)
     all {
       assert(awaiting.fighter.movementSpent == 0),
       assert(awaiting.interruptStack.length() == 1),
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
-        trigger: OpportunityAttack,
-        procedure: OpportunityAttackReactionProcedure,
-        eligibleReactors: Set(Goblin),
+        request: OpportunityAttackReactionRequest({
+          mover: Fighter,
+          threats: Set(Goblin),
+          continuation: OpportunityAttackResumesMovement({
+            speedKind: WalkSpeedKind,
+            movementCost: 5,
+          }),
+        }),
         offeredReactors: Set(),
-        continuation: ResumeMovement({ speedKind: WalkSpeedKind, movementCost: 5 }),
       })),
     }
   }
