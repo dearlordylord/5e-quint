@@ -67,14 +67,34 @@ module battleRuntimeCommandFleeNextTurnTests {
       assert(pendingReactionFrame(followed.interruptStack[0]) == HasPendingReactionFrame({
         request: OpportunityAttackReactionRequest({
           mover: Goblin,
-          threats: Set(Fighter),
+          threat: Fighter,
           continuation: OpportunityAttackResumesCommandFleeMovement({
             speedKind: WalkSpeedKind,
             movementCost: 30,
           }),
         }),
-        offeredReactors: Set(),
       })),
+    }
+  }
+
+  run test_command_flee_unavailable_threat_resumes_movement_without_phantom_window = {
+    val resolved = resolveCommand(initialState, Set(Goblin), Set(Goblin), 1, CommandFleeOption)
+    val goblinTurn = endTurn(resolved)
+    val unavailableThreat = {
+      ...goblinTurn,
+      fighter: { ...goblinTurn.fighter, incapacitated: true },
+    }
+    val followed = followCommandFlee(unavailableThreat, WalkSpeedKind, 30, true)
+    all {
+      assert(currentActor(followed) == Fighter),
+      assert(followed.goblin.movementSpent == 30),
+      assert(followed.interruptStack == []),
+      assert(not(followed.goblin.activeEffects.contains(CommandPending({
+        source: Fighter,
+        option: CommandFleeOption,
+        expiresAtActor: Goblin,
+        expiresAtRound: 1,
+      })))),
     }
   }
 }

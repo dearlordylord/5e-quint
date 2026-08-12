@@ -21,8 +21,7 @@ module battleRuntimeCounterspellReactionDecision {
 
   type CounterspellReactionContext = {
     counterspell: PendingCounterspellReaction,
-    eligibleReactors: Set[Actor],
-    offeredReactors: Set[Actor],
+    reactor: Actor,
   }
 
   type CounterspellReactionCandidate = {
@@ -43,8 +42,7 @@ module battleRuntimeCounterspellReactionDecision {
             HasPendingCounterspellReaction({
               context: {
                 counterspell: request.counterspell,
-                eligibleReactors: request.eligibleReactors,
-                offeredReactors: frame.offeredReactors,
+                reactor: request.reactor,
               },
               continuation: request.continuation,
             })
@@ -131,15 +129,11 @@ module battleRuntimeCounterspellReactionDecision {
     if (battleRuntimeReactionDecisionWasTaken(battleRuntimeTakeReactionDecision(
       battleRuntimeReactionTrigger(SpellCast),
       BattleRuntimeCounterspellReactionProcedure,
-      context.eligibleReactors.contains(reactor),
-      context.offeredReactors.contains(reactor),
+      context.reactor == reactor,
+      false,
       reactorCanReact(state, reactor),
       canActorExpendSpellSlotThisTurn(state, reactor),
-      reactionOfferCompletesFrame(
-        context.eligibleReactors,
-        context.offeredReactors,
-        reactor,
-      ),
+      true,
     ))) {
       val afterReactionSpend = spendReaction(state, reactor)
       val afterReactionProcedure = castCounterspellReactionSpell(

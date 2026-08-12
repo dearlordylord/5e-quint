@@ -87,8 +87,6 @@ module battleRuntimeSaveGatedShieldReactionResolution {
     match decision {
       | ShieldReactionDecisionTakenClosed(data) =>
           resumeSaveGatedShieldReactionAfterTake(data.state, frame.continuation)
-      | ShieldReactionDecisionTakenOpen(data) =>
-          data.state
       | _ => state
     }
   }
@@ -105,8 +103,6 @@ module battleRuntimeSaveGatedShieldReactionResolution {
     match decision {
       | ShieldReactionDecisionDeclinedClosed(data) =>
           resumeSaveGatedShieldReactionAfterDecline(data.state, frame.continuation)
-      | ShieldReactionDecisionDeclinedOpen(data) =>
-          data.state
       | _ => state
     }
   }

@@ -16,12 +16,6 @@ module battleRuntimeSanctuary {
       | _ => false
     })
 
-  pure def activeEffectsContainSanctuaryWardFrom(effects: Set[ActiveEffect], source: Actor): bool =
-    effects.exists(effect => match effect {
-      | SanctuaryWard(data) => data.source == source
-      | _ => false
-    })
-
   pure def activeEffectsSanctuaryWardDurationTicks(effects: Set[ActiveEffect]): int =
     effects.map(effect => match effect {
       | SanctuaryWard(data) => data.durationTicks
@@ -64,9 +58,6 @@ module battleRuntimeSanctuary {
       | SanctuaryLoseAttackOrSpell => warded
       | SanctuaryChooseNewTarget(data) => data.target
     }
-
-  pure def sanctuaryReplacementTargetAdmitted(warded: Actor, replacement: Actor, callerTargetLegal: bool): bool =
-    replacement != warded and callerTargetLegal
 
   pure def sanctuaryTargetingInterdictionOutcomeApplies(
     state: BattleState,

@@ -36,8 +36,7 @@ module battleRuntimeSpellCastReactionResolution {
                   HasDirectSpellReactionCandidate({
                     context: {
                       counterspell: request.counterspell,
-                      eligibleReactors: request.eligibleReactors,
-                      offeredReactors: frame.offeredReactors,
+                      reactor: request.reactor,
                     },
                     continuation: continuation,
                   })
@@ -66,24 +65,6 @@ module battleRuntimeSpellCastReactionResolution {
         frame.continuation,
       ),
     )
-
-  pure def declineDirectSpellReactionOfferAndResume(
-    state: BattleState,
-    reactor: Actor,
-  ): BattleState =
-    if (state.interruptStack.length() == 0)
-      state
-    else {
-      match state.interruptStack[state.interruptStack.length() - 1] {
-        | PendingReaction(frame) =>
-            match directSpellReactionFrame(directSpellReactionCandidate(frame)) {
-              | NoDirectSpellReactionFrame => state
-              | HasDirectSpellReactionFrame(directFrame) =>
-                  declineDirectSpellReactionFrame(state, reactor, directFrame)
-            }
-        | _ => state
-      }
-    }
 
   pure def resolveDirectSpellReactionFrame(
     state: BattleState,

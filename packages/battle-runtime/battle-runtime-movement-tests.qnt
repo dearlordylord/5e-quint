@@ -146,13 +146,12 @@ module battleRuntimeMovementTests {
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
         request: OpportunityAttackReactionRequest({
           mover: Fighter,
-          threats: Set(Goblin),
+          threat: Goblin,
           continuation: OpportunityAttackResumesMovement({
             speedKind: WalkSpeedKind,
             movementCost: 5,
           }),
         }),
-        offeredReactors: Set(),
       })),
     }
   }

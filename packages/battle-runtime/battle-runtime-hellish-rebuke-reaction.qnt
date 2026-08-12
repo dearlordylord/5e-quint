@@ -47,7 +47,6 @@ module battleRuntimeHellishRebukeReaction {
           damaged: damaged,
           slotLevel: slotLevel,
         }),
-        offeredReactors: Set(),
       })
     else
       state
@@ -124,14 +123,10 @@ module battleRuntimeHellishRebukeReaction {
       battleRuntimeReactionTrigger(AfterDamage),
       BattleRuntimeAfterDamageSpellReactionProcedure,
       reactor == continuation.damaged and reactionFrameCanOffer(frame, reactor),
-      frame.offeredReactors.contains(reactor),
+      false,
       reactorCanReact(state, reactor),
       canActorExpendSpellSlotThisTurn(state, reactor),
-      reactionOfferCompletesFrame(
-        Set(continuation.damaged),
-        frame.offeredReactors,
-        reactor,
-      ),
+      true,
     )
     match decision {
       | BattleRuntimeTookReaction(_) =>

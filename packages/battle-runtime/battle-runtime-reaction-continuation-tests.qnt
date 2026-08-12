@@ -26,10 +26,9 @@ module battleRuntimeReactionContinuationTests {
     // generic triggered-reaction owner and must be left to its narrowed owner.
     val awaiting = openReactionWindow(initialState, {
       request: AttackHitShieldReactionRequest({
-        eligibleReactors: Set(Fighter),
+        reactor: Fighter,
         continuation: ShieldResumesRayOfFrost,
       }),
-      offeredReactors: Set(),
     })
     val resolved = resolveTriggeredReactionOffer(awaiting, Fighter)
     val declined = declineTriggeredReactionOfferAndResume(awaiting, Fighter)
@@ -103,7 +102,6 @@ module battleRuntimeReactionContinuationTests {
       request: AttackHitFighterReadiedSpellReleaseReactionRequest({
         damage: 7,
       }),
-      offeredReactors: Set(),
     })
     val wrongReactor = resolveTriggeredReactionOffer(awaitingReaction, Goblin)
     val resolved = resolveTriggeredReactionOffer(awaitingReaction, Fighter)

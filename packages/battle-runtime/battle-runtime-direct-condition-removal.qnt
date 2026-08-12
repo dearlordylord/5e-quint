@@ -6,7 +6,6 @@ module battleRuntimeDirectConditionRemoval {
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeTargetActionEffectEarlyEnd.* from "./battle-runtime-target-action-effect-early-end"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"

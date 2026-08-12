@@ -451,25 +451,23 @@ module battleRuntimeModel {
   type OpportunityAttackReactionContinuation =
     | OpportunityAttackResumesMovement({ speedKind: MovementSpeedKind, movementCost: int })
     | OpportunityAttackResumesCommandFleeMovement({ speedKind: MovementSpeedKind, movementCost: int })
-    | OpportunityAttackResumesDissonantWhispersMovementThenAfterDamage({
+    | OpportunityAttackResumesDissonantWhispersReactionMovement({
         damageSource: Actor,
-        speedKind: MovementSpeedKind,
-        movementCost: int,
       })
 
   type OpportunityAttackReactionRequestData = {
     mover: Actor,
-    threats: Set[Actor],
+    threat: Actor,
     continuation: OpportunityAttackReactionContinuation,
   }
 
   type PendingReactionRequest =
     | AttackHitShieldReactionRequest({
-        eligibleReactors: Set[Actor],
+        reactor: Actor,
         continuation: ShieldReactionContinuation,
       })
     | SpellCastCounterspellReactionRequest({
-        eligibleReactors: Set[Actor],
+        reactor: Actor,
         counterspell: PendingCounterspellReaction,
         continuation: CounterspellReactionContinuation,
       })
@@ -490,12 +488,11 @@ module battleRuntimeModel {
   type DissonantWhispersForcedMovementResult =
     | DissonantWhispersInvalidMovementFill
     | DissonantWhispersNeedsMovementFill
-    | DissonantWhispersResolvedAfterDamage(BattleState)
-    | DissonantWhispersOpportunityAttackWindow(BattleState)
+    | DissonantWhispersForcedMovementResolved(BattleState)
+    | DissonantWhispersOpportunityAttackPending(BattleState)
 
   type PendingReactionFrame = {
     request: PendingReactionRequest,
-    offeredReactors: Set[Actor],
   }
   type AttackDamageConcentrationContinuation =
     | ResumeAttackDamageToGoblin
@@ -526,13 +523,13 @@ module battleRuntimeModel {
       | AfterDamageHellishRebukeReactionRequest(_) => AfterDamage
     }
 
-  pure def reactionFrameEligibleReactors(frame: PendingReactionFrame): Set[Actor] =
+  pure def reactionFrameReactor(frame: PendingReactionFrame): Actor =
     match frame.request {
-      | AttackHitShieldReactionRequest(request) => request.eligibleReactors
-      | SpellCastCounterspellReactionRequest(request) => request.eligibleReactors
-      | OpportunityAttackReactionRequest(request) => request.threats
-      | AttackHitFighterReadiedSpellReleaseReactionRequest(_) => Set(Fighter)
-      | AfterDamageHellishRebukeReactionRequest(request) => Set(request.damaged)
+      | AttackHitShieldReactionRequest(request) => request.reactor
+      | SpellCastCounterspellReactionRequest(request) => request.reactor
+      | OpportunityAttackReactionRequest(request) => request.threat
+      | AttackHitFighterReadiedSpellReleaseReactionRequest(_) => Fighter
+      | AfterDamageHellishRebukeReactionRequest(request) => request.damaged
     }
 
   type ZeroHpLifecycle = DiesAtZeroHp | UsesDeathSavingThrows

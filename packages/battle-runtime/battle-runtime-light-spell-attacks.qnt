@@ -94,16 +94,11 @@ module battleRuntimeLightSpellAttacks {
       }
     }
     else if (shieldOfferBoundary == LightShieldOfferPending and
-             state.goblin.reactionAvailable and
-             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
+             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus)) and
+             shieldReactionWindowCanOpen(state, Goblin, ShieldResumesProduceFlameHurl)) {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
-      openReactionWindow({ ...rolled, fighter: fighterWithoutProduceFlameHeldLight(rolled) }, {
-        request: AttackHitShieldReactionRequest({
-          eligibleReactors: Set(Goblin),
-          continuation: ShieldResumesProduceFlameHurl,
-        }),
-        offeredReactors: Set(),
-      })
+      val reactionBase = { ...rolled, fighter: fighterWithoutProduceFlameHeldLight(rolled) }
+      openShieldReactionWindow(reactionBase, Goblin, ShieldResumesProduceFlameHurl)
     }
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
@@ -128,14 +123,13 @@ module battleRuntimeLightSpellAttacks {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       { ...rolled, actionAvailable: false }
     }
-    else if (shieldOfferBoundary == LightShieldOfferPending and state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
-      openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
-        request: AttackHitShieldReactionRequest({
-          eligibleReactors: Set(Goblin),
-          continuation: ShieldResumesFlameBladeAttack,
-        }),
-        offeredReactors: Set(),
-      })
+    else if (
+      shieldOfferBoundary == LightShieldOfferPending and
+      not(state.goblin.activeEffects.contains(ShieldArmorClassBonus)) and
+      shieldReactionWindowCanOpen(state, Goblin, ShieldResumesFlameBladeAttack)
+    ) {
+      val reactionBase = recordFighterAttackRoll(revealFighterHidden(state))
+      openShieldReactionWindow(reactionBase, Goblin, ShieldResumesFlameBladeAttack)
     }
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))

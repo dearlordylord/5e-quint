@@ -5,34 +5,31 @@ module battleRuntimeReactionWindowTests {
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
 
   pure def opportunityAttackOfferFrame(
-    eligibleReactors: Set[Actor],
-    offeredReactors: Set[Actor],
+    mover: Actor,
+    threat: Actor,
   ): PendingReactionFrame = {
     request: OpportunityAttackReactionRequest({
-      mover: Goblin,
-      threats: eligibleReactors,
+      mover: mover,
+      threat: threat,
       continuation: OpportunityAttackResumesMovement({
         speedKind: WalkSpeedKind,
         movementCost: 10,
       }),
     }),
-    offeredReactors: offeredReactors,
   }
 
   pure def hellishRebukeOfferFrame(
     damaged: Actor,
-    offeredReactors: Set[Actor],
   ): PendingReactionFrame = {
     request: AfterDamageHellishRebukeReactionRequest({
       damager: if (damaged == Fighter) Goblin else Fighter,
       damaged: damaged,
       slotLevel: 1,
     }),
-    offeredReactors: offeredReactors,
   }
 
   run test_reaction_offer_opens_decision_frame = {
-    val frame = opportunityAttackOfferFrame(Set(Fighter), Set())
+    val frame = opportunityAttackOfferFrame(Goblin, Fighter)
     val opened = openReactionWindow(initialState, frame)
     all {
       assert(opened.interruptStack.length() == 1),
@@ -41,26 +38,16 @@ module battleRuntimeReactionWindowTests {
     }
   }
 
-  run test_reaction_decline_keeps_offer_open_for_remaining_reactor = {
-    // In this bounded two-actor model the mover cannot also be its own threat,
-    // so the historical multi-reactor OA frame was an invalid state. Strict
-    // admission also rejects offered actors outside the eligible set and
-    // already-complete frames.
-    val moverIsThreat = opportunityAttackOfferFrame(Set(Fighter, Goblin), Set())
-    val ineligibleWasOffered = opportunityAttackOfferFrame(Set(Fighter), Set(Goblin))
-    val alreadyComplete = opportunityAttackOfferFrame(Set(Fighter), Set(Fighter))
+  run test_reaction_window_rejects_self_threat_direction = {
+    val moverIsThreat = opportunityAttackOfferFrame(Goblin, Goblin)
     all {
       assert(not(pendingReactionFrameIsCanonical(moverIsThreat))),
-      assert(not(pendingReactionFrameIsCanonical(ineligibleWasOffered))),
-      assert(not(pendingReactionFrameIsCanonical(alreadyComplete))),
       assert(openReactionWindow(initialState, moverIsThreat) == initialState),
-      assert(openReactionWindow(initialState, ineligibleWasOffered) == initialState),
-      assert(openReactionWindow(initialState, alreadyComplete) == initialState),
     }
   }
 
   run test_final_reaction_decline_closes_frame_for_resume = {
-    val frame = opportunityAttackOfferFrame(Set(Fighter), Set())
+    val frame = opportunityAttackOfferFrame(Goblin, Fighter)
     val opened = openReactionWindow(initialState, frame)
     val declined = stateAfterDecliningReactionOffer(opened, Fighter)
     all {
@@ -105,12 +92,16 @@ module battleRuntimeReactionWindowTests {
       assert(not(reactorCanReact(incapacitated, Fighter))),
       assert(not(reactorCanReact(unconscious, Fighter))),
       assert(not(reactorCanReact(dead, Fighter))),
+      assert(openReactionWindow(spent, opportunityAttackOfferFrame(Goblin, Fighter)) == spent),
+      assert(openReactionWindow(incapacitated, opportunityAttackOfferFrame(Goblin, Fighter)) == incapacitated),
+      assert(openReactionWindow(unconscious, opportunityAttackOfferFrame(Goblin, Fighter)) == unconscious),
+      assert(openReactionWindow(dead, opportunityAttackOfferFrame(Goblin, Fighter)) == dead),
     }
   }
 
   run test_interrupt_stack_resume_declines_nested_to_outer_replay = {
-    val outer = openReactionWindow(initialState, opportunityAttackOfferFrame(Set(Fighter), Set()))
-    val nested = openReactionWindow(outer, hellishRebukeOfferFrame(Goblin, Set()))
+    val outer = openReactionWindow(initialState, opportunityAttackOfferFrame(Goblin, Fighter))
+    val nested = openReactionWindow(outer, hellishRebukeOfferFrame(Goblin))
     val declined = stateAfterDecliningReactionOffer(nested, Goblin)
     all {
       assert(battleRuntimeInterruptStackReactionDepth(outer) == 1),
@@ -124,7 +115,7 @@ module battleRuntimeReactionWindowTests {
   }
 
   run test_interrupt_stack_resume_observes_active_effect_change_from_battle_state = {
-    val opened = openReactionWindow(initialState, opportunityAttackOfferFrame(Set(Fighter), Set()))
+    val opened = openReactionWindow(initialState, opportunityAttackOfferFrame(Goblin, Fighter))
     val shieldedBeforeResume = applyShieldReactionSpell(opened, Goblin)
     val declined = stateAfterDecliningReactionOffer(shieldedBeforeResume, Fighter)
     all {

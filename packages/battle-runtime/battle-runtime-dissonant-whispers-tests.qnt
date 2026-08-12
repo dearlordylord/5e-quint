@@ -7,12 +7,6 @@ module battleRuntimeDissonantWhispersTests {
   import battleRuntimeTriggeredReactionResolution.* from "./battle-runtime-triggered-reaction-resolution"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
 
-  // Historical scenario identifiers that mention "opens after damage" are
-  // retained for proof-ledger continuity. Their former generic after-damage
-  // Reaction frame was an invalid phantom Reaction: Dissonant Whispers has
-  // already dealt its damage, and only the target's forced-movement Reaction
-  // (plus any Opportunity Attack it provokes) belongs in this sequence.
-
   run test_dissonant_whispers_forced_reaction_requires_movement_fill_when_available = {
     assert(
       resolveDissonantWhispersGoblinForcedReactionMovement(initialState, DissonantWhispersMovementMissing)
@@ -20,13 +14,13 @@ module battleRuntimeDissonantWhispersTests {
     )
   }
 
-  run test_dissonant_whispers_forced_reaction_no_reaction_opens_after_damage = {
+  run test_dissonant_whispers_no_reaction_completes_without_interrupt = {
     val noReaction = {
       ...initialState,
       goblin: { ...initialState.goblin, reactionAvailable: false },
     }
     match resolveDissonantWhispersGoblinForcedReactionMovement(noReaction, DissonantWhispersMovementMissing) {
-      | DissonantWhispersResolvedAfterDamage(result) =>
+      | DissonantWhispersForcedMovementResolved(result) =>
           all {
             assert(not(result.goblin.reactionAvailable)),
             assert(result.fighter.reactionAvailable),
@@ -36,10 +30,10 @@ module battleRuntimeDissonantWhispersTests {
     }
   }
 
-  run test_dissonant_whispers_forced_reaction_no_movement_spends_reaction_and_opens_after_damage = {
+  run test_dissonant_whispers_no_movement_spends_reaction_without_interrupt = {
     val grappled = grappleFighterGoblin(initialState, 12)
     match resolveDissonantWhispersGoblinForcedReactionMovement(grappled, DissonantWhispersMovementMissing) {
-      | DissonantWhispersResolvedAfterDamage(result) =>
+      | DissonantWhispersForcedMovementResolved(result) =>
           all {
             assert(not(result.goblin.reactionAvailable)),
             assert(result.fighter.reactionAvailable),
@@ -63,7 +57,7 @@ module battleRuntimeDissonantWhispersTests {
     )
   }
 
-  run test_dissonant_whispers_forced_reaction_movement_without_threat_spends_reaction_then_after_damage = {
+  run test_dissonant_whispers_reaction_movement_without_threat_preserves_turn_movement = {
     match resolveDissonantWhispersGoblinForcedReactionMovement(
       initialState,
       DissonantWhispersMovementFilled({
@@ -72,7 +66,7 @@ module battleRuntimeDissonantWhispersTests {
         provokesOpportunityAttack: false,
       })
     ) {
-      | DissonantWhispersResolvedAfterDamage(result) =>
+      | DissonantWhispersForcedMovementResolved(result) =>
           all {
             assert(not(result.goblin.reactionAvailable)),
             assert(result.goblin.movementSpent == initialState.goblin.movementSpent),
@@ -83,7 +77,7 @@ module battleRuntimeDissonantWhispersTests {
     }
   }
 
-  run test_dissonant_whispers_forced_reaction_movement_with_threat_opens_opportunity_attack_first = {
+  run test_dissonant_whispers_reaction_movement_with_threat_opens_opportunity_attack = {
     match resolveDissonantWhispersGoblinForcedReactionMovement(
       initialState,
       DissonantWhispersMovementFilled({
@@ -92,7 +86,7 @@ module battleRuntimeDissonantWhispersTests {
         provokesOpportunityAttack: true,
       })
     ) {
-      | DissonantWhispersOpportunityAttackWindow(result) =>
+      | DissonantWhispersOpportunityAttackPending(result) =>
           all {
             assert(not(result.goblin.reactionAvailable)),
             assert(result.goblin.movementSpent == initialState.goblin.movementSpent),
@@ -100,21 +94,18 @@ module battleRuntimeDissonantWhispersTests {
             assert(pendingReactionFrame(result.interruptStack[0]) == HasPendingReactionFrame({
               request: OpportunityAttackReactionRequest({
                 mover: Goblin,
-                threats: Set(Fighter),
-                continuation: OpportunityAttackResumesDissonantWhispersMovementThenAfterDamage({
+                threat: Fighter,
+                continuation: OpportunityAttackResumesDissonantWhispersReactionMovement({
                   damageSource: Fighter,
-                  speedKind: WalkSpeedKind,
-                  movementCost: 10,
                 }),
               }),
-              offeredReactors: Set(),
             })),
           }
       | _ => assert(false)
     }
   }
 
-  run test_dissonant_whispers_declined_opportunity_attack_resumes_after_damage_sequence = {
+  run test_dissonant_whispers_declined_opportunity_attack_closes_interrupt = {
     match resolveDissonantWhispersGoblinForcedReactionMovement(
       initialState,
       DissonantWhispersMovementFilled({
@@ -123,7 +114,7 @@ module battleRuntimeDissonantWhispersTests {
         provokesOpportunityAttack: true,
       })
     ) {
-      | DissonantWhispersOpportunityAttackWindow(awaiting) => {
+      | DissonantWhispersOpportunityAttackPending(awaiting) => {
           val resumed = declineTriggeredReactionOfferAndResume(awaiting, Fighter)
           all {
             assert(resumed.fighter.reactionAvailable),
@@ -145,7 +136,7 @@ module battleRuntimeDissonantWhispersTests {
         provokesOpportunityAttack: true,
       })
     ) {
-      | DissonantWhispersOpportunityAttackWindow(awaiting) => {
+      | DissonantWhispersOpportunityAttackPending(awaiting) => {
           val resolved = resolveTriggeredReactionOffer(awaiting, Fighter)
           all {
             assert(not(resolved.fighter.reactionAvailable)),
@@ -156,6 +147,30 @@ module battleRuntimeDissonantWhispersTests {
             assert(resolved.interruptStack == []),
           }
         }
+      | _ => assert(false)
+    }
+  }
+
+  run test_dissonant_whispers_unavailable_threat_completes_without_phantom_window = {
+    val unavailableThreat = {
+      ...initialState,
+      fighter: { ...initialState.fighter, incapacitated: true },
+    }
+    match resolveDissonantWhispersGoblinForcedReactionMovement(
+      unavailableThreat,
+      DissonantWhispersMovementFilled({
+        speedKind: WalkSpeedKind,
+        movementCost: 10,
+        provokesOpportunityAttack: true,
+      })
+    ) {
+      | DissonantWhispersForcedMovementResolved(resolved) =>
+          all {
+            assert(not(resolved.goblin.reactionAvailable)),
+            assert(resolved.fighter.reactionAvailable),
+            assert(resolved.goblin.movementSpent == unavailableThreat.goblin.movementSpent),
+            assert(resolved.interruptStack == []),
+          }
       | _ => assert(false)
     }
   }

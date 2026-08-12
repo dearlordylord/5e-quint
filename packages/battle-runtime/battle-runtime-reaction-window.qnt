@@ -20,7 +20,7 @@ module battleRuntimeReactionWindow {
   pure def fighterCanReleaseReadiedSpell(state: BattleState): bool =
     state.fighter.readiedSpellHeld and not(fighterHasRage(state))
 
-  pure def reactionWindowCanOpen(state: BattleState, frame: PendingReactionFrame): bool =
+  pure def reactionRequestProcedureCanOpen(state: BattleState, frame: PendingReactionFrame): bool =
     match frame.request {
       | SpellCastCounterspellReactionRequest(request) =>
           not(counterspellFrameClaimsTriggeringSlot(frame)) or
@@ -48,48 +48,58 @@ module battleRuntimeReactionWindow {
 
   pure def reactionRequestHasCanonicalParticipants(request: PendingReactionRequest): bool =
     match request {
-      | AttackHitShieldReactionRequest(data) => data.eligibleReactors.size() == 1
+      | AttackHitShieldReactionRequest(_) => true
       | SpellCastCounterspellReactionRequest(data) =>
-          data.eligibleReactors.size() == 1 and
-            not(data.eligibleReactors.contains(data.counterspell.triggeringCaster))
+          data.reactor != data.counterspell.triggeringCaster
       | OpportunityAttackReactionRequest(data) =>
-          data.threats.size() > 0 and not(data.threats.contains(data.mover))
+          data.threat != data.mover
       | AttackHitFighterReadiedSpellReleaseReactionRequest(_) => true
       | AfterDamageHellishRebukeReactionRequest(data) =>
           data.damager != data.damaged and data.slotLevel >= 1
     }
 
-  pure def pendingReactionFrameIsCanonical(frame: PendingReactionFrame): bool = {
-    val eligibleReactors = reactionFrameEligibleReactors(frame)
-    reactionRequestHasCanonicalParticipants(frame.request) and
-      frame.offeredReactors.subseteq(eligibleReactors) and
-      frame.offeredReactors != eligibleReactors
-  }
+  pure def pendingReactionFrameIsCanonical(frame: PendingReactionFrame): bool =
+    reactionRequestHasCanonicalParticipants(frame.request)
+
+  pure def reactionWindowCanOpen(state: BattleState, frame: PendingReactionFrame): bool =
+    pendingReactionFrameIsCanonical(frame) and
+      reactionRequestProcedureCanOpen(state, frame) and
+      reactorCanReact(state, reactionFrameReactor(frame))
 
   pure def openReactionWindow(state: BattleState, frame: PendingReactionFrame): BattleState =
-    if (pendingReactionFrameIsCanonical(frame) and reactionWindowCanOpen(state, frame)) {
+    if (reactionWindowCanOpen(state, frame)) {
       val openingState = stateAfterOpeningReactionWindow(state, frame)
       { ...openingState, interruptStack: openingState.interruptStack.append(PendingReaction(frame)) }
     }
     else
       state
 
-  pure def reactionFrameComplete(frame: PendingReactionFrame): bool =
-    reactionFrameEligibleReactors(frame) == frame.offeredReactors
+  pure def reactionWindowOpened(before: BattleState, after: BattleState): bool =
+    after.interruptStack.length() > before.interruptStack.length()
 
-  pure def reactionOfferCompletesFrame(
-    eligibleReactors: Set[Actor],
-    offeredReactors: Set[Actor],
+  pure def shieldReactionFrame(
     reactor: Actor,
-  ): bool =
-    eligibleReactors == offeredReactors.union(Set(reactor))
+    continuation: ShieldReactionContinuation,
+  ): PendingReactionFrame = {
+    request: AttackHitShieldReactionRequest({
+      reactor: reactor,
+      continuation: continuation,
+    }),
+  }
 
-  pure def reactionFrameCompleteAfterOffering(frame: PendingReactionFrame, reactor: Actor): bool =
-    reactionOfferCompletesFrame(
-      reactionFrameEligibleReactors(frame),
-      frame.offeredReactors,
-      reactor,
-    )
+  pure def shieldReactionWindowCanOpen(
+    state: BattleState,
+    reactor: Actor,
+    continuation: ShieldReactionContinuation,
+  ): bool =
+    reactionWindowCanOpen(state, shieldReactionFrame(reactor, continuation))
+
+  pure def openShieldReactionWindow(
+    state: BattleState,
+    reactor: Actor,
+    continuation: ShieldReactionContinuation,
+  ): BattleState =
+    openReactionWindow(state, shieldReactionFrame(reactor, continuation))
 
   pure def combatantCanReact(combatant: Combatant): bool =
     combatant.reactionAvailable and
@@ -116,19 +126,12 @@ module battleRuntimeReactionWindow {
       | PendingAttackDamageConcentration(_) => NoPendingReactionFrame
     }
 
-  pure def reactionFrameCanOffer(frame: PendingReactionFrame, reactor: Actor): bool =
-    pendingReactionFrameIsCanonical(frame) and
-      reactionFrameEligibleReactors(frame).contains(reactor) and
-      not(frame.offeredReactors.contains(reactor))
-
-  pure def reactionFrameAfterOffering(
+  pure def reactionFrameCanOffer(
     frame: PendingReactionFrame,
     reactor: Actor,
-  ): PendingReactionFrame =
-    if (reactionFrameCanOffer(frame, reactor))
-      { ...frame, offeredReactors: frame.offeredReactors.union(Set(reactor)) }
-    else
-      frame
+  ): bool =
+    pendingReactionFrameIsCanonical(frame) and
+      reactionFrameReactor(frame) == reactor
 
   pure def stateAfterDecliningReactionOffer(state: BattleState, reactor: Actor): BattleState =
     if (state.interruptStack.length() == 0)
@@ -140,11 +143,10 @@ module battleRuntimeReactionWindow {
             if (not(reactionFrameCanOffer(frame, reactor)))
               state
             else {
-              val updatedFrame = reactionFrameAfterOffering(frame, reactor)
               val decision = battleRuntimeDeclineReactionDecision(
                 true,
                 false,
-                reactionFrameComplete(updatedFrame),
+                true,
               )
               match (decision) {
                 | BattleRuntimeDeclinedReaction(result) => {
@@ -152,7 +154,7 @@ module battleRuntimeReactionWindow {
                     if (result.frameComplete)
                       { ...state, interruptStack: rest }
                     else
-                      { ...state, interruptStack: rest.append(PendingReaction(updatedFrame)) }
+                      state
                   }
                 | _ => state
               }

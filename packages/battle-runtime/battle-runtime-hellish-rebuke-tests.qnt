@@ -25,7 +25,6 @@ module battleRuntimeHellishRebukeTests {
           damaged: Fighter,
           slotLevel: 1,
         }),
-        offeredReactors: Set(),
       })),
     }
   }
@@ -133,7 +132,7 @@ module battleRuntimeHellishRebukeTests {
     }
   }
 
-  run test_after_damage_reaction_resolves_through_damage_interruption_contract = {
+  run test_hellish_rebuke_after_damage_reaction_uses_specific_typed_owner = {
     // After-damage spell Reactions use their specific typed owner; there is no
     // generic no-op Reaction procedure that can consume an unrelated reactor.
     val awaiting = openHellishRebukeAfterDamageReactionWindow(

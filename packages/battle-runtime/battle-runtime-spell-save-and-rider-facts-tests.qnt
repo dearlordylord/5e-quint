@@ -7,12 +7,10 @@
 module battleRuntimeSpellSaveAndRiderFactsTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSavingThrowRollMode.* from "./battle-runtime-saving-throw-roll-mode"
-  import battleRuntimeSorcerousBurstDamageChoice.* from "./battle-runtime-sorcerous-burst-damage-choice"
   import battleRuntimeSpellAttackRollAndVisibilityFacts.* from "./battle-runtime-spell-attack-roll-and-visibility-facts"
   import battleRuntimeChainedSpellAttack.* from "./battle-runtime-chained-spell-attack"
   import battleRuntimeSaveGatedFacts.* from "./battle-runtime-save-gated-facts"
   import battleRuntimeSaveGatedObjectFacts.* from "./battle-runtime-save-gated-object-facts"
-  import battleRuntimeSaveConditionEntangle.* from "./battle-runtime-save-condition-entangle"
   import battleRuntimeCreatureTypeProtection.* from "./battle-runtime-creature-type-protection"
   import battleRuntimeCreatureTypeProtectionAttackRoll.* from "./battle-runtime-creature-type-protection-attack-roll"
   import battleRuntimeSaveConditionTargetList.* from "./battle-runtime-save-condition-target-list"

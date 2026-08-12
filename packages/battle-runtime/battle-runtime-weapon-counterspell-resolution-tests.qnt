@@ -10,7 +10,7 @@ module battleRuntimeWeaponCounterspellResolutionTests {
   run test_counterspell_successful_save_resumes_true_strike_weapon_attack = {
     val awaiting = openReactionWindow(initialState, {
       request: SpellCastCounterspellReactionRequest({
-        eligibleReactors: Set(Goblin),
+        reactor: Goblin,
         counterspell: {
           triggeringCaster: Fighter,
           triggeringCastingResource: CounterspellMagicAction,
@@ -22,7 +22,6 @@ module battleRuntimeWeaponCounterspellResolutionTests {
         },
         continuation: CounterspellResumesTrueStrikeWeaponAttack,
       }),
-      offeredReactors: Set(),
     })
     val resolved = resolveWeaponCounterspellReactionOffer(awaiting, Goblin)
     all {

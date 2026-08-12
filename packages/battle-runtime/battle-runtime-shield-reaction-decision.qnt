@@ -12,17 +12,14 @@ module battleRuntimeShieldReactionDecision {
 
   type ShieldReactionDecision =
     | ShieldReactionDecisionUnchanged
-    | ShieldReactionDecisionTakenOpen({ state: BattleState })
     | ShieldReactionDecisionTakenClosed({ state: BattleState })
-    | ShieldReactionDecisionDeclinedOpen({ state: BattleState })
     | ShieldReactionDecisionDeclinedClosed({ state: BattleState })
 
   pure def shieldReactionFrameIsFreshGoblinTarget(
     frame: PendingReactionFrame,
   ): bool =
     pendingReactionFrameIsCanonical(frame) and
-      reactionFrameEligibleReactors(frame) == Set(Goblin) and
-      frame.offeredReactors == Set()
+      reactionFrameReactor(frame) == Goblin
 
   pure def declineShieldReactionDecision(
     state: BattleState,
@@ -31,10 +28,8 @@ module battleRuntimeShieldReactionDecision {
     val afterDecision = stateAfterDecliningReactionOffer(state, reactor)
     if (afterDecision == state)
       ShieldReactionDecisionUnchanged
-    else if (reactionDecisionClosedFrame(state, afterDecision))
-      ShieldReactionDecisionDeclinedClosed({ state: afterDecision })
     else
-      ShieldReactionDecisionDeclinedOpen({ state: afterDecision })
+      ShieldReactionDecisionDeclinedClosed({ state: afterDecision })
   }
 
   pure def takeShieldReactionDecision(
@@ -62,10 +57,7 @@ module battleRuntimeShieldReactionDecision {
             afterReactionProcedure,
             reactor,
           )
-          if (reactionDecisionClosedFrame(state, afterDecision))
-            ShieldReactionDecisionTakenClosed({ state: afterDecision })
-          else
-            ShieldReactionDecisionTakenOpen({ state: afterDecision })
+          ShieldReactionDecisionTakenClosed({ state: afterDecision })
         }
       | _ => ShieldReactionDecisionUnchanged
     }

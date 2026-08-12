@@ -33,8 +33,8 @@ module battleRuntimeTriggeredReactionResolution {
             )
           else
             state
-      | OpportunityAttackResumesDissonantWhispersMovementThenAfterDamage(movement) =>
-          if (request.mover == Goblin and movement.damageSource != request.mover) {
+      | OpportunityAttackResumesDissonantWhispersReactionMovement(continuation) =>
+          if (request.mover == Goblin and continuation.damageSource != request.mover) {
             // The frame records the already-validated Reaction movement fill.
             // Spatial displacement remains table/runtime state in this slice,
             // and its completion spends neither turn movement nor a phantom
@@ -124,10 +124,10 @@ module battleRuntimeTriggeredReactionResolution {
                     battleRuntimeReactionTrigger(OpportunityAttack),
                     BattleRuntimeOpportunityAttackProcedure,
                     reactor != request.mover and reactionFrameCanOffer(frame, reactor),
-                    frame.offeredReactors.contains(reactor),
+                    false,
                     reactorCanReact(state, reactor),
                     true,
-                    reactionFrameCompleteAfterOffering(frame, reactor),
+                    true,
                   )
                   match decision {
                     | BattleRuntimeTookReaction(_) => {
@@ -161,10 +161,10 @@ module battleRuntimeTriggeredReactionResolution {
                     battleRuntimeReactionTrigger(AttackHit),
                     BattleRuntimeReadiedSpellReleaseProcedure,
                     reactor == Fighter and reactionFrameCanOffer(frame, reactor),
-                    frame.offeredReactors.contains(reactor),
+                    false,
                     reactorCanReact(state, reactor),
                     fighterCanReleaseReadiedSpell(state),
-                    reactionFrameCompleteAfterOffering(frame, reactor),
+                    true,
                   )
                   match decision {
                     | BattleRuntimeTookReaction(_) => {

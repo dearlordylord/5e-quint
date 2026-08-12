@@ -2,7 +2,6 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE
 
 module battleRuntimeSpellAttackDirectResolution {
-  import battleRuntimeSpellAttackFacts.* from "./battle-runtime-spell-attack-facts"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
@@ -299,15 +298,10 @@ module battleRuntimeSpellAttackDirectResolution {
     else if (fighterSpellAttackMirrorImageRedirects(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight))
       recordFighterSpellAttackMirrorImageDuplicateHit(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight)
     else if (shieldOfferBoundary == DirectSpellAttackShieldOfferPending and
-             state.goblin.reactionAvailable and
-             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
-      openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
-        request: AttackHitShieldReactionRequest({
-          eligibleReactors: Set(Goblin),
-          continuation: ShieldResumesRayOfFrost,
-        }),
-        offeredReactors: Set(),
-      })
+             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus)) and
+             shieldReactionWindowCanOpen(state, Goblin, ShieldResumesRayOfFrost)) {
+      val reactionBase = recordFighterAttackRoll(revealFighterHidden(state))
+      openShieldReactionWindow(reactionBase, Goblin, ShieldResumesRayOfFrost)
     }
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
@@ -351,15 +345,10 @@ module battleRuntimeSpellAttackDirectResolution {
     else if (fighterSpellAttackMirrorImageRedirects(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight))
       recordFighterSpellAttackMirrorImageDuplicateHit(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight)
     else if (shieldOfferBoundary == DirectSpellAttackShieldOfferPending and
-             state.goblin.reactionAvailable and
-             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
-      openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
-        request: AttackHitShieldReactionRequest({
-          eligibleReactors: Set(Goblin),
-          continuation: ShieldResumesPoisonSpray,
-        }),
-        offeredReactors: Set(),
-      })
+             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus)) and
+             shieldReactionWindowCanOpen(state, Goblin, ShieldResumesPoisonSpray)) {
+      val reactionBase = recordFighterAttackRoll(revealFighterHidden(state))
+      openShieldReactionWindow(reactionBase, Goblin, ShieldResumesPoisonSpray)
     }
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
@@ -403,15 +392,10 @@ module battleRuntimeSpellAttackDirectResolution {
     else if (fighterSpellAttackMirrorImageRedirects(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight))
       recordFighterSpellAttackMirrorImageDuplicateHit(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight)
     else if (shieldOfferBoundary == DirectSpellAttackShieldOfferPending and
-             state.goblin.reactionAvailable and
-             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
-      openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
-        request: AttackHitShieldReactionRequest({
-          eligibleReactors: Set(Goblin),
-          continuation: ShieldResumesChillTouch,
-        }),
-        offeredReactors: Set(),
-      })
+             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus)) and
+             shieldReactionWindowCanOpen(state, Goblin, ShieldResumesChillTouch)) {
+      val reactionBase = recordFighterAttackRoll(revealFighterHidden(state))
+      openShieldReactionWindow(reactionBase, Goblin, ShieldResumesChillTouch)
     }
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
