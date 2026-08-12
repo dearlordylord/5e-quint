@@ -29,7 +29,6 @@ import {
 import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
 import { parseSavingThrowRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 import { combatantCanTakeActions } from "./creature-state-execution.ts";
-import { currentActorId } from "./creature-state-leaves.ts";
 
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -65,7 +64,7 @@ type ExpectedDragonBreathFill = {
 };
 type DragonsBreathDamageEntry = {
   readonly targetId: CombatantId;
-  readonly targetForHoles: BattleCreatureState | undefined;
+  readonly targetForHoles: BattleCreatureState;
   readonly damageByType: ReturnType<typeof damageAmountByTypeEntriesToMap>;
   readonly spellDamageReductionRoll:
     | Extract<BattleFill, { readonly kind: "rolledDice" }>
@@ -77,13 +76,6 @@ type DragonsBreathDamageEntry = {
 export function resolveDragonsBreathExhaleCommand(
   input: BattleResolutionInputForSubject<DragonsBreathExhaleSubject>,
 ): BattleResolutionResult {
-  if (input.subject.actorId !== currentActorId(input.state)) {
-    return invalidResult(
-      input.state,
-      "wrongActor",
-      "Dragon's Breath exhale belongs to the current actor.",
-    );
-  }
   const actor = input.state.combatants.get(input.subject.actorId);
   if (
     !combatantCanTakeActions(actor) ||
@@ -120,12 +112,9 @@ export function resolveDragonsBreathExhaleCommand(
   /* v8 ignore stop */
   const saveFill = savingThrowFillFor(input.fills, saveHole.holeId);
   if (saveFill === undefined) {
-    const fillsValidation =
-      input.fills.length === 0
-        ? null
-        : validateExpectedDragonBreathFills(input.fills, [
-            { kind: "savingThrowOutcome", holeId: saveHole.holeId },
-          ]);
+    const fillsValidation = validateExpectedDragonBreathFills(input.fills, [
+      { kind: "savingThrowOutcome", holeId: saveHole.holeId },
+    ]);
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (fillsValidation !== null) {
       return invalidResult(input.state, "invalidFill", fillsValidation);
@@ -173,13 +162,11 @@ export function resolveDragonsBreathExhaleCommand(
       return invalidResult(input.state, "invalidFill", fillsValidation);
     }
     /* v8 ignore stop */
-    const spent = spendDragonsBreathMagicAction(
+    const resolvedState = battleStateAfterSpendingDragonsBreathMagicAction(
       input,
       savingThrowTargetIds,
       relationshipFacts,
     );
-    if (spent.tag !== "spent") return spent;
-    const resolvedState = spent.state;
     return {
       tag: "resolved",
       state: resolvedState,
@@ -218,24 +205,15 @@ export function resolveDragonsBreathExhaleCommand(
   );
   const damageEntriesByTarget: DragonsBreathDamageEntry[] = [];
   for (const outcome of outcomes) {
-    const target = input.state.combatants.get(outcome.targetId);
+    // Saving-throw fill validation proves every affected outcome target belongs
+    // to this battle before damage entries are projected.
+    const target = input.state.combatants.get(outcome.targetId)!;
     const unadjusted = outcome.succeeded
       ? Math.floor(rolledDiceTotal(damageFill.value) / 2)
       : rolledDiceTotal(damageFill.value);
     const damageByType = damageAmountByTypeEntriesToMap([
       { damageType: effect.damageType, amount: unadjusted },
     ]);
-    if (target === undefined) {
-      damageEntriesByTarget.push({
-        targetId: outcome.targetId,
-        targetForHoles: target,
-        damageByType,
-        spellDamageReductionRoll: undefined,
-        damageAmount: 0,
-        spellDamageReductionHoles: [],
-      });
-      continue;
-    }
     const spellDamageReductionRoll = spellDamageReductionRollForTarget(
       spellDamageReductionRolls,
       target,
@@ -282,7 +260,7 @@ export function resolveDragonsBreathExhaleCommand(
     });
   }
   const concentrationHoles = damageEntriesByTarget.flatMap((entry) => {
-    return entry.targetForHoles === undefined || entry.damageAmount <= 0
+    return entry.damageAmount <= 0
       ? []
       : damageLifecycleConcentrationSavingThrowHoles({
           state: input.state,
@@ -324,7 +302,7 @@ export function resolveDragonsBreathExhaleCommand(
   /* v8 ignore stop */
   const damageDispositionHoles = damageEntriesByTarget.flatMap((entry) => {
     const hole =
-      entry.targetForHoles === undefined || entry.damageAmount <= 0
+      entry.damageAmount <= 0
         ? null
         : zeroHitPointReplacementDispositionHole({
             damageSourceId: input.subject.actorId,
@@ -381,18 +359,15 @@ export function resolveDragonsBreathExhaleCommand(
   }
   /* v8 ignore stop */
 
-  const spent = spendDragonsBreathMagicAction(
+  let damaged = battleStateAfterSpendingDragonsBreathMagicAction(
     input,
     savingThrowTargetIds,
     relationshipFacts,
   );
-  if (spent.tag !== "spent") return spent;
-  let damaged = spent.state;
   for (const entry of damageEntriesByTarget) {
-    const currentTarget = damaged.combatants.get(entry.targetId);
-    if (currentTarget === undefined) {
-      continue;
-    }
+    // Damage application preserves combatant membership, and fill validation
+    // proved this target was present before the sequential damage lifecycle.
+    const currentTarget = damaged.combatants.get(entry.targetId)!;
     const spellReduction = applyAvailableSpellDamageReduction(
       currentTarget,
       entry.damageByType,
@@ -460,33 +435,25 @@ export function resolveDragonsBreathExhaleCommand(
   };
 }
 
-function spendDragonsBreathMagicAction(
+function battleStateAfterSpendingDragonsBreathMagicAction(
   input: BattleResolutionInputForSubject<DragonsBreathExhaleSubject>,
   targetIds: readonly CombatantId[],
   relationshipFacts: Parameters<typeof extendSavingThrowOngoingFeatures>[3],
-):
-  | { readonly tag: "spent"; readonly state: BattleState }
-  | BattleResolutionResult {
-  const spent = spendAction(input.state.currentTurnResources, "magic");
-  if (Either.isLeft(spent)) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Magic action is no longer available for Dragon's Breath.",
-    );
-  }
-  return {
-    tag: "spent",
-    state: battleStateAfterTargetActionEarlyEndForActor(
-      extendSavingThrowOngoingFeatures(
-        { ...input.state, currentTurnResources: spent.right },
-        input.subject.actorId,
-        targetIds,
-        relationshipFacts,
-      ),
+): BattleState {
+  // The resolver proves Magic-action availability before processing fills, and
+  // fill processing does not modify turn resources.
+  const spentResources = Either.getOrThrow(
+    spendAction(input.state.currentTurnResources, "magic"),
+  );
+  return battleStateAfterTargetActionEarlyEndForActor(
+    extendSavingThrowOngoingFeatures(
+      { ...input.state, currentTurnResources: spentResources },
       input.subject.actorId,
+      targetIds,
+      relationshipFacts,
     ),
-  };
+    input.subject.actorId,
+  );
 }
 
 function dragonsBreathDamageRollHole(

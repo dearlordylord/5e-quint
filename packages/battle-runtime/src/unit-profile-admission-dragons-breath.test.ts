@@ -10,6 +10,7 @@ import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
+import { Hp } from "@dnd/shared/types";
 import dragonsBreathInput from "../../surface/content/dragons_breath.json";
 import {
   dragonsBreathUnitId,
@@ -22,6 +23,8 @@ import {
   requireHole,
   requireResultHole,
   rolledDiceGroup,
+  attackDamageDispositionFill,
+  statBlockWithCreatureType,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
@@ -54,8 +57,11 @@ import {
 import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleActiveEffectExecutionRefForTest,
+  requireCharacterUnitProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
   testCharacterD20Statistics,
+  unitLibrary,
+  ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 } from "./battle-runtime.test-support.ts";
 import { BattleSnapshotSchema } from "./index.ts";
 
@@ -676,6 +682,217 @@ describe("Dragon's Breath initial cast admission", () => {
     );
   });
 
+  test("halves an odd damage roll after a successful Dexterity save", () => {
+    const session = spellBattle({
+      preparedSpells: [dragonsBreathSpell()],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const cast = castDragonsBreath(session, "lightning");
+    const endedCasterTurn = endTurn({ state: cast, actorId: spellCasterId });
+    if (endedCasterTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const targetTurn = endedCasterTurn.state;
+    const exhaleAct = dragonsBreathExhaleAct(targetTurn);
+    const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
+    const saveFill = dragonsBreathSavingThrowOutcomeFill(saveHole, {
+      originAnchorId: spellTargetId,
+      affectedTargetIds: [spellCasterId],
+      outcomes: [{ targetId: spellCasterId, succeeded: true }],
+    });
+    const needsDamage = resolveBattleSubject({
+      state: targetTurn,
+      subject: exhaleAct.subject,
+      fills: [saveFill],
+    });
+    const damageHole = requireResultHole(needsDamage, "rolledDice");
+    const damageFill = damageRollFillWithGroups(damageHole, [[3, 3, 3]]);
+    const needsConcentration = resolveBattleSubject({
+      state: targetTurn,
+      subject: exhaleAct.subject,
+      fills: [saveFill, damageFill],
+    });
+    const concentrationHole = requireResultHole(
+      needsConcentration,
+      "concentrationSavingThrow",
+    );
+    const beforeHp = Number(requireCombatant(targetTurn, spellCasterId).hp);
+
+    const resolved = resolveBattleSubject({
+      state: targetTurn,
+      subject: exhaleAct.subject,
+      fills: [
+        saveFill,
+        damageFill,
+        {
+          kind: "concentrationSavingThrow",
+          holeId: concentrationHole.holeId,
+          value: { succeeded: true },
+        },
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected successful-save exhale to resolve.");
+    }
+    expect(Number(requireCombatant(resolved.state, spellCasterId).hp)).toBe(
+      beforeHp - 4,
+    );
+  });
+
+  test("spends the Magic action without damaging an immune Cone target", () => {
+    const immuneTargetId = combatantId("dragons-breath-fire-immune-target");
+    const session = spellBattle({
+      preparedSpells: [dragonsBreathSpell()],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      statBlockTargets: [
+        {
+          combatantId: immuneTargetId,
+          statBlock: fireImmuneHumanoidStatBlock(),
+          initiative: 5,
+        },
+      ],
+    });
+    const cast = castDragonsBreath(session, "fire");
+    const endedCasterTurn = endTurn({ state: cast, actorId: spellCasterId });
+    if (endedCasterTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const targetTurn = endedCasterTurn.state;
+    const exhaleAct = dragonsBreathExhaleAct(targetTurn);
+    const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
+    const saveFill = dragonsBreathSavingThrowOutcomeFill(saveHole, {
+      originAnchorId: spellTargetId,
+      affectedTargetIds: [immuneTargetId],
+      outcomes: [{ targetId: immuneTargetId, succeeded: false }],
+    });
+    const needsDamage = resolveBattleSubject({
+      state: targetTurn,
+      subject: exhaleAct.subject,
+      fills: [saveFill],
+    });
+    const damageHole = requireResultHole(needsDamage, "rolledDice");
+    const beforeHp = requireCombatant(targetTurn, immuneTargetId).hp;
+
+    const resolved = resolveBattleSubject({
+      state: targetTurn,
+      subject: exhaleAct.subject,
+      fills: [saveFill, damageRollFillWithGroups(damageHole, [[4, 4, 4]])],
+    });
+
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: { turn: { actionResources: [] } },
+    });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected damage-immune exhale to resolve.");
+    }
+    expect(requireCombatant(resolved.state, immuneTargetId).hp).toBe(beforeHp);
+  });
+
+  test("offers and applies zero-Hit-Point replacement for exhale damage", () => {
+    const relentlessEndurance = unitLibrary.requireUnit(
+      "orc_relentless_endurance",
+    );
+    const session = spellBattle({
+      preparedSpells: [dragonsBreathSpell()],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterResources: [{ unit: relentlessEndurance }],
+      casterUnitRefs: [
+        {
+          unit: relentlessEndurance,
+          supportProfiles: [ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE],
+        },
+      ],
+    });
+    const cast = castDragonsBreath(session, "cold");
+    const endedCasterTurn = endTurn({ state: cast, actorId: spellCasterId });
+    if (endedCasterTurn.tag !== "resolved") {
+      throw new Error("Expected caster End Turn to resolve.");
+    }
+    const caster = requireCombatant(endedCasterTurn.state, spellCasterId);
+    if (caster.positiveHpUnconscious !== null) {
+      throw new Error(
+        "Expected the Relentless Endurance caster to be conscious.",
+      );
+    }
+    const targetTurn: BattleState = {
+      ...endedCasterTurn.state,
+      combatants: new Map(endedCasterTurn.state.combatants).set(spellCasterId, {
+        ...caster,
+        hp: Hp(3),
+      }),
+    };
+    const exhaleAct = dragonsBreathExhaleAct(targetTurn);
+    const saveHole = requireHole(exhaleAct.initialHoles, "savingThrowOutcome");
+    const saveFill = dragonsBreathSavingThrowOutcomeFill(saveHole, {
+      originAnchorId: spellTargetId,
+      affectedTargetIds: [spellCasterId],
+      outcomes: [{ targetId: spellCasterId, succeeded: false }],
+    });
+    const needsDamage = resolveBattleSubject({
+      state: targetTurn,
+      subject: exhaleAct.subject,
+      fills: [saveFill],
+    });
+    const damageHole = requireResultHole(needsDamage, "rolledDice");
+    const damageFill = damageRollFillWithGroups(damageHole, [[2, 2, 2]]);
+    const needsConcentration = resolveBattleSubject({
+      state: targetTurn,
+      subject: exhaleAct.subject,
+      fills: [saveFill, damageFill],
+    });
+    const concentrationHole = requireResultHole(
+      needsConcentration,
+      "concentrationSavingThrow",
+    );
+    const concentrationFill = {
+      kind: "concentrationSavingThrow" as const,
+      holeId: concentrationHole.holeId,
+      value: { succeeded: true },
+    };
+    const needsDisposition = resolveBattleSubject({
+      state: targetTurn,
+      subject: exhaleAct.subject,
+      fills: [saveFill, damageFill, concentrationFill],
+    });
+    const dispositionHole = requireResultHole(
+      needsDisposition,
+      "attackDamageDisposition",
+    );
+    expect(dispositionHole).toMatchObject({
+      targetId: spellCasterId,
+      choices: expect.arrayContaining([
+        expect.objectContaining({ kind: "zeroHitPointReplacement" }),
+      ]),
+    });
+
+    const resolved = resolveBattleSubject({
+      state: targetTurn,
+      subject: exhaleAct.subject,
+      fills: [
+        saveFill,
+        damageFill,
+        concentrationFill,
+        attackDamageDispositionFill(dispositionHole, {
+          kind: "zeroHitPointReplacement",
+          procedureRef: requireCharacterUnitProcedureRefForTest(
+            session,
+            spellCasterId,
+            "orc_relentless_endurance",
+          ),
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected zero-Hit-Point replacement to resolve.");
+    }
+    expect(requireCombatant(resolved.state, spellCasterId).hp).toBe(Hp(1));
+  });
+
   test("rejects stale exhale state and spends the Magic action when the Cone affects no targets", () => {
     const session = spellBattle({
       preparedSpells: [dragonsBreathSpell()],
@@ -810,6 +1027,17 @@ function dragonsBreathSpell(): SpellRecord {
     throw new Error("Expected Dragon's Breath fixture to decode as a spell.");
   }
   return unit;
+}
+
+function fireImmuneHumanoidStatBlock() {
+  const base = statBlockWithCreatureType("humanoid");
+  return {
+    ...base,
+    statBlock: {
+      ...base.statBlock,
+      immunities: { damageTypes: ["fire"] as const },
+    },
+  };
 }
 
 function dragonsBreathExhaleAct(state: BattleState) {
