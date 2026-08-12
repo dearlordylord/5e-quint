@@ -12,9 +12,10 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { Either, JSONSchema, Schema } from "effect";
+import { Either, Schema } from "effect";
 
 import {
+  codexOutputJsonSchema,
   FinalScenarioReviewSchema,
   retentionRevisionMatches,
   runScenarioCampaign,
@@ -37,13 +38,14 @@ function runCodexJson<A, I>(
   schema: Schema.Schema<A, I>,
   reasoningEffort: "medium" | "high",
 ): A {
+  const outputSchema = Schema.Struct({ result: schema });
   const temporary = mkdtempSync(resolve(tmpdir(), "dnd-scenario-campaign-"));
   const schemaPath = resolve(temporary, "schema.json");
   const outputPath = resolve(temporary, "output.json");
   try {
     writeFileSync(
       schemaPath,
-      `${JSON.stringify(JSONSchema.make(schema), null, 2)}\n`,
+      `${JSON.stringify(codexOutputJsonSchema(schema), null, 2)}\n`,
     );
     const result = spawnSync(
       "codex",
@@ -72,11 +74,11 @@ function runCodexJson<A, I>(
     if (result.signal !== null)
       fail(`Scenario agent stopped by ${result.signal}.`);
     if (result.status !== 0) fail(result.stderr || "Scenario agent failed.");
-    const decoded = Schema.decodeUnknownEither(schema, {
+    const decoded = Schema.decodeUnknownEither(outputSchema, {
       onExcessProperty: "error",
     })(JSON.parse(readFileSync(outputPath, "utf8")));
     return Either.isRight(decoded)
-      ? decoded.right
+      ? decoded.right.result
       : fail(`Scenario agent returned invalid output: ${decoded.left.message}`);
   } finally {
     rmSync(temporary, { recursive: true });

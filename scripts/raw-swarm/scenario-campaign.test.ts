@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from "vitest";
 
 import {
   runScenarioCampaign,
+  codexOutputJsonSchema,
   retentionRevisionMatches,
   ScenarioRawReviewSchema,
   verifyFinalScenarioReview,
@@ -193,6 +194,10 @@ describe("scenario generation campaign", () => {
   });
 
   test("rejects malformed reviews and mismatched retained artifact identity", () => {
+    expect(codexOutputJsonSchema(ScenarioRawReviewSchema)).toMatchObject({
+      type: "object",
+      required: ["result"],
+    });
     expect(
       Either.isLeft(
         Schema.decodeUnknownEither(ScenarioRawReviewSchema, {

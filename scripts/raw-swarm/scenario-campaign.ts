@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { Either, Match, Schema } from "effect";
+import { Either, JSONSchema, Match, Schema } from "effect";
 
 import { GitShaSchema, ScenarioIdSchema } from "./transcript.ts";
 
@@ -7,6 +7,10 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.positive(),
 );
+
+export function codexOutputJsonSchema<A, I>(schema: Schema.Schema<A, I>) {
+  return JSONSchema.make(Schema.Struct({ result: schema }));
+}
 
 export const ScenarioCandidateBatchSchema = Schema.Struct({
   candidates: Schema.Array(Schema.NonEmptyTrimmedString).pipe(
