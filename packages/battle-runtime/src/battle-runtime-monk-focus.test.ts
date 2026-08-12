@@ -951,6 +951,64 @@ describe("battle runtime: Monk's Focus battle options", () => {
     }
   });
 
+  test("stored Focus options become stale after another option spends the last Focus Point", () => {
+    const state = monkFocusBattle({ usesRemaining: 1 });
+    const flurry = monkFocusSubject(
+      state,
+      (candidate) =>
+        candidate.tag === "monkFocusOption" &&
+        candidate.option === "flurryOfBlows",
+    );
+    const patientDefense = monkFocusSubject(
+      state,
+      (candidate) =>
+        candidate.tag === "monkFocusOption" &&
+        candidate.option === "patientDefense" &&
+        candidate.mode === "focusDisengageDodge",
+    );
+    const step = monkFocusSubject(
+      state,
+      (candidate) =>
+        candidate.tag === "monkFocusOption" &&
+        candidate.option === "stepOfTheWind" &&
+        candidate.mode === "focusDisengageDash" &&
+        candidate.speedKind === "walk",
+    );
+    const stepped = requireResolved(
+      resolveBattleSubject({ state, subject: step, fills: [] }),
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state: stepped.state, actorId: fighterId }),
+    );
+    const nextMonkTurn = requireResolved(
+      endTurn({ state: goblinTurn.state, actorId: goblinId }),
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: nextMonkTurn.state,
+        subject: flurry,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Flurry of Blows requires an unspent Focus Point.",
+    });
+    expect(
+      resolveBattleSubject({
+        state: nextMonkTurn.state,
+        subject: patientDefense,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Patient Defense requires an unspent Focus Point for Dodge.",
+    });
+    expect(monkFocusUsesRemaining(nextMonkTurn.snapshot)).toBe(0);
+  });
+
   test("stale Flurry activation fails without spending Focus or Bonus Action when targets disappear", () => {
     const state = monkFocusBattle({ usesRemaining: 2 });
     const subject = monkFocusSubject(

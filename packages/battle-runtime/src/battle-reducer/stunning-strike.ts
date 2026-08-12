@@ -17,6 +17,7 @@ import type {
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import type {
+  BattleCreatureState,
   BattleFill,
   BattleHole,
   BattleState,
@@ -52,6 +53,7 @@ const STUNNING_STRIKE_CHOICES = ["attempt", "decline"] as const;
 type StunningStrikeChoice = (typeof STUNNING_STRIKE_CHOICES)[number];
 
 type StunningStrikeHit = {
+  readonly target: BattleCreatureState;
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
   readonly procedureRef: BattleProcedureExecutionRef;
@@ -163,14 +165,6 @@ function resolveStunningStrikeAttempt(
   }
   /* v8 ignore stop */
   const stateAfterSpend = spendStunningStrikeFocus(input.state, hit);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (stateAfterSpend === null) {
-    return {
-      tag: "invalid",
-      message: "Stunning Strike requires an unspent Focus Point.",
-    };
-  }
-  /* v8 ignore stop */
   const savingThrowState = stateWithUnitFeatureSavingThrowRelationships({
     relationshipRequestState: input.state,
     state: stateAfterSpend,
@@ -209,17 +203,11 @@ function stunningStrikeSavingThrowHole(
   state: BattleState,
   hit: StunningStrikeHit,
 ): BattleUnitFeatureSavingThrowOutcomeHole {
-  const actor = state.combatants.get(hit.actorId);
-  if (actor === undefined) {
-    throw new Error("Stunning Strike save hole requires an actor.");
-  }
+  const actor = hit.focus.actor;
   const focusSaveDc = hit.focus.execution.effectSaveDc;
-  const abilityModifier =
-    actor.origin.kind === "character"
-      ? scoreModifier(
-          actor.origin.d20Statistics.abilityScores[focusSaveDc.ability],
-        )
-      : 0;
+  const abilityModifier = scoreModifier(
+    actor.origin.d20Statistics.abilityScores[focusSaveDc.ability],
+  );
   const ability = hit.execution.stunningStrike.savingThrow.ability;
   return {
     kind: "savingThrowOutcome",
@@ -244,10 +232,7 @@ function stunningStrikeSavingThrowHole(
 function spendStunningStrikeFocus(
   state: BattleState,
   hit: StunningStrikeHit,
-): BattleState | null {
-  if (!resourceHasUsesRemaining(hit.focus.resource)) {
-    return null;
-  }
+): BattleState {
   const spentFocusState = stateWithMonkFocusResource(
     state,
     hit.focus.actor,
@@ -269,8 +254,7 @@ function applyStunningStrikeFailure(
   state: BattleState,
   hit: StunningStrikeHit,
 ): BattleState {
-  const target = state.combatants.get(hit.targetId);
-  if (target === undefined) return state;
+  const target = hit.target;
   const activeEffect: BattleActiveEffect = {
     kind: "unitFeatureCondition",
     sourceProcedureRef: hit.procedureRef,
@@ -294,19 +278,7 @@ function applyStunningStrikeFailure(
           hit.execution.stunningStrike.onFail.condition,
         ),
       ),
-      activeEffects: [
-        ...target.activeEffects.filter(
-          (candidate) =>
-            !(
-              candidate.kind === "unitFeatureCondition" &&
-              candidate.sourceProcedureRef === hit.procedureRef &&
-              candidate.sourceCombatantId === hit.actorId &&
-              candidate.condition ===
-                hit.execution.stunningStrike.onFail.condition
-            ),
-        ),
-        activeEffect,
-      ],
+      activeEffects: [...target.activeEffects, activeEffect],
     }),
   };
 }
@@ -315,8 +287,7 @@ function applyStunningStrikeSuccess(
   state: BattleState,
   hit: StunningStrikeHit,
 ): BattleState {
-  const target = state.combatants.get(hit.targetId);
-  if (target === undefined) return state;
+  const target = hit.target;
   const speedEffect: BattleActiveEffect = {
     kind: "speedHalved",
     sourceProcedureRef: hit.procedureRef,
@@ -334,20 +305,7 @@ function applyStunningStrikeSuccess(
     ...state,
     combatants: new Map(state.combatants).set(hit.targetId, {
       ...target,
-      activeEffects: [
-        ...target.activeEffects.filter(
-          (candidate) =>
-            !(
-              (candidate.kind === "speedHalved" ||
-                candidate.kind === "nextAttackRollAgainstSelf") &&
-              "sourceProcedureRef" in candidate &&
-              candidate.sourceProcedureRef === hit.procedureRef &&
-              candidate.sourceCombatantId === hit.actorId
-            ),
-        ),
-        speedEffect,
-        attackRollEffect,
-      ],
+      activeEffects: [...target.activeEffects, speedEffect, attackRollEffect],
     }),
   };
 }
@@ -360,10 +318,8 @@ function stunningStrikeHit(input: {
 }): StunningStrikeHit | null {
   if (!stunningStrikeAttackEligible(input.attack)) return null;
   const actor = input.state.combatants.get(input.actorId);
-  if (
-    actor?.origin.kind !== "character" ||
-    !input.state.combatants.has(input.targetId)
-  ) {
+  const target = input.state.combatants.get(input.targetId);
+  if (actor?.origin.kind !== "character" || target === undefined) {
     return null;
   }
   const focus = monkFocusResourceForActor(input.state, input.actorId);
@@ -391,6 +347,7 @@ function stunningStrikeHit(input: {
     return null;
   }
   return {
+    target,
     actorId: input.actorId,
     targetId: input.targetId,
     procedureRef: selected.binding.procedureRef,

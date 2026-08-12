@@ -616,6 +616,28 @@ describe("SRDINV30C deterministic creature charm Spell Unit admission", () => {
         }),
       ]),
     });
+    expect(damaged.routeEvents).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "charmSourceDamageBreak",
+          holes: [],
+          owner: "battleHitPoint",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "charmSourceDamageBreak",
+          holes: [],
+          owner: "battleConditionLifecycle",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "charmSourceDamageBreak",
+          holes: [],
+          owner: "battleActiveEffect",
+        },
+      ]),
+    );
   });
   test("charm person ends when the caster damages the target with a spell", () => {
     const charmPerson = spellRecord(charmPersonUnitId);
