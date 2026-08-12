@@ -2,6 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  readyDeclarationFillForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
@@ -989,7 +990,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
       snapshot: { pendingInterrupt: null },
     });
   });
-  test("ensnaring_strike still opens post-cast Ready after save-failed decline", () => {
+  test("engine spell events do not guess whether a table-authored Ready trigger occurred", () => {
     const spell = spellRecord(ensnaringStrikeUnitId);
     const rayOfFrost = spellRecord(rayOfFrostUnitId);
     const initialState = spellBattle({
@@ -1043,15 +1044,29 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     if (helperTurn.tag !== "resolved") {
       throw new Error("Expected helper turn to begin.");
     }
+    const readySubject = {
+      tag: "action" as const,
+      actorId: ensnaringStrikeHelperId,
+      action: "ready" as const,
+    };
+    const readyDeclaration = resolveBattleSubject({
+      state: helperTurn.state,
+      subject: readySubject,
+      fills: [],
+    });
+    if (readyDeclaration.tag !== "needsHoles") {
+      throw new Error("Expected helper Ready declaration hole.");
+    }
     const readiedSpellCast = resolveBattleSubject({
       state: helperTurn.state,
-      subject: {
-        tag: "action",
-        actorId: ensnaringStrikeHelperId,
-        action: "ready",
-        readyTrigger: "spellCast",
-      },
-      fills: [],
+      subject: readySubject,
+      fills: [
+        readyDeclarationFillForTest(
+          readyDeclaration.holes[0]!,
+          "a spell is cast",
+          { kind: "movement" },
+        ),
+      ],
     });
     if (readiedSpellCast.tag !== "resolved") {
       throw new Error("Expected helper to ready movement.");
@@ -1139,15 +1154,12 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     });
     expect(afterSaveFailedDecline).toMatchObject({
       tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
+      holes: [{ kind: "rolledDice" }],
       snapshot: {
-        pendingInterrupt: {
-          trigger: "spellCast",
-          choices: [
-            expect.objectContaining({
-              kind: "releaseReadiedMovement",
-              readiedMovementActorId: ensnaringStrikeHelperId,
-            }),
+        pendingInterrupt: null,
+        readiedResponses: {
+          actionsOrMovements: [
+            expect.objectContaining({ actorId: ensnaringStrikeHelperId }),
           ],
         },
       },

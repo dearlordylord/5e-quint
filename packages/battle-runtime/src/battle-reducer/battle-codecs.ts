@@ -70,7 +70,10 @@ import {
   battleSubjectProcedureRefs,
   BattleAttackExecutionAbilitySchema,
   BattleAttackExecutionSelectionSchema,
+  BattleReadyResponseSnapshotSchema,
+  BattleReadyResponseSchema,
   BattleInterruptAttackExecutionSelectionSchema,
+  ReadyTriggerDescription,
   SpellInvocationRefSchema,
 } from "../battle-subjects.ts";
 import {
@@ -1333,6 +1336,13 @@ function exhaustiveBattleHoleSchema<
 const BattleHolePayloadUnionSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("readyDeclaration"),
+    label: Schema.String,
+    actorId: CombatantId,
+    responseChoices: Schema.Array(BattleReadyResponseSchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("helpAttackAllyDecision"),
     label: Schema.String,
     helperId: CombatantId,
@@ -1590,17 +1600,6 @@ const BattleHolePayloadUnionSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("attackRoll"),
-    rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
-      exact: true,
-    }),
-    creatureAttack: Schema.Struct({
-      actorId: CombatantId,
-      targetId: CombatantId,
-    }),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("attackRoll"),
     attack: SupportedAttackActionOptionSchema,
     attackBonus: AttackBonus,
     rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
@@ -1678,14 +1677,6 @@ const BattleHolePayloadUnionSchema = Schema.Union(
       ),
       { exact: true },
     ),
-  }),
-  Schema.Struct({
-    ...BattleHoleBaseSchema,
-    kind: Schema.Literal("rolledDice"),
-    creatureAttack: Schema.Struct({
-      actorId: CombatantId,
-      targetId: CombatantId,
-    }),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -3138,7 +3129,19 @@ type BattleMovementFillValueCommonEncoded = Schema.Schema.Encoded<
   typeof BattleMovementFillValueCommonSchema
 >;
 
+type BattleReadyResponseEncoded = Schema.Schema.Encoded<
+  typeof BattleReadyResponseSchema
+>;
+
 type BattleFillEncoded =
+  | {
+      readonly kind: "readyDeclaration";
+      readonly holeId: string;
+      readonly value: {
+        readonly trigger: string;
+        readonly response: BattleReadyResponseEncoded;
+      };
+    }
   | {
       readonly kind: "helpAttackAllyDecision";
       readonly holeId: string;
@@ -3818,14 +3821,6 @@ type BattleFillEncoded =
       readonly value: number;
     }
   | {
-      readonly kind: "creatureAttackZeroDamage";
-      readonly holeId: string;
-      readonly creatureAttack: {
-        readonly actorId: string;
-        readonly targetId: string;
-      };
-    }
-  | {
       readonly kind: "rolledDice";
       readonly holeId: string;
       readonly selectedAttackDamageRiderProcedureRefs?: readonly string[];
@@ -3963,6 +3958,18 @@ type BattleFillEncoded =
               | {
                   readonly kind: "releaseReadiedMovement";
                   readonly readiedMovementActorId: string;
+                  readonly fills: readonly BattleFillEncoded[];
+                }
+              | {
+                  readonly kind: "releaseReadiedAction";
+                  readonly reactorId: string;
+                  readonly fills: readonly BattleFillEncoded[];
+                }
+              | {
+                  readonly kind: "releaseReadiedAttack";
+                  readonly reactorId: string;
+                  readonly targetId: string;
+                  readonly procedureRef: string;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
@@ -4234,6 +4241,14 @@ export const BattleFillSchema: Schema.Schema<
   never
 > = Schema.suspend(() =>
   Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("readyDeclaration"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        trigger: ReadyTriggerDescription,
+        response: BattleReadyResponseSchema,
+      }),
+    }),
     Schema.Struct({
       kind: Schema.Literal("helpAttackAllyDecision"),
       holeId: BattleHoleIdSchema,
@@ -4815,14 +4830,6 @@ export const BattleFillSchema: Schema.Schema<
       value: InitiativeScoreSchema,
     }),
     Schema.Struct({
-      kind: Schema.Literal("creatureAttackZeroDamage"),
-      holeId: BattleHoleIdSchema,
-      creatureAttack: Schema.Struct({
-        actorId: CombatantId,
-        targetId: CombatantId,
-      }),
-    }),
-    Schema.Struct({
       kind: Schema.Literal("rolledDice"),
       holeId: BattleHoleIdSchema,
       selectedAttackDamageRiderProcedureRefs: Schema.optionalWith(
@@ -4940,6 +4947,21 @@ export const BattleFillSchema: Schema.Schema<
             Schema.Struct({
               kind: Schema.Literal("releaseReadiedMovement"),
               readiedMovementActorId: CombatantId,
+              fills: Schema.Array(BattleFillSchema),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("releaseReadiedAction"),
+              reactorId: CombatantId,
+              fills: Schema.Array(BattleFillSchema),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal("releaseReadiedAttack"),
+              reactorId: CombatantId,
+              targetId: CombatantId,
+              procedureRef: Schema.Union(
+                BattleAttackProcedureExecutionRef,
+                BattleStatBlockProcedureExecutionRef,
+              ),
               fills: Schema.Array(BattleFillSchema),
             }),
             Schema.Struct({
@@ -5922,9 +5944,10 @@ const BattleReadiedSpellSnapshotSchema = Schema.Struct({
   expiresAt: OngoingFeatureExpirationSchema,
 });
 
-const BattleReadiedMovementSnapshotSchema = Schema.Struct({
+const BattleReadiedResponseSnapshotSchema = Schema.Struct({
   actorId: CombatantId,
-  trigger: Schema.Literal(...BATTLE_INTERRUPT_TRIGGERS),
+  trigger: ReadyTriggerDescription,
+  response: BattleReadyResponseSnapshotSchema,
   expiresAt: OngoingFeatureExpirationSchema,
 });
 
@@ -6021,6 +6044,18 @@ export const BattleInterruptProcedureChoiceSchema = Schema.Union(
     readiedMovementActorId: CombatantId,
   }),
   Schema.Struct({
+    kind: Schema.Literal("releaseReadiedAction"),
+    reactorId: CombatantId,
+    subject: BattleSubjectSchema,
+    initialHoles: Schema.Array(BattleHoleSchema),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("releaseReadiedAttack"),
+    reactorId: CombatantId,
+    subject: BattleSubjectSchema,
+    initialHoles: Schema.Array(BattleHoleSchema),
+  }),
+  Schema.Struct({
     kind: Schema.Literal("castTriggeredReactionSpell"),
     reactorId: CombatantId,
     subject: BattleSubjectSchema,
@@ -6065,6 +6100,14 @@ export const BattleInterruptProcedureChoiceSchema = Schema.Union(
             value.subject.command === "releaseReadiedMovement" &&
             value.reactorId === value.readiedMovementActorId &&
             value.reactorId === value.subject.readiedMovementActorId,
+          releaseReadiedAction: (value) =>
+            value.subject.tag === "runtimeCommand" &&
+            value.subject.command === "releaseReadiedAction" &&
+            value.reactorId === value.subject.reactorId,
+          releaseReadiedAttack: (value) =>
+            value.subject.tag === "runtimeCommand" &&
+            value.subject.command === "releaseReadiedAttack" &&
+            value.reactorId === value.subject.reactorId,
           castTriggeredReactionSpell: (value) =>
             value.subject.tag === "runtimeCommand" &&
             value.subject.command === "castTriggeredReactionSpell" &&
@@ -6294,6 +6337,8 @@ type EncodedBattleInterruptChoice =
   typeof BattleInterruptProcedureChoiceSchema.Type;
 type EncodedBattleReadiedSpellSnapshot =
   typeof BattleReadiedSpellSnapshotSchema.Type;
+type EncodedBattleReadiedResponseSnapshot =
+  typeof BattleReadiedResponseSnapshotSchema.Type;
 type EncodedBattleActExecutionCandidate =
   typeof BattleActExecutionCandidateSchema.Type;
 type EncodedBattleSubject = typeof BattleSubjectSchema.Type;
@@ -6542,7 +6587,6 @@ function serializedBattleHoleExecutionReferences(
       Match.when({ cloudkillAreaHazard: Match.any }, (hole) =>
         procedureSource(hole.cloudkillAreaHazard),
       ),
-      Match.when({ creatureAttack: Match.any }, () => []),
       Match.when({ attack: Match.any }, (hole) => [
         ...attackOptionReferences(hole.attack),
         ...(hole.attackDamageRiders ?? []).map((rider) =>
@@ -6571,6 +6615,12 @@ function serializedBattleHoleExecutionReferences(
 
   return Match.value(hole).pipe(
     Match.discriminatorsExhaustive("kind")({
+      readyDeclaration: (value) =>
+        value.responseChoices.flatMap((response) =>
+          response.kind === "attack"
+            ? [owned(response.selection.procedureRef, value.actorId)]
+            : [],
+        ),
       helpAttackAllyDecision: noSerializedExecutionReferences,
       helpAttackEnemyDecision: noSerializedExecutionReferences,
       damageRelationshipDecisions: (value) =>
@@ -6670,7 +6720,6 @@ function serializedBattleHoleExecutionReferences(
               bound(replacement.procedureRef),
             ),
           ]),
-          Match.when({ creatureAttack: Match.any }, () => []),
           Match.exhaustive,
         ),
       rolledDice: rolledDiceReferences,
@@ -6935,6 +6984,34 @@ function serializedAttackProcedureRefIsBound(
   );
 }
 
+function serializedReadiedResponseIsBound(
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+  readied: EncodedBattleReadiedResponseSnapshot,
+): boolean {
+  if (
+    !combatants.some((combatant) => combatant.combatantId === readied.actorId)
+  ) {
+    return false;
+  }
+  return Match.value(readied.response).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      movement: () => true,
+      attack: (response) =>
+        serializedAttackProcedureRefIsBound(
+          combatants,
+          readied.actorId,
+          response.procedureRef,
+        ),
+      action: (response) =>
+        response.subject.actorId === readied.actorId &&
+        serializedBattleSubjectOwnsBoundExecutionReferences(
+          response.subject,
+          combatants,
+        ),
+    }),
+  );
+}
+
 function serializedLightEmitterOwnsSource(
   emitter: Schema.Schema.Type<typeof BattleLightEmitterSchema>,
   combatants: readonly EncodedBattleCreatureSnapshot[],
@@ -7026,6 +7103,10 @@ function serializedInterruptChoiceProcedureRefs(
         new Set(battleSubjectProcedureRefs(value.subject)),
       releaseReadiedMovement: (value) =>
         new Set(battleSubjectProcedureRefs(value.subject)),
+      releaseReadiedAction: (value) =>
+        new Set(battleSubjectProcedureRefs(value.subject)),
+      releaseReadiedAttack: (value) =>
+        new Set(battleSubjectProcedureRefs(value.subject)),
       castTriggeredReactionSpell: (value) =>
         new Set(battleSubjectProcedureRefs(value.subject)),
       castAttackHitBonusActionSpell: (value) =>
@@ -7052,6 +7133,16 @@ function serializedInterruptChoiceOwnsBoundSubjectReferences(
           combatants,
         ),
       releaseReadiedMovement: (value) =>
+        serializedBattleSubjectOwnsBoundExecutionReferences(
+          value.subject,
+          combatants,
+        ),
+      releaseReadiedAction: (value) =>
+        serializedBattleSubjectOwnsBoundExecutionReferences(
+          value.subject,
+          combatants,
+        ),
+      releaseReadiedAttack: (value) =>
         serializedBattleSubjectOwnsBoundExecutionReferences(
           value.subject,
           combatants,
@@ -7346,9 +7437,29 @@ function pendingInterruptChoiceOwnsBoundProcedure(input: {
   readonly choice: EncodedBattleInterruptChoice;
   readonly combatants: readonly EncodedBattleCreatureSnapshot[];
   readonly readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[];
+  readonly readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[];
 }): boolean {
-  const { choice, combatants, readiedSpells } = input;
-  if (choice.kind === "releaseReadiedMovement") return true;
+  const { choice, combatants, readiedSpells, readiedResponses } = input;
+  if (choice.kind === "releaseReadiedMovement") {
+    return readiedResponses.some(
+      (readied) =>
+        readied.actorId === choice.reactorId &&
+        readied.actorId === choice.readiedMovementActorId &&
+        readied.response.kind === "movement",
+    );
+  }
+  if (choice.kind === "releaseReadiedAction") {
+    return (
+      choice.subject.tag === "runtimeCommand" &&
+      choice.subject.command === "releaseReadiedAction" &&
+      choice.subject.reactorId === choice.reactorId &&
+      readiedResponses.some(
+        (readied) =>
+          readied.actorId === choice.reactorId &&
+          readied.response.kind === "action",
+      )
+    );
+  }
   if (choice.kind === "reactionRollOrDamageReduction") {
     return serializedReactionModifierProcedureRefIsBound(
       combatants,
@@ -7393,9 +7504,32 @@ function pendingInterruptChoiceOwnsBoundProcedure(input: {
   if (
     choice.subject.tag !== "runtimeCommand" ||
     (choice.subject.command !== "opportunityAttack" &&
-      choice.subject.command !== "retaliationAttack")
+      choice.subject.command !== "retaliationAttack" &&
+      choice.subject.command !== "releaseReadiedAttack")
   ) {
     return false;
+  }
+  const attackSubject = choice.subject;
+  if (
+    choice.kind === "releaseReadiedAttack" &&
+    attackSubject.tag === "runtimeCommand" &&
+    attackSubject.command === "releaseReadiedAttack" &&
+    "procedureRef" in attackSubject &&
+    "targetId" in attackSubject
+  ) {
+    const subjectProcedureRef = attackSubject.procedureRef;
+    const subjectTargetId = attackSubject.targetId;
+    return (
+      combatants.some(
+        (combatant) => combatant.combatantId === subjectTargetId,
+      ) &&
+      readiedResponses.some(
+        (readied) =>
+          readied.actorId === choice.reactorId &&
+          readied.response.kind === "attack" &&
+          readied.response.procedureRef === subjectProcedureRef,
+      )
+    );
   }
   return serializedAttackProcedureRefIsBound(
     combatants,
@@ -7522,7 +7656,7 @@ const BattleSnapshotCommonFields = {
   turn: BattleTurnSnapshotSchema,
   readiedResponses: Schema.Struct({
     spells: Schema.Array(BattleReadiedSpellSnapshotSchema),
-    movements: Schema.Array(BattleReadiedMovementSnapshotSchema),
+    actionsOrMovements: Schema.Array(BattleReadiedResponseSnapshotSchema),
   }),
   helpAttackMarkers: Schema.Array(BattleHelpAttackSnapshotSchema),
   pendingInterrupt: Schema.Union(
@@ -7626,6 +7760,9 @@ function battleSnapshotInvariantsHold(
     snapshot.readiedResponses.spells.every((readied) =>
       serializedReadiedSpellOwnsInvocation(snapshot.combatants, readied),
     ) &&
+    snapshot.readiedResponses.actionsOrMovements.every((readied) =>
+      serializedReadiedResponseIsBound(snapshot.combatants, readied),
+    ) &&
     (snapshot.pendingInterrupt === null ||
       (snapshot.pendingInterrupt.choices.every((choice) =>
         serializedInterruptChoiceOwnsBoundSubjectReferences(
@@ -7645,6 +7782,7 @@ function battleSnapshotInvariantsHold(
               choice,
               combatants: snapshot.combatants,
               readiedSpells: snapshot.readiedResponses.spells,
+              readiedResponses: snapshot.readiedResponses.actionsOrMovements,
             }) &&
             serializedBattleHolesOwnBoundExecutionReferences({
               holes: choice.initialHoles,

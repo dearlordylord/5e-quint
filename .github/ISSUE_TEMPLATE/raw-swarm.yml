@@ -1,0 +1,59 @@
+name: RAW swarm finding
+description: Track an actionable SDK or adapter defect found by the RAW swarm.
+title: "[RAW swarm] "
+labels:
+  - bug
+  - raw-swarm
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Defect summary
+      description: State the observed behavior and why it is a defect.
+    validations:
+      required: true
+  - type: textarea
+    id: fingerprints
+    attributes:
+      label: Swarm fingerprints
+      description: "Add one `Raw-Swarm-Fingerprint: <sha256>` line for every linked observation."
+      placeholder: "Raw-Swarm-Fingerprint: <sha256>"
+    validations:
+      required: true
+  - type: dropdown
+    id: owner-kind
+    attributes:
+      label: Defect boundary
+      options:
+        - SDK/runtime RAW behavior
+        - MCP adapter behavior
+    validations:
+      required: true
+  - type: textarea
+    id: run-evidence
+    attributes:
+      label: Run evidence
+      description: Include run id, tested Git SHA, scenario, transcript sequences, and artifact location.
+    validations:
+      required: true
+  - type: textarea
+    id: raw-evidence
+    attributes:
+      label: RAW evidence
+      description: Cite the local SRD 5.2.1 passages and explain the expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Deterministic reproduction
+      description: Give the exact replay or focused-test command and the observed result.
+    validations:
+      required: true
+  - type: textarea
+    id: fix-proof
+    attributes:
+      label: Fix ownership and proof
+      description: Name the owning package and the regression level required before closure.
+    validations:
+      required: true

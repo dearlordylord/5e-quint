@@ -18583,7 +18583,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -18999,7 +18999,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               }
             ],
             "profileId": "unit-feature.reaction-roll-or-damage-reduction",
@@ -19177,7 +19177,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -19238,7 +19238,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -19291,7 +19291,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -19560,7 +19560,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
@@ -19619,7 +19619,8 @@
             "profileId": "spell.invocation-dancing-lights-movable-dim-light",
             "profileKind": "table-caller",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-light.qnt"
+              "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+              "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
             ]
           }
         ],
@@ -19665,7 +19666,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
@@ -20000,7 +20001,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
@@ -20352,7 +20353,9 @@
             "profileId": "spell.invocation-spell-created-held-object",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-light.qnt"
+              "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+              "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+              "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
             ]
           }
         ],
@@ -20541,7 +20544,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -20652,7 +20655,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
@@ -20664,7 +20667,7 @@
             "profileId": "spell.reaction-hellish-rebuke",
             "profileKind": "reaction",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
+              "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt"
             ]
           },
           {
@@ -20916,7 +20919,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -20959,7 +20962,7 @@
             "profileId": "spell.invocation-direct-condition",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt"
+              "packages/battle-runtime/battle-runtime-invisibility.qnt"
             ]
           }
         ],
@@ -21031,7 +21034,8 @@
             "profileId": "spell.invocation-object-light",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-light.qnt"
+              "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+              "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
             ]
           }
         ],
@@ -21123,7 +21127,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -21184,7 +21188,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -21344,7 +21348,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               }
             ],
             "profileId": "unit-feature.attack-damage-reduction-zero-damage-redirect",
@@ -21460,7 +21464,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               }
             ],
             "profileId": "unit-feature.reaction-roll-or-damage-reduction",
@@ -21853,7 +21857,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -21920,7 +21924,9 @@
             "profileId": "spell.invocation-held-light-emitter",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-light.qnt"
+              "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+              "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+              "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
             ]
           }
         ],
@@ -22267,7 +22273,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -22328,7 +22334,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -22548,7 +22554,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               }
             ],
             "profileId": "unit-feature.reaction-roll-or-damage-reduction",
@@ -22633,7 +22639,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -22789,7 +22795,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               }
             ],
             "profileId": "spell.reaction-shield",
@@ -22907,7 +22913,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -23269,7 +23275,7 @@
                 "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
               },
               {
                 "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",

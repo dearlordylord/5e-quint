@@ -27,7 +27,6 @@ import {
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
 import * as Either from "effect/Either";
-import { BATTLE_INTERRUPT_TRIGGERS } from "../battle-interrupt-triggers.ts";
 import type {
   BattleMovementSpeedKind,
   BattleSubject,
@@ -52,7 +51,7 @@ import {
   offHandAttackActionOptionsForActor,
   offHandAttackPrerequisiteMet,
 } from "./attack-damage-apply.ts";
-import { minimalCreatureAttackActs } from "./creature-attack.ts";
+import { readyDeclarationHole, readyResponseChoices } from "./ready.ts";
 import { attackExecutionSelectionForOption } from "../battle-action-options.ts";
 import { helpAttackAllyChoices, helpAttackAllyHole } from "./help-attack.ts";
 import { currentActorId, grappledBy } from "./creature-state-leaves.ts";
@@ -127,8 +126,9 @@ import {
   commandPendingEffectsForActor,
 } from "./command-procedure-discovery.ts";
 import { standFromProneCostFeet } from "./stand-from-prone-policy.ts";
-import { readiedSpellInitialHoles } from "./readied-initial-holes.ts";
 import { movementHole } from "./movement-holes.ts";
+import { readiedSpellInitialHoles } from "./readied-initial-holes.ts";
+import { characterSpellProcedure } from "../character-execution-queries.ts";
 import {
   canSpendEscapeGrappleActionResource,
   isClassFeatureExtraAttackActionResource,
@@ -142,7 +142,6 @@ import {
 } from "./warding-bond.ts";
 import { SELF_TRANSFORMATION_MODE_KINDS } from "./domain-constants.ts";
 import { discoverLegendaryActionActs } from "./unit-feature-discovery.ts";
-import { characterSpellProcedure } from "../character-execution-queries.ts";
 import {
   activeSelfTransformationModeEffect,
   spellCreatedHeldObjectEffectsForActor,
@@ -174,33 +173,50 @@ export function discoverBattleActCandidatesWithExecutionRegistry(
   state: BattleState,
   executionRegistry: SpellProcedureExecutionRegistry,
 ): readonly BattleActDiscoveryCandidate[] {
-  return discoverBattleActCandidatesInternal(state, executionRegistry);
+  return discoverBattleActCandidatesInternal(state, executionRegistry, true);
 }
 
 export function discoverBattleActCandidatesWithoutSpellProcedures(
   state: BattleState,
 ): readonly BattleActDiscoveryCandidate[] {
-  return discoverBattleActCandidatesInternal(state, null);
+  return discoverBattleActCandidatesInternal(state, null, true);
+}
+
+export function discoverBattleActCandidatesWithoutReady(
+  state: BattleState,
+): readonly BattleActDiscoveryCandidate[] {
+  return discoverBattleActCandidatesInternal(state, null, false);
 }
 
 function discoverBattleActCandidatesInternal(
   state: BattleState,
   executionRegistry: SpellProcedureExecutionRegistry | null,
+  includeReady: boolean,
 ): readonly BattleActDiscoveryCandidate[] {
-  return discoverBattleActsWithoutRouteEvents(state, executionRegistry);
+  return discoverBattleActsWithoutRouteEvents(
+    state,
+    executionRegistry,
+    includeReady,
+  );
 }
 
 function discoverBattleActsWithoutRouteEvents(
   state: BattleState,
   executionRegistry: SpellProcedureExecutionRegistry | null,
+  includeReady: boolean,
 ): readonly BattleActDiscoveryCandidate[] {
   const actorId = currentActorId(state);
   const hasOpenStatBlockMultiattackDispatch =
     currentActorHasOpenStatBlockMultiattackDispatch(state);
+  const tableEventActs = reportReadyTriggerActs(state, actorId);
+  if (state.interruptStack.length > 0) return tableEventActs;
+  if (state.subjectResolutionPhase.kind === "subjectContinuation") {
+    return tableEventActs;
+  }
   const acts: BattleActDiscoveryCandidate[] =
     hasOpenStatBlockMultiattackDispatch
-      ? []
-      : [...minimalCreatureAttackActs(state), ...releaseGrappleActs(state)];
+      ? [...tableEventActs]
+      : [...releaseGrappleActs(state), ...tableEventActs];
   if (!state.combatants.has(actorId)) {
     return acts;
   }
@@ -211,6 +227,7 @@ function discoverBattleActsWithoutRouteEvents(
   ).filter((effect) => effect.option === "grovel");
   if (commandGrovelEffects.length > 0) {
     return [
+      ...tableEventActs,
       ...startTurnWebActs,
       ...commandGrovelEffects.map((effect) => ({
         subject: {
@@ -229,6 +246,7 @@ function discoverBattleActsWithoutRouteEvents(
   ).filter((effect) => effect.option === "drop");
   if (commandDropEffects.length > 0) {
     return [
+      ...tableEventActs,
       ...startTurnWebActs,
       ...commandDropEffects.map((effect) => {
         const subject = {
@@ -257,6 +275,7 @@ function discoverBattleActsWithoutRouteEvents(
   ).filter((effect) => effect.option === "approach");
   if (commandApproachEffects.length > 0) {
     return [
+      ...tableEventActs,
       ...startTurnWebActs,
       ...commandApproachEffects.map((effect) => ({
         subject: {
@@ -277,6 +296,7 @@ function discoverBattleActsWithoutRouteEvents(
   ).filter((effect) => effect.option === "flee");
   if (commandFleeEffects.length > 0) {
     return [
+      ...tableEventActs,
       ...startTurnWebActs,
       ...commandFleeEffects.map((effect) => ({
         subject: {
@@ -415,22 +435,6 @@ function discoverBattleActsWithoutRouteEvents(
       },
       initialHoles: [hypnoticPatternShakeAwakeTargetHole(state, actorId)],
     });
-  }
-  if (
-    combatantCanTakeActions(state.combatants.get(actorId)) &&
-    canSpendAction(state.currentTurnResources, "ready")
-  ) {
-    acts.push(
-      ...BATTLE_INTERRUPT_TRIGGERS.map((trigger) => ({
-        subject: {
-          tag: "action" as const,
-          actorId,
-          action: "ready" as const,
-          readyTrigger: trigger,
-        },
-        initialHoles: [],
-      })),
-    );
   }
   if (
     combatantCanTakeActions(state.combatants.get(actorId)) &&
@@ -596,6 +600,18 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...webAreaRemovalActs(state, actorId));
   acts.push(...wardingBondSeparationActs(state, actorId));
   acts.push(...endConcentrationActs(state, actorId));
+  const readyResponses = readyResponseChoices(state, actorId, acts);
+  if (
+    includeReady &&
+    combatantCanTakeActions(state.combatants.get(actorId)) &&
+    canSpendAction(state.currentTurnResources, "ready") &&
+    readyResponses.length > 0
+  ) {
+    acts.push({
+      subject: { tag: "action", actorId, action: "ready" },
+      initialHoles: [readyDeclarationHole(actorId, readyResponses)],
+    });
+  }
   acts.push(endTurnAct(actorId));
   acts.push(...readiedSpellReleaseActs(state, actorId));
   acts.push(...discoverLegendaryActionActs(state));
@@ -941,20 +957,26 @@ function endTurnAct(actorId: CombatantId): BattleActDiscoveryCandidate {
   };
 }
 
-function endConcentrationActs(
+function reportReadyTriggerActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
-  const actor = state.combatants.get(actorId);
-  if (actor === undefined || actor.concentration === null) {
-    return [];
-  }
-  return [
-    {
-      subject: { tag: "runtimeCommand", actorId, command: "endConcentration" },
-      initialHoles: [],
-    },
-  ];
+  return [...state.readiedResponses.keys()].flatMap((readiedActorId) => {
+    const readiedActor = state.combatants.get(readiedActorId);
+    return readiedActor !== undefined && combatantCanTakeReactions(readiedActor)
+      ? [
+          {
+            subject: {
+              tag: "runtimeCommand" as const,
+              actorId,
+              command: "reportReadyTrigger" as const,
+              readiedActorId,
+            },
+            initialHoles: [],
+          },
+        ]
+      : [];
+  });
 }
 
 function readiedSpellReleaseActs(
@@ -990,6 +1012,22 @@ function readiedSpellReleaseActs(
           },
         ];
   });
+}
+
+function endConcentrationActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly BattleActDiscoveryCandidate[] {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined || actor.concentration === null) {
+    return [];
+  }
+  return [
+    {
+      subject: { tag: "runtimeCommand", actorId, command: "endConcentration" },
+      initialHoles: [],
+    },
+  ];
 }
 
 export function releaseGrappleActs(

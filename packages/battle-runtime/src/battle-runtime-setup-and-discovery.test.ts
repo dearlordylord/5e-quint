@@ -5,12 +5,20 @@ import {
   removeBattleCombatantsRight,
   fighterVsGoblinBattle,
   fighterAttackSubject,
+  attackExecutionSelectionForSubjectForTest,
+  attackRollFill,
+  attackRollHoleAfterTarget,
+  attackTargetFill,
+  grappleOutcomeFill,
+  shoveOutcomeFill,
   requireHole,
+  requireResolved,
   findHole,
   findAct,
   targetFill,
   characterSeed,
   statBlockCreatureInit,
+  skeletonCreatureInit,
   resource,
   bardicInspirationUnit,
   wizardSpellcasting,
@@ -28,6 +36,7 @@ import {
   initiativeScore,
   movementFeet,
   resolveBattleSubject,
+  endTurn,
   Schema,
   snapshotBattle,
   startBattle,
@@ -116,7 +125,7 @@ describe("battle runtime: setup and discovery", () => {
       ],
       turn: {
         actionResources: [{ kind: "action", source: "turn" }],
-        bonusActionAvailable: true,
+        bonusActionAvailable: false,
         spellSlotUsesThisTurn: [],
         levelOnePlusSpellCastsThisTurn: [],
         quickenedLevelOnePlusSpellCastsThisTurn: [],
@@ -214,11 +223,259 @@ describe("battle runtime: setup and discovery", () => {
           combatantId: "fighter",
         },
       ],
-      readiedResponses: { spells: [], movements: [] },
+      readiedResponses: { spells: [], actionsOrMovements: [] },
       obscurementZones: [],
       helpAttackMarkers: [],
       pendingInterrupt: null,
     });
+  });
+
+  // Rules-Glossary.md — Bonus Action: a creature can take a Bonus Action only
+  // when a rule explicitly grants one. Monsters/Overview.md says a monster's
+  // Bonus Actions section supplies those grants.
+  test("snapshot Bonus Action availability follows surfaced rule grants", () => {
+    const skeletonBattle = startBattleRight({
+      battleId: battleId("battle-skeleton-bonus-action-availability"),
+      combatants: [
+        skeletonCreatureInit({ initiative: 20 }),
+        characterSeed({ initiative: 10 }),
+      ],
+    });
+    const skeletonSnapshot = snapshotBattle(skeletonBattle);
+
+    expect(skeletonSnapshot.turn.bonusActionAvailable).toBe(false);
+    expect(
+      skeletonSnapshot.acts.some(
+        ({ subject }) => subject.tag === "bonusAction",
+      ),
+    ).toBe(false);
+
+    const goblinBattle = startBattleRight({
+      battleId: battleId("battle-goblin-bonus-action-availability"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        characterSeed({ initiative: 10 }),
+      ],
+    });
+    const goblinSnapshot = snapshotBattle(goblinBattle);
+
+    expect(goblinSnapshot.turn.bonusActionAvailable).toBe(true);
+    expect(
+      goblinSnapshot.acts.some(({ subject }) => subject.tag === "bonusAction"),
+    ).toBe(true);
+  });
+
+  // A needsHoles result is one in-progress subject, not a new action-selection
+  // point. The caller must finish that subject before choosing another act.
+  test("pending subject continuation exposes no fresh acts and rejects a cached peer act", () => {
+    const state = fighterVsGoblinBattle();
+    const cachedEndTurn = findAct(state, {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "endTurn",
+    });
+    const attack = resolveBattleSubject({
+      state,
+      subject: fighterAttackSubject(state),
+      fills: [],
+    });
+    if (attack.tag !== "needsHoles") {
+      throw new Error("Expected the Attack target frontier.");
+    }
+
+    expect(attack.snapshot.acts).toEqual([]);
+    expect(snapshotBattle(attack.state).acts).toEqual([]);
+    expect(
+      resolveBattleSubject({
+        state: attack.state,
+        subject: cachedEndTurn.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+    expect(endTurn({ state: attack.state, actorId: fighterId })).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "The pending subject continuation must resolve before the turn can end.",
+    });
+  });
+
+  // Rules-Glossary.md — Unarmed Strike: instead of using a weapon for a melee
+  // attack, a creature can deal damage, grapple, or shove. Monsters/Overview.md
+  // says monsters also have the actions available to all creatures.
+  test("stat blocks execute every universal Unarmed Strike choice", () => {
+    const makeSession = (suffix: string) =>
+      startBattleSessionRight({
+        battleId: battleId(`battle-stat-block-unarmed-strike-${suffix}`),
+        combatants: [
+          skeletonCreatureInit({ initiative: 20 }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      });
+    const session = makeSession("damage");
+    const unarmedStrike = session.context.statBlocks
+      .get(skeletonId)
+      ?.procedures.find(
+        (procedure) =>
+          procedure.kind === "attack" && procedure.name === "Unarmed Strike",
+      );
+
+    expect(unarmedStrike).toBeDefined();
+    const attackAct = snapshotBattle(session.state).acts.find(
+      ({ subject }) =>
+        subject.tag === "action" &&
+        subject.action === "attack" &&
+        subject.procedureRef === unarmedStrike?.procedureRef,
+    );
+    if (
+      attackAct?.subject.tag !== "action" ||
+      attackAct.subject.action !== "attack"
+    ) {
+      throw new Error("Expected the intrinsic Unarmed Strike attack act.");
+    }
+    const attackTarget = requireHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: attackAct.subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const attackTargetSelection = attackTargetFill(
+      attackTarget,
+      skeletonId,
+      goblinId,
+      attackExecutionSelectionForSubjectForTest(attackAct.subject),
+    );
+    const attackRoll = attackRollHoleAfterTarget(
+      session.state,
+      attackTarget,
+      attackAct.subject,
+      goblinId,
+    );
+    const damaged = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: attackAct.subject,
+        fills: [
+          attackTargetSelection,
+          attackRollFill(attackRoll, { total: 15, naturalD20: 12 }),
+        ],
+      }),
+    );
+    expect(damaged.state.combatants.get(goblinId)?.hp).toBe(9);
+
+    const grappleSession = makeSession("grapple");
+    const grappleAct = snapshotBattle(grappleSession.state).acts.find(
+      ({ subject }) => subject.tag === "action" && subject.action === "grapple",
+    );
+    if (
+      grappleAct?.subject.tag !== "action" ||
+      grappleAct.subject.action !== "grapple"
+    ) {
+      throw new Error("Expected the universal Grapple act.");
+    }
+    const grappleTarget = requireHole(
+      resolveBattleSubject({
+        state: grappleSession.state,
+        subject: grappleAct.subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const grappleOutcome = requireHole(
+      resolveBattleSubject({
+        state: grappleSession.state,
+        subject: grappleAct.subject,
+        fills: [
+          targetFill(grappleTarget, goblinId, [
+            {
+              kind: "grappleTargetWithinReach",
+              grapplerId: skeletonId,
+              targetId: goblinId,
+            },
+          ]),
+        ],
+      }),
+      "grappleOutcome",
+    );
+    const grappled = requireResolved(
+      resolveBattleSubject({
+        state: grappleSession.state,
+        subject: grappleAct.subject,
+        fills: [
+          targetFill(grappleTarget, goblinId, [
+            {
+              kind: "grappleTargetWithinReach",
+              grapplerId: skeletonId,
+              targetId: goblinId,
+            },
+          ]),
+          grappleOutcomeFill(grappleOutcome, false),
+        ],
+      }),
+    );
+    expect(grappled.state.grapples).toEqual([
+      expect.objectContaining({ grapplerId: skeletonId, targetId: goblinId }),
+    ]);
+
+    const shoveSession = makeSession("shove");
+    const shoveAct = snapshotBattle(shoveSession.state).acts.find(
+      ({ subject }) => subject.tag === "action" && subject.action === "shove",
+    );
+    if (
+      shoveAct?.subject.tag !== "action" ||
+      shoveAct.subject.action !== "shove"
+    ) {
+      throw new Error("Expected the universal Shove act.");
+    }
+    const shoveTarget = requireHole(
+      resolveBattleSubject({
+        state: shoveSession.state,
+        subject: shoveAct.subject,
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const shoveOutcome = requireHole(
+      resolveBattleSubject({
+        state: shoveSession.state,
+        subject: shoveAct.subject,
+        fills: [
+          targetFill(shoveTarget, goblinId, [
+            {
+              kind: "shoveTargetWithinReach",
+              shoverId: skeletonId,
+              targetId: goblinId,
+            },
+          ]),
+        ],
+      }),
+      "shoveOutcome",
+    );
+    const shoved = requireResolved(
+      resolveBattleSubject({
+        state: shoveSession.state,
+        subject: shoveAct.subject,
+        fills: [
+          targetFill(shoveTarget, goblinId, [
+            {
+              kind: "shoveTargetWithinReach",
+              shoverId: skeletonId,
+              targetId: goblinId,
+            },
+          ]),
+          shoveOutcomeFill(shoveOutcome, {
+            succeeded: false,
+            failedEffect: { kind: "prone" },
+          }),
+        ],
+      }),
+    );
+    expect(shoved.state.combatants.get(goblinId)?.conditions.prone).toBe(true);
   });
 
   test("presented snapshots collect every independent roster issue regardless of Initiative order", () => {
@@ -682,5 +939,32 @@ describe("battle runtime: setup and discovery", () => {
     expect(Either.mapLeft(all, battleStateInitIssueMessage)).toEqual(
       Either.left("Cannot remove every combatant from a battle."),
     );
+  });
+
+  test("combatant removal clears a continuation whose accumulated fills can reference the changed roster", () => {
+    const state = fighterVsGoblinBattle();
+    const attack = fighterAttackSubject(state);
+    const target = requireHole(
+      resolveBattleSubject({ state, subject: attack, fills: [] }),
+      "targetChoice",
+    );
+    const pending = resolveBattleSubject({
+      state,
+      subject: attack,
+      fills: [targetFill(target, goblinId)],
+    });
+    if (pending.tag !== "needsHoles") {
+      throw new Error("Expected the Fighter attack-roll continuation.");
+    }
+
+    const removed = removeBattleCombatantsRight({
+      state: pending.state,
+      combatantIds: [goblinId],
+    });
+
+    expect(removed.subjectResolutionPhase).toEqual({
+      kind: "subjectSelection",
+    });
+    expect(snapshotBattle(removed).acts.length).toBeGreaterThan(0);
   });
 });

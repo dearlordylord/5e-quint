@@ -90,6 +90,7 @@ import {
 import {
   assertBattleSnapshotCodecRoundTripForTest,
   characterBattleFeatureInitForTest,
+  readyDeclarationFillForTest,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -968,19 +969,15 @@ function pactScratchFilledAttackFills(
       total: 23,
     },
   );
-  const awaitingDamage = resolveBattleSubject({
+  const resolved = resolveBattleSubject({
     state,
     subject,
     fills: [target, attackRoll],
   });
-  if (awaitingDamage.tag !== "needsHoles") {
-    throw new Error("Expected Pact familiar damage roll hole.");
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected fixed-damage Pact familiar attack resolution.");
   }
-  return [
-    target,
-    attackRoll,
-    damageRollFill(requireHole(awaitingDamage.holes, "rolledDice"), []),
-  ];
+  return [target, attackRoll];
 }
 
 function pactScratchSubject(
@@ -1007,6 +1004,7 @@ function pactScratchSubject(
     actorId,
     familiarId: subjectFamiliarId,
     procedureRef,
+    statBlockDamageNotation: "static",
   };
 }
 
@@ -2245,19 +2243,32 @@ describe("Find Familiar lifecycle", () => {
     expect(familiarTurn.tag).toBe("resolved");
     if (familiarTurn.tag !== "resolved") return;
 
+    const readySubject = {
+      tag: "action" as const,
+      actorId: familiarId,
+      action: "ready" as const,
+    };
+    const declaration = resolveBattleSubject({
+      state: familiarTurn.state,
+      subject: readySubject,
+      fills: [],
+    });
+    expect(declaration.tag).toBe("needsHoles");
+    if (declaration.tag !== "needsHoles") return;
     const readied = resolveBattleSubject({
       state: familiarTurn.state,
-      subject: {
-        tag: "action",
-        actorId: familiarId,
-        action: "ready",
-        readyTrigger: "attackHit",
-      },
-      fills: [],
+      subject: readySubject,
+      fills: [
+        readyDeclarationFillForTest(
+          declaration.holes[0]!,
+          "the enemy approaches",
+          { kind: "movement" },
+        ),
+      ],
     });
     expect(readied.tag).toBe("resolved");
     if (readied.tag !== "resolved") return;
-    expect(readied.state.readiedMovements.has(familiarId)).toBe(true);
+    expect(readied.state.readiedResponses.has(familiarId)).toBe(true);
 
     const disappeared = applyFindFamiliarZeroHitPointDisappearance({
       state: readied.state,
@@ -2266,8 +2277,10 @@ describe("Find Familiar lifecycle", () => {
     expect(disappeared.tag).toBe("resolved");
     if (disappeared.tag !== "resolved") return;
     expect(disappeared.state.combatants.has(familiarId)).toBe(false);
-    expect(disappeared.state.readiedMovements.has(familiarId)).toBe(false);
-    expect(disappeared.snapshot.readiedResponses.movements).toEqual([]);
+    expect(disappeared.state.readiedResponses.has(familiarId)).toBe(false);
+    expect(disappeared.snapshot.readiedResponses.actionsOrMovements).toEqual(
+      [],
+    );
 
     const recast = castCatFamiliarAfterCasterTurn(disappeared.state);
     expect(recast.tag).toBe("resolved");
@@ -2279,19 +2292,27 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(secondFamiliarTurn.tag).toBe("resolved");
     if (secondFamiliarTurn.tag !== "resolved") return;
+    const secondReadyDeclaration = resolveBattleSubject({
+      state: secondFamiliarTurn.state,
+      subject: readySubject,
+      fills: [],
+    });
+    expect(secondReadyDeclaration.tag).toBe("needsHoles");
+    if (secondReadyDeclaration.tag !== "needsHoles") return;
     const readiedAgain = resolveBattleSubject({
       state: secondFamiliarTurn.state,
-      subject: {
-        tag: "action",
-        actorId: familiarId,
-        action: "ready",
-        readyTrigger: "attackHit",
-      },
-      fills: [],
+      subject: readySubject,
+      fills: [
+        readyDeclarationFillForTest(
+          secondReadyDeclaration.holes[0]!,
+          "the enemy approaches",
+          { kind: "movement" },
+        ),
+      ],
     });
     expect(readiedAgain.tag).toBe("resolved");
     if (readiedAgain.tag !== "resolved") return;
-    expect(readiedAgain.state.readiedMovements.has(familiarId)).toBe(true);
+    expect(readiedAgain.state.readiedResponses.has(familiarId)).toBe(true);
 
     const casterTurn = resolveBattleSubject({
       state: readiedAgain.state,
@@ -2312,8 +2333,8 @@ describe("Find Familiar lifecycle", () => {
     expect(dismissed.tag).toBe("resolved");
     if (dismissed.tag !== "resolved") return;
     expect(dismissed.state.combatants.has(familiarId)).toBe(false);
-    expect(dismissed.state.readiedMovements.has(familiarId)).toBe(false);
-    expect(dismissed.snapshot.readiedResponses.movements).toEqual([]);
+    expect(dismissed.state.readiedResponses.has(familiarId)).toBe(false);
+    expect(dismissed.snapshot.readiedResponses.actionsOrMovements).toEqual([]);
   });
 
   test("generic combatant removal keeps owner and familiar state together", () => {
@@ -3727,7 +3748,7 @@ describe("Find Familiar lifecycle", () => {
     ]);
   });
 
-  test("Pact familiar rolled and static projections replay distinct damage procedures", () => {
+  test("Pact familiar fixed damage exposes only the executable static projection", () => {
     const session = startPactWarlockFixtureBattle();
     const cast = castCatFamiliarAfterCasterTurn(session);
     expect(cast.tag).toBe("resolved");
@@ -3739,23 +3760,24 @@ describe("Find Familiar lifecycle", () => {
         context: session.context,
       }),
     ).filter((act) => act.subject.tag === "pactOfTheChainFamiliarAttack");
-    const rolledSubject = attackActs.find(
+    const scratchProcedureRef = pactScratchSubject(cast.state).procedureRef;
+    const rolledScratchSubject = attackActs.find(
       (act) =>
         act.subject.tag === "pactOfTheChainFamiliarAttack" &&
+        act.subject.procedureRef === scratchProcedureRef &&
         act.subject.statBlockDamageNotation === undefined,
     )?.subject;
     const staticSubject = attackActs.find(
       (act) =>
         act.subject.tag === "pactOfTheChainFamiliarAttack" &&
+        act.subject.procedureRef === scratchProcedureRef &&
         act.subject.statBlockDamageNotation === "static",
     )?.subject;
-    if (
-      rolledSubject?.tag !== "pactOfTheChainFamiliarAttack" ||
-      staticSubject?.tag !== "pactOfTheChainFamiliarAttack"
-    ) {
-      throw new Error("Expected rolled and static Pact familiar attack acts.");
+    expect(rolledScratchSubject).toBeUndefined();
+    if (staticSubject?.tag !== "pactOfTheChainFamiliarAttack") {
+      throw new Error("Expected the static Pact familiar Scratch act.");
     }
-    const resolveHit = (subject: typeof rolledSubject) => {
+    const resolveHit = (subject: typeof staticSubject) => {
       const awaitingTarget = resolveBattleSubject({
         state: cast.state,
         subject,
@@ -3786,10 +3808,6 @@ describe("Find Familiar lifecycle", () => {
       });
     };
 
-    expect(resolveHit(rolledSubject)).toMatchObject({
-      tag: "needsHoles",
-      holes: [{ kind: "rolledDice" }],
-    });
     expect(resolveHit(staticSubject).tag).toBe("resolved");
   });
 

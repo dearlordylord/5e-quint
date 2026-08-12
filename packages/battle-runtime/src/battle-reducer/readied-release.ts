@@ -1,4 +1,5 @@
 // Readied release owns spell and movement continuation handling.
+// KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 
 import {
@@ -27,12 +28,77 @@ import {
 } from "./interrupt-execution.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import type {
+  BattleResolutionInput,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
 } from "../battle-state-execution.ts";
 import { MOVEMENT_HOLE_ID } from "./battle-runtime-protocol.ts";
+import { INITIAL_TURN_RESOURCES } from "./battle-runtime-protocol.ts";
 import { characterSpellProcedure } from "../character-execution-queries.ts";
 import { isReadiedSpellInvocation } from "./spells-discovery.ts";
+
+export function resolveReleaseReadiedActionCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "releaseReadiedAction";
+      }
+    >
+  >,
+  resolveAction: (input: BattleResolutionInput) => BattleResolutionResult,
+): BattleResolutionResult {
+  const activeInterrupt = currentInterruptCheckpoint(
+    input.state,
+  )?.activeInterrupt;
+  if (
+    activeInterrupt === undefined ||
+    activeInterrupt.responderId !== input.subject.reactorId ||
+    !sameBattleSubject(activeInterrupt.subject, input.subject)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Readied Action release requires its active interrupt checkpoint.",
+    );
+  }
+  const readied = input.state.readiedResponses.get(input.subject.reactorId);
+  if (readied?.response.kind !== "action") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "No readied action is currently held by this responder.",
+    );
+  }
+  const interruptedTurnResources = input.state.currentTurnResources;
+  const actionResult = resolveAction({
+    state: {
+      ...input.state,
+      currentTurnResources: INITIAL_TURN_RESOURCES,
+    },
+    subject: readied.response.subject,
+    fills: input.fills,
+  });
+  if (actionResult.tag === "invalid") return actionResult;
+  const readiedResponses = new Map(actionResult.state.readiedResponses);
+  if (actionResult.tag === "resolved") {
+    readiedResponses.delete(input.subject.reactorId);
+  }
+  const state = {
+    ...actionResult.state,
+    currentTurnResources: interruptedTurnResources,
+    readiedResponses,
+  };
+  return actionResult.tag === "needsHoles"
+    ? {
+        ...actionResult,
+        state,
+        subject: input.subject,
+        snapshot: snapshotBattle(state),
+      }
+    : { ...actionResult, state, snapshot: snapshotBattle(state) };
+}
 
 export function resolveReleaseReadiedSpellCommand(
   input: BattleResolutionInputForSubject<
@@ -147,7 +213,7 @@ export function resolveReleaseReadiedMovementCommand(
       "Readied Movement release requires an active interrupt checkpoint.",
     );
   }
-  const readied = input.state.readiedMovements.get(readiedMovementActorId);
+  const readied = input.state.readiedResponses.get(readiedMovementActorId);
   if (readied === undefined) {
     return invalidResult(
       input.state,
@@ -202,7 +268,7 @@ export function resolveReleaseReadiedMovementCommand(
         readiedMovementActorId,
         fill.value.speedKind,
       ),
-      spendsTurnMovement: true,
+      spendsTurnMovement: false,
     },
   );
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -215,9 +281,9 @@ export function resolveReleaseReadiedMovementCommand(
     movement.movement,
   );
   if (threats.length > 0) {
-    const readiedMovements = new Map(input.state.readiedMovements);
-    readiedMovements.delete(readiedMovementActorId);
-    const stateWithoutReadied = { ...input.state, readiedMovements };
+    const readiedResponses = new Map(input.state.readiedResponses);
+    readiedResponses.delete(readiedMovementActorId);
+    const stateWithoutReadied = { ...input.state, readiedResponses };
     const reactionWindow = maybeOpenInterruptWindow(
       stateWithoutReadied,
       {
@@ -252,9 +318,9 @@ export function resolveReleaseReadiedMovementCommand(
     );
   }
   /* v8 ignore stop */
-  const readiedMovements = new Map(movementEffects.state.readiedMovements);
-  readiedMovements.delete(readiedMovementActorId);
-  const stateWithoutReadied = { ...movementEffects.state, readiedMovements };
+  const readiedResponses = new Map(movementEffects.state.readiedResponses);
+  readiedResponses.delete(readiedMovementActorId);
+  const stateWithoutReadied = { ...movementEffects.state, readiedResponses };
   return {
     tag: "resolved",
     state: stateWithoutReadied,

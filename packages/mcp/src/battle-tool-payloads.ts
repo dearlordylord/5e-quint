@@ -4,6 +4,8 @@ import {
   battleSnapshotProjection,
   battleSubjectPresentation,
   discoverBattleActs,
+  presentBattleActs,
+  presentBattleSnapshot,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
   type BattleInterruptProcedureChoice,
@@ -72,13 +74,34 @@ export function battleResolutionPayload(
   result: BattleRuntimeResolutionResult,
   session: BattleRuntimeSession,
 ) {
-  const presentation = battlePresentationProjection(session);
+  const presentation = battleResultPresentationProjection(result, session);
   return Either.map(presentation, (value) => ({
     result: battleResolutionResultPayload(result, value.snapshot),
     ...value,
     snapshot: value.snapshot,
     session: root.sessionStore.snapshot(),
   }));
+}
+
+function battleResultPresentationProjection(
+  result: BattleRuntimeResolutionResult,
+  session: BattleRuntimeSession,
+): Either.Either<
+  ActiveBattlePresentationProjection,
+  BattleSnapshotPresentationIssues
+> {
+  return Either.map(
+    presentBattleSnapshot(session, result.snapshot),
+    (snapshot) => ({
+      snapshot,
+      availableActs: presentBattleActs(session, result.snapshot.acts),
+      admittedSpellPresentations: battleAdmittedSpellPresentations(session),
+      presentedInterruptChoices: presentedInterruptChoices(
+        session,
+        result.snapshot.pendingInterrupt?.choices ?? [],
+      ),
+    }),
+  );
 }
 
 function battlePresentationProjection(

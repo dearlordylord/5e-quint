@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.REACTION.OFFER_DECLINE_RESUME
+
 import { nonEmptyArrayProperty } from "../optional-property.ts";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Match } from "effect";
@@ -38,6 +40,7 @@ import {
   readiedMovementInitialHoles,
   readiedSpellInitialHoles,
 } from "./readied-initial-holes.ts";
+import { readiedAttackOption } from "./ready.ts";
 import { interruptDecisionHole, snapshotBattle } from "./battle-snapshot.ts";
 export {
   battleSnapshotProjection,
@@ -496,10 +499,7 @@ export function maybeOpenPostCastReadySpellCastWindow(input: {
           continuation: { kind: "resolved", subject: input.subject },
         },
         input.handledInterruptTrigger,
-        [
-          ...readiedSpellReactionChoices(input.state, "spellCast"),
-          ...readiedMovementReactionChoices(input.state, "spellCast"),
-        ],
+        [...readiedSpellReactionChoices(input.state, "spellCast")],
       )
     : null;
 }
@@ -579,6 +579,10 @@ function openPreparedInterruptWindowWithChoices(
       ...triggerFrame,
       ...frameCommon,
     })),
+    Match.when({ trigger: "reportedReadyTrigger" }, (triggerFrame) => ({
+      ...triggerFrame,
+      ...frameCommon,
+    })),
     Match.exhaustive,
   );
   const nextState = openBattleInterruptWindow({
@@ -631,38 +635,103 @@ export function readiedSpellReactionChoices(
 
 export function readiedMovementReactionChoices(
   state: BattleState,
-  trigger: BattleInterruptTrigger,
+  frame: BattleInterruptCheckpointInput,
 ): readonly BattleInterruptProcedureChoice[] {
-  return [...state.readiedMovements].flatMap(
-    ([readiedMovementActorId, readiedMovement]) => {
-      const reactor = state.combatants.get(readiedMovementActorId);
-      const initialHoles = readiedMovementInitialHoles(
-        state,
-        readiedMovementActorId,
-      );
-      if (
-        readiedMovement.trigger !== trigger ||
-        reactor === undefined ||
-        !combatantCanTakeReactions(reactor) ||
-        initialHoles.length === 0
-      ) {
-        return [];
-      }
-      return [
+  if (frame.trigger !== "reportedReadyTrigger") return [];
+  const readiedMovementActorId = frame.readiedActorId;
+  const readiedResponse = state.readiedResponses.get(readiedMovementActorId);
+  const reactor = state.combatants.get(readiedMovementActorId);
+  const initialHoles = readiedMovementInitialHoles(
+    state,
+    readiedMovementActorId,
+  );
+  return readiedResponse?.response.kind === "movement" &&
+    reactor !== undefined &&
+    combatantCanTakeReactions(reactor) &&
+    initialHoles.length > 0
+    ? [
         {
-          kind: "releaseReadiedMovement" as const,
+          kind: "releaseReadiedMovement",
           reactorId: readiedMovementActorId,
           readiedMovementActorId,
           initialHoles,
           subject: {
-            tag: "runtimeCommand" as const,
+            tag: "runtimeCommand",
             actorId: currentActorId(state),
-            command: "releaseReadiedMovement" as const,
+            command: "releaseReadiedMovement",
             readiedMovementActorId,
           },
         },
-      ];
-    },
+      ]
+    : [];
+}
+
+export function readiedActionReactionChoices(
+  state: BattleState,
+  frame: BattleInterruptCheckpointInput,
+): readonly BattleInterruptProcedureChoice[] {
+  if (frame.trigger !== "reportedReadyTrigger") return [];
+  const reactorId = frame.readiedActorId;
+  const readied = state.readiedResponses.get(reactorId);
+  const reactor = state.combatants.get(reactorId);
+  return readied?.response.kind === "action" &&
+    reactor !== undefined &&
+    combatantCanTakeReactions(reactor)
+    ? [
+        {
+          kind: "releaseReadiedAction",
+          reactorId,
+          initialHoles: [],
+          subject: {
+            tag: "runtimeCommand",
+            actorId: currentActorId(state),
+            command: "releaseReadiedAction",
+            reactorId,
+          },
+        },
+      ]
+    : [];
+}
+
+export function readiedAttackReactionChoices(
+  state: BattleState,
+  frame: BattleInterruptCheckpointInput,
+): readonly BattleInterruptProcedureChoice[] {
+  if (frame.trigger !== "reportedReadyTrigger") return [];
+  const reactorId = frame.readiedActorId;
+  const readied = state.readiedResponses.get(reactorId);
+  const reactor = state.combatants.get(reactorId);
+  if (
+    readied?.response.kind !== "attack" ||
+    reactor === undefined ||
+    !combatantCanTakeReactions(reactor)
+  ) {
+    return [];
+  }
+  const response = readied.response;
+  return [...state.combatants.keys()].flatMap((targetId) =>
+    readiedAttackOption(
+      state,
+      reactorId,
+      targetId,
+      response.selection.procedureRef,
+    ) === undefined
+      ? []
+      : [
+          {
+            kind: "releaseReadiedAttack" as const,
+            reactorId,
+            initialHoles: [],
+            subject: {
+              tag: "runtimeCommand" as const,
+              actorId: currentActorId(state),
+              command: "releaseReadiedAttack" as const,
+              reactorId,
+              targetId,
+              procedureRef: response.selection.procedureRef,
+            },
+          },
+        ],
   );
 }
 
@@ -672,7 +741,9 @@ export function interruptChoices(
 ): readonly BattleInterruptProcedureChoice[] {
   const readiedChoices = [
     ...readiedSpellReactionChoices(state, frame.trigger),
-    ...readiedMovementReactionChoices(state, frame.trigger),
+    ...readiedMovementReactionChoices(state, frame),
+    ...readiedActionReactionChoices(state, frame),
+    ...readiedAttackReactionChoices(state, frame),
   ];
   const attackHitBonusActionSpellChoices =
     attackHitBonusActionSpellReactionChoices(state, frame);

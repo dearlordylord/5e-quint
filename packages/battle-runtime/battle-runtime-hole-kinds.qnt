@@ -30,6 +30,7 @@ module battleRuntimeHoleKinds {
     | MovementHoleKind
     | ObjectDropResolutionHoleKind
     | OngoingSpellTargetChoiceHoleKind
+    | ReadyDeclarationHoleKind
     | RolledDiceHoleKind
     | SanctuaryInterdictionOutcomeHoleKind
     | SavingThrowOutcomeHoleKind

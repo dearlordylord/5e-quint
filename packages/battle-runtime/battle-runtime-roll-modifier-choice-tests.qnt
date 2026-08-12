@@ -3,6 +3,7 @@
 
 module battleRuntimeRollModifierChoiceTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeRollModifierChoice.* from "./battle-runtime-roll-modifier-choice"
 
   run test_roll_modifier_concentration_replacement_removes_prior_effects_before_new_effect = {

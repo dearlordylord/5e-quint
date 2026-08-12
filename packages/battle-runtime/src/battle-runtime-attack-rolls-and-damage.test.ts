@@ -646,6 +646,33 @@ describe("battle runtime: attack rolls and damage", () => {
     });
   });
 
+  test("an unresolved attack continuation does not advertise fresh acts", () => {
+    // SRD 5.2.1 Rules Glossary, "Attack [Action]", and Playing the Game,
+    // "One Thing at a Time": the attack roll and its damage are one selected
+    // Attack action, not a fresh action-selection point.
+    const state = fighterVsGoblinBattle();
+    const subject = fighterAttackSubject(state, "Longsword");
+    const targetHole = attackInitialTargetHole(state, subject);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole, subject);
+
+    const awaitingDamage = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 20, naturalD20: 15 }),
+      ],
+    });
+
+    expect(awaitingDamage).toMatchObject({
+      tag: "needsHoles",
+      snapshot: {
+        acts: [],
+        turn: { attackRollMadeThisTurn: true },
+      },
+    });
+  });
+
   test("attack replay rejects invalid natural d20 attack-roll results", () => {
     const state = fighterVsGoblinBattle();
     const targetHole = attackInitialTargetHole(state);

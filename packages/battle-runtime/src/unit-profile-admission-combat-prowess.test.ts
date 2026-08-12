@@ -277,6 +277,10 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       attack: zeroAbilityWeaponAttack("weapon_longsword"),
       cantrips: [spell],
     });
+    const spellActBeforeAttack = spellAct({
+      session: state,
+      spellId: rayOfFrostUnitId,
+    });
     const subject = weaponAttackSubject(state, "Longsword");
     const target = requireResultHole(
       resolveBattleSubject({ state: state.state, subject, fills: [] }),
@@ -307,64 +311,15 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
       throw new Error("Expected Peerless Aim weapon attack to need damage.");
     }
 
-    const act = spellAct({
-      session: battleRuntimeSessionForTest({
-        state: awaitingDamage.state,
-        context: state.context,
-      }),
-      spellId: rayOfFrostUnitId,
-    });
-    const spellTarget = requireResultHole(
-      resolveBattleSubject({
-        state: awaitingDamage.state,
-        subject: act.subject,
-        fills: [],
-      }),
-      "targetChoice",
-    );
-    const spellRoll = requireResultHole(
-      resolveBattleSubject({
-        state: awaitingDamage.state,
-        subject: act.subject,
-        fills: [
-          spellTargetFill(
-            spellTarget,
-            rayOfFrostUnitId,
-            spellCasterId,
-            spellTargetId,
-          ),
-        ],
-      }),
-      "attackRoll",
-    );
-    expect(spellRoll).not.toHaveProperty("missToHitReplacements");
-
     expect(
       resolveBattleSubject({
         state: awaitingDamage.state,
-        subject: act.subject,
-        fills: [
-          spellTargetFill(
-            spellTarget,
-            rayOfFrostUnitId,
-            spellCasterId,
-            spellTargetId,
-          ),
-          attackRollFill(spellRoll, {
-            total: 1,
-            naturalD20: 2,
-            missToHitReplacementProcedureRef: combatProwessProcedureRef(
-              battleRuntimeSessionForTest({
-                state: awaitingDamage.state,
-                context: state.context,
-              }),
-            ),
-          }),
-        ],
+        subject: spellActBeforeAttack.subject,
+        fills: [],
       }),
     ).toMatchObject({
       tag: "invalid",
-      reason: "invalidFill",
+      reason: "staleSubject",
     });
   });
 

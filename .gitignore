@@ -52,3 +52,5 @@ AGENTS.local.md
 .mcp.dnd.local.json
 fat-traces/
 .worktrees/
+
+scripts/raw-swarm/out/

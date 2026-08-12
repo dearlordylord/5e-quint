@@ -5,6 +5,9 @@
 
 module battleRuntimeSleepTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
+  import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"

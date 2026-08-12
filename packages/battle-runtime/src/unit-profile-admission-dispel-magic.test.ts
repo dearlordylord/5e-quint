@@ -978,14 +978,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     if (needsCheck.tag !== "needsHoles") {
       throw new Error("Expected a Dispel Magic spellcasting ability check.");
     }
-    const focusedSnapshot = {
-      ...needsCheck.snapshot,
-      acts: needsCheck.snapshot.acts.filter(
-        (candidate) =>
-          "procedureRef" in candidate.subject &&
-          candidate.subject.procedureRef === act.subject.procedureRef,
-      ),
-    };
+    const focusedSnapshot = needsCheck.snapshot;
     assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
       snapshot: focusedSnapshot,
       subject: act.subject,
@@ -1007,10 +1000,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
                 }
               : combatant,
           ),
-          acts: focusedSnapshot.acts.map((candidate) => ({
-            ...candidate,
-            initialHoles: needsCheck.holes,
-          })),
+          acts: [{ subject: act.subject, initialHoles: needsCheck.holes }],
         }),
       ),
     ).toBe(true);

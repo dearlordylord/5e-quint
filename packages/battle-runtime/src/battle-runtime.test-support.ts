@@ -131,7 +131,11 @@ import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { spellFillSet } from "./battle-reducer/spells-resolve-fill-set.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import type { BattleInterruptAttackExecutionSelection } from "./battle-subjects.ts";
+import {
+  readyTriggerDescription,
+  type BattleInterruptAttackExecutionSelection,
+  type BattleReadyResponse,
+} from "./battle-subjects.ts";
 import {
   battleCharacterExecutionScopeRef,
   battleActiveEffectExecutionRef,
@@ -942,7 +946,6 @@ export function subjectName(
   | "bonusActionSpell"
   | "bonusActionDashSpell"
   | "pactOfTheChainFamiliarAttack"
-  | "creatureAttack"
   | "monkFocusOption"
   | "monkFocusFlurryOfBlowsStrike"
   | "unitFeature"
@@ -958,6 +961,9 @@ export function subjectName(
   | "releaseGrapple"
   | "releaseReadiedSpell"
   | "releaseReadiedMovement"
+  | "reportReadyTrigger"
+  | "releaseReadiedAction"
+  | "releaseReadiedAttack"
   | "releaseSpellCreatedHeldObject"
   | "castTriggeredReactionSpell"
   | "castAttackHitBonusActionSpell"
@@ -1036,9 +1042,6 @@ export function subjectName(
   }
   if (subject.tag === "findFamiliarTouchSpell") {
     return "findFamiliarTouchSpell";
-  }
-  if (subject.tag === "creatureAttack") {
-    return "creatureAttack";
   }
   return subject.command;
 }
@@ -1323,19 +1326,15 @@ export function fighterTurnWithReadiedRay(
       statBlockCreatureInit({ initiative: 10 }),
     ],
   });
-  const wizardReady = resolveBattleSubject({
+  const wizardReady = resolveReadySpellForTest({
     state: session.state,
-    subject: {
-      tag: "actionSpell",
-      actorId: wizardId,
-      procedureRef: requireCharacterSpellProcedureRefForTest(
-        session,
-        wizardId,
-        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
-      ),
-      mode: { tag: "ready", trigger },
-    },
-    fills: [],
+    actorId: wizardId,
+    procedureRef: requireCharacterSpellProcedureRefForTest(
+      session,
+      wizardId,
+      cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+    ),
+    trigger,
   });
   if (wizardReady.tag !== "resolved") {
     throw new Error(`Expected resolved Ready Spell, got ${wizardReady.tag}.`);
@@ -1374,19 +1373,15 @@ export function fighterTurnWithReadiedRayAndHealer(
       statBlockCreatureInit({ initiative: 10 }),
     ],
   });
-  const wizardReady = resolveBattleSubject({
+  const wizardReady = resolveReadySpellForTest({
     state: session.state,
-    subject: {
-      tag: "actionSpell",
-      actorId: wizardId,
-      procedureRef: requireCharacterSpellProcedureRefForTest(
-        session,
-        wizardId,
-        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
-      ),
-      mode: { tag: "ready", trigger },
-    },
-    fills: [],
+    actorId: wizardId,
+    procedureRef: requireCharacterSpellProcedureRefForTest(
+      session,
+      wizardId,
+      cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+    ),
+    trigger,
   });
   if (wizardReady.tag !== "resolved") {
     throw new Error(`Expected resolved Ready Spell, got ${wizardReady.tag}.`);
@@ -1424,38 +1419,30 @@ export function fighterTurnWithReadiedAcidAndSecondReadiedRay(): BattleState {
     ],
   });
   const firstReady = requireResolved(
-    resolveBattleSubject({
+    resolveReadySpellForTest({
       state: session.state,
-      subject: {
-        tag: "actionSpell",
-        actorId: wizardId,
-        procedureRef: requireCharacterSpellProcedureRefForTest(
-          session,
-          wizardId,
-          cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
-        ),
-        mode: { tag: "ready", trigger: "attackHit" },
-      },
-      fills: [],
+      actorId: wizardId,
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        session,
+        wizardId,
+        cantripSpellInvocationRef("acid_splash", "saveGatedDamage"),
+      ),
+      trigger: "attackHit",
     }),
   ).state;
   const secondWizardTurn = requireResolved(
     endTurn({ state: firstReady, actorId: wizardId }),
   ).state;
   const secondReady = requireResolved(
-    resolveBattleSubject({
+    resolveReadySpellForTest({
       state: secondWizardTurn,
-      subject: {
-        tag: "actionSpell",
-        actorId: secondWizardId,
-        procedureRef: requireCharacterSpellProcedureRefForTest(
-          battleRuntimeSessionForTest({ ...session, state: secondWizardTurn }),
-          secondWizardId,
-          cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
-        ),
-        mode: { tag: "ready", trigger: "saveFailed" },
-      },
-      fills: [],
+      actorId: secondWizardId,
+      procedureRef: requireCharacterSpellProcedureRefForTest(
+        battleRuntimeSessionForTest({ ...session, state: secondWizardTurn }),
+        secondWizardId,
+        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+      ),
+      trigger: "saveFailed",
     }),
   ).state;
   return requireResolved(
@@ -1468,19 +1455,15 @@ export function wizardTurnWithReadiedRay(
 ): BattleRuntimeSession {
   const session = wizardVsSkeletonBattle();
   const base = session.state;
-  const wizardReady = resolveBattleSubject({
+  const wizardReady = resolveReadySpellForTest({
     state: base,
-    subject: {
-      tag: "actionSpell",
-      actorId: wizardId,
-      procedureRef: requireCharacterSpellProcedureRefForTest(
-        session,
-        wizardId,
-        cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
-      ),
-      mode: { tag: "ready", trigger },
-    },
-    fills: [],
+    actorId: wizardId,
+    procedureRef: requireCharacterSpellProcedureRefForTest(
+      session,
+      wizardId,
+      cantripSpellInvocationRef("ray_of_frost", "spellAttackDamage"),
+    ),
+    trigger,
   });
   if (wizardReady.tag !== "resolved") {
     throw new Error(`Expected resolved Ready Spell, got ${wizardReady.tag}.`);
@@ -2023,9 +2006,6 @@ function selectedSpellProcedureSubjectForTest(
       candidate.subject.actorId === selection.actorId &&
       candidate.subject.tag === selection.tag &&
       candidate.subject.mode.tag === selection.mode.tag &&
-      (candidate.subject.mode.tag !== "ready" ||
-        (selection.mode.tag === "ready" &&
-          candidate.subject.mode.trigger === selection.mode.trigger)) &&
       presentation !== undefined &&
       presentation.invocation.tag === selection.invocation.tag &&
       presentation.invocation.spellId === selection.invocation.spellId &&
@@ -2299,16 +2279,18 @@ export function assertBattleSnapshotCodecAcceptsHolesForSubjectForTest(input: {
   const actIndex = input.snapshot.acts.findIndex((act) =>
     sameBattleSubject(act.subject, input.subject),
   );
-  if (actIndex < 0) {
-    throw new Error(
-      "Expected the persisted snapshot to contain the hole-owning subject.",
-    );
-  }
+  const acts =
+    actIndex < 0
+      ? [
+          ...input.snapshot.acts,
+          { subject: input.subject, initialHoles: input.holes },
+        ]
+      : input.snapshot.acts.map((act, index) =>
+          index === actIndex ? { ...act, initialHoles: input.holes } : act,
+        );
   Schema.decodeUnknownSync(BattleSnapshotSchema)({
     ...Schema.encodeSync(BattleSnapshotSchema)(input.snapshot),
-    acts: input.snapshot.acts.map((act, index) =>
-      index === actIndex ? { ...act, initialHoles: input.holes } : act,
-    ),
+    acts,
   });
 }
 
@@ -2581,6 +2563,47 @@ export function targetFill(
       ? {}
       : { relationshipFacts: selectedRelationshipFacts }),
   };
+}
+
+export function readyDeclarationFillForTest(
+  hole: BattleHole,
+  trigger: string,
+  response: BattleReadyResponse,
+): BattleFill {
+  if (hole.kind !== "readyDeclaration") {
+    throw new Error(`Expected Ready declaration hole, got ${hole.kind}.`);
+  }
+  return {
+    kind: "readyDeclaration",
+    holeId: hole.holeId,
+    value: { trigger: readyTriggerDescription(trigger), response },
+  };
+}
+
+export function resolveReadySpellForTest(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly procedureRef: Extract<
+    BattleSubject,
+    { readonly tag: "actionSpell" }
+  >["procedureRef"];
+  readonly trigger: BattleReadiedSpellTrigger;
+}): ReturnType<typeof resolveBattleSubject> {
+  const subject: Extract<BattleSubject, { readonly tag: "actionSpell" }> = {
+    tag: "actionSpell",
+    actorId: input.actorId,
+    procedureRef: input.procedureRef,
+    mode: { tag: "ready", trigger: input.trigger },
+  };
+  return resolveBattleSubject({
+    state: input.state,
+    subject,
+    fills: [],
+  });
+}
+
+export function readyTriggerDescriptionForTest(value: string) {
+  return readyTriggerDescription(value);
 }
 
 type ObjectTargetChoiceFill = Extract<
@@ -4122,6 +4145,7 @@ export function resistantSkeletonCreatureInit(input: {
       source: Either.getOrThrow(
         battleStatBlockCombatantSource({
           id: statBlockId("stat_block_slashing_resistant_skeleton"),
+          challengeRating: skeleton.challengeRating,
           statBlock: {
             ...statBlockWithoutDamageModifiers,
             displayName: "Slashing Resistant Skeleton",

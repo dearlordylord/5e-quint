@@ -37,6 +37,7 @@ import {
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { createMcpCompositionRoot, handleToolCall } from "./server.ts";
+import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import {
   BattleResolutionOutputSchema,
   BattleSessionOutputSchema,
@@ -1176,7 +1177,11 @@ function call<const Name extends keyof BattleToolOutputByName>(
   toolName: Name,
   args: unknown,
 ): BattleToolOutputByName[Name] {
-  const result = handleToolCall(root, toolName, args);
+  const result = handleToolCall(
+    root,
+    toolName,
+    battleToolWireArgs(toolName, args),
+  );
   if (result === undefined) {
     throw new Error(`Expected ${toolName} to return a tool result.`);
   }

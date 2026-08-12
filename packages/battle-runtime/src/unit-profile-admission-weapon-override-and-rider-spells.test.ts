@@ -286,7 +286,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
       tag: "needsHoles",
       snapshot: {
         pendingInterrupt: { trigger: "spellCast" },
-        turn: { bonusActionAvailable: true },
+        turn: { bonusActionAvailable: false },
       },
     });
     if (awaitingReaction.tag !== "needsHoles") {

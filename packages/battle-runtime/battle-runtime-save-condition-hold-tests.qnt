@@ -3,6 +3,13 @@
 
 module battleRuntimeSaveConditionHoldTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
+  import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+  import battleRuntimeSavingThrowRollMode.* from "./battle-runtime-saving-throw-roll-mode"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
+  import battleRuntimeSaveGatedFacts.* from "./battle-runtime-save-gated-facts"
+  import battleRuntimeSaveConditionTargetingFacts.* from "./battle-runtime-save-condition-targeting-facts"
+  import battleRuntimeSaveConditionBlindness.* from "./battle-runtime-save-condition-blindness"
   import battleRuntimeSaveConditionHold.* from "./battle-runtime-save-condition-hold"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
 

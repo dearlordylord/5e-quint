@@ -29,6 +29,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
 import { Match } from "effect";
+import { resolveReportReadyTriggerCommand } from "./ready-trigger.ts";
 
 import { currentInterruptFrame, snapshotBattle } from "./battle-snapshot.ts";
 export {
@@ -69,7 +70,6 @@ import {
 } from "../battle-subjects.ts";
 import { CombatantId } from "../identity.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
-import { resolveCreatureAttack } from "./creature-attack-procedures.ts";
 import {
   battleSubjectActorId,
   combatantCanTakeActions,
@@ -167,6 +167,7 @@ import {
   resolveOffHandAttack,
 } from "./attack-offhand.ts";
 import {
+  resolveReleaseReadiedActionCommand,
   resolveReleaseReadiedMovementCommand,
   resolveReleaseReadiedSpellCommand,
 } from "./readied-release.ts";
@@ -211,6 +212,7 @@ type ResolveBattleSubjectInternalOptions = {
   readonly executionRegistry: SpellProcedureExecutionRegistry;
   readonly attackResolvers: BattleAttackRouteResolvers;
   readonly interruptRouteOptions: BattleInterruptRouteOptions;
+  readonly readiedActionActorId?: CombatantId;
 };
 
 export function resolveAdmittedBattleSubject(
@@ -344,7 +346,12 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         };
   if (
     input.state.interruptStack.length > 0 &&
-    interruptRouteOptions.replayingInterruptedProcedure !== true
+    interruptRouteOptions.replayingInterruptedProcedure !== true &&
+    options.readiedActionActorId === undefined &&
+    !(
+      input.subject.tag === "runtimeCommand" &&
+      input.subject.command === "reportReadyTrigger"
+    )
   ) {
     const activeFrame = currentInterruptFrame(input.state);
     if (activeFrame !== null) {
@@ -398,6 +405,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
   const actorId = battleSubjectActorId(input.subject);
   if (
     actorId !== currentActorId(input.state) &&
+    actorId !== options.readiedActionActorId &&
     !isLegendaryAttackSubject(input.state, input.subject) &&
     !isReleaseGrappleSubject(input.subject) &&
     !persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn(input.subject)
@@ -447,6 +455,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     return invalidResult(input.state, "staleSubject", commandHaltIssue);
   }
   if (
+    options.readiedActionActorId === undefined &&
     currentActorHasOpenStatBlockMultiattackDispatch(input.state) &&
     !subjectAllowedDuringStatBlockMultiattackDispatch(
       input.state,
@@ -547,9 +556,6 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
           ...interruptRouteOptions,
         },
       );
-    }
-    if (subject.tag === "creatureAttack") {
-      return resolveCreatureAttack({ ...input, subject });
     }
     if (subject.tag === "bonusAction" && subject.action === "offHandAttack") {
       return resolveOffHandAttack({
@@ -720,6 +726,28 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       if (subject.command === "releaseReadiedMovement") {
         return resolveReleaseReadiedMovementCommand({ ...input, subject });
       }
+      if (subject.command === "releaseReadiedAction") {
+        return resolveReleaseReadiedActionCommand(
+          { ...input, subject },
+          (readiedActionInput) => {
+            const admission = admitBattleResolutionInput(readiedActionInput);
+            if (admission.tag === "staleCharacterProcedure") {
+              return invalidResult(
+                readiedActionInput.state,
+                "staleSubject",
+                "The readied action is no longer bound to its responder.",
+              );
+            }
+            return resolveBattleSubjectInternal(admission.input, {
+              ...options,
+              readiedActionActorId: subject.reactorId,
+            });
+          },
+        );
+      }
+      if (subject.command === "reportReadyTrigger") {
+        return resolveReportReadyTriggerCommand({ ...input, subject });
+      }
       if (subject.command === "releaseSpellCreatedHeldObject") {
         return resolveReleaseSpellCreatedHeldObjectCommand({
           ...input,
@@ -750,6 +778,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         return resolveReleaseGrappleCommand({ ...input, subject });
       }
       if (
+        subject.command === "releaseReadiedAttack" ||
         subject.command === "opportunityAttack" ||
         subject.command === "retaliationAttack"
       ) {

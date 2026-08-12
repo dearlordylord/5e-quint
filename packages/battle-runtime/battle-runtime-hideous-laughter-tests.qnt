@@ -4,11 +4,11 @@
 
 module battleRuntimeHideousLaughterTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
-  import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeSavingThrowRollMode.* from "./battle-runtime-saving-throw-roll-mode"
+  import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
   import battleRuntimeProneMovement.* from "./battle-runtime-prone-movement"
+  import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
 
   run test_hideous_laughter_failed_save_applies_conditions_and_concentration = {
     val laughed = resolveHideousLaughter(initialState, false, 1)

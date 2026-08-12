@@ -19,7 +19,6 @@ module battleRuntimeFillKinds {
     | CompanionReappearanceInitiativeFillKind
     | ConcentrationSavingThrowFillKind
     | ConditionChoiceFillKind
-    | CreatureAttackZeroDamageFillKind
     | DamageTypeChoiceFillKind
     | DeathSavingThrowFillKind
     | GrappleOutcomeFillKind
@@ -31,6 +30,7 @@ module battleRuntimeFillKinds {
     | MovementFillKind
     | ObjectDropResolutionFillKind
     | OngoingSpellTargetChoiceFillKind
+    | ReadyDeclarationFillKind
     | RolledDiceFillKind
     | SanctuaryInterdictionOutcomeFillKind
     | SavingThrowOutcomeFillKind

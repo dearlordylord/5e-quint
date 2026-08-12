@@ -20,6 +20,7 @@ import { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";
 import { SpellSlotLevel, spellSlotLevel } from "@dnd/shared/types";
 import { AbilitySchema, DamageTypeSchema } from "@dnd/surface/surface/schema";
 import type { DamageType } from "@dnd/surface/surface/types";
+import { BATTLE_READIED_SPELL_TRIGGERS } from "./battle-interrupt-triggers.ts";
 import {
   BattleAreaId,
   BattleActiveEffectExecutionRef,
@@ -34,10 +35,6 @@ import {
   SpellId,
   spellId as makeSpellId,
 } from "./identity.ts";
-import {
-  BATTLE_INTERRUPT_TRIGGERS,
-  BATTLE_READIED_SPELL_TRIGGERS,
-} from "./battle-interrupt-triggers.ts";
 import {
   SELF_TRANSFORMATION_NATURAL_WEAPONS_MODE_KIND,
   SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS,
@@ -84,6 +81,9 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "standFromProne",
   "releaseReadiedSpell",
   "releaseReadiedMovement",
+  "reportReadyTrigger",
+  "releaseReadiedAction",
+  "releaseReadiedAttack",
   "castTriggeredReactionSpell",
   "castAttackHitBonusActionSpell",
   "releaseGrapple",
@@ -479,6 +479,14 @@ export const BattleAttackExecutionSelectionSchema = Schema.Union(
 export type BattleAttackExecutionSelection =
   typeof BattleAttackExecutionSelectionSchema.Type;
 
+export const ReadyTriggerDescription = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("ReadyTriggerDescription"),
+);
+export type ReadyTriggerDescription = typeof ReadyTriggerDescription.Type;
+export const readyTriggerDescription: (
+  value: string,
+) => ReadyTriggerDescription = ReadyTriggerDescription.make;
+
 export const BattleInterruptAttackExecutionSelectionSchema = Schema.Union(
   CharacterAttackExecutionSelectionSchema,
   StatBlockAttackExecutionSelectionSchema,
@@ -524,11 +532,6 @@ export const BattleSubjectSchema = Schema.Union(
     }),
   }),
   Schema.Struct({
-    tag: Schema.Literal("creatureAttack"),
-    actorId: CombatantId,
-    targetId: CombatantId,
-  }),
-  Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("dash"),
@@ -569,7 +572,6 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("ready"),
-    readyTrigger: Schema.Literal(...BATTLE_INTERRUPT_TRIGGERS),
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -808,6 +810,31 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     command: Schema.Literal("releaseReadiedMovement"),
     readiedMovementActorId: CombatantId,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("reportReadyTrigger"),
+    readiedActorId: CombatantId,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("releaseReadiedAction"),
+    reactorId: CombatantId,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("releaseReadiedAttack"),
+    reactorId: CombatantId,
+    targetId: CombatantId,
+    procedureRef: Schema.Union(
+      BattleAttackProcedureExecutionRef,
+      BattleStatBlockProcedureExecutionRef,
+    ),
+    attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+    attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -1085,6 +1112,57 @@ export const BattleSubjectSchema = Schema.Union(
 type BattleSubjectWireValue = typeof BattleSubjectSchema.Type;
 export type BattleSubject = BattleSubjectWireValue;
 
+export type BattleReadyActionSubject = Exclude<
+  Extract<BattleSubject, { readonly tag: "action" }>,
+  { readonly action: "attack" | "multiattack" | "ready" }
+>;
+
+export const BattleReadyActionSubjectSchema = BattleSubjectSchema.pipe(
+  Schema.filter(
+    (subject): subject is BattleReadyActionSubject =>
+      subject.tag === "action" &&
+      subject.action !== "attack" &&
+      subject.action !== "multiattack" &&
+      subject.action !== "ready",
+  ),
+);
+
+export const BattleReadyResponseSchema = Schema.Union(
+  Schema.Struct({ kind: Schema.Literal("movement") }),
+  Schema.Struct({
+    kind: Schema.Literal("attack"),
+    selection: BattleAttackExecutionSelectionSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("action"),
+    subject: BattleReadyActionSubjectSchema,
+  }),
+);
+export type BattleReadyResponse = typeof BattleReadyResponseSchema.Type;
+
+// A held response is a read-model fact, not an executable replay key. The
+// eventual interrupt choice carries its stable procedure reference; resolution
+// recovers the complete attack selection from the internal held response.
+export const BattleReadyResponseSnapshotSchema = Schema.Union(
+  Schema.Struct({ kind: Schema.Literal("movement") }),
+  Schema.Struct({
+    kind: Schema.Literal("attack"),
+    procedureRef: Schema.Union(
+      BattleAttackProcedureExecutionRef,
+      BattleStatBlockProcedureExecutionRef,
+    ),
+    selection: Schema.optionalWith(Schema.Never, { exact: true }),
+    attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+    attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("action"),
+    subject: BattleReadyActionSubjectSchema,
+  }),
+);
+export type BattleReadyResponseSnapshot =
+  typeof BattleReadyResponseSnapshotSchema.Type;
+
 const noProcedureExecutionReferences =
   (): readonly BattleProcedureExecutionRef[] => [];
 
@@ -1123,6 +1201,9 @@ function battleRuntimeCommandProcedureRefs(
       standFromProne: noProcedureExecutionReferences,
       releaseReadiedSpell: (value) => [value.procedureRef],
       releaseReadiedMovement: noProcedureExecutionReferences,
+      reportReadyTrigger: noProcedureExecutionReferences,
+      releaseReadiedAction: noProcedureExecutionReferences,
+      releaseReadiedAttack: (value) => [value.procedureRef],
       castTriggeredReactionSpell: (value) => [value.procedureRef],
       castAttackHitBonusActionSpell: (value) => [value.procedureRef],
       releaseGrapple: noProcedureExecutionReferences,
@@ -1168,7 +1249,6 @@ export function battleSubjectProcedureRefs(
     Match.discriminatorsExhaustive("tag")({
       action: battleActionSubjectProcedureRefs,
       pactOfTheChainFamiliarAttack: (value) => [value.procedureRef],
-      creatureAttack: noProcedureExecutionReferences,
       bonusAction: (value) => [value.procedureRef],
       bonusActionStandardAction: (value) => [value.procedureRef],
       monkFocusOption: (value) => [value.procedureRef],
@@ -1300,6 +1380,9 @@ function battleRuntimeCommandBoundExecutionReferences(
       standFromProne: noBoundExecutionReferences,
       releaseReadiedSpell: noBoundExecutionReferences,
       releaseReadiedMovement: noBoundExecutionReferences,
+      reportReadyTrigger: noBoundExecutionReferences,
+      releaseReadiedAction: noBoundExecutionReferences,
+      releaseReadiedAttack: noBoundExecutionReferences,
       castTriggeredReactionSpell: noBoundExecutionReferences,
       castAttackHitBonusActionSpell: noBoundExecutionReferences,
       releaseGrapple: noBoundExecutionReferences,
@@ -1345,7 +1428,6 @@ export function battleSubjectBoundExecutionReferences(
     Match.discriminatorsExhaustive("tag")({
       action: battleActionSubjectBoundExecutionReferences,
       pactOfTheChainFamiliarAttack: noBoundExecutionReferences,
-      creatureAttack: noBoundExecutionReferences,
       bonusAction: noBoundExecutionReferences,
       bonusActionStandardAction:
         battleBonusActionStandardActionBoundExecutionReferences,
@@ -1569,9 +1651,6 @@ function battleSubjectKey(subject: BattleSubject): string {
         attack.statBlockDamageNotation ?? "rolled",
       ]),
     ),
-    Match.when({ tag: "creatureAttack" }, (attack) =>
-      JSON.stringify([attack.tag, attack.actorId, attack.targetId]),
-    ),
     Match.orElse((remainingSubject) =>
       Match.value(remainingSubject).pipe(
         Match.when({ tag: "action", action: "attack" }, (attack) =>
@@ -1614,12 +1693,7 @@ function battleSubjectKey(subject: BattleSubject): string {
           ]),
         ),
         Match.when({ tag: "action", action: "ready" }, (action) =>
-          JSON.stringify([
-            action.tag,
-            action.actorId,
-            action.action,
-            "readyTrigger" in action ? action.readyTrigger : null,
-          ]),
+          JSON.stringify([action.tag, action.actorId, action.action]),
         ),
         Match.when({ tag: "action", action: "search" }, (action) =>
           JSON.stringify([action.tag, action.actorId, action.action]),
@@ -1693,6 +1767,7 @@ function battleSubjectKey(subject: BattleSubject): string {
             "readiedMovementActorId" in command
               ? command.readiedMovementActorId
               : null,
+            "readiedActorId" in command ? command.readiedActorId : null,
             "targetId" in command ? command.targetId : null,
             "reactorId" in command ? command.reactorId : null,
             "procedureRef" in command ? command.procedureRef : null,

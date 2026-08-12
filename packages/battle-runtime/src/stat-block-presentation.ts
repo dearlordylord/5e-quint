@@ -1,4 +1,5 @@
 import type { SupportedAttackActionOption } from "./battle-action-options.ts";
+import { UNARMED_STRIKE_NAME } from "./battle-action-options.ts";
 import type {
   AttackPresentationJoinIssue,
   BattleState,
@@ -58,6 +59,14 @@ export function statBlockProcedurePresentations(
       kind: "attack" as const,
       name: occurrence.source.name,
     })),
+    {
+      procedureRef: requirePresentationProcedureRef(
+        allocation.procedureRefs,
+        allocation.occurrences.unarmedStrike,
+      ),
+      kind: "attack" as const,
+      name: UNARMED_STRIKE_NAME,
+    },
     ...allocation.occurrences.multiattacks.map((occurrence) => ({
       procedureRef: requirePresentationProcedureRef(
         allocation.procedureRefs,

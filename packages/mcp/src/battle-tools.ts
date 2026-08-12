@@ -1,4 +1,5 @@
 import {
+  battleInitiativePosition,
   discoverBattleActs,
   battleSubjectPresentation,
   openCreatureFallsRuntimeInterruptWindow,
@@ -258,6 +259,7 @@ export function handleBattleToolCall(
 
       return schemaJsonContent(EndBattleOutputSchema, {
         endedBattleId: state.right.state.battleId,
+        closedAt: battleInitiativePosition(state.right.state),
         characters: Array.from(root.sessionStore.characters.entries()).map(
           ([characterId, session]) => ({
             characterId,
@@ -282,7 +284,11 @@ function battleResolutionContent(
   root: McpCompositionRoot,
   result: BattleRuntimeResolutionResult,
 ): BattleToolResult {
-  const payload = battleResolutionPayload(root, result, result.session);
+  const payload = battleResolutionPayload(
+    root,
+    result,
+    root.sessionStore.battleSession ?? result.session,
+  );
   return Either.isLeft(payload)
     ? battleSnapshotPresentationIssueContent(payload.left)
     : schemaJsonContent(BattleResolutionOutputSchema, payload.right);

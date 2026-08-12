@@ -55,6 +55,7 @@ import {
   concentrationSavingThrowFill,
   fogCloudAreaFill,
   requireCharacterSpellProcedureRefForTest,
+  readyTriggerDescriptionForTest,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import type { BattleProcedureExecutionRef } from "./identity.ts";
@@ -1179,8 +1180,9 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     };
     const readiedState = {
       ...state,
-      readiedMovements: new Map(state.readiedMovements).set(spellTargetId, {
-        trigger: "attackHit" as const,
+      readiedResponses: new Map(state.readiedResponses).set(spellTargetId, {
+        trigger: readyTriggerDescriptionForTest("the enemy attacks"),
+        response: { kind: "movement" as const },
         expiresAt: {
           kind: "startOfTurn" as const,
           combatantId: spellTargetId,
@@ -1236,9 +1238,9 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
       ],
     });
 
-    expect(resolved.state.readiedMovements.has(spellTargetId)).toBe(false);
+    expect(resolved.state.readiedResponses.has(spellTargetId)).toBe(false);
     expect(requireCombatant(resolved.state, spellTargetId)).toMatchObject({
-      movementSpentFeet: movementFeet(15),
+      movementSpentFeet: movementFeet(0),
     });
   });
 

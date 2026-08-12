@@ -15,6 +15,8 @@ import type {
 import type { CharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-schema.ts";
 import type { AttackDamageAbilityModifierChoice } from "./battle-reducer/attack-damage-ability-modifier-choice.ts";
 export type { AttackDamageAbilityModifierChoice };
+
+export const UNARMED_STRIKE_NAME = "Unarmed Strike";
 import type {
   BattleAttackProcedureExecutionRef,
   BattleObjectId,

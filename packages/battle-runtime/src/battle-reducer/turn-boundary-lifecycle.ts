@@ -278,10 +278,10 @@ function resolveEndTurn({
   for (const casterId of expiringReadiedSpellCasterIds) {
     readiedSpells.delete(casterId);
   }
-  const readiedMovements = new Map(state.readiedMovements);
-  for (const [actorId, readiedMovement] of state.readiedMovements) {
-    if (readiedMovement.expiresAt.combatantId === nextActorId) {
-      readiedMovements.delete(actorId);
+  const readiedResponses = new Map(state.readiedResponses);
+  for (const [actorId, readiedResponse] of state.readiedResponses) {
+    if (readiedResponse.expiresAt.combatantId === nextActorId) {
+      readiedResponses.delete(actorId);
     }
   }
   const helpAttacks = state.helpAttacks.filter(
@@ -314,7 +314,7 @@ function resolveEndTurn({
       ...state,
       combatants: combatantsAfterEndTurnOngoingFeatures,
       readiedSpells,
-      readiedMovements,
+      readiedResponses,
       helpAttacks,
     },
     currentActorId(state),
@@ -479,7 +479,7 @@ function resolveEndTurn({
       lightEmitters: lightEmittersAfterDurationTick,
       currentTurnResources: currentTurnResourcesAfterActionRestriction,
       readiedSpells,
-      readiedMovements,
+      readiedResponses,
       helpAttacks,
       legendaryActionWindow: {
         afterTurnActorId: currentActorId(state),

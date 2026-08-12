@@ -643,12 +643,12 @@ export type BattleReadiedSpell = {
   readonly trigger: BattleReadiedSpellTrigger;
   readonly expiresAt: TurnAnchoredBattleActiveEffectExpiration;
 };
-// SRD 5.2.1 Ready [Action]: Ready can hold a chosen action, or the special
-// alternative to move up to Speed. This runtime slice models only that
-// movement alternative for non-spell Ready responses.
-export type BattleReadiedMovement = {
-  // supported runtime trigger buckets, not the RAW Ready trigger taxonomy; RAW is closer to "table decision" and probably shall be modeled like that
-  readonly trigger: BattleInterruptTrigger;
+// SRD 5.2.1 Ready [Action]: the trigger is authored at the table rather than
+// projected from an engine-event taxonomy. The response is selected when
+// Ready is taken and may be released after the table reports that trigger.
+export type BattleReadiedResponse = {
+  readonly trigger: import("./battle-subjects.ts").ReadyTriggerDescription;
+  readonly response: import("./battle-subjects.ts").BattleReadyResponse;
   readonly expiresAt: TurnAnchoredBattleActiveEffectExpiration;
 };
 // SRD 5.2.1 Help [Action], "Assist an Attack Roll": helper distracts an
@@ -839,6 +839,13 @@ export type BattleAttackHostSubject =
     >
   | Extract<
       BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "releaseReadiedAttack";
+      }
+    >
+  | Extract<
+      BattleSubject,
       { readonly tag: "runtimeCommand"; readonly command: "retaliationAttack" }
     >;
 export type BattleCunningStrikeSelectedOption = {
@@ -973,6 +980,26 @@ type BattleInterruptProcedureChoiceWithSubject =
       >;
     })
   | (BattleInterruptProcedureChoiceBase & {
+      readonly kind: "releaseReadiedAction";
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "releaseReadiedAction";
+        }
+      >;
+    })
+  | (BattleInterruptProcedureChoiceBase & {
+      readonly kind: "releaseReadiedAttack";
+      readonly subject: Extract<
+        BattleSubject,
+        {
+          readonly tag: "runtimeCommand";
+          readonly command: "releaseReadiedAttack";
+        }
+      >;
+    })
+  | (BattleInterruptProcedureChoiceBase & {
       readonly kind: "castAttackHitBonusActionSpell";
       readonly subject: Extract<
         BattleSubject,
@@ -1098,6 +1125,16 @@ export type BattleInterruptProcedureSelection = {
       readonly readiedMovementActorId: CombatantId;
     }
   | {
+      readonly kind: "releaseReadiedAction";
+      readonly reactorId: CombatantId;
+    }
+  | {
+      readonly kind: "releaseReadiedAttack";
+      readonly reactorId: CombatantId;
+      readonly procedureRef: BattleInterruptAttackExecutionSelection["procedureRef"];
+      readonly targetId: CombatantId;
+    }
+  | {
       readonly kind: "castTriggeredReactionSpell";
       readonly procedureRef: BattleProcedureExecutionRef;
     }
@@ -1189,6 +1226,11 @@ export type BattleInterruptCheckpoint =
       readonly trigger: "opportunityAttack";
       readonly moverId: CombatantId;
       readonly threats: readonly BattleOpportunityAttackThreat[];
+    })
+  | (BattleInterruptCheckpointWithContinuationBase & {
+      readonly trigger: "reportedReadyTrigger";
+      readonly readiedActorId: CombatantId;
+      readonly resumeSubjectResolutionPhase: BattleSubjectResolutionPhase;
     });
 export type BattleAttackHitReplayCheckpoint = Extract<
   BattleInterruptCheckpoint,
@@ -4050,6 +4092,13 @@ export type LegendaryActionWindow = {
   readonly consumed: boolean;
 };
 
+export type BattleSubjectResolutionPhase =
+  | { readonly kind: "subjectSelection" }
+  | {
+      readonly kind: "subjectContinuation";
+      readonly subject: BattleSubject;
+    };
+
 export type BattleState = {
   readonly battleId: BattleId;
   readonly initiative: InitiativeStack<CombatantId>;
@@ -4064,8 +4113,9 @@ export type BattleState = {
   readonly lightEmitters: readonly BattleStoredLightEmitter[];
   readonly hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>;
   readonly currentTurnResources: BattleTurnResources;
+  readonly subjectResolutionPhase: BattleSubjectResolutionPhase;
   readonly readiedSpells: ReadonlyMap<CombatantId, BattleReadiedSpell>;
-  readonly readiedMovements: ReadonlyMap<CombatantId, BattleReadiedMovement>;
+  readonly readiedResponses: ReadonlyMap<CombatantId, BattleReadiedResponse>;
   readonly helpAttacks: readonly BattleHelpAttack[];
   readonly grapples: readonly BattleGrappleLink[];
   readonly interruptStack: readonly BattleInterruptFrame[];
@@ -4292,26 +4342,6 @@ export type BattleHelpAttackEnemyDecisionHole = {
   readonly helperId: CombatantId;
   readonly allyId: CombatantId;
   readonly choices: readonly CombatantId[];
-};
-export type BattleCreatureAttackRollHole = Extract<
-  RuntimeHole & { readonly label: string },
-  { readonly kind: "attackRoll" }
-> & {
-  readonly attackBonus?: never;
-  readonly rollMode?: AttackRollMode;
-  readonly creatureAttack: {
-    readonly actorId: CombatantId;
-    readonly targetId: CombatantId;
-  };
-};
-export type BattleCreatureAttackDamageRollHole = Extract<
-  RuntimeHole & { readonly label: string },
-  { readonly kind: "rolledDice" }
-> & {
-  readonly creatureAttack: {
-    readonly actorId: CombatantId;
-    readonly targetId: CombatantId;
-  };
 };
 export type BattleObjectTargetChoiceHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -5969,12 +5999,18 @@ export type BattleWildShapeEquipmentDispositionHole = {
   readonly formExecutionRef: BattleStatBlockExecutionScopeRef;
   readonly candidates: readonly WildShapeLoadoutObjectRef[];
 };
+export type BattleReadyDeclarationHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "readyDeclaration";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly responseChoices: readonly import("./battle-subjects.ts").BattleReadyResponse[];
+};
 export type BattleHole =
   | BattleTargetChoiceHole
   | BattleHelpAttackAllyDecisionHole
   | BattleHelpAttackEnemyDecisionHole
-  | BattleCreatureAttackRollHole
-  | BattleCreatureAttackDamageRollHole
   | BattleSpellCastReactionFactsHole
   | BattleSlowSomaticSpellFailureOutcomeHole
   | BattleWardingBondSeparationFactsHole
@@ -6062,7 +6098,8 @@ export type BattleHole =
   | BattleAttackDamageDispositionHole
   | BattleDamageRelationshipDecisionHole
   | BattleOngoingSpellTargetChoiceHole
-  | BattleWildShapeEquipmentDispositionHole;
+  | BattleWildShapeEquipmentDispositionHole
+  | BattleReadyDeclarationHole;
 
 export type BattleAttackRollResult = AttackRollResult & {
   readonly rolledD20s?: BattleD20TestRolledD20s;
@@ -6081,14 +6118,6 @@ export type BattleRolledDiceFill = {
   readonly attackDamageDieFloorChoice?: AttackDamageDieFloorChoiceFill;
   readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoiceFill;
   readonly spellDamageReroll?: BattleSpellDamageRerollDecision;
-};
-export type BattleCreatureAttackZeroDamageFill = {
-  readonly kind: "creatureAttackZeroDamage";
-  readonly holeId: BattleHoleId;
-  readonly creatureAttack: {
-    readonly actorId: CombatantId;
-    readonly targetId: CombatantId;
-  };
 };
 export const ATTACK_DAMAGE_DIE_FLOOR_CHOICE_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE =
   "Attack damage die floor choices are not available for this damage-roll owner.";
@@ -6180,6 +6209,14 @@ export type BattleBrutalStrikeForcefulBlowMovementFill = {
 };
 export type BattleFill =
   | {
+      readonly kind: "readyDeclaration";
+      readonly holeId: BattleHoleId;
+      readonly value: {
+        readonly trigger: import("./battle-subjects.ts").ReadyTriggerDescription;
+        readonly response: import("./battle-subjects.ts").BattleReadyResponse;
+      };
+    }
+  | {
       readonly kind: "helpAttackAllyDecision";
       readonly holeId: BattleHoleId;
       readonly allyId: CombatantId;
@@ -6196,7 +6233,6 @@ export type BattleFill =
       readonly value: BattleAttackRollResult;
       readonly relationshipFacts?: ReadonlyNonEmptyArray<BattleAttackRollRelationshipFact>;
     }
-  | BattleCreatureAttackZeroDamageFill
   | BattleRolledDiceFill
   | {
       readonly kind: "damageTypeChoice";
@@ -6965,7 +7001,7 @@ export type BattleSnapshot = {
   readonly turn: BattleTurnSnapshot;
   readonly readiedResponses: {
     readonly spells: readonly BattleReadiedSpellSnapshot[];
-    readonly movements: readonly BattleReadiedMovementSnapshot[];
+    readonly actionsOrMovements: readonly BattleReadiedResponseSnapshot[];
   };
   readonly helpAttackMarkers: readonly BattleHelpAttackSnapshot[];
   readonly pendingInterrupt: {
@@ -7070,8 +7106,12 @@ export type BattleReadiedSpellSnapshot = BattleReadiedSpell & {
   readonly casterId: CombatantId;
 };
 
-export type BattleReadiedMovementSnapshot = BattleReadiedMovement & {
+export type BattleReadiedResponseSnapshot = Omit<
+  BattleReadiedResponse,
+  "response"
+> & {
   readonly actorId: CombatantId;
+  readonly response: import("./battle-subjects.ts").BattleReadyResponseSnapshot;
 };
 
 export type BattleHelpAttackSnapshot = BattleHelpAttack;

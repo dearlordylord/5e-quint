@@ -8,6 +8,7 @@ export const BATTLE_INTERRUPT_TRIGGERS = [
   "afterDamage",
   "creatureFalls",
   "opportunityAttack",
+  "reportedReadyTrigger",
 ] as const;
 export type BattleInterruptTrigger = (typeof BATTLE_INTERRUPT_TRIGGERS)[number];
 

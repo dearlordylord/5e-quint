@@ -49,10 +49,10 @@ function classifyWeaponAttackOverrideFill(
 ): WeaponAttackOverrideFillClassification {
   return Match.value(fill).pipe(
     Match.discriminatorsExhaustive("kind")({
+      readyDeclaration: ordinaryFillIsInvalid,
       helpAttackAllyDecision: ordinaryFillIsInvalid,
       helpAttackEnemyDecision: ordinaryFillIsInvalid,
       attackRoll: ordinaryFillIsInvalid,
-      creatureAttackZeroDamage: ordinaryFillIsInvalid,
       rolledDice: ordinaryFillIsInvalid,
       damageTypeChoice: ordinaryFillIsInvalid,
       savingThrowOutcome: ordinaryFillIsInvalid,

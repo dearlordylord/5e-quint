@@ -233,7 +233,6 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       spellCasterId,
       spellTargetId,
     );
-    const committedSnapshot = snapshotBattle(committedState);
     const approachAct = discoverBattleActCandidates(committedState)[0];
     if (
       approachAct === undefined ||
@@ -256,11 +255,14 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     expect(awaitingEndTurnSave).toMatchObject({
       tag: "needsHoles",
       subject: approachAct.subject,
-      snapshot: committedSnapshot,
     });
     if (awaitingEndTurnSave.tag !== "needsHoles") {
       throw new Error("Expected Command Approach End Turn save frontier.");
     }
+    expect(awaitingEndTurnSave.snapshot).toEqual(
+      snapshotBattle(awaitingEndTurnSave.state),
+    );
+    expect(awaitingEndTurnSave.snapshot.acts).toEqual([]);
     const endTurnSave = requireResultHole(
       awaitingEndTurnSave,
       "savingThrowOutcome",
@@ -725,7 +727,6 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       spellCasterId,
       spellTargetId,
     );
-    const committedSnapshot = snapshotBattle(committedState);
     const fleeAct = discoverBattleActCandidates(committedState)[0];
     if (
       fleeAct === undefined ||
@@ -775,7 +776,8 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     if (afterDecline.tag !== "needsHoles") {
       throw new Error("Expected Command Flee End Turn save after decline.");
     }
-    expect(afterDecline.snapshot).toEqual(committedSnapshot);
+    expect(afterDecline.snapshot).toEqual(snapshotBattle(afterDecline.state));
+    expect(afterDecline.snapshot.acts).toEqual([]);
     expect(afterDecline.state.interruptStack).toEqual([
       {
         kind: "replayContinuation",
@@ -810,7 +812,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       tag: "invalid",
       reason: "invalidFill",
       message: "End Turn received duplicate Saving Throw outcome fills.",
-      snapshot: committedSnapshot,
+      snapshot: snapshotBattle(afterDecline.state),
       routeEvents: [
         {
           kind: "resolveBattleSubject",

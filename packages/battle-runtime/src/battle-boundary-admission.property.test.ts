@@ -175,6 +175,8 @@ import {
   testCharacterWeaponAttackForUnit,
   reactionModifierChoice,
   goblinScimitarHitReactionSetup,
+  readyDeclarationFillForTest,
+  endTurn,
 } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -236,6 +238,172 @@ describe("battle boundary admission owners", () => {
     expect(Schema.decodeUnknownSync(BattleSnapshotSchema)(actEncoded)).toEqual(
       withAct,
     );
+
+    const readySubject = {
+      tag: "action" as const,
+      actorId: fighterId,
+      action: "ready" as const,
+    };
+    const readyAct = findAct(state, readySubject);
+    const readyHole = readyAct.initialHoles[0];
+    if (readyHole?.kind !== "readyDeclaration") {
+      throw new Error("Expected Ready declaration hole.");
+    }
+    const attackResponse = readyHole.responseChoices.find(
+      (response) => response.kind === "attack",
+    );
+    if (attackResponse?.kind !== "attack") {
+      throw new Error("Expected Ready Attack response.");
+    }
+    const readied = resolveBattleSubject({
+      state,
+      subject: readySubject,
+      fills: [
+        readyDeclarationFillForTest(
+          readyHole,
+          "the goblin comes within reach",
+          attackResponse,
+        ),
+      ],
+    });
+    if (readied.tag !== "resolved") {
+      throw new Error("Expected Ready Attack declaration to resolve.");
+    }
+    const goblinTurn = endTurn({ state: readied.state, actorId: fighterId });
+    if (goblinTurn.tag !== "resolved") {
+      throw new Error("Expected the Goblin turn to begin.");
+    }
+    const reported = resolveBattleSubject({
+      state: goblinTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: goblinId,
+        command: "reportReadyTrigger",
+        readiedActorId: fighterId,
+      },
+      fills: [],
+    });
+    if (reported.tag !== "needsHoles") {
+      throw new Error("Expected a pending readied Attack interrupt.");
+    }
+    const readiedAttackEncoded = Schema.encodeSync(BattleSnapshotSchema)(
+      reported.snapshot,
+    );
+    expect(
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(readiedAttackEncoded),
+    ).toEqual(reported.snapshot);
+    const encodedPendingInterrupt = readiedAttackEncoded.pendingInterrupt;
+    if (encodedPendingInterrupt === null) {
+      throw new Error("Expected the encoded readied Attack interrupt.");
+    }
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...readiedAttackEncoded,
+        readiedResponses: {
+          ...readiedAttackEncoded.readiedResponses,
+          actionsOrMovements:
+            readiedAttackEncoded.readiedResponses.actionsOrMovements.map(
+              (entry) => ({ ...entry, actorId: "missing-combatant" }),
+            ),
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...readiedAttackEncoded,
+        pendingInterrupt: {
+          ...encodedPendingInterrupt,
+          choices: encodedPendingInterrupt.choices.map((choice) =>
+            choice.kind === "releaseReadiedAttack" &&
+            choice.subject.tag === "runtimeCommand" &&
+            choice.subject.command === "releaseReadiedAttack"
+              ? {
+                  ...choice,
+                  subject: { ...choice.subject, attackAbility: "dex" },
+                }
+              : choice,
+          ),
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...readiedAttackEncoded,
+        pendingInterrupt: {
+          ...encodedPendingInterrupt,
+          choices: encodedPendingInterrupt.choices.map((choice) =>
+            choice.kind === "releaseReadiedAttack" &&
+            choice.subject.tag === "runtimeCommand" &&
+            choice.subject.command === "releaseReadiedAttack"
+              ? {
+                  ...choice,
+                  subject: {
+                    ...choice.subject,
+                    targetId: "missing-combatant",
+                  },
+                }
+              : choice,
+          ),
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...readiedAttackEncoded,
+        readiedResponses: {
+          ...readiedAttackEncoded.readiedResponses,
+          actionsOrMovements:
+            readiedAttackEncoded.readiedResponses.actionsOrMovements.map(
+              (entry) =>
+                entry.response.kind === "attack"
+                  ? {
+                      ...entry,
+                      response: {
+                        ...entry.response,
+                        procedureRef: "forged-procedure-ref",
+                      },
+                    }
+                  : entry,
+            ),
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...readiedAttackEncoded,
+        readiedResponses: {
+          ...readiedAttackEncoded.readiedResponses,
+          actionsOrMovements:
+            readiedAttackEncoded.readiedResponses.actionsOrMovements.map(
+              (entry) => ({ ...entry, response: { kind: "movement" } }),
+            ),
+        },
+      }),
+    ).toThrow();
+    const heldAttackEncoded = Schema.encodeSync(BattleSnapshotSchema)(
+      readied.snapshot,
+    );
+    expect(() =>
+      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+        ...heldAttackEncoded,
+        readiedResponses: {
+          ...heldAttackEncoded.readiedResponses,
+          actionsOrMovements:
+            heldAttackEncoded.readiedResponses.actionsOrMovements.map(
+              (entry) =>
+                entry.response.kind === "attack"
+                  ? {
+                      ...entry,
+                      response: {
+                        ...entry.response,
+                        attackAbility: "dex",
+                      },
+                    }
+                  : entry,
+            ),
+        },
+      }),
+    ).toThrow();
 
     const forged = {
       ...actEncoded,
@@ -2376,7 +2544,7 @@ describe("battle boundary admission owners", () => {
     const pactCandidates = candidates.filter(
       (act) => act.subject.tag === "pactOfTheChainFamiliarAttack",
     );
-    expect(pactCandidates).toHaveLength(4);
+    expect(pactCandidates).toHaveLength(5);
     const familiar = session.state.combatants.get(familiarId);
     if (familiar?.origin.kind !== "statBlock") {
       throw new Error("Expected admitted familiar Stat Block.");

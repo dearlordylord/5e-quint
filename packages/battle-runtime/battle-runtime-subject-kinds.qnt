@@ -25,7 +25,6 @@ module battleRuntimeSubjectKinds {
     | FeatureAttackSubjectKind
     | ActionMagicSubjectKind
     | BonusActionMagicSubjectKind
-    | CreatureAttackSubjectKind
     | SpellGrantedMovementSubjectKind
     | FeatureActivationSubjectKind
     | FeatureWeaponActivationSubjectKind
@@ -36,6 +35,7 @@ module battleRuntimeSubjectKinds {
     | RuntimeTurnBoundarySubjectKind
     | RuntimeMovementSubjectKind
     | RuntimeReadiedResponseSubjectKind
+    | RuntimeTableDecisionSubjectKind
     | RuntimeReactionSubjectKind
     | RuntimeCommandRetaliationAttackSubjectKind
     | RuntimeLinkReleaseSubjectKind

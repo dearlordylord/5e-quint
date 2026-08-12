@@ -794,6 +794,8 @@ function interruptChoiceTurnResource(
   return Match.value(choice.kind).pipe(
     Match.when("releaseReadiedSpell", () => "reaction" as const),
     Match.when("releaseReadiedMovement", () => "reaction" as const),
+    Match.when("releaseReadiedAction", () => "reaction" as const),
+    Match.when("releaseReadiedAttack", () => "reaction" as const),
     Match.when("castTriggeredReactionSpell", () => "reaction" as const),
     Match.when("castAttackHitBonusActionSpell", () => "none" as const),
     Match.when("opportunityAttack", () => "reaction" as const),
@@ -829,6 +831,21 @@ function sameInterruptProcedureChoice(
       (decision) =>
         choice.kind === "releaseReadiedMovement" &&
         choice.readiedMovementActorId === decision.readiedMovementActorId,
+    ),
+    Match.when(
+      { kind: "releaseReadiedAction" },
+      (decision) =>
+        choice.kind === "releaseReadiedAction" &&
+        choice.reactorId === decision.reactorId,
+    ),
+    Match.when(
+      { kind: "releaseReadiedAttack" },
+      (decision) =>
+        choice.kind === "releaseReadiedAttack" &&
+        choice.reactorId === decision.reactorId &&
+        choice.subject.command === "releaseReadiedAttack" &&
+        choice.subject.targetId === decision.targetId &&
+        choice.subject.procedureRef === decision.procedureRef,
     ),
     Match.when(
       { kind: "castTriggeredReactionSpell" },

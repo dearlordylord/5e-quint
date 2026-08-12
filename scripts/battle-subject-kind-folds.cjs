@@ -62,7 +62,11 @@ function runtimeCommandSubjectKind(discriminatorValue) {
     case "castTriggeredReactionSpell":
     case "castAttackHitBonusActionSpell":
     case "opportunityAttack":
+    case "releaseReadiedAction":
+    case "releaseReadiedAttack":
       return "runtimeReaction";
+    case "reportReadyTrigger":
+      return "runtimeTableDecision";
     case "releaseGrapple":
       return "runtimeLinkRelease";
     case "greaseGroundHazardSave":

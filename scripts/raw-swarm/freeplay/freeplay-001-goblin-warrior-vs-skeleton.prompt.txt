@@ -1,0 +1,10 @@
+Play a D&D 5e (SRD 5.2.1) battle through the "dnd" MCP server. You control
+both sides as the player and DM.
+
+The combatants are a Goblin Warrior with initiative 15 and a Skeleton with
+initiative 10. Set up the encounter, make plausible table-level choices for
+both creatures, and continue until you judge the encounter complete. Then close
+the battle session and briefly report what happened.
+
+Learn the available workflow from the MCP server. Do everything through its
+tools and do not write files.

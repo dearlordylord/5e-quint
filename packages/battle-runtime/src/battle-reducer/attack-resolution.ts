@@ -124,6 +124,13 @@ import {
 } from "./movement-speed.ts";
 
 import { invalidResult } from "./result-helpers.ts";
+import {
+  readyDeclarationHole,
+  readyDeclarationFill,
+  readyResponseChoices,
+  readyResponseIsOffered,
+} from "./ready.ts";
+import { discoverBattleActCandidatesWithoutReady } from "./battle-discovery.ts";
 import { applyDashToActor, applyDisengage } from "./mobility-actions.ts";
 import { spellSaveDcForCaster } from "./spell-save-dc.ts";
 import { combatantHasSlowActivePenalties } from "./slow-active-penalties-runtime.ts";
@@ -584,10 +591,28 @@ export function resolveReady(
     Extract<BattleSubject, { readonly tag: "action"; readonly action: "ready" }>
   >,
 ): BattleResolutionResult {
+  const responseChoices = readyResponseChoices(
+    input.state,
+    input.subject.actorId,
+    discoverBattleActCandidatesWithoutReady(input.state),
+  );
+  if (input.fills.length === 0) {
+    return needsHolesResult(input.state, input.subject, [
+      readyDeclarationHole(input.subject.actorId, responseChoices),
+    ]);
+  }
+  const declaration = readyDeclarationFill(input.fills);
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (input.fills.length > 0) {
+  if (
+    declaration === null ||
+    !readyResponseIsOffered(responseChoices, declaration.value.response)
+  ) {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", "Ready accepts no fills.");
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Ready requires one offered trigger-and-response declaration.",
+    );
   }
   /* v8 ignore stop */
   const spent = spendAction(input.state.currentTurnResources, "ready");
@@ -603,10 +628,11 @@ export function resolveReady(
   const nextState = {
     ...input.state,
     currentTurnResources: spent.right,
-    readiedMovements: new Map(input.state.readiedMovements).set(
+    readiedResponses: new Map(input.state.readiedResponses).set(
       input.subject.actorId,
       {
-        trigger: input.subject.readyTrigger,
+        trigger: declaration.value.trigger,
+        response: declaration.value.response,
         expiresAt: {
           kind: "startOfTurn" as const,
           combatantId: input.subject.actorId,

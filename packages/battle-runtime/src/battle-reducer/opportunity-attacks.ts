@@ -122,6 +122,7 @@ import {
   type AttackFillSet,
 } from "./battle-runtime-protocol.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
+import { readiedAttackOption } from "./ready.ts";
 
 const byReactionAttackDamagePathKind = Match.discriminator("kind");
 
@@ -130,7 +131,10 @@ type OpportunityAttackResolutionInput = BattleResolutionInputForSubject<
     BattleSubject,
     {
       readonly tag: "runtimeCommand";
-      readonly command: "opportunityAttack" | "retaliationAttack";
+      readonly command:
+        | "opportunityAttack"
+        | "retaliationAttack"
+        | "releaseReadiedAttack";
     }
   >
 > & {
@@ -163,28 +167,59 @@ type ReactionAttackDamagePath =
 export function resolveOpportunityAttackCommand(
   input: OpportunityAttackResolutionInput,
 ): BattleResolutionResult {
+  const result = resolveReactionAttackCommand(input);
+  if (
+    input.subject.command !== "releaseReadiedAttack" ||
+    result.tag !== "resolved"
+  ) {
+    return result;
+  }
+  const readiedResponses = new Map(result.state.readiedResponses);
+  readiedResponses.delete(input.subject.reactorId);
+  const state = { ...result.state, readiedResponses };
+  return { ...result, state, snapshot: snapshotBattle(state) };
+}
+
+function resolveReactionAttackCommand(
+  input: OpportunityAttackResolutionInput,
+): BattleResolutionResult {
   const pendingAttackDamageReductions =
     input.pendingAttackDamageReductions ?? [];
   const subject = input.subject;
-  const commandLabel =
-    subject.command === "retaliationAttack"
-      ? "Retaliation"
-      : "Opportunity Attack";
+  const commandLabel = Match.value(subject.command).pipe(
+    Match.when("retaliationAttack", () => "Retaliation" as const),
+    Match.when("opportunityAttack", () => "Opportunity Attack" as const),
+    Match.when("releaseReadiedAttack", () => "Readied" as const),
+    Match.exhaustive,
+  );
   const target = input.state.combatants.get(subject.targetId);
-  const attack =
-    subject.command === "retaliationAttack"
-      ? meleeWeaponOrUnarmedStrikeOptionForReactor(
-          input.state,
-          subject.reactorId,
-          subject.targetId,
-          subject,
-        )
-      : opportunityAttackOptionForReactor(
-          input.state,
-          subject.reactorId,
-          subject.targetId,
-          subject,
-        );
+  const attack = Match.value(subject).pipe(
+    Match.when({ command: "retaliationAttack" }, (reaction) =>
+      meleeWeaponOrUnarmedStrikeOptionForReactor(
+        input.state,
+        reaction.reactorId,
+        reaction.targetId,
+        reaction,
+      ),
+    ),
+    Match.when({ command: "opportunityAttack" }, (reaction) =>
+      opportunityAttackOptionForReactor(
+        input.state,
+        reaction.reactorId,
+        reaction.targetId,
+        reaction,
+      ),
+    ),
+    Match.when({ command: "releaseReadiedAttack" }, (reaction) =>
+      readiedAttackOption(
+        input.state,
+        reaction.reactorId,
+        reaction.targetId,
+        reaction.procedureRef,
+      ),
+    ),
+    Match.exhaustive,
+  );
   if (target === undefined || attack === undefined) {
     return invalidResult(
       input.state,

@@ -35,11 +35,13 @@ timing phrase throughout spell and feature descriptions. It does not define a
 separate action for completing a turn. The boundary is a model timing
 decision, not an additional player action.
 
-## A4: A round is the model's six-second time unit
+## A4: A round is the model's smallest elapsed-time unit
 
-**Assumption:** The model treats a round as six seconds and does not represent
-sub-round elapsed time. Time-span conversions count whole rounds without
-prorating a round based on initiative position.
+**Assumption:** For rule-duration conversion, the model treats a round as a
+six-second tick and does not represent sub-round elapsed time. Time-span
+conversions count whole rounds without prorating a round based on initiative
+position. A battle summary must not multiply the highest round reached by six:
+that round can be incomplete, and the SRD's six seconds is approximate.
 
 **Rules basis / gap:** `.references/srd-5.2.1/Playing-the-Game.md`, "Combat"
 says that a round represents about 6 seconds and that each participant takes a

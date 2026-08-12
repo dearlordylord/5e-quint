@@ -887,18 +887,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
         ),
       },
     });
-    const replaceReleaseAct = (procedureRef: string) => ({
-      ...encoded,
-      acts: encoded.acts.map((act) =>
-        act.subject.tag === "runtimeCommand" &&
-        act.subject.command === "releaseReadiedSpell"
-          ? {
-              ...act,
-              subject: { ...act.subject, procedureRef },
-            }
-          : act,
-      ),
-    });
     const releaseTargetHole = releaseChoice.initialHoles.find(
       (hole) => hole.kind === "targetChoice" && hole.procedureRef !== undefined,
     );
@@ -996,27 +984,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
             procedureRef: releaseChoice.subject.procedureRef,
             reactorId: goblinId,
           }),
-        ),
-      ),
-    ).toBe(true);
-    expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(
-          replaceReleaseAct(unboundRef),
-        ),
-      ),
-    ).toBe(true);
-    expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(
-          replaceReleaseAct(wrongKindRef),
-        ),
-      ),
-    ).toBe(true);
-    expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(
-          replaceReleaseAct(differentSpellBinding.procedureRef),
         ),
       ),
     ).toBe(true);

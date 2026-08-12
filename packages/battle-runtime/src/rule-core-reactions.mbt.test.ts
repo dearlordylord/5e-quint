@@ -7,6 +7,7 @@ import {
   resolveBattleSubject,
   attackExecutionSelectionForSubjectForTest,
   characterAttackSubjectForTest,
+  readyDeclarationFillForTest,
 } from "./battle-runtime.test-support.ts";
 
 import {
@@ -35,7 +36,6 @@ import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra
 import {
   abilityModifier,
   attackBonus,
-  DieRollResult,
   Hp,
   movementFeet,
 } from "@dnd/shared/types";
@@ -243,40 +243,46 @@ function createRuleCoreReactionDriver() {
       doReadyMovementFixture: () => {
         state = ruleCoreReadiedMovementBattle();
         lastConcentrationSaveDc = 0;
+        const subject = {
+          tag: "action" as const,
+          actorId: reactorId,
+          action: "ready" as const,
+        };
+        const declaration = resolveBattleSubject({
+          state,
+          subject,
+          fills: [],
+        });
+        if (declaration.tag !== "needsHoles") {
+          recordResult(declaration);
+          return;
+        }
         const readied = resolveBattleSubject({
           state,
-          subject: {
-            tag: "action",
-            actorId: reactorId,
-            action: "ready",
-            readyTrigger: "attackHit",
-          },
-          fills: [],
+          subject,
+          fills: [
+            readyDeclarationFillForTest(
+              declaration.holes[0]!,
+              "the other combatant attacks",
+              { kind: "movement" },
+            ),
+          ],
         });
         recordResult(readied);
         if (readied.tag !== "resolved") return;
         recordResult(endTurn({ state, actorId: reactorId }));
       },
       doOfferReadiedMovement: () => {
-        const subject = interruptedAttackSubject(state);
-        const target = requireTargetChoiceHole(
-          resolveSubject(subject).tag === "needsHoles" ? holes : [],
-        );
-        const rollResult = resolveSubject(subject, [
-          attackTargetFill(target, reactorId),
-        ]);
-        if (rollResult.tag !== "needsHoles") return;
         recordResult(
           resolveBattleSubject({
             state,
-            subject,
-            fills: [
-              attackTargetFill(target, reactorId),
-              attackRollFill(requireAttackRollHole(holes), {
-                total: 20,
-                naturalD20: 12,
-              }),
-            ],
+            subject: {
+              tag: "runtimeCommand",
+              actorId: interruptedId,
+              command: "reportReadyTrigger",
+              readiedActorId: reactorId,
+            },
+            fills: [],
           }),
         );
       },
@@ -478,19 +484,6 @@ function reactionCreature(input: {
   };
 }
 
-function interruptedAttackSubject(
-  state: BattleState,
-): Extract<
-  BattleSubject,
-  { readonly tag: "action"; readonly action: "attack" }
-> {
-  return characterAttackSubjectForTest(
-    state,
-    interruptedId,
-    ruleCoreReactionAttackName,
-  );
-}
-
 function withReactorConcentration(state: BattleState): BattleState {
   const reactor = state.combatants.get(reactorId);
   if (reactor === undefined) {
@@ -530,9 +523,10 @@ function projectRuleCoreReactionState(input: {
   return withRuleCoreComponentRoute(componentOwner, {
     interruptedMovementSpentFeet: interrupted.movement.spentFeet,
     reactorReactionAvailable: reactor.reactionAvailable,
-    reactorReadiedMovementHeld: snapshot.readiedResponses.movements.some(
-      (readied) => readied.actorId === reactorId,
-    ),
+    reactorReadiedMovementHeld:
+      snapshot.readiedResponses.actionsOrMovements.some(
+        (readied) => readied.actorId === reactorId,
+      ),
     reactorReadiedSpellHeld: snapshot.readiedResponses.spells.some(
       (readied) => readied.casterId === reactorId,
     ),
@@ -571,42 +565,6 @@ function movementFill(
   };
 }
 
-function attackTargetFill(
-  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
-  targetId: CombatantId,
-): Extract<BattleFill, { readonly kind: "targetChoice" }> {
-  if (hole.attack === undefined) {
-    throw new Error("Expected bound rule-core reaction attack selection.");
-  }
-  return {
-    kind: "targetChoice",
-    holeId: hole.holeId,
-    value: targetId,
-    spatialFacts: [
-      {
-        kind: "attackTargetInMeleeReach",
-        actorId: interruptedId,
-        targetId,
-        ...hole.attack.selection,
-      },
-    ],
-  };
-}
-
-function attackRollFill(
-  hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
-  value: { readonly total: number; readonly naturalD20: number },
-): Extract<BattleFill, { readonly kind: "attackRoll" }> {
-  return {
-    kind: "attackRoll",
-    holeId: hole.holeId,
-    value: {
-      total: value.total,
-      naturalD20: DieRollResult(value.naturalD20),
-    },
-  };
-}
-
 function interruptDecisionFill(
   hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
   value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
@@ -636,26 +594,6 @@ function requireReactionDecisionHole(
   );
   if (hole === undefined) {
     throw new Error("Expected interrupt decision hole.");
-  }
-  return hole;
-}
-
-function requireTargetChoiceHole(
-  holes: readonly BattleHole[],
-): Extract<BattleHole, { readonly kind: "targetChoice" }> {
-  const hole = holes.find((candidate) => candidate.kind === "targetChoice");
-  if (hole === undefined) {
-    throw new Error("Expected target choice hole.");
-  }
-  return hole;
-}
-
-function requireAttackRollHole(
-  holes: readonly BattleHole[],
-): Extract<BattleHole, { readonly kind: "attackRoll" }> {
-  const hole = holes.find((candidate) => candidate.kind === "attackRoll");
-  if (hole === undefined) {
-    throw new Error("Expected attack roll hole.");
   }
   return hole;
 }

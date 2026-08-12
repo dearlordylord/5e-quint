@@ -19,6 +19,7 @@ const AdmittedBattleStatBlockCombatant =
 
 export type BattleStatBlockCombatantSource = {
   readonly id: BattleStatBlockExecutionSource["id"];
+  readonly challengeRating: BattleStatBlockExecutionSource["challengeRating"];
   readonly statBlock: Omit<StatBlockMechanics, "ac" | "hp" | "size"> & {
     readonly ac: Extract<
       StatBlockMechanics["ac"],

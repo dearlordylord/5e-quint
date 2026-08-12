@@ -38,6 +38,12 @@ export {
   type InitiativeScore,
 } from "./identity.ts";
 
+export {
+  BattleInitiativePositionSchema,
+  battleInitiativePosition,
+  type BattleInitiativePosition,
+} from "./battle-initiative-position.ts";
+
 export type {
   CharacterExecutionAdmission,
   CharacterExecutionState,
@@ -113,6 +119,7 @@ export {
   battleSelectedSpellInvocationForProcedure,
   battleSubjectPresentation,
   discoverBattleActs,
+  presentBattleActs,
 } from "./battle-act-composition.ts";
 
 export {
@@ -278,6 +285,9 @@ export {
   BATTLE_SUBJECT_BONUS_ACTIONS,
   CANTRIP_SPELL_PROCEDURES,
   BattleSubjectSchema,
+  BattleReadyResponseSchema,
+  ReadyTriggerDescription,
+  readyTriggerDescription,
   SPELL_SLOT_PROCEDURES,
   SpellInvocationRefSchema,
   SpellMetamagicSelectionSchema,
@@ -426,7 +436,7 @@ export {
   type BattleInterruptCheckpoint,
   type BattleInterruptProcedureChoice,
   type BattleInterruptProcedureSelection,
-  type BattleReadiedMovement,
+  type BattleReadiedResponse,
   type BattleReadiedSpell,
   type AdmittedBattleResolutionInput,
   type BattleResolutionCandidateInput,
@@ -501,7 +511,10 @@ export {
   BattleCreatureDisplayNameSchema,
   type BattleCreatureDisplayName,
 } from "./battle-creature-display-name.ts";
-export { battlePresentedSnapshot } from "./battle-snapshot-presentation.ts";
+export {
+  battlePresentedSnapshot,
+  presentBattleSnapshot,
+} from "./battle-snapshot-presentation.ts";
 export {
   addBattleRuntimeCombatant,
   applyInitiativeSwap,

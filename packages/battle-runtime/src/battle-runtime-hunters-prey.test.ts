@@ -1017,7 +1017,7 @@ describe("battle runtime: Hunter's Prey", () => {
     ).toEqual([expect.objectContaining({ attackerId: fighterId })]);
   });
 
-  test("Horde Breaker resumes a zero-damage extra attack through primary and follow-up damage Reactions", () => {
+  test("Horde Breaker resolves a zero-damage extra attack without inventing Ready triggers", () => {
     const baseState = startBattleRight({
       battleId: battleId("battle-hunters-prey-primary-damage-resume"),
       combatants: [
@@ -1039,13 +1039,7 @@ describe("battle runtime: Hunter's Prey", () => {
         }),
       ],
     });
-    const state = {
-      ...baseState,
-      readiedMovements: new Map(baseState.readiedMovements).set(goblinId, {
-        trigger: "attackDamage" as const,
-        expiresAt: { kind: "startOfTurn" as const, combatantId: goblinId },
-      }),
-    };
+    const state = baseState;
     const subject = fighterAttackSubject(state, "Longsword");
     const primaryTarget = attackInitialTargetHole(state, subject);
     const primaryRoll = attackRollHoleAfterTarget(
@@ -1072,57 +1066,19 @@ describe("battle runtime: Hunter's Prey", () => {
       attackRollFill(primaryRoll, { total: 15, naturalD20: 14 }),
       damageRollFillWithGroups(primaryDamage, [[4]]),
     ];
-    const awaitingDamageReaction = resolveBattleSubject({
+    const awaitingHordeBreaker = resolveBattleSubject({
       state,
       subject,
       fills: primaryFills,
     });
-    expect(awaitingDamageReaction).toMatchObject({
-      tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "attackDamage" }],
-    });
-    if (awaitingDamageReaction.tag !== "needsHoles") {
-      throw new Error("Expected primary attack-damage Reaction window.");
-    }
-    const pendingInterrupt = awaitingDamageReaction.snapshot.pendingInterrupt;
-    if (pendingInterrupt === null) {
-      throw new Error("Expected a pending primary attack-damage interrupt.");
-    }
-    const primaryCheckpoint =
-      awaitingDamageReaction.state.interruptStack.at(-1);
-    if (
-      primaryCheckpoint?.kind !== "interruptCheckpoint" ||
-      primaryCheckpoint.frame.trigger !== "attackDamage"
-    ) {
-      throw new Error(
-        "Expected a primary attack-damage interruption checkpoint.",
-      );
-    }
-    expect(primaryCheckpoint.frame.continuation).toMatchObject({
-      kind: "attackDamage",
-      target: { combatantId: goblinId },
-      attackResult: { total: 15, naturalD20: 14 },
-      damageInput: {
-        kind: "rolledDamage",
-        damageRollByType: [{ damageType: "slashing", amount: 3 }],
-      },
-    });
-    const declined = resolveBattleInterrupt({
-      state: awaitingDamageReaction.state,
-      fill: interruptDecisionFill(pendingInterrupt.decisionHole, {
-        kind: "decline",
-        responderId: goblinId,
-      }),
-    });
-    expect(declined).toMatchObject({
+    expect(awaitingHordeBreaker).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "unitFeatureDecision", label: "Use Horde Breaker" }],
     });
-    if (declined.tag !== "needsHoles") {
-      throw new Error(
-        "Expected Horde Breaker decision after declining damage Reaction.",
-      );
+    if (awaitingHordeBreaker.tag !== "needsHoles") {
+      throw new Error("Expected the Horde Breaker decision.");
     }
+    const declined = awaitingHordeBreaker;
     expect(declined.state.combatants.get(goblinId)?.hp).toBe(Hp(7));
     expect(declined.state.combatants.get(skeletonId)?.hp).toBe(Hp(10));
     expect(
@@ -1188,7 +1144,7 @@ describe("battle runtime: Hunter's Prey", () => {
       }),
       "rolledDice",
     );
-    const awaitingFollowupDamageReaction =
+    const resolved = requireResolved(
       resolveHuntersPreyHordeBreakerContinuation({
         state: declined.state,
         subject,
@@ -1199,45 +1155,6 @@ describe("battle runtime: Hunter's Prey", () => {
           damageRollFillWithGroups(hordeDamage, [[1]]),
         ],
         handledInterruptTrigger: undefined,
-      });
-    expect(awaitingFollowupDamageReaction).toMatchObject({
-      tag: "needsHoles",
-      holes: [{ kind: "interruptDecision", trigger: "attackDamage" }],
-    });
-    if (awaitingFollowupDamageReaction.tag !== "needsHoles") {
-      throw new Error("Expected Horde Breaker attack-damage Reaction window.");
-    }
-    const followupInterrupt =
-      awaitingFollowupDamageReaction.snapshot.pendingInterrupt;
-    if (followupInterrupt === null) {
-      throw new Error("Expected a pending Horde Breaker damage interrupt.");
-    }
-    const followupCheckpoint =
-      awaitingFollowupDamageReaction.state.interruptStack.at(-1);
-    if (
-      followupCheckpoint?.kind !== "interruptCheckpoint" ||
-      followupCheckpoint.frame.trigger !== "attackDamage"
-    ) {
-      throw new Error(
-        "Expected a procedure-bound attack-damage interruption checkpoint.",
-      );
-    }
-    expect(followupCheckpoint.frame.continuation).toMatchObject({
-      kind: "attackDamage",
-      target: { combatantId: skeletonId },
-      attackResult: { total: 15, naturalD20: 14 },
-      damageInput: {
-        kind: "rolledDamage",
-        damageRollByType: [{ damageType: "slashing", amount: 0 }],
-      },
-    });
-    const resolved = requireResolved(
-      resolveBattleInterrupt({
-        state: awaitingFollowupDamageReaction.state,
-        fill: interruptDecisionFill(followupInterrupt.decisionHole, {
-          kind: "decline",
-          responderId: goblinId,
-        }),
       }),
     );
     expect(resolved.state.combatants.get(goblinId)?.hp).toBe(Hp(7));

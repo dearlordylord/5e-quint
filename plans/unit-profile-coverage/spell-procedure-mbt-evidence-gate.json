@@ -217,7 +217,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -271,6 +271,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -725,7 +729,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -779,6 +783,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -1100,7 +1108,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -1154,6 +1162,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -1356,7 +1368,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -1410,6 +1422,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -1943,7 +1959,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -1997,6 +2013,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -2588,7 +2608,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -2642,6 +2662,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -3163,7 +3187,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -3217,6 +3241,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -4153,7 +4181,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -4207,6 +4235,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -4449,7 +4481,11 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
               "role": "semantic-core"
             },
             {
@@ -4724,7 +4760,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -4778,6 +4814,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -5099,7 +5139,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -5153,6 +5193,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -5474,7 +5518,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -5528,6 +5572,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -5870,7 +5918,15 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
               "role": "semantic-core"
             }
           ],
@@ -6097,7 +6153,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -6151,6 +6207,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -6472,7 +6532,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -6526,6 +6586,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -6894,7 +6958,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -6948,6 +7012,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -7120,12 +7188,16 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt",
-              "role": "proof-only"
+              "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
               "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-action-lifecycle.qnt",
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -7521,7 +7593,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -7575,6 +7647,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -8559,7 +8635,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -8613,6 +8689,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -8965,7 +9045,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -9019,6 +9099,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -9473,7 +9557,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -9527,6 +9611,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -9848,7 +9936,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -9902,6 +9990,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -10104,7 +10196,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -10158,6 +10250,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -10691,7 +10787,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -10745,6 +10841,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -11336,7 +11436,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -11390,6 +11490,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -11911,7 +12015,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -11965,6 +12069,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -12901,7 +13009,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -12955,6 +13063,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -13197,7 +13309,11 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
               "role": "semantic-core"
             },
             {
@@ -13472,7 +13588,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -13526,6 +13642,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -13847,7 +13967,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -13901,6 +14021,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -14289,7 +14413,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -14343,6 +14467,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -14685,7 +14813,15 @@
           ],
           "qntOwners": [
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
               "role": "semantic-core"
             }
           ],
@@ -14912,7 +15048,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -14966,6 +15102,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -15287,7 +15427,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -15341,6 +15481,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -15709,7 +15853,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -15763,6 +15907,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -15935,12 +16083,16 @@
               "role": "semantic-core"
             },
             {
-              "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt",
-              "role": "proof-only"
+              "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
+              "role": "semantic-core"
             },
             {
               "ownerPath": "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
               "role": "proof-only"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-action-lifecycle.qnt",
+              "role": "semantic-core"
             }
           ],
           "runtime": "battle",
@@ -16336,7 +16488,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -16390,6 +16542,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],
@@ -17374,7 +17530,7 @@
           "joinStatus": "covered",
           "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
           "obligationStatus": "covered",
-          "obligationTitle": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
+          "obligationTitle": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
@@ -17428,6 +17584,10 @@
             },
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
               "role": "semantic-core"
             }
           ],

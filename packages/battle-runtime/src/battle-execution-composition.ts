@@ -11,6 +11,10 @@ import type {
 } from "./battle-state-execution.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {
+  battleSubjectForReplay,
+  sameBattleSubject,
+} from "./battle-subjects.ts";
+import {
   endTurn as endTurnWithRegistry,
   resolveAdmittedBattleSubject as resolveAdmittedBattleSubjectWithRegistry,
   resolveBattleInterrupt as resolveBattleInterruptWithRegistry,
@@ -102,11 +106,36 @@ export function endTurn(input: {
   readonly actorId: CombatantId;
   readonly fills?: readonly BattleFill[];
 }): BattleResolutionResult {
+  const subject = {
+    tag: "runtimeCommand" as const,
+    actorId: input.actorId,
+    command: "endTurn" as const,
+  };
+  const phase = input.state.subjectResolutionPhase;
+  if (
+    phase.kind === "subjectContinuation" &&
+    !sameBattleSubject(phase.subject, subject)
+  ) {
+    return {
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "The pending subject continuation must resolve before the turn can end.",
+      snapshot: snapshotBattle(input.state),
+    };
+  }
+  const dispatchState =
+    phase.kind === "subjectContinuation"
+      ? {
+          ...input.state,
+          subjectResolutionPhase: { kind: "subjectSelection" as const },
+        }
+      : input.state;
   const executionRegistry = spellProcedureExecutionRegistry();
   return battleResolutionWithExecutionSnapshot(
     input.state,
     endTurnWithRegistry(
-      input,
+      { ...input, state: dispatchState },
       executionRegistry,
       BATTLE_ATTACK_ROUTE_RESOLVERS,
     ),
@@ -300,14 +329,71 @@ function battleResolutionWithExecutionSnapshot(
   result: BattleResolutionResult,
   executionRegistry: ReturnType<typeof spellProcedureExecutionRegistry>,
 ): BattleResolutionResult {
-  const snapshotState = result.tag === "invalid" ? inputState : result.state;
+  const resolvedSubjectPhase =
+    result.tag === "resolved"
+      ? completedReportedReadyResumePhase(inputState, result.state)
+      : undefined;
+  const phasedResult =
+    result.tag === "invalid"
+      ? result
+      : {
+          ...result,
+          state: {
+            ...result.state,
+            subjectResolutionPhase:
+              result.tag === "needsHoles"
+                ? {
+                    kind: "subjectContinuation" as const,
+                    subject: battleSubjectForReplay(result.subject),
+                  }
+                : (resolvedSubjectPhase ?? {
+                    kind: "subjectSelection" as const,
+                  }),
+          },
+        };
+  const snapshotState =
+    phasedResult.tag === "invalid" ? inputState : phasedResult.state;
+  const snapshot = snapshotBattleWithExecutionRegistry(
+    snapshotState,
+    executionRegistry,
+  );
   return {
-    ...result,
-    snapshot: snapshotBattleWithExecutionRegistry(
-      snapshotState,
-      executionRegistry,
-    ),
+    ...phasedResult,
+    snapshot,
   };
+}
+
+function completedReportedReadyResumePhase(
+  inputState: BattleState,
+  resultState: BattleState,
+): BattleState["subjectResolutionPhase"] | undefined {
+  const inputFrames = inputState.interruptStack.flatMap((frame) =>
+    frame.kind === "interruptCheckpoint" &&
+    frame.frame.trigger === "reportedReadyTrigger"
+      ? [frame.frame]
+      : [],
+  );
+  const remainingFrameCount = resultState.interruptStack.filter(
+    (frame) =>
+      frame.kind === "interruptCheckpoint" &&
+      frame.frame.trigger === "reportedReadyTrigger",
+  ).length;
+  const resumePhase =
+    inputFrames.slice(remainingFrameCount)[0]?.resumeSubjectResolutionPhase;
+  return resumePhase?.kind === "subjectContinuation" &&
+    (!sameCombatantRoster(inputState, resultState) ||
+      !resultState.combatants.has(resumePhase.subject.actorId))
+    ? { kind: "subjectSelection" }
+    : resumePhase;
+}
+
+function sameCombatantRoster(left: BattleState, right: BattleState): boolean {
+  return (
+    left.combatants.size === right.combatants.size &&
+    [...left.combatants.keys()].every((combatantId) =>
+      right.combatants.has(combatantId),
+    )
+  );
 }
 
 function resultWithExecutionSnapshot<

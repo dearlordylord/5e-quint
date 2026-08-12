@@ -3,7 +3,11 @@ import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
 import { Match } from "effect";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
-import type { BattleSubject } from "../battle-subjects.ts";
+import type {
+  BattleReadyResponse,
+  BattleReadyResponseSnapshot,
+  BattleSubject,
+} from "../battle-subjects.ts";
 import type { BattleCompanionSnapshot } from "../companion-state.ts";
 import { battleCompanionEntries } from "../find-familiar-state.ts";
 import { CombatantId, battleReplayStackDepth } from "../identity.ts";
@@ -20,6 +24,7 @@ import {
   discoverBattleActCandidatesWithExecutionRegistry,
   discoverBattleActCandidatesWithoutSpellProcedures,
 } from "./battle-discovery.ts";
+import { battleSubjectBeginsBonusAction } from "./action-eligibility.ts";
 import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
 import {
   INTERRUPT_DECISION_HOLE_ID,
@@ -131,16 +136,18 @@ function battleSnapshotProjectionFromActs(
       subject,
       initialHoles,
     })),
-    turn: battleTurnSnapshot(state),
+    turn: battleTurnSnapshot(state, availableActs),
     readiedResponses: {
       spells: [...state.readiedSpells].map(([casterId, readiedSpell]) => ({
         casterId,
         ...readiedSpell,
       })),
-      movements: [...state.readiedMovements].map(
-        ([actorId, readiedMovement]) => ({
+      actionsOrMovements: [...state.readiedResponses].map(
+        ([actorId, readiedResponse]) => ({
           actorId,
-          ...readiedMovement,
+          trigger: readiedResponse.trigger,
+          response: readyResponseSnapshot(readiedResponse.response),
+          expiresAt: readiedResponse.expiresAt,
         }),
       ),
     },
@@ -148,6 +155,21 @@ function battleSnapshotProjectionFromActs(
     pendingInterrupt: pendingInterruptSnapshot(state),
   };
   return { snapshot };
+}
+
+function readyResponseSnapshot(
+  response: BattleReadyResponse,
+): BattleReadyResponseSnapshot {
+  return Match.value(response).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      movement: () => ({ kind: "movement" as const }),
+      attack: ({ selection }) => ({
+        kind: "attack" as const,
+        procedureRef: selection.procedureRef,
+      }),
+      action: ({ subject }) => ({ kind: "action" as const, subject }),
+    }),
+  );
 }
 
 export function snapshotBattle(state: BattleState): BattleSnapshot {
@@ -162,11 +184,18 @@ export function snapshotBattleWithExecutionRegistry(
     .snapshot;
 }
 
-export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
+export function battleTurnSnapshot(
+  state: BattleState,
+  availableActs: readonly { readonly subject: BattleSubject }[],
+): BattleTurnSnapshot {
   const resources = state.currentTurnResources;
   return {
     actionResources: resources.actionResources,
-    bonusActionAvailable: canSpendBonusAction(resources),
+    bonusActionAvailable:
+      canSpendBonusAction(resources) &&
+      availableActs.some(({ subject }) =>
+        battleSubjectBeginsBonusAction(state, subject),
+      ),
     jumpDistanceMultiplier: resources.jumpDistanceMultiplier,
     heightenedStepOfTheWindCarriedCreatures:
       resources.heightenedStepOfTheWindCarriedCreatures,
@@ -276,6 +305,7 @@ export function interruptTriggerLabel(trigger: BattleInterruptTrigger): string {
     Match.when("afterDamage", () => "After damage"),
     Match.when("creatureFalls", () => "Creature falls"),
     Match.when("opportunityAttack", () => "Opportunity Attack"),
+    Match.when("reportedReadyTrigger", () => "Reported Ready trigger"),
     Match.exhaustive,
   );
 }

@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-held-light-emitter spell.invocation-spell-created-held-object
 
 module battleRuntimeLightSpellAttacks {
   import battleRuntimeModel.* from "./battle-runtime-model"

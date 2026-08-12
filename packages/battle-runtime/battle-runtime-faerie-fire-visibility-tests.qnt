@@ -1,8 +1,7 @@
 // -*- mode: Bluespec; -*-
-// TEMPORARY RESIDUAL: these Faerie Fire scenarios depend on the master-owned Light emitter lane; delete this root and its closure exception only after synchronization.
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
 
-module battleRuntimeSaveSpellResidualTests {
+module battleRuntimeFaerieFireVisibilityTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
@@ -14,7 +13,7 @@ module battleRuntimeSaveSpellResidualTests {
     val lit = resolveFaerieFire(initialState, true, false)
     val broken = breakConcentrationSpellEffects(lit, Fighter)
     all {
-      assert(lit.actionAvailable == false),
+      assert(not(lit.actionAvailable)),
       assert(battleActorHasCommittedSpellSlotUse(lit, Fighter)),
       assert(lit.fighter.concentrating),
       assert(not(lit.fighter.activeEffects.contains(FaerieFireOutline))),
@@ -85,5 +84,4 @@ module battleRuntimeSaveSpellResidualTests {
       assert(not(objectOutlinesDenyInvisibleBenefit(broken.objectOutlines, FaerieFireObjectTarget))),
     }
   }
-
 }

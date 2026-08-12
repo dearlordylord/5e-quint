@@ -4,6 +4,7 @@
 
 module battleRuntimeSaveConditionTargetListTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeSaveGatedFacts.* from "./battle-runtime-save-gated-facts"
   import battleRuntimeSaveConditionTargetList.* from "./battle-runtime-save-condition-target-list"
   import battleRuntimeSaveConditionTargetListResolution.* from "./battle-runtime-save-condition-target-list-resolution"
 
@@ -19,7 +20,7 @@ module battleRuntimeSaveConditionTargetListTests {
       HumanoidCreature,
       false,
     )
-    val damaged = resolveAttack({ ...failed, actionAvailable: true }, 15, 10, fighterWeaponAttackDamageRoll(1), true)
+    val damagedTarget = saveGatedConditionTargetAfterDamage(failed.goblin, 1, Fighter)
     val twoTargets = resolveTargetListSaveGatedCondition(
       initialState,
       CharmPersonSaveGate,
@@ -44,7 +45,7 @@ module battleRuntimeSaveConditionTargetListTests {
     )
     all {
       assert(failed.goblin.activeEffects.contains(CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
-      assert(not(damaged.goblin.activeEffects.contains(CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks })))),
+      assert(not(damagedTarget.activeEffects.contains(CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks })))),
       assert(twoTargets.fighter.activeEffects.contains(CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
       assert(twoTargets.goblin.activeEffects.contains(CharmPersonCharmed({ source: Fighter, durationTicks: charmPersonCharmedDurationTicks }))),
       assert(illegalTwoTargets == initialState),

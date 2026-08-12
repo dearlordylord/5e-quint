@@ -150,7 +150,7 @@ describe("Stat Block execution references", () => {
       statBlockAttackActionOptions(admission.execution).map(
         ({ damageNotation }) => damageNotation,
       ),
-    ).toEqual(attacks.map(() => "rolled"));
+    ).toEqual([...attacks.map(() => "rolled"), "static"]);
   });
 
   test("rejects noncanonical replay occurrence references", () => {
@@ -852,6 +852,71 @@ describe("Stat Block execution references", () => {
         ),
       }),
     ).toThrow();
+  });
+
+  test("binds authored Multiattack dispatches independently of intrinsic Unarmed Strike", () => {
+    const actorId = combatantId("authored-unarmed-strike-multiattack");
+    const base = statBlockRecord();
+    const scimitar = base.statBlock.actions?.attacks?.find(
+      (attack) => attack.name === "Scimitar",
+    );
+    if (scimitar === undefined) {
+      throw new Error("Expected a Scimitar attack fixture.");
+    }
+    const battle = startBattleRight({
+      battleId: battleId("battle-authored-unarmed-strike-multiattack"),
+      combatants: [
+        statBlockCreatureInit({
+          combatantId: actorId,
+          initiative: 20,
+          statBlock: {
+            ...base,
+            statBlock: {
+              ...base.statBlock,
+              actions: {
+                ...base.statBlock.actions,
+                attacks: [{ ...scimitar, name: "Unarmed Strike" }],
+                multiattacks: [
+                  {
+                    name: "Synthetic Unarmed Multiattack",
+                    dispatches: [
+                      {
+                        name: "Unarmed Strike",
+                        count: { kind: "literal", value: 1 },
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        }),
+        characterSeed({ initiative: 10 }),
+      ],
+    });
+    const execution = executionReferenceView(battle, actorId);
+    const authoredAttack = execution.procedureBindings.find(
+      (binding) =>
+        binding.procedure.kind === "attack" &&
+        binding.procedure.attack.onHit.some(
+          (effect) =>
+            effect.kind === "damage" &&
+            effect.amount.kind === "fixed" &&
+            effect.amount.static === 5,
+        ),
+    );
+    const multiattack = execution.procedureBindings.find(
+      (binding) => binding.procedure.kind === "multiattack",
+    );
+    if (
+      authoredAttack === undefined ||
+      multiattack?.procedure.kind !== "multiattack"
+    ) {
+      throw new Error("Expected authored attack and Multiattack bindings.");
+    }
+    expect(multiattack.procedure.dispatchProcedureRefs).toEqual([
+      authoredAttack.procedureRef,
+    ]);
   });
 
   test("binds distinct Legendary Action procedures to one explicit shared pool", () => {
