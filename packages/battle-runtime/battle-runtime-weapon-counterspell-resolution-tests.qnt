@@ -31,7 +31,7 @@ module battleRuntimeWeaponCounterspellResolutionTests {
     }
   }
 
-  run test_declining_weapon_counterspell_resumes_true_strike_without_reaction_slot_spend = {
+  run test_declining_weapon_counterspell_resumes_true_strike_into_shield_window = {
     val awaiting = openReactionWindow(initialState, {
       request: SpellCastCounterspellReactionRequest({
         counterspell: {
@@ -46,11 +46,14 @@ module battleRuntimeWeaponCounterspellResolutionTests {
     })
     val resumed = declineWeaponCounterspellReactionOfferAndResume(awaiting)
     all {
-      assert(resumed.interruptStack == []),
+      assert(resumed.interruptStack == [PendingReaction({
+        request: AttackHitShieldReactionRequest(ShieldResumesTrueStrikeWeaponAttack),
+      })]),
       assert(resumed.goblin.reactionAvailable),
       assert(not(battleActorHasSpellSlotUse(resumed, Goblin))),
-      assert(resumed.goblin.hp == 0),
-      assert(not(resumed.actionAvailable)),
+      assert(not(battleActorHasSpellSlotUse(resumed, Fighter))),
+      assert(resumed.goblin.hp == 10),
+      assert(resumed.actionAvailable),
     }
   }
 }
