@@ -164,7 +164,7 @@ export function resolveReleaseReadiedSpellCommand(
         fills: input.fills,
       },
     },
-    invocation,
+    { kind: "readiedSpell", invocation },
   );
   if (released.tag === "needsHoles") {
     return { ...released, subject: input.subject };

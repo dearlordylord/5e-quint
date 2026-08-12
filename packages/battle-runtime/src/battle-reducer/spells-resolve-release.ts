@@ -25,8 +25,6 @@ import {
   type BattleState,
   type BattleExecutableSpellInvocation,
   type BonusActionSpellBattleResolutionInput,
-  type ReadiedSpellInvocation,
-  type SupportedDamageSpellInvocation,
   type SpellMarkedDamageRider,
 } from "../battle-state-execution.ts";
 import { attackRollIsCriticalHit } from "./attack-resolution.ts";
@@ -94,6 +92,7 @@ import {
   spellObjectTargetHole,
   spellDamageByTypeForTarget,
   spellDamageHole,
+  type RuntimeExecutableDamageSpellProcedure,
   selectedSpellAttackDamageProcedure,
   spellTargetHole,
   spellTargetIsLegal,
@@ -109,6 +108,8 @@ import {
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import { resolveChainedSpellAttackDamageAct } from "./spells-resolve-chained.ts";
 import { spellCastInterruptFrame } from "./spell-cast-interrupt-frame.ts";
+import type { ReadiedSpellRuntimeLaneInvocation } from "./spell-execution-facts.ts";
+import type { StoredGlyphSpellReleasePlan } from "./spell-procedure-profiles/resolution-contract.ts";
 
 import { resolvePreparedSlotSpellRelease } from "./spells-resolve-prepared-slot.ts";
 import { resolveSaveGateDamageSpellRelease } from "./spells-resolve-save-gates.ts";
@@ -123,12 +124,68 @@ import {
   spiritualWeaponForcePositionInvalidReason,
 } from "./spells-targeting.ts";
 
-type ReleasableSpellInvocation =
-  | BattleExecutableSpellInvocation<ReadiedSpellInvocation>
-  | Extract<
-      BattleExecutableSpellInvocation<SupportedDamageSpellInvocation>,
-      { readonly procedure: "spiritualWeaponAttackProxy" }
-    >;
+type StoredGlyphAreaRelease = Extract<
+  StoredGlyphSpellReleasePlan,
+  { readonly kind: "ordinaryArea" }
+>;
+type StoredGlyphTriggeringCreatureRelease = Extract<
+  StoredGlyphSpellReleasePlan,
+  { readonly kind: "ordinaryTriggeringCreature" }
+>;
+type StoredGlyphDirectTargetReleaseInvocation = Extract<
+  StoredGlyphTriggeringCreatureRelease["invocation"],
+  {
+    readonly procedure: "attackBurstSaveDamage" | "spiritualWeaponAttackProxy";
+  }
+>;
+
+export type SpellReleaseRequest =
+  | {
+      readonly kind: "readiedSpell";
+      readonly invocation: BattleExecutableSpellInvocation<ReadiedSpellRuntimeLaneInvocation>;
+    }
+  | {
+      readonly kind: "storedGlyphArea";
+      readonly invocation: StoredGlyphAreaRelease["invocation"];
+      readonly anchorId: StoredGlyphAreaRelease["anchorId"];
+    }
+  | {
+      readonly kind: "storedGlyphTriggeringCreature";
+      readonly invocation: StoredGlyphTriggeringCreatureRelease["invocation"];
+      readonly targetId: StoredGlyphTriggeringCreatureRelease["targetId"];
+    };
+
+type TargetedSpellReleaseInvocation = Extract<
+  RuntimeExecutableDamageSpellProcedure,
+  {
+    readonly procedure:
+      | "attackBurstSaveDamage"
+      | "spellAttackDamage"
+      | "spiritualWeaponAttackProxy";
+  }
+>;
+
+type NonSpiritualSpellReleaseRequest =
+  | Exclude<
+      SpellReleaseRequest,
+      { readonly kind: "storedGlyphTriggeringCreature" }
+    >
+  | (Omit<
+      Extract<
+        SpellReleaseRequest,
+        { readonly kind: "storedGlyphTriggeringCreature" }
+      >,
+      "invocation"
+    > & {
+      readonly invocation: Exclude<
+        StoredGlyphTriggeringCreatureRelease["invocation"],
+        {
+          readonly procedure:
+            | "attackBurstSaveDamage"
+            | "spiritualWeaponAttackProxy";
+        }
+      >;
+    });
 
 type ReadySpellBattleResolutionInput = ActionSpellBattleResolutionInput & {
   readonly subject: ActionSpellBattleResolutionInput["subject"] & {
@@ -578,7 +635,7 @@ function dancingLightsSeparatePlacementError(
 
 export function resolveReadySpellAct(
   input: ReadySpellBattleResolutionInput,
-  invocation: BattleExecutableSpellInvocation<ReadiedSpellInvocation>,
+  invocation: BattleExecutableSpellInvocation<ReadiedSpellRuntimeLaneInvocation>,
 ): BattleResolutionResult {
   const fillSet = spellFillSet(
     input.fills,
@@ -720,13 +777,27 @@ export function resolveReadySpellAct(
 
 export function resolveSpellRelease(
   input: ActionSpellBattleResolutionInput,
-  candidateInvocation: ReleasableSpellInvocation,
-  options: {
-    readonly selfOriginAreaAnchorId?: CombatantId;
-    readonly opensSpellCastReactionWindow?: boolean;
-    readonly storedGlyphTriggeringCreatureTargetId?: CombatantId;
-  } = {},
+  request: SpellReleaseRequest,
 ): BattleResolutionResult {
+  if (request.kind === "storedGlyphTriggeringCreature") {
+    const invocation = request.invocation;
+    return invocation.procedure === "spiritualWeaponAttackProxy" ||
+      invocation.procedure === "attackBurstSaveDamage"
+      ? resolveStoredGlyphDirectTargetRelease(
+          input,
+          invocation,
+          request.targetId,
+        )
+      : resolveNonSpiritualSpellRelease(input, { ...request, invocation });
+  }
+  return resolveNonSpiritualSpellRelease(input, request);
+}
+
+function resolveNonSpiritualSpellRelease(
+  input: ActionSpellBattleResolutionInput,
+  request: NonSpiritualSpellReleaseRequest,
+): BattleResolutionResult {
+  const candidateInvocation = request.invocation;
   if (candidateInvocation.procedure === "chainedSpellAttackDamage") {
     return resolveChainedSpellAttackDamageAct({
       input,
@@ -769,28 +840,6 @@ export function resolveSpellRelease(
   }
   /* v8 ignore stop */
   const invocation = selectedInvocation.invocation;
-  if (invocation.procedure === "spiritualWeaponAttackProxy") {
-    if (fillSet.spiritualWeaponForcePosition === undefined) {
-      return needsHolesResult(input.state, input.subject, [
-        spiritualWeaponForcePositionHole(invocation),
-      ]);
-    }
-    const spiritualWeaponPlacementError =
-      spiritualWeaponForcePositionInvalidReason(
-        fillSet.spiritualWeaponForcePosition,
-        invocation,
-      );
-    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-    if (spiritualWeaponPlacementError !== null) {
-      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        spiritualWeaponPlacementError,
-      );
-    }
-    /* v8 ignore stop */
-  }
   if (invocation.procedure === "saveGatedDamage") {
     return resolveSaveGateDamageSpellRelease({
       input,
@@ -799,13 +848,11 @@ export function resolveSpellRelease(
       fillSet,
       ...optionalProperty(
         "selfOriginAreaAnchorId",
-        options.selfOriginAreaAnchorId,
+        request.kind === "storedGlyphArea" ? request.anchorId : undefined,
       ),
-      ...(options.opensSpellCastReactionWindow === undefined
+      ...(request.kind === "readiedSpell"
         ? {}
-        : {
-            opensSpellCastReactionWindow: options.opensSpellCastReactionWindow,
-          }),
+        : { opensSpellCastReactionWindow: false }),
     });
   }
   if (invocation.procedure === "repeatedDamageAllocation") {
@@ -817,49 +864,112 @@ export function resolveSpellRelease(
     });
   }
 
-  const targetResolution =
-    invocation.procedure === "spellAttackDamage"
-      ? Match.value(readiedSpellTargetSelection(fillSet, invocation)).pipe(
-          Match.discriminatorsExhaustive("tag")({
-            invalid: (selection) =>
-              invalidResult(input.state, "invalidFill", selection.message),
-            none: () =>
-              needsHolesResult(input.state, input.subject, [
-                spellTargetHole(input.state, input.subject.actorId, invocation),
-                ...(invocation.targeting.kind === "singleCreatureOrObject"
-                  ? [spellObjectTargetHole(invocation)]
-                  : []),
-              ]),
-            creature: (selection) => ({
-              tag: "continue" as const,
-              fillSet: selection.fillSet,
-            }),
-            object: (selection) =>
-              resolveReadiedSpellObjectTarget({
-                input,
-                actorId: input.subject.actorId,
-                invocation,
-                fillSet: selection.fillSet,
-              }),
+  if (invocation.procedure === "spellAttackDamage") {
+    return Match.value(readiedSpellTargetSelection(fillSet, invocation)).pipe(
+      Match.discriminatorsExhaustive("tag")({
+        invalid: (selection) =>
+          invalidResult(input.state, "invalidFill", selection.message),
+        none: () =>
+          needsHolesResult(input.state, input.subject, [
+            spellTargetHole(input.state, input.subject.actorId, invocation),
+            ...(invocation.targeting.kind === "singleCreatureOrObject"
+              ? [spellObjectTargetHole(invocation)]
+              : []),
+          ]),
+        creature: (selection) =>
+          resolveTargetedSpellRelease(
+            input,
+            invocation,
+            selection.fillSet,
+            selection.fillSet.targetId,
+            request.kind === "storedGlyphTriggeringCreature" &&
+              selection.fillSet.targetId === request.targetId,
+          ),
+        object: (selection) =>
+          resolveReadiedSpellObjectTarget({
+            input,
+            actorId: input.subject.actorId,
+            invocation,
+            fillSet: selection.fillSet,
           }),
-        )
-      : null;
-  if (targetResolution !== null && targetResolution.tag !== "continue") {
-    return targetResolution;
+      }),
+    );
   }
-  const targetId =
-    targetResolution?.tag === "continue"
-      ? targetResolution.fillSet.targetId
-      : fillSet.targetId;
-  if (targetId == null) {
+  return invocation;
+}
+
+function resolveStoredGlyphDirectTargetRelease(
+  input: ActionSpellBattleResolutionInput,
+  candidateInvocation: StoredGlyphDirectTargetReleaseInvocation,
+  targetId: CombatantId,
+): BattleResolutionResult {
+  const fillSet = spellFillSet(
+    input.fills,
+    candidateInvocation,
+    candidateInvocation.sourceProcedureRef,
+    input.subject.actorId,
+    input.state,
+  );
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (fillSet.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  /* v8 ignore stop */
+  const selectedInvocation = selectedSpellAttackDamageProcedure(
+    candidateInvocation,
+    fillSet.damageTypeChoice,
+  );
+  if (selectedInvocation.tag === "needsHoles") {
     return needsHolesResult(input.state, input.subject, [
-      spellTargetHole(input.state, input.subject.actorId, invocation),
+      selectedInvocation.hole,
     ]);
   }
+  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+  if (selectedInvocation.tag === "invalid") {
+    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      selectedInvocation.message,
+    );
+  }
+  /* v8 ignore stop */
+  const invocation = selectedInvocation.invocation;
+  if (invocation.procedure === "spiritualWeaponAttackProxy") {
+    if (fillSet.spiritualWeaponForcePosition === undefined) {
+      return needsHolesResult(input.state, input.subject, [
+        spiritualWeaponForcePositionHole(invocation),
+      ]);
+    }
+    const placementError = spiritualWeaponForcePositionInvalidReason(
+      fillSet.spiritualWeaponForcePosition,
+      invocation,
+    );
+    /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
+    if (placementError !== null) {
+      /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
+      return invalidResult(input.state, "invalidFill", placementError);
+    }
+    /* v8 ignore stop */
+  }
+  return resolveTargetedSpellRelease(
+    input,
+    invocation,
+    fillSet,
+    targetId,
+    true,
+  );
+}
+
+function resolveTargetedSpellRelease(
+  input: ActionSpellBattleResolutionInput,
+  invocation: TargetedSpellReleaseInvocation,
+  fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>,
+  targetId: CombatantId,
+  storedGlyphRetargetingMatches: boolean,
+): BattleResolutionResult {
   const target = input.state.combatants.get(targetId);
-  const storedGlyphRetargetingMatches =
-    options.storedGlyphTriggeringCreatureTargetId !== undefined &&
-    targetId === options.storedGlyphTriggeringCreatureTargetId;
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
     target == null ||
