@@ -5,6 +5,7 @@
 module battleRuntimeCounterspellReactionDecision {
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
 
