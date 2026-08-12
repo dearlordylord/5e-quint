@@ -53,6 +53,7 @@ export type {
 
 export {
   emptyBattleRuntimeContext,
+  isBattleRuntimeSession,
   type BattleRuntimeContext,
   type BattleRuntimeSession,
   type CharacterBattleRuntimeContext,

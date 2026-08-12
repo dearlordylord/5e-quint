@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
-import { currentGitRevision, repoRoot } from "./transcript.ts";
+import { currentGitRevision, repoRoot, sha256Text } from "./transcript.ts";
 
 function fail(message: string): never {
   throw new Error(message);
@@ -30,6 +30,15 @@ function main(args: readonly string[]): void {
     fail(
       `Replay requires recorded revision ${parsed.value.header.gitSha}; current checkout is ${revision.sha}.`,
     );
+  }
+  if (
+    sha256Text(readFileSync(resolve(runPath, "SCENARIO.md"), "utf8")) !==
+      parsed.value.header.scenarioSha256 ||
+    sha256Text(
+      readFileSync(resolve(runPath, "SCENARIO_REVIEW.json"), "utf8"),
+    ) !== parsed.value.header.scenarioReviewSha256
+  ) {
+    fail("Retained scenario or admission review diverged from the recording.");
   }
   const replaySupervisor = resolve(runPath, "replay-supervisor.mjs");
   const replaySupervisorSha256 = createHash("sha256")

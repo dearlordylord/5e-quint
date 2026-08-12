@@ -27,6 +27,13 @@ const header = {
   startedAt: "2026-08-12T12:00:00.000Z",
   consumerIsolation: "permissionProfile",
   replaySupervisorSha256: "b".repeat(64),
+  scenarioSha256: "d".repeat(64),
+  scenarioReviewSha256: "e".repeat(64),
+  setupSha256: "c".repeat(64),
+  setupOutcome: "ready",
+  initialSession: { step: 0 },
+  initialSessionSha256: sha256Canonical({ step: 0 }),
+  setupObservation: { setup: "property" },
 } as const;
 
 describe("SDK player transcript boundary", () => {
@@ -112,6 +119,29 @@ describe("SDK player transcript boundary", () => {
     );
     expect(
       parseSdkTranscript([header, call(1, 1), call(2, 2), call(3, 1)]).tag,
+    ).toBe("invalid");
+  });
+
+  test("binds the first call to the setup session", () => {
+    const foreignSession = { step: 1 };
+    const call = {
+      type: "sdk-call",
+      seq: 1,
+      continuation: 1,
+      operation: "discoverBattleActs",
+      outcome: "returned",
+      inputSession: foreignSession,
+      inputSessionSha256: sha256Canonical(foreignSession),
+      input: {},
+      outputSession: foreignSession,
+      outputSessionSha256: sha256Canonical(foreignSession),
+      result: [],
+      resultSha256: sha256Canonical([]),
+    };
+
+    expect(parseSdkTranscript([header, call]).tag).toBe("invalid");
+    expect(
+      parseSdkTranscript([{ ...header, initialSession: new Map() }]).tag,
     ).toBe("invalid");
   });
 

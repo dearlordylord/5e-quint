@@ -46,9 +46,12 @@ under `scripts/raw-swarm/out/` and are gitignored.
 This section owns the intended workflow. The checked-in campaign runner
 implements stochastic whole-prose generation plus final RAW and artifact-policy
 review. The direct-SDK tracer implements the single-controller execution and
-evidence seam for one fixed composition. Connecting arbitrary generated prose
-to SDK setup, multiple controllers, and branching remain later workflow
-increments.
+evidence seam. A scenario now supplies adjacent ordinary TypeScript that builds
+its initial session through a narrow public-SDK setup context. The first setup
+context exposes the canonical SRD stat-block catalog; character-build
+composition, multiple controllers, and branching remain later workflow
+increments. Missing setup capability is reported as an obstruction rather than
+modeled in a harness language.
 
 ### Generate battle scenarios as prose
 
@@ -143,6 +146,28 @@ command derives both output filenames from the validated scenario id. Admitted
 artifacts go under `sdk-player/scenarios/`; rejected diagnostic output goes
 under ignored `out/rejected-scenarios/` and is not playable input.
 
+An admitted prose artifact is not parsed. A separate external coding agent
+authors an adjacent `<scenario-id>.setup.ts` against
+`@dnd/scenario-setup-sdk`. The setup is ordinary TypeScript that either returns
+the canonical initial `BattleRuntimeSession` or reports a precise obstruction.
+It may select from `STAT_BLOCKS.json`; it must not substitute missing creatures,
+drop required combatants, or encode later tactics. From a clean revision run:
+
+```sh
+SCENARIO=generated-battle-example
+
+mise exec -- pnpm exec tsx scripts/raw-swarm/author-scenario-setup.ts \
+  "$SCENARIO"
+```
+
+The author receives only the prose, its exact admission review, public
+declarations and documentation, and the public catalog summary in a disposable
+scratch consumer. It may project scenario-fixed facts only; delegated player or
+GM choices and unresolved Table Decisions remain with their owners. If the
+setup API cannot defer them, the setup returns an obstruction. Only the
+resulting setup source is retained. This is the same code-consumer boundary as
+play, not a scenario interpreter or generated build schema.
+
 ### Execute through the public SDK
 
 The intended primary player behaves as an external SDK consumer, not as an
@@ -217,11 +242,14 @@ call-stream replay and adversarial review.
 MCP may remain an optional parity and compound-coverage lane. It is not a
 required part of the target SDK-player workflow.
 
-## Run the direct-SDK tracer
+## Run a direct-SDK scenario
 
-The first tracer is one manually authored Goblin Warrior versus Skeleton prose
-scenario. It deliberately does not generate scenarios or introduce a scenario
-interpreter. The player receives a scratch directory outside the checkout with:
+The first tracer remains a manually authored Goblin Warrior versus Skeleton
+scenario. Every runnable scenario is identified by an adjacent `.md` prose
+file, admitted `.scenario-review.json`, and `.setup.ts` public-SDK setup file;
+the runner refuses incomplete triplets. It does not parse prose or introduce a
+scenario interpreter. The player receives a scratch directory outside the
+checkout with:
 
 - the final prose scenario and public battle-runtime README;
 - declaration-only public SDK artifacts;
@@ -237,6 +265,17 @@ that exact copy, executes it, and records its calls. This is a cooperative
 external-consumer test boundary, not a hostile-code security sandbox: the
 player is instructed to use only the provided files and public SDK, and the
 harness does not attempt to defend against malicious submitted JavaScript.
+
+Before play, the supervisor typechecks and evaluates the exact adjacent setup
+source. The transcript header is the single owner of its SHA-256, complete
+initial-session projection/hash, and setup observation. Replay re-evaluates the
+same setup and requires every one of those facts to match before applying the
+first recorded SDK call.
+
+An obstructed setup is a successful diagnostic run, not a failed or fabricated
+battle. The runner retains its setup source and one-call-free transcript, does
+not launch the player, and supports the same replay, report ingestion, and
+whole-trace review flow.
 
 The agent edits ordinary TypeScript inside the continuation. The supervisor
 requires every canonical SDK operation to consume the one current session,
@@ -274,7 +313,7 @@ Run and import the independent whole-trace RAW review exactly like the MCP lane:
 
 ```sh
 mise exec -- scripts/raw-swarm/run-raw-review.sh \
-  "scripts/raw-swarm/reviews/$SCENARIO.prompt.txt" \
+  scripts/raw-swarm/reviews/sdk-player.prompt.txt \
   "scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/sdk-calls.jsonl" \
   "scripts/raw-swarm/out/$SCENARIO-sdk-review.json" \
   "scripts/raw-swarm/out/$SCENARIO-sdk-review-agent.log"
@@ -295,11 +334,12 @@ provided files. Neither claim turns submitted TypeScript into untrusted code;
 that is deliberately outside this game-testing prototype.
 
 Retained evidence lives under
-`scripts/raw-swarm/out/<scenario>-sdk-player/`: `SCENARIO.md`, the agent log and
-final message, the latest observation, the final attempt, the replay bundle,
-and `evidence/` containing the append-only program, frozen-prefix facts,
-canonical SDK JSONL, observations, and final conclusion. The disposable compiler
-and declaration distribution remains in the deleted scratch directory.
+`scripts/raw-swarm/out/<scenario>-sdk-player/`: `SCENARIO.md`,
+`SCENARIO_REVIEW.json`, the agent log and final message, the latest observation,
+the final attempt, the replay bundle, and `evidence/` containing the scenario
+setup source, append-only program, frozen-prefix facts, canonical SDK JSONL,
+observations, and final conclusion. The disposable compiler and declaration
+distribution remains in the deleted scratch directory.
 
 Run the focused executable gate with:
 

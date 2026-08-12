@@ -1,6 +1,7 @@
 import { execFileSync, spawn } from "node:child_process";
 import {
   appendFileSync,
+  copyFileSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -14,7 +15,8 @@ import { describe, expect, test } from "vitest";
 import { repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
 import { buildConsumerDistribution } from "./consumer-distribution.ts";
-import { TRACER_SCENARIO_ID } from "./fixed-scenario.ts";
+
+const TRACER_SCENARIO_ID = "tracer-001-goblin-warrior-vs-skeleton";
 
 function filesBelow(directory: string): readonly string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -39,6 +41,64 @@ describe("SDK player consumer distribution", () => {
       trustedDestination,
       scenarioPath,
     });
+    writeFileSync(join(destination, "SCENARIO_REVIEW.json"), "{}\n");
+    const obstructionRoot = mkdtempSync(
+      join(tmpdir(), "dnd-player-obstruction-"),
+    );
+    const obstructionPlayer = join(obstructionRoot, "player");
+    const obstructionTrusted = join(obstructionRoot, "trusted");
+    buildConsumerDistribution({
+      destination: obstructionPlayer,
+      trustedDestination: obstructionTrusted,
+      scenarioPath,
+    });
+    mkdirSync(join(obstructionTrusted, "evidence"));
+    writeFileSync(
+      join(obstructionTrusted, "evidence/setup.ts"),
+      `import type { ScenarioSetup } from "@dnd/scenario-setup-sdk";
+
+export const setupScenario: ScenarioSetup = () => ({
+  kind: "obstructed",
+  obstruction: "Required character-build setup is unavailable.",
+  observation: { missing: "character-build" },
+});
+`,
+    );
+    const obstructionSupervisor = join(obstructionTrusted, "supervisor.mjs");
+    execFileSync(
+      process.execPath,
+      [
+        obstructionSupervisor,
+        "init",
+        "obstructed-scenario",
+        "a".repeat(40),
+        "instructionalFallback",
+        "b".repeat(64),
+        "c".repeat(64),
+        "d".repeat(64),
+      ],
+      { cwd: obstructionTrusted, stdio: "pipe" },
+    );
+    expect(
+      execFileSync(process.execPath, [obstructionSupervisor, "replay"], {
+        cwd: obstructionTrusted,
+        encoding: "utf8",
+      }),
+    ).toContain("SDK setup obstruction replay deterministic");
+    expect(
+      readFileSync(
+        join(obstructionTrusted, "evidence/sdk-calls.jsonl"),
+        "utf8",
+      ),
+    ).toContain('"setupOutcome":"obstructed"');
+    mkdirSync(join(trustedDestination, "evidence"));
+    copyFileSync(
+      resolve(
+        repoRoot,
+        `scripts/raw-swarm/sdk-player/scenarios/${TRACER_SCENARIO_ID}.setup.ts`,
+      ),
+      join(trustedDestination, "evidence/setup.ts"),
+    );
 
     expect(
       filesBelow(destination)
@@ -105,6 +165,8 @@ export const continueBattle: PlayerContinuation = (context) => {
         "a".repeat(40),
         "instructionalFallback",
         "b".repeat(64),
+        "c".repeat(64),
+        "d".repeat(64),
       ],
       supervisorOptions,
     );

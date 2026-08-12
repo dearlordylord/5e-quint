@@ -18,6 +18,16 @@ export type ConsumerDistributionInput = {
   readonly scenarioPath: string;
 };
 
+export type ScenarioSetupDistributionInput = {
+  readonly destination: string;
+  readonly scenarioPath: string;
+  readonly scenarioReviewPath: string;
+  readonly statBlocks: readonly {
+    readonly id: string;
+    readonly name: string;
+  }[];
+};
+
 const declarationDiagnosticCodes = new Set(["TS4023", "TS4058", "TS7056"]);
 
 function emitPublicDeclarations(destination: string): void {
@@ -66,6 +76,7 @@ function emitPublicDeclarations(destination: string): void {
   const requiredDeclarations = [
     "scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
     "scripts/raw-swarm/sdk-player/continuation-contract.d.ts",
+    "scripts/raw-swarm/sdk-player/scenario-setup-contract.d.ts",
     "packages/battle-runtime/src/index.d.ts",
     "packages/battle-runtime/src/battle-state-execution.d.ts",
     "packages/battle-runtime/src/battle-session-execution.d.ts",
@@ -92,6 +103,12 @@ function consumerTsconfig(baseUrl: string, include: readonly string[]): string {
             resolve(
               baseUrl,
               "declarations/scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
+            ),
+          ],
+          "@dnd/scenario-setup-sdk": [
+            resolve(
+              baseUrl,
+              "declarations/scripts/raw-swarm/sdk-player/scenario-setup-contract.d.ts",
             ),
           ],
           "@dnd/battle-runtime": [
@@ -201,4 +218,48 @@ export function buildConsumerDistribution(
     sourcemap: false,
     logLevel: "silent",
   });
+}
+
+export function buildScenarioSetupDistribution(
+  input: ScenarioSetupDistributionInput,
+): void {
+  mkdirSync(input.destination, { recursive: true });
+  emitPublicDeclarations(input.destination);
+  copyFileSync(input.scenarioPath, resolve(input.destination, "SCENARIO.md"));
+  copyFileSync(
+    input.scenarioReviewPath,
+    resolve(input.destination, "SCENARIO_REVIEW.json"),
+  );
+  copyFileSync(
+    resolve(repoRoot, "packages/battle-runtime/README.md"),
+    resolve(input.destination, "PUBLIC_SDK.md"),
+  );
+  copyFileSync(
+    resolve(repoRoot, "scripts/raw-swarm/sdk-player/SCENARIO_SETUP.md"),
+    resolve(input.destination, "SCENARIO_SETUP.md"),
+  );
+  writeFileSync(
+    resolve(input.destination, "STAT_BLOCKS.json"),
+    `${JSON.stringify(input.statBlocks, null, 2)}\n`,
+  );
+  writeFileSync(
+    resolve(input.destination, "tsconfig.json"),
+    consumerTsconfig(input.destination, ["setup.ts"]),
+  );
+  writeFileSync(
+    resolve(input.destination, "setup.ts"),
+    `import type { ScenarioSetup } from "@dnd/scenario-setup-sdk";
+
+export const setupScenario: ScenarioSetup = () => ({
+  kind: "obstructed",
+  obstruction: "Replace this starter with the closest faithful public-SDK setup.",
+  observation: { setup: "not-authored" },
+});
+`,
+  );
+  cpSync(
+    resolve(repoRoot, "node_modules/typescript"),
+    resolve(input.destination, "tooling/typescript"),
+    { recursive: true, dereference: true },
+  );
 }

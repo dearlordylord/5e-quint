@@ -6,6 +6,7 @@ RAW_REVIEW_PROMPT=${1:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> 
 RAW_REVIEW_TRANSCRIPT=${2:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}
 RAW_REVIEW_OUTPUT=${3:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}
 RAW_REVIEW_LOG=${4:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}
+RAW_REVIEW_INSTRUCTIONS=$(<"$RAW_REVIEW_PROMPT")
 RAW_REVIEW_SCHEMA=$(mktemp)
 trap 'rm -f "$RAW_REVIEW_SCHEMA"' EXIT
 
@@ -20,5 +21,5 @@ codex exec \
   -c 'model_reasoning_effort="high"' \
   --output-schema "$RAW_REVIEW_SCHEMA" \
   --output-last-message "$RAW_REVIEW_OUTPUT" \
-  "$(<"$RAW_REVIEW_PROMPT")" \
+  "${RAW_REVIEW_INSTRUCTIONS//\{\{TRANSCRIPT_PATH\}\}/$RAW_REVIEW_TRANSCRIPT}" \
   >"$RAW_REVIEW_LOG" 2>&1

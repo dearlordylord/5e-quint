@@ -6,6 +6,8 @@ import {
   StartedAtSchema,
   sha256Canonical,
 } from "../transcript.ts";
+import type { JsonValue } from "./continuation-contract.ts";
+import { isJsonValue } from "./json-value.ts";
 
 export const SDK_PLAYER_OPERATIONS = [
   "discoverBattleActs",
@@ -24,7 +26,7 @@ const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.greaterThan(0),
 );
 
-const HeaderSchema = Schema.Struct({
+const HeaderCommonFields = {
   type: Schema.Literal("sdk-player-header"),
   scenarioId: ScenarioIdSchema,
   gitSha: GitShaSchema,
@@ -34,7 +36,24 @@ const HeaderSchema = Schema.Struct({
     "instructionalFallback",
   ),
   replaySupervisorSha256: HashSchema,
-});
+  scenarioSha256: HashSchema,
+  scenarioReviewSha256: HashSchema,
+  setupSha256: HashSchema,
+  setupObservation: Schema.Unknown,
+} as const;
+const HeaderSchema = Schema.Union(
+  Schema.Struct({
+    ...HeaderCommonFields,
+    setupOutcome: Schema.Literal("ready"),
+    initialSession: Schema.Unknown,
+    initialSessionSha256: HashSchema,
+  }),
+  Schema.Struct({
+    ...HeaderCommonFields,
+    setupOutcome: Schema.Literal("obstructed"),
+    obstruction: Schema.NonEmptyTrimmedString,
+  }),
+);
 const CallCommonFields = {
   type: Schema.Literal("sdk-call"),
   seq: PositiveIntegerSchema,
@@ -64,13 +83,31 @@ const CallSchema = Schema.Union(
   }),
 );
 
-export type SdkTranscriptHeader = Schema.Schema.Type<typeof HeaderSchema>;
+type SdkTranscriptHeader = Schema.Schema.Type<typeof HeaderSchema>;
 export type SdkCallRecord = Schema.Schema.Type<typeof CallSchema>;
 
-export type ParsedSdkTranscript = {
-  readonly header: SdkTranscriptHeader;
-  readonly calls: readonly SdkCallRecord[];
+type ReadySdkTranscriptHeader = Omit<
+  Extract<SdkTranscriptHeader, { readonly setupOutcome: "ready" }>,
+  "initialSession" | "setupObservation"
+> & {
+  readonly initialSession: JsonValue;
+  readonly setupObservation: JsonValue;
 };
+
+type ObstructedSdkTranscriptHeader = Omit<
+  Extract<SdkTranscriptHeader, { readonly setupOutcome: "obstructed" }>,
+  "setupObservation"
+> & { readonly setupObservation: JsonValue };
+
+type ParsedSdkTranscript =
+  | {
+      readonly header: ReadySdkTranscriptHeader;
+      readonly calls: readonly SdkCallRecord[];
+    }
+  | {
+      readonly header: ObstructedSdkTranscriptHeader;
+      readonly calls: readonly [];
+    };
 
 type ParseResult<A> =
   | { readonly tag: "valid"; readonly value: A }
@@ -86,6 +123,49 @@ export function parseSdkTranscript(
   if (Either.isLeft(header)) {
     return { tag: "invalid", message: "SDK transcript requires one header." };
   }
+  if (
+    header.right.setupOutcome === "ready" &&
+    (!isJsonValue(header.right.initialSession) ||
+      sha256Canonical(header.right.initialSession) !==
+        header.right.initialSessionSha256)
+  ) {
+    return {
+      tag: "invalid",
+      message: "SDK transcript header has a mismatched initial session hash.",
+    };
+  }
+  const setupObservation = header.right.setupObservation;
+  if (!isJsonValue(setupObservation)) {
+    return {
+      tag: "invalid",
+      message: "SDK transcript header has a non-JSON setup observation.",
+    };
+  }
+  if (header.right.setupOutcome === "obstructed") {
+    if (callInputs.length > 0) {
+      return {
+        tag: "invalid",
+        message: "An obstructed SDK setup cannot contain player calls.",
+      };
+    }
+    return {
+      tag: "valid",
+      value: {
+        header: {
+          ...header.right,
+          setupObservation,
+        },
+        calls: [],
+      },
+    };
+  }
+  const initialSession = header.right.initialSession;
+  if (!isJsonValue(initialSession)) {
+    return {
+      tag: "invalid",
+      message: "SDK transcript header has a non-JSON initial session.",
+    };
+  }
   const calls = callInputs.map((input) =>
     Schema.decodeUnknownEither(CallSchema, { onExcessProperty: "error" })(
       input,
@@ -98,7 +178,10 @@ export function parseSdkTranscript(
   const decodedCalls = calls.flatMap((call) =>
     Either.isRight(call) ? [call.right] : [],
   );
-  let replayCursorSha256: string | undefined;
+  let replayCursorSha256 =
+    header.right.setupOutcome === "ready"
+      ? header.right.initialSessionSha256
+      : undefined;
   for (const [index, call] of decodedCalls.entries()) {
     if (call.seq !== index + 1) {
       return {
@@ -160,7 +243,11 @@ export function parseSdkTranscript(
   return {
     tag: "valid",
     value: {
-      header: header.right,
+      header: {
+        ...header.right,
+        initialSession,
+        setupObservation,
+      },
       calls: decodedCalls,
     },
   };

@@ -1,5 +1,5 @@
 {
-  "include": ["consumer-entry.ts"],
+  "include": ["consumer-entry.ts", "scenario-setup-contract.ts"],
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
@@ -9,6 +9,9 @@
     "baseUrl": "../../..",
     "paths": {
       "@dnd/battle-runtime": ["packages/battle-runtime/src/index.ts"],
+      "@dnd/scenario-setup-sdk": [
+        "scripts/raw-swarm/sdk-player/scenario-setup-contract.ts"
+      ],
       "@dnd/shared/*": ["packages/shared/src/*"],
       "@dnd/shared-algebras/*": ["packages/shared-algebras/src/*"],
       "@dnd/surface/*": ["packages/surface/src/*"]

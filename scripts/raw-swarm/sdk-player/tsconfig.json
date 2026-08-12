@@ -6,7 +6,11 @@
     "../report.ts",
     "../review-preflight.ts",
     "../generate-scenario.ts",
+    "../author-scenario-setup.ts",
     "../scenario-campaign.ts",
+    "scenario-setup-contract.ts",
+    "scenario-setup-runtime.ts",
+    "scenarios/*.setup.ts",
     "../transcript.ts"
   ],
   "exclude": ["**/*.test.ts"],
@@ -18,6 +22,7 @@
     "types": ["node"],
     "paths": {
       "@dnd/battle-runtime": ["../../../packages/battle-runtime/src/index.ts"],
+      "@dnd/scenario-setup-sdk": ["./scenario-setup-contract.ts"],
       "@dnd/shared/*": ["../../../packages/shared/src/*"],
       "@dnd/shared-algebras/*": ["../../../packages/shared-algebras/src/*"],
       "@dnd/surface/*": ["../../../packages/surface/src/*"]

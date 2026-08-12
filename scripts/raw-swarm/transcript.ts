@@ -26,6 +26,10 @@ export function sha256Canonical(value: unknown): string {
   return createHash("sha256").update(canonicalJson(value)).digest("hex");
 }
 
+export function sha256Text(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
 export interface GitCommandReader {
   readonly read: (args: readonly string[]) => string;
 }

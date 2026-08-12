@@ -138,6 +138,13 @@ class RuntimeSession {
  */
 export type BattleRuntimeSession = RuntimeSession;
 
+/** Recognize the nominal session value constructed by this package. */
+export function isBattleRuntimeSession(
+  value: unknown,
+): value is BattleRuntimeSession {
+  return value instanceof RuntimeSession;
+}
+
 /** Package-internal construction after state/context admission. */
 export function battleRuntimeSessionFromAdmittedContext(
   state: import("./battle-state-execution.ts").BattleState,

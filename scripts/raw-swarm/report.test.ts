@@ -647,6 +647,13 @@ try {
             startedAt: "2026-08-12T00:00:00.000Z",
             consumerIsolation: "permissionProfile",
             replaySupervisorSha256: "f".repeat(64),
+            scenarioSha256: "d".repeat(64),
+            scenarioReviewSha256: "c".repeat(64),
+            setupSha256: "e".repeat(64),
+            setupOutcome: "ready",
+            initialSession: { step: 0 },
+            initialSessionSha256: sha256Canonical({ step: 0 }),
+            setupObservation: { setup: "report-fixture" },
           },
           {
             type: "sdk-call",

@@ -10,15 +10,22 @@ import {
   openSync,
   readFileSync,
   rmSync,
-  symlinkSync,
-  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
+import {
+  consumerPermissionProfileAvailable,
+  createConsumerCodexHome,
+} from "./sdk-player/consumer-codex-profile.ts";
 import { buildConsumerDistribution } from "./sdk-player/consumer-distribution.ts";
-import { TRACER_SCENARIO_ID } from "./sdk-player/fixed-scenario.ts";
-import { currentGitRevision, repoRoot } from "./transcript.ts";
+import { admittedScenarioIdentity } from "./scenario-admission.ts";
+import {
+  currentGitRevision,
+  decodeScenarioId,
+  repoRoot,
+} from "./transcript.ts";
+import { Either } from "effect";
 
 function fail(message: string): never {
   throw new Error(message);
@@ -37,66 +44,11 @@ function runCommand(
   }
 }
 
-function permissionProfileHome(): string {
-  const home = mkdtempSync(resolve(tmpdir(), "dnd-sdk-player-codex-"));
-  writeFileSync(
-    resolve(home, "config.toml"),
-    [
-      'default_permissions = "player"',
-      "",
-      "[permissions.player.filesystem]",
-      '":minimal" = "read"',
-      "",
-      '[permissions.player.filesystem.":workspace_roots"]',
-      '"." = "write"',
-      "",
-    ].join("\n"),
-  );
-  const configuredHome =
-    process.env.CODEX_HOME ?? resolve(process.env.HOME ?? "", ".codex");
-  symlinkSync(resolve(configuredHome, "auth.json"), resolve(home, "auth.json"));
-  return home;
-}
-
-function permissionProfileAvailable(
-  codexHome: string,
-  scratch: string,
-): boolean {
-  const writableProbe = resolve(scratch, ".isolation-write-probe");
-  const result = spawnSync(
-    "codex",
-    [
-      "sandbox",
-      "-C",
-      scratch,
-      "-P",
-      "player",
-      "--",
-      "sh",
-      "-c",
-      'printf isolated > "$1" && ! cat "$2" >/dev/null 2>&1',
-      "--",
-      writableProbe,
-      resolve(repoRoot, "package.json"),
-    ],
-    {
-      cwd: scratch,
-      env: { ...process.env, CODEX_HOME: codexHome },
-      stdio: "ignore",
-    },
-  );
-  const available =
-    result.status === 0 &&
-    existsSync(writableProbe) &&
-    readFileSync(writableProbe, "utf8") === "isolated";
-  rmSync(writableProbe, { force: true });
-  return available;
-}
-
 function retainRun(player: string, trusted: string, output: string): void {
   mkdirSync(output, { recursive: true });
   const retained = [
     "SCENARIO.md",
+    "SCENARIO_REVIEW.json",
     "OBSERVATION.json",
     "agent-final.txt",
     "agent.log",
@@ -114,35 +66,55 @@ function retainRun(player: string, trusted: string, output: string): void {
 
 async function main(args: readonly string[]): Promise<void> {
   const [scenarioId, ...options] = args;
+  const decodedScenarioId = decodeScenarioId(scenarioId);
   const instructionalFallback = options.includes("--instructional-isolation");
   if (
-    scenarioId !== TRACER_SCENARIO_ID ||
+    Either.isLeft(decodedScenarioId) ||
     options.some((option) => option !== "--instructional-isolation") ||
     options.filter((option) => option === "--instructional-isolation").length >
       1
   ) {
-    fail(
-      `Usage: run-sdk-player.ts ${TRACER_SCENARIO_ID} [--instructional-isolation]`,
-    );
+    fail("Usage: run-sdk-player.ts <scenario-id> [--instructional-isolation]");
   }
+  const acceptedScenarioId = decodedScenarioId.right;
   const revision = currentGitRevision();
   if (revision.tag === "dirty") {
     fail("SDK player recording requires a clean Git worktree.");
   }
   const output = resolve(
     repoRoot,
-    `scripts/raw-swarm/out/${scenarioId}-sdk-player`,
+    `scripts/raw-swarm/out/${acceptedScenarioId}-sdk-player`,
   );
   if (existsSync(output)) {
     fail(`Refusing to overwrite SDK player evidence: ${output}`);
   }
   const scenarioPath = resolve(
     repoRoot,
-    `scripts/raw-swarm/sdk-player/scenarios/${scenarioId}.md`,
+    `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.md`,
   );
+  const setupPath = resolve(
+    repoRoot,
+    `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.setup.ts`,
+  );
+  const scenarioReviewPath = `${scenarioPath}.scenario-review.json`;
+  if (
+    !existsSync(scenarioPath) ||
+    !existsSync(scenarioReviewPath) ||
+    !existsSync(setupPath)
+  ) {
+    fail(
+      `Scenario requires adjacent .md, .scenario-review.json, and .setup.ts files: ${acceptedScenarioId}`,
+    );
+  }
+  const admission = admittedScenarioIdentity({
+    scenarioId: acceptedScenarioId,
+    scenarioPath,
+    reviewPath: scenarioReviewPath,
+  });
+  if (Either.isLeft(admission)) fail(admission.left);
   const scratch = mkdtempSync(resolve(tmpdir(), "dnd-sdk-player-"));
   const trusted = mkdtempSync(resolve(tmpdir(), "dnd-sdk-supervisor-"));
-  const codexHome = permissionProfileHome();
+  const codexHome = createConsumerCodexHome();
   let supervisorProcess: ReturnType<typeof spawn> | undefined;
   let supervisorLog: number | undefined;
   try {
@@ -151,9 +123,15 @@ async function main(args: readonly string[]): Promise<void> {
       trustedDestination: trusted,
       scenarioPath,
     });
+    copyFileSync(scenarioReviewPath, resolve(scratch, "SCENARIO_REVIEW.json"));
+    mkdirSync(resolve(trusted, "evidence"));
+    copyFileSync(setupPath, resolve(trusted, "evidence/setup.ts"));
     mkdirSync(resolve(scratch, ".requests"));
     mkdirSync(resolve(scratch, ".responses"));
-    const profileAvailable = permissionProfileAvailable(codexHome, scratch);
+    const profileAvailable = consumerPermissionProfileAvailable(
+      codexHome,
+      scratch,
+    );
     if (!profileAvailable && !instructionalFallback) {
       fail(
         "Codex filesystem isolation is unavailable. Install/configure bubblewrap, or explicitly record the weaker --instructional-isolation fallback.",
@@ -167,15 +145,23 @@ async function main(args: readonly string[]): Promise<void> {
       [
         "supervisor.mjs",
         "init",
-        scenarioId,
+        acceptedScenarioId,
         revision.sha,
         consumerIsolation,
         createHash("sha256")
           .update(readFileSync(resolve(trusted, "supervisor.mjs")))
           .digest("hex"),
+        admission.right.scenarioSha256,
+        admission.right.scenarioReviewSha256,
       ],
       trusted,
     );
+    if (!existsSync(resolve(trusted, "evidence/frozen-prefix.json"))) {
+      console.log(
+        `Scenario setup recorded an obstruction; player execution was not started: ${acceptedScenarioId}`,
+      );
+      return;
+    }
 
     supervisorLog = openSync(resolve(trusted, "supervisor.log"), "w");
     supervisorProcess = spawn(

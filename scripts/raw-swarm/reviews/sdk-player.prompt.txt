@@ -1,0 +1,31 @@
+Adversarially review the direct-SDK player evidence whose transcript is
+{{TRANSCRIPT_PATH}}.
+
+Derive the retained run directory from that transcript path. Read SCENARIO.md,
+SCENARIO_REVIEW.json, evidence/setup.ts, and the transcript header. If setup is
+ready, also read the retained program, observations, final outcome, and agent
+summary. If setup is obstructed, those player artifacts intentionally do not
+exist: review whether the setup faithfully identified a real scenario/SDK
+obstruction without inventing or dropping scenario facts.
+
+Treat recorded canonical SDK calls and results, not a player's prose summary,
+as execution authority. Try to falsify setup, Initiative, turn ownership,
+action economy, targeting, range and spatial claims, attack and damage
+arithmetic, Hit Points, zero-HP handling, completion claims, and any stated
+obstruction.
+
+Use only .references/srd-5.2.1/ as RAW authority and consult ASSUMPTIONS.md for
+registered ambiguity decisions. Do not browse external D&D sources.
+Distinguish an SDK/runtime bug from a direct-SDK adapter defect, invalid player
+continuation, invalid scenario, unsupported capability, corpus ambiguity,
+assumption divergence, or reviewer error.
+
+Copy scenarioId and gitSha exactly from the first transcript line. Set
+transcriptSha256 to the lowercase SHA-256 of the exact transcript file bytes.
+Classify invalid or implausible player-authored decisions as player-invalid;
+reserve scenario-invalid for a defect in the authored scenario itself.
+
+Return only the JSON object required by the provided output schema. Every
+verdict needs a concise claim and concrete evidence naming SDK call sequences
+or setup evidence, artifact facts, and local RAW citations. Include passes for
+material claims that survive review, not merely failures.

@@ -1,0 +1,14 @@
+{
+  "scenarioId": "tracer-001-goblin-warrior-vs-skeleton",
+  "scenarioSha256": "7a078a32f17b5e545d2bbda3975155ea41a06104c717adf7936a411a7e105dbf",
+  "gitSha": "30194c5898a68ab8e6eb23b6cb50f0a2a15b746e",
+  "disposition": "admitted",
+  "rawReview": {
+    "classification": "supported",
+    "evidence": "The local SRD Combat rules support fixed Initiative totals, an exact 60-foot separation, open ground, clear sight, and ordinary opposed combat. Controller-authored roll totals are explicitly identified as experiment inputs rather than random evidence."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "The scenario uses only SRD Goblin Warrior and Skeleton identity, generic battlefield facts, and independently authored experiment instructions."
+  }
+}

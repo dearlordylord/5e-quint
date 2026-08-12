@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { constants } from "node:fs";
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import {
   appendFileSync,
   closeSync,
@@ -10,6 +10,7 @@ import {
   readFileSync,
   readdirSync,
   renameSync,
+  rmSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -32,7 +33,8 @@ import type {
   PlayerSdk,
 } from "./continuation-contract.ts";
 import { authoredAttemptBody } from "./attempt-source.ts";
-import { tracerScenarioSession, TRACER_SCENARIO_ID } from "./fixed-scenario.ts";
+import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
+import { isJsonValue } from "./json-value.ts";
 import { decodeSdkCallInput, type SdkCallInput } from "./sdk-replay-input.ts";
 import {
   parseSdkTranscript,
@@ -40,7 +42,7 @@ import {
   type SdkCallRecord,
   type SdkPlayerOperation,
 } from "./sdk-transcript.ts";
-import { canonicalJson, sha256Canonical } from "../transcript.ts";
+import { canonicalJson, sha256Canonical, sha256Text } from "../transcript.ts";
 
 const transcriptPath = resolve("evidence/sdk-calls.jsonl");
 const programPath = resolve("evidence/program.ts");
@@ -50,6 +52,7 @@ const latestObservationPath = resolve("OBSERVATION.json");
 const finalPath = resolve("evidence/final.json");
 const playerRoot = resolve(process.env.RAW_SWARM_PLAYER_ROOT ?? process.cwd());
 const submissionsPath = resolve("submissions");
+const setupPath = resolve("evidence/setup.ts");
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 const NonNegativeIntegerSchema = Schema.Number.pipe(
@@ -75,10 +78,6 @@ const PROGRAM_PREFIX = `import type { PlayerContinuation } from "@dnd/player-sdk
 
 function fail(message: string): never {
   throw new Error(message);
-}
-
-function sha256Bytes(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
 }
 
 function jsonValue(value: unknown): JsonValue {
@@ -152,7 +151,7 @@ function verifyFrozenPrefix(): FrozenPrefix {
   const prefix = readPrefix();
   const program = readFileSync(programPath, "utf8");
   const byteLength = Buffer.byteLength(program);
-  const hash = sha256Bytes(program);
+  const hash = sha256Text(program);
   if (byteLength !== prefix.frozenByteLength || hash !== prefix.frozenSha256) {
     fail("Previously observed SDK program source was modified.");
   }
@@ -162,35 +161,77 @@ function verifyFrozenPrefix(): FrozenPrefix {
   return prefix;
 }
 
-function initialize(
+async function initialize(
   scenarioId: string,
   gitSha: string,
   consumerIsolation: string,
   replaySupervisorSha256: string,
-): void {
-  if (scenarioId !== TRACER_SCENARIO_ID) {
-    fail(`Unsupported tracer scenario: ${scenarioId}`);
-  }
+  scenarioSha256: string,
+  scenarioReviewSha256: string,
+): Promise<void> {
   if (existsSync(transcriptPath)) fail("SDK player evidence already exists.");
   mkdirSync(resolve("evidence"), { recursive: true });
-  const program = PROGRAM_PREFIX;
-  writeFileSync(programPath, program, "utf8");
-  atomicJson(prefixPath, {
-    frozenByteLength: Buffer.byteLength(program),
-    frozenSha256: sha256Bytes(program),
-    continuationCount: 0,
-    run: { kind: "active" },
-  } satisfies FrozenPrefix);
-  appendFileSync(
-    transcriptPath,
-    `${JSON.stringify({
-      type: "sdk-player-header",
-      scenarioId,
-      gitSha,
-      startedAt: new Date().toISOString(),
-      consumerIsolation,
-      replaySupervisorSha256,
-    })}\n`,
+  if (!existsSync(setupPath)) fail("Scenario setup source is missing.");
+  const setupConfigPath = resolve("evidence/setup-tsconfig.json");
+  const setupConfig = JSON.parse(
+    readFileSync(resolve("tsconfig.json"), "utf8"),
+  ) as Readonly<Record<string, unknown>>;
+  writeFileSync(
+    setupConfigPath,
+    `${JSON.stringify({ ...setupConfig, include: [setupPath] }, null, 2)}\n`,
+  );
+  try {
+    typecheckSubmission(setupPath, setupConfigPath);
+  } finally {
+    rmSync(setupConfigPath, { force: true });
+  }
+  const setup = await evaluateScenarioSetup(setupPath);
+  if (setup.tag === "invalid") fail(setup.message);
+  const setupSha256 = sha256Text(readFileSync(setupPath, "utf8"));
+  const headerCommon = {
+    type: "sdk-player-header",
+    scenarioId,
+    gitSha,
+    startedAt: new Date().toISOString(),
+    consumerIsolation,
+    replaySupervisorSha256,
+    setupSha256,
+    setupObservation: setup.observation,
+    scenarioSha256,
+    scenarioReviewSha256,
+  } as const;
+  Match.value(setup).pipe(
+    Match.when({ tag: "obstructed" }, ({ obstruction }) => {
+      appendFileSync(
+        transcriptPath,
+        `${JSON.stringify({
+          ...headerCommon,
+          setupOutcome: "obstructed",
+          obstruction,
+        })}\n`,
+      );
+    }),
+    Match.when({ tag: "ready" }, ({ session }) => {
+      const initialSession = jsonValue(session);
+      const program = PROGRAM_PREFIX;
+      writeFileSync(programPath, program, "utf8");
+      atomicJson(prefixPath, {
+        frozenByteLength: Buffer.byteLength(program),
+        frozenSha256: sha256Text(program),
+        continuationCount: 0,
+        run: { kind: "active" },
+      } satisfies FrozenPrefix);
+      appendFileSync(
+        transcriptPath,
+        `${JSON.stringify({
+          ...headerCommon,
+          setupOutcome: "ready",
+          initialSession,
+          initialSessionSha256: sha256Canonical(initialSession),
+        })}\n`,
+      );
+    }),
+    Match.exhaustive,
   );
 }
 
@@ -254,14 +295,58 @@ function applyCall(
   );
 }
 
-function replay(): {
-  readonly session: BattleRuntimeSession;
-  readonly calls: readonly SdkCallRecord[];
-} {
+type ReplayResult =
+  | {
+      readonly tag: "ready";
+      readonly session: BattleRuntimeSession;
+      readonly calls: readonly SdkCallRecord[];
+    }
+  | {
+      readonly tag: "obstructed";
+      readonly obstruction: string;
+      readonly calls: readonly [];
+    };
+
+async function replay(): Promise<ReplayResult> {
   const parsed = parseSdkTranscript(transcriptRecords());
   if (parsed.tag === "invalid") fail(parsed.message);
-  const initial = tracerScenarioSession();
+  if (
+    sha256Text(readFileSync(setupPath, "utf8")) !==
+    parsed.value.header.setupSha256
+  ) {
+    fail("Scenario setup source hash diverged during replay.");
+  }
+  const initial = await evaluateScenarioSetup(setupPath);
   if (initial.tag === "invalid") fail(initial.message);
+  if (parsed.value.header.setupOutcome === "obstructed") {
+    if (
+      initial.tag !== "obstructed" ||
+      initial.obstruction !== parsed.value.header.obstruction ||
+      canonicalJson(initial.observation) !==
+        canonicalJson(parsed.value.header.setupObservation)
+    ) {
+      fail("Scenario setup obstruction diverged during replay.");
+    }
+    return {
+      tag: "obstructed",
+      obstruction: initial.obstruction,
+      calls: [],
+    };
+  }
+  if (initial.tag === "obstructed") {
+    fail("Scenario setup result diverged during replay.");
+  }
+  const initialSession = jsonValue(initial.session);
+  if (
+    sha256Canonical(initialSession) !==
+      parsed.value.header.initialSessionSha256 ||
+    canonicalJson(initialSession) !==
+      canonicalJson(parsed.value.header.initialSession) ||
+    canonicalJson(initial.observation) !==
+      canonicalJson(parsed.value.header.setupObservation)
+  ) {
+    fail("Scenario setup result diverged during replay.");
+  }
   let session = initial.session;
   for (const call of parsed.value.calls) {
     const cursorHash = sha256Canonical(jsonValue(session));
@@ -324,7 +409,7 @@ function replay(): {
       }
     }
   }
-  return { session, calls: parsed.value.calls };
+  return { tag: "ready", session, calls: parsed.value.calls };
 }
 
 function appendFrozenContinuation(prefix: FrozenPrefix, body: string): number {
@@ -337,7 +422,7 @@ function appendFrozenContinuation(prefix: FrozenPrefix, body: string): number {
   const program = readFileSync(programPath, "utf8");
   atomicJson(prefixPath, {
     frozenByteLength: Buffer.byteLength(program),
-    frozenSha256: sha256Bytes(program),
+    frozenSha256: sha256Text(program),
     continuationCount: continuation,
     run: { kind: "active" },
   } satisfies FrozenPrefix);
@@ -371,47 +456,6 @@ function typecheckSubmission(
   if (result.status !== 0) {
     fail(`Continuation did not typecheck:\n${result.stdout}${result.stderr}`);
   }
-}
-
-function isJsonValue(
-  value: unknown,
-  ancestors: WeakSet<object> = new WeakSet(),
-): value is JsonValue {
-  if (
-    value === null ||
-    typeof value === "string" ||
-    typeof value === "boolean"
-  ) {
-    return true;
-  }
-  if (typeof value === "number") return Number.isFinite(value);
-  if (typeof value !== "object" || value === null) return false;
-  if (ancestors.has(value)) return false;
-  ancestors.add(value);
-  const arrayKeys = Array.isArray(value) ? Object.keys(value) : [];
-  const valid = Array.isArray(value)
-    ? Object.getOwnPropertySymbols(value).length === 0 &&
-      arrayKeys.length === value.length &&
-      arrayKeys.every((key) => {
-        const index = Number(key);
-        return (
-          Number.isInteger(index) &&
-          index >= 0 &&
-          index < 2 ** 32 - 1 &&
-          String(index) === key
-        );
-      }) &&
-      Array.from({ length: value.length }, (_, index) => index).every(
-        (index) =>
-          Object.prototype.hasOwnProperty.call(value, index) &&
-          isJsonValue(value[index], ancestors),
-      )
-    : (Object.getPrototypeOf(value) === Object.prototype ||
-        Object.getPrototypeOf(value) === null) &&
-      Object.getOwnPropertySymbols(value).length === 0 &&
-      Object.values(value).every((entry) => isJsonValue(entry, ancestors));
-  ancestors.delete(value);
-  return valid;
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
@@ -480,7 +524,8 @@ async function runSubmittedSource(source: string): Promise<unknown> {
     renameSync(submissionDirectory, `${submissionDirectory}.rejected`);
     throw error;
   }
-  const replayed = replay();
+  const replayed = await replay();
+  if (replayed.tag === "obstructed") fail(replayed.obstruction);
   let currentSession = replayed.session;
   let frozenContinuation: number | undefined;
   let nextSeq = replayed.calls.length + 1;
@@ -677,6 +722,8 @@ async function main(args: readonly string[]): Promise<void> {
       gitSha,
       consumerIsolation,
       replaySupervisorSha256,
+      scenarioSha256,
+      scenarioReviewSha256,
       ...unexpected
     ] = rest;
     if (
@@ -686,13 +733,24 @@ async function main(args: readonly string[]): Promise<void> {
         consumerIsolation !== "instructionalFallback") ||
       replaySupervisorSha256 === undefined ||
       !/^[0-9a-f]{64}$/.test(replaySupervisorSha256) ||
+      scenarioSha256 === undefined ||
+      !/^[0-9a-f]{64}$/.test(scenarioSha256) ||
+      scenarioReviewSha256 === undefined ||
+      !/^[0-9a-f]{64}$/.test(scenarioReviewSha256) ||
       unexpected.length > 0
     ) {
       fail(
-        "Usage: supervisor.mjs init <scenario-id> <git-sha> <permissionProfile|instructionalFallback> <replay-supervisor-sha256>",
+        "Usage: supervisor.mjs init <scenario-id> <git-sha> <permissionProfile|instructionalFallback> <replay-supervisor-sha256> <scenario-sha256> <scenario-review-sha256>",
       );
     }
-    initialize(scenarioId, gitSha, consumerIsolation, replaySupervisorSha256);
+    await initialize(
+      scenarioId,
+      gitSha,
+      consumerIsolation,
+      replaySupervisorSha256,
+      scenarioSha256,
+      scenarioReviewSha256,
+    );
     return;
   }
   if (command === "attempt") {
@@ -704,9 +762,11 @@ async function main(args: readonly string[]): Promise<void> {
     return;
   }
   if (command === "replay" && rest.length === 0) {
-    const replayed = replay();
+    const replayed = await replay();
     console.log(
-      `SDK player replay deterministic: ${replayed.calls.length} call(s) matched.`,
+      replayed.tag === "ready"
+        ? `SDK player replay deterministic: ${replayed.calls.length} call(s) matched.`
+        : `SDK setup obstruction replay deterministic: ${replayed.obstruction}`,
     );
     return;
   }
