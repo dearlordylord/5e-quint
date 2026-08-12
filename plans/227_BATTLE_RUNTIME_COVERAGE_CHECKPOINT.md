@@ -20,7 +20,7 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 ## Current authoritative baseline
 
 - Date: 2026-08-11
-- Measured code tree committed as: `c928bb502`
+- Measured code tree committed as: `bff2c0503`
 - Command: `pnpm coverage`
 - Result: exit 0; every workspace coverage package completed green
 - Battle-runtime: 230/230 files passed; 2,428 passed and 116 skipped
@@ -29,32 +29,32 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 
 | Metric     |   Covered / total | Coverage | Uncovered | Gap to 99% |
 | ---------- | ----------------: | -------: | --------: | ---------: |
-| Statements | 122,010 / 125,042 |   97.57% |     3,032 |      1,782 |
-| Branches   |   31,286 / 32,973 |   94.88% |     1,687 |      1,358 |
+| Statements | 121,957 / 125,042 |   97.53% |     3,085 |      1,835 |
+| Branches   |   31,290 / 32,978 |   94.88% |     1,688 |      1,359 |
 | Functions  |     4,829 / 4,829 |     100% |         0 |          0 |
-| Lines      | 122,010 / 125,042 |   97.57% |     3,032 |      1,782 |
+| Lines      | 121,957 / 125,042 |   97.53% |     3,085 |      1,835 |
 
 Recompute the 99% gaps after every production-denominator change.
 
-## Latest accepted milestone
+## Latest accepted production milestone
 
-M34 (`c928bb502`) routes the existing Fog Cloud behavior test through its
-canonical setup/cast helpers and covers exact subject/procedure selector
-projections. Focused attribution closed 53 exact residual statements without
-duplicating the Fog Cloud scenario. Reviewer convergence and public coverage
-passed.
+M33 (`3f2f6471a`) tightens schema/admission invariants and closes 14 public
+production statements plus 9 branches. M34's focused 53-site claim and the
+reverted M35 claim targeted `battle-runtime.test-support.ts`, which the public
+coverage policy excludes; neither counts toward issue #227.
 
 ## Current campaign
 
 - Continue coverage before starting issue #254 cyclomatic-complexity work.
 - Select cohesive public scenarios with at least 50 exact, nonduplicate,
-  feasible residual sites before editing; reject smaller audit candidates.
+  feasible residual sites from the public-policy production report before
+  editing; reject test-support and smaller audit candidates.
 - Do not forge internal battle state to reach admission-proven or
   schema-impossible guards. Narrow or remove such guards only with concrete
   proof.
 - Avoid owners already marked completed or rejected in
   `/tmp/dnd-work-ownership.md`; that ledger owns live parallel coordination.
-- The current public static gaps are 1,782 statements/lines and 1,358 branches.
+- The current public static gaps are 1,835 statements/lines and 1,359 branches.
 
 ## Verification and completion
 
