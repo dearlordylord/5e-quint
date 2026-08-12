@@ -9,6 +9,7 @@ import {
   attackRollFill,
   characterAttackSubjectForTest,
   opportunityAttackProcedureSelectionForTest,
+  reactionChoiceWithSubject,
   readyDeclarationFillForTest,
 } from "./battle-runtime.test-support.ts";
 
@@ -247,17 +248,18 @@ function createRuleCoreReactionDriver() {
         ),
       doTakeOpportunityAttack: () => {
         const pendingInterrupt = snapshotBattle(state).pendingInterrupt;
-        const choice = pendingInterrupt?.choices.find(
+        const rawOpportunityChoice = pendingInterrupt?.choices.find(
           (candidate) =>
             candidate.kind === "opportunityAttack" &&
             candidate.reactorId === reactorId &&
             candidate.subject.targetId === interruptedId,
         );
-        if (pendingInterrupt === null || choice === undefined) {
+        if (pendingInterrupt === null || rawOpportunityChoice === undefined) {
           throw new Error(
             "Expected the reactor-to-interrupted Opportunity Attack choice.",
           );
         }
+        const choice = reactionChoiceWithSubject([rawOpportunityChoice]);
         const started = resolveBattleInterrupt({
           state,
           fill: interruptDecisionFill(requireReactionDecisionHole(holes), {
