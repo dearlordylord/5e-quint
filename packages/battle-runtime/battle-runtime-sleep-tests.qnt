@@ -1,15 +1,13 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-condition-save
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-target-admission
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-sleep-repeat-save-lifecycle
 
 module battleRuntimeSleepTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
-  import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 
   run test_sleep_failed_initial_save_adds_pending_repeat_save_until_concentration = {
     val slept = resolveSleepTargetAdmission(initialState, false, false, false)

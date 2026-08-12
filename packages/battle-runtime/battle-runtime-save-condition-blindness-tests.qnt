@@ -3,10 +3,7 @@
 
 module battleRuntimeSaveConditionBlindnessTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeSaveConditionBlindnessFacts.* from "./battle-runtime-save-condition-blindness-facts"
-  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeSaveConditionBlindness.* from "./battle-runtime-save-condition-blindness"
-  import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 
   run test_blindness_deafness_condition_choice_slot_scaling_and_repeat_save = {
     val deafened = resolveBlindnessDeafness(

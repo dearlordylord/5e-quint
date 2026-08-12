@@ -3,7 +3,6 @@
 
 module battleRuntimeSaveGatedDamageResolutionTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeSaveGatedDamageResolution.* from "./battle-runtime-save-gated-damage-resolution"
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
 

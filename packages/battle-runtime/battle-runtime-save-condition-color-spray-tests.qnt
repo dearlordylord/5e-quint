@@ -3,7 +3,6 @@
 
 module battleRuntimeSaveConditionColorSprayTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeSaveConditionColorSpray.* from "./battle-runtime-save-condition-color-spray"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
 

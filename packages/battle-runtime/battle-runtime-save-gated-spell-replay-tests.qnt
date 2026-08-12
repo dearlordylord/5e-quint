@@ -3,7 +3,6 @@
 
 module battleRuntimeSaveGatedSpellReplayTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeSaveGatedFacts.* from "./battle-runtime-save-gated-facts"
   import battleRuntimeSaveGatedSpellReplay.* from "./battle-runtime-save-gated-spell-replay"
 
   run test_acid_splash_replay_asks_for_saving_throw_outcomes_then_damage_on_failure = {

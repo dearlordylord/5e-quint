@@ -3,7 +3,6 @@
 
 module battleRuntimeSaveConditionEntangleTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeSaveConditionEntangle.* from "./battle-runtime-save-condition-entangle"
 
   run test_entangle_excludes_caster_and_applies_restrained_until_concentration_or_escape = {

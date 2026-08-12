@@ -5,8 +5,6 @@
 
 module battleRuntimeSaveConditionCalmEmotionsTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeSaveConditionCalmEmotions.* from "./battle-runtime-save-condition-calm-emotions"
 
   run test_calm_emotions_condition_immunity_branch_targets_humanoids_until_concentration_break = {

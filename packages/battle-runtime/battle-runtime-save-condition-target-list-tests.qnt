@@ -4,7 +4,6 @@
 
 module battleRuntimeSaveConditionTargetListTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeSaveGatedFacts.* from "./battle-runtime-save-gated-facts"
   import battleRuntimeSaveConditionTargetList.* from "./battle-runtime-save-condition-target-list"
   import battleRuntimeSaveConditionTargetListResolution.* from "./battle-runtime-save-condition-target-list-resolution"
 
@@ -20,7 +19,7 @@ module battleRuntimeSaveConditionTargetListTests {
       HumanoidCreature,
       false,
     )
-    val damaged = { ...failed, goblin: saveGatedConditionTargetAfterDamage(failed.goblin, 1, Fighter) }
+    val damaged = resolveAttack({ ...failed, actionAvailable: true }, 15, 10, fighterWeaponAttackDamageRoll(1), true)
     val twoTargets = resolveTargetListSaveGatedCondition(
       initialState,
       CharmPersonSaveGate,

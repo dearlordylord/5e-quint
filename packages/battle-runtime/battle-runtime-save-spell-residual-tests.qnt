@@ -6,8 +6,6 @@ module battleRuntimeSaveSpellResidualTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
-  import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
   import battleRuntimeSpellAttackRollAndVisibilityFacts.* from "./battle-runtime-spell-attack-roll-and-visibility-facts"
   import battleRuntimeSaveConditionFaerieFire.* from "./battle-runtime-save-condition-faerie-fire"
   import battleRuntimeLightEmitters.* from "./battle-runtime-light-emitters"
