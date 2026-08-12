@@ -9,6 +9,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type { BattleActiveEffect } from "./index.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import {
+  battleProcedureExecutionRefForSpellHoleForTest,
   concentrationSavingThrowFill,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -120,6 +121,9 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
     if (needsContactTarget.tag !== "needsHoles") {
       throw new Error("Expected Heat Metal contact targets.");
     }
+    expect(battleProcedureExecutionRefForSpellHoleForTest(contactTarget)).toBe(
+      act.subject.procedureRef,
+    );
     assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
       snapshot: needsContactTarget.snapshot,
       subject: act.subject,

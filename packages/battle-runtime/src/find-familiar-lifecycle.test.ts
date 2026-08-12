@@ -90,6 +90,7 @@ import {
 import {
   assertBattleSnapshotCodecRoundTripForTest,
   characterBattleFeatureInitForTest,
+  findAct,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -100,6 +101,7 @@ import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.
 import { battleCreatureStateWithoutKnockOut } from "./battle-reducer/creature-state.ts";
 import { applyBattleHitPointDamage } from "./battle-reducer/damage-apply.ts";
 import { D20_TEST_NATURAL_ONE_REROLL_UNAVAILABLE_MESSAGE } from "./battle-reducer/d20-test-natural-one-reroll.ts";
+import { QUICKENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic-support.ts";
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
 import {
   abilityModifier,
@@ -109,6 +111,7 @@ import {
   movementFeet,
   NonNegativeInteger,
   proficiencyBonus,
+  resourceCount,
   spellSlotLevel,
 } from "@dnd/shared/types";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
@@ -288,8 +291,16 @@ function startFixtureBattle(
 }
 
 function startSpellcasterFixtureBattle(
-  input: { readonly enemyCanCounterspell?: boolean } = {},
+  input: {
+    readonly enemyCanCounterspell?: boolean;
+    readonly quickenedMetamagic?: boolean;
+  } = {},
 ): BattleRuntimeSession {
+  const quickenedMetamagic = input.quickenedMetamagic === true;
+  const casterClassName = quickenedMetamagic ? "sorcerer" : "wizard";
+  const sorceryPointResource = unitCatalog.requireUnit(
+    "sorcerer_font_of_magic",
+  );
   const result = startBattle({
     battleId: battleId("find-familiar-telepathy-test"),
     combatants: [
@@ -297,8 +308,31 @@ function startSpellcasterFixtureBattle(
         combatantId: casterId,
         displayName: "Caster",
         initiative: 12,
+        className: casterClassName,
+        classLevel: quickenedMetamagic ? 5 : 1,
+        ...(quickenedMetamagic
+          ? {
+              resources: [
+                {
+                  unit: sorceryPointResource,
+                  pointsRemaining: resourceCount(4),
+                },
+              ],
+              metamagic: {
+                sorceryPointResourceUnitId: sorceryPointResource.id,
+                spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+                knownOptions: [
+                  {
+                    effectKind: QUICKENED_METAMAGIC_EFFECT_KIND,
+                    stackingMode: "one_per_spell",
+                    sorceryPointCost: resourceCount(2),
+                  },
+                ],
+              },
+            }
+          : {}),
         spellcasting: {
-          sourceClassName: "wizard",
+          sourceClassName: casterClassName,
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
@@ -714,7 +748,7 @@ function characterCreature(input: {
     | typeof otherCombatantId;
   readonly displayName: string;
   readonly initiative: number;
-  readonly className?: "wizard" | "warlock" | "druid";
+  readonly className?: "wizard" | "warlock" | "druid" | "sorcerer";
   readonly classLevel?: number;
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
@@ -728,6 +762,10 @@ function characterCreature(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
   >["resources"];
+  readonly metamagic?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["metamagic"];
   readonly druidWildShapeKnownForms?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -775,6 +813,7 @@ function characterCreature(input: {
         ? {}
         : { spellcasting: input.spellcasting }),
       ...(input.resources === undefined ? {} : { resources: input.resources }),
+      ...(input.metamagic === undefined ? {} : { metamagic: input.metamagic }),
       ...(input.druidWildShapeKnownForms === undefined
         ? {}
         : { druidWildShapeAvailableForms: input.druidWildShapeKnownForms }),
@@ -3251,12 +3290,11 @@ describe("Find Familiar lifecycle", () => {
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
 
-    const acts = discoverBattleActs(
-      battleRuntimeSessionForTest({
-        state: cast.state,
-        context: session.context,
-      }),
-    );
+    const runtimeSession = battleRuntimeSessionForTest({
+      state: cast.state,
+      context: session.context,
+    });
+    const acts = discoverBattleActs(runtimeSession);
     expect(
       acts.some(
         (act) =>
@@ -3272,6 +3310,66 @@ describe("Find Familiar lifecycle", () => {
     );
     expect(delivery?.subject.tag).toBe("findFamiliarTouchSpell");
     if (delivery?.subject.tag !== "findFamiliarTouchSpell") return;
+    const deliveryInvocation = battleActSpellPresentation(delivery)?.invocation;
+    if (deliveryInvocation === undefined) {
+      throw new Error("Expected Find Familiar Touch spell presentation.");
+    }
+    const selectedDelivery = findAct(runtimeSession, {
+      tag: "findFamiliarTouchSpell",
+      actorId: casterId,
+      invocation: deliveryInvocation,
+      companionId: familiarId,
+      spellAction: delivery.subject.spellAction,
+      mode: delivery.subject.mode,
+    });
+    expect(selectedDelivery.subject).toEqual(delivery.subject);
+    expect(selectedDelivery.subject).toMatchObject({
+      tag: "findFamiliarTouchSpell",
+      actorId: casterId,
+      companionId: familiarId,
+      mode: { tag: "cast" },
+    });
+
+    const quickenedSession = startSpellcasterFixtureBattle({
+      quickenedMetamagic: true,
+    });
+    const quickenedCast = castCatFamiliar(quickenedSession);
+    expect(quickenedCast.tag).toBe("resolved");
+    if (quickenedCast.tag !== "resolved") return;
+    const quickenedRuntimeSession = battleRuntimeSessionForTest({
+      state: quickenedCast.state,
+      context: quickenedSession.context,
+    });
+    const quickenedDelivery = discoverBattleActs(quickenedRuntimeSession).find(
+      (candidate) =>
+        candidate.subject.tag === "findFamiliarTouchSpell" &&
+        candidate.subject.metamagic !== undefined &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "cure_wounds",
+    );
+    expect(quickenedDelivery?.subject.tag).toBe("findFamiliarTouchSpell");
+    if (quickenedDelivery?.subject.tag !== "findFamiliarTouchSpell") return;
+    expect(quickenedDelivery.subject).toMatchObject({
+      spellAction: "bonusAction",
+      metamagic: [{ effectKind: QUICKENED_METAMAGIC_EFFECT_KIND }],
+    });
+    const quickenedInvocation =
+      battleActSpellPresentation(quickenedDelivery)?.invocation;
+    if (quickenedInvocation === undefined) {
+      throw new Error("Expected Quickened Familiar Touch presentation.");
+    }
+    const selectedQuickenedDelivery = findAct(quickenedRuntimeSession, {
+      tag: "findFamiliarTouchSpell",
+      actorId: casterId,
+      invocation: quickenedInvocation,
+      companionId: familiarId,
+      spellAction: quickenedDelivery.subject.spellAction,
+      mode: quickenedDelivery.subject.mode,
+      metamagic: quickenedDelivery.subject.metamagic,
+    });
+    expect(selectedQuickenedDelivery.subject).toEqual(
+      quickenedDelivery.subject,
+    );
 
     const targetHole = requireHole(delivery.initialHoles, "targetChoice");
     const connection = findFamiliarConnectionFill(

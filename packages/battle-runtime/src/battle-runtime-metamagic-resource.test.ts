@@ -87,6 +87,7 @@ import {
   damageRollFillWithGroups,
   fighterId,
   fighterVsGoblinBattle,
+  findAct,
   findHole,
   goblinId,
   requireCharacterSpellProcedureRefForTest,
@@ -294,6 +295,98 @@ describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
 });
 
 describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell", () => {
+  test("authored spell selectors project action and Bonus Action Metamagic procedures", () => {
+    const actionSession = saveMetamagicBattle({
+      knownOptions: [transmutedMetamagicOption()],
+      preparedSpells: ["scorching_ray"],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const actionAct = transmutedScorchingRayToPoisonAct(actionSession);
+    const actionInvocation = battleActSpellPresentation(actionAct)?.invocation;
+    if (actionInvocation === undefined) {
+      throw new Error("Expected Transmuted Scorching Ray presentation.");
+    }
+    const selectedAction = findAct(actionSession, {
+      tag: "actionSpell",
+      actorId: wizardId,
+      invocation: actionInvocation,
+      mode: { tag: "cast" },
+      metamagic: actionAct.subject.metamagic,
+    });
+
+    expect(selectedAction.subject).toEqual(actionAct.subject);
+    expect(selectedAction.subject).toMatchObject({
+      tag: "actionSpell",
+      metamagic: [
+        {
+          effectKind: TRANSMUTED_METAMAGIC_EFFECT_KIND,
+          targetDamageType: "poison",
+        },
+      ],
+    });
+    const selectedPlainAction = findAct(actionSession, {
+      tag: "actionSpell",
+      actorId: wizardId,
+      invocation: actionInvocation,
+      mode: { tag: "cast" },
+    });
+    expect(selectedPlainAction.subject).toMatchObject({
+      tag: "actionSpell",
+      procedureRef: actionAct.subject.procedureRef,
+    });
+    expect(selectedPlainAction.subject).not.toHaveProperty("metamagic");
+
+    const bonusSession = saveMetamagicBattle({
+      knownOptions: [quickenedMetamagicOption()],
+    });
+    const bonusAct = quickenedBurningHandsAct(bonusSession);
+    const bonusInvocation = battleActSpellPresentation(bonusAct)?.invocation;
+    if (bonusInvocation === undefined) {
+      throw new Error("Expected Quickened Burning Hands presentation.");
+    }
+    const selectedBonus = findAct(bonusSession, {
+      tag: "bonusActionSpell",
+      actorId: wizardId,
+      invocation: bonusInvocation,
+      mode: { tag: "cast" },
+      metamagic: bonusAct.subject.metamagic,
+    });
+
+    expect(selectedBonus.subject).toEqual(bonusAct.subject);
+    expect(selectedBonus.subject).toMatchObject({
+      tag: "bonusActionSpell",
+      metamagic: [{ effectKind: QUICKENED_METAMAGIC_EFFECT_KIND }],
+    });
+
+    const plainBonusSession = metamagicBattle({
+      preparedSpells: ["healing_word"],
+      knownOptions: [quickenedMetamagicOption()],
+      sorceryPoints: 0,
+    });
+    const plainBonusAct = discoverBattleActs(plainBonusSession).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "healing_word",
+    );
+    if (plainBonusAct === undefined) {
+      throw new Error("Expected plain Healing Word Bonus Action act.");
+    }
+    const plainBonusInvocation =
+      battleActSpellPresentation(plainBonusAct)?.invocation;
+    if (plainBonusInvocation === undefined) {
+      throw new Error("Expected plain Healing Word presentation.");
+    }
+    const selectedPlainBonus = findAct(plainBonusSession, {
+      tag: "bonusActionSpell",
+      actorId: wizardId,
+      invocation: plainBonusInvocation,
+      mode: { tag: "cast" },
+    });
+    expect(selectedPlainBonus.subject).toEqual(plainBonusAct.subject);
+    expect(selectedPlainBonus.subject).not.toHaveProperty("metamagic");
+  });
+
   test("discovers Quickened Cure Wounds as a Bonus Action and spends Sorcery Points without spending the Magic action", () => {
     const session = metamagicBattle();
     const state = session.state;
