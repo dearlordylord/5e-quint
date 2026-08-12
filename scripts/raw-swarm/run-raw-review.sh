@@ -2,13 +2,15 @@
 set -euo pipefail
 
 RAW_REVIEW_ROOT=$(git rev-parse --show-toplevel)
-RAW_REVIEW_PROMPT=${1:?Usage: run-raw-review.sh <prompt.txt> <review.json> <agent.log>}
-RAW_REVIEW_OUTPUT=${2:?Usage: run-raw-review.sh <prompt.txt> <review.json> <agent.log>}
-RAW_REVIEW_LOG=${3:?Usage: run-raw-review.sh <prompt.txt> <review.json> <agent.log>}
+RAW_REVIEW_PROMPT=${1:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}
+RAW_REVIEW_TRANSCRIPT=${2:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}
+RAW_REVIEW_OUTPUT=${3:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}
+RAW_REVIEW_LOG=${4:?Usage: run-raw-review.sh <prompt.txt> <transcript.jsonl> <review.json> <agent.log>}
 RAW_REVIEW_SCHEMA=$(mktemp)
 trap 'rm -f "$RAW_REVIEW_SCHEMA"' EXIT
 
 mkdir -p "$(dirname "$RAW_REVIEW_OUTPUT")" "$(dirname "$RAW_REVIEW_LOG")"
+pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/review-preflight.ts" "$RAW_REVIEW_TRANSCRIPT"
 pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/review-schema.ts" "$RAW_REVIEW_SCHEMA"
 
 codex exec \

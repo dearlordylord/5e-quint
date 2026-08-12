@@ -43,8 +43,10 @@ under `scripts/raw-swarm/out/` and are gitignored.
 
 ## Target discovery workflow
 
-This section specifies the intended workflow. It is not a claim that the
-checked-in prototype already implements scenario generation or direct SDK play.
+This section specifies the intended workflow. The checked-in direct-SDK tracer
+implements its single-controller execution and evidence seam for one scenario;
+stochastic scenario generation, multiple controllers, and branching remain
+future workflow increments.
 
 ### Generate battle scenarios as prose
 
@@ -119,11 +121,12 @@ the whole document. These prose sections do not constitute a scenario DSL.
 
 ### Execute through the public SDK
 
-The intended primary player is an isolated external SDK consumer, not an agent
-with repository knowledge. Give it a scratch project containing the built
-public SDK, public type declarations, user documentation, and the final scenario
-prose. Do not expose implementation source or internal tests. The agent writes
-and runs ordinary TypeScript against canonical SDK operations and types.
+The intended primary player behaves as an external SDK consumer, not as an
+agent using repository knowledge. Give it a scratch project containing public
+type declarations, user documentation, and the final scenario prose. Its
+ordinary working context does not include implementation source or internal
+tests. The agent writes ordinary TypeScript against canonical SDK operations
+and types; the supervisor runs that code against the SDK.
 
 Agent topology is an execution choice rather than a scenario fact. The same
 scenario may be run by one agent controlling every combatant or by separate
@@ -190,6 +193,96 @@ call-stream replay and adversarial review.
 MCP may remain an optional parity and compound-coverage lane. It is not a
 required part of the target SDK-player workflow.
 
+## Run the direct-SDK tracer
+
+The first tracer is one manually authored Goblin Warrior versus Skeleton prose
+scenario. It deliberately does not generate scenarios or introduce a scenario
+interpreter. The player receives a scratch directory outside the checkout with:
+
+- the final prose scenario and public battle-runtime README;
+- declaration-only public SDK artifacts;
+- one typed `PlayerContinuation` stub; and
+- a small file-protocol client that submits the authored continuation to the
+  neutral supervisor without containing SDK implementation.
+
+The supervisor, SDK implementation, append-only program, and evidence live in a
+separate working directory. The supervisor owns the canonical `discoverBattleActs`,
+`resolveBattleRuntimeSubject`, `resolveBattleRuntimeInterrupt`, and
+`endBattleRuntimeTurn` operations. It copies each submission once, typechecks
+that exact copy, executes it, and records its calls. This is a cooperative
+external-consumer test boundary, not a hostile-code security sandbox: the
+player is instructed to use only the provided files and public SDK, and the
+harness does not attempt to defend against malicious submitted JavaScript.
+
+The agent edits ordinary TypeScript inside the continuation. The supervisor
+requires every canonical SDK operation to consume the one current session,
+advances that cursor from the returned result, and accepts only that latest
+session in the continuation outcome. It records complete JSON evidence
+projections of the public input/output sessions (including every Map and Set
+entry),
+the public operation payload, and the canonical result projection, then
+reconstructs later state by replaying the stream and checking every lineage
+hash. Returned and thrown calls are both records. It freezes
+the exact authored continuation on its first SDK call. A compiler or runtime
+failure before the first call remains editable; an SDK `invalid` result or a
+later failure after a call remains frozen evidence. The retained
+`frozen-prefix.json` carries the byte length and SHA-256 of the append-only final
+program, and every later attempt verifies both before running. A
+`playerConcluded` outcome records the player's assertion; only the independent
+RAW review decides whether the trace supports a combat-ending conclusion.
+
+Recording requires a clean revision and refuses to overwrite prior evidence:
+
+```sh
+SCENARIO=tracer-001-goblin-warrior-vs-skeleton
+
+mise exec -- pnpm exec tsx scripts/raw-swarm/run-sdk-player.ts "$SCENARIO"
+
+mise exec -- pnpm exec tsx scripts/raw-swarm/replay-sdk-player.ts \
+  "scripts/raw-swarm/out/$SCENARIO-sdk-player"
+
+mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts ingest \
+  "scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/sdk-calls.jsonl" \
+  --db scripts/raw-swarm/out/player-swarm.db
+```
+
+Run and import the independent whole-trace RAW review exactly like the MCP lane:
+
+```sh
+mise exec -- scripts/raw-swarm/run-raw-review.sh \
+  "scripts/raw-swarm/reviews/$SCENARIO.prompt.txt" \
+  "scripts/raw-swarm/out/$SCENARIO-sdk-player/evidence/sdk-calls.jsonl" \
+  "scripts/raw-swarm/out/$SCENARIO-sdk-review.json" \
+  "scripts/raw-swarm/out/$SCENARIO-sdk-review-agent.log"
+
+mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts review \
+  "scripts/raw-swarm/out/$SCENARIO-sdk-review.json" \
+  --run <run-id> --db scripts/raw-swarm/out/player-swarm.db
+```
+
+The runner prefers a Codex permission profile that grants only minimal runtime
+reads and write access to the scratch consumer. On a worker where Linux
+filesystem sandboxing cannot initialize, it fails unless the operator appends
+`--instructional-isolation`; the transcript header records
+`instructionalFallback`, and the prompt forbids reading outside scratch. The
+profile probe checks that the agent shell can write scratch but cannot read
+a known repository file. The distribution test checks the intentionally
+provided files. Neither claim turns submitted TypeScript into untrusted code;
+that is deliberately outside this game-testing prototype.
+
+Retained evidence lives under
+`scripts/raw-swarm/out/<scenario>-sdk-player/`: `SCENARIO.md`, the agent log and
+final message, the latest observation, the final attempt, the replay bundle,
+and `evidence/` containing the append-only program, frozen-prefix facts,
+canonical SDK JSONL, observations, and final conclusion. The disposable compiler
+and declaration distribution remains in the deleted scratch directory.
+
+Run the focused executable gate with:
+
+```sh
+mise exec -- pnpm check:raw-swarm-sdk-player
+```
+
 ## Run the existing MCP prototype
 
 The scenario id names a committed prompt at
@@ -222,6 +315,7 @@ Run the committed adversarial review and import it as one review round:
 ```sh
 mise exec -- scripts/raw-swarm/run-raw-review.sh \
   "scripts/raw-swarm/reviews/$SCENARIO.prompt.txt" \
+  "scripts/raw-swarm/out/$SCENARIO-transcript.jsonl" \
   "scripts/raw-swarm/out/$SCENARIO-review.json" \
   "scripts/raw-swarm/out/$SCENARIO-review-agent.log"
 
@@ -231,8 +325,9 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts review \
 ```
 
 The reviewer uses only `.references/srd-5.2.1/` as RAW authority and consults
-`ASSUMPTIONS.md` for registered ambiguity choices. `run-raw-review.sh` validates
-the result against JSON Schema generated from the same Effect codec used by
+`ASSUMPTIONS.md` for registered ambiguity choices. `run-raw-review.sh` first
+requires the clean revision recorded by the transcript, then validates the
+result against JSON Schema generated from the same Effect codec used by
 report ingestion. The reviewer process uses `danger-full-access` because a
 nested Codex read-only sandbox cannot initialize in the worker environment.
 Read-only behavior is therefore an explicit reviewer-instruction contract, not
@@ -243,7 +338,7 @@ a filesystem-enforced sandbox guarantee.
 The following steps extend the checked-in MCP experiment only. They are useful
 for another immediate run, but do not replace or redefine the target SDK-player
 workflow above. Do not widen MCP solely to implement that target; begin from the
-isolated external SDK consumer and battle-session supervisor requirements in
+external-consumer and battle-session supervisor requirements in
 [Execute through the public SDK](#execute-through-the-public-sdk).
 
 Do not create JSON commands, mechanic recipes, an expectation language, or a
@@ -342,8 +437,9 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts issues \
   --db scripts/raw-swarm/out/player-swarm.db --linked
 ```
 
-Verdict classes are `bug`, `assumption-divergence`, `corpus-ambiguity`,
-`scenario-invalid`, `reviewer-error`, and `pass`.
+Verdict classes are `bug`, `adapter-defect`, `unsupported-capability`,
+`assumption-divergence`, `corpus-ambiguity`, `scenario-invalid`,
+`player-invalid`, `reviewer-error`, and `pass`.
 
 ## Finding and bug lifecycle
 
@@ -357,16 +453,16 @@ Every verdict remains immutable run evidence. For each non-pass verdict, first
 classify and disposition it:
 
 1. Inspect the transcript sequence and local RAW evidence. Classify it as an SDK
-   bug, MCP-adapter bug, unsupported capability, invalid player setup/reviewer
-   claim, or corpus ambiguity.
+   bug, adapter bug, unsupported capability, invalid scenario, invalid player
+   decision, reviewer error, or corpus ambiguity.
 2. Correct invalid setups or reviewer claims in their owning prompt/review.
    Record unsupported capability and corpus ambiguity for the appropriate
    product or corpus decision; do not label them SDK bugs.
 
-Only a reviewer-classified `bug` verdict enters the remaining bug-observation
-lifecycle. `report.ts` adds those observations to the `issues` collection for
-human triage; this is not independent confirmation. Other classes remain in the
-review evidence without an issue fingerprint.
+Only a reviewer-classified `bug` or `adapter-defect` verdict enters the
+remaining bug-observation lifecycle. `report.ts` adds those observations to the
+`issues` collection for human triage; this is not independent confirmation.
+Other classes remain in the review evidence without an issue fingerprint.
 
 3. Use `report.ts issues` to obtain the bug observation's fingerprint.
    Fingerprints hash the review class and exact claim; triage decides whether
@@ -427,6 +523,8 @@ local link workers while keeping SQLite transactions short.
 
 ## Files
 
+- Direct-SDK tracer: `sdk-player/`, `run-sdk-player.ts`, and
+  `replay-sdk-player.ts`.
 - Player inputs: `freeplay/` and `run-freeplay.ts`.
 - Reviewer inputs: `reviews/` and `run-raw-review.sh`.
 - Evidence: `mcp-recording-shim.ts`, `transcript.ts`,

@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,6 +7,7 @@ import { DatabaseSync } from "node:sqlite";
 import { Either, Match, Option, Schema } from "effect";
 
 import { ReviewOutputSchema, VERDICT_CLASSES } from "./review-contract.ts";
+import { parseSdkTranscript } from "./sdk-player/sdk-transcript.ts";
 
 import {
   isJsonRecord,
@@ -90,7 +92,10 @@ function openDb(dbPath: string): DatabaseSync {
       scenarioId TEXT,
       gitSha TEXT,
       startedAt TEXT,
-      transcriptPath TEXT
+      transcriptPath TEXT,
+      transcriptSha256 TEXT,
+      consumerIsolation TEXT
+        CHECK(consumerIsolation IS NULL OR consumerIsolation IN ('permissionProfile', 'instructionalFallback'))
     );
     CREATE TABLE IF NOT EXISTS steps(
       runId INT,
@@ -132,6 +137,24 @@ function openDb(dbPath: string): DatabaseSync {
       FOREIGN KEY(issueFingerprint) REFERENCES issues(fingerprint)
     );
   `);
+  const runColumns = db.prepare("PRAGMA table_info(runs)").all();
+  if (
+    !runColumns.some(
+      (column) => isJsonRecord(column) && column.name === "consumerIsolation",
+    )
+  ) {
+    db.exec(`
+      ALTER TABLE runs ADD COLUMN consumerIsolation TEXT
+        CHECK(consumerIsolation IS NULL OR consumerIsolation IN ('permissionProfile', 'instructionalFallback'))
+    `);
+  }
+  if (
+    !runColumns.some(
+      (column) => isJsonRecord(column) && column.name === "transcriptSha256",
+    )
+  ) {
+    db.exec("ALTER TABLE runs ADD COLUMN transcriptSha256 TEXT");
+  }
   const stepColumns = db.prepare("PRAGMA table_info(steps)").all();
   if (
     !stepColumns.some(
@@ -176,19 +199,23 @@ function recordBugIssue(
   createdAt: string,
 ): Option.Option<string> {
   const noIssue = (): Option.Option<string> => Option.none();
+  const actionableIssue = (): Option.Option<string> => {
+    const fingerprint = sha256Canonical({ class: verdictClass, claim });
+    db.prepare(
+      `INSERT INTO issues(fingerprint, class, claim, firstSeenAt, lastSeenAt)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(fingerprint) DO UPDATE SET lastSeenAt = excluded.lastSeenAt`,
+    ).run(fingerprint, verdictClass, claim, createdAt, createdAt);
+    return Option.some(fingerprint);
+  };
   return Match.value(verdictClass).pipe(
-    Match.when("bug", () => {
-      const fingerprint = sha256Canonical({ class: verdictClass, claim });
-      db.prepare(
-        `INSERT INTO issues(fingerprint, class, claim, firstSeenAt, lastSeenAt)
-         VALUES (?, ?, ?, ?, ?)
-         ON CONFLICT(fingerprint) DO UPDATE SET lastSeenAt = excluded.lastSeenAt`,
-      ).run(fingerprint, verdictClass, claim, createdAt, createdAt);
-      return Option.some(fingerprint);
-    }),
+    Match.when("bug", actionableIssue),
+    Match.when("adapter-defect", actionableIssue),
+    Match.when("unsupported-capability", noIssue),
     Match.when("assumption-divergence", noIssue),
     Match.when("corpus-ambiguity", noIssue),
     Match.when("scenario-invalid", noIssue),
+    Match.when("player-invalid", noIssue),
     Match.when("reviewer-error", noIssue),
     Match.when("pass", noIssue),
     Match.exhaustive,
@@ -349,14 +376,19 @@ export function ingest(args: readonly string[]): void {
   const transcriptPath = required(transcriptArg, "<transcript.jsonl>");
   const dbPath = required(flagValue(rest, "--db"), "--db");
 
-  const lines = readFileSync(resolve(repoRoot, transcriptPath), "utf8")
+  const transcriptBytes = readFileSync(resolve(repoRoot, transcriptPath));
+  const transcriptSha256 = createHash("sha256")
+    .update(transcriptBytes)
+    .digest("hex");
+  const lines = transcriptBytes
+    .toString("utf8")
     .split("\n")
     .filter((line) => line.trim().length > 0)
     .map((line): unknown => JSON.parse(line));
 
-  const parsed = parsePlayerTranscript(lines);
+  const parsed = parseEvidenceTranscript(lines);
   if (parsed.tag === "invalid") fail(parsed.message);
-  const { header, exchanges: steps } = parsed.value;
+  const { header, steps } = parsed.value;
 
   if (hasRemovedScenarioRegistry(dbPath)) {
     fail(
@@ -365,7 +397,7 @@ export function ingest(args: readonly string[]): void {
   }
   const db = openDb(dbPath);
   const insertRun = db.prepare(
-    "INSERT INTO runs(scenarioId, gitSha, startedAt, transcriptPath) VALUES (?, ?, ?, ?)",
+    "INSERT INTO runs(scenarioId, gitSha, startedAt, transcriptPath, transcriptSha256, consumerIsolation) VALUES (?, ?, ?, ?, ?, ?)",
   );
   const insertStep = db.prepare(
     "INSERT INTO steps(runId, seq, tool, args, response, responseSha256) VALUES (?, ?, ?, ?, ?, ?)",
@@ -379,6 +411,8 @@ export function ingest(args: readonly string[]): void {
         header.gitSha,
         header.startedAt,
         transcriptPath,
+        transcriptSha256,
+        header.kind === "sdkPlayer" ? header.consumerIsolation : null,
       );
       const insertedRunId = Number(info.lastInsertRowid);
       for (const step of steps) {
@@ -403,6 +437,102 @@ export function ingest(args: readonly string[]): void {
     `Ingested run ${runId} (${steps.length} steps) for scenario ${header.scenarioId} into ${dbPath}`,
   );
   db.close();
+}
+
+type EvidenceStep = {
+  readonly seq: number;
+  readonly tool: string;
+  readonly args: unknown;
+  readonly response: unknown;
+  readonly responseSha256: string;
+};
+
+function parseEvidenceTranscript(lines: readonly unknown[]):
+  | {
+      readonly tag: "valid";
+      readonly value: {
+        readonly header: {
+          readonly scenarioId: string;
+          readonly gitSha: string;
+          readonly startedAt: string;
+        } & (
+          | { readonly kind: "mcpPlayer" }
+          | {
+              readonly kind: "sdkPlayer";
+              readonly consumerIsolation:
+                | "permissionProfile"
+                | "instructionalFallback";
+            }
+        );
+        readonly steps: readonly EvidenceStep[];
+      };
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const header = lines[0];
+  if (!isJsonRecord(header) || typeof header.type !== "string") {
+    return { tag: "invalid", message: "Evidence transcript has no header." };
+  }
+  return Match.value(header.type).pipe(
+    Match.when("header", () => {
+      const parsed = parsePlayerTranscript(lines);
+      return parsed.tag === "invalid"
+        ? parsed
+        : {
+            tag: "valid" as const,
+            value: {
+              header: {
+                ...parsed.value.header,
+                kind: "mcpPlayer" as const,
+              },
+              steps: parsed.value.exchanges,
+            },
+          };
+    }),
+    Match.when("sdk-player-header", () => {
+      const parsed = parseSdkTranscript(lines);
+      return parsed.tag === "invalid"
+        ? parsed
+        : {
+            tag: "valid" as const,
+            value: {
+              header: {
+                ...parsed.value.header,
+                kind: "sdkPlayer" as const,
+              },
+              steps: parsed.value.calls.map((call) => {
+                const response =
+                  call.outcome === "returned"
+                    ? {
+                        outcome: call.outcome,
+                        outputSession: call.outputSession,
+                        outputSessionSha256: call.outputSessionSha256,
+                        result: call.result,
+                      }
+                    : {
+                        outcome: call.outcome,
+                        rejection: call.rejection,
+                        error: call.error,
+                      };
+                return {
+                  seq: call.seq,
+                  tool: call.operation,
+                  args: {
+                    inputSession: call.inputSession,
+                    inputSessionSha256: call.inputSessionSha256,
+                    input: call.input,
+                  },
+                  response,
+                  responseSha256: sha256Canonical(response),
+                };
+              }),
+            },
+          };
+    }),
+    Match.orElse(() => ({
+      tag: "invalid" as const,
+      message: `Unsupported evidence transcript header ${header.type}.`,
+    })),
+  );
 }
 
 function verdict(args: readonly string[]): void {
@@ -467,9 +597,31 @@ export function review(args: readonly string[]): void {
     fail(`Invalid review output: ${decoded.left.message}`);
 
   const db = openDb(dbPath);
-  if (!runExists(db, runId)) {
+  const run = db
+    .prepare(
+      "SELECT scenarioId, gitSha, transcriptPath, transcriptSha256 FROM runs WHERE id = ?",
+    )
+    .get(runId);
+  if (!isJsonRecord(run)) {
     db.close();
     fail(`Unknown run ${runId}`);
+  }
+  if (typeof run.transcriptPath !== "string") {
+    db.close();
+    fail("Selected run has no transcript path");
+  }
+  const currentTranscriptSha256 = createHash("sha256")
+    .update(readFileSync(resolve(repoRoot, run.transcriptPath)))
+    .digest("hex");
+  if (
+    typeof run.transcriptSha256 !== "string" ||
+    run.scenarioId !== decoded.right.scenarioId ||
+    run.gitSha !== decoded.right.gitSha ||
+    run.transcriptSha256 !== decoded.right.transcriptSha256 ||
+    currentTranscriptSha256 !== run.transcriptSha256
+  ) {
+    db.close();
+    fail("Review identity does not match the selected run");
   }
   const createdAt = new Date().toISOString();
   const insertReviewRound = db.prepare(

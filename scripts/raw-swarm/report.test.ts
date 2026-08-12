@@ -1,4 +1,5 @@
 import { execFileSync, spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   chmodSync,
   existsSync,
@@ -21,7 +22,7 @@ import {
   type GitHubCommandRunner,
   type GitHubIssueLinker,
 } from "./report.ts";
-import { isJsonRecord, repoRoot } from "./transcript.ts";
+import { isJsonRecord, repoRoot, sha256Canonical } from "./transcript.ts";
 
 const reportScript = resolve(repoRoot, "scripts/raw-swarm/report.ts");
 
@@ -415,6 +416,11 @@ try {
       writeFileSync(
         reviewPath,
         JSON.stringify({
+          scenarioId: "player-run-from-header",
+          gitSha: "0".repeat(40),
+          transcriptSha256: createHash("sha256")
+            .update(readFileSync(transcriptPath))
+            .digest("hex"),
           reviewer: "adversarial-reviewer",
           verdicts: [
             {
@@ -431,6 +437,53 @@ try {
         }),
         "utf8",
       );
+      const matchingReview = readFileSync(reviewPath, "utf8");
+      writeFileSync(
+        reviewPath,
+        matchingReview.replace(
+          '"player-run-from-header"',
+          '"different-player-run"',
+        ),
+        "utf8",
+      );
+      expect(() =>
+        runReport(["review", reviewPath, "--run", "1", "--db", dbPath]),
+      ).toThrow();
+      expect(
+        queryOne(dbPath, "SELECT COUNT(*) AS count FROM reviewRounds"),
+      ).toEqual({ count: 0 });
+      expect(
+        queryOne(dbPath, "SELECT COUNT(*) AS count FROM verdicts"),
+      ).toEqual({ count: 0 });
+      expect(queryOne(dbPath, "SELECT COUNT(*) AS count FROM issues")).toEqual({
+        count: 0,
+      });
+      writeFileSync(reviewPath, matchingReview, "utf8");
+      const originalTranscript = readFileSync(transcriptPath, "utf8");
+      const changedTranscript = `${originalTranscript}\n`;
+      writeFileSync(transcriptPath, changedTranscript, "utf8");
+      writeFileSync(
+        reviewPath,
+        matchingReview.replace(
+          createHash("sha256").update(originalTranscript).digest("hex"),
+          createHash("sha256").update(changedTranscript).digest("hex"),
+        ),
+        "utf8",
+      );
+      expect(() =>
+        runReport(["review", reviewPath, "--run", "1", "--db", dbPath]),
+      ).toThrow();
+      expect(
+        queryOne(dbPath, "SELECT COUNT(*) AS count FROM reviewRounds"),
+      ).toEqual({ count: 0 });
+      expect(
+        queryOne(dbPath, "SELECT COUNT(*) AS count FROM verdicts"),
+      ).toEqual({ count: 0 });
+      expect(queryOne(dbPath, "SELECT COUNT(*) AS count FROM issues")).toEqual({
+        count: 0,
+      });
+      writeFileSync(transcriptPath, originalTranscript, "utf8");
+      writeFileSync(reviewPath, matchingReview, "utf8");
       runReport(["review", reviewPath, "--run", "1", "--db", dbPath]);
 
       expect(queryOne(dbPath, "SELECT scenarioId, gitSha FROM runs")).toEqual({
@@ -577,4 +630,82 @@ try {
       rmSync(directory, { recursive: true });
     }
   }, 60_000);
+
+  test("ingests canonical direct-SDK call evidence", () => {
+    const directory = mkdtempSync(join(tmpdir(), "raw-swarm-sdk-report-"));
+    try {
+      const transcriptPath = join(directory, "sdk-run.jsonl");
+      const dbPath = join(directory, "report.db");
+      const response = [{ label: "Attack" }];
+      writeFileSync(
+        transcriptPath,
+        `${[
+          {
+            type: "sdk-player-header",
+            scenarioId: "sdk-player-run",
+            gitSha: "0".repeat(40),
+            startedAt: "2026-08-12T00:00:00.000Z",
+            consumerIsolation: "permissionProfile",
+            replaySupervisorSha256: "f".repeat(64),
+          },
+          {
+            type: "sdk-call",
+            seq: 1,
+            continuation: 1,
+            operation: "discoverBattleActs",
+            outcome: "returned",
+            inputSession: { step: 0 },
+            inputSessionSha256: sha256Canonical({ step: 0 }),
+            input: {},
+            outputSession: { step: 0 },
+            outputSessionSha256: sha256Canonical({ step: 0 }),
+            result: response,
+            resultSha256: sha256Canonical(response),
+          },
+        ]
+          .map(JSON.stringify)
+          .join("\n")}\n`,
+      );
+
+      runReport(["ingest", transcriptPath, "--db", dbPath]);
+
+      expect(
+        queryOne(
+          dbPath,
+          "SELECT scenarioId, gitSha, consumerIsolation FROM runs",
+        ),
+      ).toEqual({
+        scenarioId: "sdk-player-run",
+        gitSha: "0".repeat(40),
+        consumerIsolation: "permissionProfile",
+      });
+      expect(
+        queryOne(
+          dbPath,
+          "SELECT tool, args, response, responseSha256 FROM steps",
+        ),
+      ).toEqual({
+        tool: "discoverBattleActs",
+        args: JSON.stringify({
+          inputSession: { step: 0 },
+          inputSessionSha256: sha256Canonical({ step: 0 }),
+          input: {},
+        }),
+        response: JSON.stringify({
+          outcome: "returned",
+          outputSession: { step: 0 },
+          outputSessionSha256: sha256Canonical({ step: 0 }),
+          result: response,
+        }),
+        responseSha256: sha256Canonical({
+          outcome: "returned",
+          outputSession: { step: 0 },
+          outputSessionSha256: sha256Canonical({ step: 0 }),
+          result: response,
+        }),
+      });
+    } finally {
+      rmSync(directory, { recursive: true });
+    }
+  });
 });

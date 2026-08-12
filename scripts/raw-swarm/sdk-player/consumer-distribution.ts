@@ -1,0 +1,204 @@
+import { spawnSync } from "node:child_process";
+import {
+  copyFileSync,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  writeFileSync,
+} from "node:fs";
+import { resolve } from "node:path";
+import { buildSync } from "esbuild";
+
+import { repoRoot } from "../transcript.ts";
+import { attemptSource } from "./attempt-source.ts";
+
+export type ConsumerDistributionInput = {
+  readonly destination: string;
+  readonly trustedDestination: string;
+  readonly scenarioPath: string;
+};
+
+const declarationDiagnosticCodes = new Set(["TS4023", "TS4058", "TS7056"]);
+
+function emitPublicDeclarations(destination: string): void {
+  const declarationsDirectory = resolve(destination, "declarations");
+  const compiler = resolve(repoRoot, "node_modules/typescript/bin/tsc");
+  const config = resolve(
+    repoRoot,
+    "scripts/raw-swarm/sdk-player/declarations.tsconfig.json",
+  );
+  const result = spawnSync(
+    process.execPath,
+    [
+      compiler,
+      "-p",
+      config,
+      "--outDir",
+      declarationsDirectory,
+      "--pretty",
+      "false",
+    ],
+    { cwd: repoRoot, encoding: "utf8" },
+  );
+  if (result.error !== undefined) throw result.error;
+  if (result.signal !== null) {
+    throw new Error(`Public declaration emission stopped by ${result.signal}.`);
+  }
+  if (result.status !== 0) {
+    const diagnostics = `${result.stdout}${result.stderr}`
+      .split("\n")
+      .filter((line) => line.includes("error TS"));
+    const unexpected = diagnostics.filter((line) => {
+      const code = line.match(/error (TS\d+):/)?.[1];
+      return code === undefined || !declarationDiagnosticCodes.has(code);
+    });
+    if (diagnostics.length === 0 || unexpected.length > 0) {
+      throw new Error(
+        `Public declaration emission failed:\n${unexpected.join("\n") || result.stderr}`,
+      );
+    }
+    // TypeScript 5.9 reports these only while serializing large inferred
+    // schemas, after it emits the reachable declarations. Required-file checks
+    // below and the isolated consumer typecheck are the executable completeness
+    // boundary for this narrow SDK; any other diagnostic fails the build.
+  }
+
+  const requiredDeclarations = [
+    "scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
+    "scripts/raw-swarm/sdk-player/continuation-contract.d.ts",
+    "packages/battle-runtime/src/index.d.ts",
+    "packages/battle-runtime/src/battle-state-execution.d.ts",
+    "packages/battle-runtime/src/battle-session-execution.d.ts",
+  ];
+  for (const relativePath of requiredDeclarations) {
+    if (!existsSync(resolve(declarationsDirectory, relativePath))) {
+      throw new Error(`Public declaration emission omitted ${relativePath}.`);
+    }
+  }
+}
+
+function consumerTsconfig(baseUrl: string, include: readonly string[]): string {
+  return `${JSON.stringify(
+    {
+      compilerOptions: {
+        target: "ES2022",
+        module: "ESNext",
+        moduleResolution: "bundler",
+        lib: ["ES2022"],
+        types: [],
+        baseUrl,
+        paths: {
+          "@dnd/player-sdk": [
+            resolve(
+              baseUrl,
+              "declarations/scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
+            ),
+          ],
+          "@dnd/battle-runtime": [
+            resolve(
+              baseUrl,
+              "declarations/packages/battle-runtime/src/index.d.ts",
+            ),
+          ],
+          "@dnd/shared/*": [
+            resolve(baseUrl, "declarations/packages/shared/src/*"),
+          ],
+          "@dnd/shared-algebras/*": [
+            resolve(baseUrl, "declarations/packages/shared-algebras/src/*"),
+          ],
+          "@dnd/surface/*": [
+            resolve(baseUrl, "declarations/packages/surface/src/*"),
+          ],
+        },
+        allowImportingTsExtensions: true,
+        skipLibCheck: true,
+        strict: true,
+        exactOptionalPropertyTypes: true,
+        noUnusedLocals: true,
+        noUnusedParameters: true,
+      },
+      include,
+    },
+    null,
+    2,
+  )}\n`;
+}
+
+export function buildConsumerDistribution(
+  input: ConsumerDistributionInput,
+): void {
+  mkdirSync(input.destination, { recursive: true });
+  mkdirSync(input.trustedDestination, { recursive: true });
+  emitPublicDeclarations(input.destination);
+  cpSync(
+    resolve(input.destination, "declarations"),
+    resolve(input.trustedDestination, "declarations"),
+    { recursive: true, dereference: true },
+  );
+  copyFileSync(input.scenarioPath, resolve(input.destination, "SCENARIO.md"));
+  copyFileSync(
+    resolve(repoRoot, "packages/battle-runtime/README.md"),
+    resolve(input.destination, "PUBLIC_SDK.md"),
+  );
+  copyFileSync(
+    resolve(repoRoot, "scripts/raw-swarm/sdk-player/PLAYER.md"),
+    resolve(input.destination, "PLAYER.md"),
+  );
+  writeFileSync(
+    resolve(input.destination, "tsconfig.json"),
+    consumerTsconfig(input.destination, ["attempt.ts"]),
+  );
+  writeFileSync(
+    resolve(input.trustedDestination, "tsconfig.json"),
+    consumerTsconfig(input.trustedDestination, ["submissions/*.ts"]),
+  );
+  writeFileSync(
+    resolve(input.destination, "attempt.ts"),
+    attemptSource(
+      `  const acts = context.sdk.discoverBattleActs(context.session);
+
+  return {
+    kind: "continue",
+    session: context.session,
+    observation: {
+      availableActCount: acts.length,
+      note: "Replace this starter body with one coherent tactical continuation.",
+    },
+  };`,
+    ),
+  );
+  cpSync(
+    resolve(repoRoot, "node_modules/typescript"),
+    resolve(input.destination, "tooling/typescript"),
+    { recursive: true, dereference: true },
+  );
+  cpSync(
+    resolve(repoRoot, "node_modules/typescript"),
+    resolve(input.trustedDestination, "tooling/typescript"),
+    { recursive: true, dereference: true },
+  );
+  buildSync({
+    entryPoints: [
+      resolve(repoRoot, "scripts/raw-swarm/sdk-player/supervisor-cli.ts"),
+    ],
+    outfile: resolve(input.trustedDestination, "supervisor.mjs"),
+    bundle: true,
+    platform: "node",
+    format: "esm",
+    target: "node24",
+    sourcemap: false,
+    logLevel: "silent",
+  });
+  buildSync({
+    entryPoints: [
+      resolve(repoRoot, "scripts/raw-swarm/sdk-player/player-client.ts"),
+    ],
+    outfile: resolve(input.destination, "player-client.mjs"),
+    bundle: true,
+    platform: "node",
+    format: "esm",
+    target: "node24",
+    sourcemap: false,
+    logLevel: "silent",
+  });
+}

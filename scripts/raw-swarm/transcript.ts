@@ -48,7 +48,7 @@ export function currentGitRevision(
   };
 }
 
-const ScenarioIdSchema = Schema.String.pipe(
+export const ScenarioIdSchema = Schema.String.pipe(
   Schema.pattern(/^[a-z0-9][a-z0-9-]*$/),
   Schema.brand("RawSwarmScenarioId"),
 );
@@ -63,11 +63,11 @@ export function decodeScenarioId(
     ),
   );
 }
-const GitShaSchema = Schema.String.pipe(
+export const GitShaSchema = Schema.String.pipe(
   Schema.pattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/),
   Schema.brand("RawSwarmGitSha"),
 );
-const StartedAtSchema = Schema.String.pipe(
+export const StartedAtSchema = Schema.String.pipe(
   Schema.filter(
     (value) => {
       const parsed = new Date(value);
