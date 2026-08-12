@@ -1,4 +1,3 @@
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV31B hunters_mark SRDINV84D hex
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-marked-damage-rider
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
