@@ -14,7 +14,7 @@ module battleRuntimeMovementCompelledMovementSelectedIdentityMbt {
     qCasterSpeedFeet: int,
     qCasterRemainingFeet: int,
     qCasterDashBonusFeet: int,
-    qCasterBonusActionAvailable: bool,
+    qCurrentTurnBonusActionUnspent: bool,
     qCasterConcentrating: bool,
     qSpellSlotSpentThisTurn: bool,
     qLevel1SlotsRemaining: int,
@@ -37,7 +37,7 @@ module battleRuntimeMovementCompelledMovementSelectedIdentityMbt {
   pure def qCasterSpeedFeet: int = qState.qCasterSpeedFeet
   pure def qCasterRemainingFeet: int = qState.qCasterRemainingFeet
   pure def qCasterDashBonusFeet: int = qState.qCasterDashBonusFeet
-  pure def qCasterBonusActionAvailable: bool = qState.qCasterBonusActionAvailable
+  pure def qCurrentTurnBonusActionUnspent: bool = qState.qCurrentTurnBonusActionUnspent
   pure def qCasterConcentrating: bool = qState.qCasterConcentrating
   pure def qSpellSlotSpentThisTurn: bool = qState.qSpellSlotSpentThisTurn
   pure def qLevel1SlotsRemaining: int = qState.qLevel1SlotsRemaining
@@ -65,7 +65,7 @@ module battleRuntimeMovementCompelledMovementSelectedIdentityMbt {
     casterSpeedFeet: int,
     casterRemainingFeet: int,
     casterDashBonusFeet: int,
-    casterBonusActionAvailable: bool,
+    currentTurnBonusActionUnspent: bool,
     casterConcentrating: bool,
     spellSlotSpentThisTurn: bool,
     level1SlotsRemaining: int,
@@ -85,7 +85,7 @@ module battleRuntimeMovementCompelledMovementSelectedIdentityMbt {
       qCasterSpeedFeet: casterSpeedFeet,
       qCasterRemainingFeet: casterRemainingFeet,
       qCasterDashBonusFeet: casterDashBonusFeet,
-      qCasterBonusActionAvailable: casterBonusActionAvailable,
+      qCurrentTurnBonusActionUnspent: currentTurnBonusActionUnspent,
       qCasterConcentrating: casterConcentrating,
       qSpellSlotSpentThisTurn: spellSlotSpentThisTurn,
       qLevel1SlotsRemaining: level1SlotsRemaining,

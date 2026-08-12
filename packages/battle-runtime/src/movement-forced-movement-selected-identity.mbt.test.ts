@@ -90,7 +90,7 @@ type MovementCompelledMovementSelectedIdentityProjection = {
   readonly casterSpeedFeet: number;
   readonly casterRemainingFeet: number;
   readonly casterDashBonusFeet: number;
-  readonly casterBonusActionAvailable: boolean;
+  readonly currentTurnBonusActionUnspent: boolean;
   readonly casterConcentrating: boolean;
   readonly spellSlotSpentThisTurn: boolean;
   readonly level1SlotsRemaining: number;
@@ -182,7 +182,7 @@ defineSelectedIdentityReplayAndQntReplay({
     casterSpeedFeet: "int",
     casterRemainingFeet: "int",
     casterDashBonusFeet: "int",
-    casterBonusActionAvailable: "bool",
+    currentTurnBonusActionUnspent: "bool",
     casterConcentrating: "bool",
     spellSlotSpentThisTurn: "bool",
     level1SlotsRemaining: "int",
@@ -1344,7 +1344,7 @@ function expectedProjection(
     casterSpeedFeet: 30,
     casterRemainingFeet: 30,
     casterDashBonusFeet: 0,
-    casterBonusActionAvailable: true,
+    currentTurnBonusActionUnspent: true,
     casterConcentrating: false,
     spellSlotSpentThisTurn: false,
     level1SlotsRemaining: 2,
@@ -2050,7 +2050,8 @@ function projectMovementCompelledMovementSelectedIdentityState(
     casterSpeedFeet: caster.movement.speedFeet,
     casterRemainingFeet: caster.movement.remainingFeet,
     casterDashBonusFeet: snapshot.turn.dashMovementBonusFeet,
-    casterBonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    currentTurnBonusActionUnspent:
+      state.currentTurnResources.currentHasBonusAction,
     casterConcentrating: casterState.concentration !== null,
     spellSlotSpentThisTurn:
       state.currentTurnResources.spellSlotUsesThisTurn.some(
