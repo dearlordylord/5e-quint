@@ -79,48 +79,6 @@ module battleRuntimeReactionWindow {
       | Goblin => state.goblin.reactionAvailable
     }
 
-  pure def hellishRebukeAfterDamageReactionEligible(
-    triggerFacts: HellishRebukeAfterDamageTrigger,
-    availability: HellishRebukeAfterDamageAvailability,
-  ): bool =
-    match triggerFacts {
-      | HellishRebukeDamageFromVisibleCreatureWithin60Feet =>
-          availability.hellishRebukeAvailable and
-            availability.reactionAvailable and
-            availability.spellSlotAvailable
-      | _ => false
-    }
-
-  pure def openHellishRebukeAfterDamageReactionWindow(
-    state: BattleState,
-    damager: Actor,
-    damaged: Actor,
-    triggerFacts: HellishRebukeAfterDamageTrigger,
-    hellishRebukeAvailable: bool,
-    slotLevel: int,
-  ): BattleState =
-    if (hellishRebukeAfterDamageReactionEligible(
-      triggerFacts,
-      {
-        hellishRebukeAvailable: hellishRebukeAvailable,
-        reactionAvailable: reactorCanReact(state, damaged),
-        spellSlotAvailable: canActorExpendSpellSlotThisTurn(state, damaged),
-      },
-    ))
-      openReactionWindow(state, {
-        trigger: AfterDamage,
-        procedure: DamageInterruptionReactionProcedure,
-        eligibleReactors: Set(damaged),
-        offeredReactors: Set(),
-        continuation: ResumeHellishRebukeAfterDamage({
-          damager: damager,
-          damaged: damaged,
-          slotLevel: slotLevel,
-        }),
-      })
-    else
-      state
-
   pure def spendReaction(state: BattleState, reactor: Actor): BattleState =
     match reactor {
       | Fighter => { ...state, fighter: { ...state.fighter, reactionAvailable: false } }
@@ -386,9 +344,6 @@ module battleRuntimeReactionWindow {
   ): bool =
     pendingCounterspellTakesEffectInState(state, reactor, counterspell) and
       pendingCounterspellEndsTriggeringSpell(counterspell)
-
-  pure def hellishRebukeDamageDice(slotLevel: int): int =
-    if (slotLevel < 1) 0 else 2 + (slotLevel - 1)
 
   pure def readyFighterReadiedSpell(state: BattleState): BattleState =
     if (

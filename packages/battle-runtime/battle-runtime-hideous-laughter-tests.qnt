@@ -7,6 +7,7 @@ module battleRuntimeHideousLaughterTests {
   import battleRuntimeTimedEffects.* from "./battle-runtime-timed-effects"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import battleRuntimeSavingThrowRollMode.* from "./battle-runtime-saving-throw-roll-mode"
+  import battleRuntimeProneMovement.* from "./battle-runtime-prone-movement"
 
   run test_hideous_laughter_failed_save_applies_conditions_and_concentration = {
     val laughed = resolveHideousLaughter(initialState, false, 1)
@@ -79,6 +80,15 @@ module battleRuntimeHideousLaughterTests {
       assert(hideousLaughterDamageRepeatSaveRollMode(target) == AdvantageSavingThrow),
       assert(hideousLaughterDamageRepeatSaveRollModeWithHeightened(target) == NormalSavingThrow),
     }
+  }
+
+  run test_hideous_laughter_suppresses_standing_from_prone = {
+    val laughedAtFighter = {
+      ...initialState,
+      fighter: hideousLaughterTarget(initialState.fighter, Fighter, false, Goblin, Fighter),
+    }
+    val stood = standFighterFromProneUnlessHideousLaughter(laughedAtFighter)
+    assert(stood == laughedAtFighter)
   }
 
 }

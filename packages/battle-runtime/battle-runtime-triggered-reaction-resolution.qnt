@@ -1,18 +1,15 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.reaction-hellish-rebuke
+// KERNEL-COVERAGE: qnt-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
 module battleRuntimeTriggeredReactionResolution {
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
-  import battleRuntimeSaveGatedDamageTarget.* from "./battle-runtime-save-gated-damage-target"
-  import battleRuntimeSaveGatedDamageResolution.* from "./battle-runtime-save-gated-damage-resolution"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeCommandMovementNextTurn.* from "./battle-runtime-command-movement-next-turn"
   import battleRuntimeAttackDamageConcentrationReaction.* from "./battle-runtime-attack-damage-concentration-reaction"
-  import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
+  import battleRuntimeOpportunityAttack.* from "./battle-runtime-opportunity-attack"
 
   pure def resumeNonSpellReactionContinuation(
     state: BattleState,
@@ -142,46 +139,4 @@ module battleRuntimeTriggeredReactionResolution {
       }
     }
 
-  pure def resolveHellishRebukeAfterDamage(
-    state: BattleState,
-    continuation: HellishRebukeAfterDamageContinuation,
-    savingThrowSucceeded: bool,
-    damageRoll: int,
-    concentrationSaveSucceeded: bool,
-  ): BattleState =
-    if (
-      continuation.damaged == continuation.damager or
-      continuation.slotLevel < 1 or
-      not(reactorCanReact(state, continuation.damaged)) or
-      not(canActorExpendSpellSlotThisTurn(state, continuation.damaged))
-    )
-      state
-    else {
-      val afterReactionSpend = spendReaction(state, continuation.damaged)
-      val damagedTarget = match continuation.damager {
-        | Fighter => {
-            ...afterReactionSpend,
-            fighter: saveGatedDamageTarget(
-              HellishRebukeSaveGate,
-              afterReactionSpend.fighter,
-              savingThrowSucceeded,
-              damageRoll,
-              concentrationSaveSucceeded,
-              continuation.damaged,
-            ),
-          }
-        | Goblin => {
-            ...afterReactionSpend,
-            goblin: saveGatedDamageTarget(
-              HellishRebukeSaveGate,
-              afterReactionSpend.goblin,
-              savingThrowSucceeded,
-              damageRoll,
-              concentrationSaveSucceeded,
-              continuation.damaged,
-            ),
-          }
-      }
-      commitActorSpellSlotUse(damagedTarget, continuation.damaged)
-    }
 }

@@ -275,7 +275,8 @@
         "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
-        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-opportunity-attack.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -411,7 +412,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt",
         "packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt",
-        "packages/battle-runtime/battle-runtime-brutal-strike-bridge.qnt"
+        "packages/battle-runtime/battle-runtime-brutal-strike-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-fighter-rage-resistances.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -599,11 +601,11 @@
       "profiles": ["spell.invocation-direct-condition"],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt",
-        "packages/battle-runtime/battle-runtime-sanctuary.qnt",
         "packages/battle-runtime/battle-runtime-concentration.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt",
-        "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt",
-        "packages/battle-runtime/battle-runtime-actor-combatants.qnt"
+        "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
+        "packages/battle-runtime/battle-runtime-direct-condition-action-lifecycle.qnt",
+        "packages/battle-runtime/battle-runtime-invisibility.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2333,7 +2335,7 @@
         "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
-        "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
+        "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -4470,7 +4472,9 @@
         "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
         "packages/battle-runtime/battle-runtime-replay-equivalence.qnt",
-        "packages/battle-runtime/battle-runtime-interrupt-bridge.qnt"
+        "packages/battle-runtime/battle-runtime-interrupt-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
+        "packages/battle-runtime/battle-runtime-opportunity-attack.qnt"
       ],
       "reason": "This row covers the reducer protocol shape beyond the single Reaction offer. The weapon-attack frame owner computes one cohesive handoff value containing participant, target and spatial facts, Attack Roll result, damage input, Critical Hit consequence, phase, and one continuation; its focused witness drives the production reducer through offer, interruption, and resumed handoff. The reaction-window owner projects interrupt stack frames through the existing rule-core ReactionWindowState depth, decline, and advance-continuation semantics; the focused attack-damage and triggered-reaction owners resume suspended non-spell procedures, while the Counterspell decision owner and its direct, weapon-hosted, and save-gated continuation owners resume the exact triggering spell family from the post-Reaction BattleState; and the replay-equivalence owner computes replay-from-root projection by combining the recorded continuation subject/fills with newly supplied suffix fills. The replay focused witness compares independently resolving recorded subject+fills from the root state against the production replay-continuation frame path over the same root state, recorded continuation, handled trigger, and suffix fill sequence. The SRD anchors Reaction timing and the Attack Roll, Critical Hit, damage, and zero-Hit-Point consequence facts retained across this boundary; choosing concrete interrupt stack frames and replay calls is reducer protocol evidence, not a separate RAW ordering interpretation.",
       "runtime": "battle",
@@ -8103,11 +8107,10 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt owns non-SpellCast Reaction decisions, suspended procedure continuation, and after-damage Hellish Rebuke resolution semantics.",
+      "evidence": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt owns non-SpellCast Reaction decisions and suspended procedure continuation semantics; Hellish Rebuke after-damage reaction admission and resolution belong to its focused owner.",
       "obligationIds": [
         "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
-        "BATTLE.REACTION.OFFER_DECLINE_RESUME",
-        "BATTLE.SPELL.REACTION_CASTING_TIME"
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
       "role": "semantic-core"
@@ -8196,10 +8199,7 @@
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-sanctuary.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
-      "obligationIds": [
-        "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
-        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"
-      ],
+      "obligationIds": ["BATTLE.SANCTUARY.TARGETING_INTERDICTION"],
       "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
       "role": "semantic-core"
     },
@@ -9275,11 +9275,8 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt is profile-scoped QNT proof support for direct condition and Sanctuary spell resolution; the existing focused owners remain the generator semantic cores.",
-      "obligationIds": [
-        "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
-        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"
-      ],
+      "evidence": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt is profile-scoped QNT proof support for Sanctuary spell resolution; direct-condition semantics belong to the focused Invisibility owner.",
+      "obligationIds": ["BATTLE.SANCTUARY.TARGETING_INTERDICTION"],
       "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt",
       "role": "proof-only"
     },
@@ -10559,6 +10556,42 @@
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-turn-advancement-death-save-tests.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt owns focused Opportunity Attack resolution semantics for movement-triggered Reaction continuation and attack outcome projection.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-fighter-rage-resistances.qnt owns focused Fighter Rage damage Resistance projection semantics.",
+      "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-fighter-rage-resistances.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-direct-condition-action-lifecycle.qnt owns shared direct-condition target-action and source-action early-ending lifecycle semantics.",
+      "obligationIds": ["BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-action-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-invisibility.qnt owns focused Invisibility direct-condition application, target limit, duration, and cleanup semantics.",
+      "obligationIds": ["BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-invisibility.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt owns focused Hellish Rebuke after-damage Reaction admission, frame opening, slot-level damage facts, and continuation semantics.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
+      "role": "semantic-core"
     }
   ],
   "qntRegistry": [
@@ -10710,6 +10743,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-action-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt",
       "role": "semantic-core"
     },
@@ -10772,6 +10810,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-fighter-rage-resistances.qnt",
       "role": "semantic-core"
     },
     {
@@ -10841,6 +10884,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-hidden.qnt",
       "role": "proof-only"
     },
@@ -10873,6 +10921,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-interrupt-bridge.qnt",
       "role": "bridge"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-invisibility.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -11158,6 +11211,11 @@
       "classification": "exempt",
       "evidence": "Generic reaction-interdiction route fact vocabulary leaf imported by the focused route connector without owning reducer semantics.",
       "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack-denial-route-facts.qnt"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",

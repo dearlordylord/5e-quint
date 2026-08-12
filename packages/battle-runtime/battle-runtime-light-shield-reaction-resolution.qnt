@@ -4,7 +4,7 @@
 
 module battleRuntimeLightShieldReactionResolution {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeLight.* from "./battle-runtime-light"
+  import battleRuntimeLightSpellAttacks.* from "./battle-runtime-light-spell-attacks"
   import battleRuntimeShieldReactionDecision.* from "./battle-runtime-shield-reaction-decision"
 
   // RAW: .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield

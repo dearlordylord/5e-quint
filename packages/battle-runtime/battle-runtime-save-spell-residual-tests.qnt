@@ -1,46 +1,16 @@
 // -*- mode: Bluespec; -*-
-// TEMPORARY RESIDUAL: these scenarios depend on the master-owned Light/concentration/prone lane; delete this root and its closure exception only after synchronization.
+// TEMPORARY RESIDUAL: these Faerie Fire scenarios depend on the master-owned Light emitter lane; delete this root and its closure exception only after synchronization.
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-hideous-laughter-repeat-save-lifecycle
 
 module battleRuntimeSaveSpellResidualTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
-  import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeSleepHideousLaughter.* from "./battle-runtime-sleep-hideous-laughter"
   import battleRuntimeSpellAttackRollAndVisibilityFacts.* from "./battle-runtime-spell-attack-roll-and-visibility-facts"
   import battleRuntimeSaveConditionFaerieFire.* from "./battle-runtime-save-condition-faerie-fire"
-  import battleRuntimeLight.* from "./battle-runtime-light"
-  import battleRuntimeProneMovement.* from "./battle-runtime-prone-movement"
-
-  run test_roll_modifier_concentration_effects_end_when_caster_concentration_breaks = {
-    val concentrating = {
-      ...endTurn(initialState),
-      fighter: {
-        ...initialState.fighter,
-        concentrating: true,
-        activeEffects: Set(BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus({ skill: StealthSkill }), PassWithoutTraceStealthBonus),
-      },
-      goblin: {
-        ...initialState.goblin,
-        activeEffects: Set(BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus({ skill: StealthSkill }), PassWithoutTraceStealthBonus),
-      },
-    }
-    val result = resolveGoblinAttack(concentrating, 20, 18, 5, false)
-    all {
-      assert(not(result.fighter.concentrating)),
-      assert(not(result.fighter.activeEffects.contains(BaneD20RollPenalty))),
-      assert(not(result.fighter.activeEffects.contains(BlessD20RollBonus))),
-      assert(not(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus({ skill: StealthSkill })))),
-      assert(not(result.fighter.activeEffects.contains(PassWithoutTraceStealthBonus))),
-      assert(not(result.goblin.activeEffects.contains(BaneD20RollPenalty))),
-      assert(not(result.goblin.activeEffects.contains(BlessD20RollBonus))),
-      assert(not(result.goblin.activeEffects.contains(GuidanceAbilityCheckBonus({ skill: StealthSkill })))),
-      assert(not(result.goblin.activeEffects.contains(PassWithoutTraceStealthBonus))),
-    }
-  }
+  import battleRuntimeLightEmitters.* from "./battle-runtime-light-emitters"
 
   run test_faerie_fire_applies_outline_until_concentration_break = {
     val lit = resolveFaerieFire(initialState, true, false)
@@ -116,15 +86,6 @@ module battleRuntimeSaveSpellResidualTests {
       })))),
       assert(not(objectOutlinesDenyInvisibleBenefit(broken.objectOutlines, FaerieFireObjectTarget))),
     }
-  }
-
-  run test_hideous_laughter_suppresses_standing_from_prone = {
-    val laughedAtFighter = {
-      ...initialState,
-      fighter: hideousLaughterTarget(initialState.fighter, Fighter, false, Goblin, Fighter),
-    }
-    val stood = standFighterFromProneUnlessHideousLaughter(laughedAtFighter)
-    assert(stood == laughedAtFighter)
   }
 
 }
