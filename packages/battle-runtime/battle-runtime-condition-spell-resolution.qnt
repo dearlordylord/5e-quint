@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SANCTUARY.TARGETING_INTERDICTION BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-direct-condition
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-direct-condition
 
 module battleRuntimeConditionSpellResolution {
   import battleRuntimeModel.* from "./battle-runtime-model"

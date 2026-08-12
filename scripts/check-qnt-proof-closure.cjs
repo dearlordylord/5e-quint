@@ -42,9 +42,9 @@ const PURE_VOCABULARY_LEAVES = new Map([
 const EXCEPTIONS = {
   "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt":
     { maxFiles: 105, maxLines: 20_500 },
-  "packages/battle-runtime/battle-runtime-save-spell-tests.qnt": {
-    maxFiles: 110,
-    maxLines: 21_000,
+  "packages/battle-runtime/battle-runtime-save-spell-residual-tests.qnt": {
+    maxFiles: 73,
+    maxLines: 15_000,
   },
 };
 

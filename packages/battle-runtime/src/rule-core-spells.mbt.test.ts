@@ -138,12 +138,14 @@ type RuleCoreSpellProjection = RuleCoreComponentRoutedProjection & {
   readonly readiedHeld: boolean;
   readonly readiedReleased: boolean;
   readonly concentrationActive: boolean;
-  readonly readiedTargetSelectionKind: ReadiedSpellTargetSelectionKind;
-  readonly readiedObjectDamageCount: number;
-  readonly readiedObjectIgnitionCount: number;
   readonly holes: readonly RuleCoreSpellMbtHole[];
   readonly lastResult: RuleCoreSpellResult;
   readonly lastInvalidReason: RuleCoreSpellInvalidReason;
+};
+type RuleCoreSpellReadiedResponseProjection = RuleCoreSpellProjection & {
+  readonly readiedTargetSelectionKind: ReadiedSpellTargetSelectionKind;
+  readonly readiedObjectDamageCount: number;
+  readonly readiedObjectIgnitionCount: number;
 };
 
 const casterId = combatantId("rule-core-spell-caster");
@@ -209,7 +211,7 @@ type RuleCoreSpellDriverAction = Exclude<
 type SelectedUnitIdentityReplaySequence = {
   readonly name: string;
   readonly actions: readonly RuleCoreSpellDriverAction[];
-  readonly expected: RuleCoreSpellProjection;
+  readonly expected: RuleCoreSpellReadiedResponseProjection;
 };
 type SelectedUnitIdentityReplay = {
   readonly taskId:
@@ -578,8 +580,10 @@ const selectedUnitIdentityReplays = [
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
 function expectedSpellProjection(
-  overrides: Partial<Omit<RuleCoreSpellProjection, "componentRoute">> = {},
-): RuleCoreSpellProjection {
+  overrides: Partial<
+    Omit<RuleCoreSpellReadiedResponseProjection, "componentRoute">
+  > = {},
+): RuleCoreSpellReadiedResponseProjection {
   return withRuleCoreComponentRoute(componentOwner, {
     actionAvailable: true,
     bonusActionAvailable: true,
@@ -1572,9 +1576,13 @@ function createRuleCoreSpellDriver() {
   });
 }
 
-const spellStateCheck = stateCheck(
-  normalizeRuleCoreSpellQuintState,
-  compareRuleCoreSpellState,
+const commonSpellStateCheck = stateCheck(
+  normalizeRuleCoreSpellCommonQuintState,
+  compareRuleCoreSpellCommonState,
+);
+const readiedResponseSpellStateCheck = stateCheck(
+  normalizeRuleCoreSpellReadiedResponseQuintState,
+  compareRuleCoreSpellReadiedResponseState,
 );
 
 const ruleCoreSpellDefaultMbtSteps = 6;
@@ -1632,7 +1640,7 @@ describe("rule-core Spell focused MBT", () => {
         seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(ruleCoreSpellDefaultMbtSteps),
-        stateCheck: spellStateCheck,
+        stateCheck: commonSpellStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -1653,7 +1661,7 @@ describe("rule-core Spell focused MBT", () => {
         seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(ruleCoreSpellDefaultMbtSteps),
-        stateCheck: spellStateCheck,
+        stateCheck: commonSpellStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -1674,7 +1682,7 @@ describe("rule-core Spell focused MBT", () => {
         seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(ruleCoreSpellDefaultMbtSteps),
-        stateCheck: spellStateCheck,
+        stateCheck: commonSpellStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -1695,7 +1703,7 @@ describe("rule-core Spell focused MBT", () => {
         seed: process.env["QUINT_SEED"],
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(ruleCoreSpellDefaultMbtSteps),
-        stateCheck: spellStateCheck,
+        stateCheck: readiedResponseSpellStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,
@@ -2218,7 +2226,7 @@ function projectRuleCoreSpellState(input: {
   readonly readiedObjectIgnitionCount: number;
   readonly lastResult: RuleCoreSpellProjection["lastResult"];
   readonly lastInvalidReason: RuleCoreSpellProjection["lastInvalidReason"];
-}): RuleCoreSpellProjection {
+}): RuleCoreSpellReadiedResponseProjection {
   const snapshot = snapshotBattle(input.state);
   const caster = snapshot.combatants.find(
     (combatant) => combatant.combatantId === casterId,
@@ -2308,10 +2316,35 @@ function projectSpellHole(hole: BattleHole): RuleCoreSpellMbtHole {
   throw new Error(`Unexpected rule-core Spell MBT hole: ${hole.kind}`);
 }
 
-function normalizeRuleCoreSpellQuintState(
+function normalizeRuleCoreSpellCommonQuintState(
   raw: unknown,
 ): RuleCoreSpellProjection {
+  return normalizeRuleCoreSpellCommonState(quintStateRecord(raw));
+}
+
+function normalizeRuleCoreSpellReadiedResponseQuintState(
+  raw: unknown,
+): RuleCoreSpellReadiedResponseProjection {
   const state = quintStateRecord(raw);
+  return {
+    ...normalizeRuleCoreSpellCommonState(state),
+    readiedTargetSelectionKind: readiedSpellTargetSelectionKindName(
+      state["qReadiedTargetSelectionKind"],
+    ),
+    readiedObjectDamageCount: numberFromQuintInt(
+      state["qReadiedObjectDamageCount"],
+      "qReadiedObjectDamageCount",
+    ),
+    readiedObjectIgnitionCount: numberFromQuintInt(
+      state["qReadiedObjectIgnitionCount"],
+      "qReadiedObjectIgnitionCount",
+    ),
+  };
+}
+
+function normalizeRuleCoreSpellCommonState(
+  state: Readonly<Record<string, unknown>>,
+): RuleCoreSpellProjection {
   const protocol = decodeWitnessProtocolState({
     state,
     protocolField: "qProtocol",
@@ -2348,28 +2381,43 @@ function normalizeRuleCoreSpellQuintState(
     readiedHeld: booleanField(state, "qReadiedHeld"),
     readiedReleased: booleanField(state, "qReadiedReleased"),
     concentrationActive: booleanField(state, "qConcentrationActive"),
-    readiedTargetSelectionKind: readiedSpellTargetSelectionKindName(
-      state["qReadiedTargetSelectionKind"],
-    ),
-    readiedObjectDamageCount: numberFromQuintInt(
-      state["qReadiedObjectDamageCount"],
-      "qReadiedObjectDamageCount",
-    ),
-    readiedObjectIgnitionCount: numberFromQuintInt(
-      state["qReadiedObjectIgnitionCount"],
-      "qReadiedObjectIgnitionCount",
-    ),
     holes: protocol.holes,
     lastResult: spellResult(protocol.lastResult),
     lastInvalidReason: spellInvalidReason(protocol.lastInvalidReason),
   };
 }
 
-function compareRuleCoreSpellState(
+function compareRuleCoreSpellCommonState(
   quint: RuleCoreSpellProjection,
   runtime: RuleCoreSpellProjection,
 ): boolean {
+  return isDeepStrictEqual(commonRuleCoreSpellProjection(runtime), quint);
+}
+
+function compareRuleCoreSpellReadiedResponseState(
+  quint: RuleCoreSpellReadiedResponseProjection,
+  runtime: RuleCoreSpellReadiedResponseProjection,
+): boolean {
   return isDeepStrictEqual(runtime, quint);
+}
+
+function commonRuleCoreSpellProjection(
+  projection: RuleCoreSpellProjection | RuleCoreSpellReadiedResponseProjection,
+): RuleCoreSpellProjection {
+  if (
+    "readiedTargetSelectionKind" in projection &&
+    "readiedObjectDamageCount" in projection &&
+    "readiedObjectIgnitionCount" in projection
+  ) {
+    const {
+      readiedTargetSelectionKind: _readiedTargetSelectionKind,
+      readiedObjectDamageCount: _readiedObjectDamageCount,
+      readiedObjectIgnitionCount: _readiedObjectIgnitionCount,
+      ...commonProjection
+    } = projection;
+    return commonProjection;
+  }
+  return projection;
 }
 
 function spellRecord(

@@ -1703,6 +1703,10 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
         },
         {
@@ -1737,7 +1741,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-chained-spell-attack-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -1771,7 +1775,31 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -1805,7 +1833,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2050,7 +2078,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3026,6 +3054,10 @@
       "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
       "verificationOwners": [
         {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice-tests.qnt"
+        },
+        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
         },
@@ -3087,7 +3119,15 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3125,7 +3165,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-residual-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3179,7 +3219,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3285,7 +3325,11 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-hideous-laughter-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-residual-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3310,7 +3354,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -4131,7 +4175,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt"
         },
         {
           "kind": "runtime-test",
@@ -32617,6 +32661,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -32942,7 +32990,15 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -33824,7 +33880,31 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -33893,6 +33973,10 @@
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice-tests.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
@@ -33979,6 +34063,10 @@
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice-tests.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
@@ -34162,6 +34250,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -34277,7 +34369,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -34365,6 +34457,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -34465,7 +34561,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-chained-spell-attack-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -34650,7 +34746,31 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -35293,6 +35413,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -35522,7 +35646,31 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -36076,7 +36224,15 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -36280,6 +36436,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -36841,6 +37001,10 @@
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice-tests.qnt"
+            },
+            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
             },
@@ -37050,7 +37214,31 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -37137,6 +37325,10 @@
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice-tests.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
@@ -37274,7 +37466,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-residual-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -37499,6 +37691,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -37593,6 +37789,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -37791,6 +37991,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -38255,6 +38459,10 @@
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice-tests.qnt"
+            },
+            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
             },
@@ -38482,6 +38690,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -39221,6 +39433,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -39304,6 +39520,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -39496,7 +39716,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt"
             },
             {
               "kind": "runtime-test",
@@ -39945,6 +40165,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -40922,6 +41146,10 @@
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice-tests.qnt"
+            },
+            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
             },
@@ -41141,6 +41369,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -41424,7 +41656,15 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -41587,6 +41827,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -41838,6 +42082,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -41949,6 +42197,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -42455,6 +42707,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -43057,6 +43313,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -43175,6 +43435,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -43319,6 +43583,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -43814,6 +44082,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -44042,6 +44314,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -44185,6 +44461,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -44448,6 +44728,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -45107,6 +45391,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -45345,7 +45633,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-sleep-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -45375,7 +45663,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-sleep-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -46573,6 +46861,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -46818,7 +47110,15 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -46936,6 +47236,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -47014,7 +47318,11 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-hideous-laughter-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-residual-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -47089,7 +47397,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -47342,7 +47650,31 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -47423,7 +47755,31 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold-tests.qnt"
             },
             {
               "kind": "runtime-test",

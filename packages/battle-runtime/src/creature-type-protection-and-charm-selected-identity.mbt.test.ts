@@ -6,6 +6,7 @@ import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 import { Either } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { battleActsWithReducerRouteEvents } from "./battle-act-composition.ts";
 import { describe, expect, it } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -1445,7 +1446,10 @@ function protectionFromEvilAndGoodSpellAct(state: BattleState): ActionSpellAct {
 }
 
 function spellAct(state: BattleState, unitId: string): ActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
+  const act = battleActsWithReducerRouteEvents(
+    state,
+    discoverBattleActCandidates(state),
+  ).find(
     (candidate): candidate is ActionSpellAct =>
       candidate.subject.tag === "actionSpell",
   );
@@ -1557,14 +1561,7 @@ function resolveAnimalFriendshipFailedSave(state: BattleState): BattleState {
 }
 
 function animalFriendshipSpellAct(state: BattleState): ActionSpellAct {
-  const act = discoverBattleActCandidates(state).find(
-    (candidate): candidate is ActionSpellAct =>
-      candidate.subject.tag === "actionSpell",
-  );
-  if (act === undefined) {
-    throw new Error("Expected Animal Friendship spell act.");
-  }
-  return act;
+  return spellAct(state, animalFriendshipUnitId);
 }
 
 function spellTargetListFill(

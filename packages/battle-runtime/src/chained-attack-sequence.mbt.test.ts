@@ -1,5 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import { battleProcedureExecutionRefForSpellHoleForTest } from "./battle-runtime.test-support.ts";
 import {
   battleActSpellPresentation,
   battleActSpellSlotPresentation,
@@ -848,9 +848,8 @@ function spellTargetFill(
         kind: "spellTarget",
         casterId: spellCasterId,
         targetId,
-        sourceProcedureRef: battleProcedureExecutionRefForTest(
-          String(chromaticOrbUnitId),
-        ),
+        sourceProcedureRef:
+          battleProcedureExecutionRefForSpellHoleForTest(hole),
       },
     ],
   };
@@ -874,9 +873,8 @@ function spellLeapTargetFill(
             kind: "spellLeapTargetWithinRange",
             previousTargetId,
             targetId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(chromaticOrbUnitId),
-            ),
+            sourceProcedureRef:
+              battleProcedureExecutionRefForSpellHoleForTest(hole),
             rangeFeet: movementFeet(30),
           },
         ]
