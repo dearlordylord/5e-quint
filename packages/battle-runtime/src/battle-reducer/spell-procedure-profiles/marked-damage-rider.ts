@@ -32,7 +32,6 @@ import {
   type SpellSlotLevel,
 } from "@dnd/shared/types";
 import {
-  isFixedDistancePointRange,
   type Ability,
   type DamageType,
   type DiceExpr,
@@ -119,6 +118,15 @@ type MarkedDamageRiderCastInvocation = Extract<
 >;
 type MarkedDamageRiderResolveInput =
   SpellProcedureProfileResolveInput<MarkedDamageRiderInvocation>;
+type OngoingEffectMechanics = Extract<
+  BattleSpellAdmissionSource["mechanics"],
+  { readonly family: "ongoing_effect" }
+>;
+type OngoingEffectOperation = OngoingEffectMechanics["operations"][number];
+type ConcentrationDuration = Extract<
+  OngoingEffectMechanics["duration"],
+  { readonly kind: "concentration" }
+>;
 
 function admitMarkedDamageRider(
   spell: BattleSpellAdmissionSource,
@@ -128,8 +136,14 @@ function admitMarkedDamageRider(
   if (projection === null) {
     return [];
   }
-  const { abilityCheckBehavior, damageType, expr, rangeFeet, retargetTiming } =
-    projection;
+  const {
+    abilityCheckBehavior,
+    damageType,
+    duration,
+    expr,
+    rangeFeet,
+    retargetTiming,
+  } = projection;
   const favoredEnemyResourcePoolRef =
     spell.classFeatureFreeCastResourcePoolRefs.find((resourcePoolRef) =>
       characterBattleResourcePoolRefHasUsesRemaining(
@@ -139,7 +153,7 @@ function admitMarkedDamageRider(
     );
   const favoredEnemyExpiresAt = markedDamageRiderConcentrationExpirationForSlot(
     ctx.actor.combatantId,
-    spell,
+    duration,
     spellSlotLevel(1),
   );
   const freeCastInvocations: readonly MarkedDamageRiderInvocation[] =
@@ -168,7 +182,7 @@ function admitMarkedDamageRider(
     (slot): readonly MarkedDamageRiderInvocation[] => {
       const expiresAt = markedDamageRiderConcentrationExpirationForSlot(
         ctx.actor.combatantId,
-        spell,
+        duration,
         slot.spellLevel,
       );
       return Number(slot.spellLevel) < spell.mechanics.level ||
@@ -215,6 +229,7 @@ function markedDamageRiderTransferIsAvailableOnTurn(
 function markedDamageRiderSpellProjection(spell: BattleSpellAdmissionSource): {
   readonly abilityCheckBehavior: MarkedDamageRiderCastAbilityCheckBehavior;
   readonly damageType: DamageType;
+  readonly duration: ConcentrationDuration;
   readonly expr: DiceExpr;
   readonly rangeFeet: MovementFeet;
   readonly retargetTiming: MarkedDamageRiderRetargetTiming;
@@ -235,7 +250,9 @@ function markedDamageRiderSpellProjection(spell: BattleSpellAdmissionSource): {
 
   if (spell.mechanics.operations.length === 1) {
     return markedDamageRiderDamageProjection(
-      spell,
+      spell.mechanics.operations[0],
+      movementFeet(spell.mechanics.range.feet),
+      spell.mechanics.duration,
       "force",
       {
         kind: "findingAdvantage",
@@ -257,7 +274,9 @@ function markedDamageRiderSpellProjection(spell: BattleSpellAdmissionSource): {
     return abilityChoices === null
       ? null
       : markedDamageRiderDamageProjection(
-          spell,
+          spell.mechanics.operations[0],
+          movementFeet(spell.mechanics.range.feet),
+          spell.mechanics.duration,
           "necrotic",
           { kind: "chosenAbilityDisadvantage", choices: abilityChoices },
           "laterTurn",
@@ -268,30 +287,24 @@ function markedDamageRiderSpellProjection(spell: BattleSpellAdmissionSource): {
 }
 
 function markedDamageRiderDamageProjection(
-  spell: BattleSpellAdmissionSource,
+  operation: OngoingEffectOperation | undefined,
+  rangeFeet: MovementFeet,
+  duration: ConcentrationDuration,
   damageType: DamageType,
   abilityCheckBehavior: MarkedDamageRiderCastAbilityCheckBehavior,
   retargetTiming: MarkedDamageRiderRetargetTiming,
 ): {
   readonly abilityCheckBehavior: MarkedDamageRiderCastAbilityCheckBehavior;
   readonly damageType: DamageType;
+  readonly duration: ConcentrationDuration;
   readonly expr: DiceExpr;
   readonly rangeFeet: MovementFeet;
   readonly retargetTiming: MarkedDamageRiderRetargetTiming;
 } | null {
-  const mechanics = spell.mechanics;
-  if (
-    mechanics.family !== "ongoing_effect" ||
-    !isFixedDistancePointRange(mechanics.range)
-  ) {
-    return null;
-  }
-  const operation = mechanics.operations[0];
   if (
     operation?.trigger.kind !== "on_caster_attack_hit" ||
     operation.effect.kind !== "damage" ||
-    operation.effect.damageType !== damageType ||
-    operation.effect.amount === undefined
+    operation.effect.damageType !== damageType
   ) {
     return null;
   }
@@ -301,8 +314,9 @@ function markedDamageRiderDamageProjection(
     : {
         abilityCheckBehavior,
         damageType,
+        duration,
         expr,
-        rangeFeet: movementFeet(mechanics.range.feet),
+        rangeFeet,
         retargetTiming,
       };
 }
@@ -334,58 +348,61 @@ function hexAbilityChoices(
 
 function markedDamageRiderConcentrationExpirationForSlot(
   actorId: CombatantId,
-  spell: BattleSpellAdmissionSource,
+  duration: ConcentrationDuration,
   slotLevel: SpellSlotLevel,
 ): Extract<
   BattleActiveEffectExpiration,
   { readonly kind: "concentration" }
 > | null {
+  const durationTiers = supportedMarkedDamageRiderDurationTiers(duration.upTo);
   if (
-    spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.duration.upTo.unit !== "hour" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    !hasSupportedMarkedDamageRiderDurationTiers(spell.mechanics.duration.upTo)
+    duration.upTo.unit !== "hour" ||
+    duration.upTo.amount !== 1 ||
+    durationTiers === null
   ) {
     return null;
   }
-  const upTo = spell.mechanics.duration.upTo;
-  const amount =
-    upTo.upcastTiers?.reduce(
-      (currentAmount, tier) =>
-        Number(slotLevel) >= tier.atSlot ? tier.amount : currentAmount,
-      upTo.amount,
-    ) ?? upTo.amount;
-  const ticks = elapsedTimeTicksFromTimeSpanDuration({
-    unit: upTo.unit,
+  const upTo = duration.upTo;
+  const amount = durationTiers.reduce(
+    (currentAmount, tier) =>
+      Number(slotLevel) >= tier.atSlot ? tier.amount : currentAmount,
+    upTo.amount,
+  );
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration({
+    unit: "hour",
     amount,
   });
-  return Either.isLeft(ticks)
-    ? null
-    : {
-        kind: "concentration",
-        combatantId: actorId,
-        durationTicks: ticks.right,
-      };
+  if (Either.isLeft(durationTicks)) {
+    return null;
+  }
+  return {
+    kind: "concentration",
+    combatantId: actorId,
+    durationTicks: durationTicks.right,
+  };
 }
 
-function hasSupportedMarkedDamageRiderDurationTiers(
+function supportedMarkedDamageRiderDurationTiers(
   upTo: Extract<
     BattleSpellAdmissionSource["mechanics"]["duration"],
     { readonly kind: "concentration" }
   >["upTo"],
-): boolean {
-  const tiers = upTo.upcastTiers ?? [];
-  return (
-    durationTiersEqual(tiers, [
-      { atSlot: 3, amount: 8 },
-      { atSlot: 5, amount: 24 },
-    ]) ||
+): readonly { readonly atSlot: number; readonly amount: number }[] | null {
+  const tiers = upTo.upcastTiers;
+  if (tiers === undefined) {
+    return null;
+  }
+  return durationTiersEqual(tiers, [
+    { atSlot: 3, amount: 8 },
+    { atSlot: 5, amount: 24 },
+  ]) ||
     durationTiersEqual(tiers, [
       { atSlot: 2, amount: 4 },
       { atSlot: 3, amount: 8 },
       { atSlot: 5, amount: 24 },
     ])
-  );
+    ? tiers
+    : null;
 }
 
 function durationTiersEqual(
