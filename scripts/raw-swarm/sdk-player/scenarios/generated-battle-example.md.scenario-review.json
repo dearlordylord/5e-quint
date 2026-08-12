@@ -1,0 +1,19 @@
+{
+  "scenarioId": "generated-battle-example",
+  "scenarioSha256": "56d45e3d99d56ecca8a45d4e702a7cffc886d3b7101c17b6a69d188e0988408c",
+  "gitSha": "62e4a015d42f724a0af4157b572732854f46d612",
+  "admitReviewedUnsupported": true,
+  "rawReview": {
+    "classification": "supported",
+    "evidence": "The combat setup follows `.references/srd-5.2.1/Playing-the-Game.md` headings “Combat,” “Initiative,” “Playing on a Grid,” “Movement and Position,” “Making an Attack,” “Cover,” “Opportunity Attacks,” and “Ending Combat”; canonical creature behavior comes from `.references/srd-5.2.1/Monsters/Monsters-E-G.md` heading “Goblin Warrior” and `.references/srd-5.2.1/Animals.md` heading “Wolf.” The visibly synthetic crystal uses explicit table-authored object facts consistent with `.references/srd-5.2.1/Rules-Glossary.md` headings “Object” and “Breaking Objects,” including attackability, table-selected AC and Hit Points, and Poison and Psychic immunity. Character construction and starting-square assignment are explicitly delegated before Initiative rather than asserted as RAW facts. The attacker and defender text supplies adaptable strategy briefs rather than extra mechanical effects. The objective observes normal combat ending and uses the round-eight boundary consistently with `ASSUMPTIONS.md` A2 and A4. Initiative ties and situational sight or cover remain ordinary GM decisions at the table rather than missing scenario rules."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "The artifact uses canonical SRD identities only (Goblin Warrior and Wolf), generic adventurer terminology, and a visibly synthetic beacon crystal. It contains no real PHB+ ids, names, slugs, provenance claims, page references, source crosswalks, protected examples, or recognizable borrowed prose; its map, objectives, and tactical presentation are independently expressed."
+  },
+  "contentAvailabilityIntent": "availableOnly",
+  "contentReview": {
+    "classification": "supplied",
+    "evidence": "The scenario selects only Goblin Warrior and Wolf canonical stat blocks; both identities are included in the supplied availability profile."
+  }
+}
