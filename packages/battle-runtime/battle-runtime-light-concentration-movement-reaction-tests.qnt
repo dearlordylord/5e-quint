@@ -25,6 +25,9 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
   import battleRuntimeFindFamiliar.* from "./battle-runtime-find-familiar"
   import battleRuntimeLight.* from "./battle-runtime-light"
+  import battleRuntimeLightEmitters.* from "./battle-runtime-light-emitters"
+  import battleRuntimeLightSpellAttacks.* from "./battle-runtime-light-spell-attacks"
+  import battleRuntimeLightSpellLifecycle.* from "./battle-runtime-light-spell-lifecycle"
   import battleRuntimeOngoingSpellDispel.* from "./battle-runtime-ongoing-spell-dispel"
   import battleRuntimeCreatureTypeProtection.* from "./battle-runtime-creature-type-protection"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
@@ -32,17 +35,15 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   import battleRuntimeBardicInspiration.* from "./battle-runtime-bardic-inspiration"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeSpellSlotClassification.* from "./battle-runtime-spell-slot-classification"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
-  import battleRuntimeReactionResolution.* from "./battle-runtime-reaction-resolution"
+  import battleRuntimeTriggeredReactionResolution.* from "./battle-runtime-triggered-reaction-resolution"
   import battleRuntimeSpellAttackFacts.* from "./battle-runtime-spell-attack-facts"
   import battleRuntimeChainedSpellAttack.* from "./battle-runtime-chained-spell-attack"
   import battleRuntimeSaveGatedDamageResolution.* from "./battle-runtime-save-gated-damage-resolution"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeMarkedSpells.* from "./battle-runtime-marked-spells"
-  import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
@@ -1068,7 +1069,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
       })
     ) {
       | DissonantWhispersOpportunityAttackWindow(awaiting) => {
-          val resumed = declineReactionOfferAndResume(awaiting, Fighter)
+          val resumed = declineNonSpellReactionOfferAndResume(awaiting, Fighter)
           all {
             assert(resumed.fighter.reactionAvailable),
             assert(not(resumed.goblin.reactionAvailable)),
@@ -1089,8 +1090,25 @@ module battleRuntimeLightConcentrationMovementReactionTests {
   run test_reaction_decision_contract_rejects_unavailable_reaction = {
     val awaiting = moveFighter({ ...initialState, goblin: { ...initialState.goblin, reactionAvailable: false } }, 5, 10 > 5)
     all {
-      assert(resolveReactionOffer(awaiting, Goblin) == awaiting),
-      assert(declineReactionOfferAndResume(awaiting, Goblin).fighter.movementSpent == 5),
+      assert(resolveNonSpellReactionOffer(awaiting, Goblin) == awaiting),
+      assert(declineNonSpellReactionOfferAndResume(awaiting, Goblin).fighter.movementSpent == 5),
+    }
+  }
+
+  run test_unsupported_shield_continuation_is_rejected_without_reaction_spend = {
+    val awaiting = openReactionWindow(initialState, {
+      trigger: AttackHit,
+      procedure: ShieldReactionProcedure,
+      eligibleReactors: Set(Fighter),
+      offeredReactors: Set(),
+      continuation: ResumeAfterDamage,
+    })
+    val resolved = resolveNonSpellReactionOffer(awaiting, Fighter)
+    val declined = declineNonSpellReactionOfferAndResume(awaiting, Fighter)
+    all {
+      assert(resolved == awaiting),
+      assert(declined == awaiting),
+      assert(resolved.fighter.reactionAvailable),
     }
   }
 
@@ -1102,7 +1120,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
       offeredReactors: Set(),
       continuation: ResumeAfterDamage,
     })
-    val resolved = resolveReactionOffer(awaitingReaction, Fighter)
+    val resolved = resolveNonSpellReactionOffer(awaitingReaction, Fighter)
     all {
       assert(resolved.interruptStack == []),
       assert(not(resolved.fighter.reactionAvailable)),
@@ -1111,7 +1129,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
 
   run test_declined_opportunity_attack_resumes_movement = {
     val awaiting = moveFighter(initialState, 5, 10 > 5)
-    val resumed = declineReactionOfferAndResume(awaiting, Goblin)
+    val resumed = declineNonSpellReactionOfferAndResume(awaiting, Goblin)
     all {
       assert(resumed.interruptStack == []),
       assert(resumed.fighter.movementSpent == 5),
@@ -1121,7 +1139,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
 
   run test_resolved_opportunity_attack_spends_reaction_damages_then_resumes_movement = {
     val awaiting = moveFighter(initialState, 5, 10 > 5)
-    val resolved = resolveReactionOffer(awaiting, Goblin)
+    val resolved = resolveNonSpellReactionOffer(awaiting, Goblin)
     all {
       assert(resolved.interruptStack == []),
       assert(resolved.goblin.reactionAvailable == false),
@@ -1147,7 +1165,7 @@ module battleRuntimeLightConcentrationMovementReactionTests {
       offeredReactors: Set(),
       continuation: ResumeAttack({ damage: 7 }),
     })
-    val resolved = resolveReactionOffer(awaitingReaction, Fighter)
+    val resolved = resolveNonSpellReactionOffer(awaitingReaction, Fighter)
     all {
       assert(not(resolved.fighter.readiedSpellHeld)),
       assert(not(resolved.fighter.concentrating)),

@@ -268,6 +268,13 @@
       ],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+        "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
       ],
       "reason": "The shared rule core and focused MBT own the generic Reaction window plus the held and released readied-Movement branch, including the fact that its movement does not consume ordinary turn movement. Focused runtime regressions separately exercise the canonical declaration choices and ordinary Action and Attack release branches. Together the evidence proves that the runtime stores the player-authored perceivable trigger and selected offered action or movement, opens the Reaction only after a table report, expires it at the actor's next turn, and restores any interrupted subject continuation. This row does not claim that the QNT movement branch alone models every response discriminant.",
@@ -282,7 +289,8 @@
       "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Rules-Glossary.md#Ready-Action",
-        ".references/srd-5.2.1/Rules-Glossary.md#Reaction"
+        ".references/srd-5.2.1/Rules-Glossary.md#Reaction",
+        ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield"
       ],
       "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
     },
@@ -493,8 +501,7 @@
         "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
         "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
         "packages/battle-runtime/battle-runtime-spell-attack-burst-bridge.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt"
+        "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -1050,7 +1057,7 @@
       "profiles": ["spell.invocation-ongoing-spell-ending"],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt",
-        "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
         "packages/battle-runtime/battle-runtime-object-contact-damage.qnt"
       ],
       "runtime": "battle",
@@ -1681,7 +1688,8 @@
       ],
       "profiles": ["spell.invocation-object-light"],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt",
         "packages/battle-runtime/battle-runtime-end-of-turn-light-expiration.qnt"
       ],
@@ -1750,7 +1758,11 @@
         }
       ],
       "profiles": ["spell.invocation-held-light-emitter"],
-      "qntOwners": ["packages/battle-runtime/battle-runtime-light.qnt"],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
+      ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -1777,7 +1789,11 @@
         }
       ],
       "profiles": ["spell.invocation-spell-created-held-object"],
-      "qntOwners": ["packages/battle-runtime/battle-runtime-light.qnt"],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
+      ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -1802,7 +1818,10 @@
         }
       ],
       "profiles": ["spell.invocation-dancing-lights-movable-dim-light"],
-      "qntOwners": ["packages/battle-runtime/battle-runtime-light.qnt"],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
+      ],
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -2327,7 +2346,12 @@
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
-        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt"
+        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt",
+        "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2908,7 +2932,8 @@
       ],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
-        "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+        "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
+        "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt",
         "packages/battle-runtime/battle-runtime-chosen-damage-resistance.qnt"
       ],
       "runtime": "battle",
@@ -3266,6 +3291,7 @@
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-spell-replay.qnt",
         "packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt",
         "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt",
         "packages/battle-runtime/battle-runtime-command-ordering.qnt",
@@ -4427,11 +4453,16 @@
       "profiles": [],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
-        "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
+        "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
         "packages/battle-runtime/battle-runtime-replay-equivalence.qnt",
         "packages/battle-runtime/battle-runtime-interrupt-bridge.qnt"
       ],
-      "reason": "This row covers the reducer protocol shape beyond the single Reaction offer. The reaction-window owner projects interrupt stack frames through the existing rule-core ReactionWindowState depth, decline, and advance-continuation semantics, the reaction-resolution owner resumes suspended procedures from the post-Reaction BattleState after active Spell Effects may have changed, and the replay-equivalence owner computes replay-from-root projection by combining the recorded continuation subject/fills with newly supplied suffix fills. The focused interrupt-stack witness covers nested decline, active Spell Effect mutation, and replay-from-root equivalence against the production reducer. The SRD anchors Reaction timing and the Attack Roll, Critical Hit, damage, and zero-Hit-Point consequence facts retained across this boundary; choosing concrete interrupt stack frames and replay calls is reducer protocol evidence, not a separate RAW ordering interpretation.",
+      "reason": "This row covers the reducer protocol shape beyond the single Reaction offer. The reaction-window owner projects interrupt stack frames through the existing rule-core ReactionWindowState depth, decline, and advance-continuation semantics; the focused attack-damage and triggered-reaction owners resume suspended non-spell procedures, while the Counterspell decision owner and its direct, weapon-hosted, and save-gated continuation owners resume the exact triggering spell family from the post-Reaction BattleState; and the replay-equivalence owner computes replay-from-root projection by combining the recorded continuation subject/fills with newly supplied suffix fills. The focused interrupt-stack witness covers nested decline, active Spell Effect mutation, and replay-from-root equivalence against the production reducer. The SRD anchors Reaction timing and the Attack Roll, Critical Hit, damage, and zero-Hit-Point consequence facts retained across this boundary; choosing concrete interrupt stack frames and replay calls is reducer protocol evidence, not a separate RAW ordering interpretation.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -7745,9 +7776,9 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-damage-adjustments.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "evidence": "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt owns target-side immunity, Resistance, and vulnerability adjustment plus chosen-type Resistance spell reduction application and consumption semantics.",
       "obligationIds": ["BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION"],
-      "ownerPath": "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
       "role": "semantic-core"
     },
     {
@@ -7843,15 +7874,40 @@
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-light.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
+      "obligationIds": ["BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused light-emitter state, projection, replacement, cleanup, and Dispel Magic semantics split from the weapon-effect light owner.",
       "obligationIds": [
         "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
         "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
-        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
-        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS"
+        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE"
       ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-light.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused held-light and spell-created-held-object attack semantics split from the light lifecycle owner.",
+      "obligationIds": [
+        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused object-light, held-light, spell-created-held-object, and Dancing Lights lifecycle semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
       "role": "semantic-core"
     },
     {
@@ -8008,9 +8064,88 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-reaction-resolution.qnt is the covered obligation QNT owner carrying reaction procedure resolution and suspended continuation resume semantics.",
-      "obligationIds": ["BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY"],
-      "ownerPath": "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
+      "evidence": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt owns the typed Shield Reaction offer, decline, resource admission, spend, and frame-close decision protocol.",
+      "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt owns Shield continuation admission and resume for direct Ray of Frost, Poison Spray, and Chill Touch attack frames.",
+      "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt owns Shield continuation admission and resume for Produce Flame hurl and Flame Blade attack frames, including the consumed-held-light boundary.",
+      "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt owns Shield continuation admission and resume for the Ice Knife attack-and-burst frame.",
+      "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt owns Shield continuation admission and resume for the True Strike weapon attack frame.",
+      "obligationIds": ["BATTLE.REACTION.OFFER_DECLINE_RESUME"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt owns attack-damage continuation and Concentration interruption resolution semantics.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt owns Counterspell spell-cast Reaction resolution and direct suspended spell-attack continuation semantics.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt owns non-SpellCast Reaction decisions, suspended procedure continuation, and after-damage Hellish Rebuke resolution semantics.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt owns Counterspell decision, slot finalization, and continuation handoff semantics independent of the triggering spell family.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt owns Counterspell resume dispatch for suspended weapon-hosted spell continuations.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt owns Counterspell resume dispatch for suspended save-gated spell continuations.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
       "role": "semantic-core"
     },
     {
@@ -9898,6 +10033,12 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "packages/battle-runtime/battle-runtime-save-gated-spell-replay.qnt owns save-gated replay and frontier-hole projections extracted from the former catch-all production closure.",
+      "obligationIds": ["BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay.qnt",
+      "role": "semantic-core"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt is a focused QNT owner extracted from a former catch-all production closure.",
       "obligationIds": ["BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE"],
       "ownerPath": "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
@@ -9937,12 +10078,6 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt is a focused QNT owner extracted from a former catch-all production closure.",
-      "obligationIds": ["BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE"],
-      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-      "role": "semantic-core"
-    },
-    {
       "evidence": "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt is a focused QNT owner extracted from a former catch-all production closure.",
       "obligationIds": [
         "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
@@ -9967,6 +10102,7 @@
     {
       "evidence": "Focused battle-runtime projection bridge from portable spell-lifecycle semantics into the battle state shape.",
       "obligationIds": [
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
         "BATTLE.SPELL.READIED_RESPONSE_PROCEDURE",
         "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
         "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE"
@@ -10460,6 +10596,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-attack-facts.qnt",
       "role": "proof-only"
     },
@@ -10536,6 +10677,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-creature-size-change.qnt",
       "role": "semantic-core"
     },
@@ -10556,7 +10702,7 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+      "ownerPath": "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
       "role": "semantic-core"
     },
     {
@@ -10567,6 +10713,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-removal.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
       "role": "semantic-core"
     },
     {
@@ -10733,6 +10884,26 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-levitate-creature.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
       "role": "semantic-core"
     },
     {
@@ -11044,11 +11215,6 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
-      "role": "semantic-core"
-    },
-    {
-      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-reaction-window.qnt",
       "role": "semantic-core"
     },
@@ -11155,6 +11321,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution.qnt",
       "role": "semantic-core"
     },
@@ -11175,7 +11346,17 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay.qnt",
       "role": "semantic-core"
     },
     {
@@ -11208,6 +11389,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-shape-shifting.qnt",
       "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -11276,15 +11462,15 @@
       "role": "semantic-core"
     },
     {
-      "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt",
-      "role": "semantic-core"
-    },
-    {
       "category": "proof-only-example",
       "classification": "exempt",
       "evidence": "Run-block examples for the spell bridge; registered spell rule-core and battle owners carry active coverage.",
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-bridge-examples.qnt"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -11379,6 +11565,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-turn-advancement-death-save.qnt",
       "role": "semantic-core"
     },
@@ -11419,6 +11610,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt",
       "role": "semantic-core"
     },
@@ -11431,6 +11627,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-weapon-hosted-capability-facts.qnt",
       "role": "bridge"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -12880,7 +13081,12 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
-        "packages/battle-runtime/battle-runtime-reaction-window.qnt"
+        "packages/battle-runtime/battle-runtime-reaction-window.qnt",
+        "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13562,7 +13768,7 @@
       "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-ongoing-spell-dispel.qnt",
-        "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
         "packages/battle-runtime/battle-runtime-object-contact-damage.qnt"
       ],
       "status": "generation-subset-clean"
@@ -14065,7 +14271,8 @@
       "obligationId": "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-light.qnt",
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt",
         "packages/battle-runtime/battle-runtime-end-of-turn-light-expiration.qnt"
       ],
@@ -14134,7 +14341,11 @@
       ],
       "obligationId": "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": ["packages/battle-runtime/battle-runtime-light.qnt"],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
+      ],
       "status": "generation-subset-clean"
     },
     {
@@ -14164,7 +14375,11 @@
       ],
       "obligationId": "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": ["packages/battle-runtime/battle-runtime-light.qnt"],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
+      ],
       "status": "generation-subset-clean"
     },
     {
@@ -14194,7 +14409,10 @@
       ],
       "obligationId": "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
       "proofOnly": [],
-      "semanticCore": ["packages/battle-runtime/battle-runtime-light.qnt"],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
+      ],
       "status": "generation-subset-clean"
     },
     {
@@ -14648,7 +14866,11 @@
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/battle-runtime/battle-runtime-spell-slot-classification.qnt",
-        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt"
+        "packages/battle-runtime/battle-runtime-spell-cast-resources.qnt",
+        "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15107,8 +15329,7 @@
         "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
         "packages/battle-runtime/battle-runtime-magic-missile-arithmetic.qnt",
         "packages/battle-runtime/battle-runtime-saving-throw-roll-mode.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack-timed-effects.qnt"
+        "packages/battle-runtime/battle-runtime-spell-attack-direct-resolution.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15162,7 +15383,7 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
-        "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+        "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15773,6 +15994,7 @@
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-spell-replay.qnt",
         "packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt",
         "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt",
         "packages/battle-runtime/battle-runtime-command-ordering.qnt",
@@ -15808,7 +16030,12 @@
       "proofOnly": [],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
-        "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
+        "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
         "packages/battle-runtime/battle-runtime-replay-equivalence.qnt"
       ],
       "status": "generation-subset-clean"

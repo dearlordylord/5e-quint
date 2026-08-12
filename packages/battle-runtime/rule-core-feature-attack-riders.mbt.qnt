@@ -188,7 +188,7 @@ module ruleCoreFeatureAttackRidersMbt {
       incomingAttackAdvantage: true,
       lastDamageAmount: 2,
       result: WResolved,
-      frenzyDamageTypeSelection: FrenzyAutomatic("bludgeoning"),
+      frenzyDamageTypeSelection: FrenzyAutomatic("slashing"),
     }),
   }
 

@@ -1938,7 +1938,7 @@ export function resolveSaveGateDamageSpellAct(input: {
   }
   const hideousLaughterSaveHoleIds = new Set<BattleHoleId>(
     hideousLaughterSaveChecks.flatMap((check) =>
-      check.tag === "invalid" ? [] : check.holes.map((hole) => hole.holeId),
+      check.tag === "ok" ? check.holes.map((hole) => hole.holeId) : [],
     ),
   );
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -3819,12 +3819,6 @@ function validateGreaseGroundHazardSavingThrowOutcomes(input: {
   }
   if (input.area.kind !== "greaseGroundArea") {
     return "Grease requires a ground-area id.";
-  }
-  if (input.area.areaId.length === 0) {
-    return "Grease ground-area id must not be empty.";
-  }
-  if ("sleepNonSleeperFacts" in input.area) {
-    return "Sleep non-sleeper facts are only valid for Sleep target admission.";
   }
   if (!input.state.combatants.has(input.area.originAnchorId)) {
     return "Grease ground-area origin anchor must be a combatant in this battle.";

@@ -11,7 +11,7 @@ module battleRuntimeObjectContactDamage {
   import battleRuntimeAntimagicSuppression.* from "./battle-runtime-antimagic-suppression"
   import battleRuntimeOngoingSpellDispel.* from "./battle-runtime-ongoing-spell-dispel"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
 
   pure val heatMetalDurationTicks = 10
   pure val heatMetalObjectId = 4

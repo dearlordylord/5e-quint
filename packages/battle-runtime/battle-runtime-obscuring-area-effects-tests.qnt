@@ -4,6 +4,7 @@
 module battleRuntimeObscuringAreaEffectsTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeLight.* from "./battle-runtime-light"
+  import battleRuntimeLightEmitters.* from "./battle-runtime-light-emitters"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
   import battleRuntimeAntimagicSuppression.* from "./battle-runtime-antimagic-suppression"

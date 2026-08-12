@@ -4,7 +4,7 @@
 
 module battleRuntimeProtectionFromPoison {
   import battleRuntimeSavingThrowRollMode.* from "./battle-runtime-saving-throw-roll-mode"
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMovement.* from "./battle-runtime-movement"

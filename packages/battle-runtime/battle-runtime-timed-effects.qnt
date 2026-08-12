@@ -78,7 +78,9 @@ module battleRuntimeTimedEffects {
   }
 
   pure def expireStartOfTurnEffectsForActiveActor(effects: Set[ActiveEffect]): Set[ActiveEffect] = {
-    val resetEffects = resetAreaHazardSavedThisTurnEffects(resetResistanceDamageReductions(effects))
+    val resetEffects = resetAreaHazardSavedThisTurnEffects(
+      resetJumpMovementReplacements(resetResistanceDamageReductions(effects))
+    )
     if (battleRuntimeOneRoundShieldArmorClassBonusExpiresAtStartOfNextTurn)
       resetEffects.exclude(Set(ShieldArmorClassBonus))
     else
@@ -120,12 +122,8 @@ module battleRuntimeTimedEffects {
         }
     }
 
-  pure def resetResistanceDamageReductions(effects: Set[ActiveEffect]): Set[ActiveEffect] =
+  pure def resetJumpMovementReplacements(effects: Set[ActiveEffect]): Set[ActiveEffect] =
     effects.map(effect => match effect {
-      | ResistanceDamageReduction(data) => ResistanceDamageReduction({
-          ...data,
-          usedThisTurn: battleRuntimeOncePerTurnSpellEffectUsedAtTurnStart,
-        })
       | JumpMovementReplacement(data) => JumpMovementReplacement({
           ...data,
           usedThisTurn: battleRuntimeOncePerTurnSpellEffectUsedAtTurnStart,

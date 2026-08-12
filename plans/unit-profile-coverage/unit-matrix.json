@@ -563,7 +563,7 @@
         },
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-core-combat-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-damage-reduction-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -946,7 +946,7 @@
       "profileKind": "passive",
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
-        "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+        "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -1703,6 +1703,10 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
         },
         {
@@ -1737,7 +1741,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-chained-spell-attack-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -1771,7 +1775,31 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -1805,7 +1833,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2050,7 +2078,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-sleep-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2155,7 +2183,8 @@
       "id": "spell.invocation-object-light",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-light.qnt"
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -2228,7 +2257,9 @@
       "id": "spell.invocation-held-light-emitter",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-light.qnt"
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -2254,7 +2285,9 @@
       "id": "spell.invocation-spell-created-held-object",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-light.qnt"
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2294,7 +2327,8 @@
       "id": "spell.invocation-dancing-lights-movable-dim-light",
       "profileKind": "table-caller",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-light.qnt"
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+        "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -2490,7 +2524,7 @@
       "id": "spell.reaction-hellish-rebuke",
       "profileKind": "reaction",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+        "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2522,14 +2556,17 @@
       "id": "spell.reaction-counterspell",
       "profileKind": "reaction",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+        "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
         "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
       ],
-      "sourceBoundary": "The runtime consumes typed table-supplied spell-cast Reaction facts establishing that a reactor can see a spell caster within 60 feet, requires Counterspell spell access, an available Reaction, an available Spell Slot, and the SRD same-turn spell-slot ledger, opens a spell-cast Reaction frame before the triggering spell resolves, resolves automatic or Constitution-save-gated interruption, releases the triggering pending slot when the spell is countered, and exposes nested spell-cast Reaction facts so Counterspell can itself be countered. Spell visibility, range geometry, and component witnesses remain table-supplied facts.",
+      "sourceBoundary": "The runtime consumes typed table-supplied spell-cast Reaction facts establishing that a reactor can see a spell caster within 60 feet, requires Counterspell spell access, an available Reaction, an available Spell Slot, and the SRD same-turn spell-slot ledger, opens a spell-cast Reaction frame before the triggering spell resolves, resolves automatic or Constitution-save-gated interruption, releases the triggering pending slot when the spell is countered, resumes the triggering direct, weapon-hosted, or save-gated spell continuation when it is not countered, and exposes nested spell-cast Reaction facts so Counterspell can itself be countered. Spell visibility, range geometry, and component witnesses remain table-supplied facts.",
       "taskRefs": [
         "SRDINV91A"
       ],
@@ -2537,7 +2574,15 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-core-combat-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-spell-resolution-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2607,7 +2652,8 @@
       "id": "spell.invocation-damage-reduction",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+        "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
+        "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -2909,12 +2955,18 @@
       "id": "spell.reaction-shield",
       "profileKind": "reaction",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+        "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-interrupt-triggers.ts",
         "packages/battle-runtime/src/battle-state-execution.ts"
       ],
+      "sourceBoundary": "The runtime admits Shield only from an attack-hit or its existing SpellCast/repeatedDamageAllocation path. This QNT owner set models the attack-hit frame with typed direct spell-attack, weapon, light-created, and save-gated continuations; Magic Missile target allocation and per-dart damage facts remain at the runtime spell-cast boundary until a matching narrowed QNT owner exists. Runtime Shield/Magic Missile immunity is verified by the listed Shield runtime test; the Counterspell runtime test separately verifies nested-cast timing; this profile makes no QNT parity claim for Magic Missile.",
       "taskRefs": [
         "QCORE8",
         "QCORE10",
@@ -2928,12 +2980,40 @@
           "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
         },
         {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-reaction-spell-resolution-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-procedure-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution-tests.qnt"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/counterspell-reaction-spell.test.ts"
+        },
+        {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
         },
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/shield-reaction-spell.test.ts"
         }
       ]
     },
@@ -2983,6 +3063,10 @@
       ],
       "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice-tests.qnt"
+        },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
@@ -3045,7 +3129,15 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3083,7 +3175,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-residual-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3137,7 +3229,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3243,7 +3335,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-hideous-laughter-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3268,7 +3360,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3325,7 +3417,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-core-combat-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar-lifecycle-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -4089,7 +4181,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt"
         },
         {
           "kind": "runtime-test",
@@ -7390,7 +7482,7 @@
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+            "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
           }
         ],
         "profileId": "unit-feature.attack-damage-reduction-zero-damage-redirect",
@@ -7654,7 +7746,7 @@
         "profileId": "unit-feature.passive-damage-resistance",
         "profileKind": "passive",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+          "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
           "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt"
         ]
       },
@@ -7902,7 +7994,7 @@
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+            "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
           }
         ],
         "profileId": "unit-feature.reaction-roll-or-damage-reduction",
@@ -8217,7 +8309,8 @@
         "profileId": "spell.invocation-object-light",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-light.qnt"
+          "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+          "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
         ]
       },
       {
@@ -8274,7 +8367,9 @@
         "profileId": "spell.invocation-held-light-emitter",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-light.qnt"
+          "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+          "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+          "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
         ]
       },
       {
@@ -8308,7 +8403,9 @@
         "profileId": "spell.invocation-spell-created-held-object",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-light.qnt"
+          "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+          "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+          "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
         ]
       },
       {
@@ -8324,7 +8421,8 @@
         "profileId": "spell.invocation-dancing-lights-movable-dim-light",
         "profileKind": "table-caller",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-light.qnt"
+          "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+          "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
         ]
       },
       {
@@ -8424,7 +8522,7 @@
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+            "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
           },
           {
             "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
@@ -8446,7 +8544,7 @@
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+            "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
           },
           {
             "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
@@ -8458,7 +8556,7 @@
         "profileId": "spell.reaction-hellish-rebuke",
         "profileKind": "reaction",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+          "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
         ]
       },
       {
@@ -8468,7 +8566,7 @@
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+            "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
           },
           {
             "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
@@ -8480,7 +8578,10 @@
         "profileId": "spell.reaction-counterspell",
         "profileKind": "reaction",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+          "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+          "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
+          "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+          "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt"
         ]
       },
       {
@@ -8518,7 +8619,7 @@
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+            "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
           },
           {
             "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
@@ -8546,7 +8647,8 @@
         "profileId": "spell.invocation-damage-reduction",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+          "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
+          "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt"
         ]
       },
       {
@@ -8716,12 +8818,17 @@
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+            "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
           }
         ],
         "profileId": "spell.reaction-shield",
         "profileKind": "reaction",
         "qntOwners": [
+          "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+          "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+          "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+          "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+          "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
           "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
         ],
         "semanticOwnerPolicy": "profile-local-semantic-core"
@@ -8733,7 +8840,7 @@
             "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+            "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
           },
           {
             "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -10521,7 +10628,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -10981,7 +11088,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 }
               ],
               "profileId": "unit-feature.reaction-roll-or-damage-reduction",
@@ -11159,7 +11266,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -11220,7 +11327,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -11273,7 +11380,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -11542,7 +11649,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
@@ -11554,7 +11661,10 @@
               "profileId": "spell.reaction-counterspell",
               "profileKind": "reaction",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+                "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+                "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
+                "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+                "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt"
               ]
             }
           ],
@@ -11598,7 +11708,8 @@
               "profileId": "spell.invocation-dancing-lights-movable-dim-light",
               "profileKind": "table-caller",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-light.qnt"
+                "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+                "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
               ]
             }
           ],
@@ -11666,7 +11777,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
@@ -11844,7 +11955,7 @@
               "profileId": "unit-feature.passive-damage-resistance",
               "profileKind": "passive",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+                "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
                 "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt"
               ]
             },
@@ -12172,7 +12283,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
@@ -12524,7 +12635,9 @@
               "profileId": "spell.invocation-spell-created-held-object",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-light.qnt"
+                "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+                "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+                "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
               ]
             }
           ],
@@ -12713,7 +12826,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -12824,7 +12937,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.REACTION_CASTING_TIME",
@@ -12836,7 +12949,7 @@
               "profileId": "spell.reaction-hellish-rebuke",
               "profileKind": "reaction",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+                "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
               ]
             },
             {
@@ -13088,7 +13201,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -13203,7 +13316,8 @@
               "profileId": "spell.invocation-object-light",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-light.qnt"
+                "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+                "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
               ]
             }
           ],
@@ -13295,7 +13409,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -13356,7 +13470,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -13605,7 +13719,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 }
               ],
               "profileId": "unit-feature.attack-damage-reduction-zero-damage-redirect",
@@ -13743,7 +13857,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 }
               ],
               "profileId": "unit-feature.reaction-roll-or-damage-reduction",
@@ -14203,7 +14317,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -14270,7 +14384,9 @@
               "profileId": "spell.invocation-held-light-emitter",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-light.qnt"
+                "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+                "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+                "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
               ]
             }
           ],
@@ -14617,7 +14733,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -14678,7 +14794,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -14721,7 +14837,8 @@
               "profileId": "spell.invocation-damage-reduction",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+                "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
+                "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt"
               ]
             }
           ],
@@ -14917,7 +15034,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 }
               ],
               "profileId": "unit-feature.reaction-roll-or-damage-reduction",
@@ -15002,7 +15119,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -15158,12 +15275,17 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 }
               ],
               "profileId": "spell.reaction-shield",
               "profileKind": "reaction",
               "qntOwners": [
+                "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+                "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+                "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+                "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+                "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
                 "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
               ],
               "semanticOwnerPolicy": "profile-local-semantic-core"
@@ -15271,7 +15393,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -15510,7 +15632,7 @@
               "profileId": "unit-feature.passive-damage-resistance",
               "profileKind": "passive",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-damage-adjustments.qnt",
+                "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
                 "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt"
               ]
             }
@@ -15722,7 +15844,7 @@
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle Reaction offer, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
+                  "title": "Battle Reaction offer, Ready declaration and release, decline, spend, bounded continuation resume, and damage-triggered Concentration Saving Throw protocol"
                 },
                 {
                   "obligationId": "BATTLE.SPELL.INVOCATION_RESOURCE_PROCEDURE",
@@ -29656,7 +29778,7 @@
             },
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-core-combat-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-damage-reduction-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -31479,7 +31601,7 @@
           "profileKind": "passive",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
-            "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+            "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -31595,7 +31717,7 @@
           "profileKind": "passive",
           "qntOwners": [
             "packages/shared-algebras/proofs/rule-core/damage-component-adjustments.qnt",
-            "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+            "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -32557,6 +32679,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -32882,7 +33008,15 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -33764,7 +33898,31 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -33833,6 +33991,10 @@
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice-tests.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
@@ -33919,6 +34081,10 @@
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice-tests.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
@@ -34102,6 +34268,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -34217,7 +34387,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -34305,6 +34475,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -34405,7 +34579,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-chained-spell-attack-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -34590,7 +34764,31 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -35039,7 +35237,8 @@
           "id": "spell.invocation-object-light",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-light.qnt"
+            "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+            "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -35231,6 +35430,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -35462,7 +35665,31 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -35518,14 +35745,17 @@
           "id": "spell.reaction-counterspell",
           "profileKind": "reaction",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+            "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
+            "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
             "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
             "packages/battle-runtime/src/battle-reducer/reaction-triggered-spells.ts"
           ],
-          "sourceBoundary": "The runtime consumes typed table-supplied spell-cast Reaction facts establishing that a reactor can see a spell caster within 60 feet, requires Counterspell spell access, an available Reaction, an available Spell Slot, and the SRD same-turn spell-slot ledger, opens a spell-cast Reaction frame before the triggering spell resolves, resolves automatic or Constitution-save-gated interruption, releases the triggering pending slot when the spell is countered, and exposes nested spell-cast Reaction facts so Counterspell can itself be countered. Spell visibility, range geometry, and component witnesses remain table-supplied facts.",
+          "sourceBoundary": "The runtime consumes typed table-supplied spell-cast Reaction facts establishing that a reactor can see a spell caster within 60 feet, requires Counterspell spell access, an available Reaction, an available Spell Slot, and the SRD same-turn spell-slot ledger, opens a spell-cast Reaction frame before the triggering spell resolves, resolves automatic or Constitution-save-gated interruption, releases the triggering pending slot when the spell is countered, resumes the triggering direct, weapon-hosted, or save-gated spell continuation when it is not countered, and exposes nested spell-cast Reaction facts so Counterspell can itself be countered. Spell visibility, range geometry, and component witnesses remain table-supplied facts.",
           "taskRefs": [
             "SRDINV91A"
           ],
@@ -35533,7 +35763,15 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-core-combat-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-spell-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -35766,7 +36004,8 @@
           "id": "spell.invocation-dancing-lights-movable-dim-light",
           "profileKind": "table-caller",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-light.qnt"
+            "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+            "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -36005,7 +36244,15 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -36209,6 +36456,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -36770,6 +37021,10 @@
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice-tests.qnt"
+            },
+            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
             },
@@ -36979,7 +37234,31 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -37066,6 +37345,10 @@
           ],
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice-tests.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
@@ -37203,7 +37486,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-residual-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -37428,6 +37711,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -37524,6 +37811,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -37596,7 +37887,9 @@
           "id": "spell.invocation-spell-created-held-object",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-light.qnt"
+            "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+            "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+            "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -37722,6 +38015,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -37818,7 +38115,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-core-combat-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar-lifecycle-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -38184,6 +38481,10 @@
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice-tests.qnt"
+            },
+            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
             },
@@ -38411,6 +38712,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -39150,6 +39455,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -39233,6 +39542,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -39425,7 +39738,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt"
             },
             {
               "kind": "runtime-test",
@@ -39876,6 +40189,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -39989,7 +40306,8 @@
           "id": "spell.invocation-object-light",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-light.qnt"
+            "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+            "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -40851,6 +41169,10 @@
           "title": "Spell invocation applies concentration d20 roll modifiers or chosen-ability Ability Check roll modes from target-list, area-selected, or skill-choice spell effects",
           "verificationOwners": [
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice-tests.qnt"
+            },
+            {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts"
             },
@@ -41070,6 +41392,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -41353,7 +41679,15 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -41518,6 +41852,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -41538,7 +41876,9 @@
           "id": "spell.invocation-held-light-emitter",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-light.qnt"
+            "packages/battle-runtime/battle-runtime-light-emitters.qnt",
+            "packages/battle-runtime/battle-runtime-light-spell-attacks.qnt",
+            "packages/battle-runtime/battle-runtime-light-spell-lifecycle.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -41767,6 +42107,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -41878,6 +42222,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -42135,7 +42483,8 @@
           "id": "spell.invocation-damage-reduction",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-damage-adjustments.qnt"
+            "packages/battle-runtime/battle-runtime-damage-type-adjustment.qnt",
+            "packages/battle-runtime/battle-runtime-spell-lifecycle-bridge.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -42383,6 +42732,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -42985,6 +43338,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -43103,6 +43460,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -43247,6 +43608,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -43742,6 +44107,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -43970,6 +44339,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -44113,6 +44486,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -44376,6 +44753,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -44833,12 +45214,18 @@
           "id": "spell.reaction-shield",
           "profileKind": "reaction",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+            "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+            "packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt",
+            "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
+            "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-interrupt-triggers.ts",
             "packages/battle-runtime/src/battle-state-execution.ts"
           ],
+          "sourceBoundary": "The runtime admits Shield only from an attack-hit or its existing SpellCast/repeatedDamageAllocation path. This QNT owner set models the attack-hit frame with typed direct spell-attack, weapon, light-created, and save-gated continuations; Magic Missile target allocation and per-dart damage facts remain at the runtime spell-cast boundary until a matching narrowed QNT owner exists. Runtime Shield/Magic Missile immunity is verified by the listed Shield runtime test; the Counterspell runtime test separately verifies nested-cast timing; this profile makes no QNT parity claim for Magic Missile.",
           "taskRefs": [
             "QCORE8",
             "QCORE10",
@@ -44852,12 +45239,40 @@
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-reaction-spell-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-procedure-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution-tests.qnt"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/counterspell-reaction-spell.test.ts"
+            },
+            {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
             },
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/battle-runtime/src/shield-reaction-spell.test.ts"
             }
           ]
         }
@@ -45003,6 +45418,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -45243,7 +45662,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-sleep-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -45273,7 +45692,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-sleep-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -46471,6 +46890,10 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
             },
             {
@@ -46716,7 +47139,15 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -46773,7 +47204,7 @@
           "id": "spell.reaction-hellish-rebuke",
           "profileKind": "reaction",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-reaction-resolution.qnt"
+            "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -46832,6 +47263,10 @@
           ],
           "title": "Spell invocation resolves supported attack-roll or save-gated damage effects",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-damage-resolution-tests.qnt"
+            },
             {
               "kind": "qnt-proof",
               "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles-inductive.qnt"
@@ -46912,7 +47347,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-hideous-laughter-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -46987,7 +47422,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-hypnotic-pattern-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -47240,7 +47675,31 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -47321,7 +47780,31 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-gated-spell-replay-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-color-spray-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-calm-emotions-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-entangle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-target-list-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-blindness-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-save-condition-hold-tests.qnt"
             },
             {
               "kind": "runtime-test",

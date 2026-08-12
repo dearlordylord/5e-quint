@@ -11,7 +11,7 @@ module battleRuntimeSpikeGrowthMovementHazard {
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
 
   pure val spikeGrowthDurationTicks = 100
   pure val spikeGrowthAreaId = 7

@@ -6,7 +6,7 @@ module battleRuntimeChainedSpellAttack {
   import battleRuntimeSpellAttackBridge.* from "./battle-runtime-spell-attack-bridge"
   import battleRuntimeSpellChainedAttackBridge.* from "./battle-runtime-spell-chained-attack-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
 
   pure def battleRuntimeChainedSpellAttackDamageProfileForInvocation(
     invocation: ChainedSpellAttackDamageInvocation

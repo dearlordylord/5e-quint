@@ -1,11 +1,11 @@
 // -*- mode: Bluespec; -*-
+// KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-damage-reduction unit-feature.passive-damage-resistance
 
-// KERNEL-COVERAGE: qnt-owner BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
-
-module battleRuntimeDamageAdjustments {
+module battleRuntimeDamageTypeAdjustment {
   import damageComponentAdjustments.* from "../shared-algebras/proofs/rule-core/damage-component-adjustments"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
 
   pure def damageAfterAdjustments(
     damage: int,
@@ -81,12 +81,16 @@ module battleRuntimeDamageAdjustments {
 
   pure def resistanceDamageReductionAvailable(effects: Set[ActiveEffect], damageType: DamageType): bool =
     effects.exists(effect => match effect {
-      | ResistanceDamageReduction(data) => data.damageType == damageType and not(data.usedThisTurn)
+      | ResistanceDamageReduction(data) =>
+          data.damageType == damageType and not(data.usedThisTurn)
       | _ => false
     })
 
   pure def damageAfterResistanceSpellReduction(damage: int, damageType: DamageType, effects: Set[ActiveEffect], reductionRoll: int): int =
-    if (damage > 0 and resistanceDamageReductionAvailable(effects, damageType))
+    if (
+      damage > 0 and
+        resistanceDamageReductionAvailable(effects, damageType)
+    )
       if (damage - reductionRoll < 0) 0 else damage - reductionRoll
     else
       damage
@@ -101,4 +105,30 @@ module battleRuntimeDamageAdjustments {
       | _ => effect
     })
 
+  pure def applyResistanceSpellReductionToFighter(
+    state: BattleState,
+    damageType: DamageType,
+    damage: int,
+    reductionRoll: int,
+  ): BattleState = {
+    val reducedDamage = damageAfterResistanceSpellReduction(
+      damage,
+      damageType,
+      state.fighter.activeEffects,
+      reductionRoll,
+    )
+    val updatedEffects = activeEffectsAfterResistanceSpellReduction(
+      state.fighter.activeEffects,
+      damageType,
+    )
+    {
+      ...state,
+      fighter: applyDamage(
+        { ...state.fighter, activeEffects: updatedEffects },
+        reducedDamage,
+        1,
+        true,
+      ),
+    }
+  }
 }

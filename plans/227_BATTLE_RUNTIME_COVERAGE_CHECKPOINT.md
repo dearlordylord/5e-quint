@@ -20,42 +20,41 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 ## Current authoritative baseline
 
 - Date: 2026-08-11
-- Measured code tree committed as: `d8ce0c853`
+- Measured code tree committed as: `bff2c0503`
 - Command: `pnpm coverage`
 - Result: exit 0; every workspace coverage package completed green
-- Battle-runtime: 222/222 files passed; 2,386 passed and 81 skipped
+- Battle-runtime: 230/230 files passed; 2,428 passed and 116 skipped
 - Every executable package other than battle-runtime remains at or above 99%
   for statements, branches, functions, and lines.
 
 | Metric     |   Covered / total | Coverage | Uncovered | Gap to 99% |
 | ---------- | ----------------: | -------: | --------: | ---------: |
-| Statements | 121,771 / 125,055 |   97.37% |     3,284 |      2,034 |
-| Branches   |   31,105 / 32,853 |   94.67% |     1,748 |      1,420 |
-| Functions  |     4,827 / 4,827 |     100% |         0 |          0 |
-| Lines      | 121,771 / 125,055 |   97.37% |     3,284 |      2,034 |
+| Statements | 121,957 / 125,042 |   97.53% |     3,085 |      1,835 |
+| Branches   |   31,290 / 32,978 |   94.88% |     1,688 |      1,359 |
+| Functions  |     4,829 / 4,829 |     100% |         0 |          0 |
+| Lines      | 121,957 / 125,042 |   97.53% |     3,085 |      1,835 |
 
 Recompute the 99% gaps after every production-denominator change.
 
-## Latest accepted milestone
+## Latest accepted production milestone
 
-M29 (`d8ce0c853`) covers public creature/object spell attack-sequence rerolls,
-interrupts, relationship decisions, critical movement, misses, and source
-damage penalties. Focused attribution proved 50 exact residual statements (48
-attack-sequence and 2 Ready-release); the public aggregate gained 53 covered
-statements/lines. Focused checks, reviewer convergence, and public coverage
-passed.
+M33 (`3f2f6471a`) tightens schema/admission invariants and closes 14 public
+production statements plus 9 branches. M34's focused 53-site claim and the
+reverted M35 claim targeted `battle-runtime.test-support.ts`, which the public
+coverage policy excludes; neither counts toward issue #227.
 
 ## Current campaign
 
 - Continue coverage before starting issue #254 cyclomatic-complexity work.
 - Select cohesive public scenarios with at least 50 exact, nonduplicate,
-  feasible residual sites before editing; reject smaller audit candidates.
+  feasible residual sites from the public-policy production report before
+  editing; reject test-support and smaller audit candidates.
 - Do not forge internal battle state to reach admission-proven or
   schema-impossible guards. Narrow or remove such guards only with concrete
   proof.
 - Avoid owners already marked completed or rejected in
   `/tmp/dnd-work-ownership.md`; that ledger owns live parallel coordination.
-- The current public static gaps are 2,034 statements/lines and 1,420 branches.
+- The current public static gaps are 1,835 statements/lines and 1,359 branches.
 
 ## Verification and completion
 

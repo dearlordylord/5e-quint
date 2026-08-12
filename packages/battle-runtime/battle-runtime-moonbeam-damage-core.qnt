@@ -5,7 +5,7 @@
 module battleRuntimeMoonbeamDamageCore {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
   import battleRuntimeMoonbeamFacts.* from "./battle-runtime-moonbeam-facts"
 
   pure def moonbeamAdjustedDamage(rolledDamage: int, savingThrowSucceeded: bool): int =

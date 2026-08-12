@@ -5,7 +5,7 @@ module battleRuntimeSaveGatedDamageTarget {
   import battleRuntimeSaveGatedFacts.* from "./battle-runtime-save-gated-facts"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
 
   pure def saveGatedDamageTarget(
     invocation: SaveGatedDamageInvocation,

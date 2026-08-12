@@ -13,6 +13,10 @@ module ruleCoreFeaturesMbt {
     | ActionSurgeActionAvailable
     | ActionSurgeActionSpent
 
+  type FrenzyDamageTypeSelectionProjection =
+    | FrenzySelectionNotObserved
+    | FrenzyAutomatic(str)
+
   var qActionAvailable: bool
   var qBonusActionAvailable: bool
   var qReactionAvailable: bool
@@ -28,6 +32,7 @@ module ruleCoreFeaturesMbt {
   var qIncomingAttackAdvantage: bool
   var qSneakAttackUsedThisTurn: bool
   var qLastDamageAmount: int
+  var qFrenzyDamageTypeSelection: FrenzyDamageTypeSelectionProjection
   var qAbilityCheckBoostedTotal: int
   var qAbilityCheckBoostedSucceeded: bool
   var qActorArmorClass: int
@@ -124,6 +129,7 @@ module ruleCoreFeaturesMbt {
     ),
     qAbilityCheckBoostedTotal' = 0,
     qAbilityCheckBoostedSucceeded' = false,
+    qFrenzyDamageTypeSelection' = FrenzySelectionNotObserved,
   }
 
   action recordAbilityCheckBoostProjection(
@@ -159,6 +165,7 @@ module ruleCoreFeaturesMbt {
     ),
     qAbilityCheckBoostedTotal' = abilityCheckBoostedTotal,
     qAbilityCheckBoostedSucceeded' = abilityCheckBoostedSucceeded,
+    qFrenzyDamageTypeSelection' = FrenzySelectionNotObserved,
   }
 
   action init = recordProjection(
@@ -309,11 +316,14 @@ module ruleCoreFeaturesMbt {
 
   action doFrenzy = all {
     openHoles == Set(),
-    recordProjection(
+    recordBaseProjection(
       false, false, true, 0, NoActionSurgeActionGrant, 12, 7, 0,
       false, false, true, true, true, false, 2, false,
       featureMbtBaselineArmorClass, Set(), false, WResolved
     ),
+    qAbilityCheckBoostedTotal' = 0,
+    qAbilityCheckBoostedSucceeded' = false,
+    qFrenzyDamageTypeSelection' = FrenzyAutomatic("slashing"),
   }
 
   action doImprovedCritical = all {

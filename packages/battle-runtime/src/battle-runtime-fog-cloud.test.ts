@@ -12,6 +12,7 @@ import {
   attackInitialTargetHole,
   attackRollHoleAfterTarget,
   fogCloudAreaFill,
+  fogCloudBattle,
   characterSeed,
   statBlockCreatureInit,
   wizardSpellcasting,
@@ -23,6 +24,7 @@ import {
   battleId,
   battleObscurementZones,
   breakBattleConcentration,
+  castFogCloud,
   discoverBattleActs,
   endTurn,
   movementFeet,
@@ -90,11 +92,11 @@ describe("battle runtime: Fog Cloud", () => {
   });
 
   test("Fog Cloud creates a Concentration-owned Heavily Obscured area", () => {
-    const cast = castFogCloudSession(
-      "battle-fog-cloud-cast",
-      battleAreaId("fog-1"),
-    );
-    const caster = cast.session.state.combatants.get(wizardId);
+    const initial = fogCloudBattle("battle-fog-cloud-initial");
+    expect(initial.combatants.get(wizardId)?.activeEffects).toEqual([]);
+
+    const cast = castFogCloud("battle-fog-cloud-cast", battleAreaId("fog-1"));
+    const caster = cast.state.combatants.get(wizardId);
 
     expect(caster?.activeEffects).toEqual([
       expect.objectContaining({
@@ -113,7 +115,7 @@ describe("battle runtime: Fog Cloud", () => {
     expect(caster?.concentration).toMatchObject({
       sourceProcedureRef: expect.any(String),
     });
-    expect(cast.result.snapshot.obscurementZones).toEqual([
+    expect(cast.snapshot.obscurementZones).toEqual([
       {
         kind: "spellObscurementZone",
         sourceProcedureRef: expect.any(String),
@@ -131,7 +133,7 @@ describe("battle runtime: Fog Cloud", () => {
         },
       },
     ]);
-    expect(expendedLevelOneSlots(cast.result, wizardId)).toBe(1);
+    expect(expendedLevelOneSlots(cast, wizardId)).toBe(1);
   });
 
   test("Fog Cloud ends when Concentration breaks or strong wind disperses it", () => {

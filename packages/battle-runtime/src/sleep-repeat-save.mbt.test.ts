@@ -31,6 +31,7 @@ import {
 } from "@dnd/shared/types";
 
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import { battleActsWithReducerRouteEvents } from "./battle-act-composition.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   fighterId,
@@ -684,7 +685,10 @@ function discoverSleepAct(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
 ): ReturnType<typeof discoverBattleActCandidates>[number] {
-  const act = discoverBattleActCandidates(state).find(
+  const act = battleActsWithReducerRouteEvents(
+    state,
+    discoverBattleActCandidates(state),
+  ).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
       candidate.subject.actorId === subject.actorId &&

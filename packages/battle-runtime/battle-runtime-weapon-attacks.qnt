@@ -13,8 +13,8 @@ module battleRuntimeWeaponAttacks {
   import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
+  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
@@ -217,18 +217,11 @@ module battleRuntimeWeaponAttacks {
     }
   }
 
-  pure def resolveTrueStrikeWeaponAttack(
-    state: BattleState,
-    attackTotal: int,
-    naturalD20: int,
-    weaponDamageRoll: int,
-    bonusDamageRoll: int,
-    spellcastingAbilityModifier: int,
-    characterLevel: int,
-    selectedDamageType: DamageType,
-    weaponDamageType: DamageType,
-    concentrationSaveSucceeded: bool,
-  ): BattleState = {
+  pure def resolveTrueStrikeWeaponAttack(state: BattleState, attackTotal: int, naturalD20: int, weaponDamageRoll: int, bonusDamageRoll: int, spellcastingAbilityModifier: int, characterLevel: int, selectedDamageType: DamageType, weaponDamageType: DamageType, concentrationSaveSucceeded: bool): BattleState = resolveTrueStrikeWeaponAttackAtShieldOfferBoundary(state, attackTotal, naturalD20, weaponDamageRoll, bonusDamageRoll, spellcastingAbilityModifier, characterLevel, selectedDamageType, weaponDamageType, concentrationSaveSucceeded, TrueStrikeShieldOfferPending)
+
+  type TrueStrikeShieldOfferBoundary = | TrueStrikeShieldOfferPending | TrueStrikeShieldOfferConsidered
+
+  pure def resolveTrueStrikeWeaponAttackAtShieldOfferBoundary(state: BattleState, attackTotal: int, naturalD20: int, weaponDamageRoll: int, bonusDamageRoll: int, spellcastingAbilityModifier: int, characterLevel: int, selectedDamageType: DamageType, weaponDamageType: DamageType, concentrationSaveSucceeded: bool, shieldOfferBoundary: TrueStrikeShieldOfferBoundary): BattleState = {
     val attacker = combatantForActor(state, Fighter)
     val defender = combatantForActor(state, Goblin)
     if (
@@ -244,7 +237,7 @@ module battleRuntimeWeaponAttacks {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
       { ...rolled, actionAvailable: false }
     }
-    else if (defender.reactionAvailable and not(defender.activeEffects.contains(ShieldArmorClassBonus))) {
+    else if (shieldOfferBoundary == TrueStrikeShieldOfferPending and defender.reactionAvailable and not(defender.activeEffects.contains(ShieldArmorClassBonus))) {
       openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
         trigger: AttackHit,
         procedure: ShieldReactionProcedure,

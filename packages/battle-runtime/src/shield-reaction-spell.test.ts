@@ -1,3 +1,5 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-shield
+
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import * as Either from "effect/Either";

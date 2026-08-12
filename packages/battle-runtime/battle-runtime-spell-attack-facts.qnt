@@ -11,7 +11,7 @@ module battleRuntimeSpellAttackFacts {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSpellAttackRollAndVisibilityFacts.* from "./battle-runtime-spell-attack-roll-and-visibility-facts"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
-  import battleRuntimeDamageAdjustments.* from "./battle-runtime-damage-adjustments"
+  import battleRuntimeDamageTypeAdjustment.* from "./battle-runtime-damage-type-adjustment"
   import battleRuntimeMarkedRiders.* from "./battle-runtime-marked-riders"
   import battleRuntimeAttackFacts.* from "./battle-runtime-attack-facts"
   import battleRuntimeHidden.* from "./battle-runtime-hidden"
