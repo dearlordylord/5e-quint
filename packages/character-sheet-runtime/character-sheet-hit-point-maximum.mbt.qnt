@@ -10,6 +10,8 @@ module characterSheetHitPointMaximumMbt {
     | CharacterSheetHitPointMaximumFighterLevelTwo
     | CharacterSheetHitPointMaximumWizardFighterMulticlass
     | CharacterSheetHitPointMaximumMinimumHigherLevelGain
+    | CharacterSheetHitPointMaximumWizardLevelFour
+    | CharacterSheetHitPointMaximumDwarfWizardLevelFour
     | CharacterSheetHitPointMaximumSorcererDraconicResilience
     | CharacterSheetHitPointMaximumReducedEffectiveMaximum
 
@@ -120,7 +122,7 @@ module characterSheetHitPointMaximumMbt {
   }
 
   action doProjectSorcererDraconicResilience = all {
-    qState.replayIndex == 4,
+    qState.replayIndex == 6,
     recordProjection(
       CharacterSheetHitPointMaximumSorcererDraconicResilience,
       {
@@ -131,12 +133,12 @@ module characterSheetHitPointMaximumMbt {
       hitPointMaximumReduction: 0,
     },
       3,
-      5,
+      7,
     ),
   }
 
   action doProjectReducedEffectiveMaximum = all {
-    qState.replayIndex == 5,
+    qState.replayIndex == 7,
     recordProjection(
       CharacterSheetHitPointMaximumReducedEffectiveMaximum,
       {
@@ -147,6 +149,38 @@ module characterSheetHitPointMaximumMbt {
       hitPointMaximumReduction: 3,
     },
       2,
+      8,
+    ),
+  }
+
+  action doProjectWizardLevelFour = all {
+    qState.replayIndex == 4,
+    recordProjection(
+      CharacterSheetHitPointMaximumWizardLevelFour,
+      {
+      startingHitPointDie: 6,
+      constitutionModifier: 2,
+      fixedHigherLevelHitPointDice: [6, 6, 6],
+      hitPointMaximumBonus: 0,
+      hitPointMaximumReduction: 0,
+    },
+      4,
+      5,
+    ),
+  }
+
+  action doProjectDwarfWizardLevelFour = all {
+    qState.replayIndex == 5,
+    recordProjection(
+      CharacterSheetHitPointMaximumDwarfWizardLevelFour,
+      {
+      startingHitPointDie: 6,
+      constitutionModifier: 2,
+      fixedHigherLevelHitPointDice: [6, 6, 6],
+      hitPointMaximumBonus: 4,
+      hitPointMaximumReduction: 0,
+    },
+      4,
       6,
     ),
   }
@@ -156,6 +190,8 @@ module characterSheetHitPointMaximumMbt {
     doProjectFighterLevelTwo,
     doProjectWizardFighterMulticlass,
     doProjectMinimumHigherLevelGain,
+    doProjectWizardLevelFour,
+    doProjectDwarfWizardLevelFour,
     doProjectSorcererDraconicResilience,
     doProjectReducedEffectiveMaximum,
   }

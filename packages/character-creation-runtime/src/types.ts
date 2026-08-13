@@ -1055,12 +1055,12 @@ export type CharacterBuildProjectionCause =
       readonly classUnitId: UnitRecord["id"];
     }
   | {
-      readonly tag: "missingHitPointMaximumBonusFeatureUnit";
-      readonly featureUnitId: UnitRecord["id"];
+      readonly tag: "missingHitPointMaximumGrantSourceUnit";
+      readonly sourceUnitId: UnitRecord["id"];
     }
   | {
-      readonly tag: "nonDeterministicHitPointMaximumBonus";
-      readonly featureUnitId: UnitRecord["id"];
+      readonly tag: "unsupportedHitPointMaximumGrant";
+      readonly sourceUnitId: UnitRecord["id"];
     }
   | {
       readonly tag: "unsupportedClassFeatureLanguage";

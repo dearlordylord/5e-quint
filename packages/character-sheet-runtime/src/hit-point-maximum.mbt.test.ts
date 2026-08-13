@@ -1,4 +1,6 @@
 // KERNEL-COVERAGE: parity-witness SHEET.HIT_POINTS.MAXIMUM_DERIVATION
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.hit-point-maximum-projection
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection GH-271 dwarf_dwarven_toughness
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
@@ -21,6 +23,7 @@ import {
   characterSheetHitPointMaximum,
   characterSheetId,
   createFreshCharacterSheet,
+  rebuildCharacterSheet,
 } from "./index.ts";
 
 const hitPointMaximumScenarios = [
@@ -29,6 +32,8 @@ const hitPointMaximumScenarios = [
   "fighter-level-two",
   "wizard-fighter-multiclass",
   "minimum-higher-level-gain",
+  "wizard-level-four",
+  "dwarf-wizard-level-four",
   "sorcerer-draconic-resilience",
   "reduced-effective-maximum",
 ] as const;
@@ -58,6 +63,8 @@ const driverSchema = {
   doProjectFighterLevelTwo: {},
   doProjectWizardFighterMulticlass: {},
   doProjectMinimumHigherLevelGain: {},
+  doProjectWizardLevelFour: {},
+  doProjectDwarfWizardLevelFour: {},
   doProjectSorcererDraconicResilience: {},
   doProjectReducedEffectiveMaximum: {},
   step: {},
@@ -116,6 +123,29 @@ function createHitPointMaximumDriver() {
           replayIndex: 4,
         });
       },
+      doProjectWizardLevelFour: () => {
+        projection = projectHitPointMaximum({
+          outcome: "wizard-level-four",
+          build: buildFixture({
+            startingClass: "class_wizard",
+            constitutionScore: 14,
+            advancements: ["class_wizard", "class_wizard", "class_wizard"],
+          }),
+          replayIndex: 5,
+        });
+      },
+      doProjectDwarfWizardLevelFour: () => {
+        projection = projectHitPointMaximum({
+          outcome: "dwarf-wizard-level-four",
+          build: buildFixture({
+            startingClass: "class_wizard",
+            constitutionScore: 14,
+            advancements: ["class_wizard", "class_wizard", "class_wizard"],
+            species: "species_dwarf",
+          }),
+          replayIndex: 6,
+        });
+      },
       doProjectSorcererDraconicResilience: () => {
         projection = projectHitPointMaximum({
           outcome: "sorcerer-draconic-resilience",
@@ -133,7 +163,7 @@ function createHitPointMaximumDriver() {
               },
             ],
           },
-          replayIndex: 5,
+          replayIndex: 7,
         });
       },
       doProjectReducedEffectiveMaximum: () => {
@@ -145,7 +175,7 @@ function createHitPointMaximumDriver() {
             advancements: ["class_fighter"],
           }),
           hitPointMaximumReduction: 3,
-          replayIndex: 6,
+          replayIndex: 8,
         });
       },
       step: () => {},
@@ -198,17 +228,32 @@ function projectHitPointMaximum(input: {
     characterBuildHitPoints(input.build, unitLibrary),
   );
   const hitPointMaximumReduction = input.hitPointMaximumReduction ?? 0;
-  const sheet = requireRight(
+  const freshSheet = requireRight(
     createFreshCharacterSheet({
       characterId: characterSheetId(`character:hp-maximum:${input.outcome}`),
       build: input.build,
-      currentHp: Hp(Number(hitPoints.maximum) - hitPointMaximumReduction),
+      currentHp: Hp(Number(hitPoints.maximum)),
       tempHp: Hp(0),
-      hitPointMaximumReduction: Hp(hitPointMaximumReduction),
+      hitPointMaximumReduction: Hp(0),
       conditions: [],
       unitLibrary,
     }),
   );
+  const sheet =
+    hitPointMaximumReduction === 0
+      ? freshSheet
+      : requireRight(
+          rebuildCharacterSheet({
+            characterId: freshSheet.characterId,
+            build: freshSheet.build,
+            currentHp: Hp(Number(hitPoints.maximum) - hitPointMaximumReduction),
+            tempHp: Hp(0),
+            hitPointMaximumReduction: Hp(hitPointMaximumReduction),
+            conditions: [],
+            companion: { tag: "none" },
+            unitLibrary,
+          }),
+        );
 
   return {
     outcome: input.outcome,
@@ -229,6 +274,7 @@ function buildFixture(input: {
   readonly startingClass: string;
   readonly constitutionScore: number;
   readonly advancements?: readonly string[];
+  readonly species?: string;
 }): CharacterBuild {
   return {
     progression: {
@@ -239,7 +285,7 @@ function buildFixture(input: {
       })),
     },
     background: authoredUnitId("background_soldier"),
-    species: authoredUnitId("species_orc"),
+    species: authoredUnitId(input.species ?? "species_orc"),
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
@@ -323,6 +369,8 @@ const qntOutcomeByVariant = {
     "wizard-fighter-multiclass",
   CharacterSheetHitPointMaximumMinimumHigherLevelGain:
     "minimum-higher-level-gain",
+  CharacterSheetHitPointMaximumWizardLevelFour: "wizard-level-four",
+  CharacterSheetHitPointMaximumDwarfWizardLevelFour: "dwarf-wizard-level-four",
   CharacterSheetHitPointMaximumSorcererDraconicResilience:
     "sorcerer-draconic-resilience",
   CharacterSheetHitPointMaximumReducedEffectiveMaximum:

@@ -3184,11 +3184,11 @@
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds",
         "packages/character-creation-runtime/src/finalization.ts:characterBuildHitPoints",
-        "packages/character-creation-runtime/src/finalization.ts:classFeatureHitPointMaximumBonus"
+        "packages/character-creation-runtime/src/finalization.ts:hitPointMaximumGrantBonusTotal"
       ],
       "buildProjection": [
         "packages/character-creation-runtime/src/finalization.ts:characterBuildHitPoints",
-        "packages/character-creation-runtime/src/finalization.ts:classFeatureHitPointMaximumBonus"
+        "packages/character-creation-runtime/src/finalization.ts:hitPointMaximumGrantBonusTotal"
       ],
       "tests": [
         "packages/character-creation-runtime/src/index.test.ts:adds Draconic Resilience to Sorcerer Hit Point maximum from the retained feature"

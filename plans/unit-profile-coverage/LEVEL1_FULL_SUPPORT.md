@@ -20,7 +20,7 @@ Strict level-9 final support blockers: 0.
 | Selected identity readiness | 83/83 (100%) |
 | Diagnostic product readiness | 367/367 (100%) |
 | Strict level-9 final support | 107/107 (100%) |
-| SRD authored product readiness | 71/71 (100%) |
+| SRD authored product readiness | 73/73 (100%) |
 | Rules-kernel profile join | 60/60 (100%) |
 | Rules-kernel covered profile join | 53/60 (88.3%) |
 | Supported Unit rules-kernel chain | 70/80 (87.5%) |
@@ -59,7 +59,7 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | --- | --- | ---: | --- |
 | Strict runtime/profile closure | pass | 96/96 (100%) | _none_ |
 | Selected identity readiness | pass | 83/83 (100%) | _none_ |
-| SRD authored product readiness | pass | 71/71 (100%) | _none_ |
+| SRD authored product readiness | pass | 73/73 (100%) | _none_ |
 | Strict level-9 final support | pass | 107/107 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
@@ -82,9 +82,9 @@ This gate checks authored records and retained Unit references that must resolve
 | SRD background origin feat refs | complete | 4/4 (100%) | Every finalized background origin feat ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
 | SRD background concrete equipment refs | complete | 4/4 (100%) | Every concrete Unit ref in SRD background starting equipment must resolve through the Unit catalog. |
 | SRD species records | complete | 9/9 (100%) | Every SRD species selectable at character creation must be installed. |
-| SRD species trait refs | complete | 21/21 (100%) | Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
+| SRD species trait refs | complete | 22/22 (100%) | Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
 | SRD class feature grants through level 1 | complete | 25/25 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
-| SRD class concrete equipment refs | complete | 0/0 (n/a) | Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog. |
+| SRD class concrete equipment refs | complete | 1/1 (100%) | Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog. |
 | Unique SRD concrete equipment refs | complete | 4/4 (100%) | Unique concrete weapon, armor, and shield Unit refs reachable from SRD starting equipment. |
 
 ### Readiness Blockers

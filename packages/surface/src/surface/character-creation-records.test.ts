@@ -2015,6 +2015,7 @@ describe("character-creation Surface records", () => {
           traits: {
             darkvision: "dwarf_darkvision",
             dwarvenResilience: "dwarf_dwarven_resilience",
+            dwarvenToughness: "dwarf_dwarven_toughness",
           },
         },
       },

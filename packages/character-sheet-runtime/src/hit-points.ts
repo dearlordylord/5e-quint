@@ -332,7 +332,7 @@ export function parseHp(
 function characterSheetBuildNormalHitPointMaximum(input: {
   readonly build: Pick<
     CharacterBuild,
-    "progression" | "abilityScores" | "features"
+    "progression" | "species" | "abilityScores" | "features"
   >;
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<HpType, CharacterSheetIssue> {

@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 513,
-      "numerator": 348,
-      "percent": "67.8%"
+      "denominator": 514,
+      "numerator": 349,
+      "percent": "67.9%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 601,
-      "numerator": 398,
-      "percent": "66.2%"
+      "denominator": 602,
+      "numerator": 399,
+      "percent": "66.3%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 399
+      "value": 400
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 215,
-      "numerator": 210,
+      "denominator": 216,
+      "numerator": 211,
       "percent": "97.7%"
     },
     "profileClassificationCoverage": {
-      "denominator": 399,
-      "numerator": 399,
+      "denominator": 400,
+      "numerator": 400,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -82,19 +82,19 @@
       "percent": "94.6%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 187,
-      "numerator": 161,
-      "percent": "86.1%"
+      "denominator": 188,
+      "numerator": 162,
+      "percent": "86.2%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 187,
-      "numerator": 185,
+      "denominator": 188,
+      "numerator": 186,
       "percent": "98.9%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 201,
-      "numerator": 169,
-      "percent": "84.1%"
+      "denominator": 202,
+      "numerator": 170,
+      "percent": "84.2%"
     },
     "runtimeMappingCoverage": {
       "denominator": 149,
@@ -112,9 +112,9 @@
       "percent": "99.5%"
     },
     "supportedProfileCoverage": {
-      "denominator": 349,
-      "numerator": 215,
-      "percent": "61.6%"
+      "denominator": 350,
+      "numerator": 216,
+      "percent": "61.7%"
     }
   },
   "metricSemantics": [
@@ -5380,15 +5380,20 @@
       "runtimeOwners": [
         "packages/character-creation-runtime/src/finalization.ts"
       ],
-      "sourceBoundary": "Character Creation consumes CharacterBuild class progression, installed Surface class-feature modify_max_hp grants, and class-level scaling facts to derive durable Hit Point maximum bonuses without storing a second HP progression table.",
+      "sourceBoundary": "Character Creation consumes CharacterBuild class progression and selected species, resolves installed Surface class-feature and species-trait modify_max_hp grant sources, and applies each parsed linear_per_level axis against the owning class level or total character level. The authored Dwarven Toughness species-trait record supplies character-axis scaling; Draconic Resilience supplies class-axis scaling. Projection derives the durable Hit Point maximum bonus without dispatching on authored identity or storing a second HP progression table, and independently discoverable selected-species and grant-source failures accumulate in one typed issue result.",
       "taskRefs": [
-        "L13UG-A15"
+        "L13UG-A15",
+        "GH-271"
       ],
-      "title": "Character Creation derives Hit Point maximum bonuses from retained class features",
+      "title": "Character Creation derives Hit Point maximum bonuses from retained class-feature and species-trait grant sources",
       "verificationOwners": [
         {
           "kind": "runtime-test",
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/character-sheet-runtime/src/hit-point-maximum.mbt.test.ts"
         }
       ]
     },
@@ -7338,13 +7343,13 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; profile-local-semantic-core mappings require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 187,
-        "numerator": 161,
-        "percent": "86.1%"
+        "denominator": 188,
+        "numerator": 162,
+        "percent": "86.2%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 187,
-        "numerator": 185,
+        "denominator": 188,
+        "numerator": 186,
         "percent": "98.9%"
       }
     },
@@ -10087,6 +10092,20 @@
         "joinStatus": "covered",
         "obligations": [
           {
+            "obligationId": "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
+            "runtime": "character-sheet",
+            "status": "covered",
+            "title": "Character Sheet normal and effective Hit Point Maximum derivation from class Hit Dice, level progression, Constitution modifier, deterministic class-feature and species-trait maximum grants, and maximum reduction"
+          }
+        ],
+        "profileId": "character-creation.hit-point-maximum-projection",
+        "profileKind": "character-creation",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
             "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
             "runtime": "battle",
             "status": "covered",
@@ -10570,9 +10589,9 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 201,
-          "numerator": 169,
-          "percent": "84.1%"
+          "denominator": 202,
+          "numerator": 170,
+          "percent": "84.2%"
         }
       },
       "units": [
@@ -11987,6 +12006,26 @@
             }
           ],
           "unitId": "dwarf_dwarven_resilience"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet normal and effective Hit Point Maximum derivation from class Hit Dice, level progression, Constitution modifier, deterministic class-feature and species-trait maximum grants, and maximum reduction"
+                }
+              ],
+              "profileId": "character-creation.hit-point-maximum-projection",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            }
+          ],
+          "unitId": "dwarf_dwarven_toughness"
         },
         {
           "joinStatus": "covered",
@@ -15496,6 +15535,20 @@
         {
           "joinStatus": "covered",
           "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
+                  "runtime": "character-sheet",
+                  "status": "covered",
+                  "title": "Character Sheet normal and effective Hit Point Maximum derivation from class Hit Dice, level progression, Constitution modifier, deterministic class-feature and species-trait maximum grants, and maximum reduction"
+                }
+              ],
+              "profileId": "character-creation.hit-point-maximum-projection",
+              "profileKind": "character-creation",
+              "qntOwners": []
+            },
             {
               "joinStatus": "covered",
               "obligations": [
@@ -19094,6 +19147,14 @@
         "character-creation.hit-point-maximum-projection"
       ],
       "taskId": "L13UG-A15"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "GitHub #271 adds the canonical Dwarven Toughness species-trait source, character-level modify_max_hp scaling through Character Build and fresh Character Sheet projection, ordinary Wizard 26 versus Dwarf Wizard 30 deterministic QNT replay evidence, and accumulated typed selected-species plus grant-source projection failures.",
+      "profileIds": [
+        "character-creation.hit-point-maximum-projection"
+      ],
+      "taskId": "GH-271"
     },
     {
       "claimKind": "admission-projection",
@@ -27978,15 +28039,20 @@
           "runtimeOwners": [
             "packages/character-creation-runtime/src/finalization.ts"
           ],
-          "sourceBoundary": "Character Creation consumes CharacterBuild class progression, installed Surface class-feature modify_max_hp grants, and class-level scaling facts to derive durable Hit Point maximum bonuses without storing a second HP progression table.",
+          "sourceBoundary": "Character Creation consumes CharacterBuild class progression and selected species, resolves installed Surface class-feature and species-trait modify_max_hp grant sources, and applies each parsed linear_per_level axis against the owning class level or total character level. The authored Dwarven Toughness species-trait record supplies character-axis scaling; Draconic Resilience supplies class-axis scaling. Projection derives the durable Hit Point maximum bonus without dispatching on authored identity or storing a second HP progression table, and independently discoverable selected-species and grant-source failures accumulate in one typed issue result.",
           "taskRefs": [
-            "L13UG-A15"
+            "L13UG-A15",
+            "GH-271"
           ],
-          "title": "Character Creation derives Hit Point maximum bonuses from retained class features",
+          "title": "Character Creation derives Hit Point maximum bonuses from retained class-feature and species-trait grant sources",
           "verificationOwners": [
             {
               "kind": "runtime-test",
               "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/hit-point-maximum.mbt.test.ts"
             }
           ]
         },
@@ -31798,6 +31864,66 @@
       ],
       "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
       "unitId": "dwarf_dwarven_resilience"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "character-creation.hit-point-maximum-projection"
+        ],
+        "rawRequirementIds": [],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character creation and character sheet deterministic projection owners",
+          "reason": "Dwarven Toughness is a deterministic Character Build and fresh Character Sheet Hit Point Maximum projection. Execution consumes the parsed modify_max_hp character-level scaling fact rather than selected Unit identity.",
+          "tag": "not-applicable"
+        },
+        "supportedMechanics": [
+          "Character Creation derives the Dwarven Toughness Hit Point Maximum increase from the species trait's retained Surface modify_max_hp character-level scaling fact and total character level"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/character-sheet-runtime/src/hit-point-maximum.mbt.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "GH-271"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "species_trait",
+      "profiles": [
+        {
+          "id": "character-creation.hit-point-maximum-projection",
+          "profileKind": "character-creation",
+          "qntOwners": [],
+          "runtimeOwners": [
+            "packages/character-creation-runtime/src/finalization.ts"
+          ],
+          "sourceBoundary": "Character Creation consumes CharacterBuild class progression and selected species, resolves installed Surface class-feature and species-trait modify_max_hp grant sources, and applies each parsed linear_per_level axis against the owning class level or total character level. The authored Dwarven Toughness species-trait record supplies character-axis scaling; Draconic Resilience supplies class-axis scaling. Projection derives the durable Hit Point maximum bonus without dispatching on authored identity or storing a second HP progression table, and independently discoverable selected-species and grant-source failures accumulate in one typed issue result.",
+          "taskRefs": [
+            "L13UG-A15",
+            "GH-271"
+          ],
+          "title": "Character Creation derives Hit Point maximum bonuses from retained class-feature and species-trait grant sources",
+          "verificationOwners": [
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+            },
+            {
+              "kind": "runtime-test",
+              "ownerPath": "packages/character-sheet-runtime/src/hit-point-maximum.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_toughness.json",
+      "unitId": "dwarf_dwarven_toughness"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

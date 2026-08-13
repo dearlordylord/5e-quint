@@ -4021,32 +4021,33 @@
       "kind": "composition",
       "parityWitnesses": [
         {
-          "deterministicReplayRationale": "DRP-T15 keeps Character Sheet Hit Point Maximum derivation as a deterministic replay. The fixture covers level-1 maximum Hit Die, fixed higher-level gain, multiclass later-level gain, minimum 1 later-level gain, deterministic class-feature maximum bonus, and effective maximum after a maximum reduction. The TS witness derives normal maximum through characterBuildHitPoints from retained class Hit Dice, class level progression, Constitution modifier, and deterministic class-feature facts, then derives effective maximum through Character Sheet maximumHp minus hitPointMaximumReduction; it does not add or compare a second stored maximum state. The input space is scalar arithmetic over existing build and reduction facts with no draft-fill ordering, branch interleaving, or table-choice risk, so focused random MBT would not add coverage.",
+          "deterministicReplayRationale": "DRP-T15 keeps Character Sheet Hit Point Maximum derivation as a deterministic replay. The fixture covers level-1 maximum Hit Die, fixed higher-level gain, multiclass later-level gain, minimum 1 later-level gain, an ordinary level-4 Wizard at 26, a level-4 Dwarf Wizard whose parsed Dwarven Toughness character-level grant yields 30, a deterministic class-feature maximum grant, and effective maximum after a maximum reduction. The authored Surface record packages/surface/content/species_dwarf_dwarven_toughness.json is the source boundary for the Dwarven Toughness modify_max_hp procedure; the TS witness derives normal maximum through characterBuildHitPoints from retained class Hit Dice, level progression, Constitution modifier, and parsed grant facts without dispatching on species identity, then derives effective maximum through Character Sheet maximumHp minus hitPointMaximumReduction. It does not add or compare a second stored maximum state. The input space is scalar arithmetic over existing build and reduction facts with no draft-fill ordering, branch interleaving, or table-choice risk, so focused random MBT would not add coverage.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/character-sheet-runtime/src/hit-point-maximum.mbt.test.ts",
           "qntSpecPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
           "stepAction": "step"
         }
       ],
-      "profiles": [],
+      "profiles": ["character-creation.hit-point-maximum-projection"],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/hit-point-maximum.qnt",
         "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt"
       ],
       "runtime": "character-sheet",
       "runtimeOwners": [
-        "packages/character-sheet-runtime/src/hit-points.ts",
-        "packages/character-creation-runtime/src/finalization.ts"
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-sheet-runtime/src/hit-points.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Character-Creation.md#Hit Points",
         ".references/srd-5.2.1/Character-Creation.md#Level 1 Hit Points by Class",
         ".references/srd-5.2.1/Character-Creation.md#Fixed Hit Points by Class",
+        ".references/srd-5.2.1/Character-Origins.md#Dwarven Toughness",
         ".references/srd-5.2.1/Rules-Glossary.md#Hit Points",
         ".references/srd-5.2.1/Rules-Glossary.md#Long Rest"
       ],
-      "title": "Character Sheet normal and effective Hit Point Maximum derivation from class Hit Dice, level progression, Constitution modifier, deterministic maximum bonuses, and maximum reduction"
+      "title": "Character Sheet normal and effective Hit Point Maximum derivation from class Hit Dice, level progression, Constitution modifier, deterministic class-feature and species-trait maximum grants, and maximum reduction"
     },
     {
       "id": "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
@@ -7526,6 +7527,10 @@
     {
       "obligationIds": ["CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION"],
       "profileId": "character-creation.class-feature-source-fact-projection"
+    },
+    {
+      "obligationIds": ["SHEET.HIT_POINTS.MAXIMUM_DERIVATION"],
+      "profileId": "character-creation.hit-point-maximum-projection"
     },
     {
       "obligationIds": [

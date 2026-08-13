@@ -3787,13 +3787,13 @@
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 108,
-      "numerator": 96,
-      "percent": "88.9%"
+      "denominator": 109,
+      "numerator": 97,
+      "percent": "89%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 108,
-      "numerator": 108,
+      "denominator": 109,
+      "numerator": 109,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
@@ -11561,6 +11561,20 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
+                "runtime": "character-sheet",
+                "status": "covered",
+                "title": "Character Sheet normal and effective Hit Point Maximum derivation from class Hit Dice, level progression, Constitution modifier, deterministic class-feature and species-trait maximum grants, and maximum reduction"
+              }
+            ],
+            "profileId": "character-creation.hit-point-maximum-projection",
+            "profileKind": "character-creation",
+            "qntOwners": []
+          },
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
                 "runtime": "character-sheet",
                 "status": "covered",
@@ -12419,8 +12433,8 @@
         "group": "species-trait-refs",
         "label": "SRD species trait refs",
         "metrics": {
-          "denominator": 21,
-          "numerator": 21,
+          "denominator": 22,
+          "numerator": 22,
           "percent": "100%"
         },
         "rows": [
@@ -12468,6 +12482,15 @@
             "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
             "status": "installed",
             "unitId": "dwarf_dwarven_resilience"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_dwarf",
+            "ready": true,
+            "relation": "species.traits.dwarvenToughness",
+            "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_toughness.json",
+            "status": "installed",
+            "unitId": "dwarf_dwarven_toughness"
           },
           {
             "kind": "species_trait",
@@ -12615,7 +12638,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 21
+          "installed": 22
         }
       },
       {
@@ -13056,12 +13079,26 @@
         "group": "class-starting-equipment-unit-refs",
         "label": "SRD class concrete equipment refs",
         "metrics": {
-          "denominator": 0,
-          "numerator": 0,
-          "percent": "n/a"
+          "denominator": 1,
+          "numerator": 1,
+          "percent": "100%"
         },
-        "rows": [],
-        "rowsByStatus": {}
+        "rows": [
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "class_wizard",
+            "quantity": 2,
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_dagger.json",
+            "status": "installed",
+            "unitId": "weapon_dagger"
+          }
+        ],
+        "rowsByStatus": {
+          "installed": 1
+        }
       },
       {
         "blockerRows": [],
@@ -13123,8 +13160,8 @@
       }
     ],
     "metrics": {
-      "denominator": 92,
-      "numerator": 92,
+      "denominator": 94,
+      "numerator": 94,
       "percent": "100%"
     },
     "openBlockerCount": 0

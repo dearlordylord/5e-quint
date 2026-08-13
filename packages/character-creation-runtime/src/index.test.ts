@@ -3757,7 +3757,11 @@ describe("character creation finalization", () => {
       },
       {
         speciesUnitId: "species_dwarf",
-        expectedTraitUnitIds: ["dwarf_darkvision", "dwarf_dwarven_resilience"],
+        expectedTraitUnitIds: [
+          "dwarf_darkvision",
+          "dwarf_dwarven_resilience",
+          "dwarf_dwarven_toughness",
+        ],
       },
       {
         speciesUnitId: "species_elf",
@@ -10521,6 +10525,7 @@ describe("character creation finalization", () => {
   test("adds Draconic Resilience to Sorcerer Hit Point maximum from the retained feature", () => {
     const baseBuild = {
       progression: testProgression(authoredUnitId("class_sorcerer"), 3),
+      species: authoredUnitId("species_orc"),
       abilityScores: testAbilityScoreAssignment({
         str: 8,
         dex: 14,

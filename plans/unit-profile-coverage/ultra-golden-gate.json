@@ -57,8 +57,8 @@
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 71,
-              "numerator": 71,
+              "denominator": 73,
+              "numerator": 73,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -331,8 +331,8 @@
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 89,
-              "numerator": 89,
+              "denominator": 91,
+              "numerator": 91,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -608,8 +608,8 @@
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 92,
-              "numerator": 92,
+              "denominator": 94,
+              "numerator": 94,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -630,12 +630,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 62,
-              "numerator": 62
+              "denominator": 63,
+              "numerator": 63
             },
             "qntCoveredObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 74,
+              "numerator": 74
             }
           },
           "generatorBlockingRows": [],
@@ -647,11 +647,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 74,
+              "numerator": 74
             },
             "witnessKinds": {
-              "deterministic-qnt-replay": 11,
+              "deterministic-qnt-replay": 12,
               "focused-mbt": 78,
               "runtime-test": 23
             }
@@ -817,6 +817,7 @@
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
@@ -850,8 +851,8 @@
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 105,
-              "numerator": 105,
+              "denominator": 107,
+              "numerator": 107,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -872,12 +873,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 62,
-              "numerator": 62
+              "denominator": 63,
+              "numerator": 63
             },
             "qntCoveredObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 74,
+              "numerator": 74
             }
           },
           "generatorBlockingRows": [],
@@ -889,11 +890,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 73,
-              "numerator": 73
+              "denominator": 74,
+              "numerator": 74
             },
             "witnessKinds": {
-              "deterministic-qnt-replay": 11,
+              "deterministic-qnt-replay": 12,
               "focused-mbt": 78,
               "runtime-test": 23
             }
@@ -1059,6 +1060,7 @@
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
@@ -1092,8 +1094,8 @@
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 115,
-              "numerator": 115,
+              "denominator": 117,
+              "numerator": 117,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -1114,12 +1116,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 63,
-              "numerator": 63
+              "denominator": 64,
+              "numerator": 64
             },
             "qntCoveredObligations": {
-              "denominator": 76,
-              "numerator": 76
+              "denominator": 77,
+              "numerator": 77
             }
           },
           "generatorBlockingRows": [],
@@ -1131,11 +1133,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 76,
-              "numerator": 76
+              "denominator": 77,
+              "numerator": 77
             },
             "witnessKinds": {
-              "deterministic-qnt-replay": 11,
+              "deterministic-qnt-replay": 12,
               "focused-mbt": 80,
               "runtime-test": 26
             }
@@ -1304,6 +1306,7 @@
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
@@ -1337,8 +1340,8 @@
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 116,
-              "numerator": 116,
+              "denominator": 118,
+              "numerator": 118,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -1359,12 +1362,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 63,
-              "numerator": 63
+              "denominator": 64,
+              "numerator": 64
             },
             "qntCoveredObligations": {
-              "denominator": 76,
-              "numerator": 76
+              "denominator": 77,
+              "numerator": 77
             }
           },
           "generatorBlockingRows": [],
@@ -1376,11 +1379,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 76,
-              "numerator": 76
+              "denominator": 77,
+              "numerator": 77
             },
             "witnessKinds": {
-              "deterministic-qnt-replay": 11,
+              "deterministic-qnt-replay": 12,
               "focused-mbt": 80,
               "runtime-test": 26
             }
@@ -1549,6 +1552,7 @@
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
@@ -1582,8 +1586,8 @@
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 116,
-              "numerator": 116,
+              "denominator": 118,
+              "numerator": 118,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -1604,12 +1608,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 63,
-              "numerator": 63
+              "denominator": 64,
+              "numerator": 64
             },
             "qntCoveredObligations": {
-              "denominator": 76,
-              "numerator": 76
+              "denominator": 77,
+              "numerator": 77
             }
           },
           "generatorBlockingRows": [],
@@ -1621,11 +1625,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 76,
-              "numerator": 76
+              "denominator": 77,
+              "numerator": 77
             },
             "witnessKinds": {
-              "deterministic-qnt-replay": 11,
+              "deterministic-qnt-replay": 12,
               "focused-mbt": 80,
               "runtime-test": 26
             }
@@ -1794,6 +1798,7 @@
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
@@ -1827,8 +1832,8 @@
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 117,
-              "numerator": 117,
+              "denominator": 119,
+              "numerator": 119,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -1849,12 +1854,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 63,
-              "numerator": 63
+              "denominator": 64,
+              "numerator": 64
             },
             "qntCoveredObligations": {
-              "denominator": 76,
-              "numerator": 76
+              "denominator": 77,
+              "numerator": 77
             }
           },
           "generatorBlockingRows": [],
@@ -1866,11 +1871,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 76,
-              "numerator": 76
+              "denominator": 77,
+              "numerator": 77
             },
             "witnessKinds": {
-              "deterministic-qnt-replay": 11,
+              "deterministic-qnt-replay": 12,
               "focused-mbt": 80,
               "runtime-test": 26
             }
@@ -2039,6 +2044,7 @@
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
@@ -2072,8 +2078,8 @@
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 126,
-              "numerator": 126,
+              "denominator": 128,
+              "numerator": 128,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -2094,12 +2100,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 63,
-              "numerator": 63
+              "denominator": 64,
+              "numerator": 64
             },
             "qntCoveredObligations": {
-              "denominator": 76,
-              "numerator": 76
+              "denominator": 77,
+              "numerator": 77
             }
           },
           "generatorBlockingRows": [],
@@ -2111,11 +2117,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 76,
-              "numerator": 76
+              "denominator": 77,
+              "numerator": 77
             },
             "witnessKinds": {
-              "deterministic-qnt-replay": 11,
+              "deterministic-qnt-replay": 12,
               "focused-mbt": 80,
               "runtime-test": 26
             }
@@ -2272,6 +2278,7 @@
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
@@ -2305,8 +2312,8 @@
               "percent": "100%"
             },
             "srdAuthoredProductReadiness": {
-              "denominator": 133,
-              "numerator": 133,
+              "denominator": 135,
+              "numerator": 135,
               "percent": "100%"
             },
             "strictFinalSupport": {
@@ -2327,12 +2334,12 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 63,
-              "numerator": 63
+              "denominator": 64,
+              "numerator": 64
             },
             "qntCoveredObligations": {
-              "denominator": 76,
-              "numerator": 76
+              "denominator": 77,
+              "numerator": 77
             }
           },
           "generatorBlockingRows": [],
@@ -2344,11 +2351,11 @@
           "blockingCount": 0,
           "evidence": {
             "parityWitnessedObligations": {
-              "denominator": 76,
-              "numerator": 76
+              "denominator": 77,
+              "numerator": 77
             },
             "witnessKinds": {
-              "deterministic-qnt-replay": 11,
+              "deterministic-qnt-replay": 12,
               "focused-mbt": 80,
               "runtime-test": 26
             }
@@ -2505,6 +2512,7 @@
         "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
         "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
         "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.HIT_POINTS.MAXIMUM_DERIVATION",
         "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
         "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
         "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",

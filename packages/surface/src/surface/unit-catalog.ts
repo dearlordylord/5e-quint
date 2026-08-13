@@ -283,6 +283,7 @@ import speciesDragonbornDarkvisionInput from "../../content/species_dragonborn_d
 import speciesDwarfInput from "../../content/species_dwarf.json";
 import speciesDwarfDarkvisionInput from "../../content/species_dwarf_darkvision.json";
 import speciesDwarfDwarvenResilienceInput from "../../content/species_dwarf_dwarven_resilience.json";
+import speciesDwarfDwarvenToughnessInput from "../../content/species_dwarf_dwarven_toughness.json";
 import speciesElfInput from "../../content/species_elf.json";
 import speciesGnomeInput from "../../content/species_gnome.json";
 import speciesGnomeDarkvisionInput from "../../content/species_gnome_darkvision.json";
@@ -809,6 +810,7 @@ export const srdUnitCollection = defineSrdUnitCollection({
     speciesDragonbornDarkvisionInput,
     speciesDwarfDarkvisionInput,
     speciesDwarfDwarvenResilienceInput,
+    speciesDwarfDwarvenToughnessInput,
     speciesGnomeDarkvisionInput,
     speciesGnomeGnomishCunningInput,
     speciesGnomeGnomishLineageInput,

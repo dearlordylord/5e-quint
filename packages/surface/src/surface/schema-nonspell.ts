@@ -4092,6 +4092,7 @@ export const DragonbornSpeciesRecordSchema = Schema.Struct({
 export const DwarfSpeciesTraitsSchema = Schema.Struct({
   darkvision: Schema.Literal("dwarf_darkvision"),
   dwarvenResilience: Schema.Literal("dwarf_dwarven_resilience"),
+  dwarvenToughness: Schema.Literal("dwarf_dwarven_toughness"),
 });
 
 export const DwarfSpeciesRecordSchema = Schema.Struct({

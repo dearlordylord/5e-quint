@@ -216,6 +216,7 @@ const requiredFirstVerticalUnitIds = [
   "species_dragonborn_darkvision",
   "dwarf_darkvision",
   "dwarf_dwarven_resilience",
+  "dwarf_dwarven_toughness",
   "species_gnome_darkvision",
   "species_gnome_gnomish_cunning",
   "species_gnome_gnomish_lineage",

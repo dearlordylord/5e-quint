@@ -86,6 +86,7 @@ function projectionBuild(
   CharacterBuild,
   | "progression"
   | "background"
+  | "species"
   | "abilityScores"
   | "features"
   | "proficiencyChoices"
@@ -93,6 +94,7 @@ function projectionBuild(
   return {
     progression: { startingClass, advancements: [] },
     background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
     abilityScores: baseScores,
     features: [],
     proficiencyChoices: [],
@@ -321,7 +323,7 @@ describe("character finalization boundaries", () => {
     });
   });
 
-  test("aggregates missing retained feature Units during Hit Point projection", () => {
+  test("reports selected-species and Hit Point grant source projection failures", () => {
     const fighterBuild = projectionBuild(
       classUnitId(authoredUnitId("class_fighter")),
     );
@@ -346,8 +348,64 @@ describe("character finalization boundaries", () => {
       left: [
         {
           cause: {
-            tag: "missingHitPointMaximumBonusFeatureUnit",
-            featureUnitId: missingFeatureUnitId,
+            tag: "missingHitPointMaximumGrantSourceUnit",
+            sourceUnitId: missingFeatureUnitId,
+          },
+        },
+      ],
+    });
+
+    expect(
+      characterBuildHitPoints(
+        {
+          ...fighterBuild,
+          species: authoredUnitId("synthetic_missing_species"),
+          features: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: authoredUnitId("synthetic_feature_source"),
+              unitId: missingFeatureUnitId,
+            },
+          ],
+        },
+        unitLibrary,
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: [
+        {
+          cause: {
+            tag: "unknownUnit",
+            role: "species",
+            unitId: "synthetic_missing_species",
+          },
+        },
+        {
+          cause: {
+            tag: "missingHitPointMaximumGrantSourceUnit",
+            sourceUnitId: missingFeatureUnitId,
+          },
+        },
+      ],
+    });
+
+    expect(
+      characterBuildHitPoints(
+        {
+          ...fighterBuild,
+          species: authoredUnitId("weapon_longsword"),
+        },
+        unitLibrary,
+      ),
+    ).toMatchObject({
+      _tag: "Left",
+      left: [
+        {
+          cause: {
+            tag: "unreadableUnit",
+            role: "species",
+            unitId: "weapon_longsword",
+            issues: [{ code: "unsupportedUnitKind" }],
           },
         },
       ],
@@ -381,16 +439,6 @@ describe("character finalization boundaries", () => {
         delta: {
           kind: "fixed",
           expr: { dice: 1, dieSize: 6 },
-        },
-      },
-      {
-        suffix: "character_axis",
-        delta: {
-          kind: "linear_per_level",
-          axis: "character",
-          base: { dice: 0, dieSize: 1, flat: 3 },
-          perLevel: { flat: 1 },
-          startingAtLevel: 3,
         },
       },
       {
@@ -429,8 +477,8 @@ describe("character finalization boundaries", () => {
         left: [
           {
             cause: {
-              tag: "nonDeterministicHitPointMaximumBonus",
-              featureUnitId,
+              tag: "unsupportedHitPointMaximumGrant",
+              sourceUnitId: featureUnitId,
             },
           },
         ],

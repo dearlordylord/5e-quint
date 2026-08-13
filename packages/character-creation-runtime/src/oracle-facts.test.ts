@@ -1187,12 +1187,12 @@ describe("Character Creation owner facts", () => {
           classUnitId: syntheticUnitId,
         },
         {
-          tag: "missingHitPointMaximumBonusFeatureUnit",
-          featureUnitId: syntheticFeatureUnitId,
+          tag: "missingHitPointMaximumGrantSourceUnit",
+          sourceUnitId: syntheticFeatureUnitId,
         },
         {
-          tag: "nonDeterministicHitPointMaximumBonus",
-          featureUnitId: syntheticFeatureUnitId,
+          tag: "unsupportedHitPointMaximumGrant",
+          sourceUnitId: syntheticFeatureUnitId,
         },
         {
           tag: "unsupportedClassFeatureLanguage",

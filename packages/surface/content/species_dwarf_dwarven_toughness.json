@@ -1,0 +1,32 @@
+{
+  "id": "dwarf_dwarven_toughness",
+  "kind": "species_trait",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "delta": {
+          "axis": "character",
+          "base": {
+            "dice": 0,
+            "dieSize": 1,
+            "flat": 1
+          },
+          "kind": "linear_per_level",
+          "perLevel": {
+            "flat": 1
+          },
+          "startingAtLevel": 1
+        },
+        "direction": "increase",
+        "kind": "modify_max_hp"
+      }
+    ]
+  },
+  "name": "Dwarven Toughness",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Character-Origins.md:141"
+  },
+  "species": "dwarf"
+}

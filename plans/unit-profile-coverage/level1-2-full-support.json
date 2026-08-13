@@ -8590,8 +8590,8 @@
         "group": "species-trait-refs",
         "label": "SRD species trait refs",
         "metrics": {
-          "denominator": 21,
-          "numerator": 21,
+          "denominator": 22,
+          "numerator": 22,
           "percent": "100%"
         },
         "rows": [
@@ -8639,6 +8639,15 @@
             "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_resilience.json",
             "status": "installed",
             "unitId": "dwarf_dwarven_resilience"
+          },
+          {
+            "kind": "species_trait",
+            "ownerUnitId": "species_dwarf",
+            "ready": true,
+            "relation": "species.traits.dwarvenToughness",
+            "sourceRecordPath": "packages/surface/content/species_dwarf_dwarven_toughness.json",
+            "status": "installed",
+            "unitId": "dwarf_dwarven_toughness"
           },
           {
             "kind": "species_trait",
@@ -8786,7 +8795,7 @@
           }
         ],
         "rowsByStatus": {
-          "installed": 21
+          "installed": 22
         }
       },
       {
@@ -9200,12 +9209,26 @@
         "group": "class-starting-equipment-unit-refs",
         "label": "SRD class concrete equipment refs",
         "metrics": {
-          "denominator": 0,
-          "numerator": 0,
-          "percent": "n/a"
+          "denominator": 1,
+          "numerator": 1,
+          "percent": "100%"
         },
-        "rows": [],
-        "rowsByStatus": {}
+        "rows": [
+          {
+            "group": "starting-equipment-unit-refs",
+            "kind": "weapon",
+            "ownerUnitId": "class_wizard",
+            "quantity": 2,
+            "ready": true,
+            "relation": "startingEquipment.option_a.unit_ref",
+            "sourceRecordPath": "packages/surface/content/weapon_dagger.json",
+            "status": "installed",
+            "unitId": "weapon_dagger"
+          }
+        ],
+        "rowsByStatus": {
+          "installed": 1
+        }
       },
       {
         "blockerRows": [],
@@ -9267,8 +9290,8 @@
       }
     ],
     "metrics": {
-      "denominator": 89,
-      "numerator": 89,
+      "denominator": 91,
+      "numerator": 91,
       "percent": "100%"
     },
     "openBlockerCount": 0

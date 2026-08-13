@@ -557,12 +557,12 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
     classUnitId: UnitIdSchema,
   }),
   Schema.Struct({
-    tag: Schema.Literal("missingHitPointMaximumBonusFeatureUnit"),
-    featureUnitId: UnitIdSchema,
+    tag: Schema.Literal("missingHitPointMaximumGrantSourceUnit"),
+    sourceUnitId: UnitIdSchema,
   }),
   Schema.Struct({
-    tag: Schema.Literal("nonDeterministicHitPointMaximumBonus"),
-    featureUnitId: UnitIdSchema,
+    tag: Schema.Literal("unsupportedHitPointMaximumGrant"),
+    sourceUnitId: UnitIdSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("unsupportedClassFeatureLanguage"),
@@ -1482,17 +1482,17 @@ function characterBuildProjectionCauseFact(
       },
     ),
     byTag(
-      "missingHitPointMaximumBonusFeatureUnit",
-      ({ tag, featureUnitId, ...unprojected }) => {
+      "missingHitPointMaximumGrantSourceUnit",
+      ({ tag, sourceUnitId, ...unprojected }) => {
         noUnprojectedFields(unprojected);
-        return { tag, featureUnitId };
+        return { tag, sourceUnitId };
       },
     ),
     byTag(
-      "nonDeterministicHitPointMaximumBonus",
-      ({ tag, featureUnitId, ...unprojected }) => {
+      "unsupportedHitPointMaximumGrant",
+      ({ tag, sourceUnitId, ...unprojected }) => {
         noUnprojectedFields(unprojected);
-        return { tag, featureUnitId };
+        return { tag, sourceUnitId };
       },
     ),
     byTag(

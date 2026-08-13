@@ -1252,14 +1252,14 @@ function characterBuildProjectionCauseMessage(
         `Cannot derive ${projection} without starting class facts: ${classUnitId}.`,
     ),
     Match.when(
-      { tag: "missingHitPointMaximumBonusFeatureUnit" },
-      ({ featureUnitId }) =>
-        `Cannot derive Hit Point maximum bonus without class-feature Unit: ${featureUnitId}.`,
+      { tag: "missingHitPointMaximumGrantSourceUnit" },
+      ({ sourceUnitId }) =>
+        `Cannot derive Hit Point maximum without grant source Unit: ${sourceUnitId}.`,
     ),
     Match.when(
-      { tag: "nonDeterministicHitPointMaximumBonus" },
-      ({ featureUnitId }) =>
-        `Class-feature Hit Point maximum bonus on Unit ${featureUnitId} must be a deterministic flat amount.`,
+      { tag: "unsupportedHitPointMaximumGrant" },
+      ({ sourceUnitId }) =>
+        `Hit Point maximum grant on Unit ${sourceUnitId} must use a supported deterministic amount and level axis.`,
     ),
     Match.when(
       { tag: "unsupportedClassFeatureLanguage" },
@@ -1745,7 +1745,10 @@ function normalHitPointMaximum(facts: CharacterHitPointMaximumFacts): number {
 }
 
 export function characterBuildHitPoints(
-  build: Pick<CharacterBuild, "progression" | "abilityScores" | "features">,
+  build: Pick<
+    CharacterBuild,
+    "progression" | "species" | "abilityScores" | "features"
+  >,
   unitLibrary: UnitCatalog,
 ): Either.Either<CharacterBuildHitPoints, ProjectionIssues> {
   const classFactsByUnitId = allClassFactsForFinalization(
@@ -1771,12 +1774,12 @@ export function characterBuildHitPoints(
   }
   /* v8 ignore stop */
 
-  const classFeatureMaximumBonus = classFeatureHitPointMaximumBonus(
+  const hitPointMaximumGrantBonus = hitPointMaximumGrantBonusTotal(
     build,
     unitLibrary,
   );
-  if (Either.isLeft(classFeatureMaximumBonus)) {
-    return Either.left(classFeatureMaximumBonus.left);
+  if (Either.isLeft(hitPointMaximumGrantBonus)) {
+    return Either.left(hitPointMaximumGrantBonus.left);
   }
 
   const constitutionModifier = abilityModifier(build.abilityScores.con);
@@ -1791,7 +1794,7 @@ export function characterBuildHitPoints(
         /* v8 ignore stop */
       },
     ),
-    hitPointMaximumBonus: classFeatureMaximumBonus.right,
+    hitPointMaximumBonus: hitPointMaximumGrantBonus.right,
   });
 
   return Either.right({
@@ -1813,32 +1816,48 @@ export function characterBuildHitPoints(
   });
 }
 
-function classFeatureHitPointMaximumBonus(
-  build: Pick<CharacterBuild, "progression" | "features">,
+function hitPointMaximumGrantBonusTotal(
+  build: Pick<CharacterBuild, "progression" | "species" | "features">,
   unitLibrary: UnitCatalog,
 ): Either.Either<number, ProjectionIssues> {
   let total = 0;
   const issues: CharacterBuildProjectionIssue[] = [];
 
-  for (const featureUnitId of characterBuildFeatureUnitIds(
+  const speciesTraitIds = speciesTraitUnitIdsForHitPointProjection(
     build,
     unitLibrary,
-  )) {
-    const unit = unitLibrary.getUnit(featureUnitId);
+  );
+  if (Either.isLeft(speciesTraitIds)) {
+    issues.push(speciesTraitIds.left);
+  }
+  const sourceUnitIds = uniqueValues([
+    ...characterBuildFeatureUnitIds(build, unitLibrary),
+    ...(Either.isRight(speciesTraitIds) ? speciesTraitIds.right : []),
+  ]);
+  for (const sourceUnitId of sourceUnitIds) {
+    const unit = unitLibrary.getUnit(sourceUnitId);
     if (Option.isNone(unit)) {
       issues.push(
         characterBuildProjectionIssue({
-          tag: "missingHitPointMaximumBonusFeatureUnit",
-          featureUnitId,
+          tag: "missingHitPointMaximumGrantSourceUnit",
+          sourceUnitId,
         }),
       );
       continue;
     }
-    if (unit.value.kind !== "class_feature") continue;
-    const classUnit = classUnitId(
-      authoredUnitId(`class_${unit.value.className}`),
-    );
-    const classLevel = classLevelForUnit(build.progression, classUnit);
+    if (
+      unit.value.kind !== "class_feature" &&
+      unit.value.kind !== "species_trait"
+    ) {
+      continue;
+    }
+    const sourceClassLevel =
+      unit.value.kind === "class_feature"
+        ? classLevelForUnit(
+            build.progression,
+            classUnitId(authoredUnitId(`class_${unit.value.className}`)),
+          )
+        : undefined;
     const components: PassiveMechanics[] =
       unit.value.mechanics.family === "composite"
         ? unit.value.mechanics.parts.filter(
@@ -1853,15 +1872,15 @@ function classFeatureHitPointMaximumBonus(
         if (grant.kind !== "modify_max_hp" || grant.direction !== "increase") {
           continue;
         }
-        const bonus = deterministicHitPointMaximumDelta(
-          grant.delta,
-          classLevel,
-        );
+        const bonus = deterministicHitPointMaximumDelta(grant.delta, {
+          characterLevel: computeTotalLevel(build.progression),
+          sourceClassLevel,
+        });
         if (bonus === undefined) {
           issues.push(
             characterBuildProjectionIssue({
-              tag: "nonDeterministicHitPointMaximumBonus",
-              featureUnitId,
+              tag: "unsupportedHitPointMaximumGrant",
+              sourceUnitId,
             }),
           );
           continue;
@@ -1879,18 +1898,27 @@ function classFeatureHitPointMaximumBonus(
 
 function deterministicHitPointMaximumDelta(
   delta: HitPointMaximumDelta,
-  classLevel: number,
+  levels: {
+    readonly characterLevel: number;
+    readonly sourceClassLevel: number | undefined;
+  },
 ): number | undefined {
   return Match.value(delta).pipe(
     Match.when({ kind: "fixed" }, (fixed) =>
       deterministicFlatDiceExpr(fixed.expr),
     ),
     Match.when({ kind: "linear_per_level" }, (linear) => {
-      if (linear.axis !== "class") return undefined;
+      const scaleLevel =
+        linear.axis === "character"
+          ? levels.characterLevel
+          : linear.axis === "class"
+            ? levels.sourceClassLevel
+            : undefined;
+      if (scaleLevel === undefined) return undefined;
       const base = deterministicFlatDiceExpr(linear.base);
       const perLevel = deterministicFlatDiceDelta(linear.perLevel);
       if (base === undefined || perLevel === undefined) return undefined;
-      return base + Math.max(0, classLevel - linear.startingAtLevel) * perLevel;
+      return base + Math.max(0, scaleLevel - linear.startingAtLevel) * perLevel;
     }),
     Match.when({ kind: "threshold_tiers" }, () => undefined),
     Match.when({ kind: "threshold_tiers_exploding_max_die" }, () => undefined),
@@ -3379,6 +3407,27 @@ function speciesTraitUnitIds(
   return facts.tag === "readable"
     ? Object.values(facts.value.traits).map(authoredUnitId)
     : [];
+}
+
+function speciesTraitUnitIdsForHitPointProjection(
+  build: Pick<CharacterBuild, "species">,
+  unitLibrary: UnitCatalog,
+): Either.Either<readonly UnitRecord["id"][], CharacterBuildProjectionIssue> {
+  const speciesUnit = unitForFinalization(
+    unitLibrary,
+    build.species,
+    "species",
+  );
+  if (Either.isLeft(speciesUnit)) return Either.left(speciesUnit.left);
+  const speciesFacts = readableForFinalization(
+    readSpeciesCreationFacts(speciesUnit.right),
+    build.species,
+    "species",
+  );
+  if (Either.isLeft(speciesFacts)) return Either.left(speciesFacts.left);
+  return Either.right(
+    Object.values(speciesFacts.right.traits).map(authoredUnitId),
+  );
 }
 
 export function finalizedClassChoiceFeatures(
