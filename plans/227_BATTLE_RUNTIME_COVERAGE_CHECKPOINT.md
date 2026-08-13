@@ -20,31 +20,31 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 ## Current authoritative baseline
 
 - Date: 2026-08-13
-- Measured code tree committed as: `c3c2b078f`
+- Measured code tree committed as: `4d15f9262`
 - Command: `pnpm coverage`
 - Result: exit 0 under the original package timeouts
-- Battle-runtime: 236/236 files passed; 2,558 passed / 128 skipped
+- Battle-runtime: 236/236 files passed; 2,566 passed / 128 skipped
 - Every executable package other than battle-runtime remains at or above 99%
   for statements, branches, functions, and lines.
 
 | Metric     |   Covered / total | Coverage | Uncovered | Gap to 99% |
 | ---------- | ----------------: | -------: | --------: | ---------: |
-| Statements | 122,917 / 125,508 |   97.93% |     2,591 |      1,336 |
-| Branches   |   31,916 / 33,379 |   95.61% |     1,463 |      1,130 |
+| Statements | 122,928 / 125,508 |   97.94% |     2,580 |      1,325 |
+| Branches   |   31,925 / 33,384 |   95.62% |     1,459 |      1,126 |
 | Functions  |     4,876 / 4,876 |  100.00% |         0 |          0 |
-| Lines      | 122,917 / 125,508 |   97.93% |     2,591 |      1,336 |
+| Lines      | 122,928 / 125,508 |   97.94% |     2,580 |      1,325 |
 
 Recompute the 99% gaps after every production-denominator change.
 
 ## Current campaign
 
-- Continue coverage before starting issue #254 cyclomatic-complexity work.
+- Coverage work is paused after M87; resume it before issue #254 complexity work.
 - Select cohesive 150–300-counter domain slices from the public-policy
   production report; use at most two implementation lanes at once.
 - Do not forge internal battle state to reach admission-proven or
   schema-impossible guards. Narrow or remove such guards only with concrete
   proof.
-- The current public gaps are 1,336 statements/lines and 1,130 branches.
+- The current public gaps are 1,325 statements/lines and 1,126 branches.
 
 ## Verification and completion
 
