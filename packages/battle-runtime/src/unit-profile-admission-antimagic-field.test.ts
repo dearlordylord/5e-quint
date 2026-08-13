@@ -494,6 +494,33 @@ describe("SRD Antimagic Field ongoing spell suppression admission", () => {
       forcePositionId: spiritualWeaponEffect.forcePositionId,
     });
   });
+
+  test("empty Antimagic Field suppression preserves tracked light occurrences", () => {
+    const sourceEffectId = battleSpellEffectOccurrenceId(
+      "unit-profile-antimagic-empty-suppression-effect",
+    );
+    const emitter = trackedObjectSpellLightEmitter({
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic_empty_suppression_light",
+      ),
+      sourceEffectId,
+      sourceSpellLevel: 2,
+      objectId: "unit-profile-antimagic-empty-suppression-object",
+    });
+    const session = antimagicFieldBattle({ lightEmitters: [emitter] });
+    const resolved = castAntimagicField(session, []);
+
+    expect(resolved.state.lightEmitters).toEqual([emitter]);
+    expect(resolved.snapshot.lightEmitters).toEqual([emitter]);
+    expect(
+      requireCombatant(resolved.state, spellCasterId).activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "antimagicFieldOngoingSpellSuppression",
+        suppressedOngoingSpellEffects: [],
+      }),
+    );
+  });
 });
 
 function maybeSpiritualWeaponRepeatAct(session: BattleRuntimeSession) {

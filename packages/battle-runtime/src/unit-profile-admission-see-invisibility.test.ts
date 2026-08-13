@@ -26,6 +26,7 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import {
   applyCondition,
   battleCreatureStateWithKnockOutPreservedConditions,
@@ -303,6 +304,78 @@ describe("L12G-FOLLOWUP-SEE-INVISIBILITY-RUNTIME-SUPPORT deterministic See Invis
         blockedByOpaqueCover: false,
       }),
     ).toBe(false);
+  });
+
+  test("see_invisibility recast replaces only the caster-owned sight effect", () => {
+    const spell = spellRecord(seeInvisibilityUnitId);
+    const base = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      session: base,
+      spellId: seeInvisibilityUnitId,
+      slotLevel: 2,
+    });
+    const caster = requireCombatant(base.state, spellCasterId);
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-see-invisible-unrelated",
+    );
+    const state: BattleState = {
+      ...base.state,
+      combatants: new Map(base.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: [
+          {
+            kind: "seeInvisibleAndEthereal" as const,
+            sourceProcedureRef: act.subject.procedureRef,
+            sourceCombatantId: spellCasterId,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(1),
+            },
+          },
+          {
+            kind: "seeInvisibleAndEthereal" as const,
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        ],
+      }),
+    };
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected See Invisibility recast to resolve.");
+    }
+    expect(
+      requireCombatant(resolved.state, spellCasterId).activeEffects,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "seeInvisibleAndEthereal",
+        sourceProcedureRef: unrelatedSource,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: elapsedTimeTicks(10),
+        },
+      }),
+      expect.objectContaining({
+        kind: "seeInvisibleAndEthereal",
+        sourceProcedureRef: act.subject.procedureRef,
+        expiresAt: {
+          kind: "duration",
+          durationTicks: seeInvisibilityDurationTicks,
+        },
+      }),
+    ]);
   });
 });
 

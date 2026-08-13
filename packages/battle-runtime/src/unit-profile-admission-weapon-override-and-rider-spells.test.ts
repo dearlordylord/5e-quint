@@ -1576,4 +1576,71 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       ),
     ).toBe(false);
   });
+
+  test("magic_weapon recast preserves an unrelated caster effect", () => {
+    const magicWeapon = spellRecord(magicWeaponUnitId);
+    const session = spellBattle({
+      preparedSpells: [magicWeapon],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+      attack: zeroAbilityWeaponAttack("weapon_longsword"),
+    });
+    const caster = requireCombatant(session.state, spellCasterId);
+    const act = bonusSpellAct({
+      session,
+      spellId: magicWeaponUnitId,
+      slotLevel: 3,
+    });
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-magic-weapon-unrelated-resistance",
+    );
+    const state = {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: [
+          ...caster.activeEffects,
+          {
+            kind: "damageResistance" as const,
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            damageType: "cold" as const,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        ],
+      }),
+    };
+    const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
+    const recast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        magicWeaponTargetItemFill(targetHole, {
+          holderCombatantId: spellCasterId,
+          itemId: battleObjectId("main:weapon_longsword"),
+        }),
+      ],
+    });
+    expect(recast).toMatchObject({ tag: "resolved" });
+    if (recast.tag !== "resolved") {
+      throw new Error("Expected Magic Weapon recast to resolve.");
+    }
+    expect(
+      requireCombatant(recast.state, spellCasterId).activeEffects,
+    ).toContainEqual(
+      expect.objectContaining({
+        kind: "damageResistance",
+        sourceProcedureRef: unrelatedSource,
+      }),
+    );
+    expect(
+      battleWeaponItemHasMagicWeaponEnhancement(
+        recast.state,
+        spellCasterId,
+        battleObjectId("main:weapon_longsword"),
+      ),
+    ).toBe(true);
+  });
 });

@@ -1,4 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-BLUR blur
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-blur-attack-roll-defense
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE
@@ -22,6 +23,7 @@ import {
   breakBattleConcentration,
   combatantId,
   endTurn,
+  elapsedTimeTicks,
   resolveBattleSubject,
 } from "./unit-profile-admission.test-support.ts";
 import type {
@@ -132,6 +134,63 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
       targetId: spellCasterId,
     });
     expect(attackRoll.rollMode).toBeUndefined();
+  });
+
+  test("blur recast replaces only its own defense effect", () => {
+    const attackerId = combatantId("unit-profile-blur-recast-attacker");
+    const base = blurBattle(attackerId);
+    const act = spellAct({ session: base, spellId: blurUnitId, slotLevel: 2 });
+    const caster = requireCombatant(base.state, spellCasterId);
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-blur-unrelated",
+    );
+    const state = {
+      ...base.state,
+      combatants: new Map(base.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: [
+          {
+            kind: "blurred" as const,
+            sourceProcedureRef: act.subject.procedureRef,
+            sourceCombatantId: spellCasterId,
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: spellCasterId,
+            },
+          },
+          {
+            kind: "blurred" as const,
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: spellCasterId,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        ],
+      }),
+    };
+
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [],
+    });
+    expect(cast).toMatchObject({ tag: "resolved" });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Blur recast to resolve.");
+    }
+    expect(requireCombatant(cast.state, spellCasterId).activeEffects).toEqual([
+      expect.objectContaining({
+        kind: "blurred",
+        sourceProcedureRef: unrelatedSource,
+      }),
+      expect.objectContaining({
+        kind: "blurred",
+        sourceProcedureRef: act.subject.procedureRef,
+      }),
+    ]);
   });
 });
 
