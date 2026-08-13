@@ -20,34 +20,31 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 ## Current authoritative baseline
 
 - Date: 2026-08-12
-- Measured code tree committed as: `09335bc93`
+- Measured code tree committed as: `f8997eb8f`
 - Command: `pnpm coverage`
 - Result: exit 0 under the original package timeouts
-- Battle-runtime: 236/236 files passed; 2,515 passed and 115 skipped
+- Battle-runtime: 236/236 files passed
 - Every executable package other than battle-runtime remains at or above 99%
   for statements, branches, functions, and lines.
 
 | Metric     |   Covered / total | Coverage | Uncovered | Gap to 99% |
 | ---------- | ----------------: | -------: | --------: | ---------: |
-| Statements | 122,624 / 125,323 |   97.84% |     2,699 |      1,446 |
-| Branches   |   31,687 / 33,201 |   95.43% |     1,514 |      1,182 |
-| Functions  |     4,868 / 4,868 |  100.00% |         0 |          0 |
-| Lines      | 122,624 / 125,323 |   97.84% |     2,699 |      1,446 |
+| Statements | 122,835 / 125,508 |   97.87% |     2,673 |      1,418 |
+| Branches   |   31,788 / 33,285 |   95.50% |     1,497 |      1,165 |
+| Functions  |     4,876 / 4,876 |  100.00% |         0 |          0 |
+| Lines      | 122,835 / 125,508 |   97.87% |     2,673 |      1,418 |
 
 Recompute the 99% gaps after every production-denominator change.
 
 ## Current campaign
 
 - Continue coverage before starting issue #254 cyclomatic-complexity work.
-- Select cohesive public scenarios with at least 50 exact, nonduplicate,
-  feasible residual sites from the public-policy production report before
-  editing; reject test-support and smaller audit candidates.
+- Select cohesive 150–300-counter domain slices from the public-policy
+  production report; use at most two implementation lanes at once.
 - Do not forge internal battle state to reach admission-proven or
   schema-impossible guards. Narrow or remove such guards only with concrete
   proof.
-- Avoid owners already marked completed or rejected in
-  `/tmp/dnd-work-ownership.md`; that ledger owns live parallel coordination.
-- The current public gaps are 1,446 statements/lines and 1,182 branches.
+- The current public gaps are 1,418 statements/lines and 1,165 branches.
 
 ## Verification and completion
 
