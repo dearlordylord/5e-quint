@@ -2737,7 +2737,7 @@ describe("M87 support-profile admission near misses", () => {
       expected: null,
     },
   ] as const)(
-    "$name rejects malformed authored mechanics",
+    "$name is not recognized by its support-profile projector",
     ({ unit, project, expected }) => {
       expect(project(unit)).toBe(expected);
     },

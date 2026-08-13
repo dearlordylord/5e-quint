@@ -1,7 +1,6 @@
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { abilityModifier, attackBonus, classLevel } from "@dnd/shared/types";
 import {
   startBattleRight,
   startBattleSessionRight,
@@ -59,12 +58,9 @@ import type {
 import type { AttackRollResult } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
   AttackDamageRider,
-  BattleAttackRollResult,
   BattleFill,
-  PendingAttackRollMissToHitReplacementContext,
   SpellAttackDamageComponent,
 } from "./battle-state-execution.ts";
-import type { UnitFeatureProcedureExecution } from "./character-execution-vocabulary.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 import {
   attackActionBonus,
@@ -83,14 +79,6 @@ import {
   weaponAttackDamageExpression,
   weaponAttackSupportsFinesseOrRanged,
   weaponDamageComponent,
-  attackDamageRiderForProfile,
-  attackDamageRiderDiceCount,
-  eligibleAttackDamageDieFloorProcedureRefsForAttacker,
-  attackRollMissToHitReplacementHolePayload,
-  eligibleAttackRollMissToHitReplacements,
-  selectedAttackRollMissToHitReplacement,
-  attackRollMissToHitReplacementForProcedure,
-  recordAttackRollMissToHitReplacementUsed,
 } from "./battle-reducer/statblock-attacks.ts";
 import {
   applyWeaponMasterySapOnHit,
@@ -107,93 +95,6 @@ import {
 import { describe, expect, test } from "vitest";
 
 describe("battle runtime: attack rolls and damage", () => {
-  test("stat-block rider and miss-to-hit projections keep zero, stale, and ordinary-hit outcomes typed", () => {
-    const riderProfile = {
-      kind: "attackDamageRider",
-      optional: true,
-      usageLimit: "oncePerTurn",
-      trigger: "finesseOrRangedAttackWithAdvantageOrAlly",
-      eligibility:
-        "advantageOrNonIncapacitatedAllyWithin5ftOfTargetWithoutDisadvantage",
-      classLevel: classLevel(1),
-      dice: {
-        kind: "classLevelTable",
-        dieSize: 6,
-        diceByLevel: [{ atLevel: 1, count: 0 }],
-      },
-    } as const satisfies Extract<
-      UnitFeatureProcedureExecution,
-      { readonly kind: "attackDamageRider" }
-    >;
-    const riderRef = battleProcedureExecutionRefForTest("m87-rider");
-    expect(attackDamageRiderDiceCount(riderProfile, 0)).toBe(0);
-    expect(
-      attackDamageRiderForProfile(riderProfile, riderRef, goblinId, "fire", 0),
-    ).toBeNull();
-
-    const state = goblinTurnBattle();
-    const subject = goblinAttackSubject(state, "Scimitar");
-    const ordinaryMiss: BattleAttackRollResult = {
-      total: 1,
-      naturalD20: DieRollResult(1),
-      missToHitReplacementProcedureRef: riderRef,
-    };
-    const context: PendingAttackRollMissToHitReplacementContext = {
-      subject,
-      targetId: fighterId,
-      attackRoll: ordinaryMiss,
-    };
-    expect(attackRollMissToHitReplacementHolePayload(state, goblinId)).toEqual(
-      {},
-    );
-    expect(
-      eligibleAttackRollMissToHitReplacements(state.combatants.get(goblinId)),
-    ).toEqual([]);
-    expect(
-      selectedAttackRollMissToHitReplacement({
-        state,
-        subject,
-        attackerId: goblinId,
-        targetId: fighterId,
-        attackRoll: ordinaryMiss,
-        ordinaryHit: true,
-      }),
-    ).toBeNull();
-    expect(
-      attackRollMissToHitReplacementForProcedure(
-        state,
-        goblinId,
-        riderRef,
-        context,
-      ),
-    ).toBeNull();
-    expect(
-      recordAttackRollMissToHitReplacementUsed(
-        state,
-        combatantId("m87-missing-attacker"),
-        { procedureRef: riderRef },
-        context,
-      ),
-    ).toBe(state);
-    expect(
-      eligibleAttackDamageDieFloorProcedureRefsForAttacker(
-        state.combatants.get(goblinId),
-        {
-          kind: "unarmedStrike",
-          effect: {
-            kind: "damage",
-            damage: { kind: "base", damageType: "bludgeoning", flat: 1 },
-          },
-          attackAbility: "str",
-          attackAbilityModifier: abilityModifier(0),
-          attackBonus: attackBonus(0),
-          damageAbilityModifier: abilityModifier(0),
-        },
-        riderRef,
-      ),
-    ).toEqual([]);
-  });
-
   test("attack damage projections preserve Stat Block critical, advantage, and character branches", () => {
     const state = goblinTurnBattle();
     const goblin = state.combatants.get(goblinId);

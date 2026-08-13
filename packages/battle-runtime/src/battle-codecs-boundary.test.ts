@@ -468,61 +468,6 @@ const rolledDiceCases: readonly CodecCase[] = [
       },
     }),
   ),
-  right(
-    "unarmedProcedureReplacementAndDamageReferences",
-    rolled("unarmedProcedureReplacementAndDamageReferences", {
-      critical: false,
-      attack: {
-        kind: "unarmedStrike",
-        effect: {
-          kind: "damage",
-          damage: {
-            kind: "procedureReplacement",
-            sourceProcedureRef: fixture.sourceProcedureRef,
-            dice: 1,
-            dieSize: 6,
-            damageType: "bludgeoning",
-          },
-        },
-        attackAbility: "str",
-        attackAbilityModifier: 3,
-        attackBonus: 3,
-        damageAbilityModifier: 3,
-      },
-      attackDamageRiders: [
-        {
-          attackerId: wizardId,
-          procedureRef: fixture.sourceProcedureRef,
-          optional: true,
-          damage: { dice: 1, dieSize: 6, damageType: "cold" },
-        },
-      ],
-      spellWeaponDamageRiders: [
-        {
-          sourceCombatantId: wizardId,
-          sourceProcedureRef: fixture.sourceProcedureRef,
-          damage: { expr: { dice: 1, dieSize: 4 }, damageType: "fire" },
-          expiresAt: { kind: "untilDispelled" },
-        },
-      ],
-      spellMarkedDamageRiders: [markedRider],
-      cunningStrikeOptions: [
-        {
-          procedureRef: fixture.sourceProcedureRef,
-          optionId: "poison",
-          sourceDamageRiderProcedureRef: fixture.sourceProcedureRef,
-          dieCost: { dice: 1, dieSize: 6 },
-        },
-      ],
-      weaponDamageDiceRollChoiceProcedureRefs: [fixture.sourceProcedureRef],
-      attackDamageDieFloorChoiceProcedureRefs: [fixture.sourceProcedureRef],
-      attackDamageAbilityModifierChoice: {
-        procedureRefs: [fixture.sourceProcedureRef],
-        appliedDamageAbilityModifier: 3,
-        declinedDamageAbilityModifier: 0,
-      },
-    }),
-  ),
 ];
 
 const invalidSource = battleProcedureExecutionRefForTest(

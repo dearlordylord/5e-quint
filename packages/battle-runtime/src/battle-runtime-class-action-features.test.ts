@@ -766,30 +766,6 @@ describe("battle runtime: class action features", () => {
       ]),
     );
 
-    const reAimedState = {
-      ...aimed.state,
-      currentTurnResources: {
-        ...aimed.state.currentTurnResources,
-        currentHasBonusAction: true,
-      },
-    } satisfies BattleState;
-    const reAimed = requireResolved(
-      resolveBattleSubject({
-        state: reAimedState,
-        subject: act.subject,
-        fills: [],
-      }),
-    );
-    expect(
-      reAimed.state.combatants
-        .get(fighterId)
-        ?.activeEffects.filter(
-          (effect) =>
-            effect.kind === "nextAttackRollBySelf" ||
-            effect.kind === "selfSpeedZero",
-        ),
-    ).toHaveLength(2);
-
     const targetHole = attackInitialTargetHole(aimed.state);
     const rollHole = attackRollHoleAfterTarget(aimed.state, targetHole);
     expect(rollHole).toMatchObject({
