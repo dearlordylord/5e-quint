@@ -226,9 +226,7 @@ describe("Thaumaturgy Booming Voice", () => {
     type ThaumaturgyEffectInput =
       (typeof thaumaturgyInput.mechanics.operations)[number]["effect"];
     const unsupportedEffectMutations = {
-      synthetic_thaumaturgy_numeric_effect: (
-        _effect: ThaumaturgyEffectInput,
-      ) => ({
+      synthetic_thaumaturgy_numeric_effect: () => ({
         kind: "modify_roll_numeric" as const,
         delta: {
           kind: "fixed_number" as const,

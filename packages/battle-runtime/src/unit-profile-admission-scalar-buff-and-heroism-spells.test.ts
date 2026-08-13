@@ -1494,7 +1494,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     type AidDeltaInput =
       (typeof aidInput.mechanics.phases)[number]["effects"][number]["delta"];
     const unsupportedDeltaMutations = {
-      synthetic_max_hp_resource_spent: (_delta: AidDeltaInput) => ({
+      synthetic_max_hp_resource_spent: () => ({
         kind: "resource_spent" as const,
       }),
       synthetic_max_hp_random_base: (delta: AidDeltaInput) => ({
@@ -1604,7 +1604,7 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         ...amount,
         startingAtLevel: 1,
       }),
-      synthetic_temp_hp_resource_spent: (_amount: FalseLifeAmountInput) => ({
+      synthetic_temp_hp_resource_spent: () => ({
         kind: "resource_spent" as const,
       }),
     } as const;
