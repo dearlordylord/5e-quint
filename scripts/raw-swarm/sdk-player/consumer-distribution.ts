@@ -274,6 +274,13 @@ export function buildScenarioSetupDistribution(
     resolve(repoRoot, "scripts/raw-swarm/sdk-player/SCENARIO_SETUP.md"),
     resolve(input.destination, "SCENARIO_SETUP.md"),
   );
+  copyFileSync(
+    resolve(
+      repoRoot,
+      "scripts/raw-swarm/sdk-player/SCENARIO_SETUP_CONTROLLER.md",
+    ),
+    resolve(input.destination, "SCENARIO_SETUP_CONTROLLER.md"),
+  );
   writeFileSync(
     resolve(input.destination, "STAT_BLOCKS.json"),
     `${JSON.stringify(input.statBlocks, null, 2)}\n`,

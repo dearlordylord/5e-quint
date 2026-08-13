@@ -126,6 +126,47 @@ describe("scenario setup public-SDK boundary", () => {
     });
   }, 120_000);
 
+  test("retains only spatial setup as the generated battle obstruction", async () => {
+    const scenarioDirectory = resolve(
+      repoRoot,
+      "scripts/raw-swarm/sdk-player/scenarios",
+    );
+    const characters = await evaluateScenarioCharacters(
+      resolve(scenarioDirectory, "generated-battle-example.characters.ts"),
+    );
+    expect(characters.tag).toBe("ready");
+    if (characters.tag !== "ready") return;
+
+    const result = await evaluateScenarioSetup(
+      resolve(scenarioDirectory, "generated-battle-example.setup.ts"),
+      characters.characterSheets,
+    );
+    expect(result).toMatchObject({
+      tag: "obstructed",
+      observation: {
+        setup: "obstructed",
+        remainingUnavailablePublicCapability:
+          "initial spatial and interactive battlefield state",
+        projectedCombatants: [
+          { combatantId: "beacon-warden-ember", initiative: 18 },
+          { combatantId: "beacon-warden-veil", initiative: 16 },
+          { combatantId: "beacon-warden-aegis", initiative: 13 },
+          { combatantId: "beacon-warden-arc", initiative: 11 },
+          { combatantId: "goblin-warrior-2c", initiative: 14 },
+          { combatantId: "goblin-warrior-2d", initiative: 14 },
+          { combatantId: "wolf-3b", initiative: 10 },
+          { combatantId: "wolf-3e", initiative: 10 },
+          { combatantId: "goblin-warrior-5c", initiative: 14 },
+          { combatantId: "goblin-warrior-5d", initiative: 14 },
+        ],
+      },
+    });
+    if (result.tag !== "obstructed") return;
+    expect(result.obstruction).not.toContain("deferred initial initiative");
+    expect(result.obstruction).not.toContain("initiative-roll hole");
+    expect(result.obstruction).not.toContain("round eight");
+  }, 120_000);
+
   test("retains an authored setup obstruction", async () => {
     const directory = mkdtempSync(
       resolve(tmpdir(), "dnd-scenario-obstruction-"),
