@@ -255,6 +255,9 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
     expect(readFileSync(join(destination, "SCENARIO.md"), "utf8")).toContain(
       "External Fighter",
     );
+    expect(readFileSync(join(destination, "PLAYER.md"), "utf8")).toContain(
+      'kind: "objectTargetChoice" as const',
+    );
     expect(
       filesBelow(destination).some((path) => path.endsWith("supervisor.mjs")),
     ).toBe(false);

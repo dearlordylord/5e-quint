@@ -40,9 +40,22 @@ subject, derived Movement fill, and planned placement across downstream holes
 and Opportunity Attack decisions; do not restate the route.
 Canonical object-damage outcomes advance each scenario object's current Hit
 Points. For an ordinary object attack, choose only the object id and pass an
-empty `spatialFacts` array; the scenario SDK projects range, sight, Cover, AC,
-the object's current damage disposition, and any visible non-incapacitated
-enemy within 5 feet from the canonical session. SDK
+empty `spatialFacts` array. A `targetChoice` hole whose `attack` has
+`acceptsObjectTarget: true` accepts the distinct object fill branch—do not put
+an object id in the creature `targetChoice` branch:
+
+```ts
+const objectTarget = {
+  kind: "objectTargetChoice" as const,
+  holeId: targetHole.holeId,
+  value: objectId,
+  spatialFacts: [],
+};
+```
+
+The scenario SDK projects range, sight, Cover, AC, the object's current damage
+disposition, and any visible non-incapacitated enemy within 5 feet from the
+canonical session. SDK
 operations accept the whole scenario session and preserve those table-owned
 facts while the nested battle advances.
 For a creature-targeting spell hole that surfaces an ordinary spatial-fact
