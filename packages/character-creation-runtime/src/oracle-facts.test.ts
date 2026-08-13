@@ -418,20 +418,24 @@ describe("Character Creation owner facts", () => {
       equipment: {
         owned: [
           {
+            kind: "catalogItem",
             itemId: armorItemId,
-            unitId: parsedEquipmentUnitIds.armor.right,
+            quantity: PositiveInteger(1),
           },
           {
+            kind: "catalogItem",
             itemId: shieldItemId,
-            unitId: parsedEquipmentUnitIds.shield.right,
+            quantity: PositiveInteger(1),
           },
           {
+            kind: "catalogItem",
             itemId: mainWeaponItemId,
-            unitId: parsedEquipmentUnitIds.main.right,
+            quantity: PositiveInteger(1),
           },
           {
+            kind: "catalogItem",
             itemId: offHandWeaponItemId,
-            unitId: parsedEquipmentUnitIds.off.right,
+            quantity: PositiveInteger(1),
           },
         ],
         loadout: {
@@ -650,12 +654,35 @@ describe("Character Creation owner facts", () => {
         decodeCharacterBuildFact({
           ...buildFact,
           equipment: {
-            owned: [{ itemId: "not-an-equipment-item-id" }],
+            owned: [
+              {
+                kind: "catalogItem",
+                itemId: "not-an-equipment-item-id",
+                quantity: 1,
+              },
+            ],
             loadout: {},
           },
         }),
       ),
     ).toContain("invalid Character Equipment Item id");
+    expect(
+      parseErrorMessage(
+        decodeCharacterBuildFact({
+          ...buildFact,
+          equipment: {
+            owned: [
+              {
+                kind: "selectedToolItem",
+                toolProficiencyId: "not-a-tool",
+                quantity: 1,
+              },
+            ],
+            loadout: {},
+          },
+        }),
+      ),
+    ).toContain("invalid Character Build tool proficiency id");
 
     const speciesHole: Extract<CreationHole, { kind: "choice" }> = {
       ...syntheticChoiceHole(),
@@ -1475,8 +1502,9 @@ describe("Character Creation owner facts", () => {
       equipment: {
         owned: [
           {
+            kind: "catalogItem",
             itemId,
-            unitId: equipmentUnitId.right,
+            quantity: PositiveInteger(1),
           },
         ],
         loadout: {
@@ -1485,7 +1513,9 @@ describe("Character Creation owner facts", () => {
       },
     });
 
-    expect(fact.equipment.owned).toEqual([{ itemId }]);
+    expect(fact.equipment.owned).toEqual([
+      { kind: "catalogItem", itemId, quantity: 1 },
+    ]);
     expect(decodeCharacterBuildFact(fact)._tag).toBe("Right");
   });
 });

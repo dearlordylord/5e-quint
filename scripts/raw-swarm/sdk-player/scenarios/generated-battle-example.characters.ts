@@ -371,7 +371,8 @@ export const composeScenarioCharacters: ScenarioCharacters = ({
           "Spellbook",
           "Scholar's Pack",
         ],
-        loadout: "Arcane Focus (Quarterstaff) wielded one-handed",
+        loadout:
+          "The authored starting-item bundle surfaced no initial loadout hole; the Arcane Focus (Quarterstaff) is owned but not claimed as wielded.",
       },
       characters: plans.map(
         ({

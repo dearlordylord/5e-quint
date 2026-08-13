@@ -31,10 +31,8 @@ import {
   LOADOUT_SHIELD_SLOT,
   LOADOUT_WEAPON_SLOT,
   PHASE1_ARMOR_CHAIN_MAIL_UNIT_ID,
-  PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID,
   PHASE1_CHARACTER_ALIGNMENT,
   PHASE1_CHARACTER_STARTING_LANGUAGES,
-  PHASE1_CLASS_EQUIPMENT_OPTION_ID,
   PHASE1_CLASS_FIGHTER_UNIT_ID,
   SRD_BARD_CLASS_UNIT_ID,
   SRD_CLERIC_CLASS_UNIT_ID,
@@ -141,12 +139,11 @@ export type SupportedLoadoutChoice =
       readonly grip: NonNullable<CharacterBuildLoadout["weapon"]>["grip"];
     };
 
-type SourceScopedEquipmentChoiceKey =
-  | typeof CLASS_EQUIPMENT_CHOICE_KEY
-  | typeof BACKGROUND_EQUIPMENT_CHOICE_KEY;
 type SupportProfileUnitChoiceKey = Exclude<
   UnitChoiceKey,
-  SourceScopedEquipmentChoiceKey | typeof EQUIPMENT_PURCHASE_CHOICE_KEY
+  | typeof CLASS_EQUIPMENT_CHOICE_KEY
+  | typeof BACKGROUND_EQUIPMENT_CHOICE_KEY
+  | typeof EQUIPMENT_PURCHASE_CHOICE_KEY
 >;
 
 export type CharacterCreationSupportProfile = {
@@ -156,10 +153,6 @@ export type CharacterCreationSupportProfile = {
   readonly backgroundUnitIds: readonly UnitRecord["id"][];
   readonly purchasableEquipmentUnitIds: readonly UnitRecord["id"][];
   readonly equipmentPurchaseChoiceCount: 3;
-  readonly coinEquipmentChoiceOptionIdsByUnitId: ReadonlyMap<
-    UnitRecord["id"],
-    readonly CreationChoiceOptionId[]
-  >;
   readonly loadoutChoices: readonly SupportedLoadoutChoice[];
   readonly manifest: {
     readonly languages: CharacterStartingLanguages;
@@ -416,29 +409,6 @@ export const CHARACTER_CREATION_SUPPORT_PROFILE = {
   backgroundUnitIds: SUPPORTED_BACKGROUND_UNIT_IDS,
   purchasableEquipmentUnitIds: SUPPORTED_PURCHASE_UNIT_IDS,
   equipmentPurchaseChoiceCount: 3,
-  coinEquipmentChoiceOptionIdsByUnitId: new Map<
-    UnitRecord["id"],
-    readonly CreationChoiceOptionId[]
-  >([
-    ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.map(
-      (classUnitId) =>
-        [
-          authoredUnitId(classUnitId),
-          [creationChoiceOptionId("option_b")],
-        ] as const,
-    ),
-    ...SUPPORTED_BACKGROUND_UNIT_IDS.map(
-      (backgroundUnitId) =>
-        [
-          authoredUnitId(backgroundUnitId),
-          [PHASE1_BACKGROUND_EQUIPMENT_OPTION_ID],
-        ] as const,
-    ),
-    [
-      authoredUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
-      [PHASE1_CLASS_EQUIPMENT_OPTION_ID],
-    ],
-  ]),
   loadoutChoices: [
     {
       slot: LOADOUT_ARMOR_SLOT,
@@ -540,6 +510,14 @@ export function supportedHoleOptionIds(
 
   if (
     hole.kind === "choice" &&
+    (source.choiceKey === CLASS_EQUIPMENT_CHOICE_KEY ||
+      source.choiceKey === BACKGROUND_EQUIPMENT_CHOICE_KEY)
+  ) {
+    return hole.options.map((option) => option.optionId);
+  }
+
+  if (
+    hole.kind === "choice" &&
     source.choiceKey === BACKGROUND_TOOL_CHOICE_KEY
   ) {
     return hole.options
@@ -559,7 +537,7 @@ export function supportedHoleOptionIds(
     return hole.options.map((option) => option.optionId);
   }
 
-  return supportedUnitOptionIdsForSource(source, supportProfile);
+  return mappedUnitOptionIdsForSource(source, supportProfile);
 }
 
 export function supportedDraftOptionIds(
@@ -611,18 +589,15 @@ export function supportedUnitOptionIds(
   return optionIdsByChoiceKey[choiceKey] ?? [];
 }
 
-export function supportedUnitOptionIdsForSource(
+function mappedUnitOptionIdsForSource(
   source: UnitChoiceSource,
   supportProfile: CharacterCreationSupportProfile,
-): readonly CreationChoiceOptionId[] {
+): readonly CreationChoiceOptionId[] | undefined {
   if (
     source.choiceKey === CLASS_EQUIPMENT_CHOICE_KEY ||
     source.choiceKey === BACKGROUND_EQUIPMENT_CHOICE_KEY
   ) {
-    return (
-      supportProfile.coinEquipmentChoiceOptionIdsByUnitId.get(source.unitId) ??
-      []
-    );
+    return undefined;
   }
 
   if (source.choiceKey === EQUIPMENT_PURCHASE_CHOICE_KEY) {

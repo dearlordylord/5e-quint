@@ -663,8 +663,6 @@ export function characterEquipmentItemUnitIdFromLoadoutEquipmentUnitId(
   return CharacterEquipmentItemUnitId(value);
 }
 
-export type ToolProficiencyId = string & Brand.Brand<"ToolProficiencyId">;
-const ToolProficiencyId = Brand.nominal<ToolProficiencyId>();
 export const ARTISAN_TOOL_PROFICIENCY_IDS = [
   "alchemists_supplies",
   "brewers_supplies",
@@ -718,6 +716,9 @@ export const CHARACTER_BUILD_TOOL_PROFICIENCY_IDS = [
 ] as const;
 export type ToolProficiencyIdText =
   (typeof CHARACTER_BUILD_TOOL_PROFICIENCY_IDS)[number];
+export type ToolProficiencyId = ToolProficiencyIdText &
+  Brand.Brand<"ToolProficiencyId">;
+const ToolProficiencyId = Brand.nominal<ToolProficiencyId>();
 export function isCharacterBuildToolProficiencyId(
   value: string,
 ): value is ToolProficiencyIdText {
@@ -1439,14 +1440,41 @@ export type CharacterBuildLoadout = {
   };
 };
 
-export type CharacterBuildOwnedEquipmentItem = {
+export type CharacterBuildCatalogEquipmentItem = {
+  readonly kind: "catalogItem";
   readonly itemId: CharacterEquipmentItemId;
-  readonly unitId: UnitRecord["id"];
+  readonly quantity: PositiveIntegerType;
 };
 
+export function characterBuildCatalogEquipmentItem(input: {
+  readonly itemId: CharacterEquipmentItemId;
+  readonly quantity?: PositiveIntegerType;
+}): CharacterBuildCatalogEquipmentItem {
+  return {
+    kind: "catalogItem",
+    itemId: input.itemId,
+    quantity: input.quantity ?? PositiveInteger(1),
+  };
+}
+
+export type CharacterBuildAuthoredStartingEquipmentItem = {
+  readonly kind: "authoredStartingItem";
+  readonly itemName: string;
+  readonly quantity: PositiveIntegerType;
+};
+
+export type CharacterBuildSelectedToolEquipmentItem = {
+  readonly kind: "selectedToolItem";
+  readonly toolProficiencyId: ToolProficiencyId;
+  readonly quantity: PositiveIntegerType;
+};
+
+export type CharacterBuildOwnedEquipmentItem =
+  | CharacterBuildCatalogEquipmentItem
+  | CharacterBuildAuthoredStartingEquipmentItem
+  | CharacterBuildSelectedToolEquipmentItem;
+
 // The build records durable owned equipment separately from the initial loadout.
-// Equipment acquisition provenance can be added when a workflow needs it; the
-// current model intentionally keeps owned equipment source-less.
 // The in-play Character Sheet owns mutable equipment state after creation.
 export type CharacterBuildEquipment = {
   readonly owned: readonly CharacterBuildOwnedEquipmentItem[];

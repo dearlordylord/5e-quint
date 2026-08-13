@@ -446,8 +446,8 @@ module characterCreationRuntimeSlice {
     | HClassSkills => Set(OSkillPerception, OSkillSurvival)
     | HFighterWeaponMastery => Set(OWeaponLongsword, OWeaponSpear, OWeaponFlail)
     | HBackgroundAbilityScoreIncrease => Set(OBackgroundAsiStrCon)
-    | HClassEquipment => Set(OClassEquipmentCoins)
-    | HBackgroundEquipment => Set(OBackgroundEquipmentCoins)
+    | HClassEquipment => Set(OClassEquipmentPackageA, OClassEquipmentPackageB, OClassEquipmentCoins)
+    | HBackgroundEquipment => Set(OBackgroundEquipmentPack, OBackgroundEquipmentCoins)
     | _ => validOptions(hole)
   }
 

@@ -74,6 +74,7 @@ import {
   attackBonus,
   difficultyClass,
   Hp,
+  PositiveInteger,
   movementDeltaFeet,
   movementFeet,
   resourceCount,
@@ -6608,7 +6609,13 @@ function levelOneEquipment(
     unitId: requireRight(characterEquipmentItemUnitId(weaponUnitId)),
   });
   return {
-    owned: [{ itemId: weaponItemId, unitId: weaponUnitId }],
+    owned: [
+      {
+        kind: "catalogItem",
+        itemId: weaponItemId,
+        quantity: PositiveInteger(1),
+      },
+    ],
     loadout: { weapon: { itemId: weaponItemId, grip: "one_handed" } },
   };
 }

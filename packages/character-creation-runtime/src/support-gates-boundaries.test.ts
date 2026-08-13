@@ -36,7 +36,6 @@ import {
   supportedPurchasableEquipmentUnitIdsForClass,
   supportedSpeciesUnitIds,
   supportedUnitOptionIds,
-  supportedUnitOptionIdsForSource,
   supportsCharacterBuildResourceUnitId,
   unitRefsForSupportedSelectedUnitChoice,
   unsupportedHoleSelectionOptionId,
@@ -144,7 +143,7 @@ describe("character creation support-profile boundaries", () => {
     ).toBe(false);
   });
 
-  test("distinguishes non-choice holes from absent equipment support maps", () => {
+  test("distinguishes non-choice holes while admitting surfaced equipment choices", () => {
     const abilityScoreHole: CreationHole = {
       kind: "abilityScores",
       holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
@@ -171,15 +170,39 @@ describe("character creation support-profile boundaries", () => {
         CHARACTER_CREATION_SUPPORT_PROFILE,
       ),
     ).toBeUndefined();
+    const surfacedEquipmentHole = choiceHole({
+      source: unitSource(
+        authoredUnitId("synthetic_class_with_item_bundle"),
+        CLASS_EQUIPMENT_CHOICE_KEY,
+      ),
+      cardinality: exactChoiceCardinality(1),
+      options: [
+        {
+          optionId: creationChoiceOptionId("option_a"),
+          label: "Item bundle",
+        },
+        {
+          optionId: creationChoiceOptionId("option_b"),
+          label: "Coin grant",
+        },
+      ],
+    });
+    if (surfacedEquipmentHole?.kind !== "choice") {
+      throw new Error("The surfaced equipment fixture must be a choice hole.");
+    }
     expect(
-      supportedUnitOptionIdsForSource(
-        unitSource(
-          authoredUnitId("synthetic_class_without_equipment_map"),
-          CLASS_EQUIPMENT_CHOICE_KEY,
-        ),
+      supportedHoleOptionIds(
+        surfacedEquipmentHole,
         CHARACTER_CREATION_SUPPORT_PROFILE,
       ),
-    ).toEqual([]);
+    ).toEqual(["option_a", "option_b"]);
+    expect(
+      unsupportedHoleSelectionOptionId(
+        surfacedEquipmentHole,
+        [creationChoiceOptionId("option_a")],
+        CHARACTER_CREATION_SUPPORT_PROFILE,
+      ),
+    ).toBeUndefined();
 
     const unsupportedLoadoutHole = choiceHole({
       source: loadoutSource(

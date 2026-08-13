@@ -330,7 +330,9 @@ export function characterPactBladeBondedWeaponItemId(input: {
     );
   }
   if (
-    !input.build.equipment.owned.some((item) => item.itemId === input.itemId)
+    !input.build.equipment.owned.some(
+      (item) => item.kind === "catalogItem" && item.itemId === input.itemId,
+    )
   ) {
     return battleCreatureInitIssue(
       "Pact of the Blade bond must reference owned equipment.",

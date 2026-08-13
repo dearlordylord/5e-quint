@@ -151,6 +151,7 @@ import {
 } from "./support-gates.ts";
 import {
   characterEquipmentItemId,
+  characterEquipmentItemSourceFromId,
   characterEquipmentItemUnitId,
   characterEquipmentItemUnitIdFromLoadoutEquipmentUnitId,
   creationChoiceOptionId,
@@ -167,6 +168,7 @@ import {
   type AbilityScoreAssignment,
   type BackgroundAbilityScoreIncreaseSelection,
   type CharacterBuild,
+  type CharacterBuildOwnedEquipmentItem,
   type CharacterBuildEquipment,
   type CharacterEquipmentItemSlot,
   type CharacterBuildClassFeatureLanguage,
@@ -271,7 +273,7 @@ export function finalizeCharacterDraft(input: {
     };
   }
 
-  const selections = finalizedSelections(input.draft);
+  const selections = finalizedSelectionsAfterHoleClosure(input.draft);
   /* v8 ignore start -- No open holes plus a parsed CharacterDraft necessarily produces FinalizedCharacterSelections. */
   if (selections == null) {
     return {
@@ -309,6 +311,18 @@ export function finalizeCharacterDraft(input: {
     tag: "ready",
     build: build.right,
   };
+}
+
+function finalizedSelectionsAfterHoleClosure(
+  draft: CharacterDraft,
+): FinalizedCharacterSelections | undefined {
+  return finalizedSelections({
+    ...draft,
+    selections: {
+      ...draft.selections,
+      equipment: draft.selections.equipment ?? { selectedUnitIds: [] },
+    },
+  });
 }
 
 function unfilledFinalizationHoles(
@@ -502,7 +516,11 @@ export function executableSupportIssues(
       startingClassUnitId(selections.progression),
     )
       ? expectedValueIssue(
-          isSupportedEquipmentSelection(selections, supportProfile),
+          isSupportedEquipmentSelection(
+            selections,
+            unitLibrary,
+            supportProfile,
+          ),
           { tag: "unsupportedEquipmentSelection" },
         )
       : []),
@@ -2410,7 +2428,7 @@ export function allFinalizedChoicesSupported(
       }
 
       if (sameCreationHoleSource(choice.source, classEquipmentHole.source)) {
-        return supportedStartingEquipmentCoinGrantChoice(
+        return supportedStartingEquipmentChoice(
           choice,
           selectedClassUnitId,
           CLASS_EQUIPMENT_CHOICE_KEY,
@@ -2422,7 +2440,7 @@ export function allFinalizedChoicesSupported(
       if (
         sameCreationHoleSource(choice.source, backgroundEquipmentHole.source)
       ) {
-        return supportedStartingEquipmentCoinGrantChoice(
+        return supportedStartingEquipmentChoice(
           choice,
           selections.background,
           BACKGROUND_EQUIPMENT_CHOICE_KEY,
@@ -3091,7 +3109,7 @@ function isPresent<T>(value: T | undefined): value is T {
   return value !== undefined;
 }
 
-function supportedStartingEquipmentCoinGrantChoice(
+function supportedStartingEquipmentChoice(
   selection: Extract<CharacterChoiceSelection, { readonly kind: "unitChoice" }>,
   unitId: UnitRecord["id"],
   choiceKey:
@@ -3122,23 +3140,49 @@ function supportedStartingEquipmentCoinGrantChoice(
   }
   /* v8 ignore stop */
 
-  const selectedOptionId = selection.options[0]?.optionId;
-  const selectedChoice = choices.find(
-    (choice) => choice.id === selectedOptionId,
-  );
-  return selectedChoice?.kind === "coin_grant";
+  return true;
 }
 
-export function isSupportedEquipmentSelection(
+function isSupportedEquipmentSelection(
   selections: FinalizedCharacterSelections,
+  unitLibrary: UnitCatalog,
   supportProfile: CharacterCreationSupportProfile = CHARACTER_CREATION_SUPPORT_PROFILE,
 ): boolean {
   const supportedUnitIds = supportedPurchasableEquipmentUnitIdsForClass(
     startingClassUnitId(selections.progression),
     supportProfile,
   );
-  return selections.equipment.selectedUnitIds.every((unitId) =>
-    (supportedUnitIds as readonly string[]).includes(unitId),
+  if (
+    !selections.equipment.selectedUnitIds.every((unitId) =>
+      (supportedUnitIds as readonly string[]).includes(unitId),
+    )
+  ) {
+    return false;
+  }
+  if (selections.equipment.selectedUnitIds.length === 0) return true;
+
+  const startingClassId = startingClassUnitId(selections.progression);
+  const classUnit = unitLibrary.getUnit(startingClassId);
+  const backgroundUnit = unitLibrary.getUnit(selections.background);
+  if (Option.isNone(classUnit) || Option.isNone(backgroundUnit)) return false;
+  const classFacts = readClassCreationFacts(classUnit.value);
+  const backgroundFacts = readBackgroundCreationFacts(backgroundUnit.value);
+  if (classFacts.tag !== "readable" || backgroundFacts.tag !== "readable") {
+    return false;
+  }
+  return (
+    selectedStartingEquipmentForBuild(
+      selections,
+      startingClassId,
+      CLASS_EQUIPMENT_CHOICE_KEY,
+      classFacts.value.startingEquipment,
+    )?.kind === "coin_grant" &&
+    selectedStartingEquipmentForBuild(
+      selections,
+      selections.background,
+      BACKGROUND_EQUIPMENT_CHOICE_KEY,
+      backgroundFacts.value.startingEquipment,
+    )?.kind === "coin_grant"
   );
 }
 
@@ -3176,7 +3220,11 @@ export function characterBuildUnitRefs(
         : [],
     ),
     ...unitRefs(
-      ...build.equipment.owned.map((item) => item.unitId),
+      ...build.equipment.owned.flatMap((item) =>
+        item.kind === "catalogItem"
+          ? [characterEquipmentItemSourceFromId(item.itemId).unitId]
+          : [],
+      ),
       ...(build.spellcasting?.sources.flatMap((source) => [
         source.sourceUnitId,
         ...source.cantrips,
@@ -3533,7 +3581,7 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
     },
     {},
   );
-  const owned = traverseValidation(
+  const purchased = traverseValidation(
     selections.equipment.selectedUnitIds,
     (unitId) => {
       const itemUnitId = characterEquipmentItemUnitId(unitId);
@@ -3545,26 +3593,180 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
               equipmentUnitId: unitId,
             }),
           )
-        : Either.right({
+        : Either.right<CharacterBuildOwnedEquipmentItem>({
+            kind: "catalogItem",
             itemId: characterEquipmentItemId({
               slot: ownedEquipmentDefaultSlot(unitLibrary, unitId),
               unitId: itemUnitId.right,
             }),
-            unitId,
+            quantity: PositiveInteger(1),
           });
       /* v8 ignore stop */
     },
   );
   /* v8 ignore start -- Supported equipment selections retain only ids accepted by the item-id projection above. */
-  if (Either.isLeft(owned)) {
-    return Either.left(owned.left);
+  if (Either.isLeft(purchased)) {
+    return Either.left(purchased.left);
   }
   /* v8 ignore stop */
 
+  const starting = finalizedStartingEquipment(selections, unitLibrary);
+  if (Either.isLeft(starting)) {
+    return Either.left(starting.left);
+  }
+
   return Either.right({
-    owned: owned.right,
+    owned: combineCatalogEquipment([...purchased.right, ...starting.right]),
     loadout,
   });
+}
+
+function finalizedStartingEquipment(
+  selections: FinalizedCharacterSelections,
+  unitLibrary: UnitCatalog,
+): Either.Either<
+  readonly CharacterBuildOwnedEquipmentItem[],
+  ProjectionIssues
+> {
+  const startingClassId = startingClassUnitId(selections.progression);
+  const classUnit = unitForFinalization(unitLibrary, startingClassId, "class");
+  const backgroundUnit = unitForFinalization(
+    unitLibrary,
+    selections.background,
+    "background",
+  );
+  if (Either.isLeft(classUnit) && Either.isLeft(backgroundUnit)) {
+    return Either.left([classUnit.left, backgroundUnit.left]);
+  }
+  if (Either.isLeft(classUnit)) return Either.left([classUnit.left]);
+  if (Either.isLeft(backgroundUnit)) return Either.left([backgroundUnit.left]);
+
+  const classFacts = readableForFinalization(
+    readClassCreationFacts(classUnit.right),
+    startingClassId,
+    "class",
+  );
+  const backgroundFacts = readableForFinalization(
+    readBackgroundCreationFacts(backgroundUnit.right),
+    selections.background,
+    "background",
+  );
+  if (Either.isLeft(classFacts) && Either.isLeft(backgroundFacts)) {
+    return Either.left([classFacts.left, backgroundFacts.left]);
+  }
+  if (Either.isLeft(classFacts)) return Either.left([classFacts.left]);
+  if (Either.isLeft(backgroundFacts))
+    return Either.left([backgroundFacts.left]);
+
+  const choices = [
+    selectedStartingEquipmentForBuild(
+      selections,
+      startingClassId,
+      CLASS_EQUIPMENT_CHOICE_KEY,
+      classFacts.right.startingEquipment,
+    ),
+    selectedStartingEquipmentForBuild(
+      selections,
+      selections.background,
+      BACKGROUND_EQUIPMENT_CHOICE_KEY,
+      backgroundFacts.right.startingEquipment,
+    ),
+  ];
+  const selectedToolIds = selectedBackgroundToolProficiencies(selections);
+  const items = choices.flatMap((choice) =>
+    choice?.kind === "item_bundle" ? choice.items : [],
+  );
+  const projected = traverseValidation(items, (item) =>
+    Match.value(item).pipe(
+      Match.when({ kind: "unit_ref" }, (unitRef) => {
+        const unitId = authoredUnitId(unitRef.unitId);
+        const itemUnitId = characterEquipmentItemUnitId(unitId);
+        return Either.isLeft(itemUnitId)
+          ? Either.left(
+              characterBuildProjectionIssue({
+                tag: "unsupportedEquipmentUnitId",
+                equipmentUnitId: unitId,
+              }),
+            )
+          : Either.right<CharacterBuildOwnedEquipmentItem[]>([
+              {
+                kind: "catalogItem",
+                itemId: characterEquipmentItemId({
+                  slot: ownedEquipmentDefaultSlot(unitLibrary, unitId),
+                  unitId: itemUnitId.right,
+                }),
+                quantity: PositiveInteger(unitRef.quantity ?? 1),
+              },
+            ]);
+      }),
+      Match.when({ kind: "draft_owned_item" }, (authoredItem) =>
+        Either.right<CharacterBuildOwnedEquipmentItem[]>([
+          {
+            kind: "authoredStartingItem",
+            itemName: authoredItem.itemName,
+            quantity: PositiveInteger(authoredItem.quantity ?? 1),
+          },
+        ]),
+      ),
+      Match.when({ kind: "selected_tool_proficiency" }, () =>
+        Either.right<CharacterBuildOwnedEquipmentItem[]>(
+          selectedToolIds.map((toolProficiencyId) => ({
+            kind: "selectedToolItem",
+            toolProficiencyId,
+            quantity: PositiveInteger(1),
+          })),
+        ),
+      ),
+      Match.exhaustive,
+    ),
+  );
+  return Either.isLeft(projected)
+    ? Either.left(projected.left)
+    : Either.right(projected.right.flat());
+}
+
+function selectedStartingEquipmentForBuild(
+  selections: FinalizedCharacterSelections,
+  unitId: UnitRecord["id"],
+  choiceKey:
+    | typeof CLASS_EQUIPMENT_CHOICE_KEY
+    | typeof BACKGROUND_EQUIPMENT_CHOICE_KEY,
+  choices: readonly StartingEquipmentChoice[],
+): StartingEquipmentChoice | undefined {
+  const selection = selections.choices.find(
+    (candidate) =>
+      candidate.kind === "unitChoice" &&
+      candidate.source.unitId === unitId &&
+      candidate.source.choiceKey === choiceKey,
+  );
+  const optionId = selection?.options[0]?.optionId;
+  return choices.find((choice) => choice.id === optionId);
+}
+
+function combineCatalogEquipment(
+  items: readonly CharacterBuildOwnedEquipmentItem[],
+): readonly CharacterBuildOwnedEquipmentItem[] {
+  const combined: CharacterBuildOwnedEquipmentItem[] = [];
+  for (const item of items) {
+    if (item.kind !== "catalogItem") {
+      combined.push(item);
+      continue;
+    }
+    const priorIndex = combined.findIndex(
+      (candidate) =>
+        candidate.kind === "catalogItem" && candidate.itemId === item.itemId,
+    );
+    const prior = combined[priorIndex];
+    if (prior?.kind !== "catalogItem") {
+      combined.push(item);
+      continue;
+    }
+    combined[priorIndex] = {
+      ...prior,
+      quantity: PositiveInteger(prior.quantity + item.quantity),
+    };
+  }
+  return combined;
 }
 
 type FinalizedSpellcastingSourceProjection = {

@@ -58,7 +58,12 @@ import {
   type CharacterSheet,
   type CharacterSheetResourceExpenditure,
 } from "@dnd/character-sheet-runtime";
-import { DieRollResult, Hp, NonNegativeInteger } from "@dnd/shared/types";
+import {
+  DieRollResult,
+  Hp,
+  NonNegativeInteger,
+  PositiveInteger,
+} from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -302,7 +307,13 @@ export function levelFiveMartialBuild(input: {
       ? {}
       : { abilityScores: input.abilityScores }),
     equipment: {
-      owned: [{ itemId: weaponItemId, unitId: input.weaponUnitId }],
+      owned: [
+        {
+          kind: "catalogItem",
+          itemId: weaponItemId,
+          quantity: PositiveInteger(1),
+        },
+      ],
       loadout: {
         weapon: { itemId: weaponItemId, grip: "one_handed" },
       },

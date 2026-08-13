@@ -343,7 +343,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -383,7 +383,7 @@
         "packages/character-creation-runtime/src/discovery.ts:startingEquipmentChoiceHole"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedBuildEquipment"
@@ -506,7 +506,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -526,7 +526,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -566,7 +566,7 @@
         "packages/character-creation-runtime/src/discovery.ts:startingEquipmentChoiceHole"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedBuildEquipment"
@@ -689,7 +689,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -729,7 +729,7 @@
         "packages/character-creation-runtime/src/discovery.ts:startingEquipmentChoiceHole"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedBuildEquipment"
@@ -852,7 +852,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -912,7 +912,7 @@
         "packages/character-creation-runtime/src/discovery.ts:startingEquipmentChoiceHole"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedBuildEquipment"
@@ -1059,7 +1059,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedSelections",
@@ -1101,7 +1101,7 @@
         "packages/character-creation-runtime/src/discovery.ts:startingEquipmentChoiceHole"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedBuildEquipment"
@@ -1222,7 +1222,7 @@
       ],
       "fill": [
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles",
@@ -1425,7 +1425,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1445,7 +1445,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1485,7 +1485,7 @@
         "packages/character-creation-runtime/src/discovery.ts:startingEquipmentChoiceHole"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedBuildEquipment"
@@ -1608,7 +1608,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1648,7 +1648,7 @@
         "packages/character-creation-runtime/src/discovery.ts:startingEquipmentChoiceHole"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedBuildEquipment"
@@ -1771,7 +1771,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1811,7 +1811,7 @@
         "packages/character-creation-runtime/src/discovery.ts:startingEquipmentChoiceHole"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedBuildEquipment"
@@ -1934,7 +1934,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -1994,7 +1994,7 @@
         "packages/character-creation-runtime/src/discovery.ts:startingEquipmentChoiceHole"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedBuildEquipment"
@@ -2117,7 +2117,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2157,7 +2157,7 @@
         "packages/character-creation-runtime/src/discovery.ts:startingEquipmentChoiceHole"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedBuildEquipment"
@@ -2280,7 +2280,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:executableSupportSelections"
@@ -2320,7 +2320,7 @@
         "packages/character-creation-runtime/src/discovery.ts:startingEquipmentChoiceHole"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedBuildEquipment"
@@ -2443,7 +2443,7 @@
         "packages/character-creation-runtime/src/discovery.ts:discoverClassGrantedHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedSelections",
@@ -2485,7 +2485,7 @@
         "packages/character-creation-runtime/src/discovery.ts:startingEquipmentChoiceHole"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:finalizedBuildEquipment"
@@ -2555,7 +2555,7 @@
       ],
       "fill": [
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles",
@@ -2601,7 +2601,7 @@
       ],
       "fill": [
         "packages/character-creation-runtime/src/support-gates.ts:CHARACTER_CREATION_SUPPORT_PROFILE.supportedProgressions",
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles",
@@ -2625,7 +2625,7 @@
         "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles"
@@ -2759,7 +2759,7 @@
         "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles"
@@ -2870,7 +2870,7 @@
         "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles"
       ],
       "fill": [
-        "packages/character-creation-runtime/src/support-gates.ts:supportedUnitOptionIdsForSource"
+        "packages/character-creation-runtime/src/support-gates.ts:supportedHoleOptionIds"
       ],
       "finalization": [
         "packages/character-creation-runtime/src/finalization.ts:supportedFinalizationChoiceHoles"

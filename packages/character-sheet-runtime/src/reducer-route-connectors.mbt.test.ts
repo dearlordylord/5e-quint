@@ -8,6 +8,7 @@ import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import type { SimpleActionMap, SimpleDriver } from "@firfi/quint-connect";
 import {
   abilityScoreAssignment,
+  characterBuildCatalogEquipmentItem,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   classUnitId,
@@ -1148,14 +1149,17 @@ function armorClassBuild(input: {
       owned: [
         ...(armorItemId === undefined || input.armor === undefined
           ? []
-          : [{ itemId: armorItemId, unitId: authoredUnitId(input.armor) }]),
+          : [
+              characterBuildCatalogEquipmentItem({
+                itemId: armorItemId,
+              }),
+            ]),
         ...(shieldItemId === undefined
           ? []
           : [
-              {
+              characterBuildCatalogEquipmentItem({
                 itemId: shieldItemId,
-                unitId: authoredUnitId("equipment_shield"),
-              },
+              }),
             ]),
       ],
       loadout: {

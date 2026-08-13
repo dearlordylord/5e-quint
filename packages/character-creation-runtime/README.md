@@ -223,9 +223,12 @@ downstream Character Sheet or table/object owner needs those facts. Rock Gnome
 clockwork-device execution state remains in-play table/object ownership.
 
 Equipment on a build is split into durable owned equipment and initial loadout.
-Loadout entries hold `CharacterEquipmentItemId`s for owned items instead of
-duplicating bare equipment Unit ids. Mutable in-play equipment changes belong to
-the future Character Sheet/session boundary, not character creation.
+Catalog-backed items retain their `CharacterEquipmentItemId`, while
+Surface-authored starting items that are not Unitized retain their authored
+name and quantity and selected-tool items retain the chosen tool proficiency.
+Only catalog-backed items can appear in the executable initial loadout or Unit
+reference projection. Mutable in-play equipment changes belong to the future
+Character Sheet/session boundary, not character creation.
 
 Finalization support checks are source-shaped: they reconstruct expected
 choice-hole families from Surface readers plus the support profile and validate

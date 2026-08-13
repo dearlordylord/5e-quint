@@ -5,6 +5,7 @@ import {
 import type { CharacterBuild } from "@dnd/character-creation-runtime";
 import {
   abilityScoreAssignment,
+  characterBuildCatalogEquipmentItem,
   characterBuildSorcererMetamagicFacts,
   characterBuildResources,
   characterEquipmentItemId,
@@ -1070,14 +1071,17 @@ export function armorClassBuild(input: {
       owned: [
         ...(armorItemId === undefined || input.armor === undefined
           ? []
-          : [{ itemId: armorItemId, unitId: authoredUnitId(input.armor) }]),
+          : [
+              characterBuildCatalogEquipmentItem({
+                itemId: armorItemId,
+              }),
+            ]),
         ...(shieldItemId === undefined
           ? []
           : [
-              {
+              characterBuildCatalogEquipmentItem({
                 itemId: shieldItemId,
-                unitId: authoredUnitId("equipment_shield"),
-              },
+              }),
             ]),
       ],
       loadout: {

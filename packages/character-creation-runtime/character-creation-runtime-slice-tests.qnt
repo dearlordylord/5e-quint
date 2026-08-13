@@ -223,8 +223,16 @@ module characterCreationRuntimeSliceTests {
       | Rejected(v) =>
           assert(v.issues.fills == Set(
             { fillIndex: 0, hole: HClassSkills, code: UnsupportedChoice },
-            { fillIndex: 1, hole: HBackgroundEquipment, code: UnsupportedChoice },
           ))
+    }
+  }
+
+  run test_class_item_bundle_is_supported = {
+    match fillCreationHoles(afterInitialManifest, 1, [
+      FChoice({ hole: HClassEquipment, options: [OClassEquipmentPackageA] }),
+    ]) {
+      | Accepted(v) => assert(v.draft.classEquipment)
+      | Rejected(_) => assert(false)
     }
   }
 }

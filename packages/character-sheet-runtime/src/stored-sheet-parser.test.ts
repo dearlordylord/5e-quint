@@ -640,8 +640,26 @@ describe("stored Character Build parser", () => {
       ...fighterBuild,
       equipment: {
         owned: [
-          { itemId: mainWeaponItemId, unitId: mainWeaponUnitId },
-          { itemId: offHandWeaponItemId, unitId: offHandWeaponUnitId },
+          {
+            kind: "catalogItem",
+            itemId: mainWeaponItemId,
+            quantity: 1,
+          },
+          {
+            kind: "catalogItem",
+            itemId: offHandWeaponItemId,
+            quantity: 1,
+          },
+          {
+            kind: "authoredStartingItem",
+            itemName: "Spellbook",
+            quantity: 1,
+          },
+          {
+            kind: "selectedToolItem",
+            toolProficiencyId: "smiths_tools",
+            quantity: 1,
+          },
         ],
         loadout: {
           weapon: { itemId: mainWeaponItemId, grip: "one_handed" as const },
@@ -928,34 +946,17 @@ describe("stored Character Build parser", () => {
       value: {
         ...fighterBuild,
         equipment: {
-          owned: [{ itemId: "invalid", unitId: "armor_chain_mail" }],
+          owned: [
+            {
+              kind: "catalogItem",
+              itemId: "invalid",
+              quantity: 1,
+            },
+          ],
           loadout: {},
         },
       },
       expected: "Character Build owned equipment item id is invalid.",
-    },
-    {
-      name: "inconsistent owned equipment identity",
-      value: {
-        ...armorClassBuild({
-          startingClass: "class_fighter",
-          armor: "armor_chain_mail",
-        }),
-        equipment: {
-          ...armorClassBuild({
-            startingClass: "class_fighter",
-            armor: "armor_chain_mail",
-          }).equipment,
-          owned: armorClassBuild({
-            startingClass: "class_fighter",
-            armor: "armor_chain_mail",
-          }).equipment.owned.map((item) => ({
-            ...item,
-            unitId: "armor_leather",
-          })),
-        },
-      },
-      expected: "Character Build owned equipment identity is inconsistent.",
     },
   ])("rejects $name", ({ value, expected }) => {
     expectIssue(parseCharacterBuild(value, unitLibrary), expected);

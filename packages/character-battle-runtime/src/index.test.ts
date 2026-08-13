@@ -68,6 +68,7 @@ import { battleResourcePoolExecutionRefForTest } from "./sdk-integration.test-su
 import { characterUnarmoredArmorClassBases } from "./battle-character-build-projection.ts";
 import {
   abilityScoreAssignment,
+  characterBuildCatalogEquipmentItem,
   characterDraconicAncestrySelection,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
@@ -6215,8 +6216,12 @@ describe("Character Build battle projection", () => {
       ...build,
       equipment: {
         owned: [
-          { itemId: missingItemId, unitId: missingUnitId },
-          { itemId: missingOffHandItemId, unitId: missingUnitId },
+          characterBuildCatalogEquipmentItem({
+            itemId: missingItemId,
+          }),
+          characterBuildCatalogEquipmentItem({
+            itemId: missingOffHandItemId,
+          }),
         ],
         loadout: {
           weapon: { itemId: missingItemId, grip: "one_handed" },
@@ -6307,10 +6312,9 @@ describe("Character Build battle projection", () => {
           ],
           equipment: {
             owned: [
-              {
+              characterBuildCatalogEquipmentItem({
                 itemId: daggerItemId,
-                unitId: authoredUnitId("weapon_dagger"),
-              },
+              }),
             ],
             loadout: {
               weapon: { itemId: daggerItemId, grip: "one_handed" },
@@ -6336,10 +6340,9 @@ describe("Character Build battle projection", () => {
           ...build,
           equipment: {
             owned: [
-              {
+              characterBuildCatalogEquipmentItem({
                 itemId: nonWeaponItemId,
-                unitId: authoredUnitId("armor_chain_mail"),
-              },
+              }),
             ],
             loadout: {
               weapon: { itemId: nonWeaponItemId, grip: "one_handed" },
@@ -6373,10 +6376,9 @@ describe("Character Build battle projection", () => {
           ...build,
           equipment: {
             owned: [
-              {
+              characterBuildCatalogEquipmentItem({
                 itemId: missingOffHandItemId,
-                unitId: missingUnitId,
-              },
+              }),
             ],
             loadout: { offHandWeapon: { itemId: missingOffHandItemId } },
           },
@@ -6392,7 +6394,11 @@ describe("Character Build battle projection", () => {
         build: {
           ...build,
           equipment: {
-            owned: [{ itemId: missingArmorItemId, unitId: missingUnitId }],
+            owned: [
+              characterBuildCatalogEquipmentItem({
+                itemId: missingArmorItemId,
+              }),
+            ],
             loadout: { armor: missingArmorItemId },
           },
         },
@@ -6406,7 +6412,11 @@ describe("Character Build battle projection", () => {
         build: {
           ...pactBladeInvocationBuild(authoredUnitId("weapon_longsword")),
           equipment: {
-            owned: [{ itemId: missingItemId, unitId: missingUnitId }],
+            owned: [
+              characterBuildCatalogEquipmentItem({
+                itemId: missingItemId,
+              }),
+            ],
             loadout: {
               weapon: { itemId: missingItemId, grip: "one_handed" },
             },
@@ -6544,10 +6554,9 @@ describe("Character Build battle projection", () => {
           ...wizard,
           equipment: {
             owned: [
-              {
+              characterBuildCatalogEquipmentItem({
                 itemId: missingArmorItemId,
-                unitId: missingArmorUnitId,
-              },
+              }),
             ],
             loadout: { armor: missingArmorItemId },
           },
@@ -6571,10 +6580,9 @@ describe("Character Build battle projection", () => {
             ...wizard,
             equipment: {
               owned: [
-                {
+                characterBuildCatalogEquipmentItem({
                   itemId: chainMailItemId,
-                  unitId: authoredUnitId("armor_chain_mail"),
-                },
+                }),
               ],
               loadout: { armor: chainMailItemId },
             },
@@ -6632,10 +6640,9 @@ describe("Character Build battle projection", () => {
           ...build,
           equipment: {
             owned: [
-              {
+              characterBuildCatalogEquipmentItem({
                 itemId: leatherArmorItemId,
-                unitId: leatherArmorUnitId,
-              },
+              }),
             ],
             loadout: {
               offHandWeapon: { itemId: leatherArmorItemId },
@@ -6799,10 +6806,9 @@ describe("Character Build battle projection", () => {
           ...multiclassUnarmoredDefenseBuild(),
           equipment: {
             owned: [
-              {
+              characterBuildCatalogEquipmentItem({
                 itemId: shieldItemId,
-                unitId: authoredUnitId("equipment_shield"),
-              },
+              }),
             ],
             loadout: { shield: shieldItemId },
           },
@@ -8785,7 +8791,11 @@ describe("Character Build battle projection", () => {
         build: {
           ...validBuild,
           equipment: {
-            owned: [{ itemId: missingItemId, unitId: missingUnitId }],
+            owned: [
+              characterBuildCatalogEquipmentItem({
+                itemId: missingItemId,
+              }),
+            ],
             loadout: {
               weapon: { itemId: missingItemId, grip: "one_handed" },
             },
@@ -9126,30 +9136,31 @@ function monkBuild(input: {
         ...(weaponItemId === undefined || input.weaponUnitId === undefined
           ? []
           : [
-              {
+              characterBuildCatalogEquipmentItem({
                 itemId: weaponItemId,
-                unitId: authoredUnitId(input.weaponUnitId),
-              },
+              }),
             ]),
         ...(offHandWeaponItemId === undefined ||
         input.offHandWeaponUnitId === undefined
           ? []
           : [
-              {
+              characterBuildCatalogEquipmentItem({
                 itemId: offHandWeaponItemId,
-                unitId: authoredUnitId(input.offHandWeaponUnitId),
-              },
+              }),
             ]),
         ...(armorItemId === undefined
           ? []
-          : [{ itemId: armorItemId, unitId: authoredUnitId("armor_leather") }]),
+          : [
+              characterBuildCatalogEquipmentItem({
+                itemId: armorItemId,
+              }),
+            ]),
         ...(shieldItemId === undefined
           ? []
           : [
-              {
+              characterBuildCatalogEquipmentItem({
                 itemId: shieldItemId,
-                unitId: authoredUnitId("equipment_shield"),
-              },
+              }),
             ]),
       ],
       loadout: {
@@ -9167,9 +9178,9 @@ function monkBuild(input: {
 }
 
 function pactBladeInvocationBuild(
-  weaponUnitId: CharacterBuild["equipment"]["owned"][number]["unitId"],
+  weaponUnitId: UnitRecord["id"],
   input: {
-    readonly offHandWeaponUnitId?: CharacterBuild["equipment"]["owned"][number]["unitId"];
+    readonly offHandWeaponUnitId?: UnitRecord["id"];
     readonly str?: number;
     readonly cha?: number;
     readonly pactOfTheBlade?: boolean;
@@ -9226,15 +9237,16 @@ function pactBladeInvocationBuild(
           ],
     equipment: {
       owned: [
-        { itemId: weaponItemId, unitId: weaponUnitId },
+        characterBuildCatalogEquipmentItem({
+          itemId: weaponItemId,
+        }),
         ...(input.offHandWeaponUnitId === undefined ||
         offHandWeaponItemId === undefined
           ? []
           : [
-              {
+              characterBuildCatalogEquipmentItem({
                 itemId: offHandWeaponItemId,
-                unitId: input.offHandWeaponUnitId,
-              },
+              }),
             ]),
       ],
       loadout: {
@@ -9576,7 +9588,9 @@ function defenseBuild(input: {
     ],
     equipment: {
       owned: [
-        { itemId: armorItemId, unitId: authoredUnitId("armor_chain_mail") },
+        characterBuildCatalogEquipmentItem({
+          itemId: armorItemId,
+        }),
       ],
       loadout: input.wearingArmor ? { armor: armorItemId } : {},
     },
@@ -9657,7 +9671,9 @@ function weaponMasteryLongswordFighterBuild(): CharacterBuild {
     ],
     equipment: {
       owned: [
-        { itemId: longswordItemId, unitId: authoredUnitId("weapon_longsword") },
+        characterBuildCatalogEquipmentItem({
+          itemId: longswordItemId,
+        }),
       ],
       loadout: {
         weapon: {
@@ -9701,10 +9717,9 @@ function weaponMasteryQuarterstaffFighterBuild(): CharacterBuild {
     ],
     equipment: {
       owned: [
-        {
+        characterBuildCatalogEquipmentItem({
           itemId: quarterstaffItemId,
-          unitId: authoredUnitId("weapon_quarterstaff"),
-        },
+        }),
       ],
       loadout: {
         weapon: {
@@ -9735,7 +9750,9 @@ function weaponMasteryGreataxeFighterBuild(): CharacterBuild {
     ],
     equipment: {
       owned: [
-        { itemId: greataxeItemId, unitId: authoredUnitId("weapon_greataxe") },
+        characterBuildCatalogEquipmentItem({
+          itemId: greataxeItemId,
+        }),
       ],
       loadout: {
         weapon: {
@@ -9774,7 +9791,9 @@ function trueStrikeWizardBuild(): CharacterBuild {
     features: [],
     equipment: {
       owned: [
-        { itemId: daggerItemId, unitId: authoredUnitId("weapon_dagger") },
+        characterBuildCatalogEquipmentItem({
+          itemId: daggerItemId,
+        }),
       ],
       loadout: {
         weapon: {

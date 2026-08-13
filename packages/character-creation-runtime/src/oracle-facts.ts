@@ -22,6 +22,7 @@ import {
   LOADOUT_SLOTS,
   SUPPORTED_ABILITY_SCORE_METHODS,
   UNIT_CHOICE_KEYS,
+  isCharacterBuildToolProficiencyId,
   parseCharacterEquipmentItemId,
   parseCreationHoleId,
   type CharacterBuild,
@@ -335,9 +336,28 @@ const characterEquipmentItemIdSchema = <
   );
 const EquipmentSchema = Schema.Struct({
   owned: Schema.Array(
-    Schema.Struct({
-      itemId: characterEquipmentItemIdSchema(),
-    }),
+    Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("catalogItem"),
+        itemId: characterEquipmentItemIdSchema(),
+        quantity: PositiveIntegerSchema,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("authoredStartingItem"),
+        itemName: Schema.NonEmptyString,
+        quantity: PositiveIntegerSchema,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("selectedToolItem"),
+        toolProficiencyId: Schema.String.pipe(
+          Schema.filter(isCharacterBuildToolProficiencyId, {
+            message: () => "invalid Character Build tool proficiency id",
+          }),
+          Schema.brand("ToolProficiencyId"),
+        ),
+        quantity: PositiveIntegerSchema,
+      }),
+    ),
   ),
   loadout: Schema.Struct({
     armor: Schema.optionalWith(characterEquipmentItemIdSchema("armor"), {
@@ -1254,11 +1274,26 @@ function equipmentFact(
 ): CharacterBuildFact["equipment"] {
   const { owned, loadout, ...unprojected } = equipment;
   noUnprojectedFields(unprojected);
-  const projectedOwned = owned.map(
-    ({ itemId, unitId: _unitId, ...unprojectedItem }) => {
-      noUnprojectedFields(unprojectedItem);
-      return { itemId };
-    },
+  const projectedOwned = owned.map((item) =>
+    Match.value(item).pipe(
+      Match.when({ kind: "catalogItem" }, (catalogItem) => {
+        const { kind, itemId, quantity, ...unprojectedItem } = catalogItem;
+        noUnprojectedFields(unprojectedItem);
+        return { kind, itemId, quantity };
+      }),
+      Match.when({ kind: "authoredStartingItem" }, (authoredItem) => {
+        const { kind, itemName, quantity, ...unprojectedItem } = authoredItem;
+        noUnprojectedFields(unprojectedItem);
+        return { kind, itemName, quantity };
+      }),
+      Match.when({ kind: "selectedToolItem" }, (toolItem) => {
+        const { kind, toolProficiencyId, quantity, ...unprojectedItem } =
+          toolItem;
+        noUnprojectedFields(unprojectedItem);
+        return { kind, toolProficiencyId, quantity };
+      }),
+      Match.exhaustive,
+    ),
   );
   const { armor, shield, weapon, offHandWeapon, ...unprojectedLoadout } =
     loadout;

@@ -23,6 +23,7 @@ export {
   characterDraftId,
   characterDraconicAncestrySelection,
   characterClassLevel,
+  characterBuildCatalogEquipmentItem,
   characterEquipmentItemId,
   characterEquipmentItemSourceFromId,
   characterEquipmentItemUnitId,

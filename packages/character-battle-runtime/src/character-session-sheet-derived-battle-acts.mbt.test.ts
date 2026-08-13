@@ -37,6 +37,7 @@ import {
 import {
   DieRollResult,
   Hp,
+  PositiveInteger,
   resourceCount,
   spellSlotLevel,
 } from "@dnd/shared/types";
@@ -687,7 +688,13 @@ function sheetDerivedBuild(input?: {
     features: [],
     equipment: {
       owned: wieldedWeapon
-        ? [{ itemId: daggerItemId, unitId: daggerUnitId }]
+        ? [
+            {
+              kind: "catalogItem",
+              itemId: daggerItemId,
+              quantity: PositiveInteger(1),
+            },
+          ]
         : [],
       loadout: wieldedWeapon
         ? { weapon: { itemId: daggerItemId, grip: "one_handed" } }

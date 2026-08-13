@@ -31,6 +31,7 @@ import {
   type CharacterBuildSpellcasting,
   type CharacterBuildSpellcastingFocus,
   type CharacterBuildSpellcastingSource,
+  type CharacterEquipmentItemId,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
 import {
@@ -43,7 +44,12 @@ import {
   type StandardLanguage,
   type SurfaceSkill,
 } from "@dnd/shared/game-facts";
-import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
+import {
+  Hp,
+  PositiveInteger,
+  resourceCount,
+  spellSlotLevel,
+} from "@dnd/shared/types";
 import type {
   Hp as HpType,
   ResourceCount,
@@ -1905,11 +1911,41 @@ function parseStoredEquipment(
   }
   const owned: CharacterBuildEquipment["owned"][number][] = [];
   for (const item of value.owned) {
-    if (
-      !isRecord(item) ||
-      typeof item.itemId !== "string" ||
-      typeof item.unitId !== "string"
-    ) {
+    if (!isRecord(item) || !isPositiveInteger(item.quantity)) {
+      return characterSheetIssue(
+        "Character Build owned equipment item is invalid.",
+      );
+    }
+    if (item.kind === "authoredStartingItem") {
+      if (typeof item.itemName !== "string" || item.itemName.trim() === "") {
+        return characterSheetIssue(
+          "Character Build authored starting equipment item is invalid.",
+        );
+      }
+      owned.push({
+        kind: "authoredStartingItem",
+        itemName: item.itemName,
+        quantity: PositiveInteger(item.quantity),
+      });
+      continue;
+    }
+    if (item.kind === "selectedToolItem") {
+      if (
+        typeof item.toolProficiencyId !== "string" ||
+        !isCharacterBuildToolProficiencyId(item.toolProficiencyId)
+      ) {
+        return characterSheetIssue(
+          "Character Build selected-tool equipment item is invalid.",
+        );
+      }
+      owned.push({
+        kind: "selectedToolItem",
+        toolProficiencyId: toolProficiencyId(item.toolProficiencyId),
+        quantity: PositiveInteger(item.quantity),
+      });
+      continue;
+    }
+    if (item.kind !== "catalogItem" || typeof item.itemId !== "string") {
       return characterSheetIssue(
         "Character Build owned equipment item is invalid.",
       );
@@ -1920,14 +1956,10 @@ function parseStoredEquipment(
         "Character Build owned equipment item id is invalid.",
       );
     }
-    if (parsedItemId.right.unitId !== item.unitId) {
-      return characterSheetIssue(
-        "Character Build owned equipment identity is inconsistent.",
-      );
-    }
     owned.push({
+      kind: "catalogItem",
       itemId: characterEquipmentItemId(parsedItemId.right),
-      unitId: authoredUnitId(item.unitId),
+      quantity: PositiveInteger(item.quantity),
     });
   }
   const loadout = parseStoredLoadout(value.loadout);
@@ -2017,10 +2049,7 @@ function parseStoredOffHandWeapon(
 function parseOptionalEquipmentItemId(
   value: unknown,
   slot: "armor" | "shield" | "main" | "off",
-): Either.Either<
-  CharacterBuildEquipment["owned"][number]["itemId"] | undefined,
-  CharacterSheetIssue
-> {
+): Either.Either<CharacterEquipmentItemId | undefined, CharacterSheetIssue> {
   if (value === undefined) return Either.right(undefined);
   /* v8 ignore start -- Malformed stored build: an equipment item id is non-string, unparseable, or belongs to a different loadout slot. */
   if (typeof value !== "string") {

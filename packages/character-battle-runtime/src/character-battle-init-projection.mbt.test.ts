@@ -29,7 +29,12 @@ import {
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
+import {
+  Hp,
+  PositiveInteger,
+  resourceCount,
+  spellSlotLevel,
+} from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -509,7 +514,11 @@ function defenseBuild(input: {
     ],
     equipment: {
       owned: [
-        { itemId: armorItemId, unitId: authoredUnitId("armor_chain_mail") },
+        {
+          kind: "catalogItem",
+          itemId: armorItemId,
+          quantity: PositiveInteger(1),
+        },
       ],
       loadout: input.wearingArmor ? { armor: armorItemId } : {},
     },

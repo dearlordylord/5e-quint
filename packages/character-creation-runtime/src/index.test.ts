@@ -86,6 +86,7 @@ import {
   loadoutEquipmentUnitId,
   loadoutSourceHoleIdText,
   loadoutSourceKey,
+  characterEquipmentItemSourceFromId,
   parseCharacterEquipmentItemId,
   parseCharacterDraft,
   parseCreationHoleId,
@@ -146,6 +147,7 @@ import {
 } from "./support-gates.ts";
 import {
   CLASS_CANTRIP_CHOICE_KEY,
+  CLASS_EQUIPMENT_CHOICE_KEY,
   CLASS_FEATURE_ABILITY_SCORE_INCREASE_CHOICE_KEY,
   CLASS_FEATURE_FEAT_CHOICE_KEY,
   CLASS_FEATURE_LANGUAGE_CHOICE_KEY,
@@ -156,6 +158,7 @@ import {
   SPECIES_TRAIT_PROFICIENCY_CHOICE_KEY,
   CLASS_PREPARED_SPELL_CHOICE_KEY,
   CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+  BACKGROUND_EQUIPMENT_CHOICE_KEY,
   GNOMISH_LINEAGE_CHOICE_KEY,
   GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
   PALADIN_FIGHTING_STYLE_CHOICE_KEY,
@@ -2110,7 +2113,10 @@ describe("character creation hole discovery", () => {
         cardinality: { tag: "exactly", count: 1 },
         options: [{ optionId: "option_a" }, { optionId: "option_b" }],
       });
-      expect(supportedHoleOptionIds(equipmentHole)).toEqual(["option_b"]);
+      expect(supportedHoleOptionIds(equipmentHole)).toEqual([
+        "option_a",
+        "option_b",
+      ]);
     },
   );
 
@@ -2220,7 +2226,7 @@ describe("character creation hole discovery", () => {
     ).toBeUndefined();
   });
 
-  test("reports non-coin background equipment as unsupported, not invalid", () => {
+  test("accepts a surfaced non-coin background equipment bundle", () => {
     const draft = requireAcceptedBatch(
       fillCreationHoles({
         draft: createTestDraft("draft:background-option-a"),
@@ -2248,17 +2254,7 @@ describe("character creation hole discovery", () => {
       ],
     });
 
-    expect(result).toMatchObject({
-      tag: "rejected",
-      issues: [
-        {
-          tag: "illegalFill",
-          code: "unsupportedChoice",
-          message:
-            "Unsupported choice option_a for character creation hole: cc:unit-source:u:18:background_acolyte:c:background_equipment_choice",
-        },
-      ],
-    });
+    expect(result).toMatchObject({ tag: "accepted" });
   });
 
   test("does not open purchase for Fighter item-bundle equipment choices", () => {
@@ -2283,10 +2279,7 @@ describe("character creation hole discovery", () => {
         holes,
         testUnitHoleId("class_fighter", "class_equipment_choice"),
       ),
-    ).toMatchObject({
-      kind: "choice",
-      cardinality: { tag: "exactly", count: 1 },
-    });
+    ).toBeUndefined();
     expect(
       holeById(holes, testUnitHoleId("class_fighter", "equipment_purchase")),
     ).toBeUndefined();
@@ -2776,7 +2769,7 @@ describe("character creation QNT slice parity", () => {
           "athletics",
         ),
         choiceFill(
-          testUnitHoleId("background_soldier", "background_equipment_choice"),
+          testUnitHoleId("background_soldier", BACKGROUND_EQUIPMENT_CHOICE_KEY),
           "option_a",
         ),
       ],
@@ -2784,6 +2777,23 @@ describe("character creation QNT slice parity", () => {
     if (unsupportedLaterChoices.tag !== "rejected") {
       throw new Error(
         "Expected later valid-but-unsupported choices to be rejected.",
+      );
+    }
+
+    const classEquipmentBundle = fillCreationHoles({
+      draft: afterInitial.draft,
+      unitLibrary,
+      expectedRevision: afterInitial.draft.revision,
+      fills: [
+        choiceFill(
+          testUnitHoleId("class_fighter", CLASS_EQUIPMENT_CHOICE_KEY),
+          "option_a",
+        ),
+      ],
+    });
+    if (classEquipmentBundle.tag !== "accepted") {
+      throw new Error(
+        "Expected the surfaced class item bundle to be accepted.",
       );
     }
 
@@ -2937,6 +2947,7 @@ describe("character creation QNT slice parity", () => {
         unsupportedAlignment,
         duplicateLanguage,
         unsupportedLaterChoices,
+        classEquipmentBundle,
         standardArrayPermutation,
         pointBuyAssignment,
         tooFewLanguages,
@@ -3122,7 +3133,7 @@ describe("character creation batch fill", () => {
     });
   });
 
-  test("rejects source-unsupported class equipment option ids", () => {
+  test("accepts a surfaced class item-bundle option id", () => {
     const draft = createTestDraft("draft:batch-fighter-item-equipment");
     const afterInitial = requireAcceptedBatch(
       fillCreationHoles({
@@ -3144,11 +3155,7 @@ describe("character creation batch fill", () => {
       ],
     });
 
-    expect(result).toMatchObject({
-      tag: "rejected",
-      draft: afterInitial,
-      issues: [{ tag: "illegalFill", code: "unsupportedChoice", fillIndex: 0 }],
-    });
+    expect(result).toMatchObject({ tag: "accepted" });
   });
 
   test("reports every invalid option in a choice fill", () => {
@@ -3469,7 +3476,7 @@ describe("character creation finalization", () => {
     const draft = completeManifestDraft();
     const result = finalizeCharacterDraft({ draft, unitLibrary });
 
-    expect(result.tag).toBe("ready");
+    expect(result.tag, JSON.stringify(result)).toBe("ready");
     if (result.tag !== "ready") {
       return;
     }
@@ -4350,11 +4357,13 @@ describe("character creation finalization", () => {
     expect(
       expectRight(characterBuildProficiencies(result.build, unitLibrary)).tools,
     ).toEqual(expect.arrayContaining(["tool_dice_set", "tool_lute"]));
-    expect(result.build.equipment.owned.map((item) => item.unitId)).toEqual([
-      "weapon_longsword",
-      "weapon_dagger",
-      "equipment_shield",
-    ]);
+    expect(
+      result.build.equipment.owned.flatMap((item) =>
+        item.kind === "catalogItem"
+          ? [characterEquipmentItemSourceFromId(item.itemId).unitId]
+          : [],
+      ),
+    ).toEqual(["weapon_longsword", "weapon_dagger", "equipment_shield"]);
   });
 
   test("finalizes each supported level-1 SRD class-container source facts from Surface class records", () => {
@@ -4439,9 +4448,13 @@ describe("character creation finalization", () => {
           "class_equipment_choice",
         ),
       ).toHaveLength(1);
-      expect(result.build.equipment.owned.map((item) => item.unitId)).toEqual(
-        draft.selections.equipment?.selectedUnitIds,
-      );
+      expect(
+        result.build.equipment.owned.flatMap((item) =>
+          item.kind === "catalogItem"
+            ? [characterEquipmentItemSourceFromId(item.itemId).unitId]
+            : [],
+        ),
+      ).toEqual(draft.selections.equipment?.selectedUnitIds);
     }
   });
 
@@ -9704,6 +9717,37 @@ describe("character creation finalization", () => {
     ]);
   });
 
+  test("fills the surfaced Wizard item bundle and retains its canonical owned equipment", () => {
+    const wizard = completeWizardDraft({ classEquipmentOption: "option_a" });
+    const result = finalizeCharacterDraft({ draft: wizard, unitLibrary });
+
+    expect(result.tag, JSON.stringify(result)).toBe("ready");
+    if (result.tag !== "ready") return;
+    expect(result.build.equipment).toEqual({
+      owned: [
+        { kind: "authoredStartingItem", itemName: "Dagger", quantity: 2 },
+        {
+          kind: "authoredStartingItem",
+          itemName: "Arcane Focus (Quarterstaff)",
+          quantity: 1,
+        },
+        { kind: "authoredStartingItem", itemName: "Robe", quantity: 1 },
+        { kind: "authoredStartingItem", itemName: "Spellbook", quantity: 1 },
+        {
+          kind: "authoredStartingItem",
+          itemName: "Scholar's Pack",
+          quantity: 1,
+        },
+      ],
+      loadout: {},
+    });
+    expect(
+      characterBuildUnitRefs(result.build, unitLibrary).map(
+        (ref) => ref.unitId,
+      ),
+    ).not.toContain("Arcane Focus (Quarterstaff)");
+  });
+
   test("does not finalize Fighter item-bundle equipment with purchased loadout", () => {
     const complete = completeManifestDraft();
     const itemBundleWithPurchasedEquipment: CharacterDraft = {
@@ -11236,6 +11280,16 @@ function manifestFixtureOptionIds(source: {
   readonly unitId: UnitRecord["id"];
   readonly choiceKey: UnitChoiceKey;
 }): readonly CreationChoiceOptionId[] | undefined {
+  if (source.choiceKey === CLASS_EQUIPMENT_CHOICE_KEY) {
+    return [
+      creationChoiceOptionId(
+        source.unitId === "class_fighter" ? "option_c" : "option_b",
+      ),
+    ];
+  }
+  if (source.choiceKey === BACKGROUND_EQUIPMENT_CHOICE_KEY) {
+    return [creationChoiceOptionId("option_b")];
+  }
   if (
     source.unitId === "wizard_evocation_savant" &&
     source.choiceKey === WIZARD_SPELLBOOK_CHOICE_KEY
@@ -12121,7 +12175,9 @@ function completeFighterDraftForBackground(input: {
   );
 }
 
-function completeWizardDraft(): CharacterDraft {
+function completeWizardDraft(
+  input: { readonly classEquipmentOption?: "option_a" | "option_b" } = {},
+): CharacterDraft {
   const draft = createTestDraft("draft:complete-wizard");
   const afterInitial = requireAcceptedBatch(
     fillCreationHoles({
@@ -12199,7 +12255,7 @@ function completeWizardDraft(): CharacterDraft {
         ),
         choiceFill(
           testUnitHoleId("class_wizard", "class_equipment_choice"),
-          "option_b",
+          input.classEquipmentOption ?? "option_b",
         ),
         choiceFill(
           testUnitHoleId("background_soldier", "background_equipment_choice"),
@@ -12208,6 +12264,7 @@ function completeWizardDraft(): CharacterDraft {
       ],
     }),
   );
+  if (input.classEquipmentOption === "option_a") return afterChoices;
   const afterPurchase = requireAcceptedBatch(
     fillCreationHoles({
       draft: afterChoices,
@@ -12583,7 +12640,7 @@ function runGeneratedQuintParity(moduleBody: string): void {
       ],
       { encoding: "utf8" },
     );
-    expect(quintOutput).toContain("13 passing");
+    expect(quintOutput).toContain("14 passing");
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
@@ -12600,6 +12657,7 @@ function renderQuintParityModule(input: {
   readonly unsupportedAlignment: RejectedCreationBatch;
   readonly duplicateLanguage: RejectedCreationBatch;
   readonly unsupportedLaterChoices: RejectedCreationBatch;
+  readonly classEquipmentBundle: AcceptedCreationBatch;
   readonly standardArrayPermutation: AcceptedCreationBatch;
   readonly pointBuyAssignment: AcceptedCreationBatch;
   readonly tooFewLanguages: RejectedCreationBatch;
@@ -12765,6 +12823,20 @@ function renderQuintParityModule(input: {
             assert(v.issues.fills == ${renderQntFillIssueSet(input.unsupportedLaterChoices.issues)}),
             assert(v.finalization == ${qntFinalizationTag(input.unsupportedLaterChoices.finalization.tag)}),
           }
+    }
+  }
+
+  run parity_class_item_bundle_matches_runtime = {
+    match fillCreationHoles(afterInitialManifest, 1, [
+      FChoice({ hole: HClassEquipment, options: [OClassEquipmentPackageA] }),
+    ]) {
+      | Accepted(v) =>
+          all {
+            assert(v.draft == ${renderQntDraftProjection(input.classEquipmentBundle.draft)}),
+            assert(v.holes == ${renderQntHoleSet(input.classEquipmentBundle.holes)}),
+            assert(v.finalization == ${qntFinalizationTag(input.classEquipmentBundle.finalization.tag)}),
+          }
+      | Rejected(_) => assert(false)
     }
   }
 
