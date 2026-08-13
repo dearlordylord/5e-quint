@@ -23,7 +23,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import {
   spellHasTopLevelRitualTag,
-  supportedClassFeatureSpellFreeCastGrantsForUnit,
+  supportedClassFeatureSpellFreeCastProjectionForUnit,
   topLevelSpellCastingTime,
   type SupportedClassFeatureSpellFreeCastProfile,
 } from "@dnd/surface/surface/types";
@@ -787,14 +787,13 @@ function characterBattleResourceForUnitOrNull(
 function classFeatureSpellFreeCastResource(
   unit: UnitRecord,
 ): LimitedUseCountActivationResource | null {
-  const grants = supportedClassFeatureSpellFreeCastGrantsForUnit(unit);
-  const freeCastGrant = grants?.freeCastGrant;
-  if (freeCastGrant === undefined) {
+  const projection = supportedClassFeatureSpellFreeCastProjectionForUnit(unit);
+  if (projection === null) {
     return null;
   }
   return {
     kind: "use_count",
-    cap: { kind: "fixed", uses: freeCastGrant.count },
+    cap: { kind: "fixed", uses: projection.freeCastGrant.count },
   };
 }
 
@@ -816,7 +815,9 @@ export function characterResourceIsClassFeatureFreeCastForSpell(
 function classFeatureSpellFreeCastProfileForUnit(
   unit: UnitRecord,
 ): SupportedClassFeatureSpellFreeCastProfile | null {
-  return supportedClassFeatureSpellFreeCastGrantsForUnit(unit)?.profile ?? null;
+  return (
+    supportedClassFeatureSpellFreeCastProjectionForUnit(unit)?.profile ?? null
+  );
 }
 
 function activationResourceIsUnlimited(

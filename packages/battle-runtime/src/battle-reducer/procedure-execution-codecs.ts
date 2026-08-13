@@ -10,6 +10,7 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import {
   AbilitySchema,
   ActionRestrictionSchema,
+  SpellLevelSchema,
   WeaponUsageSchema,
 } from "@dnd/surface/surface/schema";
 import {
@@ -621,7 +622,8 @@ export const SpellInvocationResourceExecutionSchema = Schema.Union(
     slotLevel: SpellSlotLevel,
   }),
   Schema.Struct({
-    tag: Schema.Literal("classFeatureFreeCast"),
+    tag: Schema.Literal("spellAccessFreeCast"),
+    castLevel: SpellLevelSchema,
     resourcePoolRef: BattleResourcePoolExecutionRef,
     resourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
   }),

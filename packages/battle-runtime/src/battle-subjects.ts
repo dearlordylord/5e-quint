@@ -319,7 +319,7 @@ export const SpellInvocationRefSchema = Schema.Union(
     procedure: Schema.Literal(...SPELL_SLOT_PROCEDURES),
   }),
   Schema.Struct({
-    tag: Schema.Literal("classFeatureFreeCast"),
+    tag: Schema.Literal("spellAccessFreeCast"),
     spellId: SpellId,
     resourcePoolRef: BattleResourcePoolExecutionRef,
     procedure: Schema.Literal("afterHitDamage", "markedDamageRider"),
@@ -387,13 +387,13 @@ export function spellEffectInvocationRef(
   };
 }
 
-export function classFeatureFreeCastSpellInvocationRef(
+export function spellAccessFreeCastSpellInvocationRef(
   rawSpellId: string,
   resourcePoolRef: BattleResourcePoolExecutionRef,
   procedure: "afterHitDamage" | "markedDamageRider",
 ): SpellInvocationRef {
   return {
-    tag: "classFeatureFreeCast",
+    tag: "spellAccessFreeCast",
     spellId: makeSpellId(rawSpellId),
     resourcePoolRef,
     procedure,

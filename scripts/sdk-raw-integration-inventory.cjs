@@ -4836,7 +4836,7 @@ function rangerFavoredEnemyHuntersMarkSdkHelperNeedles() {
       needles: [
         "const act = huntersMarkFavoredEnemyBonusActionSpellAct(",
         "usesRemaining: 2",
-        'tag: "classFeatureFreeCast"',
+        'tag: "spellAccessFreeCast"',
         "requiresTableSpatialFact: true",
         "spellSlotUsesThisTurn).toEqual([])",
         "usesRemaining: 1",
@@ -4860,7 +4860,7 @@ function rangerFavoredEnemyHuntersMarkSdkHelperNeedles() {
       anchor: "function huntersMarkFavoredEnemyBonusActionSpellAct",
       needles: [
         'candidate.subject.tag === "bonusActionSpell"',
-        'invocation?.tag === "classFeatureFreeCast"',
+        'invocation?.tag === "spellAccessFreeCast"',
         "invocation.spellId === huntersMarkSpellId",
         "rangerFavoredEnemyUnitId",
         'invocation.procedure === "markedDamageRider"',

@@ -17,6 +17,7 @@ import {
   DcSourceSchema,
   DiceExprSchema,
   SizeSchema,
+  SpellLevelSchema,
 } from "@dnd/surface/surface/schema";
 import { SKILLS as SURFACE_SKILLS } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
@@ -343,13 +344,15 @@ export const SpellSlotInvocationResourceSchema = Schema.Struct({
 
 export { NoSpellInvocationResourceSchema } from "../procedure-execution/spell-invocation-codecs.ts";
 
-export const ClassFeatureFreeCastInvocationResourceSchema = Schema.Struct({
-  tag: Schema.Literal("classFeatureFreeCast"),
+export const SpellAccessFreeCastInvocationResourceSchema = Schema.Struct({
+  tag: Schema.Literal("spellAccessFreeCast"),
+  castLevel: SpellLevelSchema,
   resourcePoolRef: BattleResourcePoolExecutionRef,
 });
 
-export const ClassFeatureFreeCastExecutionResourceSchema = Schema.Struct({
-  tag: Schema.Literal("classFeatureFreeCast"),
+export const SpellAccessFreeCastExecutionResourceSchema = Schema.Struct({
+  tag: Schema.Literal("spellAccessFreeCast"),
+  castLevel: SpellLevelSchema,
   resourcePoolRef: BattleResourcePoolExecutionRef,
 });
 

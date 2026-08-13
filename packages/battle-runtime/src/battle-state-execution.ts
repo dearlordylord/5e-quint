@@ -262,6 +262,7 @@ import type {
   PreparedSpellAccess,
   SaveGatedConditionSpellTargeting,
   SaveGatedDamageSpellTargeting,
+  SpellAccessFreeCastInvocationResource,
   SpellSlotInvocationResource,
   SpellTargeting,
 } from "./procedure-execution/spell-invocation-vocabulary.ts";
@@ -291,6 +292,7 @@ export type {
   PreparedSpellAccess,
   SaveGatedConditionSpellTargeting,
   SaveGatedDamageSpellTargeting,
+  SpellAccessFreeCastInvocationResource,
   SpellSlotInvocationResource,
   SpellTargeting,
 } from "./procedure-execution/spell-invocation-vocabulary.ts";
@@ -2073,17 +2075,13 @@ type SpellEffectSpellAccess = {
   readonly sourceCombatantId: CombatantId;
 };
 type NoSpellInvocationResource = { readonly tag: "none" };
-export type ClassFeatureFreeCastInvocationResource = {
-  readonly tag: "classFeatureFreeCast";
-  readonly resourcePoolRef: BattleResourcePoolExecutionRef;
-};
 type PreparedSpellSlotSource = {
   readonly access: PreparedSpellAccess;
   readonly resource: SpellSlotInvocationResource;
 };
-type PreparedClassFeatureFreeCastSource = {
+type PreparedSpellAccessFreeCastSource = {
   readonly access: PreparedSpellAccess;
-  readonly resource: ClassFeatureFreeCastInvocationResource;
+  readonly resource: SpellAccessFreeCastInvocationResource;
 };
 type ClassCantripDamageSpellSource = {
   readonly access: ClassCantripSpellAccess;
@@ -2665,7 +2663,7 @@ export type MagicWeaponEnhancementSpellInvocation = {
 };
 export type AfterHitDamageSpellInvocation = (
   | PreparedSpellSlotSource
-  | PreparedClassFeatureFreeCastSource
+  | PreparedSpellAccessFreeCastSource
 ) & {
   readonly procedure: "afterHitDamage";
   readonly spell: BattleSpellAdmissionSource;
@@ -2726,7 +2724,7 @@ export type AfterHitDamageAndIlluminationSpellInvocation = {
   >;
 };
 export type MarkedDamageRiderSpellInvocation =
-  | ((PreparedSpellSlotSource | PreparedClassFeatureFreeCastSource) & {
+  | ((PreparedSpellSlotSource | PreparedSpellAccessFreeCastSource) & {
       readonly procedure: "markedDamageRider";
       readonly action: "cast";
       readonly spell: BattleSpellAdmissionSource;

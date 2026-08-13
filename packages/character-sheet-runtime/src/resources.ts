@@ -34,7 +34,7 @@ import {
   type ResourceCount,
 } from "@dnd/shared/types";
 import {
-  supportedClassFeatureSpellFreeCastGrantsForUnit,
+  supportedClassFeatureSpellFreeCastProjectionForUnit,
   type ChargePoolResource,
   type RestResetCadence,
   type SorcererSorcerousRestorationMechanics,
@@ -769,13 +769,13 @@ function classFeatureSpellFreeCastResourceForUnit(
   CharacterSheetClassFeatureSpellFreeCastResource,
   "tag" | "count"
 > | null {
-  const grants = supportedClassFeatureSpellFreeCastGrantsForUnit(unit);
-  if (grants === null) {
+  const projection = supportedClassFeatureSpellFreeCastProjectionForUnit(unit);
+  if (projection === null) {
     return null;
   }
   return {
-    tag: grants.profile.resourceTag,
-    count: resourceCount(grants.freeCastGrant.count),
+    tag: projection.profile.resourceTag,
+    count: resourceCount(projection.freeCastGrant.count),
   };
 }
 

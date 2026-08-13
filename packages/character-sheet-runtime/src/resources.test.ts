@@ -11,6 +11,9 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A10-SORCERER-SORCEROUS-RESTORATION sorcerer_sorcerous_restoration
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
+import type { UnitCatalog } from "@dnd/character-creation-runtime";
+import type { UnitRecord } from "@dnd/surface/surface/types";
+import { Option } from "effect";
 import { describe, expect, test } from "vitest";
 import type { CharacterSheetResourceExpenditure } from "./index.ts";
 import type { CharacterBuild } from "./test-support.test-support.ts";
@@ -490,6 +493,49 @@ describe("Character Sheet runtime / resources", () => {
           expended: 0,
         },
       ],
+    });
+  });
+
+  test("does not expose a synthetic class-feature free-cast matching shape", () => {
+    const favoredEnemy = unitLibrary.requireUnit("ranger_favored_enemy");
+    const syntheticFavoredEnemy: UnitRecord = {
+      ...favoredEnemy,
+      provenance: {
+        kind: "synthetic-test",
+        section: "Synthetic Tests/Unsupported Class-Feature Free Cast",
+      },
+    };
+    const syntheticUnitLibrary: UnitCatalog = {
+      getUnit: (id) =>
+        id === syntheticFavoredEnemy.id
+          ? Option.some(syntheticFavoredEnemy)
+          : unitLibrary.getUnit(id),
+      listUnits: () =>
+        unitLibrary
+          .listUnits()
+          .map((unit) =>
+            unit.id === syntheticFavoredEnemy.id ? syntheticFavoredEnemy : unit,
+          ),
+      requireUnit: (id) =>
+        id === syntheticFavoredEnemy.id
+          ? syntheticFavoredEnemy
+          : unitLibrary.requireUnit(id),
+    };
+    const sheet = requireRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:synthetic-favored-enemy-resource",
+        ),
+        build: armorClassBuild({ startingClass: "class_ranger" }),
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary: syntheticUnitLibrary,
+      }),
+    );
+
+    expect(characterSheetResources(sheet, syntheticUnitLibrary)).toMatchObject({
+      _tag: "Right",
+      right: [],
     });
   });
 

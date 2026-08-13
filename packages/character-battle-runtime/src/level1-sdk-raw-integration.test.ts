@@ -4672,7 +4672,7 @@ function assertLevelOneHuntersMark(input: {
     tag: "bonusActionSpell",
     actorId: input.casterId,
     invocation: {
-      tag: "classFeatureFreeCast",
+      tag: "spellAccessFreeCast",
       spellId: huntersMarkSpellId,
       procedure: "markedDamageRider",
     },
@@ -8919,7 +8919,7 @@ function huntersMarkFavoredEnemyBonusActionSpellAct(
         candidate.subject.tag === "bonusActionSpell" &&
         candidate.subject.actorId === actorId &&
         candidate.subject.mode.tag === "cast" &&
-        invocation?.tag === "classFeatureFreeCast" &&
+        invocation?.tag === "spellAccessFreeCast" &&
         invocation.spellId === huntersMarkSpellId &&
         session.context.characters
           .get(actorId)

@@ -1403,13 +1403,15 @@ export function isSupportedClassFeatureSpellFreeCastResourceTag(
   );
 }
 
-export function supportedClassFeatureSpellFreeCastGrantsForUnit(
-  unit: UnitRecord,
-): {
+export type SupportedClassFeatureSpellFreeCastProjection = {
   readonly profile: SupportedClassFeatureSpellFreeCastProfile;
   readonly preparedSpellGrant: PreparedSpellAccessGrant;
   readonly freeCastGrant: NumericSpellFreeCastGrant;
-} | null {
+};
+
+export function supportedClassFeatureSpellFreeCastProjectionForUnit(
+  unit: UnitRecord,
+): SupportedClassFeatureSpellFreeCastProjection | null {
   if (!isPassiveClassFeatureUnitRecord(unit)) {
     return null;
   }
@@ -1436,18 +1438,12 @@ export function supportedClassFeatureSpellFreeCastGrantsForUnit(
     : { profile, preparedSpellGrant, freeCastGrant };
 }
 
-export function favoredEnemyHuntersMarkFreeCastGrantsForUnit(
+export function favoredEnemyHuntersMarkFreeCastProjectionForUnit(
   unit: UnitRecord,
-): {
-  readonly preparedSpellGrant: PreparedSpellAccessGrant;
-  readonly freeCastGrant: NumericSpellFreeCastGrant;
-} | null {
-  const grants = supportedClassFeatureSpellFreeCastGrantsForUnit(unit);
-  return grants?.profile.resourceTag === "favoredEnemyHuntersMarkFreeCasts"
-    ? {
-        preparedSpellGrant: grants.preparedSpellGrant,
-        freeCastGrant: grants.freeCastGrant,
-      }
+): SupportedClassFeatureSpellFreeCastProjection | null {
+  const projection = supportedClassFeatureSpellFreeCastProjectionForUnit(unit);
+  return projection?.profile.resourceTag === "favoredEnemyHuntersMarkFreeCasts"
+    ? projection
     : null;
 }
 

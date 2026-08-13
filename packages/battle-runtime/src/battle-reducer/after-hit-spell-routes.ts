@@ -79,7 +79,7 @@ export function afterHitSpellDiscoveryRoutesForResolution(
     if (invocation.resource.tag === "spellSlot") {
       owners.add("battleSpellSlotAndActionEconomy");
     }
-    if (invocation.resource.tag === "classFeatureFreeCast") {
+    if (invocation.resource.tag === "spellAccessFreeCast") {
       owners.add("battleFeatureResource");
     }
     if (invocation.procedure === "afterHitDamageAndIllumination") {
@@ -187,7 +187,7 @@ export function afterHitSpellRouteForInterrupt(input: {
       ),
     );
   }
-  if (invocation.resource.tag === "classFeatureFreeCast") {
+  if (invocation.resource.tag === "spellAccessFreeCast") {
     route.push(
       afterHitSpellDiscoverRoute(
         hasSaveFill ? ["savingThrowOutcome"] : ["interruptDecision"],

@@ -58,12 +58,12 @@ import {
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type { Language } from "@dnd/shared/game-facts";
-import type {
-  SpeciesRecord,
-  StatBlockRecord,
-  UnitRecord,
+import {
+  supportedClassFeatureSpellFreeCastProjectionForUnit,
+  type SpeciesRecord,
+  type StatBlockRecord,
+  type UnitRecord,
 } from "@dnd/surface/surface/types";
-import { supportedClassFeatureSpellFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either } from "effect";
 import {
@@ -875,18 +875,20 @@ function characterBattlePersistedUsesRemaining(
     );
   }
 
-  const freeCastGrants = supportedClassFeatureSpellFreeCastGrantsForUnit(unit);
-  if (freeCastGrants !== null) {
+  const freeCastProjection =
+    supportedClassFeatureSpellFreeCastProjectionForUnit(unit);
+  if (freeCastProjection !== null) {
     const expended =
       resourceExpenditures.find(
-        (expenditure) => expenditure.tag === freeCastGrants.profile.resourceTag,
+        (expenditure) =>
+          expenditure.tag === freeCastProjection.profile.resourceTag,
       )?.expended ?? 0;
-    if (expended > freeCastGrants.freeCastGrant.count) {
+    if (expended > freeCastProjection.freeCastGrant.count) {
       return battleCreatureInitIssue(
         "Class feature spell free-cast expenditure exceeds its battle resource cap.",
       );
     }
-    return Either.right(freeCastGrants.freeCastGrant.count - expended);
+    return Either.right(freeCastProjection.freeCastGrant.count - expended);
   }
   const useCountExpenditure = resourceExpenditures.find(
     (expenditure) =>

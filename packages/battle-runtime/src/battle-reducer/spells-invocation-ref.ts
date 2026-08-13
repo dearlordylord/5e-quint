@@ -5,7 +5,7 @@
 import {
   armorOfShadowsSpellInvocationRef,
   cantripSpellInvocationRef,
-  classFeatureFreeCastSpellInvocationRef,
+  spellAccessFreeCastSpellInvocationRef,
   spellEffectInvocationRef,
   spellSlotInvocationRef,
   type SpellInvocationRef,
@@ -24,8 +24,8 @@ export function supportedSpellInvocationRef(
         value.procedure,
       ),
     ),
-    Match.when({ resource: { tag: "classFeatureFreeCast" } }, (value) =>
-      classFeatureFreeCastSpellInvocationRef(
+    Match.when({ resource: { tag: "spellAccessFreeCast" } }, (value) =>
+      spellAccessFreeCastSpellInvocationRef(
         value.spell.id,
         value.resource.resourcePoolRef,
         value.procedure,

@@ -45,11 +45,11 @@ import {
   surfaceSchemaRolesEqual,
 } from "./schema.ts";
 import {
-  favoredEnemyHuntersMarkFreeCastGrantsForUnit,
+  favoredEnemyHuntersMarkFreeCastProjectionForUnit,
   isSupportedClassFeatureSpellFreeCastResourceTag,
   spellHasTopLevelCastingTime,
   spellHasTopLevelRitualTag,
-  supportedClassFeatureSpellFreeCastGrantsForUnit,
+  supportedClassFeatureSpellFreeCastProjectionForUnit,
   topLevelSpellCastingTime,
   type SpellRecord,
   type UnitRecord,
@@ -177,7 +177,7 @@ describe("SRD Surface publication schema", () => {
     );
     expect(isSupportedClassFeatureSpellFreeCastResourceTag(1)).toBe(false);
     expect(
-      favoredEnemyHuntersMarkFreeCastGrantsForUnit(favoredEnemy),
+      favoredEnemyHuntersMarkFreeCastProjectionForUnit(favoredEnemy),
     ).toMatchObject({
       preparedSpellGrant: {
         kind: "grant_spell_access",
@@ -189,16 +189,16 @@ describe("SRD Surface publication schema", () => {
       },
     });
     expect(
-      favoredEnemyHuntersMarkFreeCastGrantsForUnit(paladinsSmite),
+      favoredEnemyHuntersMarkFreeCastProjectionForUnit(paladinsSmite),
     ).toBeNull();
     expect(
-      supportedClassFeatureSpellFreeCastGrantsForUnit(fighterClass),
+      supportedClassFeatureSpellFreeCastProjectionForUnit(fighterClass),
     ).toBeNull();
     expect(
-      supportedClassFeatureSpellFreeCastGrantsForUnit(dangerSense),
+      supportedClassFeatureSpellFreeCastProjectionForUnit(dangerSense),
     ).toBeNull();
     expect(
-      supportedClassFeatureSpellFreeCastGrantsForUnit({
+      supportedClassFeatureSpellFreeCastProjectionForUnit({
         ...dangerSense,
         provenance: {
           kind: "synthetic-test",
@@ -213,7 +213,7 @@ describe("SRD Surface publication schema", () => {
       throw new Error("Favored Enemy support-profile fixture changed shape");
     }
     expect(
-      supportedClassFeatureSpellFreeCastGrantsForUnit({
+      supportedClassFeatureSpellFreeCastProjectionForUnit({
         ...favoredEnemy,
         mechanics: {
           ...favoredEnemy.mechanics,

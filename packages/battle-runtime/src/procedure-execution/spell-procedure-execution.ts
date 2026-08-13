@@ -66,7 +66,7 @@ import type { BattleSpellEffectLevel } from "./spell-effect-level.ts";
 import type {
   ArmorOfShadowsSpellAccess,
   ClassCantripSpellAccess,
-  ClassFeatureFreeCastInvocationResource,
+  SpellAccessFreeCastInvocationResource,
   NoSpellInvocationResource,
   PreparedSpellAccess,
   RollModifierSpellSaveGate,
@@ -143,7 +143,7 @@ export type AfterHitDamageSpellProcedureExecution =
     readonly procedure: "afterHitDamage";
     readonly resource:
       | SpellSlotInvocationResource
-      | ClassFeatureFreeCastInvocationResource;
+      | SpellAccessFreeCastInvocationResource;
   };
 
 export type AfterHitDamageAndIlluminationSpellProcedureExecution =
@@ -795,7 +795,7 @@ export type MarkedDamageRiderCastSpellProcedureExecution =
     readonly rangeFeet: MovementFeet;
     readonly resource:
       | SpellSlotInvocationResource
-      | ClassFeatureFreeCastInvocationResource;
+      | SpellAccessFreeCastInvocationResource;
     readonly retargetTiming: MarkedDamageRiderRetargetTiming;
     readonly targeting: { readonly kind: "singleCombatant" };
   };

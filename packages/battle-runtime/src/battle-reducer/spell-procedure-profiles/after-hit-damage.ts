@@ -61,7 +61,7 @@ import {
 } from "../spells-execution-facts.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import {
-  spendClassFeatureFreeCastResource,
+  spendSpellAccessFreeCastResource,
   spendSpellCastResources,
   type SpellCastResourceSpendResult,
 } from "../spells-resolve-resources.ts";
@@ -76,7 +76,7 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 import {
-  ClassFeatureFreeCastExecutionResourceSchema,
+  SpellAccessFreeCastExecutionResourceSchema,
   DamageTypeSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
@@ -114,7 +114,8 @@ function admitAfterHitDamage(
             (resourcePoolRef): AfterHitDamageInvocation => ({
               access: { tag: "prepared" },
               resource: {
-                tag: "classFeatureFreeCast",
+                tag: "spellAccessFreeCast",
+                castLevel: spell.mechanics.level,
                 resourcePoolRef,
               },
               procedure: "afterHitDamage",
@@ -243,7 +244,7 @@ function resolveAfterHitDamage(
   }
 
   const resourced =
-    input.invocation.resource.tag === "classFeatureFreeCast"
+    input.invocation.resource.tag === "spellAccessFreeCast"
       ? spendAfterHitDamageFreeCastResource(
           input.input.state,
           input.input.subject.casterId,
@@ -314,7 +315,7 @@ function spendAfterHitDamageFreeCastResource(
       "Bonus Action spell is no longer available for the current actor.",
     );
   }
-  return spendClassFeatureFreeCastResource(
+  return spendSpellAccessFreeCastResource(
     {
       ...state,
       currentTurnResources: spentBonusAction.right,
@@ -331,7 +332,7 @@ const AfterHitDamageInvocationSchema = spellProcedureExecutionSchema(
     access: PreparedSpellAccessSchema,
     resource: Schema.Union(
       SpellSlotInvocationResourceSchema,
-      ClassFeatureFreeCastExecutionResourceSchema,
+      SpellAccessFreeCastExecutionResourceSchema,
     ),
     procedure: Schema.Literal("afterHitDamage"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,

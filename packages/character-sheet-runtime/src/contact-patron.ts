@@ -11,7 +11,7 @@ import {
 import {
   CONTACT_PATRON_CONTACT_OTHER_PLANE_FREE_CAST_RESOURCE_TAG,
   CONTACT_PATRON_CONTACT_OTHER_PLANE_SPELL_ID,
-  supportedClassFeatureSpellFreeCastGrantsForUnit,
+  supportedClassFeatureSpellFreeCastProjectionForUnit,
   type SpellRecord,
   type UnitRecord,
 } from "@dnd/surface/surface/types";
@@ -52,13 +52,15 @@ export function castContactPatron(input: {
   const feature = getRequiredUnit(input.unitLibrary, resource.right.unitId);
   /* v8 ignore next -- Malformed sheet/catalog correlation: the projected Contact Patron resource retains its admitted feature Unit id. */
   if (Either.isLeft(feature)) return Either.left(feature.left);
-  const grants = supportedClassFeatureSpellFreeCastGrantsForUnit(feature.right);
+  const projection = supportedClassFeatureSpellFreeCastProjectionForUnit(
+    feature.right,
+  );
   /* v8 ignore start -- The retained Contact Patron resource and its authored free-cast grant are one correlated support profile. */
   if (
-    grants === null ||
-    grants.profile.resourceTag !==
+    projection === null ||
+    projection.profile.resourceTag !==
       CONTACT_PATRON_CONTACT_OTHER_PLANE_FREE_CAST_RESOURCE_TAG ||
-    grants.profile.spellId !== CONTACT_PATRON_CONTACT_OTHER_PLANE_SPELL_ID
+    projection.profile.spellId !== CONTACT_PATRON_CONTACT_OTHER_PLANE_SPELL_ID
   ) {
     return characterSheetIssue(
       "Contact Patron requires the supported class-feature spell free-cast profile.",

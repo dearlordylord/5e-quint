@@ -664,7 +664,7 @@ function afterHitDivineFreeCastDamageReady(): AfterHitRuntimeState {
     afterHitChoiceReady("divineSmiteFreeCast"),
     divineSmiteUnitId,
     2,
-    { invocationTag: "classFeatureFreeCast" },
+    { invocationTag: "spellAccessFreeCast" },
   );
 }
 
@@ -1051,7 +1051,7 @@ function createAfterHitSpellsDriver(
       doChooseDivineSmiteFreeCast: () => {
         transition("doChooseDivineSmiteFreeCast", () =>
           chooseAfterHitDamageSpell(state, divineSmiteUnitId, 2, {
-            invocationTag: "classFeatureFreeCast",
+            invocationTag: "spellAccessFreeCast",
           }),
         );
       },

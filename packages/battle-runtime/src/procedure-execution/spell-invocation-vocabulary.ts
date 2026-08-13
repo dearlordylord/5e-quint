@@ -1,5 +1,5 @@
 import type { MovementFeet, SpellSlotLevel } from "@dnd/shared/types";
-import type { Ability, DcSource } from "@dnd/surface/surface/types";
+import type { Ability, DcSource, SpellLevel } from "@dnd/surface/surface/types";
 import type {
   BattleResourcePoolExecutionRef,
   CombatantId,
@@ -23,8 +23,9 @@ export type SpellEffectSpellAccess = {
   readonly sourceCombatantId: CombatantId;
 };
 export type NoSpellInvocationResource = { readonly tag: "none" };
-export type ClassFeatureFreeCastInvocationResource = {
-  readonly tag: "classFeatureFreeCast";
+export type SpellAccessFreeCastInvocationResource = {
+  readonly tag: "spellAccessFreeCast";
+  readonly castLevel: SpellLevel;
   readonly resourcePoolRef: BattleResourcePoolExecutionRef;
 };
 

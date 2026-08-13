@@ -201,7 +201,7 @@ import {
   characterBattleResourceSupportedForUnit,
   characterBattleResourceUsage,
   characterId,
-  classFeatureFreeCastSpellInvocationRef,
+  spellAccessFreeCastSpellInvocationRef,
   combatantId,
   concentrationSavingThrowDc,
   discoverBattleActs,
@@ -664,8 +664,8 @@ function sameSpellInvocationRef(
     return left.sourceCombatantId === right.sourceCombatantId;
   }
   if (
-    left.tag === "classFeatureFreeCast" &&
-    right.tag === "classFeatureFreeCast"
+    left.tag === "spellAccessFreeCast" &&
+    right.tag === "spellAccessFreeCast"
   ) {
     return left.resourcePoolRef === right.resourcePoolRef;
   }
@@ -5821,7 +5821,7 @@ export {
   characterBattleResourceIsUseCount,
   characterBattleResourceSupportedForUnit,
   characterBattleResourceUsage,
-  classFeatureFreeCastSpellInvocationRef,
+  spellAccessFreeCastSpellInvocationRef,
   combatantCanSee,
   combatantId,
   concentrationSavingThrowDc,

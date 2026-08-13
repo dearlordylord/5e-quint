@@ -294,7 +294,7 @@ export {
   SpellSubjectModeSchema,
   armorOfShadowsSpellInvocationRef,
   cantripSpellInvocationRef,
-  classFeatureFreeCastSpellInvocationRef,
+  spellAccessFreeCastSpellInvocationRef,
   isCharacterProcedureBattleSubject,
   sameBattleSubject,
   spellSlotInvocationRef,

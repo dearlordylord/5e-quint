@@ -30,7 +30,7 @@ export function spellHasAvailableSpend(
   if (resource.tag === "none") {
     return true;
   }
-  if (resource.tag === "classFeatureFreeCast") {
+  if (resource.tag === "spellAccessFreeCast") {
     return actor.origin.resources.some(
       (candidate) =>
         candidate.resourcePoolRef === resource.resourcePoolRef &&

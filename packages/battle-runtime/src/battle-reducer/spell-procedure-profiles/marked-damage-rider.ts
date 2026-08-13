@@ -79,7 +79,7 @@ import {
 import { HUNTERS_MARK_FINDING_SKILLS } from "../domain-constants.ts";
 import { markSpellSlotExpendedThisTurn } from "../spell-turn-resources.ts";
 import {
-  spendClassFeatureFreeCastResource,
+  spendSpellAccessFreeCastResource,
   startSpellEffectConcentration,
   type SpellCastResourceSpendResult,
 } from "../spells-resolve-resources.ts";
@@ -94,7 +94,7 @@ import type {
 import { Schema } from "effect";
 import {
   AbilitySchema,
-  ClassFeatureFreeCastExecutionResourceSchema,
+  SpellAccessFreeCastExecutionResourceSchema,
   PreparedSpellAccessSchema,
   SpellSlotInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
@@ -163,7 +163,8 @@ function admitMarkedDamageRider(
           {
             access: { tag: "prepared" },
             resource: {
-              tag: "classFeatureFreeCast",
+              tag: "spellAccessFreeCast",
+              castLevel: spell.mechanics.level,
               resourcePoolRef: favoredEnemyResourcePoolRef,
             },
             procedure: "markedDamageRider",
@@ -593,8 +594,8 @@ function resolveMarkedDamageRider(
     input.actorId,
   );
   const resourced =
-    input.invocation.resource.tag === "classFeatureFreeCast"
-      ? spendClassFeatureFreeCastResource(
+    input.invocation.resource.tag === "spellAccessFreeCast"
+      ? spendSpellAccessFreeCastResource(
           {
             ...concentrationBase,
             currentTurnResources: turnResources,
@@ -805,7 +806,7 @@ const MarkedDamageRiderInvocationSchema = spellProcedureExecutionSchema(
       access: PreparedSpellAccessSchema,
       resource: Schema.Union(
         SpellSlotInvocationResourceSchema,
-        ClassFeatureFreeCastExecutionResourceSchema,
+        SpellAccessFreeCastExecutionResourceSchema,
       ),
       procedure: Schema.Literal("markedDamageRider"),
       action: Schema.Literal("cast"),

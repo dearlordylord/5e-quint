@@ -202,10 +202,13 @@ describe("battle runtime: spellcasting actions and slots", () => {
     );
     if (
       invocation === undefined ||
-      invocation.resource.tag !== "classFeatureFreeCast"
+      invocation.resource.tag !== "spellAccessFreeCast"
     ) {
       throw new Error("Expected Hunter's Mark class-feature invocation.");
     }
+    expect(invocation.resource).toMatchObject({
+      castLevel: 1,
+    });
     expect(
       spendSpellCastResources({
         state: session.state,

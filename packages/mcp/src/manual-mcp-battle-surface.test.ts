@@ -939,9 +939,7 @@ describe("manual MCP battle surface coverage", () => {
 
     const huntersMark = requireSpellAct(root, "hunters_mark");
     expect(huntersMark.subject.tag).toBe("bonusActionSpell");
-    expect(huntersMark.presentation.invocation.tag).toBe(
-      "classFeatureFreeCast",
-    );
+    expect(huntersMark.presentation.invocation.tag).toBe("spellAccessFreeCast");
     const target = requireHole(huntersMark.initialHoles, "targetChoice");
     const afterTarget = call(root, "fill_battle_hole", {
       subject: huntersMark.subject,

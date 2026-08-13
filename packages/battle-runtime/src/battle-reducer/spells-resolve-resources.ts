@@ -146,7 +146,7 @@ export function spendSpellCastResources(input: {
       shouldStartConcentration,
     });
   }
-  if (input.invocation.resource.tag === "classFeatureFreeCast") {
+  if (input.invocation.resource.tag === "spellAccessFreeCast") {
     return invalidResult(
       input.errorState,
       "unsupportedSubject",
@@ -225,7 +225,7 @@ function markQuickenedLevelOnePlusSpellCastForApplications(
     : resources;
 }
 
-export function spendClassFeatureFreeCastResource(
+export function spendSpellAccessFreeCastResource(
   state: BattleState,
   actorId: CombatantId,
   resourcePoolRef: BattleResourcePoolExecutionRef,

@@ -23,7 +23,7 @@ import {
   characterBattleResourceSupportedForUnit,
   characterSeed,
   characterSpellInvocationRefForProcedureRefForTest,
-  classFeatureFreeCastSpellInvocationRef,
+  spellAccessFreeCastSpellInvocationRef,
   damageRollFillWithGroups,
   discoverBattleActs,
   elapsedTimeTicks,
@@ -83,7 +83,7 @@ describe("battle runtime: Favored Enemy", () => {
     const subject = {
       tag: "bonusActionSpell" as const,
       actorId: fighterId,
-      invocation: classFeatureFreeCastSpellInvocationRef(
+      invocation: spellAccessFreeCastSpellInvocationRef(
         "hunters_mark",
         characterResourcePoolRefForUnit(
           session,
@@ -193,7 +193,7 @@ describe("battle runtime: Favored Enemy", () => {
     const subject = {
       tag: "bonusActionSpell" as const,
       actorId: fighterId,
-      invocation: classFeatureFreeCastSpellInvocationRef(
+      invocation: spellAccessFreeCastSpellInvocationRef(
         "hunters_mark",
         characterResourcePoolRefForUnit(
           session,
@@ -223,10 +223,13 @@ describe("battle runtime: Favored Enemy", () => {
     if (
       invocation === undefined ||
       invocation.procedure !== "markedDamageRider" ||
-      invocation.resource.tag !== "classFeatureFreeCast"
+      invocation.resource.tag !== "spellAccessFreeCast"
     ) {
       throw new Error("Expected Favored Enemy Hunter's Mark invocation.");
     }
+    expect(invocation.resource).toMatchObject({
+      castLevel: 1,
+    });
     const existingConcentration = {
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("existing_concentration"),
@@ -393,7 +396,7 @@ describe("battle runtime: Favored Enemy", () => {
         (candidate) =>
           candidate.subject.tag === "bonusActionSpell" &&
           battleActSpellPresentation(candidate)?.invocation.tag ===
-            "classFeatureFreeCast" &&
+            "spellAccessFreeCast" &&
           battleActSpellPresentation(candidate)?.invocation.spellId ===
             "hunters_mark",
       ),
@@ -498,7 +501,7 @@ describe("battle runtime: Paladin's Smite", () => {
             }),
             choice.reactorId,
             choice.subject.procedureRef,
-          ).tag === "classFeatureFreeCast"
+          ).tag === "spellAccessFreeCast"
         );
       });
     if (
@@ -517,7 +520,7 @@ describe("battle runtime: Paladin's Smite", () => {
         smiteChoice.subject.procedureRef,
       ),
     ).toEqual(
-      classFeatureFreeCastSpellInvocationRef(
+      spellAccessFreeCastSpellInvocationRef(
         "divine_smite",
         characterResourcePoolRefForUnit(
           session,
@@ -660,7 +663,7 @@ describe("battle runtime: Paladin's Smite", () => {
           choice.subject.procedureRef,
         );
         return (
-          invocation.tag === "classFeatureFreeCast" &&
+          invocation.tag === "spellAccessFreeCast" &&
           invocation.spellId === "divine_smite"
         );
       }),
@@ -733,7 +736,7 @@ describe("battle runtime: Paladin's Smite", () => {
           choice.subject.procedureRef,
         );
         return (
-          invocation.tag === "classFeatureFreeCast" &&
+          invocation.tag === "spellAccessFreeCast" &&
           invocation.spellId === "divine_smite"
         );
       }),
