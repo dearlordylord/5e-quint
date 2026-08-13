@@ -3282,6 +3282,25 @@ describe("Find Familiar lifecycle", () => {
     );
     expect(cureWoundsAct?.subject.tag).toBe("actionSpell");
     if (cureWoundsAct?.subject.tag !== "actionSpell") return;
+
+    const readiedMode = deliverTouchSpellThroughFindFamiliar({
+      state: cast.state,
+      subject: {
+        ...cureWoundsAct.subject,
+        mode: { tag: "ready", trigger: "spellCast" },
+      },
+      fills: [],
+      fact: {
+        kind: "findFamiliarWithin100FeetOfOwner",
+        ownerId: casterId,
+        familiarId,
+      },
+    });
+    expect(readiedMode).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+    });
+
     const wrongConnection = deliverTouchSpellThroughFindFamiliar({
       state: cast.state,
       subject: cureWoundsAct.subject,
