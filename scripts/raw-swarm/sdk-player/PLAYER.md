@@ -125,6 +125,11 @@ as one coherent tactical choice requires. Return `kind: "continue"` when a new
 observation should inform the next choice. Return `kind: "playerConcluded"`
 when you believe play has reached a conclusion. This is an assertion for the
 independent RAW reviewer, not proof that a RAW combat-ending condition occurred.
+Describe the concrete combatant, object, procedure, and resource facts that
+support the assertion. Do not report a winner, victory, or winning side, and do
+not infer an encounter-wide partition. Scenario-objective satisfaction and the
+decision to end combat remain table interpretations over those concrete facts,
+not Battle Runtime state.
 Both outcomes must return the latest session produced by the calls.
 
 A `needsHoles` result means the selected subject is still in progress. A fresh

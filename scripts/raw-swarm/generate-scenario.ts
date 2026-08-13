@@ -94,7 +94,7 @@ function generationPreamble(
   contentAvailabilityIntent: ContentAvailabilityIntent,
 ): string {
   return `You generate battle-testing scenarios for an SRD 5.2.1 adjudicator SDK.
-Return complete prose scenario revisions, not outlines or patches. Bias toward combat, serious attempts to win, and materially different or changing tactics. Keep story to mechanically consequential terrain, visibility, distance, objectives, builds, and encounter facts. Mix exact constraints with delegated player choices naturally in prose. Do not invent a stage system, command language, or expected result. Use only SRD identity or visibly synthetic unsupported material; never copy non-SRD official D&D identity or expression.
+Return complete prose scenario revisions, not outlines or patches. Bias toward combat, serious pursuit of authored objectives, and materially different or changing tactics. Keep story to mechanically consequential terrain, visibility, distance, objectives, builds, and encounter facts. Mix exact constraints with delegated player choices naturally in prose. Do not invent a stage system, command language, or expected result. Do not describe a winner, victory, winning side, or encounter-wide partition; retain concrete combatants, pairwise relationships, and objective facts. Use only SRD identity or visibly synthetic unsupported material; never copy non-SRD official D&D identity or expression.
 
 Available canonical stat-block identities:
 ${statBlockNames.join(", ")}
@@ -137,7 +137,7 @@ Produce exactly ${input.candidateCount} materially different complete prose revi
       contentAvailabilityIntent,
     }) =>
       runCodexJson(
-        `Independently judge whether this battle-testing scenario is ready. It is ready only if the setup is mechanically meaningful, every represented combatant or group has a serious strategy-bearing objective to win, and its fixed versus delegated choices fit the campaign's distribution preference. Do not impose a generic balance: a deliberately loose or highly prescribed scenario can be ready. Do not judge RAW legality, choose tactics, predict the winner, rewrite prose, or stop merely because the document is coherent. Return ready or one concise critique that would materially improve the next whole revision.
+        `Independently judge whether this battle-testing scenario is ready. It is ready only if the setup is mechanically meaningful, every represented combatant or group seriously pursues an authored strategy-bearing objective, and its fixed versus delegated choices fit the campaign's distribution preference. Do not impose a generic balance: a deliberately loose or highly prescribed scenario can be ready. Do not judge RAW legality, choose tactics, predict the outcome, rewrite prose, or stop merely because the document is coherent. Reject prose that introduces a winner, victory, winning side, or encounter-wide partition instead of concrete combatant, pairwise-relationship, and objective facts. Return ready or one concise critique that would materially improve the next whole revision.
 
 Available canonical stat-block identities:
 ${statBlocks.statBlocks.map(({ name }) => name).join(", ")}

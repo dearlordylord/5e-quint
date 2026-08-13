@@ -21,8 +21,9 @@ unchanged.
 
 Preserve every scenario-fixed combatant and setup fact from the prose. Do not
 change a completed Character Sheet, replace a canonical Stat Block, silently
-drop a combatant, change terrain or an object's properties, or encode tactics
-and victory interpretation as initial battle state. If the public SDK still
+drop a combatant, change terrain or an object's properties, or encode tactics,
+objective satisfaction, or a combat-ending interpretation as initial battle
+state. If the public SDK still
 cannot represent a required fact after you supply the choices you own, retain a
 precise `kind: "obstructed"` result for that capability instead of describing
 the delegated choice itself as unavailable.

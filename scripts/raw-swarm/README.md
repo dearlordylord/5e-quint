@@ -63,8 +63,8 @@ obstruction rather than modeled in a harness language.
 Scenario generation is an offline authoring process, separate from battle
 execution. A generation campaign supplies a broad distribution preference,
 such as mostly exploratory character choices with a few tightly constrained
-edge cases. It must bias toward battles, attempts to win, and materially
-different strategies rather than plots or storytelling.
+edge cases. It must bias toward battles, serious pursuit of authored objectives,
+and materially different strategies rather than plots or storytelling.
 
 The generator also receives the canonical stat-block availability profile and
 an explicit campaign intent: `availableOnly` or `probeUnavailableContent`.
@@ -110,8 +110,8 @@ Keep prose mechanically relevant. Include only facts that can affect character
 choices, encounter setup, tactical decisions, or result interpretation. Brief
 fiction may establish terrain, visibility, distance, objectives, or another
 battle fact; do not grow dialogue, travel narrative, personalities, or plot for
-its own sake. Every represented combatant or group has a serious objective to
-win. A scenario may give any strategy-bearing brief an initial approach, but
+its own sake. Every represented combatant or group must seriously pursue its
+authored objective. A scenario may give any strategy-bearing brief an initial approach, but
 must permit strategies to change as the battle develops. When one agent
 controls conflicting roles, it must pursue each brief faithfully rather than
 collapsing them into one cooperative strategy.

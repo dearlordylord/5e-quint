@@ -1,6 +1,6 @@
 {
   "scenarioId": "generated-battle-example",
-  "distributionPreference": "Favor different winning strategies, changing tactics, varied SRD combatant compositions, and a mix of delegated and exact character choices. Keep the encounter compact enough to play through the public SDK.",
+  "distributionPreference": "Favor materially different approaches to authored objectives, changing tactics, varied SRD combatant compositions, and a mix of delegated and exact character choices. Keep the encounter compact enough to play through the public SDK.",
   "contentAvailabilityIntent": "availableOnly",
   "minimumIterations": 2,
   "maximumIterations": 4,
