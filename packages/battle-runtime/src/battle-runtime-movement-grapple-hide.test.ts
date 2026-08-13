@@ -6,17 +6,21 @@ import {
 } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.creature-space-movement-permission unit-feature.grappler
+// KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION species_halfling_nimbleness
-import { abilityModifier } from "@dnd/shared/types";
+import { abilityModifier, Hp } from "@dnd/shared/types";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
   BattleInterruptProcedureChoiceSchema,
   BattleSnapshotSchema,
 } from "./index.ts";
-import { deriveCreatureSpaceTraversalMovementFactFromTableRoute } from "./battle-reducer/creature-space-table-route.ts";
+import {
+  deriveCreatureSpaceTraversalMovementFactFromTableRoute,
+  deriveOrdinaryMovementTableRouteFacts,
+} from "./battle-reducer/creature-space-table-route.ts";
 import { resolveReplayContinuationFromState } from "./battle-execution-composition.ts";
 import {
   grappleDragCostExempt,
@@ -1061,6 +1065,53 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       message:
         "Creature-space traversal cannot end in an occupied creature space.",
     });
+    const incapacitatedOccupant = state.combatants.get(goblinId);
+    expect(incapacitatedOccupant).toBeDefined();
+    if (
+      incapacitatedOccupant === undefined ||
+      incapacitatedOccupant.positiveHpUnconscious !== null
+    )
+      return;
+    const terminalState = {
+      ...state,
+      combatants: new Map(state.combatants).set(goblinId, {
+        ...testBattleCreatureStateWithConditions(
+          incapacitatedOccupant,
+          applyCondition(incapacitatedOccupant.conditions, "incapacitated"),
+        ),
+        hp: Hp(0),
+        zeroHpLifecycle: { policy: "diesAtZeroHp" as const },
+      }),
+    };
+    expect(
+      resolveBattleSubject({
+        state: terminalState,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            creatureSpaceTraversal: {
+              kind: "occupiedCreatureSpaceTraversal",
+              occupiedSpaces: [
+                {
+                  occupantId: goblinId,
+                  positionId: battleTablePositionId("terminal-space"),
+                },
+              ],
+              destination: {
+                kind: "unoccupiedSpace",
+                positionId: battleTablePositionId("beyond-corpse"),
+              },
+            },
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Creature-space traversal cannot classify a terminal zero-Hit-Point combatant as an occupied creature.",
+    });
   });
 
   test("table route facts derive an occupied destination witness for Movement rejection", () => {
@@ -1231,7 +1282,85 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     });
   });
 
-  test("Creature-space Movement facts require an admitted permission profile", () => {
+  test("ordinary table routes distinguish enemy, ally, Tiny, Incapacitated, and corpse occupants", () => {
+    const occupied = battleTablePositionId("ordinary-occupied-space");
+    const destination = battleTablePositionId("ordinary-destination");
+    const occupantId = combatantId("ordinary-occupant");
+    const route = {
+      positionsEnteredBeforeDestination: [
+        { positionId: occupied, distanceFeet: movementFeet(5) },
+      ],
+      destination: {
+        positionId: destination,
+        distanceFeet: movementFeet(10),
+      },
+    };
+    const living = {
+      kind: "livingCreature" as const,
+      occupantId,
+      creatureSize: "medium" as const,
+      incapacitated: false,
+      allyOfMover: false,
+      occupiedPositions: [occupied] as const,
+    };
+    const derive = (
+      occupant: Parameters<
+        typeof deriveOrdinaryMovementTableRouteFacts
+      >[0]["occupants"][number],
+      moverSize: Parameters<
+        typeof deriveOrdinaryMovementTableRouteFacts
+      >[0]["moverSize"] = "medium",
+    ) =>
+      deriveOrdinaryMovementTableRouteFacts({
+        moverId: fighterId,
+        moverSize,
+        route,
+        occupants: [occupant],
+      });
+
+    expect(derive(living)).toMatchObject({
+      tag: "invalid",
+      reason: "livingCreatureBlocksTraversal",
+    });
+    expect(derive({ ...living, allyOfMover: true })).toEqual({
+      tag: "routeFacts",
+      difficultTerrainSteps: [],
+    });
+    expect(derive({ ...living, creatureSize: "tiny" })).toEqual({
+      tag: "routeFacts",
+      difficultTerrainSteps: [],
+    });
+    expect(derive({ ...living, creatureSize: "large" }, "small")).toEqual({
+      tag: "routeFacts",
+      difficultTerrainSteps: [
+        { positionId: occupied, distanceFeet: movementFeet(5) },
+      ],
+    });
+    expect(derive({ ...living, creatureSize: "small" }, "large")).toEqual({
+      tag: "routeFacts",
+      difficultTerrainSteps: [
+        { positionId: occupied, distanceFeet: movementFeet(5) },
+      ],
+    });
+    expect(derive({ ...living, incapacitated: true })).toMatchObject({
+      tag: "routeFacts",
+      difficultTerrainSteps: [
+        { positionId: occupied, distanceFeet: movementFeet(5) },
+      ],
+      creatureSpaceTraversal: {
+        occupiedSpaces: [{ occupantId, positionId: occupied }],
+      },
+    });
+    expect(
+      derive({
+        kind: "corpse",
+        tokenId: occupantId,
+        occupiedPositions: [occupied],
+      }),
+    ).toEqual({ tag: "routeFacts", difficultTerrainSteps: [] });
+  });
+
+  test("Creature-space Movement facts require an Incapacitated occupant or an admitted permission profile", () => {
     const state = startBattleRight({
       battleId: battleId("battle-halfling-nimbleness-missing-profile"),
       combatants: [
@@ -1286,7 +1415,104 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     ).toMatchObject({
       tag: "invalid",
       message:
-        "Creature-space traversal requires a selected occupied-creature-space movement permission profile.",
+        "Creature-space traversal requires an Incapacitated occupant or a selected occupied-creature-space movement permission profile.",
+    });
+  });
+
+  test("ordinary Movement crosses an Incapacitated creature space but cannot stop there", () => {
+    const initial = startBattleRight({
+      battleId: battleId("battle-incapacitated-creature-space"),
+      combatants: [
+        characterSeed({
+          combatantId: fighterId,
+          displayName: "Mover",
+          initiative: 20,
+          size: "medium",
+        }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Incapacitated Occupant",
+          initiative: 10,
+          size: "medium",
+        }),
+      ],
+    });
+    const occupant = initial.combatants.get(goblinId);
+    expect(occupant).toBeDefined();
+    if (occupant === undefined) return;
+    const state = {
+      ...initial,
+      combatants: new Map(initial.combatants).set(goblinId, {
+        ...testBattleCreatureStateWithConditions(
+          occupant,
+          applyCondition(occupant.conditions, "incapacitated"),
+        ),
+      }),
+    };
+    const subject: BattleSubject = {
+      tag: "runtimeCommand",
+      actorId: fighterId,
+      command: "move",
+    };
+    const hole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "movement",
+    );
+    const traversal = {
+      kind: "occupiedCreatureSpaceTraversal" as const,
+      occupiedSpaces: [
+        {
+          occupantId: goblinId,
+          positionId: battleTablePositionId("incapacitated-space"),
+        },
+      ] as const,
+    };
+
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            creatureSpaceTraversal: {
+              ...traversal,
+              destination: {
+                kind: "unoccupiedSpace",
+                positionId: battleTablePositionId("beyond-occupant"),
+              },
+            },
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "resolved",
+      movements: [{ creatureSpaceTraversal: traversal }],
+    });
+    expect(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          movementFill(hole, {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            creatureSpaceTraversal: {
+              ...traversal,
+              destination: {
+                kind: "occupiedCreatureSpace",
+                occupantId: goblinId,
+                positionId: battleTablePositionId("incapacitated-space"),
+              },
+            },
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Creature-space traversal cannot end in an occupied creature space.",
     });
   });
 

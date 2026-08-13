@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 138,
-    "covered": 130,
+    "total": 139,
+    "covered": 131,
     "open": 2,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 107,
+      "battle": 108,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 130,
+      "covered": 131,
       "needs-qnt-owner": 2,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -73,6 +73,38 @@
       "status": "covered",
       "surfaceEvidence": [],
       "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+    },
+    {
+      "id": "BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE",
+      "kind": "boundary-protocol",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-movement-grapple-hide.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/ordinary-creature-space-route.qnt"
+      ],
+      "reason": "The focused ordinary-route core owns the identity-free distinction between living creature and corpse occupancy, symmetric two-or-more-size traversal, ally, Tiny, and Incapacitated traversal permissions, creature-space Difficult Terrain exemptions, RAW rejection of a living-creature destination, and an explicit unsupported result for the separately unadjudicated corpse destination. The table/session adapter derives those facts from current battle conditions, terminal zero-HP lifecycle, pairwise movement-ally decisions, canonical effective Sizes, actual route-step distance, and tactical placements. The Battle reducer rejects forged creature-space witnesses naming terminal combatants. The executable QNT proof and mapped contract tests cover this pure table-boundary projection; the existing creature-space Unit profile remains the separate exceptional larger-creature permission.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/creature-space-table-route.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-procedures.ts",
+        "scripts/raw-swarm/sdk-player/scenario-session.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Playing-the-Game.md#Moving-around-Other-Creatures",
+        "UBIQUITOUS_LANGUAGE.md#Movement",
+        "UBIQUITOUS_LANGUAGE.md#Conditions"
+      ],
+      "title": "Ordinary movement through living creature spaces and terminal-corpse table occupancy"
     },
     {
       "id": "BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE",
@@ -10704,6 +10736,18 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "Owns identity-free ordinary route traversal and extra-cost semantics for living creature versus corpse occupancy, including ally, Tiny, Incapacitated, and symmetric two-or-more-size permissions.",
+      "obligationIds": ["BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/ordinary-creature-space-route.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused executable proof cases for the ordinary creature-space route semantic core; runtime parity remains in the mapped Battle Runtime and ScenarioSession regressions.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/ordinary-creature-space-route-tests.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -12022,6 +12066,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/object-damage-transition-examples.qnt",
       "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/ordinary-creature-space-route.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -16482,6 +16531,30 @@
       ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-spike-growth-movement-hazard.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match"
+      ],
+      "obligationId": "BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/ordinary-creature-space-route-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/ordinary-creature-space-route.qnt"
       ],
       "status": "generation-subset-clean"
     }

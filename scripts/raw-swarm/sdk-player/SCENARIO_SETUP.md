@@ -18,6 +18,14 @@ Supply only the directed `initialRangedAttackEnemyRelationships` needed by the
 scenario. Each `{ attackerId, enemyId }` is a pairwise Table Decision scoped to
 the initial ranged-attack proximity question. It is not an encounter-wide side,
 party, or faction model; omit pairs whose relationship the table has not decided.
+Supply directed `movementAllyRelationships` separately for the RAW movement
+question. Each `{ moverId, allyId }` applies only when that mover crosses that
+creature's space; it is not a durable side or faction. An ally's space is
+traversable without becoming Difficult Terrain. Incapacitated enemy spaces are
+traversable Difficult Terrain, and Tiny creature spaces are traversable without
+becoming Difficult Terrain. Terminal dead combatants remain placed as corpses,
+not creatures; crossing is allowed, while ending in their space remains an
+explicit unsupported table-object adjudication.
 The retained `space` begins from these setup placements and later advances only
 through the composed scenario movement operation. Setup authors still provide
 only the starting placements.

@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
@@ -9,6 +10,8 @@ import {
   discoverBattleActs,
   resolveBattleRuntimeSubject,
 } from "../../../packages/battle-runtime/src/index.ts";
+import { battleRuntimeSessionWithState } from "../../../packages/battle-runtime/src/battle-runtime-context.ts";
+import { applyCondition } from "../../../packages/shared-algebras/src/conditions-algebra.ts";
 
 import { FIGHTER_EXAMPLE_DRAFT } from "../../../packages/app/src/components/character-creation/characterCreationPresets.ts";
 import { finalizeCharacterDraft } from "../../../packages/character-creation-runtime/src/index.ts";
@@ -151,6 +154,225 @@ describe("scenario setup public-SDK boundary", () => {
     }
   }, 120_000);
 
+  test("crosses dead and Incapacitated creature spaces without ending there", async () => {
+    const setup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        `scripts/raw-swarm/sdk-player/scenarios/${TRACER_SCENARIO_ID}.setup.ts`,
+      ),
+      [],
+    );
+    expect(setup.tag).toBe("ready");
+    if (setup.tag !== "ready") return;
+
+    const moverId = combatantId("goblin-warrior");
+    const occupantId = combatantId("skeleton");
+    const occupant = setup.session.battle.state.combatants.get(occupantId);
+    expect(occupant).toBeDefined();
+    if (occupant === undefined) return;
+    const movementSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: moverId,
+      command: "move" as const,
+    };
+    const scenarioWithOccupant = (
+      battle: typeof setup.session.battle,
+      allies: boolean = false,
+    ) =>
+      createScenarioSession({
+        battle,
+        arena: {
+          cells: [0, 1, 2].map((x) => ({
+            x,
+            y: 0,
+            terrain: "ordinary" as const,
+          })),
+          boundaries: [],
+        },
+        placements: [
+          { tokenId: moverId, coordinate: { x: 0, y: 0 } },
+          { tokenId: occupantId, coordinate: { x: 1, y: 0 } },
+        ],
+        ambientIllumination: "brightLight",
+        environment: { overhead: { kind: "open" }, barrierHeights: [] },
+        initialRangedAttackEnemyRelationships: [],
+        movementAllyRelationships: allies
+          ? [{ moverId, allyId: occupantId }]
+          : [],
+        objects: [],
+      });
+    const plan = (session: typeof setup.session) =>
+      planScenarioMovement({
+        session,
+        subject: movementSubject,
+        route: [
+          { x: 1, y: 0 },
+          { x: 2, y: 0 },
+        ],
+        speedKind: "walk",
+        provokedOpportunityAttacks: [],
+        fills: [],
+      });
+
+    const liveScenario = scenarioWithOccupant(setup.session.battle);
+    expect(Either.isRight(liveScenario)).toBe(true);
+    if (Either.isLeft(liveScenario)) return;
+    expect(plan(liveScenario.right)).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("skeleton") },
+    });
+
+    const incapacitatedBattle = battleRuntimeSessionWithState(
+      setup.session.battle,
+      {
+        ...setup.session.battle.state,
+        combatants: new Map(setup.session.battle.state.combatants).set(
+          occupantId,
+          {
+            ...occupant,
+            conditions: applyCondition(occupant.conditions, "incapacitated"),
+          },
+        ),
+      },
+    );
+    const incapacitatedScenario = scenarioWithOccupant(incapacitatedBattle);
+    expect(Either.isRight(incapacitatedScenario)).toBe(true);
+    if (Either.isLeft(incapacitatedScenario)) return;
+    const incapacitatedPlan = plan(incapacitatedScenario.right);
+    expect(incapacitatedPlan).toMatchObject({
+      _tag: "Right",
+      right: {
+        fills: [
+          {
+            kind: "movement",
+            value: {
+              movementCostFeet: 15,
+              creatureSpaceTraversal: {
+                occupiedSpaces: [{ occupantId: "skeleton" }],
+                destination: { kind: "unoccupiedSpace" },
+              },
+            },
+          },
+        ],
+      },
+    });
+    if (Either.isRight(incapacitatedPlan)) {
+      expect(
+        resolveBattleRuntimeSubject({
+          session: incapacitatedPlan.right.session.battle,
+          subject: incapacitatedPlan.right.subject,
+          fills: incapacitatedPlan.right.fills,
+        }),
+      ).toMatchObject({
+        tag: "resolved",
+        movements: [
+          {
+            movementCostFeet: 15,
+            creatureSpaceTraversal: {
+              occupiedSpaces: [{ occupantId: "skeleton" }],
+            },
+          },
+        ],
+      });
+    }
+    expect(
+      planScenarioMovement({
+        session: incapacitatedScenario.right,
+        subject: movementSubject,
+        route: [{ x: 1, y: 0 }],
+        speedKind: "walk",
+        provokedOpportunityAttacks: [],
+        fills: [],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("cannot willingly end") },
+    });
+
+    const deadBattle = battleRuntimeSessionWithState(setup.session.battle, {
+      ...setup.session.battle.state,
+      combatants: new Map(setup.session.battle.state.combatants).set(
+        occupantId,
+        { ...occupant, hp: Hp(0) },
+      ),
+    });
+    const deadScenario = scenarioWithOccupant(deadBattle);
+    expect(Either.isRight(deadScenario)).toBe(true);
+    if (Either.isLeft(deadScenario)) return;
+    expect(plan(deadScenario.right)).toMatchObject({
+      _tag: "Right",
+      right: {
+        fills: [
+          {
+            kind: "movement",
+            value: {
+              movementCostFeet: 10,
+            },
+          },
+        ],
+      },
+    });
+    expect(
+      plan(
+        scenarioWithOccupant(
+          battleRuntimeSessionWithState(setup.session.battle, {
+            ...setup.session.battle.state,
+            combatants: new Map(setup.session.battle.state.combatants).set(
+              occupantId,
+              { ...occupant, size: "tiny" },
+            ),
+          }),
+        ).pipe(Either.getOrThrow),
+      ),
+    ).toMatchObject({
+      _tag: "Right",
+      right: { fills: [{ value: { movementCostFeet: 10 } }] },
+    });
+    expect(
+      plan(
+        scenarioWithOccupant(setup.session.battle, true).pipe(
+          Either.getOrThrow,
+        ),
+      ),
+    ).toMatchObject({
+      _tag: "Right",
+      right: { fills: [{ value: { movementCostFeet: 10 } }] },
+    });
+    const deadAndIncapacitated = battleRuntimeSessionWithState(
+      setup.session.battle,
+      {
+        ...setup.session.battle.state,
+        combatants: new Map(setup.session.battle.state.combatants).set(
+          occupantId,
+          {
+            ...occupant,
+            hp: Hp(0),
+            conditions: applyCondition(occupant.conditions, "incapacitated"),
+          },
+        ),
+      },
+    );
+    expect(
+      plan(scenarioWithOccupant(deadAndIncapacitated).pipe(Either.getOrThrow)),
+    ).toMatchObject({
+      _tag: "Right",
+      right: { fills: [{ value: { movementCostFeet: 10 } }] },
+    });
+    expect(
+      planScenarioMovement({
+        session: deadScenario.right,
+        subject: movementSubject,
+        route: [{ x: 1, y: 0 }],
+        speedKind: "walk",
+        provokedOpportunityAttacks: [],
+        fills: [],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("corpse") },
+    });
+  }, 120_000);
+
   test("reports every missing tactical placement at composition", async () => {
     const setup = await evaluateScenarioSetup(
       resolve(
@@ -175,6 +397,7 @@ describe("scenario setup public-SDK boundary", () => {
       ambientIllumination: "brightLight",
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
       initialRangedAttackEnemyRelationships: [],
+      movementAllyRelationships: [],
       objects: [],
     });
     expect(Either.isLeft(result)).toBe(true);
@@ -229,6 +452,7 @@ describe("scenario setup public-SDK boundary", () => {
       ambientIllumination: "brightLight",
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
       initialRangedAttackEnemyRelationships: [],
+      movementAllyRelationships: [],
       objects: [object, object],
     });
     expect(Either.isLeft(result)).toBe(true);
@@ -279,6 +503,7 @@ describe("scenario setup public-SDK boundary", () => {
           enemyId: combatantId("skeleton"),
         },
       ],
+      movementAllyRelationships: [],
       objects: [
         {
           objectId,

@@ -1,5 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard spell.invocation-jump-movement-replacement unit-feature.acrobatic-movement unit-feature.creature-space-movement-permission
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
+// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
 
 import { optionalProperty } from "../optional-property.ts";
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
@@ -7,7 +8,10 @@ import {
   canSpendMovement,
   markMovementSpentForMovementActionBonusActionExclusion,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import { removeCondition } from "@dnd/shared-algebras/conditions-algebra";
+import {
+  isIncapacitated,
+  removeCondition,
+} from "@dnd/shared-algebras/conditions-algebra";
 import { ordinaryMovementCost } from "@dnd/shared-algebras/movement-cost-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import {
@@ -65,6 +69,7 @@ import {
   combatantWearingArmor,
   combatantWieldingShield,
   currentActorId,
+  zeroHpLifecycleIsTerminal,
 } from "./creature-state-leaves.ts";
 import { concentrationSavingThrowHole } from "./damage-apply.ts";
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
@@ -1458,8 +1463,8 @@ function acrobaticMovementProfileForCombatant(
   return null;
 }
 
-const CREATURE_SPACE_TRAVERSAL_MISSING_PROFILE_MESSAGE =
-  "Creature-space traversal requires a selected occupied-creature-space movement permission profile.";
+const CREATURE_SPACE_TRAVERSAL_MISSING_PERMISSION_MESSAGE =
+  "Creature-space traversal requires an Incapacitated occupant or a selected occupied-creature-space movement permission profile.";
 
 const CREATURE_SPACE_TRAVERSAL_SELF_OCCUPANT_MESSAGE =
   "Creature-space traversal cannot name the mover as the occupied creature.";
@@ -1470,6 +1475,9 @@ const CREATURE_SPACE_TRAVERSAL_REPEATED_OCCUPANT_MESSAGE =
 const CREATURE_SPACE_TRAVERSAL_UNKNOWN_OCCUPANT_MESSAGE =
   "Creature-space traversal references an unknown occupied creature.";
 
+const CREATURE_SPACE_TRAVERSAL_TERMINAL_OCCUPANT_MESSAGE =
+  "Creature-space traversal cannot classify a terminal zero-Hit-Point combatant as an occupied creature.";
+
 const CREATURE_SPACE_TRAVERSAL_SAME_SIZE_MESSAGE =
   "Creature-space traversal requires each occupied creature to be larger than the mover.";
 
@@ -1477,10 +1485,11 @@ const CREATURE_SPACE_TRAVERSAL_OCCUPIED_STOP_MESSAGE =
   "Creature-space traversal cannot end in an occupied creature space.";
 
 const CREATURE_SPACE_TRAVERSAL_VALIDATION_MESSAGES = new Set<string>([
-  CREATURE_SPACE_TRAVERSAL_MISSING_PROFILE_MESSAGE,
+  CREATURE_SPACE_TRAVERSAL_MISSING_PERMISSION_MESSAGE,
   CREATURE_SPACE_TRAVERSAL_SELF_OCCUPANT_MESSAGE,
   CREATURE_SPACE_TRAVERSAL_REPEATED_OCCUPANT_MESSAGE,
   CREATURE_SPACE_TRAVERSAL_UNKNOWN_OCCUPANT_MESSAGE,
+  CREATURE_SPACE_TRAVERSAL_TERMINAL_OCCUPANT_MESSAGE,
   CREATURE_SPACE_TRAVERSAL_SAME_SIZE_MESSAGE,
   CREATURE_SPACE_TRAVERSAL_OCCUPIED_STOP_MESSAGE,
 ]);
@@ -1499,9 +1508,11 @@ function validateCreatureSpaceTraversalMovementFact(
   if (fact === undefined) {
     return null;
   }
-  /* v8 ignore start -- Malformed creature-space traversal fill: discovery requests this fact only for a mover with the admitted traversal profile. */
-  if (creatureSpaceMovementPermissionProfileForCombatant(mover) === null) {
-    return CREATURE_SPACE_TRAVERSAL_MISSING_PROFILE_MESSAGE;
+  const largerCreatureSpacePermission =
+    creatureSpaceMovementPermissionProfileForCombatant(mover) !== null;
+  /* v8 ignore start -- Defensive boundary for direct parser callers that bypass BattleFillSchema. */
+  if (!Array.isArray(fact.occupiedSpaces) || fact.occupiedSpaces.length === 0) {
+    return CREATURE_SPACE_TRAVERSAL_MISSING_PERMISSION_MESSAGE;
   }
   /* v8 ignore stop */
   const seenOccupants = new Set<CombatantId>();
@@ -1523,16 +1534,26 @@ function validateCreatureSpaceTraversalMovementFact(
       return CREATURE_SPACE_TRAVERSAL_UNKNOWN_OCCUPANT_MESSAGE;
     }
     /* v8 ignore stop */
-    /* v8 ignore start -- Malformed traversal witness: the admitted table fact includes only creature spaces larger than the mover. */
-    if (
-      !creatureSizeIsLargerThanSelf(
-        combatantEffectiveSize(mover),
-        combatantEffectiveSize(occupant),
-      )
-    ) {
-      return CREATURE_SPACE_TRAVERSAL_SAME_SIZE_MESSAGE;
+    if (zeroHpLifecycleIsTerminal(occupant)) {
+      return CREATURE_SPACE_TRAVERSAL_TERMINAL_OCCUPANT_MESSAGE;
     }
-    /* v8 ignore stop */
+    if (!isIncapacitated(occupant.conditions)) {
+      /* v8 ignore start -- Malformed creature-space traversal fill: ordinary movers may cross only Incapacitated occupants; the exceptional profile separately admits larger creatures. */
+      if (!largerCreatureSpacePermission) {
+        return CREATURE_SPACE_TRAVERSAL_MISSING_PERMISSION_MESSAGE;
+      }
+      /* v8 ignore stop */
+      /* v8 ignore start -- Malformed traversal witness: the admitted exceptional table fact includes only creature spaces larger than the mover. */
+      if (
+        !creatureSizeIsLargerThanSelf(
+          combatantEffectiveSize(mover),
+          combatantEffectiveSize(occupant),
+        )
+      ) {
+        return CREATURE_SPACE_TRAVERSAL_SAME_SIZE_MESSAGE;
+      }
+      /* v8 ignore stop */
+    }
   }
   /* v8 ignore start -- Malformed traversal destination: the table adapter cannot select a position already named as occupied while labeling it unoccupied. */
   if (

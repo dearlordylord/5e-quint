@@ -83,6 +83,7 @@ export const setupScenario: ScenarioSetup = ({
         enemyId: character.right.combatantId,
       },
     ],
+    movementAllyRelationships: [],
     objects: [],
   });
   return sdk.isLeft(session)

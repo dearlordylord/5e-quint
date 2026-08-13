@@ -30,6 +30,9 @@ kind, caller-owned Opportunity Attack facts, and any downstream fills. The
 scenario session derives traversal and Movement cost, while battle owns Movement
 resources and interrupts. The operation currently supports two-dimensional Walk
 routes only and reports other movement modes honestly.
+The retained setup's directed movement-ally facts, current creature conditions,
+sizes, terminal zero-HP lifecycle, and placements determine occupied-space
+traversal and Difficult Terrain; callers do not restate those facts in a Move.
 If that operation returns downstream holes, call the same operation with
 `kind: "continue"` and only their fills. The session retains the original Move
 subject, derived Movement fill, and planned placement across downstream holes

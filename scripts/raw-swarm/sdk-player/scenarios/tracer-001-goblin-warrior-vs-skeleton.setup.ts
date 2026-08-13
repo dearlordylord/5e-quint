@@ -82,6 +82,7 @@ export const setupScenario: ScenarioSetup = (context) => {
         enemyId: goblin.right.combatantId,
       },
     ],
+    movementAllyRelationships: [],
     objects: [],
   });
   return sdk.isLeft(session)

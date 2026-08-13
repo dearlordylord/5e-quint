@@ -32,6 +32,7 @@ export type {
   ScenarioBarrierHeight,
   ScenarioEnvironment,
   ScenarioInitialRangedAttackEnemyRelationship,
+  ScenarioMovementAllyRelationship,
   ScenarioPlacement,
   ScenarioSession,
   ScenarioTokenId,

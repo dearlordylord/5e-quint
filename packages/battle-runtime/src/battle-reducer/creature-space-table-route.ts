@@ -1,6 +1,12 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.creature-space-movement-permission
+// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
 
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  SIZES,
+  type MovementFeet,
+  type ReadonlyNonEmptyArray,
+  type Size,
+} from "@dnd/shared/types";
 import type { BattleCreatureSpaceTraversalMovementFact } from "../battle-state-execution.ts";
 import type { BattleTablePositionId, CombatantId } from "../identity.ts";
 
@@ -59,6 +65,142 @@ export type BattleCreatureSpaceTableRouteDerivationResult =
       readonly reason: BattleCreatureSpaceTableRouteDerivationInvalidReason;
       readonly message: string;
     };
+
+export type BattleOrdinaryMovementRouteOccupant =
+  | {
+      readonly kind: "livingCreature";
+      readonly occupantId: CombatantId;
+      readonly creatureSize: Size;
+      readonly incapacitated: boolean;
+      readonly allyOfMover: boolean;
+      readonly occupiedPositions: ReadonlyNonEmptyArray<BattleTablePositionId>;
+    }
+  | {
+      readonly kind: "corpse";
+      readonly tokenId: CombatantId;
+      readonly occupiedPositions: ReadonlyNonEmptyArray<BattleTablePositionId>;
+    };
+
+export type BattleOrdinaryMovementTableRouteResult =
+  | {
+      readonly tag: "routeFacts";
+      readonly difficultTerrainSteps: readonly {
+        readonly positionId: BattleTablePositionId;
+        readonly distanceFeet: MovementFeet;
+      }[];
+      readonly creatureSpaceTraversal?: BattleRouteDerivedCreatureSpaceTraversalMovementFact;
+    }
+  | {
+      readonly tag: "invalid";
+      readonly reason:
+        | "livingCreatureBlocksTraversal"
+        | "livingCreatureDestination"
+        | "corpseDestinationUnsupported";
+      readonly tokenId: CombatantId;
+      readonly message: string;
+    };
+
+export function deriveOrdinaryMovementTableRouteFacts(input: {
+  readonly moverId: CombatantId;
+  readonly moverSize: Size;
+  readonly route: {
+    readonly positionsEnteredBeforeDestination: readonly {
+      readonly positionId: BattleTablePositionId;
+      readonly distanceFeet: MovementFeet;
+    }[];
+    readonly destination: {
+      readonly positionId: BattleTablePositionId;
+      readonly distanceFeet: MovementFeet;
+    };
+  };
+  readonly occupants: readonly BattleOrdinaryMovementRouteOccupant[];
+}): BattleOrdinaryMovementTableRouteResult {
+  const positions = [
+    ...input.route.positionsEnteredBeforeDestination.map((position) => ({
+      ...position,
+      kind: "enteredBeforeDestination" as const,
+    })),
+    { ...input.route.destination, kind: "destination" as const },
+  ];
+  const difficultTerrainSteps = new Map<BattleTablePositionId, MovementFeet>();
+  const traversedCreatures = new Map<CombatantId, BattleTablePositionId>();
+  for (const position of positions) {
+    for (const occupant of input.occupants) {
+      if (!occupant.occupiedPositions.includes(position.positionId)) continue;
+      const tokenId =
+        occupant.kind === "livingCreature"
+          ? occupant.occupantId
+          : occupant.tokenId;
+      if (tokenId === input.moverId) continue;
+      if (position.kind === "destination") {
+        return occupant.kind === "livingCreature"
+          ? {
+              tag: "invalid",
+              reason: "livingCreatureDestination",
+              tokenId,
+              message:
+                "A creature cannot willingly end its movement in another creature's space.",
+            }
+          : {
+              tag: "invalid",
+              reason: "corpseDestinationUnsupported",
+              tokenId,
+              message:
+                "Scenario movement does not yet adjudicate ending in a corpse's space.",
+            };
+      }
+      if (occupant.kind === "corpse") continue;
+      const occupantIsTiny = occupant.creatureSize === "tiny";
+      const traversable =
+        occupant.incapacitated ||
+        occupantIsTiny ||
+        occupant.allyOfMover ||
+        twoOrMoreCreatureSizesDifferent(input.moverSize, occupant.creatureSize);
+      if (!traversable) {
+        return {
+          tag: "invalid",
+          reason: "livingCreatureBlocksTraversal",
+          tokenId,
+          message: `Scenario combatant ${String(tokenId)} blocks movement through its space.`,
+        };
+      }
+      if (!occupantIsTiny && !occupant.allyOfMover) {
+        difficultTerrainSteps.set(position.positionId, position.distanceFeet);
+      }
+      if (occupant.incapacitated) {
+        traversedCreatures.set(tokenId, position.positionId);
+      }
+    }
+  }
+  const occupiedSpaces = readonlyNonEmptyArray(
+    [...traversedCreatures].map(([occupantId, positionId]) => ({
+      occupantId,
+      positionId,
+    })),
+  );
+  return {
+    tag: "routeFacts",
+    difficultTerrainSteps: [...difficultTerrainSteps].map(
+      ([positionId, distanceFeet]) => ({ positionId, distanceFeet }),
+    ),
+    ...(occupiedSpaces === null
+      ? {}
+      : {
+          creatureSpaceTraversal: {
+            kind: "occupiedCreatureSpaceTraversal",
+            occupiedSpaces,
+            destination: {
+              kind: "unoccupiedSpace",
+              positionId: input.route.destination.positionId,
+            },
+          },
+        }),
+  };
+}
+
+function twoOrMoreCreatureSizesDifferent(first: Size, second: Size): boolean {
+  return Math.abs(SIZES.indexOf(first) - SIZES.indexOf(second)) >= 2;
+}
 
 export function deriveCreatureSpaceTraversalMovementFactFromTableRoute(
   input: BattleCreatureSpaceTableRouteDerivationInput,

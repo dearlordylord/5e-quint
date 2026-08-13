@@ -646,7 +646,10 @@ export {
 } from "./battle-reducer/failed-saving-throw-reroll.ts";
 
 export {
+  deriveOrdinaryMovementTableRouteFacts,
   deriveCreatureSpaceTraversalMovementFactFromTableRoute,
+  type BattleOrdinaryMovementRouteOccupant,
+  type BattleOrdinaryMovementTableRouteResult,
   type BattleCreatureSpaceOccupantFootprintFact,
   type BattleCreatureSpaceSizeRelationToMover,
   type BattleCreatureSpaceTableRoute,
@@ -655,6 +658,8 @@ export {
   type BattleCreatureSpaceTableRouteDerivationResult,
   type BattleRouteDerivedCreatureSpaceTraversalMovementFact,
 } from "./battle-reducer/creature-space-table-route.ts";
+
+export { zeroHpLifecycleIsTerminal } from "./battle-reducer/creature-state-leaves.ts";
 
 export {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,

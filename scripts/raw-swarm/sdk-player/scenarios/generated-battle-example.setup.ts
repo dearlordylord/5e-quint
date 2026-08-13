@@ -245,6 +245,18 @@ export const setupScenario: ScenarioSetup = ({
         defenderIds.map((enemyId) => ({ attackerId, enemyId })),
       ),
     ],
+    movementAllyRelationships: [
+      ...defenderIds.flatMap((moverId) =>
+        defenderIds
+          .filter((allyId) => allyId !== moverId)
+          .map((allyId) => ({ moverId, allyId })),
+      ),
+      ...attackerIds.flatMap((moverId) =>
+        attackerIds
+          .filter((allyId) => allyId !== moverId)
+          .map((allyId) => ({ moverId, allyId })),
+      ),
+    ],
     objects: [
       {
         objectId: crystalId,

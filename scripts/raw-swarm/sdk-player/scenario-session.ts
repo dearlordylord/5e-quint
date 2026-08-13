@@ -1,20 +1,27 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
 import type {
   BattleIllumination,
   BattleId,
   BattleObjectDamageDisposition,
   BattleObjectDamageOutcome,
   BattleObjectId,
+  BattleOrdinaryMovementRouteOccupant,
   BattleOpportunityAttackThreat,
   BattleFill,
   BattleMovementSpeedKind,
   BattleResolvedMovement,
   BattleRuntimeSession,
   BattleSubject,
+  BattleTablePositionId,
   CombatantId,
 } from "@dnd/battle-runtime";
 import {
+  battleTablePositionId,
+  combatantEffectiveSize,
+  deriveOrdinaryMovementTableRouteFacts,
   isBattleRuntimeSession,
   resolveBattleRuntimeSubject,
+  zeroHpLifecycleIsTerminal,
 } from "../../../packages/battle-runtime/src/index.ts";
 import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { isIncapacitated } from "../../../packages/shared-algebras/src/conditions-algebra.ts";
@@ -81,12 +88,18 @@ export type ScenarioInitialRangedAttackEnemyRelationship = Readonly<{
   readonly enemyId: CombatantId;
 }>;
 
+export type ScenarioMovementAllyRelationship = Readonly<{
+  readonly moverId: CombatantId;
+  readonly allyId: CombatantId;
+}>;
+
 export type ScenarioBattlefield = Readonly<{
   readonly arena: ArenaSnapshot;
   readonly space: SpatialSnapshot;
   readonly ambientIllumination: BattleIllumination;
   readonly environment: ScenarioEnvironment;
   readonly initialRangedAttackEnemyRelationships: readonly ScenarioInitialRangedAttackEnemyRelationship[];
+  readonly movementAllyRelationships: readonly ScenarioMovementAllyRelationship[];
   readonly objects: readonly ScenarioBattleObject[];
 }>;
 
@@ -155,6 +168,14 @@ export type ScenarioSessionFactIssue =
         | "duplicate-ranged-attack-enemy-relationship"
         | "self-ranged-attack-enemy-relationship"
         | "unknown-ranged-attack-relationship-combatant";
+      readonly combatantId: CombatantId;
+      readonly message: string;
+    }>
+  | Readonly<{
+      readonly tag:
+        | "duplicate-movement-ally-relationship"
+        | "self-movement-ally-relationship"
+        | "unknown-movement-ally-relationship-combatant";
       readonly combatantId: CombatantId;
       readonly message: string;
     }>;
@@ -266,6 +287,7 @@ export function createScenarioSession(input: {
   readonly ambientIllumination: BattleIllumination;
   readonly environment: ScenarioEnvironment;
   readonly initialRangedAttackEnemyRelationships: readonly ScenarioInitialRangedAttackEnemyRelationship[];
+  readonly movementAllyRelationships: readonly ScenarioMovementAllyRelationship[];
   readonly objects: readonly ScenarioBattleObject[];
 }): Either.Either<ScenarioSession, ScenarioSessionIssue> {
   const issues: ScenarioSessionFactIssue[] = [];
@@ -310,6 +332,34 @@ export function createScenarioSession(input: {
       });
     }
     rangedAttackEnemyRelationships.add(relationshipKey);
+  }
+  const movementAllyRelationships = new Set<string>();
+  for (const relationship of input.movementAllyRelationships) {
+    const relationshipKey = `${String(relationship.moverId)}\u0000${String(relationship.allyId)}`;
+    for (const combatantId of [relationship.moverId, relationship.allyId]) {
+      if (!combatantIds.has(String(combatantId))) {
+        issues.push({
+          tag: "unknown-movement-ally-relationship-combatant",
+          combatantId,
+          message: `Movement ally relationship names unknown scenario combatant ${String(combatantId)}.`,
+        });
+      }
+    }
+    if (relationship.moverId === relationship.allyId) {
+      issues.push({
+        tag: "self-movement-ally-relationship",
+        combatantId: relationship.moverId,
+        message: `Scenario combatant ${String(relationship.moverId)} cannot be its own movement ally.`,
+      });
+    }
+    if (movementAllyRelationships.has(relationshipKey)) {
+      issues.push({
+        tag: "duplicate-movement-ally-relationship",
+        combatantId: relationship.moverId,
+        message: `Movement ally relationship ${String(relationship.moverId)} to ${String(relationship.allyId)} is declared more than once.`,
+      });
+    }
+    movementAllyRelationships.add(relationshipKey);
   }
   const objectIds = new Set<string>();
   for (const object of input.objects) {
@@ -459,6 +509,11 @@ export function createScenarioSession(input: {
     }),
     initialRangedAttackEnemyRelationships: Object.freeze(
       input.initialRangedAttackEnemyRelationships.map((relationship) =>
+        Object.freeze({ ...relationship }),
+      ),
+    ),
+    movementAllyRelationships: Object.freeze(
+      input.movementAllyRelationships.map((relationship) =>
         Object.freeze({ ...relationship }),
       ),
     ),
@@ -625,9 +680,61 @@ export function planScenarioMovement(input: {
       object,
     ]),
   );
-  const combatantIds = new Set(
-    [...input.session.battle.state.combatants.keys()].map(String),
+  const combatantByToken = new Map(
+    [...input.session.battle.state.combatants].map(
+      ([combatantId, combatant]) => [String(combatantId), combatant],
+    ),
   );
+  const routeSteps: Array<{
+    readonly positionId: BattleTablePositionId;
+    readonly distanceFeet: MovementFeet;
+  }> = [];
+  const tacticalDifficultTerrainPositions = new Set<BattleTablePositionId>();
+  const moverState = input.session.battle.state.combatants.get(
+    input.subject.actorId,
+  );
+  if (moverState === undefined) {
+    return Either.left({
+      tag: "scenario-movement-rejected",
+      message: `Scenario movement actor ${String(input.subject.actorId)} is not a current battle combatant.`,
+    });
+  }
+  const moverSize = combatantEffectiveSize(moverState);
+  const movementOccupants = [
+    ...combatantByToken.values(),
+  ].flatMap<BattleOrdinaryMovementRouteOccupant>((combatant) => {
+    const placement = input.session.battlefield.space.placements.find(
+      ({ token }) => String(token) === String(combatant.combatantId),
+    );
+    if (placement === undefined) return [];
+    const occupiedPositions = [
+      scenarioPositionId(placement.coordinate),
+    ] as const;
+    if (zeroHpLifecycleIsTerminal(combatant)) {
+      return [
+        {
+          kind: "corpse" as const,
+          tokenId: combatant.combatantId,
+          occupiedPositions,
+        },
+      ];
+    }
+    const occupantSize = combatantEffectiveSize(combatant);
+    return [
+      {
+        kind: "livingCreature" as const,
+        occupantId: combatant.combatantId,
+        creatureSize: occupantSize,
+        incapacitated: isIncapacitated(combatant.conditions),
+        allyOfMover: input.session.battlefield.movementAllyRelationships.some(
+          ({ moverId, allyId }) =>
+            moverId === input.subject.actorId &&
+            allyId === combatant.combatantId,
+        ),
+        occupiedPositions,
+      },
+    ];
+  });
   for (const suppliedCoordinate of input.route) {
     const coordinate = parseCoordinate(suppliedCoordinate);
     if (coordinate.tag === "error") {
@@ -650,14 +757,6 @@ export function planScenarioMovement(input: {
           tableRejection = `Scenario object ${String(blockingObject.objectId)} blocks movement into the requested square.`;
           return { tag: "impassable" };
         }
-        const occupiedByCreature = step.occupants.some((token) =>
-          combatantIds.has(String(token)),
-        );
-        if (occupiedByCreature) {
-          tableRejection =
-            "Scenario route composition does not yet support traversing an occupied creature space.";
-          return { tag: "impassable" };
-        }
         const cost =
           Number(step.distanceFeet) * (step.terrain === "difficult" ? 2 : 1);
         return { tag: "passable", weight: cost };
@@ -672,6 +771,14 @@ export function planScenarioMovement(input: {
       });
     }
     movementCost += Number(preview.value.step.weight);
+    const routePosition = scenarioPositionId(preview.value.step.to);
+    routeSteps.push({
+      positionId: routePosition,
+      distanceFeet: movementFeet(Number(preview.value.step.distanceFeet)),
+    });
+    if (preview.value.step.terrain === "difficult") {
+      tacticalDifficultTerrainPositions.add(routePosition);
+    }
     const committed = commitPreview(routeState, preview.value);
     if (committed.tag === "error") {
       return Either.left({
@@ -681,6 +788,28 @@ export function planScenarioMovement(input: {
     }
     routeState = committed.value;
   }
+  const destination = routeSteps.at(-1)!;
+  const routeFacts = deriveOrdinaryMovementTableRouteFacts({
+    moverId: input.subject.actorId,
+    moverSize,
+    route: {
+      positionsEnteredBeforeDestination: routeSteps.slice(0, -1),
+      destination,
+    },
+    occupants: movementOccupants,
+  });
+  if (routeFacts.tag === "invalid") {
+    return Either.left({
+      tag: "scenario-movement-rejected",
+      message: routeFacts.message,
+    });
+  }
+  movementCost += routeFacts.difficultTerrainSteps
+    .filter(
+      ({ positionId }) => !tacticalDifficultTerrainPositions.has(positionId),
+    )
+    .reduce((total, { distanceFeet }) => total + Number(distanceFeet), 0);
+  const creatureSpaceTraversal = routeFacts.creatureSpaceTraversal;
   const fill: Extract<BattleFill, { readonly kind: "movement" }> =
     Object.freeze({
       kind: "movement",
@@ -693,6 +822,9 @@ export function planScenarioMovement(input: {
             Object.freeze({ ...threat }),
           ),
         ),
+        ...(creatureSpaceTraversal === undefined
+          ? {}
+          : { creatureSpaceTraversal }),
       }),
     });
   const movementResolution = Object.freeze({
@@ -1018,10 +1150,44 @@ function sameScenarioMovement(
     movement.acrobaticMovement === undefined &&
     movement.areaDifficultTerrain === undefined &&
     movement.grappleDrag === undefined &&
-    movement.creatureSpaceTraversal === undefined &&
+    sameCreatureSpaceTraversal(
+      movement.creatureSpaceTraversal,
+      value.creatureSpaceTraversal,
+    ) &&
     movement.jumpMovementReplacement === undefined &&
     movement.levitatedMovement === undefined
   );
+}
+
+function sameCreatureSpaceTraversal(
+  first: BattleResolvedMovement["creatureSpaceTraversal"],
+  second: BattleResolvedMovement["creatureSpaceTraversal"],
+): boolean {
+  if (first === undefined || second === undefined) return first === second;
+  const sameDestination =
+    first.destination.kind === second.destination.kind &&
+    first.destination.positionId === second.destination.positionId &&
+    (first.destination.kind === "unoccupiedSpace" ||
+      (second.destination.kind === "occupiedCreatureSpace" &&
+        first.destination.occupantId === second.destination.occupantId));
+  return (
+    sameDestination &&
+    first.occupiedSpaces.length === second.occupiedSpaces.length &&
+    first.occupiedSpaces.every((space, index) => {
+      const counterpart = second.occupiedSpaces[index];
+      return (
+        counterpart !== undefined &&
+        space.occupantId === counterpart.occupantId &&
+        space.positionId === counterpart.positionId
+      );
+    })
+  );
+}
+
+function scenarioPositionId(
+  coordinate: CoordinateInput,
+): BattleTablePositionId {
+  return battleTablePositionId(`scenario-cell:${coordinate.x},${coordinate.y}`);
 }
 
 function sameOpportunityAttackThreats(
