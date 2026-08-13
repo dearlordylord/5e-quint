@@ -22,6 +22,12 @@ export type ScenarioBattleResolutionResult =
       readonly issue: ScenarioSessionUpdateIssue;
     };
 
+export type EndBattleRuntimeTurnInput = {
+  readonly session: ScenarioSession;
+  readonly actorId: CombatantId;
+  readonly fills?: readonly BattleFill[];
+};
+
 export type PlayerSdk = {
   readonly scenarioInitialRelation: (input: {
     readonly session: ScenarioSession;
@@ -40,11 +46,9 @@ export type PlayerSdk = {
     readonly session: ScenarioSession;
     readonly fill: Extract<BattleFill, { readonly kind: "interruptDecision" }>;
   }) => ScenarioBattleResolutionResult;
-  readonly endBattleRuntimeTurn: (input: {
-    readonly session: ScenarioSession;
-    readonly actorId: CombatantId;
-    readonly fills?: readonly BattleFill[];
-  }) => ScenarioBattleResolutionResult;
+  readonly endBattleRuntimeTurn: (
+    input: EndBattleRuntimeTurnInput,
+  ) => ScenarioBattleResolutionResult;
 };
 
 export type JsonValue =

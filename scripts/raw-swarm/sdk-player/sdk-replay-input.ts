@@ -4,11 +4,16 @@ import {
   CombatantId,
   type BattleFill,
   type BattleSubject,
-  type CombatantId as CombatantIdType,
 } from "../../../packages/battle-runtime/src/index.ts";
 import { Either, Match, Schema } from "effect";
 
+import type { EndBattleRuntimeTurnInput } from "./continuation-contract.ts";
 import type { SdkCallRecord } from "./sdk-transcript.ts";
+
+type EndBattleRuntimeTurnReplayInput = Omit<
+  EndBattleRuntimeTurnInput,
+  "session"
+>;
 
 export type SdkCallInput =
   | {
@@ -40,10 +45,7 @@ export type SdkCallInput =
     }
   | {
       readonly operation: "endBattleRuntimeTurn";
-      readonly input: {
-        readonly actorId: CombatantIdType;
-        readonly fills: readonly BattleFill[];
-      };
+      readonly input: EndBattleRuntimeTurnReplayInput;
     };
 
 type ParseResult<A> =
@@ -62,7 +64,7 @@ const ResolveInputSchema = Schema.Struct({
 const InterruptInputSchema = Schema.Struct({ fill: BattleFillSchema });
 const EndTurnInputSchema = Schema.Struct({
   actorId: CombatantId,
-  fills: Schema.Array(BattleFillSchema),
+  fills: Schema.optionalWith(Schema.Array(BattleFillSchema), { exact: true }),
 });
 
 export function decodeSdkCallInput(
