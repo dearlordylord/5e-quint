@@ -392,7 +392,6 @@ export const continueBattle: PlayerContinuation = (context) => {
   const advanced = context.sdk.endBattleRuntimeTurn({
     session: context.session,
     actorId: endTurn.subject.actorId,
-    fills: [],
   });
   const invalid = context.sdk.resolveBattleRuntimeSubject({
     session: advanced.session,
