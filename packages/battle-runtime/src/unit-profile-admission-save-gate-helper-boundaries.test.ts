@@ -454,9 +454,9 @@ describe("save-gate helper admission boundaries", () => {
         );
       },
     );
-    const wrongCadence = contagionWithFailure(
+    const wrongSuccessThreshold = contagionWithFailure(
       contagion,
-      "synthetic_contagion_wrong_repeat_cadence",
+      "synthetic_contagion_wrong_repeat_success_threshold",
       (failure) => compositeFailure(failure),
       (phase) => ({
         ...phase,
@@ -500,7 +500,7 @@ describe("save-gate helper admission boundaries", () => {
     );
 
     expect(damageAdmission(wrongShape)).toEqual([]);
-    expect(damageAdmission(wrongCadence)).toEqual([]);
+    expect(damageAdmission(wrongSuccessThreshold)).toEqual([]);
     expect(damageAdmission(missingOn)).toEqual([]);
     expect(damageAdmission(nonHoleFilter)).toEqual([]);
   });
