@@ -102,6 +102,7 @@ module battleRuntimeModel {
         creatureTypeOverride: FindFamiliarCreatureTypeOverride,
         initiative: int,
         placement: FindFamiliarPlacement,
+        reactionAvailable: bool,
       })
     | TemporarilyDismissedFindFamiliar({
         owner: Actor,
@@ -109,6 +110,7 @@ module battleRuntimeModel {
         protocol: FindFamiliarProtocol,
         form: FindFamiliarForm,
         creatureTypeOverride: FindFamiliarCreatureTypeOverride,
+        reactionAvailable: bool,
       })
     | DisappearedAtZeroHitPointsFindFamiliar({
         owner: Actor,
@@ -116,6 +118,7 @@ module battleRuntimeModel {
         protocol: FindFamiliarProtocol,
         form: FindFamiliarForm,
         creatureTypeOverride: FindFamiliarCreatureTypeOverride,
+        reactionAvailable: bool,
       })
     // Terminal state after a permanent dismissal. Unlike NoFindFamiliar ("the
     // owner never had a familiar"), this retains the owner and identity so

@@ -340,6 +340,20 @@ export function castResolvedFindFamiliar(
     );
   }
   /* v8 ignore stop */
+  const reactionAvailable = reactionAvailableForFindFamiliarCast({
+    state: input.state,
+    priorFamiliarId: priorPresentFamiliarId,
+    priorFamiliar,
+  });
+  /* v8 ignore start -- Corrupt retained state: a present familiar always owns its live combatant Reaction resource. */
+  if (typeof reactionAvailable === "string") {
+    return invalidFindFamiliarResult(
+      input.state,
+      "invalidFill",
+      reactionAvailable,
+    );
+  }
+  /* v8 ignore stop */
   const nextState = withAdmittedFindFamiliarCombatant({
     state: input.state,
     casterId: input.casterId,
@@ -347,6 +361,7 @@ export function castResolvedFindFamiliar(
     familiar: nextFamiliar,
     initiative: input.initiative,
     statBlock: familiarStatBlockWithCreatureTypeOverride(resolvedForm),
+    reactionAvailable,
     ...(preservedHitPoints === null
       ? {}
       : {
@@ -457,6 +472,20 @@ export function castWildCompanion(
     );
   }
   /* v8 ignore stop */
+  const reactionAvailable = reactionAvailableForFindFamiliarCast({
+    state: spent.state,
+    priorFamiliarId: priorPresentFamiliarId,
+    priorFamiliar,
+  });
+  /* v8 ignore start -- Corrupt retained state: a present Wild Companion always owns its live combatant Reaction resource. */
+  if (typeof reactionAvailable === "string") {
+    return invalidFindFamiliarResult(
+      spent.state,
+      "invalidFill",
+      reactionAvailable,
+    );
+  }
+  /* v8 ignore stop */
   const nextState = withAdmittedFindFamiliarCombatant({
     state: spent.state,
     casterId: input.casterId,
@@ -467,6 +496,7 @@ export function castWildCompanion(
       statBlock: resolvedForm.form.statBlock,
       creatureTypeOverride: "fey",
     }),
+    reactionAvailable,
     ...(preservedHitPoints === null
       ? {}
       : {
@@ -562,6 +592,7 @@ export function admitCompanionToBattle(
     statBlock: familiarStatBlockWithCreatureTypeOverride(resolvedForm.form),
     currentHp: input.manifestation.hitPoints.currentHp,
     tempHp: input.manifestation.hitPoints.tempHp,
+    reactionAvailable: true,
   });
   /* v8 ignore start -- The resolved stored form and collision-checked companion identity satisfy Stat Block admission; failures remain a defensive typed propagation. */
   if (nextState.tag === "invalid") {
@@ -607,6 +638,7 @@ function withAdmittedFindFamiliarCombatant(
     familiar: input.familiar,
     initiative: input.initiative,
     combatantAdmission: combatantAdmission.right,
+    reactionAvailable: input.reactionAvailable,
     ...optionalProperty("currentHp", input.currentHp),
     ...optionalProperty("tempHp", input.tempHp),
   });
@@ -656,6 +688,7 @@ function admitAbsentCompanionToBattle(
           protocol: input.protocol,
           creatureTypeOverride: input.manifestation.creatureTypeOverride,
           hitPoints: input.manifestation.hitPoints,
+          reactionAvailable: true,
           reappearanceCombatantId: input.manifestation.reappearanceCombatantId,
           ownerId: input.ownerId,
         })
@@ -665,6 +698,7 @@ function admitAbsentCompanionToBattle(
           protocol: input.protocol,
           creatureTypeOverride: input.manifestation.creatureTypeOverride,
           ownerId: input.ownerId,
+          reactionAvailable: true,
         });
   /* v8 ignore start -- Type-level invariant: both absent-companion constructors above receive the retained identity required by this admission input. */
   if (companion.identity.tag !== "retainedBetweenBattles") {
@@ -736,6 +770,29 @@ function hitPointsForFindFamiliarCast(input: {
     hitPoints,
     statBlock: input.statBlock,
   });
+}
+
+function reactionAvailableForFindFamiliarCast(input: {
+  readonly state: BattleState;
+  readonly priorFamiliarId: CombatantId | undefined;
+  readonly priorFamiliar: BattleCompanionState | undefined;
+}): boolean | string {
+  if (
+    input.priorFamiliar === undefined ||
+    input.priorFamiliar.status === "dismissedForever"
+  ) {
+    return true;
+  }
+  if (input.priorFamiliar.status !== "present") {
+    return input.priorFamiliar.reactionAvailable;
+  }
+  if (input.priorFamiliarId === undefined) {
+    return "Present Find Familiar combatant identity is missing.";
+  }
+  return (
+    input.state.combatants.get(input.priorFamiliarId)?.reactionAvailable ??
+    "Present Find Familiar combatant is missing."
+  );
 }
 
 function hitPointsForAdoptedFamiliarForm(input: {

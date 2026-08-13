@@ -164,7 +164,9 @@ familiar's form rather than creating another identity. A living or dismissed
 familiar carries its Hit Points clamped to the new form's maximum and keeps
 Temporary Hit Points; a familiar that disappeared at 0 Hit Points reappears
 with the new form's full Hit Points and no Temporary Hit Points. The casting
-route supplies the companion's protocol.
+route supplies the companion's protocol. Recasting or reappearing the same
+familiar during an encounter carries its Reaction availability; changing form
+or manifestation does not start the familiar's next turn.
 
 **Rules basis / gap:** `.references/srd-5.2.1/Spells/Descriptions-E-L.md`,
 "Find Familiar" says that only one familiar can exist, that recasting causes
@@ -173,8 +175,8 @@ after the spell is cast again. `.references/srd-5.2.1/Classes/Druid.md`,
 "Level 2: Wild Companion" defines a distinct route that casts Find Familiar
 without Material components and makes the familiar Fey. Neither source
 specifies Hit Point carry-over, reappearance Hit Points, Temporary Hit Points,
-or persistence of a casting route's companion protocol. Those details are
-explicit model choices.
+Reaction carry-over, or persistence of a casting route's companion protocol.
+Those details are explicit model choices.
 
 ## A49: Enlarge/Reduce creature effects are target-exclusive
 

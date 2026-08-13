@@ -443,6 +443,7 @@ function startWildCompanionDruidFixtureBattle(input: {
     readonly count: number;
   }[];
   readonly wildShapeUsesRemaining?: number;
+  readonly wizardTouchCantripAccess?: boolean;
 }): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("wild-companion-test"),
@@ -451,14 +452,21 @@ function startWildCompanionDruidFixtureBattle(input: {
         combatantId: casterId,
         displayName: "Druid",
         initiative: 12,
-        className: "druid",
-        classLevel: 2,
+        classLevels:
+          input.wizardTouchCantripAccess === true
+            ? [
+                { className: "druid", level: 2 },
+                { className: "wizard", level: 1 },
+              ]
+            : [{ className: "druid", level: 2 }],
         spellcasting: {
-          sourceClassName: "druid",
+          sourceClassName:
+            input.wizardTouchCantripAccess === true ? "wizard" : "druid",
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
-          cantrips: [],
+          cantrips:
+            input.wizardTouchCantripAccess === true ? [shockingGraspSpell] : [],
           preparedSpells: [],
           featurePreparedSpells: [],
           spellbookRitualSpellAccesses: [],
@@ -771,6 +779,10 @@ function characterCreature(input: {
   readonly initiative: number;
   readonly className?: "wizard" | "warlock" | "druid";
   readonly classLevel?: number;
+  readonly classLevels?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["classLevels"];
   readonly spellcasting?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -798,7 +810,7 @@ function characterCreature(input: {
       kind: "character",
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: input.characterUnitRefs ?? [],
-      classLevels: [
+      classLevels: input.classLevels ?? [
         {
           className: input.className ?? "wizard",
           level: input.classLevel ?? 1,
@@ -2932,9 +2944,10 @@ describe("Find Familiar lifecycle", () => {
     ]);
   });
 
-  test("completes a familiar-delivered Touch attack when the familiar targets itself and disappears at 0 Hit Points", () => {
-    const session = startSpellcasterFixtureBattle({
-      casterSpellProfile: "wizardShockingGrasp",
+  test("preserves a spent familiar Reaction when another feature supplies a same-round Wild Companion Magic Action", () => {
+    const session = startWildCompanionDruidFixtureBattle({
+      wildShapeUsesRemaining: 1,
+      wizardTouchCantripAccess: true,
     });
     const cast = castCatFamiliar(session);
     expect(cast.tag).toBe("resolved");
@@ -3008,12 +3021,45 @@ describe("Find Familiar lifecycle", () => {
       findFamiliarCompanionForOwner(delivered.state, casterId),
     ).toMatchObject({
       status: "disappearedAtZeroHitPoints",
+      reactionAvailable: false,
     });
     expect(
       delivered.state.currentTurnResources.spellSlotUsesThisTurn.some(
         (use) => use.kind === "committed",
       ),
     ).toBe(false);
+
+    const recast = castWildCompanion({
+      state: withFreshMagicAction(delivered.state),
+      casterId,
+      catalog: statBlockCatalog,
+      eligibility: familiarEligibility,
+      selection: { tag: "normalNamedForm", formId: "rat" },
+      spend: {
+        kind: "wildShapeUse",
+        resourcePoolRef: wildShapeResourcePoolRefForFixture(session),
+      },
+      familiarId,
+      initiative: initiativeScore(15),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+    });
+    expect(recast.tag).toBe("resolved");
+    if (recast.tag !== "resolved") return;
+    expect(recast.state.combatants.get(familiarId)).toMatchObject({
+      reactionAvailable: false,
+      origin: expect.objectContaining({ statBlockId: "stat_block_rat" }),
+    });
+    expect(recast.state.currentTurnResources.actionResources).toEqual([]);
+    const druid = recast.state.combatants.get(casterId);
+    expect(
+      druid?.origin.kind === "character"
+        ? druid.origin.resources.find(
+            (resource) =>
+              resource.resourcePoolRef ===
+              wildShapeResourcePoolRefForFixture(session),
+          )
+        : undefined,
+    ).toMatchObject({ usesRemaining: 0 });
   });
 
   test("commits the familiar Reaction through a declined spell-cast interrupt and resumes the wrapper fills", () => {
