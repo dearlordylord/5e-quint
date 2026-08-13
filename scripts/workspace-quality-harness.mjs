@@ -33,9 +33,9 @@ const COMPLEXITY_BASELINE_PATH = join(
 const COMMON_COVERAGE_EXCLUDES = sourceGlobsUnder("src");
 
 // Every production package must appear here. Coverage floors are temporary
-// non-regression ratchets, initially measured on 2026-07-26, incrementally
-// remeasured as coverage lands, and rounded down to whole percentages; issue
-// #227's real target remains 99% for every metric in every package.
+// non-regression ratchets, initially measured on 2026-07-26 and incrementally
+// remeasured as coverage lands. Issue #227's real target remains 99% for every
+// metric in every package.
 // Duplication ceilings remain at issue #228's real 2% target except
 // for an explicitly identified temporary ratchet. Libraries are consumed as
 // TypeScript source by their owning applications; the root Turbo build
@@ -47,7 +47,7 @@ const PACKAGE_POLICIES = {
     duplicationCeiling: 2,
   },
   "battle-runtime": {
-    coverage: { lines: 97, statements: 97, functions: 100, branches: 94 },
+    coverage: { lines: 97.9, statements: 97.9, functions: 100, branches: 95.6 },
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
@@ -387,6 +387,14 @@ function checkCoverage() {
 
 function selfTest() {
   checkInventory();
+  const rootPackage = JSON.parse(
+    readFileSync(join(ROOT, "package.json"), "utf8"),
+  );
+  assert.match(
+    rootPackage.scripts["quality:body"],
+    /(?:^|&&\s*)pnpm run coverage:body(?:\s*&&|$)/,
+    "The public quality gate must run the workspace coverage thresholds.",
+  );
   const configured = Object.keys(PACKAGE_POLICIES);
   assert.deepEqual(inventoryIssues(configured, configured), {
     missing: [],
