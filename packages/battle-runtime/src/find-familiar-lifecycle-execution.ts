@@ -508,6 +508,7 @@ export function withFindFamiliarCombatant(input: {
       admission: input.combatantAdmission,
       currentHp: input.currentHp ?? Hp(maxHp),
       tempHp: input.tempHp ?? Hp(0),
+      reactionAvailable: input.reactionAvailable,
     },
   });
   /* v8 ignore start -- Internal commit invariant: the familiar identity was collision-checked and its Stat Block combatant admission succeeded immediately before insertion. */
@@ -519,26 +520,9 @@ export function withFindFamiliarCombatant(input: {
     );
   }
   /* v8 ignore stop */
-  const addedFamiliar = added.right.combatants.get(input.familiarId);
-  /* v8 ignore start -- Stat Block combatant insertion above establishes this exact familiar identity. */
-  if (addedFamiliar === undefined) {
-    return invalidFindFamiliarResult(
-      input.state,
-      "missingCombatant",
-      "Present Find Familiar combatant insertion is missing.",
-    );
-  }
-  /* v8 ignore stop */
-  const stateWithReaction = {
-    ...added.right,
-    combatants: new Map(added.right.combatants).set(input.familiarId, {
-      ...addedFamiliar,
-      reactionAvailable: input.reactionAvailable,
-    }),
-  };
   return {
     tag: "resolved",
-    state: withFindFamiliar(stateWithReaction, input.familiar),
+    state: withFindFamiliar(added.right, input.familiar),
   };
 }
 

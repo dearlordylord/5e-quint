@@ -61,6 +61,7 @@ describe("Stat Block combatant admission capability", () => {
       admission,
       currentHp: input.currentHp ?? Hp(1),
       tempHp: Hp(0),
+      reactionAvailable: true,
     };
   }
 
@@ -170,6 +171,7 @@ describe("Stat Block combatant admission capability", () => {
         admission,
         currentHp: Hp(1),
         tempHp: Hp(0),
+        reactionAvailable: true,
       },
     });
 
@@ -211,6 +213,7 @@ describe("Stat Block combatant admission capability", () => {
         admission,
         currentHp: Hp(1),
         tempHp: Hp(0),
+        reactionAvailable: true,
       },
     });
 
@@ -232,6 +235,7 @@ describe("Stat Block combatant admission capability", () => {
         admission,
         currentHp: Hp(1),
         tempHp: Hp(0),
+        reactionAvailable: true,
       },
     });
 
