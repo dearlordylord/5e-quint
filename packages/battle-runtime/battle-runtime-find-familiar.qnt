@@ -42,8 +42,37 @@ module battleRuntimeFindFamiliar {
             creatureTypeOverride: creatureTypeOverride,
             initiative: initiative,
             placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
+            reactionAvailable: present.reactionAvailable,
           })
         } else prior
+      | TemporarilyDismissedFindFamiliar(absent) =>
+        if (owner == familiar or ordinaryCombatants.contains(familiar)) prior
+        else
+          PresentFindFamiliar({
+            owner: owner,
+            familiar: familiar,
+            identity: absent.identity,
+            protocol: OrdinaryFamiliarLikeOneAtATime,
+            form: form,
+            creatureTypeOverride: creatureTypeOverride,
+            initiative: initiative,
+            placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
+            reactionAvailable: absent.reactionAvailable,
+          })
+      | DisappearedAtZeroHitPointsFindFamiliar(absent) =>
+        if (owner == familiar or ordinaryCombatants.contains(familiar)) prior
+        else
+          PresentFindFamiliar({
+            owner: owner,
+            familiar: familiar,
+            identity: absent.identity,
+            protocol: OrdinaryFamiliarLikeOneAtATime,
+            form: form,
+            creatureTypeOverride: creatureTypeOverride,
+            initiative: initiative,
+            placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
+            reactionAvailable: absent.reactionAvailable,
+          })
       | _ =>
         if (owner == familiar or ordinaryCombatants.contains(familiar)) prior
         else
@@ -56,6 +85,7 @@ module battleRuntimeFindFamiliar {
             creatureTypeOverride: creatureTypeOverride,
             initiative: initiative,
             placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
+            reactionAvailable: true,
           })
     }
 
@@ -81,6 +111,7 @@ module battleRuntimeFindFamiliar {
         creatureTypeOverride: creatureTypeOverride,
         initiative: initiative,
         placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
+        reactionAvailable: true,
       })
 
   pure def temporarilyDismissFindFamiliarLifecycle(
@@ -97,6 +128,7 @@ module battleRuntimeFindFamiliar {
             protocol: present.protocol,
             form: present.form,
             creatureTypeOverride: present.creatureTypeOverride,
+            reactionAvailable: present.reactionAvailable,
           }),
           itemDropBoundaryEvents: heldObjectIds.map(objectId => {
             owner: present.owner,
@@ -181,6 +213,7 @@ module battleRuntimeFindFamiliar {
             creatureTypeOverride: absent.creatureTypeOverride,
             initiative: initiative,
             placement: FindFamiliarUnoccupiedSpaceWithin30Feet,
+            reactionAvailable: absent.reactionAvailable,
           }),
           itemDropBoundaryEvents: Set(),
           magicActionSpent: true,
@@ -208,6 +241,7 @@ module battleRuntimeFindFamiliar {
             protocol: present.protocol,
             form: present.form,
             creatureTypeOverride: present.creatureTypeOverride,
+            reactionAvailable: present.reactionAvailable,
           }),
           itemDropBoundaryEvents: heldObjectIds.map(objectId => {
             owner: present.owner,
@@ -288,11 +322,10 @@ module battleRuntimeFindFamiliar {
     owner: Actor,
     spellHasTouchRange: bool,
     familiarWithin100Feet: bool,
-    familiarReactionAvailable: bool,
   ): FindFamiliarTouchSpellDelivery =
     match lifecycle {
       | PresentFindFamiliar(present) =>
-        if (present.owner == owner and spellHasTouchRange and familiarWithin100Feet and familiarReactionAvailable)
+        if (present.owner == owner and spellHasTouchRange and familiarWithin100Feet and present.reactionAvailable)
           { spellCast: true, familiarReactionSpent: true }
         else
           { spellCast: false, familiarReactionSpent: false }
@@ -304,7 +337,6 @@ module battleRuntimeFindFamiliar {
     owner: Actor,
     pactOfTheChainSelected: bool,
     ownerAttackActionAttackAvailable: bool,
-    familiarReactionAvailable: bool,
     supportedFamiliarActionAttack: bool,
   ): PactOfTheChainFamiliarReactionAttack =
     match lifecycle {
@@ -313,7 +345,7 @@ module battleRuntimeFindFamiliar {
           present.owner == owner and
           pactOfTheChainSelected and
           ownerAttackActionAttackAvailable and
-          familiarReactionAvailable and
+          present.reactionAvailable and
           supportedFamiliarActionAttack
         )
           PactFamiliarReactionAttackResolved

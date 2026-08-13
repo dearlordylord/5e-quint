@@ -986,4 +986,107 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         .activeEffects,
     ).not.toContainEqual(possessionEffect);
   });
+
+  test("protection from evil and good recast replaces only its own creature-type protection", () => {
+    const spell = spellRecord(protectionFromEvilAndGoodUnitId);
+    const base = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = spellAct({
+      session: base,
+      spellId: protectionFromEvilAndGoodUnitId,
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const target = requireCombatant(base.state, spellTargetId);
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-creature-protection-unrelated",
+    );
+    const state: BattleState = {
+      ...base.state,
+      combatants: new Map(base.state.combatants)
+        .set(spellCasterId, {
+          ...requireCombatant(base.state, spellCasterId),
+          concentration: {
+            sourceProcedureRef: act.subject.procedureRef,
+            effectKind: "spellEffect",
+          },
+        })
+        .set(spellTargetId, {
+          ...target,
+          activeEffects: [
+            {
+              kind: "creatureTypeProtection" as const,
+              sourceProcedureRef: act.subject.procedureRef,
+              sourceCombatantId: spellCasterId,
+              attackRollMode: "disadvantage" as const,
+              protectedAgainstCreatureTypes: ["undead"] as const,
+              preventedConditions: ["charmed", "frightened"] as const,
+              preventsPossession: true,
+              expiresAt: {
+                kind: "concentration" as const,
+                combatantId: spellCasterId,
+              },
+            },
+            {
+              kind: "creatureTypeProtection" as const,
+              sourceProcedureRef: unrelatedSource,
+              sourceCombatantId: spellCasterId,
+              attackRollMode: "disadvantage" as const,
+              protectedAgainstCreatureTypes: ["fey"] as const,
+              preventedConditions: [],
+              preventsPossession: false,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          ],
+        }),
+    };
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          targetHole,
+          protectionFromEvilAndGoodUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        "Expected Protection from Evil and Good recast to resolve.",
+      );
+    }
+    const effects = requireCombatant(
+      resolved.state,
+      spellTargetId,
+    ).activeEffects;
+    expect(effects).toHaveLength(2);
+    expect(effects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "creatureTypeProtection",
+          sourceProcedureRef: unrelatedSource,
+          protectedAgainstCreatureTypes: ["fey"],
+        }),
+        expect.objectContaining({
+          kind: "creatureTypeProtection",
+          sourceProcedureRef: act.subject.procedureRef,
+          protectedAgainstCreatureTypes: [
+            "aberration",
+            "celestial",
+            "elemental",
+            "fey",
+            "fiend",
+            "undead",
+          ],
+        }),
+      ]),
+    );
+  });
 });

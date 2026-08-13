@@ -9,6 +9,8 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { DISTANT_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
+import { battleSpellEffectOccurrenceId } from "./identity.ts";
+import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import {
   characterBattleResourceIsPointPool,
   type CharacterBattleMetamagicOptionFact,
@@ -30,6 +32,7 @@ import {
   spellTouchedObjectTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import type { BattleTrackedOngoingSpellLightEmitter } from "./index.ts";
 import type {
   BattleRuntimeSession,
   BattleState,
@@ -891,4 +894,94 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       },
     });
   });
+
+  test("continual flame keeps separate occurrences when recast on the same object", () => {
+    const spell = spellRecord(continualFlameUnitId);
+    const objectId = battleObjectId("unit-profile-continual-flame-same-object");
+    const baseSession = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const procedureRef = requireCharacterSpellProcedureRefForTest(
+      baseSession,
+      spellCasterId,
+      spellSlotInvocationRef(continualFlameUnitId, 2, "objectLight"),
+    );
+    const priorSourceEffectId = battleSpellEffectOccurrenceId(
+      `${spellCasterId}:${procedureRef}:${objectId}:object-light:1`,
+    );
+    const sourceSpellLevel = testBattleSpellEffectLevel(2);
+    const state: BattleState = {
+      ...baseSession.state,
+      lightEmitters: [
+        {
+          kind: "spellLightEmitter",
+          sourceProcedureRef: procedureRef,
+          sourceCombatantId: spellCasterId,
+          sourceEffectId: priorSourceEffectId,
+          sourceSpellLevel,
+          attachment: { kind: "object", objectId },
+          emission: {
+            kind: "brightAndDim",
+            brightRadiusFeet: movementFeet(20),
+            dimAdditionalFeet: movementFeet(20),
+          },
+          opaqueCoverInteraction: { kind: "blocksEmission" },
+          expiresAt: { kind: "untilDispelled" },
+        },
+      ],
+    };
+    const act = spellAct({
+      session: baseSession,
+      spellId: continualFlameUnitId,
+      slotLevel: 2,
+    });
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTouchedObjectTargetFill({
+          hole: requireHole(act.initialHoles, "objectTargetChoice"),
+          objectId,
+          spellId: continualFlameUnitId,
+          casterId: spellCasterId,
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        "Expected same-object Continual Flame recast to resolve.",
+      );
+    }
+    const emitters = resolved.state.lightEmitters.filter(
+      (emitter): emitter is BattleTrackedOngoingSpellLightEmitter =>
+        emitter.kind === "spellLightEmitter" &&
+        "sourceEffectId" in emitter &&
+        emitter.sourceCombatantId === spellCasterId &&
+        emitter.attachment.kind === "object" &&
+        emitter.attachment.objectId === objectId,
+    );
+    expect(emitters).toHaveLength(2);
+    const nextSourceEffectId = battleSpellEffectOccurrenceId(
+      `${spellCasterId}:${procedureRef}:${objectId}:object-light:2`,
+    );
+    expect(emitters.map((emitter) => emitter.sourceEffectId)).toEqual(
+      expect.arrayContaining([priorSourceEffectId, nextSourceEffectId]),
+    );
+    expect(
+      emitters.every(
+        (emitter) => emitter.sourceSpellLevel === sourceSpellLevel,
+      ),
+    ).toBe(true);
+  });
 });
+
+function testBattleSpellEffectLevel(value: number) {
+  const parsed = parseBattleSpellEffectLevel(value);
+  if (parsed === null) {
+    throw new Error(`Invalid spell effect level ${value}.`);
+  }
+  return parsed;
+}

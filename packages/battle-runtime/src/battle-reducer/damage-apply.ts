@@ -82,6 +82,7 @@ import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import { setCompanion } from "../companion-state.ts";
 import { findPresentFamiliarById } from "../find-familiar-state.ts";
 import { retainedStoredFormForPresentCompanion } from "../companion-stored-form.ts";
+import { findFamiliarDisappearedAtZeroHitPointsState } from "../find-familiar-lifecycle-execution.ts";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import { removeBattleCombatants } from "./combatant-removal.ts";
 import {
@@ -830,14 +831,24 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
       ownerId: entry.ownerId,
     });
   }
-  const disappearedFamiliar = {
-    ...retainedForm,
-    status: "disappearedAtZeroHitPoints" as const,
+  const target = input.state.combatants.get(input.targetId);
+  /* v8 ignore start -- A present familiar is removed only after its live combatant has been resolved; a missing entry is malformed cross-record state. */
+  if (target === undefined) {
+    return removeInvalidPresentFindFamiliarAfterZeroHitPointDamage({
+      state: input.state,
+      companionId: entry.companionId,
+      ownerId: entry.ownerId,
+    });
+  }
+  /* v8 ignore stop */
+  const disappearedFamiliar = findFamiliarDisappearedAtZeroHitPointsState({
+    storedForm: retainedForm,
     ownerId: entry.ownerId,
     identity: entry.familiar.identity,
     protocol: entry.familiar.protocol,
     creatureTypeOverride: entry.familiar.creatureTypeOverride,
-  };
+    reactionAvailable: target.reactionAvailable,
+  });
   const removed = removeBattleCombatants({
     state: input.state,
     combatantIds: [input.targetId],

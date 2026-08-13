@@ -63,6 +63,7 @@ describe("Stat Block combatant admission capability", () => {
       currentHp: input.currentHp ?? Hp(1),
       tempHp: Hp(0),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      reactionAvailable: true,
     };
   }
 
@@ -174,6 +175,7 @@ describe("Stat Block combatant admission capability", () => {
         currentHp: Hp(1),
         tempHp: Hp(0),
         ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+        reactionAvailable: true,
       },
     });
 
@@ -216,6 +218,7 @@ describe("Stat Block combatant admission capability", () => {
         currentHp: Hp(1),
         tempHp: Hp(0),
         ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+        reactionAvailable: true,
       },
     });
 
@@ -238,6 +241,7 @@ describe("Stat Block combatant admission capability", () => {
         currentHp: Hp(1),
         tempHp: Hp(0),
         ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+        reactionAvailable: true,
       },
     });
 

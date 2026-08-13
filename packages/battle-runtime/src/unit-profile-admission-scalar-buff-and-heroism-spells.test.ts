@@ -3,6 +3,7 @@ import { unitId } from "@dnd/shared/game-facts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type { BattleProcedureExecutionRef } from "./index.ts";
 import aidInput from "../../surface/content/aid.json";
+import falseLifeInput from "../../surface/content/false_life.json";
 import heroismInput from "../../surface/content/heroism.json";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
@@ -15,6 +16,7 @@ import heroismInput from "../../surface/content/heroism.json";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { describe, expect, test } from "vitest";
 import {
+  battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -32,6 +34,7 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   damageRollFillWithGroups,
+  requireCombatant,
   requireHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
@@ -1493,12 +1496,20 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     type AidDeltaInput =
       (typeof aidInput.mechanics.phases)[number]["effects"][number]["delta"];
     const unsupportedDeltaMutations = {
-      synthetic_max_hp_resource_spent: (_delta: AidDeltaInput) => ({
+      synthetic_max_hp_resource_spent: () => ({
         kind: "resource_spent" as const,
       }),
       synthetic_max_hp_random_base: (delta: AidDeltaInput) => ({
         ...delta,
         base: { ...delta.base, dice: 1, dieSize: 4 },
+      }),
+      synthetic_max_hp_random_per_level_dice: (delta: AidDeltaInput) => ({
+        ...delta,
+        perLevel: { ...delta.perLevel, dice: 1 },
+      }),
+      synthetic_max_hp_random_per_level_die_size: (delta: AidDeltaInput) => ({
+        ...delta,
+        perLevel: { ...delta.perLevel, dieSize: 4 },
       }),
     } as const;
 
@@ -1515,6 +1526,106 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
             effects: phase.effects.map((effect) => ({
               ...effect,
               delta: mutateDelta(effect.delta),
+            })),
+          })),
+        },
+      });
+
+      expect(
+        maybeSpellAct({
+          session: spellBattle({
+            preparedSpells: [spell],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
+          spellId: spell.id,
+          slotLevel: 2,
+        }),
+      ).toBeUndefined();
+    }
+  });
+
+  test("scalar-buff admission rejects synthetic target selections without a supported count", () => {
+    const [phase] = aidInput.mechanics.phases;
+    const selection = phase.attachment.value.selection;
+    const spell = decodeSpellRecordForTest({
+      ...aidInput,
+      id: "synthetic_scalar_buff_missing_target_count",
+      name: "synthetic_scalar_buff_missing_target_count",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic_scalar_buff_missing_target_count",
+      },
+      mechanics: {
+        ...aidInput.mechanics,
+        phases: [
+          {
+            ...phase,
+            attachment: {
+              ...phase.attachment,
+              value: {
+                ...phase.attachment.value,
+                selection: {
+                  ...selection,
+                  count: {
+                    kind: "threshold_tiers",
+                    axis: "slot",
+                    base: 3,
+                    tiers: [{ atLevel: 3, value: 4 }],
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    expect(
+      maybeSpellAct({
+        session: spellBattle({
+          preparedSpells: [spell],
+          spellSlots: [{ spellLevel: 2, count: 1 }],
+        }),
+        spellId: spell.id,
+        slotLevel: 2,
+      }),
+    ).toBeUndefined();
+  });
+
+  test("temporary Hit Point admission rejects unsupported synthetic scaling axes and starts", () => {
+    type FalseLifeAmountInput =
+      (typeof falseLifeInput.mechanics.phases)[number]["effects"][number]["amount"];
+    const unsupportedAmountMutations = {
+      synthetic_temp_hp_character_axis: (amount: FalseLifeAmountInput) => ({
+        ...amount,
+        axis: "character" as const,
+      }),
+      synthetic_temp_hp_wrong_starting_level: (
+        amount: FalseLifeAmountInput,
+      ) => ({
+        ...amount,
+        startingAtLevel: 1,
+      }),
+      synthetic_temp_hp_resource_spent: () => ({
+        kind: "resource_spent" as const,
+      }),
+    } as const;
+
+    for (const [id, mutateAmount] of Object.entries(
+      unsupportedAmountMutations,
+    )) {
+      const spell = decodeSpellRecordForTest({
+        ...falseLifeInput,
+        id,
+        name: id,
+        provenance: { kind: "synthetic-test", section: id },
+        mechanics: {
+          ...falseLifeInput.mechanics,
+          phases: falseLifeInput.mechanics.phases.map((phase) => ({
+            ...phase,
+            effects: phase.effects.map((effect) => ({
+              ...effect,
+              amount: mutateAmount(effect.amount),
             })),
           })),
         },
@@ -1863,6 +1974,184 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     expect(remainingAidEffects).toEqual([
       expect.objectContaining({ amount: 5, sourceCombatantId: spellCasterId }),
     ]);
+  });
+
+  test("shield_of_faith recast replaces only the caster-owned AC bonus", () => {
+    const spell = spellRecord(shieldOfFaithUnitId);
+    const session = spellBattle({ preparedSpells: [spell] });
+    const act = bonusSpellAct({ session, spellId: shieldOfFaithUnitId });
+    const target = session.state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected Shield of Faith target.");
+    }
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-other-ac-bonus",
+    );
+    const stateWithPriorEffects: BattleState = {
+      ...session.state,
+      combatants: new Map(session.state.combatants)
+        .set(spellCasterId, {
+          ...requireCombatant(session.state, spellCasterId),
+          concentration: {
+            sourceProcedureRef: act.subject.procedureRef,
+            effectKind: "spellEffect",
+          },
+        })
+        .set(spellTargetId, {
+          ...target,
+          activeEffects: [
+            ...target.activeEffects,
+            {
+              kind: "spellArmorClassBonus" as const,
+              sourceProcedureRef: act.subject.procedureRef,
+              sourceCombatantId: spellCasterId,
+              bonus: 2,
+              negatesRepeatedDamageAllocation: false,
+              expiresAt: {
+                kind: "concentration" as const,
+                combatantId: spellCasterId,
+              },
+            },
+            {
+              kind: "spellArmorClassBonus" as const,
+              sourceProcedureRef: unrelatedSource,
+              sourceCombatantId: spellCasterId,
+              bonus: 1,
+              negatesRepeatedDamageAllocation: false,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          ],
+        }),
+    };
+    const resolved = resolveBattleSubject({
+      state: stateWithPriorEffects,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          requireHole(act.initialHoles, "targetChoice"),
+          shieldOfFaithUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Shield of Faith recast to resolve.");
+    }
+    const bonuses = resolved.state.combatants
+      .get(spellTargetId)
+      ?.activeEffects.filter(
+        (effect) => effect.kind === "spellArmorClassBonus",
+      );
+    expect(bonuses).toHaveLength(2);
+    expect(bonuses).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceProcedureRef: unrelatedSource,
+          bonus: 1,
+        }),
+        expect.objectContaining({
+          sourceProcedureRef: act.subject.procedureRef,
+          bonus: 2,
+        }),
+      ]),
+    );
+  });
+
+  test("spider_climb recast replaces its own climb grant without dropping another source", () => {
+    const spell = spellRecord(spiderClimbUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: spiderClimbUnitId,
+      slotLevel: 2,
+    });
+    const target = session.state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected Spider Climb target.");
+    }
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-other-climb-grant",
+    );
+    const stateWithPriorEffects: BattleState = {
+      ...session.state,
+      combatants: new Map(session.state.combatants)
+        .set(spellCasterId, {
+          ...requireCombatant(session.state, spellCasterId),
+          concentration: {
+            sourceProcedureRef: act.subject.procedureRef,
+            effectKind: "spellEffect",
+          },
+        })
+        .set(spellTargetId, {
+          ...target,
+          activeEffects: [
+            ...target.activeEffects,
+            {
+              kind: "specialSpeedGrant" as const,
+              sourceProcedureRef: act.subject.procedureRef,
+              sourceCombatantId: spellCasterId,
+              speedKind: "climb" as const,
+              speed: { kind: "equalToSpeed" as const },
+              hover: false,
+              expiresAt: {
+                kind: "concentration" as const,
+                combatantId: spellCasterId,
+              },
+            },
+            {
+              kind: "specialSpeedGrant" as const,
+              sourceProcedureRef: unrelatedSource,
+              sourceCombatantId: spellCasterId,
+              speedKind: "climb" as const,
+              speed: { kind: "equalToSpeed" as const },
+              hover: false,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          ],
+        }),
+    };
+    const resolved = resolveBattleSubject({
+      state: stateWithPriorEffects,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          requireHole(act.initialHoles, "targetChoice"),
+          spiderClimbUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Spider Climb recast to resolve.");
+    }
+    const grants = requireCombatant(
+      resolved.state,
+      spellTargetId,
+    ).activeEffects.filter((effect) => effect.kind === "specialSpeedGrant");
+    expect(grants).toHaveLength(2);
+    expect(grants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceProcedureRef: unrelatedSource,
+        }),
+        expect.objectContaining({
+          sourceProcedureRef: act.subject.procedureRef,
+        }),
+      ]),
+    );
   });
 });
 
@@ -2322,6 +2611,66 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
       ],
     });
     expect(resolved).toMatchObject({ tag: "resolved" });
+  });
+
+  test("Heroism concentration cleanup preserves an unrelated condition immunity", () => {
+    const spell = spellRecord(heroismUnitId);
+    const base = spellBattle({ preparedSpells: [spell] });
+    const caster = requireCombatant(base.state, spellCasterId);
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-heroism-unrelated-immunity",
+    );
+    const state: BattleState = {
+      ...base.state,
+      combatants: new Map(base.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: [
+          ...caster.activeEffects,
+          {
+            kind: "conditionImmunity" as const,
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            condition: "frightened" as const,
+            conditionHadNonSpellSource: false,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        ],
+      }),
+    };
+    const session = battleRuntimeSessionForTest({ ...base, state });
+    const act = spellAct({ session, spellId: heroismUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          heroismUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Heroism to resolve.");
+    }
+    const broken = breakBattleConcentration(resolved.state, spellCasterId);
+    const brokenCaster = requireCombatant(broken, spellCasterId);
+    expect(brokenCaster.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "conditionImmunity",
+        sourceProcedureRef: unrelatedSource,
+        sourceCombatantId: spellCasterId,
+      }),
+    );
+    expect(brokenCaster.activeEffects).not.toContainEqual(
+      expect.objectContaining({ sourceProcedureRef: act.subject.procedureRef }),
+    );
   });
 });
 

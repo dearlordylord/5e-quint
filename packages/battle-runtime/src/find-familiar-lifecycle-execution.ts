@@ -91,6 +91,7 @@ export function findFamiliarTemporarilyDismissedState(input: {
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
   readonly hitPoints: BattleCompanionHitPoints;
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
+  readonly reactionAvailable: boolean;
   readonly reappearanceCombatantId: CombatantId;
   readonly ownerId: CombatantId;
 }): BattleCompanionTemporarilyDismissedState {
@@ -104,6 +105,7 @@ export function findFamiliarTemporarilyDismissedState(input: {
     reappearanceCombatantId: input.reappearanceCombatantId,
     hitPoints: input.hitPoints,
     ammunitionStocks: input.ammunitionStocks,
+    reactionAvailable: input.reactionAvailable,
   };
 }
 
@@ -113,6 +115,7 @@ export function findFamiliarDisappearedAtZeroHitPointsState(input: {
   readonly protocol: BattleCompanionProtocol;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
   readonly ownerId: CombatantId;
+  readonly reactionAvailable: boolean;
 }): BattleCompanionDisappearedAtZeroHitPointsState {
   return {
     ...input.storedForm,
@@ -121,6 +124,7 @@ export function findFamiliarDisappearedAtZeroHitPointsState(input: {
     identity: input.identity,
     protocol: input.protocol,
     creatureTypeOverride: input.creatureTypeOverride,
+    reactionAvailable: input.reactionAvailable,
   };
 }
 
@@ -195,6 +199,17 @@ export function temporarilyDismissFindFamiliar(
     return invalidFindFamiliarResult(input.state, "invalidFill", hitPoints);
   }
   /* v8 ignore stop */
+  const reactionAvailable =
+    input.state.combatants.get(familiarId)?.reactionAvailable;
+  /* v8 ignore start -- Present-companion lifecycle invariant: the same live combatant that supplied retained Hit Points owns its Reaction availability. */
+  if (reactionAvailable === undefined) {
+    return invalidFindFamiliarResult(
+      input.state,
+      "missingCombatant",
+      "Present Find Familiar combatant is missing.",
+    );
+  }
+  /* v8 ignore stop */
   const retainedForm = retainedStoredFormForPresentCompanion({
     state: input.state,
     companionId: familiarId,
@@ -222,6 +237,7 @@ export function temporarilyDismissFindFamiliar(
     creatureTypeOverride: familiar.creatureTypeOverride,
     hitPoints,
     ammunitionStocks: combatant.ammunitionStocks,
+    reactionAvailable,
     reappearanceCombatantId: familiarId,
     ownerId: input.casterId,
   });
@@ -364,6 +380,7 @@ export function reappearAdmittedTemporarilyDismissedFindFamiliar(
     currentHp: familiar.hitPoints.currentHp,
     tempHp: familiar.hitPoints.tempHp,
     ammunitionStocks: familiar.ammunitionStocks,
+    reactionAvailable: familiar.reactionAvailable,
   });
   /* v8 ignore start -- Admitted reappearance commit: owner, identity, form, HP, and roster insertion were proven together before this helper returns. */
   if (nextState.tag === "invalid") {
@@ -400,12 +417,25 @@ export function applyFindFamiliarZeroHitPointDisappearance(input: {
     return invalidFindFamiliarResult(input.state, "invalidFill", retainedForm);
   }
   /* v8 ignore stop */
+  const reactionAvailable = input.state.combatants.get(
+    input.familiarId,
+  )?.reactionAvailable;
+  /* v8 ignore start -- Zero-HP disappearance starts from the present familiar combatant that owns the retained Reaction resource. */
+  if (reactionAvailable === undefined) {
+    return invalidFindFamiliarResult(
+      input.state,
+      "missingCombatant",
+      "Present Find Familiar combatant is missing.",
+    );
+  }
+  /* v8 ignore stop */
   const nextFamiliar = findFamiliarDisappearedAtZeroHitPointsState({
     storedForm: retainedForm,
     identity: entry.familiar.identity,
     protocol: entry.familiar.protocol,
     creatureTypeOverride: entry.familiar.creatureTypeOverride,
     ownerId: entry.ownerId,
+    reactionAvailable,
   });
   const nextState = withoutPresentFindFamiliarCombatant(
     withFindFamiliar(input.state, nextFamiliar),
@@ -436,6 +466,7 @@ export function withFindFamiliarCombatant(input: {
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
   readonly ammunitionStocks: readonly import("./battle-state-execution.ts").BattleAmmunitionStock[];
+  readonly reactionAvailable: boolean;
 }):
   | { readonly tag: "resolved"; readonly state: BattleState }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
@@ -494,6 +525,7 @@ export function withFindFamiliarCombatant(input: {
       currentHp: input.currentHp ?? Hp(maxHp),
       tempHp: input.tempHp ?? Hp(0),
       ammunitionStocks: input.ammunitionStocks,
+      reactionAvailable: input.reactionAvailable,
     },
   });
   /* v8 ignore start -- Internal commit invariant: the familiar identity was collision-checked and its Stat Block combatant admission succeeded immediately before insertion. */

@@ -59,6 +59,10 @@ export type BattleCompanionHitPoints = {
   readonly tempHp: Hp;
 };
 
+export type BattleCompanionAbsentEncounterResources = {
+  readonly reactionAvailable: boolean;
+};
+
 export type BattleCompanionProtocolState = {
   readonly ownerId: CombatantId;
   readonly identity: BattleCompanionIdentity;
@@ -75,6 +79,7 @@ export type BattleCompanionPresentState = BattleCompanionFormAccess &
 
 export type BattleCompanionTemporarilyDismissedState =
   BattleCompanionStoredForm &
+    BattleCompanionAbsentEncounterResources &
     BattleCompanionProtocolState & {
       readonly status: "temporarilyDismissed";
       readonly reappearanceCombatantId: CombatantId;
@@ -84,6 +89,7 @@ export type BattleCompanionTemporarilyDismissedState =
 
 export type BattleCompanionDisappearedAtZeroHitPointsState =
   BattleCompanionStoredForm &
+    BattleCompanionAbsentEncounterResources &
     BattleCompanionProtocolState & {
       readonly status: "disappearedAtZeroHitPoints";
     };

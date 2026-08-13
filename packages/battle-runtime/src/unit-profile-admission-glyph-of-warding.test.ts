@@ -65,6 +65,7 @@ import {
   glyphExplosiveRuneReleaseProfileForSpell,
   glyphDurableOccurrenceProfileForSpell,
   glyphStoredSpellReleaseProfileForSpell,
+  glyphDurableOccurrenceEffectFromCompletedInscriptionWithProjection,
   releaseGlyphExplosiveRune,
   releaseGlyphStoredSpell,
   type CompletedGlyphInscriptionWitness,
@@ -153,7 +154,10 @@ import {
   thunderwaveArea,
   webAreaFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleAreaId,
   battleObjectId,
@@ -469,6 +473,40 @@ const GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_RELEASE_CASES: ReadonlyArray<Gl
   ];
 
 describe("SRD Glyph of Warding durable occurrence admission", () => {
+  test("rejects an unsupported Glyph Surface level", () => {
+    const glyph = spellRecord(glyphOfWardingUnitId);
+    const mechanics = requireGlyphMechanics(glyph);
+    const unsupportedDurable = decodeSpellRecordForTest({
+      ...glyph,
+      mechanics: {
+        ...mechanics,
+        level: 4,
+      },
+    });
+    expect(
+      glyphDurableOccurrenceProfileForSpell(unsupportedDurable),
+    ).toBeNull();
+  });
+
+  test("rejects projected-out stored spells", () => {
+    const profile = requireGlyphProfile();
+    const storedInvocation = storedSpellInvocation(guidingBoltUnitId, 1);
+    const witness = completedGlyphInscriptionWitness({
+      anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
+      release: { kind: "spellGlyph", storedInvocation },
+    });
+    expect(
+      glyphDurableOccurrenceEffectFromCompletedInscriptionWithProjection({
+        profile,
+        witness,
+        projectStoredInvocation: () => undefined,
+      }),
+    ).toEqual({
+      tag: "storedSpellProcedureUnsupported",
+      storedInvocation,
+    });
+  });
+
   test("admits the durable occurrence profile by Surface shape, not authored identity", () => {
     const glyph = spellRecord(glyphOfWardingUnitId);
     const profile = glyphDurableOccurrenceProfileForSpell(glyph);

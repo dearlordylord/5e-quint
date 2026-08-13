@@ -24,6 +24,7 @@ import {
   characterAttackSubjectForTest,
 } from "./battle-runtime.test-support.ts";
 import guidanceInput from "../../surface/content/guidance.json";
+import baneInput from "../../surface/content/bane.json";
 import protectionFromEnergyInput from "../../surface/content/protection_from_energy.json";
 import protectionFromPoisonInput from "../../surface/content/protection_from_poison.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
@@ -617,6 +618,72 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         maybeSpellAct({
           session: spellBattle({ cantrips: [spell], spellSlots: [] }),
           spellId: spell.id,
+        }),
+      ).toBeUndefined();
+    }
+  });
+
+  test("save-gated roll modifier admission rejects unsupported target counts and modifiers", () => {
+    type BanePhaseInput = (typeof baneInput.mechanics.phases)[number];
+    const unsupportedPhaseMutations = {
+      synthetic_save_gated_roll_modifier_missing_target_count: (
+        phase: BanePhaseInput,
+      ) => {
+        const selection = phase.attachment.value.selection;
+        return {
+          ...phase,
+          attachment: {
+            ...phase.attachment,
+            value: {
+              ...phase.attachment.value,
+              selection: {
+                ...selection,
+                count: {
+                  kind: "threshold_tiers",
+                  axis: "slot",
+                  base: 3,
+                  tiers: [{ atLevel: 2, value: 4 }],
+                },
+              },
+            },
+          },
+        };
+      },
+      synthetic_save_gated_roll_modifier_zero_delta: (
+        phase: BanePhaseInput,
+      ) => ({
+        ...phase,
+        onFail: {
+          ...phase.onFail,
+          delta: {
+            kind: "fixed_number" as const,
+            amount: 0,
+            sign: "-" as const,
+          },
+        },
+      }),
+    } as const;
+
+    for (const [id, mutatePhase] of Object.entries(unsupportedPhaseMutations)) {
+      const spell = decodeSpellRecordForTest({
+        ...baneInput,
+        id,
+        name: id,
+        provenance: { kind: "synthetic-test", section: id },
+        mechanics: {
+          ...baneInput.mechanics,
+          phases: baneInput.mechanics.phases.map((phase) => mutatePhase(phase)),
+        },
+      });
+
+      expect(
+        maybeSpellAct({
+          session: spellBattle({
+            preparedSpells: [spell],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+          spellId: spell.id,
+          slotLevel: 1,
         }),
       ).toBeUndefined();
     }
@@ -1889,6 +1956,180 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     expect(damaged.concentration).toBeNull();
     expect(damaged.activeEffects).toEqual([]);
   });
+
+  test("guidance recast replaces the selected skill modifier and preserves another source", () => {
+    const spell = spellRecord(guidanceUnitId);
+    const session = spellBattle({ cantrips: [spell], spellSlots: [] });
+    const act = spellAct({ session, spellId: guidanceUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const skillHole = requireHole(act.initialHoles, "skillChoice");
+    const target = requireCombatant(session.state, spellCasterId);
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-other-guidance-source",
+    );
+    const stateWithPriorEffects: BattleState = {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellCasterId, {
+        ...target,
+        concentration: {
+          sourceProcedureRef: act.subject.procedureRef,
+          effectKind: "spellEffect",
+        },
+        activeEffects: [
+          ...target.activeEffects,
+          {
+            kind: "d20RollModifier" as const,
+            sourceProcedureRef: act.subject.procedureRef,
+            sourceCombatantId: spellCasterId,
+            on: ["ability_check"] as const,
+            delta: { dice: 1, dieSize: 4, sign: "+" as const },
+            skill: "stealth" as const,
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: spellCasterId,
+            },
+          },
+          {
+            kind: "d20RollModifier" as const,
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            on: ["ability_check"] as const,
+            delta: { dice: 1, dieSize: 4, sign: "+" as const },
+            skill: "perception" as const,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        ],
+      }),
+    };
+
+    const resolved = resolveBattleSubject({
+      state: stateWithPriorEffects,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          guidanceUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+        skillChoiceFill(skillHole, "perception"),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Guidance recast to resolve.");
+    }
+    const modifiers = resolved.state.combatants
+      .get(spellCasterId)
+      ?.activeEffects.filter((effect) => effect.kind === "d20RollModifier");
+    expect(modifiers).toHaveLength(2);
+    expect(modifiers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceProcedureRef: unrelatedSource,
+          skill: "perception",
+        }),
+        expect.objectContaining({
+          sourceProcedureRef: act.subject.procedureRef,
+          skill: "perception",
+        }),
+      ]),
+    );
+  });
+
+  test("resistance recast resets only its own once-per-turn reduction", () => {
+    const base = resistanceBattle();
+    const act = spellAct({ session: base, spellId: resistanceUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
+    const target = requireCombatant(base.state, spellTargetId);
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-resistance-unrelated",
+    );
+    const state: BattleState = {
+      ...base.state,
+      combatants: new Map(base.state.combatants)
+        .set(spellCasterId, {
+          ...requireCombatant(base.state, spellCasterId),
+          concentration: {
+            sourceProcedureRef: act.subject.procedureRef,
+            effectKind: "spellEffect",
+          },
+        })
+        .set(spellTargetId, {
+          ...target,
+          activeEffects: [
+            {
+              kind: "spellDamageReduction" as const,
+              sourceProcedureRef: act.subject.procedureRef,
+              sourceCombatantId: spellCasterId,
+              damageType: "acid" as const,
+              amount: { dice: 1 as const, dieSize: 4 as const },
+              usedThisTurn: true,
+              expiresAt: {
+                kind: "concentration" as const,
+                combatantId: spellCasterId,
+              },
+            },
+            {
+              kind: "spellDamageReduction" as const,
+              sourceProcedureRef: unrelatedSource,
+              sourceCombatantId: spellCasterId,
+              damageType: "cold" as const,
+              amount: { dice: 1 as const, dieSize: 4 as const },
+              usedThisTurn: true,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          ],
+        }),
+    };
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          targetHole,
+          resistanceUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        damageTypeChoiceFill(damageTypeHole, "fire"),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Resistance recast to resolve.");
+    }
+    const effects = requireCombatant(
+      resolved.state,
+      spellTargetId,
+    ).activeEffects;
+    expect(effects).toHaveLength(2);
+    expect(effects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "spellDamageReduction",
+          sourceProcedureRef: unrelatedSource,
+          damageType: "cold",
+          usedThisTurn: true,
+        }),
+        expect.objectContaining({
+          kind: "spellDamageReduction",
+          sourceProcedureRef: act.subject.procedureRef,
+          damageType: "fire",
+          usedThisTurn: false,
+        }),
+      ]),
+    );
+  });
 });
 
 function resistanceBattle(): BattleRuntimeSession {
@@ -2324,6 +2565,104 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
       ),
     ).toBe(false);
   });
+
+  test("protection_from_poison recast replaces both caster-owned protections and preserves another source", () => {
+    const spell = spellRecord(protectionFromPoisonUnitId);
+    const base = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      session: base,
+      spellId: protectionFromPoisonUnitId,
+      slotLevel: 2,
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const target = requireCombatant(base.state, spellTargetId);
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-poison-unrelated",
+    );
+    const state: BattleState = {
+      ...base.state,
+      combatants: new Map(base.state.combatants).set(spellTargetId, {
+        ...target,
+        activeEffects: [
+          {
+            kind: "conditionSavingThrowRollMode" as const,
+            sourceProcedureRef: act.subject.procedureRef,
+            sourceCombatantId: spellCasterId,
+            condition: "poisoned" as const,
+            mode: "advantage" as const,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(600),
+            },
+          },
+          {
+            kind: "damageResistance" as const,
+            sourceProcedureRef: act.subject.procedureRef,
+            sourceCombatantId: spellCasterId,
+            damageType: "poison" as const,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(600),
+            },
+          },
+          {
+            kind: "damageResistance" as const,
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            damageType: "acid" as const,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        ],
+      }),
+    };
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          protectionFromPoisonUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Protection from Poison recast to resolve.");
+    }
+    const effects = requireCombatant(
+      resolved.state,
+      spellTargetId,
+    ).activeEffects;
+    expect(effects).toHaveLength(3);
+    expect(effects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "damageResistance",
+          sourceProcedureRef: unrelatedSource,
+          damageType: "acid",
+        }),
+        expect.objectContaining({
+          kind: "conditionSavingThrowRollMode",
+          sourceProcedureRef: act.subject.procedureRef,
+          condition: "poisoned",
+        }),
+        expect.objectContaining({
+          kind: "damageResistance",
+          sourceProcedureRef: act.subject.procedureRef,
+          damageType: "poison",
+        }),
+      ]),
+    );
+  });
 });
 
 describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () => {
@@ -2580,6 +2919,99 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
     }
     expect(weaponResolved.state.combatants.get(spellTargetId)?.hp).toBe(
       Hp(Number(requireCombatant(weaponBase.state, spellTargetId).hp) - 4),
+    );
+  });
+
+  test("protection_from_energy recast replaces only the caster-owned damage Resistance", () => {
+    const spell = authoredProtectionFromEnergySpell();
+    const base = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const act = spellAct({
+      session: base,
+      spellId: protectionFromEnergyUnitId,
+      slotLevel: 3,
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const damageTypeHole = requireHole(act.initialHoles, "damageTypeChoice");
+    const target = requireCombatant(base.state, spellTargetId);
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-energy-unrelated",
+    );
+    const state: BattleState = {
+      ...base.state,
+      combatants: new Map(base.state.combatants)
+        .set(spellCasterId, {
+          ...requireCombatant(base.state, spellCasterId),
+          concentration: {
+            sourceProcedureRef: act.subject.procedureRef,
+            effectKind: "spellEffect",
+          },
+        })
+        .set(spellTargetId, {
+          ...target,
+          activeEffects: [
+            {
+              kind: "damageResistance" as const,
+              sourceProcedureRef: act.subject.procedureRef,
+              sourceCombatantId: spellCasterId,
+              damageType: "acid" as const,
+              expiresAt: {
+                kind: "concentration" as const,
+                combatantId: spellCasterId,
+                durationTicks: protectionFromEnergyDurationTicks,
+              },
+            },
+            {
+              kind: "damageResistance" as const,
+              sourceProcedureRef: unrelatedSource,
+              sourceCombatantId: spellCasterId,
+              damageType: "cold" as const,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          ],
+        }),
+    };
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          targetHole,
+          protectionFromEnergyUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+        damageTypeChoiceFill(damageTypeHole, "fire"),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Protection from Energy recast to resolve.");
+    }
+    const effects = requireCombatant(
+      resolved.state,
+      spellTargetId,
+    ).activeEffects;
+    expect(effects).toHaveLength(2);
+    expect(effects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "damageResistance",
+          sourceProcedureRef: unrelatedSource,
+          damageType: "cold",
+        }),
+        expect.objectContaining({
+          kind: "damageResistance",
+          sourceProcedureRef: act.subject.procedureRef,
+          damageType: "fire",
+        }),
+      ]),
     );
   });
 });

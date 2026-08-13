@@ -609,6 +609,55 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       message: "Hypnotic Pattern shake-awake is no longer available.",
     });
   });
+
+  test("Hypnotic Pattern recast replaces only its own control effect", () => {
+    const base = spellBattle({
+      preparedSpells: [hypnoticPatternSpellRecord()],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const target = requireCombatant(base.state, spellTargetId);
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-hypnotic-unrelated",
+    );
+    const state: BattleRuntimeSession = battleRuntimeSessionForTest({
+      ...base,
+      state: {
+        ...base.state,
+        combatants: new Map(base.state.combatants).set(spellTargetId, {
+          ...target,
+          activeEffects: [
+            {
+              kind: "hypnoticPatternControl" as const,
+              sourceProcedureRef: unrelatedSource,
+              sourceCombatantId: spellCasterId,
+              conditionHadNonSpellCharmedSource: false,
+              conditionHadNonSpellIncapacitatedSource: false,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          ],
+        }),
+      },
+    });
+    const cast = castFailedHypnoticPattern(state);
+    const effects = requireCombatant(cast.state, spellTargetId).activeEffects;
+    expect(effects).toHaveLength(2);
+    expect(effects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "hypnoticPatternControl",
+          sourceProcedureRef: unrelatedSource,
+        }),
+        expect.objectContaining({
+          kind: "hypnoticPatternControl",
+          sourceCombatantId: spellCasterId,
+          expiresAt: expect.objectContaining({ kind: "concentration" }),
+        }),
+      ]),
+    );
+  });
 });
 
 function castFailedHypnoticPattern(

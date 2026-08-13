@@ -3589,7 +3589,7 @@ describe("MCP server route", () => {
       root.sessionStore.battleSession?.state.combatants.get(
         combatantId("wizard-familiar"),
       )?.reactionAvailable,
-    ).toBe(true);
+    ).toBe(false);
     const healingRollHole = afterTarget.result.holes.find(
       (hole: { readonly kind: string }) => hole.kind === "rolledDice",
     );

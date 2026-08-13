@@ -133,6 +133,56 @@ describe("L12G-SPELL-BLUR deterministic Blur admission", () => {
     });
     expect(attackRoll.rollMode).toBeUndefined();
   });
+
+  test("blur recast replaces only its own defense effect", () => {
+    const attackerId = combatantId("unit-profile-blur-recast-attacker");
+    const base = blurBattle(attackerId);
+    const act = spellAct({ session: base, spellId: blurUnitId, slotLevel: 2 });
+    const caster = requireCombatant(base.state, spellCasterId);
+    const state = {
+      ...base.state,
+      combatants: new Map(base.state.combatants).set(spellCasterId, {
+        ...caster,
+        concentration: {
+          sourceProcedureRef: act.subject.procedureRef,
+          effectKind: "spellEffect",
+        },
+        activeEffects: [
+          {
+            kind: "blurred" as const,
+            sourceProcedureRef: act.subject.procedureRef,
+            sourceCombatantId: spellCasterId,
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: spellCasterId,
+            },
+          },
+        ],
+      }),
+    };
+
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [],
+    });
+    expect(cast).toMatchObject({ tag: "resolved" });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Blur recast to resolve.");
+    }
+    const effects = requireCombatant(cast.state, spellCasterId).activeEffects;
+    expect(effects).toHaveLength(1);
+    expect(effects).toContainEqual(
+      expect.objectContaining({
+        kind: "blurred",
+        sourceProcedureRef: act.subject.procedureRef,
+        expiresAt: {
+          kind: "concentration",
+          combatantId: spellCasterId,
+        },
+      }),
+    );
+  });
 });
 
 function blurBattle(attackerId: CombatantId): BattleRuntimeSession {

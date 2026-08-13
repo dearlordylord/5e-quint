@@ -183,14 +183,14 @@ const source = {
   sourceProcedureRef: fixture.sourceProcedureRef,
   sourceCombatantId: wizardId,
 };
-const save = (ability: "dex" | "wis" | "con") => ({
+const save = (ability: "dex" | "str" | "wis" | "con") => ({
   ability,
   dc: { kind: "caster_spell_save_dc" },
 });
 const saving = (
   name: string,
   variant: string,
-  ability: "dex" | "wis" | "con",
+  ability: "dex" | "str" | "wis" | "con",
   value: object,
 ) =>
   hole(name, {
@@ -299,6 +299,28 @@ const savingThrowCases: readonly CodecCase[] = [
         rangeFeet: 30,
       },
       requiresTableSpatialFact: true,
+    }),
+  ),
+  right(
+    "gustOfWindLineSave",
+    saving("gustOfWindLineSave", "gustOfWindLine", "str", {
+      targetId: skeletonId,
+      sourceCombatantId: wizardId,
+      sourceProcedureRef: fixture.sourceProcedureRef,
+      areaId: battleAreaId("area:codec-gust-save"),
+      directionId: battleLineDirectionId("direction:codec-gust-save"),
+      trigger: "endsTurnInLine",
+      save: { ability: "str", dc: { kind: "caster_spell_save_dc" } },
+      pushDistanceFeet: 15,
+    }),
+  ),
+  right(
+    "dragonsBreathSave",
+    saving("dragonsBreathSave", "dragonsBreath", "dex", {
+      targetId: skeletonId,
+      sourceCombatantId: wizardId,
+      sourceProcedureRef: fixture.sourceProcedureRef,
+      lengthFeet: 15,
     }),
   ),
 ];
@@ -432,6 +454,17 @@ const rolledDiceCases: readonly CodecCase[] = [
         areaId: battleAreaId("area:cloudkillAreaHazard"),
         trigger: "entersArea",
         damage: { expr: { dice: 1, dieSize: 6 }, damageType: "poison" },
+      },
+    }),
+  ),
+  right(
+    "dragonsBreathDamage",
+    rolled("dragonsBreathDamage", {
+      dragonsBreath: {
+        sourceCombatantId: wizardId,
+        sourceProcedureRef: fixture.sourceProcedureRef,
+        damageType: "fire",
+        expr: { dice: 1, dieSize: 6 },
       },
     }),
   ),

@@ -25,6 +25,7 @@ module battleRuntimeFindFamiliarCompanionLifecycleRouteMbt {
     | FamiliarDismissalReappearanceRouteSurface
     | FamiliarSharedSensesRouteSurface
     | FamiliarTouchDeliveryRouteSurface
+    | FamiliarTouchDeliveryNoRollRouteSurface
     | PactFamiliarAttackRouteSurface
 
   var qSurface: FindFamiliarCompanionLifecycleRouteSurface
@@ -133,6 +134,32 @@ module battleRuntimeFindFamiliarCompanionLifecycleRouteMbt {
     ),
   }
 
+  action doRouteTouchDeliveryNoRoll = all {
+    qSurface == FreshCompanionRouteSurface,
+    recordSurface(
+      FamiliarTouchDeliveryNoRollRouteSurface,
+      List(
+        startRoute,
+        routeDiscoverBattleActs(
+          CompanionTouchDeliveryRouteSubject,
+          Set(TargetChoiceHoleKind),
+          BattleSpellSlotAndActionEconomyOwner,
+        ),
+        routeResolveBattleSubject(
+          CompanionTouchDeliveryRouteSubject,
+          TargetChoiceFillKind,
+          Set(),
+          BattleCompanionOwner,
+        ),
+        routeResolveBattleSubjectWithoutFill(
+          CompanionTouchDeliveryRouteSubject,
+          Set(),
+          BattleActionEconomyOwner,
+        ),
+      ),
+    ),
+  }
+
   action doRoutePactFamiliarAttack = all {
     qSurface == FreshCompanionRouteSurface,
     recordSurface(
@@ -158,14 +185,8 @@ module battleRuntimeFindFamiliarCompanionLifecycleRouteMbt {
         routeResolveBattleSubject(
           CompanionReactionAttackRouteSubject,
           AttackRollFillKind,
-          Set(RolledDiceHoleKind),
-          BattleAttackRollOwner,
-        ),
-        routeResolveBattleSubject(
-          CompanionReactionAttackRouteSubject,
-          RolledDiceFillKind,
           Set(),
-          BattleHitPointOwner,
+          BattleAttackRollOwner,
         ),
         routeResolveBattleSubjectWithoutFill(
           CompanionReactionAttackRouteSubject,
@@ -182,6 +203,7 @@ module battleRuntimeFindFamiliarCompanionLifecycleRouteMbt {
     doRouteFamiliarDismissalReappearance,
     doRouteSharedSenses,
     doRouteTouchDelivery,
+    doRouteTouchDeliveryNoRoll,
     doRoutePactFamiliarAttack,
   }
 }

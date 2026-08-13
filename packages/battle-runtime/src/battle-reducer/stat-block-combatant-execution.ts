@@ -42,6 +42,7 @@ export function addBattleStatBlockCombatant(input: {
     readonly currentHp: Hp;
     readonly tempHp: Hp;
     readonly ammunitionStocks: readonly BattleAmmunitionStock[];
+    readonly reactionAvailable: boolean;
   };
 }): Either.Either<BattleState, BattleStateInitIssue> {
   const { combatant } = input;
@@ -122,7 +123,7 @@ export function addBattleStatBlockCombatant(input: {
     dodging: false,
     hidden: null,
     zeroHpLifecycle: { policy: "diesAtZeroHp" },
-    reactionAvailable: true,
+    reactionAvailable: combatant.reactionAvailable,
     movementSpentFeet: movementFeet(0),
     ammunitionStocks,
     armorClass: statBlockArmorClassState(initialization.armorClass),

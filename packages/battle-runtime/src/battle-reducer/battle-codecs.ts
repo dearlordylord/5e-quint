@@ -6428,6 +6428,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
     hitPoints: BattleCompanionHitPointsSchema,
     ammunitionStocks: BattleAmmunitionStocksSchema,
+    reactionAvailable: Schema.Boolean,
   }),
   Schema.Struct({
     status: Schema.Literal("temporarilyDismissed"),
@@ -6440,6 +6441,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
     hitPoints: BattleCompanionHitPointsSchema,
     ammunitionStocks: BattleAmmunitionStocksSchema,
+    reactionAvailable: Schema.Boolean,
   }),
   Schema.Struct({
     status: Schema.Literal("disappearedAtZeroHitPoints"),
@@ -6449,6 +6451,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     formAccess: Schema.Literal("findFamiliar"),
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
+    reactionAvailable: Schema.Boolean,
   }),
   Schema.Struct({
     status: Schema.Literal("disappearedAtZeroHitPoints"),
@@ -6458,6 +6461,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     formAccess: Schema.Literal("pactOfTheChain"),
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
+    reactionAvailable: Schema.Boolean,
   }),
 );
 
