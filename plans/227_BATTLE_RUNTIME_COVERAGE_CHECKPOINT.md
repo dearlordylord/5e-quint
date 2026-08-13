@@ -52,7 +52,7 @@ Recompute the 99% gaps after every production-denominator change.
    `UBIQUITOUS_LANGUAGE.md`; do not browse a substitute rules source.
 2. At a reasonable milestone, run focused tests, package typecheck, formatting,
    lint, and any behavior-relevant locked MBT.
-3. Require Sol self-review, then repeat independent RAW/domain,
+3. Require Luna self-review, then repeat independent RAW/domain,
    architecture/connascence, standards, and specification reviews until no
    reasonable findings remain.
 4. Run public root `pnpm coverage` and update only this current baseline.
