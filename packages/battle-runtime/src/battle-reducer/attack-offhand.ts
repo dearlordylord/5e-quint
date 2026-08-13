@@ -64,6 +64,7 @@ import {
   damageAmountByTypeEntriesToMap,
   damageAmountByTypeMapEntries,
   ongoingFeatureDamageModifier,
+  prospectiveAttackDamageTypes,
   sourceDamageRollPenaltyRollHoleForDamageRoll,
   sourceDamageRollPenaltyRollForDamageRoll,
   unexpectedSourceDamageRollPenaltyRoll,
@@ -103,7 +104,6 @@ import { attackFillSet } from "./attack-fill-set.ts";
 import { invalidResult } from "./result-helpers.ts";
 
 import {
-  attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
   frenzyDamageTypeDecision,
   eligibleAttackDamageDieFloorProcedureRefs,
@@ -540,7 +540,9 @@ function resolveBonusActionAttack(
         attackRoll: effectiveAttackRoll,
         attackKind: attackKindForDeflectRedirect(attack),
         attackHitTriggerKind: attackHitTriggerKind(attack),
-        damageTypes: attackPotentialDamageTypes(
+        damageTypes: prospectiveAttackDamageTypes(
+          attackRolledState,
+          attackRolledState.combatants.get(input.subject.actorId),
           attack,
           critical,
           effectiveAttackRoll,

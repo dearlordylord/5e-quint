@@ -58,6 +58,7 @@ import { combatantHasWardingBondResistance } from "./warding-bond.ts";
 import {
   attackDamageComponents,
   attackDamageModifier,
+  attackPotentialDamageTypes,
   eligibleAttackDamageDieFloorProcedureRefsForAttacker,
   selectedAttackDamageDieFloorChoice,
   statBlockAttackDamage,
@@ -146,6 +147,34 @@ export function fixedAttackDamageByTypeEntries(
     }),
     Match.exhaustive,
   );
+}
+
+export function prospectiveAttackDamageTypes(
+  state: BattleState,
+  attacker: BattleCreatureState | undefined,
+  attack: SupportedAttackActionOption,
+  critical: boolean,
+  attackRoll: AttackRollResult,
+  eligibleAttackDamageRiders: readonly AttackDamageRider[],
+  spellWeaponDamageRiders: readonly SpellAttackDamageComponent[] = [],
+  spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
+): readonly DamageType[] {
+  return [
+    ...new Set([
+      ...(
+        fixedAttackDamageByTypeEntries(state, attacker, attack, attackRoll) ??
+        []
+      ).map(({ damageType }) => damageType),
+      ...attackPotentialDamageTypes(
+        attack,
+        critical,
+        attackRoll,
+        eligibleAttackDamageRiders,
+        spellWeaponDamageRiders,
+        spellMarkedDamageRiders,
+      ),
+    ]),
+  ];
 }
 
 export function attackDamageByTypeEntries(
@@ -402,6 +431,13 @@ export function isSourceDamageRollPenaltyRollFill(
   fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
 ): boolean {
   return fill.holeId.startsWith(SOURCE_DAMAGE_ROLL_PENALTY_ROLL_HOLE_PREFIX);
+}
+
+export function sourceDamageRollPenaltyRollFillMatchesDamageRoll(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  damageRollHoleId: SourceDamageRollPenaltyRoll["damageRollHoleId"],
+): boolean {
+  return fill.holeId.endsWith(`:${damageRollHoleId}`);
 }
 
 export type SpellDamageReductionIdentity = Omit<
