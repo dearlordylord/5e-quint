@@ -28,7 +28,10 @@ not creatures; crossing is allowed, while ending in their space remains an
 explicit unsupported table-object adjudication.
 The retained `space` begins from these setup placements and later advances only
 through the composed scenario movement operation. Setup authors still provide
-only the starting placements.
+only the starting placements. That same retained space canonically projects
+the requested range, sight, and Total Cover eligibility for ordinary
+creature-spell target holes; specialized and point-origin holes keep their
+dedicated protocols rather than acquiring a second spell-target geometry.
 
 A scenario object is a table-owned target fact: use canonical `BattleObjectId`,
 `ArmorClass`, `BattleObjectDamageDisposition`, and tactical-space

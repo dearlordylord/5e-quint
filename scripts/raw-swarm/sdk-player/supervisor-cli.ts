@@ -42,6 +42,7 @@ import {
   scenarioSessionAfterRejectedMovement,
   scenarioRelation,
   scenarioObjectAttackFills,
+  scenarioCreatureSpellTargetFills,
   scenarioSessionWithBattleResult,
   scenarioTokenId,
   type ScenarioSession,
@@ -410,10 +411,15 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
           value: result,
         };
       }
+      const creatureSpellProjectedFills = scenarioCreatureSpellTargetFills({
+        session,
+        subject: input.subject,
+        fills: projectedFills.right,
+      });
       const battleResult = resolveBattleRuntimeSubject({
         session: session.battle,
         subject: input.subject,
-        fills: projectedFills.right,
+        fills: creatureSpellProjectedFills,
       });
       const result = retainScenarioBattlefield(session, battleResult);
       return {

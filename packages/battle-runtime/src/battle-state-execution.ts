@@ -4310,6 +4310,8 @@ export type BattleTargetChoiceHole = Extract<
   readonly spellTargetSpatialFactRequest?: {
     readonly casterId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
+    readonly rangeFeet: MovementFeet;
+    readonly visibility: "requiresSight" | "notSpecifiedByProcedure";
     readonly requiresKnownWillingTarget?: true;
   };
   readonly attack?: {
@@ -4690,6 +4692,12 @@ export type BattleSpellTargetAllocationHole = {
   readonly allocationCount: number;
   readonly choices: readonly CombatantId[];
   readonly requiresTableSpatialFact: true;
+  readonly spellTargetSpatialFactRequest: {
+    readonly casterId: CombatantId;
+    readonly sourceProcedureRef: BattleProcedureExecutionRef;
+    readonly rangeFeet: MovementFeet;
+    readonly visibility: "requiresSight";
+  };
 };
 export type BattleSpellTargetListHole = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
@@ -4707,6 +4715,12 @@ export type BattleSpellTargetListHole = {
       };
   readonly choices: readonly CombatantId[];
   readonly requiresTableSpatialFact: true;
+  readonly spellTargetSpatialFactRequest?: {
+    readonly casterId: CombatantId;
+    readonly sourceProcedureRef: BattleProcedureExecutionRef;
+    readonly rangeFeet: MovementFeet;
+    readonly visibility: "notSpecifiedByProcedure";
+  };
   readonly requiresKnownWillingTargets?: true;
   readonly relationshipFactRequest?: BattleSpellTargetListRelationshipFactRequest;
 };

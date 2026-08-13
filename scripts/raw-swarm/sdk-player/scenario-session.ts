@@ -868,6 +868,121 @@ export type ScenarioObjectAttackProjectionIssue = Readonly<{
   readonly message: string;
 }>;
 
+type ScenarioCreatureSpellTargetFill = Extract<
+  BattleFill,
+  {
+    readonly kind: "targetChoice" | "spellTargetAllocation" | "spellTargetList";
+  }
+>;
+
+function isScenarioCreatureSpellTargetFill(
+  fill: BattleFill,
+): fill is ScenarioCreatureSpellTargetFill {
+  return (
+    fill.kind === "targetChoice" ||
+    fill.kind === "spellTargetAllocation" ||
+    fill.kind === "spellTargetList"
+  );
+}
+
+export function scenarioCreatureSpellTargetFills(input: {
+  readonly session: ScenarioSession;
+  readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
+}): readonly BattleFill[] {
+  const projectedFills: BattleFill[] = [];
+  for (const fill of input.fills) {
+    const frontier = resolveBattleRuntimeSubject({
+      session: input.session.battle,
+      subject: input.subject,
+      fills: projectedFills,
+    });
+    if (frontier.tag !== "needsHoles") {
+      projectedFills.push(fill);
+      continue;
+    }
+    const hole = frontier.holes.find(
+      (candidate) =>
+        candidate.holeId === fill.holeId && candidate.kind === fill.kind,
+    );
+    if (
+      hole === undefined ||
+      !("spellTargetSpatialFactRequest" in hole) ||
+      hole.spellTargetSpatialFactRequest === undefined ||
+      !isScenarioCreatureSpellTargetFill(fill)
+    ) {
+      projectedFills.push(fill);
+      continue;
+    }
+    const request = hole.spellTargetSpatialFactRequest;
+    const targetIds = Match.value(fill).pipe(
+      Match.when({ kind: "targetChoice" }, ({ value }) => [value]),
+      Match.when({ kind: "spellTargetAllocation" }, ({ value }) =>
+        value.allocations.map(({ targetId }) => targetId),
+      ),
+      Match.when({ kind: "spellTargetList" }, ({ value }) => value.targetIds),
+      Match.exhaustive,
+    );
+    const canonicalFacts = [...new Set(targetIds)].flatMap((targetId) => {
+      const relation = scenarioRelation({
+        session: input.session,
+        sourceId: request.casterId,
+        targetId,
+      });
+      if (
+        relation.tag !== "relation" ||
+        Number(relation.relation.distanceFeet) > Number(request.rangeFeet) ||
+        relation.relation.cover === "total" ||
+        (request.visibility === "requiresSight" &&
+          !relation.relation.attackerCanSeeTarget)
+      ) {
+        return [];
+      }
+      return [
+        {
+          kind: "spellTarget" as const,
+          casterId: request.casterId,
+          targetId,
+          sourceProcedureRef: request.sourceProcedureRef,
+        },
+      ];
+    });
+    projectedFills.push(
+      Match.value(fill).pipe(
+        Match.when({ kind: "targetChoice" }, (targetChoice) => ({
+          ...targetChoice,
+          spatialFacts: [
+            ...(targetChoice.spatialFacts ?? []).filter(
+              ({ kind }) => kind !== "spellTarget",
+            ),
+            ...canonicalFacts,
+          ],
+        })),
+        Match.when({ kind: "spellTargetAllocation" }, (allocation) => ({
+          ...allocation,
+          spatialFacts: [
+            ...allocation.spatialFacts.filter(
+              ({ kind }) => kind !== "spellTarget",
+            ),
+            ...canonicalFacts,
+          ],
+        })),
+        Match.when({ kind: "spellTargetList" }, (targetList) => ({
+          ...targetList,
+          spatialFacts: [
+            ...targetList.spatialFacts.filter(
+              ({ kind }) => kind !== "spellTarget",
+            ),
+            ...canonicalFacts,
+          ],
+        })),
+        Match.exhaustive,
+      ),
+    );
+  }
+  return projectedFills;
+}
+
 export function scenarioObjectAttackFills(input: {
   readonly session: ScenarioSession;
   readonly subject: BattleSubject;

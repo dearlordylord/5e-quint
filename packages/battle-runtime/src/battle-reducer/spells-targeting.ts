@@ -165,13 +165,16 @@ export function spellTargetHole(
     label: `Spell target`,
     procedureRef: invocation.sourceProcedureRef,
     requiresTableSpatialFact: true,
-    spellTargetSpatialFactRequest: {
-      casterId: actorId,
-      sourceProcedureRef: invocation.sourceProcedureRef,
-      ...(spellInvocationRequiresKnownWillingTarget(invocation)
-        ? { requiresKnownWillingTarget: true as const }
-        : {}),
-    },
+    ...(invocation.procedure === "spellAttackDamage"
+      ? {
+          spellTargetSpatialFactRequest: {
+            casterId: actorId,
+            sourceProcedureRef: invocation.sourceProcedureRef,
+            rangeFeet: invocation.rangeFeet,
+            visibility: "notSpecifiedByProcedure" as const,
+          },
+        }
+      : {}),
     ...(spellTargetRequiresAttackRollRelationshipFact(invocation) &&
     ongoingFeatureEnemyRelationshipDecisionRequired(
       state,
@@ -310,6 +313,8 @@ export function spellAttackSequencePartTargetHole(
     spellTargetSpatialFactRequest: {
       casterId: actorId,
       sourceProcedureRef: invocation.sourceProcedureRef,
+      rangeFeet: invocation.rangeFeet,
+      visibility: "notSpecifiedByProcedure",
     },
     ...(ongoingFeatureEnemyRelationshipDecisionRequired(
       state,
@@ -580,6 +585,12 @@ export function spellTargetAllocationHole(
       repeatedDamageAllocationAdmissionFactsForInvocation(invocation),
     ).maximumTargetCount,
     requiresTableSpatialFact: true,
+    spellTargetSpatialFactRequest: {
+      casterId: actorId,
+      sourceProcedureRef: invocation.sourceProcedureRef,
+      rangeFeet: invocation.rangeFeet,
+      visibility: "requiresSight",
+    },
     choices: [...state.combatants.keys()].filter((id) =>
       spellTargetHasNonSpatialPrerequisites(state, actorId, id, invocation),
     ),

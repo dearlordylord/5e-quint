@@ -1300,6 +1300,13 @@ describe("Sanctuary targeting interdiction", () => {
     if (needsLeapTarget.tag !== "needsHoles") {
       throw new Error("Expected Chromatic Orb leap target hole.");
     }
+    expect(requireHole(needsLeapTarget.holes, "targetChoice")).toMatchObject({
+      spellTargetSpatialFactRequest: {
+        casterId,
+        rangeFeet: 30,
+        visibility: "notSpecifiedByProcedure",
+      },
+    });
     const leapTargetFill = spellLeapTargetFill(
       requireHole(needsLeapTarget.holes, "targetChoice"),
       replacementId,

@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 import { Either } from "effect";
 import {
+  battleActSpellPresentation,
   battleObjectId,
   combatantId,
   discoverBattleActs,
@@ -35,6 +36,7 @@ import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
 import {
   createScenarioSession,
   continueScenarioMovement,
+  scenarioCreatureSpellTargetFills,
   scenarioRelation,
   scenarioEnemyWithinFiveFeetCanSeeAttacker,
   scenarioObjectAttackFills,
@@ -680,6 +682,224 @@ describe("scenario setup public-SDK boundary", () => {
       tag: "unknown-token",
       tokenId: "missing-scout",
       message: "Scenario token missing-scout has no current placement.",
+    });
+
+    const magicMissileAct = discoverBattleActs(result.session.battle).find(
+      (act) =>
+        battleActSpellPresentation(act)?.invocation.procedure ===
+        "repeatedDamageAllocation",
+    );
+    expect(magicMissileAct).toBeDefined();
+    if (magicMissileAct === undefined) return;
+    const magicMissileFrontier = resolveBattleRuntimeSubject({
+      session: result.session.battle,
+      subject: magicMissileAct.subject,
+      fills: [],
+    });
+    expect(magicMissileFrontier.tag).toBe("needsHoles");
+    if (magicMissileFrontier.tag !== "needsHoles") return;
+    const allocationHole = magicMissileFrontier.holes.find(
+      (hole) => hole.kind === "spellTargetAllocation",
+    );
+    expect(allocationHole?.kind).toBe("spellTargetAllocation");
+    if (allocationHole?.kind !== "spellTargetAllocation") return;
+    expect(allocationHole.spellTargetSpatialFactRequest).toMatchObject({
+      casterId: "beacon-warden-ember",
+      rangeFeet: 120,
+      visibility: "requiresSight",
+    });
+
+    const forgedOccludedTarget = scenarioCreatureSpellTargetFills({
+      session: result.session,
+      subject: magicMissileAct.subject,
+      fills: [
+        {
+          kind: "spellTargetAllocation",
+          holeId: allocationHole.holeId,
+          value: {
+            allocations: [{ targetId: combatantId("wolf-3b"), count: 3 }],
+          },
+          spatialFacts: [
+            {
+              kind: "spellTarget",
+              casterId: combatantId("beacon-warden-ember"),
+              targetId: combatantId("wolf-3b"),
+              sourceProcedureRef:
+                allocationHole.spellTargetSpatialFactRequest.sourceProcedureRef,
+            },
+          ],
+        },
+      ],
+    });
+    expect(forgedOccludedTarget[0]).toMatchObject({
+      kind: "spellTargetAllocation",
+      spatialFacts: [],
+    });
+    expect(
+      resolveBattleRuntimeSubject({
+        session: result.session.battle,
+        subject: magicMissileAct.subject,
+        fills: forgedOccludedTarget,
+      }).tag,
+    ).toBe("invalid");
+
+    const projectedVisibleTarget = scenarioCreatureSpellTargetFills({
+      session: result.session,
+      subject: magicMissileAct.subject,
+      fills: [
+        {
+          kind: "spellTargetAllocation",
+          holeId: allocationHole.holeId,
+          value: {
+            allocations: [
+              { targetId: combatantId("beacon-warden-aegis"), count: 3 },
+            ],
+          },
+          spatialFacts: [],
+        },
+      ],
+    });
+    expect(projectedVisibleTarget[0]).toMatchObject({
+      kind: "spellTargetAllocation",
+      spatialFacts: [
+        {
+          kind: "spellTarget",
+          casterId: "beacon-warden-ember",
+          targetId: "beacon-warden-aegis",
+        },
+      ],
+    });
+
+    const genericTargetActs = discoverBattleActs(result.session.battle);
+    const scalarTargetAct = genericTargetActs.find(
+      (act) =>
+        battleActSpellPresentation(act)?.invocation.procedure ===
+        "persistentArmorEffect",
+    );
+    expect(scalarTargetAct).toBeDefined();
+    if (scalarTargetAct === undefined) return;
+    const scalarFrontier = resolveBattleRuntimeSubject({
+      session: result.session.battle,
+      subject: scalarTargetAct.subject,
+      fills: [],
+    });
+    expect(scalarFrontier.tag).toBe("needsHoles");
+    if (scalarFrontier.tag !== "needsHoles") return;
+    const scalarTargetHole = scalarFrontier.holes.find(
+      (hole) => hole.kind === "targetChoice",
+    );
+    expect(scalarTargetHole?.kind).toBe("targetChoice");
+    if (scalarTargetHole?.kind !== "targetChoice") return;
+    expect(scalarTargetHole.spellTargetSpatialFactRequest).toBeUndefined();
+
+    const pointOriginAct = genericTargetActs.find(
+      (act) =>
+        battleActSpellPresentation(act)?.invocation.procedure ===
+        "greaseGroundHazard",
+    );
+    expect(pointOriginAct).toBeDefined();
+    if (pointOriginAct === undefined) return;
+    const pointOriginFrontier = resolveBattleRuntimeSubject({
+      session: result.session.battle,
+      subject: pointOriginAct.subject,
+      fills: [],
+    });
+    expect(pointOriginFrontier.tag).toBe("needsHoles");
+    if (pointOriginFrontier.tag !== "needsHoles") return;
+    expect(
+      pointOriginFrontier.holes.some(
+        (hole) => "spellTargetSpatialFactRequest" in hole,
+      ),
+    ).toBe(false);
+
+    const ordinarySpellAttackAct = genericTargetActs.find(
+      (act) =>
+        battleActSpellPresentation(act)?.invocation.procedure ===
+        "spellAttackDamage",
+    );
+    expect(ordinarySpellAttackAct).toBeDefined();
+    if (ordinarySpellAttackAct === undefined) return;
+    const ordinarySpellAttackFrontier = resolveBattleRuntimeSubject({
+      session: result.session.battle,
+      subject: ordinarySpellAttackAct.subject,
+      fills: [],
+    });
+    expect(ordinarySpellAttackFrontier.tag).toBe("needsHoles");
+    if (ordinarySpellAttackFrontier.tag !== "needsHoles") return;
+    const ordinaryTargetHole = ordinarySpellAttackFrontier.holes.find(
+      (hole) => hole.kind === "targetChoice",
+    );
+    expect(ordinaryTargetHole?.kind).toBe("targetChoice");
+    if (
+      ordinaryTargetHole?.kind !== "targetChoice" ||
+      ordinaryTargetHole.spellTargetSpatialFactRequest === undefined
+    ) {
+      return;
+    }
+    const ordinaryRequest = ordinaryTargetHole.spellTargetSpatialFactRequest;
+    const forgedOrdinaryTarget = scenarioCreatureSpellTargetFills({
+      session: result.session,
+      subject: ordinarySpellAttackAct.subject,
+      fills: [
+        {
+          kind: "targetChoice",
+          holeId: ordinaryTargetHole.holeId,
+          value: combatantId("wolf-3b"),
+          spatialFacts: [
+            {
+              kind: "spellTarget",
+              casterId: ordinaryRequest.casterId,
+              targetId: combatantId("wolf-3b"),
+              sourceProcedureRef: ordinaryRequest.sourceProcedureRef,
+            },
+          ],
+        },
+      ],
+    });
+    expect(forgedOrdinaryTarget[0]).toMatchObject({
+      kind: "targetChoice",
+      spatialFacts: [],
+    });
+
+    const visibleOrdinaryTarget = ordinaryTargetHole.choices.find(
+      (targetId) => {
+        const relation = scenarioRelation({
+          session: result.session,
+          sourceId: ordinaryRequest.casterId,
+          targetId,
+        });
+        return (
+          relation.tag === "relation" &&
+          relation.relation.cover !== "total" &&
+          Number(relation.relation.distanceFeet) <=
+            Number(ordinaryRequest.rangeFeet)
+        );
+      },
+    );
+    expect(visibleOrdinaryTarget).toBeDefined();
+    if (visibleOrdinaryTarget === undefined) return;
+    expect(
+      scenarioCreatureSpellTargetFills({
+        session: result.session,
+        subject: ordinarySpellAttackAct.subject,
+        fills: [
+          {
+            kind: "targetChoice",
+            holeId: ordinaryTargetHole.holeId,
+            value: visibleOrdinaryTarget,
+            spatialFacts: [],
+          },
+        ],
+      })[0],
+    ).toMatchObject({
+      kind: "targetChoice",
+      spatialFacts: [
+        {
+          kind: "spellTarget",
+          casterId: ordinaryRequest.casterId,
+          targetId: visibleOrdinaryTarget,
+        },
+      ],
     });
     const damaged = scenarioSessionWithBattleResult(
       result.session,

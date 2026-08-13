@@ -1463,6 +1463,8 @@ const BattleHolePayloadUnionSchema = Schema.Union(
       Schema.Struct({
         casterId: CombatantId,
         sourceProcedureRef: BattleProcedureExecutionRef,
+        rangeFeet: MovementFeet,
+        visibility: Schema.Literal("requiresSight", "notSpecifiedByProcedure"),
         requiresKnownWillingTarget: Schema.optionalWith(Schema.Literal(true), {
           exact: true,
         }),
@@ -1666,6 +1668,12 @@ const BattleHolePayloadUnionSchema = Schema.Union(
     allocationCount: Schema.Number,
     choices: Schema.Array(CombatantId),
     requiresTableSpatialFact: Schema.Literal(true),
+    spellTargetSpatialFactRequest: Schema.Struct({
+      casterId: CombatantId,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      rangeFeet: MovementFeet,
+      visibility: Schema.Literal("requiresSight"),
+    }),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -1683,6 +1691,15 @@ const BattleHolePayloadUnionSchema = Schema.Union(
     ),
     choices: Schema.Array(CombatantId),
     requiresTableSpatialFact: Schema.Literal(true),
+    spellTargetSpatialFactRequest: Schema.optionalWith(
+      Schema.Struct({
+        casterId: CombatantId,
+        sourceProcedureRef: BattleProcedureExecutionRef,
+        rangeFeet: MovementFeet,
+        visibility: Schema.Literal("notSpecifiedByProcedure"),
+      }),
+      { exact: true },
+    ),
     requiresKnownWillingTargets: Schema.optionalWith(Schema.Literal(true), {
       exact: true,
     }),

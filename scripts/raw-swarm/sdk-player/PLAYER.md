@@ -44,6 +44,11 @@ the object's current damage disposition, and any visible non-incapacitated
 enemy within 5 feet from the canonical session. SDK
 operations accept the whole scenario session and preserve those table-owned
 facts while the nested battle advances.
+For a creature-targeting spell hole that surfaces an ordinary spatial-fact
+request, choose targets or damage allocations through that hole. The scenario
+SDK overwrites caller-supplied spell-target facts with the requested range,
+sight, and Total Cover eligibility derived from the retained tactical space.
+Specialized and point-origin spell holes retain their dedicated protocols.
 One continuation may make as many ordinary TypeScript decisions and SDK calls
 as one coherent tactical choice requires. Return `kind: "continue"` when a new
 observation should inform the next choice. Return `kind: "playerConcluded"`
