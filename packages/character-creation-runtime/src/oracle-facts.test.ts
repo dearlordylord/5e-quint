@@ -472,6 +472,42 @@ describe("Character Creation owner facts", () => {
       offHandWeaponItemId,
     );
 
+    const focusFact = characterBuildFact({
+      ...build,
+      equipment: {
+        ...build.equipment,
+        owned: [
+          ...build.equipment.owned,
+          {
+            kind: "authoredCatalogItem",
+            itemId: mainWeaponItemId,
+            authoredItemId: "synthetic_arcane_focus_staff",
+            spellcastingFocusKind: "arcane",
+            quantity: PositiveInteger(1),
+          },
+        ],
+        loadout: {
+          ...build.equipment.loadout,
+          weapon: {
+            itemId: mainWeaponItemId,
+            grip: "one_handed",
+          },
+        },
+      },
+    });
+    expect(focusFact.equipment.loadout.weapon).toMatchObject({
+      itemId: mainWeaponItemId,
+      grip: "one_handed",
+    });
+    expect(focusFact.equipment.owned).toContainEqual(
+      expect.objectContaining({
+        kind: "authoredCatalogItem",
+        authoredItemId: "synthetic_arcane_focus_staff",
+        spellcastingFocusKind: "arcane",
+      }),
+    );
+    expect(decodeCharacterBuildFact(focusFact)).toHaveProperty("_tag", "Right");
+
     const gnomishFact = characterBuildFact({
       ...build,
       speciesChoiceFacts: {

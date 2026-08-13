@@ -83,6 +83,7 @@ module characterCreationRuntimeSlice {
     | OWeaponDagger
     | OWeaponSpear
     | OWeaponFlail
+    | OWeaponQuarterstaff
     | OWeaponShortbow
     | OBackgroundAsiStrDex
     | OBackgroundAsiStrCon
@@ -134,6 +135,17 @@ module characterCreationRuntimeSlice {
     | NoProgression
     | SelectedProgression(CharacterProgression)
 
+  type ClassEquipmentSelection =
+    | NoClassEquipment
+    | ClassEquipmentCoinGrant
+    | ClassEquipmentItemBundle
+    | ClassEquipmentItemBundleWithWeapon
+
+  type BackgroundEquipmentSelection =
+    | NoBackgroundEquipment
+    | BackgroundEquipmentCoinGrant
+    | BackgroundEquipmentItemBundle
+
   type Fill =
     | FChoice({ hole: HoleId, options: List[ChoiceOptionId] })
     | FAbilityScores({ hole: HoleId, method: SupportedAbilityScoreMethod, scores: AbilityScores })
@@ -174,9 +186,11 @@ module characterCreationRuntimeSlice {
     fighterWeaponMastery: bool,
     backgroundAbilityScoreIncrease: bool,
     backgroundTool: bool,
-    classEquipment: bool,
-    backgroundEquipment: bool,
-    equipmentPurchase: bool,
+    classEquipment: ClassEquipmentSelection,
+    backgroundEquipment: BackgroundEquipmentSelection,
+    purchasedArmor: bool,
+    purchasedShield: bool,
+    purchasedWeapon: bool,
     loadoutArmor: bool,
     loadoutShield: bool,
     loadoutWeapon: bool,
@@ -201,9 +215,11 @@ module characterCreationRuntimeSlice {
     fighterWeaponMastery: false,
     backgroundAbilityScoreIncrease: false,
     backgroundTool: false,
-    classEquipment: false,
-    backgroundEquipment: false,
-    equipmentPurchase: false,
+    classEquipment: NoClassEquipment,
+    backgroundEquipment: NoBackgroundEquipment,
+    purchasedArmor: false,
+    purchasedShield: false,
+    purchasedWeapon: false,
     loadoutArmor: false,
     loadoutShield: false,
     loadoutWeapon: false,
@@ -249,6 +265,22 @@ module characterCreationRuntimeSlice {
 
   pure def hasWizardProgression(draft: Draft): bool =
     selectedProgressionClassLevel(draft.progression, WizardClassUnit) > 0
+
+  pure def hasClassEquipment(draft: Draft): bool =
+    draft.classEquipment != NoClassEquipment
+
+  pure def classEquipmentHasBundleWeapon(draft: Draft): bool =
+    draft.classEquipment == ClassEquipmentItemBundleWithWeapon
+
+  pure def hasBackgroundEquipment(draft: Draft): bool =
+    draft.backgroundEquipment != NoBackgroundEquipment
+
+  pure def hasCoinEquipmentPath(draft: Draft): bool =
+    draft.classEquipment == ClassEquipmentCoinGrant
+      and draft.backgroundEquipment == BackgroundEquipmentCoinGrant
+
+  pure def hasEquipmentPurchase(draft: Draft): bool =
+    draft.purchasedArmor or draft.purchasedShield or draft.purchasedWeapon
 
   pure val fighterStandardArray: AbilityScores = {
     strength: 15,
@@ -319,12 +351,12 @@ module characterCreationRuntimeSlice {
           if (draft.classSkills) Set() else Set(HClassSkills),
           if (draft.fighterFightingStyle) Set() else Set(HFighterFightingStyle),
           if (draft.fighterWeaponMastery) Set() else Set(HFighterWeaponMastery),
-          if (draft.classEquipment) Set() else Set(HClassEquipment),
+          if (hasClassEquipment(draft)) Set() else Set(HClassEquipment),
         ).flatten()
       else if (hasWizardProgression(draft))
         Set(
           if (draft.classSkills) Set() else Set(HClassSkills),
-          if (draft.classEquipment) Set() else Set(HClassEquipment),
+          if (hasClassEquipment(draft)) Set() else Set(HClassEquipment),
         ).flatten()
       else Set()
 
@@ -333,21 +365,25 @@ module characterCreationRuntimeSlice {
         Set(
           if (draft.backgroundAbilityScoreIncrease) Set() else Set(HBackgroundAbilityScoreIncrease),
           if (draft.backgroundTool) Set() else Set(HBackgroundTool),
-          if (draft.backgroundEquipment) Set() else Set(HBackgroundEquipment),
+          if (hasBackgroundEquipment(draft)) Set() else Set(HBackgroundEquipment),
         ).flatten()
       else Set()
 
-    val equipment =
-      if (draft.classEquipment and draft.backgroundEquipment)
+    val purchasedEquipment =
+      if (hasCoinEquipmentPath(draft))
         Set(
-          if (draft.equipmentPurchase) Set() else Set(HEquipmentPurchase),
-          if (draft.equipmentPurchase and not(draft.loadoutArmor)) Set(HLoadoutArmor) else Set(),
-          if (draft.equipmentPurchase and not(draft.loadoutShield)) Set(HLoadoutShield) else Set(),
-          if (draft.equipmentPurchase and not(draft.loadoutWeapon)) Set(HLoadoutWeapon) else Set(),
+          if (hasEquipmentPurchase(draft)) Set() else Set(HEquipmentPurchase),
+          if (draft.purchasedArmor and not(draft.loadoutArmor)) Set(HLoadoutArmor) else Set(),
+          if (draft.purchasedShield and not(draft.loadoutShield)) Set(HLoadoutShield) else Set(),
         ).flatten()
       else Set()
 
-    initial.union(classGranted).union(backgroundGranted).union(equipment)
+    val weaponLoadout =
+      if ((draft.purchasedWeapon or classEquipmentHasBundleWeapon(draft)) and not(draft.loadoutWeapon))
+        Set(HLoadoutWeapon)
+      else Set()
+
+    initial.union(classGranted).union(backgroundGranted).union(purchasedEquipment).union(weaponLoadout)
   }
 
   pure def finalizeDraft(draft: Draft): FinalizationStatus =
@@ -360,9 +396,14 @@ module characterCreationRuntimeSlice {
         or (hasWizardProgression(draft) and draft.classSkills)
       )
       and draft.backgroundAbilityScoreIncrease
-      and draft.backgroundTool and draft.classEquipment and draft.backgroundEquipment
-      and draft.equipmentPurchase and draft.loadoutArmor and draft.loadoutShield
-      and draft.loadoutWeapon
+      and draft.backgroundTool and hasClassEquipment(draft) and hasBackgroundEquipment(draft)
+      and (
+        (classEquipmentHasBundleWeapon(draft) and draft.loadoutWeapon)
+        or (hasEquipmentPurchase(draft)
+          and (not(draft.purchasedArmor) or draft.loadoutArmor)
+          and (not(draft.purchasedShield) or draft.loadoutShield)
+          and (not(draft.purchasedWeapon) or draft.loadoutWeapon))
+      )
     ) Ready
     else Invalid
 
@@ -432,7 +473,7 @@ module characterCreationRuntimeSlice {
     | HBackgroundTool => Set(OToolDiceSet)
     | HClassEquipment => Set(OClassEquipmentPackageA, OClassEquipmentPackageB, OClassEquipmentCoins)
     | HBackgroundEquipment => Set(OBackgroundEquipmentPack, OBackgroundEquipmentCoins)
-    | HEquipmentPurchase => Set(OArmorChainMail, OWeaponLongsword, OWeaponDagger, OWeaponFlail, OEquipmentShield)
+    | HEquipmentPurchase => Set(OArmorChainMail, OWeaponLongsword, OWeaponDagger, OWeaponFlail, OWeaponQuarterstaff, OEquipmentShield)
     | HLoadoutArmor => Set(OLoadoutWorn)
     | HLoadoutShield => Set(OLoadoutWielded)
     | HLoadoutWeapon => Set(OLoadoutWieldedOneHanded)
@@ -451,13 +492,15 @@ module characterCreationRuntimeSlice {
     | _ => validOptions(hole)
   }
 
-  pure def requiredChoiceCount(hole: HoleId): int = match hole {
+  pure def minimumChoiceCount(hole: HoleId): int = match hole {
     | HLanguages => 2
     | HClassSkills => 2
     | HFighterWeaponMastery => 3
-    | HEquipmentPurchase => 3
     | _ => 1
   }
+
+  pure def maximumChoiceCount(hole: HoleId): int =
+    if (hole == HEquipmentPurchase) 3 else minimumChoiceCount(hole)
 
   pure def allOptionsIn(options: List[ChoiceOptionId], allowed: Set[ChoiceOptionId]): bool =
     options.foldl(true, (valid, option) => valid and allowed.contains(option))
@@ -479,10 +522,10 @@ module characterCreationRuntimeSlice {
       | FChoice(v) =>
           val cardinalityIssues =
             Set(
-              if (v.options.length() < requiredChoiceCount(hole))
+              if (v.options.length() < minimumChoiceCount(hole))
                 Set({ fillIndex: fillIndex, hole: hole, code: TooFewChoices })
               else Set(),
-              if (v.options.length() > requiredChoiceCount(hole))
+              if (v.options.length() > maximumChoiceCount(hole))
                 Set({ fillIndex: fillIndex, hole: hole, code: TooManyChoices })
               else Set(),
             ).flatten()
@@ -516,6 +559,16 @@ module characterCreationRuntimeSlice {
     else if (optionSelected(options, OClassWizardLevel1)) SelectedProgression(wizardLevel1Progression)
     else NoProgression
 
+  pure def selectedClassEquipment(draft: Draft, options: List[ChoiceOptionId]): ClassEquipmentSelection =
+    if (optionSelected(options, OClassEquipmentCoins)) ClassEquipmentCoinGrant
+    else if (hasWizardProgression(draft) and optionSelected(options, OClassEquipmentPackageA))
+      ClassEquipmentItemBundleWithWeapon
+    else ClassEquipmentItemBundle
+
+  pure def selectedBackgroundEquipment(options: List[ChoiceOptionId]): BackgroundEquipmentSelection =
+    if (optionSelected(options, OBackgroundEquipmentCoins)) BackgroundEquipmentCoinGrant
+    else BackgroundEquipmentItemBundle
+
   pure def applyFill(draft: Draft, fill: Fill): Draft = match fill {
       | FChoice(v) => match v.hole {
         | HProgression => draft.with("progression", progressionSelection(v.options))
@@ -528,9 +581,20 @@ module characterCreationRuntimeSlice {
         | HFighterWeaponMastery => draft.with("fighterWeaponMastery", true)
         | HBackgroundAbilityScoreIncrease => draft.with("backgroundAbilityScoreIncrease", true)
         | HBackgroundTool => draft.with("backgroundTool", true)
-        | HClassEquipment => draft.with("classEquipment", true)
-        | HBackgroundEquipment => draft.with("backgroundEquipment", true)
-        | HEquipmentPurchase => draft.with("equipmentPurchase", true)
+        | HClassEquipment =>
+            { ...draft, classEquipment: selectedClassEquipment(draft, v.options) }
+        | HBackgroundEquipment =>
+            { ...draft, backgroundEquipment: selectedBackgroundEquipment(v.options) }
+        | HEquipmentPurchase => {
+            ...draft,
+            purchasedArmor: optionSelected(v.options, OArmorChainMail),
+            purchasedShield: optionSelected(v.options, OEquipmentShield),
+            purchasedWeapon:
+              optionSelected(v.options, OWeaponLongsword)
+                or optionSelected(v.options, OWeaponDagger)
+                or optionSelected(v.options, OWeaponFlail)
+                or optionSelected(v.options, OWeaponQuarterstaff),
+          }
         | HLoadoutArmor => draft.with("loadoutArmor", true)
         | HLoadoutShield => draft.with("loadoutShield", true)
         | HLoadoutWeapon => draft.with("loadoutWeapon", true)

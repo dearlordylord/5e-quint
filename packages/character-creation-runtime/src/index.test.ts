@@ -2365,6 +2365,43 @@ describe("character creation hole discovery", () => {
     });
   });
 
+  test("one selected weapon loadout suppresses every other owned weapon hole", () => {
+    const holes = discoverCreationHoles({
+      draft: draftWithSelections({
+        progression: testProgression(authoredUnitId("class_fighter"), 1),
+        background: authoredUnitId("background_soldier"),
+        choices: [
+          selectedChoice("class_fighter", "class_equipment_choice", "option_c"),
+          selectedChoice(
+            "background_soldier",
+            "background_equipment_choice",
+            "option_b",
+          ),
+          selectedLoadoutChoice(
+            "weapon_longsword",
+            "weapon",
+            "wielded_one_handed",
+          ),
+        ],
+        equipment: {
+          selectedUnitIds: [
+            authoredUnitId("weapon_longsword"),
+            authoredUnitId("weapon_flail"),
+            authoredUnitId("equipment_shield"),
+          ],
+        },
+      }),
+      unitLibrary,
+    });
+
+    expect(
+      holeById(holes, testLoadoutHoleId("weapon_longsword", "weapon")),
+    ).toBeUndefined();
+    expect(
+      holeById(holes, testLoadoutHoleId("weapon_flail", "weapon")),
+    ).toBeUndefined();
+  });
+
   test("opens Quarterstaff loadout when a coin-equipment Druid purchases a Shillelagh weapon", () => {
     const holes = discoverCreationHoles({
       draft: draftWithSelections({
@@ -2934,6 +2971,13 @@ describe("character creation QNT slice parity", () => {
     if (staleRevision.tag !== "rejected") {
       throw new Error("Expected the stale-revision fill to be rejected.");
     }
+    const wizardItemBundle = completeWizardDraft({
+      classEquipmentOption: "option_a",
+    });
+    const wizardCoinPath = completeWizardDraft({
+      classEquipmentOption: "option_b",
+      coinEquipmentUnitIds: ["weapon_quarterstaff"],
+    });
 
     runGeneratedQuintParity(
       renderQuintParityModule({
@@ -2953,6 +2997,8 @@ describe("character creation QNT slice parity", () => {
         tooFewLanguages,
         tooManyLanguages,
         staleRevision,
+        wizardItemBundle,
+        wizardCoinPath,
       }),
     );
   }, 30_000);
@@ -9725,10 +9771,16 @@ describe("character creation finalization", () => {
     if (result.tag !== "ready") return;
     expect(result.build.equipment).toEqual({
       owned: [
-        { kind: "authoredStartingItem", itemName: "Dagger", quantity: 2 },
         {
-          kind: "authoredStartingItem",
-          itemName: "Arcane Focus (Quarterstaff)",
+          kind: "catalogItem",
+          itemId: testCharacterEquipmentItemId("main", "weapon_dagger"),
+          quantity: 2,
+        },
+        {
+          kind: "authoredCatalogItem",
+          itemId: testCharacterEquipmentItemId("main", "weapon_quarterstaff"),
+          authoredItemId: "wizard_arcane_focus_quarterstaff",
+          spellcastingFocusKind: "arcane",
           quantity: 1,
         },
         { kind: "authoredStartingItem", itemName: "Robe", quantity: 1 },
@@ -9739,13 +9791,53 @@ describe("character creation finalization", () => {
           quantity: 1,
         },
       ],
-      loadout: {},
+      loadout: {
+        weapon: {
+          itemId: testCharacterEquipmentItemId("main", "weapon_quarterstaff"),
+          grip: "one_handed",
+        },
+      },
     });
     expect(
       characterBuildUnitRefs(result.build, unitLibrary).map(
         (ref) => ref.unitId,
       ),
-    ).not.toContain("Arcane Focus (Quarterstaff)");
+    ).toEqual(expect.arrayContaining(["weapon_dagger", "weapon_quarterstaff"]));
+  });
+
+  test("does not project a purchased plain Quarterstaff as an Arcane Focus", () => {
+    const wizard = completeWizardDraft({ classEquipmentOption: "option_b" });
+    const completeSelections = finalizedSelections(wizard);
+    expect(completeSelections).toBeDefined();
+    if (completeSelections === undefined) return;
+    const selections = {
+      ...completeSelections,
+      equipment: {
+        selectedUnitIds: completeSelections.equipment.selectedUnitIds.map(
+          (unitId) =>
+            unitId === "weapon_longsword"
+              ? authoredUnitId("weapon_quarterstaff")
+              : unitId,
+        ),
+      },
+      choices: completeSelections.choices.map((choice) =>
+        choice.kind === "loadout" && choice.source.slot === "weapon"
+          ? selectedLoadoutChoice(
+              "weapon_quarterstaff",
+              "weapon",
+              "wielded_one_handed",
+            )
+          : choice,
+      ),
+    };
+
+    const result = finalizedBuildEquipment(selections, unitLibrary);
+    expect(result).toHaveProperty("_tag", "Right");
+    if (Either.isLeft(result)) return;
+    expect(result.right.loadout.weapon).toEqual({
+      itemId: testCharacterEquipmentItemId("main", "weapon_quarterstaff"),
+      grip: "one_handed",
+    });
   });
 
   test("does not finalize Fighter item-bundle equipment with purchased loadout", () => {
@@ -12176,7 +12268,10 @@ function completeFighterDraftForBackground(input: {
 }
 
 function completeWizardDraft(
-  input: { readonly classEquipmentOption?: "option_a" | "option_b" } = {},
+  input: {
+    readonly classEquipmentOption?: "option_a" | "option_b";
+    readonly coinEquipmentUnitIds?: readonly string[];
+  } = {},
 ): CharacterDraft {
   const draft = createTestDraft("draft:complete-wizard");
   const afterInitial = requireAcceptedBatch(
@@ -12264,7 +12359,30 @@ function completeWizardDraft(
       ],
     }),
   );
-  if (input.classEquipmentOption === "option_a") return afterChoices;
+  if (input.classEquipmentOption === "option_a") {
+    expect(
+      holeById(
+        discoverCreationHoles({ draft: afterChoices, unitLibrary }),
+        testLoadoutHoleId("weapon_quarterstaff", "weapon"),
+      ),
+    ).toMatchObject({
+      kind: "choice",
+      options: [{ optionId: "wielded_one_handed" }],
+    });
+    return requireAcceptedBatch(
+      fillCreationHoles({
+        draft: afterChoices,
+        unitLibrary,
+        expectedRevision: afterChoices.revision,
+        fills: [
+          choiceFill(
+            testLoadoutHoleId("weapon_quarterstaff", "weapon"),
+            "wielded_one_handed",
+          ),
+        ],
+      }),
+    );
+  }
   const afterPurchase = requireAcceptedBatch(
     fillCreationHoles({
       draft: afterChoices,
@@ -12273,9 +12391,11 @@ function completeWizardDraft(
       fills: [
         choiceFill(
           testUnitHoleId("class_wizard", "equipment_purchase"),
-          "weapon_longsword",
-          "weapon_dagger",
-          "equipment_shield",
+          ...(input.coinEquipmentUnitIds ?? [
+            "weapon_longsword",
+            "weapon_dagger",
+            "equipment_shield",
+          ]),
         ),
       ],
     }),
@@ -12287,9 +12407,23 @@ function completeWizardDraft(
       unitLibrary,
       expectedRevision: afterPurchase.revision,
       fills: [
-        choiceFill(testLoadoutHoleId("equipment_shield", "shield"), "wielded"),
+        ...((input.coinEquipmentUnitIds ?? ["equipment_shield"]).includes(
+          "equipment_shield",
+        )
+          ? [
+              choiceFill(
+                testLoadoutHoleId("equipment_shield", "shield"),
+                "wielded",
+              ),
+            ]
+          : []),
         choiceFill(
-          testLoadoutHoleId("weapon_longsword", "weapon"),
+          testLoadoutHoleId(
+            input.coinEquipmentUnitIds?.find((unitId) =>
+              unitId.startsWith("weapon_"),
+            ) ?? "weapon_longsword",
+            "weapon",
+          ),
           "wielded_one_handed",
         ),
       ],
@@ -12576,6 +12710,7 @@ const HOLE_ID_TO_QNT_VARIANT = {
   [testLoadoutHoleId("armor_chain_mail", "armor")]: "HLoadoutArmor",
   [testLoadoutHoleId("equipment_shield", "shield")]: "HLoadoutShield",
   [testLoadoutHoleId("weapon_longsword", "weapon")]: "HLoadoutWeapon",
+  [testLoadoutHoleId("weapon_quarterstaff", "weapon")]: "HLoadoutWeapon",
 } as const satisfies Record<string, string>;
 const HOLE_ID_TO_QNT_VARIANT_LOOKUP: Readonly<Record<string, string>> =
   HOLE_ID_TO_QNT_VARIANT;
@@ -12640,7 +12775,7 @@ function runGeneratedQuintParity(moduleBody: string): void {
       ],
       { encoding: "utf8" },
     );
-    expect(quintOutput).toContain("14 passing");
+    expect(quintOutput).toContain("16 passing");
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
@@ -12663,6 +12798,8 @@ function renderQuintParityModule(input: {
   readonly tooFewLanguages: RejectedCreationBatch;
   readonly tooManyLanguages: RejectedCreationBatch;
   readonly staleRevision: RejectedCreationBatch;
+  readonly wizardItemBundle: CharacterDraft;
+  readonly wizardCoinPath: CharacterDraft;
 }): string {
   const completeFinalizationTag = qntFinalizationTag(
     input.completeFinalization.tag,
@@ -12692,6 +12829,22 @@ function renderQuintParityModule(input: {
       assert(completeManifestDraft == ${renderQntDraftProjection(input.complete)}),
       assert(openCreationHoles(completeManifestDraft) == ${renderQntHoleSet(input.completeHoles)}),
       assert(finalizeDraft(completeManifestDraft) == ${completeFinalizationTag}),
+    }
+  }
+
+  run parity_wizard_item_bundle_ready_matches_runtime = {
+    val draft = ${renderQntDraftProjection(input.wizardItemBundle)}
+    all {
+      assert(openCreationHoles(draft) == ${renderQntHoleSet(discoverCreationHoles({ draft: input.wizardItemBundle, unitLibrary }))}),
+      assert(finalizeDraft(draft) == ${qntFinalizationTag(finalizeCharacterDraft({ draft: input.wizardItemBundle, unitLibrary }).tag)}),
+    }
+  }
+
+  run parity_wizard_coin_path_ready_matches_runtime = {
+    val draft = ${renderQntDraftProjection(input.wizardCoinPath)}
+    all {
+      assert(openCreationHoles(draft) == ${renderQntHoleSet(discoverCreationHoles({ draft: input.wizardCoinPath, unitLibrary }))}),
+      assert(finalizeDraft(draft) == ${qntFinalizationTag(finalizeCharacterDraft({ draft: input.wizardCoinPath, unitLibrary }).tag)}),
     }
   }
 
@@ -12900,18 +13053,30 @@ function renderQntDraftProjection(draft: CharacterDraft): string {
     abilityScores: ${qntBool(selections.abilityScoreGeneration != null)},
     languages: ${qntBool(selections.languages != null)},
     alignment: ${qntBool(selections.alignment != null)},
-    classSkills: ${qntBool(hasChoiceSelection(draft, "class_fighter", "class_skill_proficiency_choice"))},
+    classSkills: ${qntBool(draft.selections.choices.some((selection) => selection.kind === "unitChoice" && selection.source.choiceKey === "class_skill_proficiency_choice"))},
     fighterFightingStyle: ${qntBool(hasChoiceSelection(draft, "fighter_fighting_style", "class_feature_feat_choice"))},
     fighterWeaponMastery: ${qntBool(hasChoiceSelection(draft, "fighter_weapon_mastery", "weapon_mastery_options"))},
     backgroundAbilityScoreIncrease: ${qntBool(selections.backgroundAbilityScoreIncrease != null)},
     backgroundTool: ${qntBool(hasChoiceSelection(draft, "background_soldier", "background_tool_choice"))},
-    classEquipment: ${qntBool(hasChoiceSelection(draft, "class_fighter", "class_equipment_choice"))},
-    backgroundEquipment: ${qntBool(hasChoiceSelection(draft, "background_soldier", "background_equipment_choice"))},
-    equipmentPurchase: ${qntBool(selections.equipment != null)},
-    loadoutArmor: ${qntBool(hasChoiceSelection(draft, "armor_chain_mail", "loadout_armor"))},
-    loadoutShield: ${qntBool(hasChoiceSelection(draft, "equipment_shield", "loadout_shield"))},
-    loadoutWeapon: ${qntBool(hasChoiceSelection(draft, "weapon_longsword", "loadout_weapon"))},
+    classEquipment: ${renderQntClassEquipmentSelection(draft)},
+    backgroundEquipment: ${renderQntBackgroundEquipmentSelection(draft)},
+    purchasedArmor: ${qntBool(selections.equipment?.selectedUnitIds.some((unitId) => unitId === "armor_chain_mail") ?? false)},
+    purchasedShield: ${qntBool(selections.equipment?.selectedUnitIds.some((unitId) => unitId === "equipment_shield") ?? false)},
+    purchasedWeapon: ${qntBool(selections.equipment?.selectedUnitIds.some((unitId) => String(unitId).startsWith("weapon_")) ?? false)},
+    loadoutArmor: ${qntBool(hasLoadoutSlotSelection(draft, "armor"))},
+    loadoutShield: ${qntBool(hasLoadoutSlotSelection(draft, "shield"))},
+    loadoutWeapon: ${qntBool(hasLoadoutSlotSelection(draft, "weapon"))},
   }`;
+}
+
+function hasLoadoutSlotSelection(
+  draft: CharacterDraft,
+  slot: "armor" | "shield" | "weapon",
+): boolean {
+  return draft.selections.choices.some(
+    (selection) =>
+      selection.kind === "loadout" && selection.source.slot === slot,
+  );
 }
 
 function qntProgressionSelection(
@@ -12922,6 +13087,46 @@ function qntProgressionSelection(
   }
 
   return `SelectedProgression(${renderQntCharacterProgression(progression)})`;
+}
+
+function renderQntClassEquipmentSelection(draft: CharacterDraft): string {
+  const progression = draft.selections.progression;
+  const classUnit =
+    progression == null ? undefined : startingClassUnitId(progression);
+  if (classUnit == null) return "NoClassEquipment";
+  const selected = selectedChoiceBySource(
+    draft,
+    classUnit,
+    "class_equipment_choice",
+  );
+  if (selected == null) return "NoClassEquipment";
+  if (
+    selected.options.some(
+      (option) =>
+        option.optionId ===
+        (classUnit === "class_wizard" ? "option_b" : "option_c"),
+    )
+  ) {
+    return "ClassEquipmentCoinGrant";
+  }
+  return classUnit === "class_wizard" &&
+    selected.options.some((option) => option.optionId === "option_a")
+    ? "ClassEquipmentItemBundleWithWeapon"
+    : "ClassEquipmentItemBundle";
+}
+
+function renderQntBackgroundEquipmentSelection(draft: CharacterDraft): string {
+  const backgroundUnit = draft.selections.background;
+  if (backgroundUnit == null) return "NoBackgroundEquipment";
+  const selected = selectedChoiceBySource(
+    draft,
+    backgroundUnit,
+    "background_equipment_choice",
+  );
+  if (selected == null) return "NoBackgroundEquipment";
+  return selected.options.some((option) => option.optionId === "option_b")
+    ? "BackgroundEquipmentCoinGrant"
+    : "BackgroundEquipmentItemBundle";
 }
 
 function renderQntCharacterProgression(

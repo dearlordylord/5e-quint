@@ -1431,13 +1431,19 @@ export type CharacterBuildSpellSlotCapacity = {
 export type CharacterBuildLoadout = {
   readonly armor?: CharacterEquipmentItemId<"armor">;
   readonly shield?: CharacterEquipmentItemId<"shield">;
-  readonly weapon?: {
-    readonly itemId: CharacterEquipmentItemId<"main">;
-    readonly grip: "one_handed";
-  };
+  readonly weapon?: CharacterBuildHeldWeapon;
   readonly offHandWeapon?: {
     readonly itemId: CharacterEquipmentItemId<"off">;
   };
+};
+
+export const CHARACTER_SPELLCASTING_FOCUS_KINDS = ["arcane"] as const;
+export type CharacterSpellcastingFocusKind =
+  (typeof CHARACTER_SPELLCASTING_FOCUS_KINDS)[number];
+
+export type CharacterBuildHeldWeapon = {
+  readonly itemId: CharacterEquipmentItemId<"main">;
+  readonly grip: "one_handed";
 };
 
 export type CharacterBuildCatalogEquipmentItem = {
@@ -1463,6 +1469,14 @@ export type CharacterBuildAuthoredStartingEquipmentItem = {
   readonly quantity: PositiveIntegerType;
 };
 
+export type CharacterBuildAuthoredCatalogEquipmentItem = {
+  readonly kind: "authoredCatalogItem";
+  readonly itemId: CharacterEquipmentItemId;
+  readonly authoredItemId: string;
+  readonly spellcastingFocusKind: CharacterSpellcastingFocusKind;
+  readonly quantity: PositiveIntegerType;
+};
+
 export type CharacterBuildSelectedToolEquipmentItem = {
   readonly kind: "selectedToolItem";
   readonly toolProficiencyId: ToolProficiencyId;
@@ -1471,6 +1485,7 @@ export type CharacterBuildSelectedToolEquipmentItem = {
 
 export type CharacterBuildOwnedEquipmentItem =
   | CharacterBuildCatalogEquipmentItem
+  | CharacterBuildAuthoredCatalogEquipmentItem
   | CharacterBuildAuthoredStartingEquipmentItem
   | CharacterBuildSelectedToolEquipmentItem;
 

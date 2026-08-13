@@ -68,9 +68,11 @@ type DraftProjection = {
   readonly fighterWeaponMastery: boolean;
   readonly backgroundAbilityScoreIncrease: boolean;
   readonly backgroundTool: boolean;
-  readonly classEquipment: boolean;
-  readonly backgroundEquipment: boolean;
-  readonly equipmentPurchase: boolean;
+  readonly classEquipment: ClassEquipmentSelectionProjection;
+  readonly backgroundEquipment: BackgroundEquipmentSelectionProjection;
+  readonly purchasedArmor: boolean;
+  readonly purchasedShield: boolean;
+  readonly purchasedWeapon: boolean;
   readonly loadoutArmor: boolean;
   readonly loadoutShield: boolean;
   readonly loadoutWeapon: boolean;
@@ -80,6 +82,15 @@ type ProgressionSelectionProjection =
   | "FighterLevel1"
   | "FighterLevel2"
   | "WizardLevel1";
+type ClassEquipmentSelectionProjection =
+  | "NoClassEquipment"
+  | "ClassEquipmentCoinGrant"
+  | "ClassEquipmentItemBundle"
+  | "ClassEquipmentItemBundleWithWeapon";
+type BackgroundEquipmentSelectionProjection =
+  | "NoBackgroundEquipment"
+  | "BackgroundEquipmentCoinGrant"
+  | "BackgroundEquipmentItemBundle";
 
 type RuntimeMbtState = {
   readonly draft: DraftProjection;
@@ -111,9 +122,39 @@ const quintDraftSchema = z.object({
   fighterWeaponMastery: z.boolean(),
   backgroundAbilityScoreIncrease: z.boolean(),
   backgroundTool: z.boolean(),
-  classEquipment: z.boolean(),
-  backgroundEquipment: z.boolean(),
-  equipmentPurchase: z.boolean(),
+  classEquipment: z
+    .unknown()
+    .transform((value): ClassEquipmentSelectionProjection => {
+      const tag = nullaryVariantToString(value, "class equipment selection");
+      if (
+        tag === "NoClassEquipment" ||
+        tag === "ClassEquipmentCoinGrant" ||
+        tag === "ClassEquipmentItemBundle" ||
+        tag === "ClassEquipmentItemBundleWithWeapon"
+      ) {
+        return tag;
+      }
+      throw new Error(`Unknown class equipment selection ${tag}.`);
+    }),
+  backgroundEquipment: z
+    .unknown()
+    .transform((value): BackgroundEquipmentSelectionProjection => {
+      const tag = nullaryVariantToString(
+        value,
+        "background equipment selection",
+      );
+      if (
+        tag === "NoBackgroundEquipment" ||
+        tag === "BackgroundEquipmentCoinGrant" ||
+        tag === "BackgroundEquipmentItemBundle"
+      ) {
+        return tag;
+      }
+      throw new Error(`Unknown background equipment selection ${tag}.`);
+    }),
+  purchasedArmor: z.boolean(),
+  purchasedShield: z.boolean(),
+  purchasedWeapon: z.boolean(),
   loadoutArmor: z.boolean(),
   loadoutShield: z.boolean(),
   loadoutWeapon: z.boolean(),
@@ -725,16 +766,72 @@ function projectDraft(draft: CharacterDraft): DraftProjection {
     backgroundAbilityScoreIncrease:
       selections.backgroundAbilityScoreIncrease != null,
     backgroundTool: hasChoice(selections.choices, "background_tool_choice"),
-    classEquipment: hasChoice(selections.choices, "class_equipment_choice"),
-    backgroundEquipment: hasChoice(
-      selections.choices,
-      "background_equipment_choice",
-    ),
-    equipmentPurchase: selections.equipment != null,
+    classEquipment: projectClassEquipmentSelection(draft),
+    backgroundEquipment: projectBackgroundEquipmentSelection(draft),
+    purchasedArmor:
+      selections.equipment?.selectedUnitIds.some(
+        (unitId) => unitId === "armor_chain_mail",
+      ) ?? false,
+    purchasedShield:
+      selections.equipment?.selectedUnitIds.some(
+        (unitId) => unitId === "equipment_shield",
+      ) ?? false,
+    purchasedWeapon:
+      selections.equipment?.selectedUnitIds.some((unitId) =>
+        String(unitId).startsWith("weapon_"),
+      ) ?? false,
     loadoutArmor: hasChoice(selections.choices, "loadout_armor"),
     loadoutShield: hasChoice(selections.choices, "loadout_shield"),
     loadoutWeapon: hasChoice(selections.choices, "loadout_weapon"),
   };
+}
+
+function projectClassEquipmentSelection(
+  draft: CharacterDraft,
+): ClassEquipmentSelectionProjection {
+  if (!hasChoice(draft.selections.choices, "class_equipment_choice")) {
+    return "NoClassEquipment";
+  }
+  const progression = projectProgression(draft.selections.progression);
+  if (
+    (progression === "WizardLevel1" &&
+      hasUnitChoiceOption(
+        draft.selections.choices,
+        "class_equipment_choice",
+        "option_b",
+      )) ||
+    (progression !== "WizardLevel1" &&
+      hasUnitChoiceOption(
+        draft.selections.choices,
+        "class_equipment_choice",
+        "option_c",
+      ))
+  ) {
+    return "ClassEquipmentCoinGrant";
+  }
+  return progression === "WizardLevel1" &&
+    hasUnitChoiceOption(
+      draft.selections.choices,
+      "class_equipment_choice",
+      "option_a",
+    )
+    ? "ClassEquipmentItemBundleWithWeapon"
+    : "ClassEquipmentItemBundle";
+}
+
+function projectBackgroundEquipmentSelection(
+  draft: CharacterDraft,
+): BackgroundEquipmentSelectionProjection {
+  if (!hasChoice(draft.selections.choices, "background_equipment_choice")) {
+    return "NoBackgroundEquipment";
+  }
+  return hasUnitChoiceOption(
+    draft.selections.choices,
+    "background_equipment_choice",
+    "option_b",
+  )
+    ? "BackgroundEquipmentCoinGrant"
+    : "BackgroundEquipmentItemBundle";
 }
 
 function projectProgression(
@@ -784,6 +881,19 @@ function hasChoice(
       (choice.kind === "unitChoice" &&
         String(choice.source.choiceKey) === choiceKey) ||
       (choice.kind === "loadout" && choice.source.slot === loadoutSlot),
+  );
+}
+
+function hasUnitChoiceOption(
+  choices: CharacterDraft["selections"]["choices"],
+  choiceKey: string,
+  optionId: string,
+): boolean {
+  return choices.some(
+    (choice) =>
+      choice.kind === "unitChoice" &&
+      String(choice.source.choiceKey) === choiceKey &&
+      choice.options.some((option) => String(option.optionId) === optionId),
   );
 }
 

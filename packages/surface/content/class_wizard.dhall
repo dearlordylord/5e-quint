@@ -364,22 +364,40 @@
   [ { coinsGp = 5
     , id = "option_a"
     , items = Some
-      [ { itemName = "Dagger", kind = "draft_owned_item", quantity = Some 2 }
-      , { itemName = "Arcane Focus (Quarterstaff)"
-        , kind = "draft_owned_item"
-        , quantity = None Natural
+      [ { itemName = None Text
+        , authoredItemId = None Text
+        , kind = "unit_ref"
+        , quantity = Some 2
+        , spellcastingFocusKind = None Text
+        , unitId = Some "weapon_dagger"
         }
-      , { itemName = "Robe"
-        , kind = "draft_owned_item"
+      , { itemName = None Text
+        , kind = "unit_ref_with_spellcasting_focus"
         , quantity = None Natural
+        , unitId = Some "weapon_quarterstaff"
+        , authoredItemId = Some "wizard_arcane_focus_quarterstaff"
+        , spellcastingFocusKind = Some "arcane"
         }
-      , { itemName = "Spellbook"
+      , { itemName = Some "Robe"
         , kind = "draft_owned_item"
         , quantity = None Natural
+        , unitId = None Text
+        , authoredItemId = None Text
+        , spellcastingFocusKind = None Text
         }
-      , { itemName = "Scholar's Pack"
+      , { itemName = Some "Spellbook"
         , kind = "draft_owned_item"
         , quantity = None Natural
+        , unitId = None Text
+        , authoredItemId = None Text
+        , spellcastingFocusKind = None Text
+        }
+      , { itemName = Some "Scholar's Pack"
+        , kind = "draft_owned_item"
+        , quantity = None Natural
+        , unitId = None Text
+        , authoredItemId = None Text
+        , spellcastingFocusKind = None Text
         }
       ]
     , kind = "item_bundle"
@@ -388,7 +406,15 @@
     , id = "option_b"
     , items =
         None
-          (List { itemName : Text, kind : Text, quantity : Optional Natural })
+          ( List
+              { itemName : Optional Text
+              , kind : Text
+              , quantity : Optional Natural
+              , unitId : Optional Text
+              , authoredItemId : Optional Text
+              , spellcastingFocusKind : Optional Text
+              }
+          )
     , kind = "coin_grant"
     }
   ]

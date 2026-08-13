@@ -2591,6 +2591,8 @@ export const BackgroundAbilityScoreIncreaseSchema = Schema.Struct({
   ),
 });
 
+export const STARTING_EQUIPMENT_SPELLCASTING_FOCUS_KINDS = ["arcane"] as const;
+
 export const StartingEquipmentItemRefSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("unit_ref"),
@@ -2599,6 +2601,15 @@ export const StartingEquipmentItemRefSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("selected_tool_proficiency"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("unit_ref_with_spellcasting_focus"),
+    authoredItemId: surfaceIdentity(NonEmptyStringSchema, "catalog-reference"),
+    unitId: surfaceDependency(NonEmptyStringSchema, "item-reference"),
+    spellcastingFocusKind: Schema.Literal(
+      ...STARTING_EQUIPMENT_SPELLCASTING_FOCUS_KINDS,
+    ),
+    quantity: exactOptional(PositiveIntegerSchema),
   }),
   Schema.Struct({
     kind: Schema.Literal("draft_owned_item"),

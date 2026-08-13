@@ -240,7 +240,7 @@ module characterCreationRuntimeMbt {
   action doRejectUnknownLoadoutArmor =
     all {
       not(openHoles.contains(HLoadoutArmor)),
-      not(draft.equipmentPurchase),
+      not(hasEquipmentPurchase(draft)),
       recordResult(fillCreationHoles(draft, draft.revision, [
         FChoice({ hole: HLoadoutArmor, options: [OLoadoutWorn] }),
       ])),
@@ -285,9 +285,9 @@ module characterCreationRuntimeMbt {
       + (if (draft.fighterWeaponMastery) 1 else 0)
       + (if (draft.backgroundAbilityScoreIncrease) 1 else 0)
       + (if (draft.backgroundTool) 1 else 0)
-      + (if (draft.classEquipment) 1 else 0)
-      + (if (draft.backgroundEquipment) 1 else 0)
-      + (if (draft.equipmentPurchase) 1 else 0)
+      + (if (hasClassEquipment(draft)) 1 else 0)
+      + (if (hasBackgroundEquipment(draft)) 1 else 0)
+      + (if (hasEquipmentPurchase(draft)) 1 else 0)
       + (if (draft.loadoutArmor) 1 else 0)
       + (if (draft.loadoutShield) 1 else 0)
       + (if (draft.loadoutWeapon) 1 else 0)
@@ -296,14 +296,15 @@ module characterCreationRuntimeMbt {
     (draft.classSkills implies hasProgression(draft))
       and (draft.fighterFightingStyle implies hasFighterProgression(draft))
       and (draft.fighterWeaponMastery implies hasFighterProgression(draft))
-      and (draft.classEquipment implies hasProgression(draft))
+      and (hasClassEquipment(draft) implies hasProgression(draft))
+      and (classEquipmentHasBundleWeapon(draft) implies hasWizardProgression(draft))
       and (draft.backgroundAbilityScoreIncrease implies draft.background)
       and (draft.backgroundTool implies draft.background)
-      and (draft.backgroundEquipment implies draft.background)
-      and (draft.equipmentPurchase implies draft.classEquipment and draft.backgroundEquipment)
-      and (draft.loadoutArmor implies draft.equipmentPurchase)
-      and (draft.loadoutShield implies draft.equipmentPurchase)
-      and (draft.loadoutWeapon implies draft.equipmentPurchase)
+      and (hasBackgroundEquipment(draft) implies draft.background)
+      and (hasEquipmentPurchase(draft) implies hasCoinEquipmentPath(draft))
+      and (draft.loadoutArmor implies draft.purchasedArmor)
+      and (draft.loadoutShield implies draft.purchasedShield)
+      and (draft.loadoutWeapon implies draft.purchasedWeapon or classEquipmentHasBundleWeapon(draft))
 
   pure def draftReadyFieldsHold(draft: Draft): bool =
     hasProgression(draft)
@@ -319,12 +320,15 @@ module characterCreationRuntimeMbt {
       )
       and draft.backgroundAbilityScoreIncrease
       and draft.backgroundTool
-      and draft.classEquipment
-      and draft.backgroundEquipment
-      and draft.equipmentPurchase
-      and draft.loadoutArmor
-      and draft.loadoutShield
-      and draft.loadoutWeapon
+      and hasClassEquipment(draft)
+      and hasBackgroundEquipment(draft)
+      and (
+        (classEquipmentHasBundleWeapon(draft) and draft.loadoutWeapon)
+        or (hasEquipmentPurchase(draft)
+          and (not(draft.purchasedArmor) or draft.loadoutArmor)
+          and (not(draft.purchasedShield) or draft.loadoutShield)
+          and (not(draft.purchasedWeapon) or draft.loadoutWeapon))
+      )
 
   val invariant =
     draft.revision >= 0

@@ -338,7 +338,9 @@ export function characterPactBladeBondedWeaponItemId(input: {
   }
   if (
     !input.build.equipment.owned.some(
-      (item) => item.kind === "catalogItem" && item.itemId === input.itemId,
+      (item) =>
+        (item.kind === "catalogItem" || item.kind === "authoredCatalogItem") &&
+        item.itemId === input.itemId,
     )
   ) {
     return battleCreatureInitIssue(

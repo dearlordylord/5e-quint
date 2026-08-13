@@ -344,10 +344,12 @@ describe("character-creation Surface records", () => {
             coinsGp: 5,
             id: "option_a",
             items: [
-              { itemName: "Dagger", kind: "draft_owned_item", quantity: 2 },
+              { kind: "unit_ref", unitId: "weapon_dagger", quantity: 2 },
               {
-                itemName: "Arcane Focus (Quarterstaff)",
-                kind: "draft_owned_item",
+                authoredItemId: "wizard_arcane_focus_quarterstaff",
+                kind: "unit_ref_with_spellcasting_focus",
+                spellcastingFocusKind: "arcane",
+                unitId: "weapon_quarterstaff",
               },
               { itemName: "Robe", kind: "draft_owned_item" },
               { itemName: "Spellbook", kind: "draft_owned_item" },

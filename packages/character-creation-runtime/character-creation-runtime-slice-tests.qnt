@@ -231,7 +231,60 @@ module characterCreationRuntimeSliceTests {
     match fillCreationHoles(afterInitialManifest, 1, [
       FChoice({ hole: HClassEquipment, options: [OClassEquipmentPackageA] }),
     ]) {
-      | Accepted(v) => assert(v.draft.classEquipment)
+      | Accepted(v) => assert(hasClassEquipment(v.draft))
+      | Rejected(_) => assert(false)
+    }
+  }
+
+  run test_wizard_item_bundle_opens_weapon_loadout_without_coin_purchase = {
+    val wizardDraft = requireAccepted(fillCreationHoles(emptyDraft, 0, [
+      FChoice({ hole: HProgression, options: [OClassWizardLevel1] }),
+      FChoice({ hole: HBackground, options: [OBackgroundSoldier] }),
+    ]))
+    match fillCreationHoles(wizardDraft, 1, [
+      FChoice({ hole: HClassEquipment, options: [OClassEquipmentPackageA] }),
+      FChoice({ hole: HBackgroundEquipment, options: [OBackgroundEquipmentCoins] }),
+    ]) {
+      | Accepted(v) =>
+          all {
+            assert(classEquipmentHasBundleWeapon(v.draft)),
+            assert(not(hasEquipmentPurchase(v.draft))),
+            assert(v.holes.contains(HLoadoutWeapon)),
+            assert(not(v.holes.contains(HEquipmentPurchase))),
+          }
+      | Rejected(_) => assert(false)
+    }
+  }
+
+  run test_wizard_single_quarterstaff_purchase_requires_only_weapon_loadout = {
+    val readyForPurchase = {
+      ...emptyDraft,
+      revision: 2,
+      progression: SelectedProgression(wizardLevel1Progression),
+      background: true,
+      species: true,
+      abilityScores: true,
+      languages: true,
+      alignment: true,
+      classSkills: true,
+      backgroundAbilityScoreIncrease: true,
+      backgroundTool: true,
+      classEquipment: ClassEquipmentCoinGrant,
+      backgroundEquipment: BackgroundEquipmentCoinGrant,
+    }
+    val purchased = requireAccepted(fillCreationHoles(readyForPurchase, 2, [
+      FChoice({ hole: HEquipmentPurchase, options: [OWeaponQuarterstaff] }),
+    ]))
+    match fillCreationHoles(purchased, 3, [
+      FChoice({ hole: HLoadoutWeapon, options: [OLoadoutWieldedOneHanded] }),
+    ]) {
+      | Accepted(v) => all {
+          assert(v.holes == Set()),
+          assert(not(v.draft.purchasedArmor)),
+          assert(not(v.draft.purchasedShield)),
+          assert(v.draft.purchasedWeapon),
+          assert(v.finalization == Ready),
+        }
       | Rejected(_) => assert(false)
     }
   }

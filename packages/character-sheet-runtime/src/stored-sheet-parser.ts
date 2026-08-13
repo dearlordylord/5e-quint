@@ -1945,6 +1945,32 @@ function parseStoredEquipment(
       });
       continue;
     }
+    if (item.kind === "authoredCatalogItem") {
+      if (
+        typeof item.itemId !== "string" ||
+        typeof item.authoredItemId !== "string" ||
+        item.authoredItemId.trim() === "" ||
+        item.spellcastingFocusKind !== "arcane"
+      ) {
+        return characterSheetIssue(
+          "Character Build authored catalog equipment item is invalid.",
+        );
+      }
+      const parsedItemId = parseCharacterEquipmentItemId(item.itemId);
+      if (Either.isLeft(parsedItemId)) {
+        return characterSheetIssue(
+          "Character Build authored catalog equipment item id is invalid.",
+        );
+      }
+      owned.push({
+        kind: "authoredCatalogItem",
+        itemId: characterEquipmentItemId(parsedItemId.right),
+        authoredItemId: item.authoredItemId,
+        spellcastingFocusKind: "arcane",
+        quantity: PositiveInteger(item.quantity),
+      });
+      continue;
+    }
     if (item.kind !== "catalogItem" || typeof item.itemId !== "string") {
       return characterSheetIssue(
         "Character Build owned equipment item is invalid.",
@@ -1965,6 +1991,24 @@ function parseStoredEquipment(
   const loadout = parseStoredLoadout(value.loadout);
   /* v8 ignore next -- Malformed stored build: raw loadout fields are parsed before CharacterBuildEquipment is constructed. */
   if (Either.isLeft(loadout)) return Either.left(loadout.left);
+  const ownedItemIds = new Set(
+    owned.flatMap((item) =>
+      item.kind === "catalogItem" || item.kind === "authoredCatalogItem"
+        ? [item.itemId]
+        : [],
+    ),
+  );
+  const selectedItemIds = [
+    loadout.right.armor,
+    loadout.right.shield,
+    loadout.right.weapon?.itemId,
+    loadout.right.offHandWeapon?.itemId,
+  ].filter((itemId) => itemId !== undefined);
+  if (selectedItemIds.some((itemId) => !ownedItemIds.has(itemId))) {
+    return characterSheetIssue(
+      "Character Build loadout must reference owned catalog equipment.",
+    );
+  }
   return Either.right({ owned, loadout: loadout.right });
 }
 
@@ -2010,12 +2054,13 @@ function parseStoredMainWeapon(
     return characterSheetIssue("Character Build weapon loadout is invalid.");
   }
   /* v8 ignore stop */
-  return Either.right({
-    itemId: itemId.right as NonNullable<
-      CharacterBuildEquipment["loadout"]["weapon"]
-    >["itemId"],
-    grip: "one_handed",
-  });
+  const parsedItemId = itemId.right as NonNullable<
+    CharacterBuildEquipment["loadout"]["weapon"]
+  >["itemId"];
+  if (Object.keys(value).some((key) => key !== "itemId" && key !== "grip")) {
+    return characterSheetIssue("Character Build weapon loadout is invalid.");
+  }
+  return Either.right({ itemId: parsedItemId, grip: "one_handed" });
 }
 
 function parseStoredOffHandWeapon(

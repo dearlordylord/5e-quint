@@ -1251,7 +1251,7 @@ export function discoverEquipmentHoles(input: {
     input.draft.selections.progression == null
       ? undefined
       : startingClassUnitId(input.draft.selections.progression);
-  if (classUnitId == null || !hasSupportedCoinEquipmentPath(input)) {
+  if (classUnitId == null) {
     return [];
   }
   const purchaseHole = choiceHole({
@@ -1275,28 +1275,104 @@ export function discoverEquipmentHoles(input: {
     purchaseHole,
     input.supportProfile,
   );
+  const loadoutEquipmentUnitIds = new Set([
+    ...(hasValidPurchaseSelection
+      ? (input.draft.selections.equipment?.selectedUnitIds ?? [])
+      : []),
+    ...selectedStartingEquipmentUnitIdsForDraft(input),
+  ]);
 
   return [
-    ...unselectedPurchaseHole(input.draft, purchaseHole, input.supportProfile),
+    ...(hasSupportedCoinEquipmentPath(input)
+      ? unselectedPurchaseHole(input.draft, purchaseHole, input.supportProfile)
+      : []),
     ...supportedLoadoutChoices(input.supportProfile).flatMap((loadoutChoice) =>
-      unselectedLoadoutHole(
-        input.draft,
-        choiceHole({
-          source: loadoutSource(loadoutChoice.unitId, loadoutChoice.slot),
-          cardinality: EXACTLY_ONE_CHOICE,
-          options: [
-            {
-              optionId: loadoutChoice.optionId,
-              label: loadoutChoice.label,
-              unitRef: { unitId: loadoutChoice.unitId },
-            },
-          ],
-        }),
-        loadoutChoice.unitId,
-        hasValidPurchaseSelection,
-      ),
+      loadoutEquipmentUnitIds.has(loadoutChoice.unitId)
+        ? unselectedLoadoutHole(
+            input.draft,
+            choiceHole({
+              source: loadoutSource(loadoutChoice.unitId, loadoutChoice.slot),
+              cardinality: EXACTLY_ONE_CHOICE,
+              options: [
+                {
+                  optionId: loadoutChoice.optionId,
+                  label: loadoutChoice.label,
+                  unitRef: { unitId: loadoutChoice.unitId },
+                },
+              ],
+            }),
+            true,
+          )
+        : [],
     ),
   ];
+}
+
+function selectedStartingEquipmentUnitIdsForDraft(input: {
+  readonly draft: CharacterDraft;
+  readonly unitLibrary: UnitCatalog;
+  readonly supportProfile: CharacterCreationSupportProfile;
+}): readonly UnitRecord["id"][] {
+  const progression = input.draft.selections.progression;
+  const classUnitId =
+    progression == null ? undefined : startingClassUnitId(progression);
+  const backgroundUnitId = input.draft.selections.background;
+  const classUnit =
+    classUnitId == null
+      ? Option.none()
+      : input.unitLibrary.getUnit(classUnitId);
+  const backgroundUnit =
+    backgroundUnitId == null
+      ? Option.none()
+      : input.unitLibrary.getUnit(backgroundUnitId);
+  const classFacts = Option.isSome(classUnit)
+    ? readClassCreationFacts(classUnit.value)
+    : undefined;
+  const backgroundFacts = Option.isSome(backgroundUnit)
+    ? readBackgroundCreationFacts(backgroundUnit.value)
+    : undefined;
+
+  return [
+    ...(classUnitId != null && classFacts?.tag === "readable"
+      ? startingEquipmentUnitIds(
+          selectedStartingEquipmentChoice(
+            input.draft,
+            startingEquipmentChoiceHole(
+              unitSource(classUnitId, CLASS_EQUIPMENT_CHOICE_KEY),
+              classFacts.value.startingEquipment,
+            ),
+            classFacts.value.startingEquipment,
+            input.supportProfile,
+          ),
+        )
+      : []),
+    ...(backgroundUnitId != null && backgroundFacts?.tag === "readable"
+      ? startingEquipmentUnitIds(
+          selectedStartingEquipmentChoice(
+            input.draft,
+            startingEquipmentChoiceHole(
+              unitSource(backgroundUnitId, BACKGROUND_EQUIPMENT_CHOICE_KEY),
+              backgroundFacts.value.startingEquipment,
+            ),
+            backgroundFacts.value.startingEquipment,
+            input.supportProfile,
+          ),
+        )
+      : []),
+  ];
+}
+
+export function startingEquipmentUnitIds(
+  choice: StartingEquipmentChoice | undefined,
+): readonly UnitRecord["id"][] {
+  return choice?.kind === "item_bundle"
+    ? choice.items.flatMap((item) =>
+        item.kind === "unit_ref" ||
+        item.kind === "unit_ref_with_spellcasting_focus"
+          ? [authoredUnitId(item.unitId)]
+          : [],
+      )
+    : [];
 }
 
 function classToolProficiencyChoiceHoles(
@@ -1467,15 +1543,15 @@ export function unselectedPurchaseHole(
 export function unselectedLoadoutHole(
   draft: CharacterDraft,
   hole: CreationHole | undefined,
-  unitId: UnitRecord["id"],
-  hasValidPurchaseSelection: boolean,
+  isOwned: boolean,
 ): readonly CreationHole[] {
   if (hole === undefined) {
     return [];
   }
-  return hasValidPurchaseSelection &&
-    hasPurchasedUnit(draft, unitId) &&
-    !hasValidLoadoutSlotSelectionForHole(draft, hole)
+  if (hole.source.tag !== "loadout") {
+    return [];
+  }
+  return isOwned && !hasValidLoadoutSlotSelectionForHole(draft, hole)
     ? [hole]
     : [];
 }

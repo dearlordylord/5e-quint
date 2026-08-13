@@ -398,9 +398,9 @@ The legal phase-1 fill chooses:
 
 That last point matters for Unit-backed selections. For Fighting Style and
 Weapon Mastery, `selectedChoiceOption` preserves `unitRef` from the hole option.
-Selected-equipment loadout fills store the loadout source plus selected option
-only; fill validation proves the option belongs to the source equipment before
-the durable selection is written.
+Loadout fills store the owned equipment source plus selected option. Discovery
+admits both valid purchases and catalog Unit refs from a selected authored item
+bundle, then suppresses all other candidates for an already-filled slot.
 
 ## Legal Batch 3: Equipment Purchase Opens Only After Coin Path
 
@@ -450,7 +450,8 @@ equipment: {
 }
 ```
 
-`discoverEquipmentHoles` calls `unselectedLoadoutHole` three times:
+`discoverEquipmentHoles` calls `unselectedLoadoutHole` for each owned supported
+candidate. A selected slot suppresses every other candidate in that slot:
 
 ```mermaid
 flowchart TD
@@ -458,7 +459,7 @@ flowchart TD
   Armor["hasPurchasedUnit(armor_chain_mail)<br/>slot armor -> worn"]
   Shield["hasPurchasedUnit(equipment_shield)<br/>slot shield -> wielded"]
   Weapon["hasPurchasedUnit(weapon_longsword)<br/>slot weapon -> wielded_one_handed"]
-  Suppress["hasValidSelectionForHole suppresses already-filled loadout"]
+  Suppress["hasValidLoadoutSlotSelectionForHole<br/>suppresses every candidate in an occupied slot"]
 
   Purchased --> Armor --> Suppress
   Purchased --> Shield --> Suppress
@@ -466,8 +467,11 @@ flowchart TD
 ```
 
 The loadout fills are stored in `selections.choices` as loadout selections keyed
-by selected-equipment source and slot. They store the selected option only; source
-equipment identity is not duplicated into the selected option.
+by selected-equipment source and slot. The finalized loadout retains only item
+identity and grip. When the matching owned item is both an Arcane Focus and a
+Quarterstaff, its owned-item variant is the single owner of authored identity
+and focus capability; weapon execution still derives from the catalog Unit. A
+coin-purchased plain Quarterstaff has the generic owned-item variant.
 
 ## Finalization Time Diagram
 
@@ -586,7 +590,11 @@ Examples:
 - Surface-authored class and background starting-equipment options are
   supported at their canonical choice holes. Coin options open the separate
   equipment-purchase path; item bundles project their canonical owned items
-  directly into the finalized build.
+  directly into the finalized build and can open loadout holes for their catalog
+  Unit refs. Wizard item-bundle and coin paths both have TS-to-QNT parity through
+  an empty frontier and `Ready`. Coin-path loadout holes derive from the actual
+  purchased categories: a single Quarterstaff purchase opens only the weapon
+  loadout and reaches `Ready` without armor or shield.
 
 This is not provenance. SRD provenance stays in Surface records. These support
 gates are runtime implementation boundaries for the currently modeled vertical.
@@ -622,8 +630,9 @@ Several facts must change together:
 - Choice cardinality, accepted option metadata, and selection suppression are
   coupled by algorithm in `choiceFillIssues`, `choiceOptionIdsFitHole`, and
   `choiceSelectionMatchesHole`.
-- Equipment purchase and loadout are intentionally ordered: loadout holes depend
-  on a valid purchase selection and `hasPurchasedUnit`.
+- Equipment ownership and loadout are intentionally ordered: loadout holes
+  depend on a valid purchase or a selected bundle Unit ref, then converge by
+  loadout slot rather than by every owned item identity.
 - `applyDraftFill("draft.progression.initial")` creates the progression selected
   from `SUPPORTED_PROGRESSIONS`; finalization later checks that value with
   `isSupportedFinalizableProgression`.

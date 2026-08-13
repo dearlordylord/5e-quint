@@ -332,22 +332,8 @@ describe("choice-selection structural equality", () => {
       unselectedBackgroundAbilityScoreIncreaseHole(draft, undefined),
     ).toEqual([]);
     expect(unselectedPurchaseHole(draft, undefined)).toEqual([]);
-    expect(
-      unselectedLoadoutHole(
-        draft,
-        undefined,
-        authoredUnitId("synthetic_absent_purchase"),
-        true,
-      ),
-    ).toEqual([]);
-    expect(
-      unselectedLoadoutHole(
-        draft,
-        skillChoiceHole(),
-        authoredUnitId("synthetic_absent_purchase"),
-        true,
-      ),
-    ).toEqual([]);
+    expect(unselectedLoadoutHole(draft, undefined, true)).toEqual([]);
+    expect(unselectedLoadoutHole(draft, skillChoiceHole(), true)).toEqual([]);
     expect(
       hasValidEquipmentPurchaseSelectionForHole(draft, skillChoiceHole()),
     ).toBe(false);

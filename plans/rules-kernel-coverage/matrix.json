@@ -63,9 +63,12 @@
         "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
         "packages/battle-runtime/battle-runtime-movement-bridge.qnt"
       ],
+      "reason": "The rule core and battle bridge own Movement cost/resource and Opportunity Attack interruption semantics. The battle runtime emits an applied Movement outcome only after those semantics resolve; a table/session layer may use that outcome to commit its independently owned spatial placement without adding geometry to BattleState.",
       "runtime": "battle",
       "runtimeOwners": [
-        "packages/battle-runtime/src/battle-state-execution.ts"
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/battle-runtime/src/battle-session-execution.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-procedures.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [],
@@ -3102,13 +3105,18 @@
       "qntOwners": [
         "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
       ],
+      "reason": "The generated TS-to-QNT parity module replays the Wizard authored item-bundle path and a Wizard coin path that purchases only a Quarterstaff through an empty frontier and Ready finalization. Purchased equipment categories, rather than a generic purchase flag, determine the required loadout slots. The bundle retains Arcane Focus identity and capability only on the owned item; loadout retains item identity and grip.",
       "runtime": "character-creation",
       "runtimeOwners": [
-        "packages/character-creation-runtime/src/fill-reducer.ts"
+        "packages/character-creation-runtime/src/fill-reducer.ts",
+        "packages/character-creation-runtime/src/finalization.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [],
-      "title": "Character Creation draft hole discovery, atomic fill batch, rediscovery, and finalization status for the established supported slice"
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Classes/Wizard.md",
+        ".references/srd-5.2.1/Equipment.md"
+      ],
+      "title": "Character Creation draft hole discovery, atomic fill batch, rediscovery, and finalization status for the supported Fighter and Wizard equipment paths"
     },
     {
       "id": "CREATION.CHOICE_DISCOVERY_CARDINALITY",
@@ -3125,6 +3133,7 @@
       "qntOwners": [
         "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
       ],
+      "reason": "Loadout discovery admits catalog Unit refs from selected starting bundles as owned equipment, suppresses alternatives by occupied loadout slot, and keeps authored dual-role item capability distinct from a separately purchased generic weapon with the same catalog shape.",
       "runtime": "character-creation",
       "runtimeOwners": [
         "packages/character-creation-runtime/src/discovery.ts",
@@ -3136,10 +3145,11 @@
       "surfaceEvidence": [
         ".references/srd-5.2.1/Character-Creation.md",
         ".references/srd-5.2.1/Classes/Fighter.md",
+        ".references/srd-5.2.1/Classes/Wizard.md",
         ".references/srd-5.2.1/Character-Origins.md",
         ".references/srd-5.2.1/Equipment.md"
       ],
-      "title": "Character Creation choice-hole availability, cardinality, and option legality for the existing Fighter manifest path"
+      "title": "Character Creation choice-hole availability, cardinality, and option legality for supported Fighter and Wizard equipment paths"
     },
     {
       "id": "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",

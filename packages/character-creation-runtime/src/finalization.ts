@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_OPTION.PROJECTION CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_RESOURCE.PROJECTION
+// KERNEL-COVERAGE: runtime-owner CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY
 // KERNEL-COVERAGE: runtime-owner SHEET.HIT_POINTS.MAXIMUM_DERIVATION
 // KERNEL-COVERAGE: runtime-owner CHARACTER.LIFECYCLE.LAYER_PROJECTION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-prepared-spell-access
@@ -76,6 +77,7 @@ import {
   skillExpertiseFromChoiceSelections,
   skillProficienciesFromChoiceSelections,
   startingEquipmentChoiceHole,
+  startingEquipmentUnitIds,
 } from "./discovery.ts";
 import {
   decodeAbilityScoreIncreaseOptionId,
@@ -2731,7 +2733,25 @@ function supportedFinalizationChoiceHoles(
   const backgroundToolHole = backgroundToolChoiceSpec(
     input.backgroundFacts.toolProficiency,
   );
-  const selectedEquipment = new Set(input.selections.equipment.selectedUnitIds);
+  const selectedEquipment = new Set([
+    ...input.selections.equipment.selectedUnitIds,
+    ...startingEquipmentUnitIds(
+      selectedStartingEquipmentForBuild(
+        input.selections,
+        startingClassUnitId(input.selections.progression),
+        CLASS_EQUIPMENT_CHOICE_KEY,
+        input.classFacts.startingEquipment,
+      ),
+    ),
+    ...startingEquipmentUnitIds(
+      selectedStartingEquipmentForBuild(
+        input.selections,
+        input.selections.background,
+        BACKGROUND_EQUIPMENT_CHOICE_KEY,
+        input.backgroundFacts.startingEquipment,
+      ),
+    ),
+  ]);
 
   return [
     classSkillHole,
@@ -2762,24 +2782,38 @@ function supportedFinalizationChoiceHoles(
         ])),
     input.classEquipmentHole,
     input.backgroundEquipmentHole,
-    ...supportedLoadoutChoices(input.supportProfile).flatMap((loadoutChoice) =>
-      selectedEquipment.has(loadoutChoice.unitId)
-        ? compact([
-            requireLoadoutCreationHole(
-              choiceHole({
-                source: loadoutSource(loadoutChoice.unitId, loadoutChoice.slot),
-                cardinality: EXACTLY_ONE_CHOICE,
-                options: [
-                  {
-                    optionId: loadoutChoice.optionId,
-                    label: loadoutChoice.label,
-                    unitRef: { unitId: loadoutChoice.unitId },
-                  },
-                ],
-              }),
-            ),
-          ])
-        : [],
+    ...supportedLoadoutChoices(input.supportProfile).flatMap(
+      (loadoutChoice) => {
+        const selectedInSlot = input.selections.choices.find(
+          (selection) =>
+            selection.kind === "loadout" &&
+            selection.source.slot === loadoutChoice.slot,
+        );
+        return selectedEquipment.has(loadoutChoice.unitId) &&
+          (selectedInSlot === undefined ||
+            (selectedInSlot.kind === "loadout" &&
+              String(selectedInSlot.source.equipmentUnitId) ===
+                String(loadoutChoice.unitId)))
+          ? compact([
+              requireLoadoutCreationHole(
+                choiceHole({
+                  source: loadoutSource(
+                    loadoutChoice.unitId,
+                    loadoutChoice.slot,
+                  ),
+                  cardinality: EXACTLY_ONE_CHOICE,
+                  options: [
+                    {
+                      optionId: loadoutChoice.optionId,
+                      label: loadoutChoice.label,
+                      unitRef: { unitId: loadoutChoice.unitId },
+                    },
+                  ],
+                }),
+              ),
+            ])
+          : [];
+      },
     ),
   ].filter(isPresent);
 }
@@ -3221,7 +3255,7 @@ export function characterBuildUnitRefs(
     ),
     ...unitRefs(
       ...build.equipment.owned.flatMap((item) =>
-        item.kind === "catalogItem"
+        item.kind === "catalogItem" || item.kind === "authoredCatalogItem"
           ? [characterEquipmentItemSourceFromId(item.itemId).unitId]
           : [],
       ),
@@ -3565,18 +3599,16 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
         };
       }
 
+      const itemId = characterEquipmentItemId({
+        slot: "main",
+        unitId:
+          characterEquipmentItemUnitIdFromLoadoutEquipmentUnitId(
+            selectedUnitId,
+          ),
+      });
       return {
         ...equipment,
-        weapon: {
-          itemId: characterEquipmentItemId({
-            slot: "main",
-            unitId:
-              characterEquipmentItemUnitIdFromLoadoutEquipmentUnitId(
-                selectedUnitId,
-              ),
-          }),
-          grip: loadoutChoice.grip,
-        },
+        weapon: { itemId, grip: loadoutChoice.grip },
       };
     },
     {},
@@ -3699,6 +3731,33 @@ function finalizedStartingEquipment(
               },
             ]);
       }),
+      Match.when(
+        { kind: "unit_ref_with_spellcasting_focus" },
+        (authoredCatalogItem) => {
+          const unitId = authoredUnitId(authoredCatalogItem.unitId);
+          const itemUnitId = characterEquipmentItemUnitId(unitId);
+          return Either.isLeft(itemUnitId)
+            ? Either.left(
+                characterBuildProjectionIssue({
+                  tag: "unsupportedEquipmentUnitId",
+                  equipmentUnitId: unitId,
+                }),
+              )
+            : Either.right<CharacterBuildOwnedEquipmentItem[]>([
+                {
+                  kind: "authoredCatalogItem",
+                  itemId: characterEquipmentItemId({
+                    slot: ownedEquipmentDefaultSlot(unitLibrary, unitId),
+                    unitId: itemUnitId.right,
+                  }),
+                  authoredItemId: authoredCatalogItem.authoredItemId,
+                  spellcastingFocusKind:
+                    authoredCatalogItem.spellcastingFocusKind,
+                  quantity: PositiveInteger(authoredCatalogItem.quantity ?? 1),
+                },
+              ]);
+        },
+      ),
       Match.when({ kind: "draft_owned_item" }, (authoredItem) =>
         Either.right<CharacterBuildOwnedEquipmentItem[]>([
           {

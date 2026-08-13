@@ -238,6 +238,10 @@ export function describeStartingEquipmentItem(
       return item.quantity === undefined
         ? item.unitId
         : `${item.quantity} ${item.unitId}`;
+    case "unit_ref_with_spellcasting_focus":
+      return item.quantity === undefined
+        ? `${item.authoredItemId} (${item.unitId}, ${item.spellcastingFocusKind} focus)`
+        : `${item.quantity} ${item.authoredItemId} (${item.unitId}, ${item.spellcastingFocusKind} focus)`;
     case "selected_tool_proficiency":
       return "selected tool proficiency";
     case "draft_owned_item":

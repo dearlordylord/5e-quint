@@ -226,8 +226,18 @@ Equipment on a build is split into durable owned equipment and initial loadout.
 Catalog-backed items retain their `CharacterEquipmentItemId`, while
 Surface-authored starting items that are not Unitized retain their authored
 name and quantity and selected-tool items retain the chosen tool proficiency.
-Only catalog-backed items can appear in the executable initial loadout or Unit
-reference projection. Mutable in-play equipment changes belong to the future
+An authored starting item can also retain a distinct authored identity and
+spellcasting-focus capability while projecting its executable weapon shape
+through a catalog Unit. The loadout stores only the owned item id and grip;
+consumers derive focus capability from the matching owned item. A separately
+purchased weapon with the same Unit shape does not acquire the focus capability.
+An authored Spellbook remains honest possession evidence; it
+does not claim that a focus is wielded or make the loadout battle-ready.
+Loadout requirements are suppressed per occupied slot, so
+owning several weapons requires one initial main-weapon choice, not one choice
+per weapon. Coin-path requirements are likewise derived from the categories
+actually purchased: a Wizard buying only a Quarterstaff owes only a weapon
+loadout, not fictitious armor or shield choices. Mutable in-play equipment changes belong to the future
 Character Sheet/session boundary, not character creation.
 
 Finalization support checks are source-shaped: they reconstruct expected

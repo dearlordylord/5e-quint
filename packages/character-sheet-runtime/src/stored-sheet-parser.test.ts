@@ -626,7 +626,7 @@ describe("stored Character Build parser", () => {
       Either.right(equipped),
     );
 
-    const mainWeaponUnitId = authoredUnitId("weapon_longsword");
+    const mainWeaponUnitId = authoredUnitId("weapon_quarterstaff");
     const offHandWeaponUnitId = authoredUnitId("weapon_dagger");
     const mainWeaponItemId = characterEquipmentItemId({
       slot: "main",
@@ -641,8 +641,10 @@ describe("stored Character Build parser", () => {
       equipment: {
         owned: [
           {
-            kind: "catalogItem",
+            kind: "authoredCatalogItem",
             itemId: mainWeaponItemId,
+            authoredItemId: "synthetic_arcane_focus_quarterstaff",
+            spellcastingFocusKind: "arcane",
             quantity: 1,
           },
           {
@@ -662,7 +664,10 @@ describe("stored Character Build parser", () => {
           },
         ],
         loadout: {
-          weapon: { itemId: mainWeaponItemId, grip: "one_handed" as const },
+          weapon: {
+            itemId: mainWeaponItemId,
+            grip: "one_handed" as const,
+          },
           offHandWeapon: { itemId: offHandWeaponItemId },
         },
       },
@@ -957,6 +962,30 @@ describe("stored Character Build parser", () => {
         },
       },
       expected: "Character Build owned equipment item id is invalid.",
+    },
+    {
+      name: "a loadout item that is not owned",
+      value: {
+        ...fighterBuild,
+        equipment: {
+          owned: [],
+          loadout: {
+            weapon: {
+              itemId: characterEquipmentItemId({
+                slot: "main",
+                unitId: requireRight(
+                  characterEquipmentItemUnitId(
+                    authoredUnitId("weapon_quarterstaff"),
+                  ),
+                ),
+              }),
+              grip: "one_handed",
+            },
+          },
+        },
+      },
+      expected:
+        "Character Build loadout must reference owned catalog equipment.",
     },
   ])("rejects $name", ({ value, expected }) => {
     expectIssue(parseCharacterBuild(value, unitLibrary), expected);

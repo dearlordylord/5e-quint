@@ -343,6 +343,13 @@ const EquipmentSchema = Schema.Struct({
         quantity: PositiveIntegerSchema,
       }),
       Schema.Struct({
+        kind: Schema.Literal("authoredCatalogItem"),
+        itemId: characterEquipmentItemIdSchema(),
+        authoredItemId: Schema.NonEmptyString,
+        spellcastingFocusKind: Schema.Literal("arcane"),
+        quantity: PositiveIntegerSchema,
+      }),
+      Schema.Struct({
         kind: Schema.Literal("authoredStartingItem"),
         itemName: Schema.NonEmptyString,
         quantity: PositiveIntegerSchema,
@@ -1281,6 +1288,24 @@ function equipmentFact(
         noUnprojectedFields(unprojectedItem);
         return { kind, itemId, quantity };
       }),
+      Match.when({ kind: "authoredCatalogItem" }, (catalogItem) => {
+        const {
+          kind,
+          itemId,
+          authoredItemId,
+          spellcastingFocusKind,
+          quantity,
+          ...unprojectedItem
+        } = catalogItem;
+        noUnprojectedFields(unprojectedItem);
+        return {
+          kind,
+          itemId,
+          authoredItemId,
+          spellcastingFocusKind,
+          quantity,
+        };
+      }),
       Match.when({ kind: "authoredStartingItem" }, (authoredItem) => {
         const { kind, itemName, quantity, ...unprojectedItem } = authoredItem;
         noUnprojectedFields(unprojectedItem);
@@ -1298,14 +1323,7 @@ function equipmentFact(
   const { armor, shield, weapon, offHandWeapon, ...unprojectedLoadout } =
     loadout;
   noUnprojectedFields(unprojectedLoadout);
-  const projectedWeapon =
-    weapon === undefined
-      ? undefined
-      : (() => {
-          const { itemId, grip, ...unprojectedWeapon } = weapon;
-          noUnprojectedFields(unprojectedWeapon);
-          return { itemId, grip };
-        })();
+  const projectedWeapon = weapon;
   const projectedOffHandWeapon =
     offHandWeapon === undefined
       ? undefined
