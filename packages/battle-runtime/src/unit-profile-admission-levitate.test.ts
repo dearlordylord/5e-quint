@@ -26,6 +26,7 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import {
   breakBattleConcentration,
   discoverBattleActCandidates,
@@ -557,6 +558,48 @@ describe("L12G deterministic Levitate creature admission", () => {
     expect(requireCombatant(expired, spellCasterId).concentration).toBeNull();
     expect(
       requireCombatant(expired, spellTargetId).activeEffects.some(
+        (effect) => effect.kind === "spellLevitatedCreature",
+      ),
+    ).toBe(false);
+  });
+
+  test("Levitate concentration cleanup preserves an unrelated target resistance", () => {
+    const cast = castWillingLevitate();
+    const target = requireCombatant(cast.state, spellTargetId);
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-levitate-unrelated-resistance",
+    );
+    const state: BattleState = {
+      ...cast.state,
+      combatants: new Map(cast.state.combatants).set(spellTargetId, {
+        ...target,
+        activeEffects: [
+          ...target.activeEffects,
+          {
+            kind: "damageResistance" as const,
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellTargetId,
+            damageType: "cold" as const,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        ],
+      }),
+    };
+
+    const broken = breakBattleConcentration(state, spellCasterId);
+    const brokenTarget = requireCombatant(broken, spellTargetId);
+    expect(brokenTarget.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "damageResistance",
+        sourceProcedureRef: unrelatedSource,
+        damageType: "cold",
+      }),
+    );
+    expect(
+      brokenTarget.activeEffects.some(
         (effect) => effect.kind === "spellLevitatedCreature",
       ),
     ).toBe(false);

@@ -823,6 +823,80 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       ),
     ).toBe(false);
   });
+
+  test("Slow recast replaces only its own active penalties", () => {
+    const base = spellBattle({
+      preparedSpells: [spellRecord(slowUnitId)],
+      spellSlots: [{ spellLevel: 3, count: 1 }],
+    });
+    const act = spellAct({ session: base, spellId: slowUnitId, slotLevel: 3 });
+    const savingThrow = requireSpellSavingThrowOutcomeHole(act.initialHoles);
+    const target = requireCombatant(base.state, spellTargetId);
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-slow-unrelated",
+    );
+    const state: BattleState = {
+      ...base.state,
+      combatants: new Map(base.state.combatants).set(spellTargetId, {
+        ...target,
+        activeEffects: [
+          {
+            kind: "slowActivePenalties" as const,
+            sourceProcedureRef: act.subject.procedureRef,
+            sourceCombatantId: spellCasterId,
+            save: {
+              ability: "wis" as const,
+              dc: { kind: "caster_spell_save_dc" as const },
+            },
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: spellCasterId,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+          {
+            kind: "slowActivePenalties" as const,
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            save: {
+              ability: "wis" as const,
+              dc: { kind: "caster_spell_save_dc" as const },
+            },
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: spellCasterId,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        ],
+      }),
+    };
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        slowSavingThrowOutcomeFill(savingThrow, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Slow recast to resolve.");
+    }
+    expect(
+      requireCombatant(resolved.state, spellTargetId).activeEffects,
+    ).toEqual([
+      expect.objectContaining({
+        kind: "slowActivePenalties",
+        sourceProcedureRef: unrelatedSource,
+      }),
+      expect.objectContaining({
+        kind: "slowActivePenalties",
+        sourceProcedureRef: act.subject.procedureRef,
+      }),
+    ]);
+  });
 });
 
 function castFailedSlow(session: BattleRuntimeSession): BattleState {

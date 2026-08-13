@@ -2,6 +2,8 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   assertBattleSnapshotCodecRoundTripForTest,
   attackExecutionSelectionForSubjectForTest,
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
   characterAttackSubjectForTest,
   testShortswordAttack,
 } from "./battle-runtime.test-support.ts";
@@ -765,5 +767,83 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
         ]),
       },
     });
+  });
+
+  test("Jump recast replaces only its own movement replacement", () => {
+    const spell = spellRecord(jumpUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 1, count: 1 }],
+    });
+    const act = bonusSpellAct({ session, spellId: jumpUnitId });
+    const caster = requireCombatant(session.state, spellCasterId);
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-jump-unrelated-resistance",
+    );
+    const state = {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: [
+          ...caster.activeEffects,
+          {
+            kind: "jumpMovementReplacement" as const,
+            effectRef: battleActiveEffectExecutionRefForTest(
+              "synthetic-jump-prior",
+            ),
+            sourceProcedureRef: act.subject.procedureRef,
+            sourceCombatantId: spellCasterId,
+            movementCostFeet: movementFeet(10),
+            maxJumpDistanceFeet: movementFeet(30),
+            usedThisTurn: true,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(1),
+            },
+          },
+          {
+            kind: "damageResistance" as const,
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            damageType: "cold" as const,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        ],
+      }),
+    };
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    const recast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        jumpSpellTargetListFill(targetHole, spellCasterId, jumpUnitId, [
+          spellCasterId,
+        ]),
+      ],
+    });
+    expect(recast).toMatchObject({ tag: "resolved" });
+    if (recast.tag !== "resolved") {
+      throw new Error("Expected Jump recast to resolve.");
+    }
+    const effects = requireCombatant(recast.state, spellCasterId).activeEffects;
+    expect(effects).toContainEqual(
+      expect.objectContaining({
+        kind: "damageResistance",
+        sourceProcedureRef: unrelatedSource,
+      }),
+    );
+    expect(effects).toContainEqual(
+      expect.objectContaining({
+        kind: "jumpMovementReplacement",
+        sourceProcedureRef: act.subject.procedureRef,
+        usedThisTurn: false,
+      }),
+    );
+    expect(
+      effects.filter((effect) => effect.kind === "jumpMovementReplacement"),
+    ).toHaveLength(1);
   });
 });

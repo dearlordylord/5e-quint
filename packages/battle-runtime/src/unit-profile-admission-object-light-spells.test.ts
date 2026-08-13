@@ -891,4 +891,70 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       },
     });
   });
+
+  test("continual flame keeps separate occurrences when recast on the same object", () => {
+    const spell = spellRecord(continualFlameUnitId);
+    const objectId = battleObjectId("unit-profile-continual-flame-same-object");
+    const baseSession = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const procedureRef = requireCharacterSpellProcedureRefForTest(
+      baseSession,
+      spellCasterId,
+      spellSlotInvocationRef(continualFlameUnitId, 2, "objectLight"),
+    );
+    const state: BattleState = {
+      ...baseSession.state,
+      lightEmitters: [
+        {
+          kind: "spellLightEmitter",
+          sourceProcedureRef: procedureRef,
+          sourceCombatantId: spellCasterId,
+          attachment: { kind: "object", objectId },
+          emission: {
+            kind: "brightAndDim",
+            brightRadiusFeet: movementFeet(20),
+            dimAdditionalFeet: movementFeet(20),
+          },
+          opaqueCoverInteraction: { kind: "blocksEmission" },
+          expiresAt: { kind: "untilDispelled" },
+        },
+      ],
+    };
+    const act = spellAct({
+      session: baseSession,
+      spellId: continualFlameUnitId,
+      slotLevel: 2,
+    });
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTouchedObjectTargetFill({
+          hole: requireHole(act.initialHoles, "objectTargetChoice"),
+          objectId,
+          spellId: continualFlameUnitId,
+          casterId: spellCasterId,
+        }),
+      ],
+    });
+
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        "Expected same-object Continual Flame recast to resolve.",
+      );
+    }
+    expect(resolved.state.lightEmitters).toHaveLength(2);
+    expect(
+      resolved.state.lightEmitters.filter(
+        (emitter) =>
+          emitter.kind === "spellLightEmitter" &&
+          emitter.sourceCombatantId === spellCasterId &&
+          emitter.attachment.kind === "object" &&
+          emitter.attachment.objectId === objectId,
+      ),
+    ).toHaveLength(2);
+  });
 });
