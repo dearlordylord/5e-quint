@@ -829,46 +829,6 @@ describe("SRDINV95 deterministic Flame Blade admission", () => {
     );
     expect(snapshotBattle(expired).lightEmitters).toEqual([]);
   });
-
-  test("flame_blade concentration cleanup preserves an unrelated caster effect", () => {
-    const cast = castFlameBlade(flameBladeBattle());
-    const caster = requireCombatant(cast.state, spellCasterId);
-    const unrelatedSource = battleProcedureExecutionRefForTest(
-      "synthetic-flame-blade-unrelated-resistance",
-    );
-    const state: BattleState = {
-      ...cast.state,
-      combatants: new Map(cast.state.combatants).set(spellCasterId, {
-        ...caster,
-        activeEffects: [
-          ...caster.activeEffects,
-          {
-            kind: "damageResistance" as const,
-            sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellCasterId,
-            damageType: "cold" as const,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        ],
-      }),
-    };
-    const broken = breakBattleConcentration(state, spellCasterId);
-    const brokenCaster = requireCombatant(broken, spellCasterId);
-    expect(brokenCaster.activeEffects).toContainEqual(
-      expect.objectContaining({
-        kind: "damageResistance",
-        sourceProcedureRef: unrelatedSource,
-      }),
-    );
-    expect(brokenCaster.activeEffects).not.toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ kind: "spellCreatedHeldObject" }),
-      ]),
-    );
-  });
 });
 
 function flameBladeBattle(

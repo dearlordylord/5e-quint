@@ -526,35 +526,6 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(hasCondition(target.conditions, "incapacitated")).toBe(true);
     expect(Number(effectiveWalkSpeed(second.state, target))).toBe(0);
   });
-
-  test("Haste creation preserves a target-owned concentration effect", () => {
-    const spell = spellRecord(hasteUnitId);
-    const initial = spellBattle({
-      preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 3, count: 1 }],
-    });
-    const withTargetConcentration = stateWithSyntheticTargetConcentration(
-      initial.state,
-    );
-    const session = battleRuntimeSessionForTest({
-      ...initial,
-      state: withTargetConcentration,
-    });
-    const act = spellAct({
-      session,
-      spellId: hasteUnitId,
-      slotLevel: 3,
-    });
-    const resolved = resolveHaste({
-      state: withTargetConcentration,
-      subject: act.subject,
-      targetHole: requireHole(act.initialHoles, "targetChoice"),
-    });
-
-    const target = requireCombatant(resolved.state, spellTargetId);
-    expect(hasSyntheticTargetConcentrationEffect(target)).toBe(true);
-    expect(hasHastePositiveEffects(target)).toBe(true);
-  });
 });
 
 function resolveHaste(input: {

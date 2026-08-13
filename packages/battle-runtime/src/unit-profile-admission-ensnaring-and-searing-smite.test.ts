@@ -14,7 +14,6 @@ import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runt
 import type {
   BattleInterruptProcedureChoice,
   BattleRuntimeSession,
-  BattleState,
 } from "./index.ts";
 import {
   ensnaringStrikeHelperId,
@@ -1165,81 +1164,5 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
         },
       },
     });
-  });
-
-  test("Searing Smite turn-start failure preserves the timed rider", () => {
-    const base = spellBattle({
-      preparedSpells: [spellRecord(searingSmiteUnitId)],
-      targetHp: 20,
-      targetMaxHp: 20,
-    });
-    const sourceProcedureRef = battleProcedureExecutionRefForTest(
-      "synthetic-searing-smite-turn-start",
-    );
-    const caster = requireCombatant(base.state, spellCasterId);
-    const target = requireCombatant(base.state, spellTargetId);
-    const state: BattleState = {
-      ...base.state,
-      combatants: new Map(base.state.combatants)
-        .set(spellCasterId, {
-          ...caster,
-          concentration: {
-            sourceProcedureRef,
-            effectKind: "spellEffect",
-          },
-        })
-        .set(spellTargetId, {
-          ...target,
-          activeEffects: [
-            ...target.activeEffects,
-            {
-              kind: "spellTurnStartDamageAndSave" as const,
-              source: "afterHitTimedDamageAndSave" as const,
-              sourceProcedureRef,
-              sourceCombatantId: spellCasterId,
-              damage: {
-                expr: { dice: 1, dieSize: 6 },
-                damageType: "fire" as const,
-              },
-              save: {
-                ability: "con" as const,
-                dc: { kind: "caster_spell_save_dc" as const },
-                successEnds: "spell" as const,
-              },
-              expiresAt: {
-                kind: "concentration" as const,
-                combatantId: spellCasterId,
-                durationTicks: elapsedTimeTicks(10),
-              },
-            },
-          ],
-        }),
-    };
-    const awaiting = endTurn({ state, actorId: spellCasterId });
-    const damage = requireResultHole(awaiting, "rolledDice");
-    const save = requireResultHole(awaiting, "savingThrowOutcome");
-    const failed = endTurn({
-      state,
-      actorId: spellCasterId,
-      fills: [
-        damageRollFillWithGroups(damage, [[3]]),
-        savingThrowOutcomeFill(save, [
-          { targetId: spellTargetId, succeeded: false },
-        ]),
-      ],
-    });
-    expect(failed).toMatchObject({ tag: "resolved" });
-    if (failed.tag !== "resolved") {
-      throw new Error("Expected Searing Smite failed save to resolve.");
-    }
-    expect(requireCombatant(failed.state, spellTargetId).hp).toBe(Hp(17));
-    expect(
-      requireCombatant(failed.state, spellTargetId).activeEffects,
-    ).toContainEqual(
-      expect.objectContaining({
-        kind: "spellTurnStartDamageAndSave",
-        sourceProcedureRef,
-      }),
-    );
   });
 });

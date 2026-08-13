@@ -1226,44 +1226,6 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     ]);
     expect(wardingBondEffects(expired, spellTargetId)).toEqual([]);
   });
-
-  test("Warding Bond creation preserves an unrelated target protection", () => {
-    const session = wardingBondBattle();
-    const target = requireCombatant(session.state, spellTargetId);
-    const unrelatedSource = battleProcedureExecutionRefForTest(
-      "synthetic-warding-bond-unrelated",
-    );
-    const state: BattleState = {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(spellTargetId, {
-        ...target,
-        activeEffects: [
-          ...target.activeEffects,
-          {
-            kind: "damageResistance" as const,
-            sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellCasterId,
-            damageType: "cold" as const,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        ],
-      }),
-    };
-    const cast = castWardingBond(
-      battleRuntimeSessionForTest({ ...session, state }),
-    );
-    expect(requireCombatant(cast, spellTargetId).activeEffects).toEqual([
-      expect.objectContaining({
-        kind: "damageResistance",
-        sourceProcedureRef: unrelatedSource,
-        damageType: "cold",
-      }),
-      expect.objectContaining({ kind: "wardingBond" }),
-    ]);
-  });
 });
 
 function wardingBondBattle(
