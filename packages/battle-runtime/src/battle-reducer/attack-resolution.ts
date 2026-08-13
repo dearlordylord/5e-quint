@@ -45,7 +45,11 @@ import type { BattleProcedureExecutionRef } from "../identity.ts";
 
 import * as Either from "effect/Either";
 
-import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import type {
+  BoundSupportedAttackActionOption,
+  SupportedAttackActionOption,
+} from "../battle-action-options.ts";
+import { spendAmmunitionForAcceptedAttack } from "../battle-ammunition.ts";
 
 import {
   type ActionHideSubject,
@@ -291,7 +295,7 @@ type StatBlockBonusActionOptionResolverInput =
 export function needsAttackDamageConcentrationResult(input: {
   readonly state: BattleState;
   readonly subject: BattleAttackHostSubject;
-  readonly attack: SupportedAttackActionOption;
+  readonly attack: BoundSupportedAttackActionOption;
   readonly continuation: BattleAttackDamageContinuationWithoutConcentration;
   readonly concentrationSave: BattleConcentrationSavingThrowHole;
 }): BattleResolutionResult {
@@ -309,6 +313,7 @@ export function needsAttackDamageConcentrationResult(input: {
     pendingState,
     input.subject.actorId,
     input.attack,
+    { kind: "acceptedAttack" },
   );
   /* v8 ignore start -- Defensive internal guard: dispatcher admission proves the Attack resource exists, and the pre-concentration damage path preserves it; reaction-window paths spend and return before calling this helper. */
   if (spent.tag === "invalid") {
@@ -2388,7 +2393,8 @@ export function openClassFeatureExtraAttackResource(input: {
 export function spendAttackAction(
   state: BattleState,
   actorId: CombatantId,
-  attack: SupportedAttackActionOption,
+  attack: BoundSupportedAttackActionOption,
+  timing: { readonly kind: "acceptedAttack" | "attackPreventedBeforeRoll" },
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
   const statBlockAttackSection =
     attack.kind === "statBlockAttack"
@@ -2402,11 +2408,19 @@ export function spendAttackAction(
     );
   }
   if (statBlockAttackSection === "legendaryActions") {
-    const nextState = spendStatBlockAttackResources({
+    const resourcesSpent = spendStatBlockAttackResources({
       state,
       actorId,
       attack,
     });
+    const nextState =
+      timing.kind === "acceptedAttack"
+        ? spendAmmunitionForAcceptedAttack({
+            state: resourcesSpent,
+            actorId,
+            attack,
+          })
+        : resourcesSpent;
     return {
       tag: "resolved",
       state: nextState,
@@ -2483,7 +2497,7 @@ export function spendAttackAction(
       actorId,
     );
 
-  const nextState = spendStatBlockAttackResources({
+  const resourcesSpentState = spendStatBlockAttackResources({
     state: {
       ...state,
       currentTurnResources: nextTurnResourcesWithoutPendingReplacement,
@@ -2491,6 +2505,14 @@ export function spendAttackAction(
     actorId,
     attack,
   });
+  const nextState =
+    timing.kind === "acceptedAttack"
+      ? spendAmmunitionForAcceptedAttack({
+          state: resourcesSpentState,
+          actorId,
+          attack,
+        })
+      : resourcesSpentState;
   return {
     tag: "resolved",
     state: nextState,

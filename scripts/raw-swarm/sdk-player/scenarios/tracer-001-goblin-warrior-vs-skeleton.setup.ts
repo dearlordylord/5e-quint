@@ -16,6 +16,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     combatantId: sdk.combatantId("goblin-warrior"),
     initiative: sdk.initiativeScore(15),
     statBlock: goblinStatBlock,
+    ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
   });
   if (sdk.isLeft(goblin)) {
     return {
@@ -38,6 +39,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     combatantId: sdk.combatantId("skeleton"),
     initiative: sdk.initiativeScore(10),
     statBlock: skeletonStatBlock,
+    ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
   });
   if (sdk.isLeft(skeleton)) {
     return {

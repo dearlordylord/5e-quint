@@ -52,10 +52,20 @@ import {
   characterSheetBattleInit,
 } from "./index.ts";
 
+import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+
 function battleCreatureInitFromStatBlock(
-  input: Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+  input: Omit<
+    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+    "ammunitionStocks"
+  >,
 ) {
-  return expectRight(parseBattleCreatureInitFromStatBlock(input));
+  return expectRight(
+    parseBattleCreatureInitFromStatBlock({
+      ...input,
+      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
+    }),
+  );
 }
 
 const battleInitProjectionScenarios = [
@@ -342,6 +352,7 @@ function rejectMixedSpellAndPactSlotInitProjection(): BattleInitProjection {
     combatantId: combatantId("combatant:battle-init-mixed-slots"),
     displayName: "Character",
     initiative: initiativeScore(20),
+    ammunitionStocks: [],
   });
 
   return projectFromParts({
@@ -359,6 +370,7 @@ function rejectBuildMaximumAboveBuildMaximumProjection(): BattleInitProjection {
     displayName: "Fighter",
     build: defenseBuild({ wearingArmor: false }),
     initiative: initiativeScore(20),
+    ammunitionStocks: [],
     unitLibrary,
     hitPointMaximum: Hp(13),
   });
@@ -394,6 +406,7 @@ function rejectStableRecoveryProgressDuringInitProjection(): BattleInitProjectio
     combatantId: combatantId("combatant:stable-recovery-init"),
     displayName: "Character",
     initiative: initiativeScore(20),
+    ammunitionStocks: [],
   });
 
   return projectFromParts({
@@ -425,6 +438,7 @@ function projectCharacterBattle(input: {
       combatantId: input.combatantId,
       displayName: "Character",
       initiative: initiativeScore(20),
+      ammunitionStocks: [],
     }),
   );
   const session = expectRight(

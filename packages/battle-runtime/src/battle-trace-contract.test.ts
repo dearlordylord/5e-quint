@@ -257,6 +257,7 @@ function statBlockCreatureInit(input: {
       source: Either.getOrThrow(battleStatBlockCombatantSource(statBlock)),
       currentHp: Hp(statBlock.statBlock.hp.value),
       tempHp: Hp(0),
+      ammunitionStocks: [],
     },
   };
 }

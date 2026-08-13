@@ -2378,6 +2378,7 @@ function featureActor(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId(`${input.combatantId ?? actorId}-character`),
       characterUnitRefs,
       classLevels: input.classLevels ?? [{ className: "fighter", level: 1 }],

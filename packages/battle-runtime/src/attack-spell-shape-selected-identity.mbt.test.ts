@@ -785,6 +785,7 @@ function attackSpellShapeCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
       classLevels: [

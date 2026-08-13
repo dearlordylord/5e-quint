@@ -48,6 +48,7 @@ import {
   battleActUnitPresentation,
   battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleCreaturePresentationDisplayName,
+  battleAmmunitionStock,
   battleId,
   characterBattleResourceIsPointPool,
   characterBattleResourceForUnit,
@@ -159,10 +160,20 @@ import {
 import { characterBattleOriginFeatSelectedReferenceProjection } from "./origin-feat-selected-reference-projection.ts";
 import { settleCompanionFromBattle } from "./companion-handoff.ts";
 
+import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+
 function battleCreatureInitFromStatBlock(
-  input: Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+  input: Omit<
+    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+    "ammunitionStocks"
+  >,
 ) {
-  return expectRight(parseBattleCreatureInitFromStatBlock(input));
+  return expectRight(
+    parseBattleCreatureInitFromStatBlock({
+      ...input,
+      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
+    }),
+  );
 }
 
 const build = defenseBuild({ wearingArmor: false });
@@ -334,6 +345,7 @@ describe("Character Sheet battle handoff", () => {
           species: authoredUnitId("species_orc"),
         },
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
       }),
     ).toMatchObject({
@@ -430,6 +442,7 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Support profile propagation",
         build: candidateBuild,
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary: catalog,
       });
     const malformedMasteryBuild = {
@@ -587,11 +600,13 @@ describe("Character Sheet battle handoff", () => {
         combatantId: characterCombatantId,
         displayName: "Character",
         initiative: initiativeScore(20),
+        ammunitionStocks: [],
       },
       statBlockBattleInput: {
         combatantId: monsterCombatantId,
         statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
         initiative: initiativeScore(10),
+        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       },
     });
 
@@ -664,11 +679,13 @@ describe("Character Sheet battle handoff", () => {
           combatantId: characterCombatantId,
           displayName: "Character",
           initiative: initiativeScore(20),
+          ammunitionStocks: [],
         },
         statBlockBattleInput: {
           combatantId: characterCombatantId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         },
       }),
     ).toMatchObject({
@@ -691,6 +708,7 @@ describe("Character Sheet battle handoff", () => {
           combatantId: characterCombatantId,
           displayName: "Character",
           initiative: initiativeScore(20),
+          ammunitionStocks: [],
         },
         statBlockBattleInput: {
           combatantId: monsterCombatantId,
@@ -705,6 +723,7 @@ describe("Character Sheet battle handoff", () => {
             },
           },
           initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         },
       }),
     ).toMatchObject({
@@ -735,6 +754,7 @@ describe("Character Sheet battle handoff", () => {
       combatantId: combatantId("init-catalog-drift"),
       displayName: "Catalog Drift Fighter",
       initiative: initiativeScore(10),
+      ammunitionStocks: [],
     } as const;
 
     expect(
@@ -914,6 +934,7 @@ describe("Character Sheet battle handoff", () => {
               combatantId: characterCombatantId,
               displayName: "Settlement Owner",
               initiative: initiativeScore(12),
+              ammunitionStocks: [],
             }),
           ),
           battleCreatureInitFromStatBlock({
@@ -1358,6 +1379,7 @@ describe("Character Sheet battle handoff", () => {
       state,
       unitLibrary,
       ownerCombatantId: ownerId,
+      ammunitionStocks: [],
       initialCombatantOrder: new Map([[ownerId, 0]]),
       statBlockCatalog,
     } as const;
@@ -1444,6 +1466,7 @@ describe("Character Sheet battle handoff", () => {
         sheet: disappeared,
         unitLibrary,
         ownerCombatantId: ownerId,
+        ammunitionStocks: [],
         initialCombatantOrder: new Map([[ownerId, 0]]),
         statBlockCatalog,
       }),
@@ -1520,6 +1543,7 @@ describe("Character Sheet battle handoff", () => {
         combatantId: ownerId,
         displayName: "Pact Companion Owner",
         initiative: initiativeScore(12),
+        ammunitionStocks: [],
       }),
     );
     const started = expectRight(
@@ -1532,6 +1556,7 @@ describe("Character Sheet battle handoff", () => {
       sheet: retained,
       unitLibrary,
       ownerCombatantId: ownerId,
+      ammunitionStocks: [],
       companionCombatantId: companionId,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithinSpellRange" as const },
@@ -1643,6 +1668,7 @@ describe("Character Sheet battle handoff", () => {
         combatantId: ownerId,
         displayName: "Companion Owner",
         initiative: initiativeScore(12),
+        ammunitionStocks: [],
       }),
     );
     const started = expectRight(
@@ -1655,6 +1681,7 @@ describe("Character Sheet battle handoff", () => {
       sheet,
       unitLibrary,
       ownerCombatantId: ownerId,
+      ammunitionStocks: [],
       companionCombatantId: companionId,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithinSpellRange" as const },
@@ -1931,6 +1958,7 @@ describe("Character Sheet battle handoff", () => {
       status: "temporarilyDismissed",
       reappearanceCombatantId: companionId,
       hitPoints: retained.companion.manifestation.hitPoints,
+      ammunitionStocks: [],
     } as const satisfies BattleCompanionState;
     expect(
       settle({
@@ -2065,6 +2093,7 @@ describe("Character Sheet battle handoff", () => {
         combatantId: ownerId,
         displayName: "Owner",
         initiative: initiativeScore(12),
+        ammunitionStocks: [],
       }),
     );
     const started = expectRight(
@@ -2079,6 +2108,7 @@ describe("Character Sheet battle handoff", () => {
         session: started,
         unitLibrary,
         ownerCombatantId: ownerId,
+        ammunitionStocks: [],
         companionCombatantId: companionId,
         initiative: initiativeScore(14),
         placement: { kind: "unoccupiedSpaceWithinSpellRange" },
@@ -2111,6 +2141,7 @@ describe("Character Sheet battle handoff", () => {
       session: admitted,
       casterId: ownerId,
       familiarId: companionId,
+      ammunitionStocks: [],
       catalog: statBlockCatalog,
       eligibility,
       selection: { tag: "normalNamedForm", formId: "rat" },
@@ -2372,6 +2403,7 @@ describe("Character Sheet battle handoff", () => {
       state: state.state,
       unitLibrary,
       ownerCombatantId: ownerId,
+      ammunitionStocks: [],
       companionCombatantId: combatantId("forged-companion"),
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithinSpellRange" },
@@ -2480,6 +2512,7 @@ describe("Character Sheet battle handoff", () => {
       state: state.state,
       unitLibrary,
       ownerCombatantId: ownerId,
+      ammunitionStocks: [],
       companionCombatantId: companionId,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithinSpellRange" as const },
@@ -2595,6 +2628,7 @@ describe("Character Sheet battle handoff", () => {
       state: state.state,
       unitLibrary: unitLibraryWithSyntheticFamiliarFormCatalog(),
       ownerCombatantId: ownerId,
+      ammunitionStocks: [],
       companionCombatantId: companionId,
       initiative: initiativeScore(14),
       placement: { kind: "unoccupiedSpaceWithinSpellRange" },
@@ -2636,6 +2670,7 @@ describe("Character Sheet battle handoff", () => {
         combatantId: ownerId,
         displayName: "Owner",
         initiative: initiativeScore(12),
+        ammunitionStocks: [],
       }),
     );
     const state = expectRight(
@@ -2656,6 +2691,7 @@ describe("Character Sheet battle handoff", () => {
       state: state.state,
       casterId: ownerId,
       familiarId: battleOnlyCompanionId,
+      ammunitionStocks: [],
       catalog: statBlockCatalog,
       eligibility,
       selection: { tag: "normalNamedForm", formId: "cat" },
@@ -2738,6 +2774,7 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Druid",
         sheet: sheet.right,
         initiative: initiativeScore(20),
+        ammunitionStocks: [],
         unitLibrary,
         statBlockCatalog,
       }),
@@ -2769,6 +2806,7 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Druid",
         sheet,
         initiative: initiativeScore(20),
+        ammunitionStocks: [],
         unitLibrary,
         statBlockCatalog: emptyStatBlockCatalog(),
       }),
@@ -2831,6 +2869,7 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Druid",
         sheet,
         initiative: initiativeScore(20),
+        ammunitionStocks: [],
         unitLibrary,
         statBlockCatalog,
       }),
@@ -2892,6 +2931,7 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Fighter",
         sheet: sheet.right,
         initiative: initiativeScore(20),
+        ammunitionStocks: [],
         unitLibrary,
         statBlockCatalog,
       }),
@@ -2910,6 +2950,7 @@ describe("Character Sheet battle handoff", () => {
       displayName: "Fighter",
       build,
       initiative: initiativeScore(20),
+      ammunitionStocks: [],
       unitLibrary,
       hitPointMaximum: Hp(13),
     });
@@ -2929,6 +2970,7 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Fighter",
         build,
         initiative: initiativeScore(20),
+        ammunitionStocks: [],
         unitLibrary,
         hitPointMaximum: Hp(13),
       }),
@@ -2953,6 +2995,7 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Fighter",
         build,
         initiative: initiativeScore(20),
+        ammunitionStocks: [],
         unitLibrary,
       }),
     ).toMatchObject({
@@ -2973,6 +3016,7 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Druid",
         build: druidWildShapeBuild(),
         initiative: initiativeScore(20),
+        ammunitionStocks: [],
         unitLibrary,
       }),
     ).toMatchObject({
@@ -3010,6 +3054,7 @@ describe("Character Sheet battle handoff", () => {
           ],
         },
         initiative: initiativeScore(20),
+        ammunitionStocks: [],
         unitLibrary,
       }),
     );
@@ -3027,6 +3072,7 @@ describe("Character Sheet battle handoff", () => {
       displayName: "Druid",
       build: druidWildShapeBuild(),
       initiative: initiativeScore(20),
+      ammunitionStocks: [],
       unitLibrary,
       druidWildShapeAvailableForms: [
         statBlockCatalog.requireStatBlock("stat_block_rat"),
@@ -3054,6 +3100,7 @@ describe("Character Sheet battle handoff", () => {
       displayName: "Druid",
       build: druidWildShapeBuild(),
       initiative: initiativeScore(20),
+      ammunitionStocks: [],
       unitLibrary,
     });
 
@@ -3215,6 +3262,7 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Dragonborn",
         sheet: parsed,
         initiative: initiativeScore(20),
+        ammunitionStocks: [],
         unitLibrary,
         statBlockCatalog,
       }),
@@ -3679,6 +3727,7 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Stable Fighter",
         sheet: sheet.right,
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
         statBlockCatalog,
       }),
@@ -3701,6 +3750,7 @@ describe("Character Sheet battle handoff", () => {
           displayName: "Stable Fighter",
           sheet: sheet.right,
           initiative: initiativeScore(10),
+          ammunitionStocks: [],
           unitLibrary,
           statBlockCatalog,
         },
@@ -3708,6 +3758,7 @@ describe("Character Sheet battle handoff", () => {
           combatantId: combatantId("stable-init-entry-skeleton"),
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(5),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         },
       }),
     ).toMatchObject({
@@ -3913,6 +3964,7 @@ describe("Character Sheet battle handoff", () => {
         combatantId: combatantId(`combatant:zero-hp-${label}`),
         displayName: `Zero HP ${label}`,
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
       });
       expect(init).toMatchObject({ _tag: "Right" });
 
@@ -3962,6 +4014,7 @@ describe("Character Sheet battle handoff", () => {
         combatantId: combatantId("combatant:positive-hp-unconscious"),
         displayName: "Positive HP unconscious",
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
       }),
     );
     expect(init).toMatchObject({
@@ -4280,6 +4333,7 @@ describe("Character Sheet battle handoff", () => {
         combatantId: combatantIdValue,
         displayName: "Warlock",
         initiative: initiativeScore(12),
+        ammunitionStocks: [],
       }),
     );
     if (init.creatureInit.kind !== "character") {
@@ -4590,6 +4644,7 @@ describe("Character Sheet battle handoff", () => {
       combatantId: combatantIdValue,
       displayName: "Wizard/Warlock",
       initiative: initiativeScore(12),
+      ammunitionStocks: [],
     });
 
     expect(init).toMatchObject({
@@ -4650,6 +4705,7 @@ describe("Character Sheet battle handoff", () => {
         combatantId: combatantId("combatant:sorcerer-font-battle"),
         displayName: "Sorcerer",
         initiative: initiativeScore(12),
+        ammunitionStocks: [],
       }),
     );
     if (init.creatureInit.kind !== "character") {
@@ -4886,6 +4942,7 @@ describe("Character Sheet battle handoff", () => {
         combatantId: combatantIdValue,
         displayName: "Sorcerer",
         initiative: initiativeScore(12),
+        ammunitionStocks: [],
       }),
     );
     const state = expectRight(
@@ -4952,6 +5009,7 @@ describe("Character Sheet battle handoff", () => {
         combatantId: sorcererCombatantId,
         displayName: "Sorcerer",
         initiative: initiativeScore(12),
+        ammunitionStocks: [],
       }),
     );
     if (characterInit.creatureInit.kind !== "character") {
@@ -5068,6 +5126,7 @@ describe("Character Sheet battle handoff", () => {
         displayName: "Malformed Metamagic Sorcerer",
         build: malformedMetamagicBuild,
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
       }),
     ).toMatchObject({
@@ -5480,6 +5539,7 @@ describe("Character Sheet battle handoff", () => {
         combatantId: combatantId("combatant:monk-uncanny-handoff"),
         displayName: "Monk",
         initiative: initiativeScore(16),
+        ammunitionStocks: [],
       }),
     );
     if (init.creatureInit.kind !== "character") {
@@ -6046,6 +6106,7 @@ describe("Character Build battle projection", () => {
       displayName: "Invalid boundary",
       build,
       initiative: initiativeScore(10),
+      ammunitionStocks: [],
       unitLibrary,
     } as const;
 
@@ -6161,6 +6222,7 @@ describe("Character Build battle projection", () => {
           combatantId: combatantId("invalid-build-boundary-stat-block"),
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(5),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         },
         unitLibrary,
       }),
@@ -6187,6 +6249,7 @@ describe("Character Build battle projection", () => {
             },
           },
           initiative: initiativeScore(5),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         },
         unitLibrary,
       }),
@@ -6358,6 +6421,7 @@ describe("Character Build battle projection", () => {
       characterId: characterId("character:missing-projection-unit"),
       displayName: "Missing projection Unit",
       initiative: initiativeScore(10),
+      ammunitionStocks: [],
       unitLibrary,
     } as const;
     expect(
@@ -6553,6 +6617,7 @@ describe("Character Build battle projection", () => {
         characterId: characterId("character:missing-spellcasting-unit"),
         displayName: "Missing spellcasting Unit",
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
         build: {
           ...wizard,
@@ -6774,6 +6839,7 @@ describe("Character Build battle projection", () => {
         displayName: "Barbarian Monk",
         build: multiclassUnarmoredDefenseBuild(),
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
         armorClassBaseChoices: {
           kind: "currentEquipment",
@@ -6802,6 +6868,7 @@ describe("Character Build battle projection", () => {
         displayName: "Barbarian Monk",
         build: multiclassUnarmoredDefenseBuild(),
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
         armorClassBaseChoices: {
           kind: "byShieldUse",
@@ -6841,6 +6908,7 @@ describe("Character Build battle projection", () => {
         displayName: "Barbarian Monk",
         build: multiclassUnarmoredDefenseBuild(),
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
         armorClassBaseChoices: {
           kind: "byShieldUse",
@@ -6886,6 +6954,7 @@ describe("Character Build battle projection", () => {
           },
         },
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
         armorClassBaseChoices: {
           kind: "byShieldUse",
@@ -6992,6 +7061,7 @@ describe("Character Build battle projection", () => {
         displayName: "Duplicate Class Identity",
         build: duplicateClassBuild,
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary: duplicateClassIdentityLibrary,
       }),
     ).toMatchObject({
@@ -7022,6 +7092,7 @@ describe("Character Build battle projection", () => {
         displayName: "Fighter With Sheet Resource",
         build: fighterWithLayOnHandsResourceBuild(),
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
       }),
     );
@@ -7095,6 +7166,7 @@ describe("Character Build battle projection", () => {
         displayName: "Wild Shape without Druid",
         build: invalidBuild,
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
       }),
     ).toMatchObject(expectedIssue);
@@ -7173,6 +7245,7 @@ describe("Character Build battle projection", () => {
         displayName: "Over-cap Sorcerer",
         build: sorcererMetamagicBuild(),
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
         resourceExpenditures: [
           {
@@ -7321,11 +7394,13 @@ describe("Character Build battle projection", () => {
           displayName: "True Strike Wizard",
           build: trueStrikeWizardBuild(),
           initiative: initiativeScore(20),
+          ammunitionStocks: [],
         },
         statBlockBattleInput: {
           combatantId: targetId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         },
         unitLibrary,
       }),
@@ -7474,6 +7549,7 @@ describe("Character Build battle projection", () => {
         combatantId: combatantId("pact-tome-battle-init"),
         displayName: "Pact Tome Warlock",
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
       }),
     );
     expect(init.creatureInit).toMatchObject({
@@ -7499,11 +7575,13 @@ describe("Character Build battle projection", () => {
           combatantId: characterCombatantId,
           displayName: "Pact Tome Warlock",
           initiative: initiativeScore(10),
+          ammunitionStocks: [],
         },
         statBlockBattleInput: {
           combatantId: combatantId("combatant:pact-tome-opponent"),
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(5),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         },
       }),
     );
@@ -7974,11 +8052,13 @@ describe("Character Build battle projection", () => {
           displayName: "Eldritch Mind Warlock",
           build: eldritchMindInvocationBuild(),
           initiative: initiativeScore(20),
+          ammunitionStocks: [],
         },
         statBlockBattleInput: {
           combatantId: targetId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         },
         unitLibrary,
       }),
@@ -8034,11 +8114,13 @@ describe("Character Build battle projection", () => {
           displayName: "Weapon Mastery Fighter",
           build: weaponMasteryLongswordFighterBuild(),
           initiative: initiativeScore(20),
+          ammunitionStocks: [],
         },
         statBlockBattleInput: {
           combatantId: targetId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         },
         unitLibrary,
       }),
@@ -8164,11 +8246,13 @@ describe("Character Build battle projection", () => {
           displayName: "Weapon Mastery Topple Fighter",
           build: weaponMasteryQuarterstaffFighterBuild(),
           initiative: initiativeScore(20),
+          ammunitionStocks: [],
         },
         statBlockBattleInput: {
           combatantId: targetId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         },
         unitLibrary,
       }),
@@ -8238,11 +8322,13 @@ describe("Character Build battle projection", () => {
           displayName: "Weapon Mastery Cleave Fighter",
           build: weaponMasteryGreataxeFighterBuild(),
           initiative: initiativeScore(20),
+          ammunitionStocks: [],
         },
         statBlockBattleInput: {
           combatantId: targetId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         },
         unitLibrary,
       }),
@@ -8318,6 +8404,7 @@ describe("Character Build battle projection", () => {
         displayName: "Martial Arts Dagger Monk",
         build: monkBuild({ weaponUnitId: "weapon_dagger", str: 12, dex: 16 }),
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
       }),
     );
@@ -8380,6 +8467,7 @@ describe("Character Build battle projection", () => {
         displayName: "Pact Blade Character",
         build,
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
         pactBladeBondedWeaponItemId: bondedItemId,
       }),
@@ -8456,6 +8544,7 @@ describe("Character Build battle projection", () => {
         displayName: "Strong Pact Blade Character",
         build,
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
         pactBladeBondedWeaponItemId: bondedItemId,
       }),
@@ -8498,6 +8587,7 @@ describe("Character Build battle projection", () => {
           displayName: "Pact Blade Character",
           build,
           initiative: initiativeScore(20),
+          ammunitionStocks: [],
           pactBladeBondedWeaponItemId: bondedItemId,
         },
         statBlockBattleInput: {
@@ -8506,6 +8596,7 @@ describe("Character Build battle projection", () => {
             "stat_block_goblin_warrior",
           ),
           initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         },
         unitLibrary,
       }),
@@ -8590,6 +8681,7 @@ describe("Character Build battle projection", () => {
           displayName: "Pact Blade Off-Hand Character",
           build,
           initiative: initiativeScore(20),
+          ammunitionStocks: [],
           pactBladeBondedWeaponItemId: bondedItemId,
         },
         statBlockBattleInput: {
@@ -8598,6 +8690,7 @@ describe("Character Build battle projection", () => {
             "stat_block_goblin_warrior",
           ),
           initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         },
         unitLibrary,
       }),
@@ -8712,6 +8805,7 @@ describe("Character Build battle projection", () => {
         displayName: "Unbonded Blade Warlock",
         build: meleeBuild,
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
       }),
     );
@@ -8748,6 +8842,7 @@ describe("Character Build battle projection", () => {
           displayName: "No Invocation Character",
           build: noInvocationBuild,
           initiative: initiativeScore(10),
+          ammunitionStocks: [],
           unitLibrary,
           pactBladeBondedWeaponItemId: noInvocationItemId,
         }),
@@ -8769,6 +8864,7 @@ describe("Character Build battle projection", () => {
           displayName: "Ranged Blade Character",
           build: rangedBuild,
           initiative: initiativeScore(10),
+          ammunitionStocks: [],
           unitLibrary,
           pactBladeBondedWeaponItemId: rangedItemId,
         }),
@@ -8789,6 +8885,7 @@ describe("Character Build battle projection", () => {
           displayName: "Invalid Bond Character",
           build: pactBladeInvocationBuild(authoredUnitId("weapon_longsword")),
           initiative: initiativeScore(10),
+          ammunitionStocks: [],
           unitLibrary,
           pactBladeBondedWeaponItemId: arbitraryItemId,
         }),
@@ -8814,6 +8911,7 @@ describe("Character Build battle projection", () => {
         ],
       },
       initiative: initiativeScore(10),
+      ammunitionStocks: [],
       unitLibrary,
       pactBladeBondedWeaponItemId: arbitraryItemId,
     });
@@ -8842,6 +8940,7 @@ describe("Character Build battle projection", () => {
           equipment: { ...validBuild.equipment, owned: [] },
         },
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
         pactBladeBondedWeaponItemId: validItemId,
       }),
@@ -8874,6 +8973,7 @@ describe("Character Build battle projection", () => {
           },
         },
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
         pactBladeBondedWeaponItemId: missingItemId,
       }),
@@ -8893,6 +8993,7 @@ describe("Character Build battle projection", () => {
         displayName: "Ranged Blade Warlock",
         build: pactBladeInvocationBuild(authoredUnitId("weapon_shortbow")),
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
       }),
     );
@@ -8929,6 +9030,7 @@ describe("Character Build battle projection", () => {
             dex: 16,
           }),
           initiative: initiativeScore(10),
+          ammunitionStocks: [],
           unitLibrary,
         }),
       );
@@ -8969,6 +9071,7 @@ describe("Character Build battle projection", () => {
         displayName: "Strength Monk",
         build: monkBuild({ weaponUnitId: "weapon_dagger", str: 16, dex: 12 }),
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
       }),
     );
@@ -9003,6 +9106,7 @@ describe("Character Build battle projection", () => {
           dex: 16,
         }),
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
       }),
     );
@@ -9017,6 +9121,7 @@ describe("Character Build battle projection", () => {
           dex: 16,
         }),
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
       }),
     );
@@ -9032,6 +9137,7 @@ describe("Character Build battle projection", () => {
           dex: 16,
         }),
         initiative: initiativeScore(10),
+        ammunitionStocks: [],
         unitLibrary,
       }),
     );
@@ -9064,11 +9170,13 @@ describe("Character Build battle projection", () => {
           displayName: "Grappling Monk",
           build: monkBuild({ level: 5, str: 12, dex: 16 }),
           initiative: initiativeScore(20),
+          ammunitionStocks: [],
         },
         statBlockBattleInput: {
           combatantId: targetId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         },
         unitLibrary,
       }),
@@ -9434,6 +9542,7 @@ function startDruidWildShapeSheetBattle(
       displayName: "Druid",
       sheet,
       initiative: initiativeScore(20),
+      ammunitionStocks: [],
       unitLibrary,
       statBlockCatalog,
     }),

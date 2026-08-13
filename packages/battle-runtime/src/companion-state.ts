@@ -11,6 +11,7 @@ import type {
   CombatantId,
   InitiativeScore,
 } from "./identity.ts";
+import type { BattleAmmunitionStock } from "./battle-state-execution.ts";
 
 export type BattleCompanionDurableId = string;
 
@@ -78,6 +79,7 @@ export type BattleCompanionTemporarilyDismissedState =
       readonly status: "temporarilyDismissed";
       readonly reappearanceCombatantId: CombatantId;
       readonly hitPoints: BattleCompanionHitPoints;
+      readonly ammunitionStocks: readonly BattleAmmunitionStock[];
     };
 
 export type BattleCompanionDisappearedAtZeroHitPointsState =

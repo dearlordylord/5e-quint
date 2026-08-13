@@ -39,6 +39,7 @@ import {
   isPresentFindFamiliarCombatant,
 } from "../find-familiar-state.ts";
 import { combatantHasPactOfTheChainFindFamiliar } from "../find-familiar-pact-facts.ts";
+import { ammunitionForAttackIsAvailable } from "../battle-ammunition.ts";
 import {
   companionHeldObjectFactsHole,
   companionReappearanceInitiativeHole,
@@ -928,6 +929,7 @@ function pactOfTheChainFamiliarAttackActs(
     familiarCombatant.origin.execution,
   ).flatMap((attack) => {
     if (
+      !ammunitionForAttackIsAvailable(familiarCombatant, attack) ||
       statBlockAttackProcedureSection(
         state,
         familiarId,

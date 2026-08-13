@@ -783,6 +783,7 @@ function weaponMasteryAttackerInit(
     initiative: initiativeScore(20),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId(`character:${unitId}`),
       characterUnitRefs: [
         {
@@ -835,6 +836,7 @@ function targetCreatureInit(
     initiative: initiativeScore(initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId(`character:${combatantIdValue}`),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],

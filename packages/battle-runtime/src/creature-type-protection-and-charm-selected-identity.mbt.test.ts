@@ -17,6 +17,7 @@ import {
   difficultyClass,
   movementFeet,
   proficiencyBonus,
+  resourceCount,
   type Condition,
 } from "@dnd/shared/types";
 import {
@@ -1375,6 +1376,7 @@ function spellcasterCreature(input: {
       currentHp: Hp(12),
       maxHp: Hp(12),
       tempHp: Hp(0),
+      ammunitionStocks: [],
       selectedLoadout: {},
       attack: null,
       unarmedStrike: {
@@ -1409,6 +1411,7 @@ function statBlockCreature(input: {
       ),
       currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
       tempHp: Hp(0),
+      ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
     },
   };
 }

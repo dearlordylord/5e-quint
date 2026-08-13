@@ -21,6 +21,7 @@ import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { ArmorClassSchema as BattleArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
 import { RETAINED_COMPANION_PROTOCOL_TAGS } from "@dnd/shared-algebras/companion-protocol-algebra";
 import {
+  AmmunitionKindSchema,
   STANDARD_ACTION_KINDS,
   type StandardActionKind,
 } from "@dnd/shared/game-facts";
@@ -32,7 +33,7 @@ import {
 import { BattleCreatureDisplayNameSchema } from "../battle-creature-display-name.ts";
 import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
 import {
-  CreatureNamedAttackRollSchema,
+  CreatureAttackRollMechanicsSchema,
   CreatureRechargeMinimumRollSchema,
   DiceExprSchema,
   UnitRecordSchema,
@@ -5533,8 +5534,7 @@ const StatBlockResourcePoolStateSchema = Schema.Union(
 const StatBlockAttackProcedureSchema = Schema.Struct({
   kind: Schema.Literal("attack"),
   section: Schema.Literal("actions", "legendaryActions"),
-  attack: CreatureNamedAttackRollSchema.pipe(
-    Schema.omit("name", "description", "limitedUse"),
+  attack: CreatureAttackRollMechanicsSchema.pipe(
     Schema.filter(creatureAttackRollMechanicsAreSupported, {
       message: () => "Unsupported Stat Block attack procedure mechanics.",
     }),
@@ -5799,6 +5799,13 @@ const CharacterBattleCreatureOriginSnapshotSchema = Schema.Struct({
   ),
 });
 
+const BattleAmmunitionStocksSchema = Schema.Array(
+  Schema.Struct({
+    ammunition: AmmunitionKindSchema,
+    remaining: ResourceCount,
+  }),
+);
+
 const StatBlockBattleCreatureOriginSnapshotSchema = Schema.Struct({
   kind: Schema.Literal("statBlock"),
   statBlockId: Schema.String,
@@ -5820,6 +5827,7 @@ const BattleCreatureSnapshotCommonFields = {
   concentrating: Schema.Boolean,
   dodging: Schema.Boolean,
   reactionAvailable: Schema.Boolean,
+  ammunitionStocks: BattleAmmunitionStocksSchema,
   movement: Schema.Struct({
     speedFeet: Schema.Number,
     spentFeet: Schema.Number,
@@ -5853,6 +5861,12 @@ function battleCreatureSnapshotInvariantsHold(
 ): boolean {
   if (
     new Set(snapshot.activeEffectRefs).size !== snapshot.activeEffectRefs.length
+  ) {
+    return false;
+  }
+  if (
+    new Set(snapshot.ammunitionStocks.map((stock) => stock.ammunition)).size !==
+    snapshot.ammunitionStocks.length
   ) {
     return false;
   }
@@ -6413,6 +6427,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
     hitPoints: BattleCompanionHitPointsSchema,
+    ammunitionStocks: BattleAmmunitionStocksSchema,
   }),
   Schema.Struct({
     status: Schema.Literal("temporarilyDismissed"),
@@ -6424,6 +6439,7 @@ const BattleCompanionSnapshotSchema = Schema.Union(
     resolvedStatBlockId: BattleCompanionResolvedStatBlockIdSchema,
     creatureTypeOverride: FindFamiliarCreatureTypeOverrideSchema,
     hitPoints: BattleCompanionHitPointsSchema,
+    ammunitionStocks: BattleAmmunitionStocksSchema,
   }),
   Schema.Struct({
     status: Schema.Literal("disappearedAtZeroHitPoints"),
@@ -7971,3 +7987,4 @@ export const BattleSnapshotSchema = Schema.Struct({
     ),
   )
   .annotations({ identifier: "BattleSnapshot" });
+// KERNEL-COVERAGE: runtime-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE

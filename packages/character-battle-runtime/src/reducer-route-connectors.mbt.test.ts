@@ -5,6 +5,7 @@ import * as path from "node:path";
 import {
   type AvailableBattleAct,
   battleActSpellPresentation,
+  battleAmmunitionStock,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -118,10 +119,20 @@ import {
   type CharacterSessionSheetDerivedBattleActsRouteAction,
 } from "./index.ts";
 
+import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+
 function battleCreatureInitFromStatBlock(
-  input: Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+  input: Omit<
+    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+    "ammunitionStocks"
+  >,
 ) {
-  return expectRight(parseBattleCreatureInitFromStatBlock(input));
+  return expectRight(
+    parseBattleCreatureInitFromStatBlock({
+      ...input,
+      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
+    }),
+  );
 }
 
 const MBT_TEST_TIMEOUT_MS = 120_000;
@@ -973,6 +984,7 @@ function metamagicBridgeUsesSharedPointPoolRoute(
       combatantId: sorcererCombatantId,
       displayName: "Sorcerer",
       initiative: initiativeScore(12),
+      ammunitionStocks: [],
     }),
   );
   if (characterInit.creatureInit.kind !== "character") {
@@ -1398,6 +1410,7 @@ function originFeatSelectedReferenceRetentionRoute(): readonly CharacterBattleRo
     combatantId: combatantId("combatant:route-origin-feat-retention"),
     displayName: "Route Origin Feat Retention",
     initiative: alertInitiativeScoreForBuild(build),
+    ammunitionStocks: [],
   });
   if (Either.isLeft(projection)) {
     throw new Error(projection.left.issue.message);
@@ -1418,11 +1431,13 @@ function originFeatSelectedReferenceInitiativeHandoffRoute(): readonly Character
       combatantId: combatantId("combatant:route-origin-feat-runtime-entry"),
       displayName: "Route Origin Feat Runtime Entry",
       initiative: alertInitiativeScoreForBuild(build),
+      ammunitionStocks: [],
     },
     statBlockBattleInput: {
       combatantId: combatantId("combatant:route-origin-feat-skeleton"),
       statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
       initiative: initiativeScore(10),
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
     },
   });
   if (Either.isLeft(entry)) {

@@ -1,6 +1,7 @@
 import { pathToFileURL } from "node:url";
 import {
   battleCreatureInitFromStatBlock,
+  battleAmmunitionStock,
   battleId,
   battleObjectId,
   battleStateInitIssueMessage,
@@ -76,6 +77,7 @@ function setupContext(
             statBlocks: validCatalog.listStatBlocks(),
             unitCatalog,
             sdk: {
+              battleAmmunitionStock,
               battleCreatureInitFromStatBlock,
               battleId,
               battleObjectId,

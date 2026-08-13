@@ -8,6 +8,11 @@
 // creature-state-leaves.ts to break the cluster_state ↔ movement_speed cycle.
 
 import { optionalProperty } from "../optional-property.ts";
+import {
+  ammunitionStockIssues,
+  missingRequiredAmmunitionKinds,
+} from "../battle-ammunition.ts";
+import { statBlockAttackActionOptions } from "../stat-block-execution.ts";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import { Either, Match } from "effect";
 import {
@@ -211,6 +216,20 @@ export function battleCreatureStateAdmissionFromInit(
       >;
     } {
   const creatureInit = input.creatureInit;
+  const ammunitionIssues = ammunitionStockIssues(creatureInit.ammunitionStocks);
+  if (ammunitionIssues.length > 0) {
+    const [firstIssue, ...remainingIssues] = ammunitionIssues;
+    return {
+      tag: "invalid",
+      issues: [
+        { tag: "battleStateInitIssue", message: firstIssue },
+        ...remainingIssues.map((message) => ({
+          tag: "battleStateInitIssue" as const,
+          message,
+        })),
+      ],
+    };
+  }
   const maxHp =
     creatureInit.kind === "character"
       ? creatureInit.maxHp
@@ -258,6 +277,7 @@ export function battleCreatureStateAdmissionFromInit(
     zeroHpLifecycle,
     reactionAvailable: true,
     movementSpentFeet: movementFeet(0),
+    ammunitionStocks: creatureInit.ammunitionStocks,
   };
 
   if (creatureInit.kind === "character") {
@@ -507,6 +527,27 @@ export function battleCreatureStateAdmissionFromInit(
       issues: [admission.left],
     };
   }
+  const missingAmmunitionKinds = missingRequiredAmmunitionKinds(
+    statBlockAttackActionOptions(admission.right.origin.execution).map(
+      (option) => option.attack,
+    ),
+    creatureInit.ammunitionStocks,
+  );
+  if (isNonEmptyReadonlyArray(missingAmmunitionKinds)) {
+    return {
+      tag: "invalid",
+      issues: [
+        {
+          tag: "battleStateInitIssue" as const,
+          message: `Stat Block battle initialization requires an explicit ${missingAmmunitionKinds[0]} ammunition stock.`,
+        },
+        ...missingAmmunitionKinds.slice(1).map((ammunition) => ({
+          tag: "battleStateInitIssue" as const,
+          message: `Stat Block battle initialization requires an explicit ${ammunition} ammunition stock.`,
+        })),
+      ],
+    };
+  }
   const admittedCreature = applyInitialZeroHpLifecycle({
     ...base,
     armorClass: statBlockArmorClassState(
@@ -572,7 +613,24 @@ export function hidePrerequisiteReferencedCombatantIds(
 function characterBattleInitInvariantIssues(
   creatureInit: CharacterBattleCreatureInit,
 ): BattleStateInitLeafIssue[] {
+  const attacks = [creatureInit.attack, creatureInit.offHandAttack].flatMap(
+    (attack) => {
+      if (attack === null || attack === undefined) return [];
+      return attack.weapon.properties.flatMap((property) =>
+        property.kind === "ammunition"
+          ? [{ attackType: "ranged" as const, ammunition: property.ammunition }]
+          : [],
+      );
+    },
+  );
   return [
+    ...missingRequiredAmmunitionKinds(
+      attacks,
+      creatureInit.ammunitionStocks,
+    ).map((ammunition) => ({
+      tag: "battleStateInitIssue" as const,
+      message: `Character battle initialization requires an explicit ${ammunition} ammunition stock.`,
+    })),
     ...duplicateCharacterBattleResourceUnitIssues(creatureInit.resources ?? []),
     ...duplicateCharacterBattleFeatureUnitIssues(
       creatureInit.unitFeatures ?? [],

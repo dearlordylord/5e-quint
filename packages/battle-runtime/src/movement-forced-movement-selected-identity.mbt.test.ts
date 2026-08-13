@@ -1692,6 +1692,7 @@ function movementCompelledMovementCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: input.characterUnitRefs ?? [],
       classLevels: input.classLevels ?? [

@@ -244,6 +244,10 @@ describe("Stat Block catalog boundary", () => {
       expect(
         goblin.statBlock.actions?.attacks?.map((attack) => attack.name),
       ).toEqual(["Scimitar", "Shortbow"]);
+      const shortbow = goblin.statBlock.actions?.attacks?.[1];
+      expect(
+        shortbow?.attackType === "ranged" ? shortbow.ammunition : undefined,
+      ).toBe("arrow");
       expect(goblin.statBlock.actions?.attacks?.[0]?.onHit).toContainEqual({
         amount: { expr: { dice: 1, dieSize: 4 }, kind: "fixed", static: 2 },
         damageType: "slashing",
@@ -263,6 +267,25 @@ describe("Stat Block catalog boundary", () => {
         },
       ]);
     }
+  });
+
+  test("rejects ammunition on a melee creature attack", () => {
+    const attacks = goblinWarriorInput.statBlock.actions?.attacks;
+    expect(attacks).toBeDefined();
+    if (attacks === undefined) return;
+    const malformed = {
+      ...goblinWarriorInput,
+      statBlock: {
+        ...goblinWarriorInput.statBlock,
+        actions: {
+          ...goblinWarriorInput.statBlock.actions,
+          attacks: attacks.map((attack, index) =>
+            index === 0 ? { ...attack, ammunition: "arrow" } : attack,
+          ),
+        },
+      },
+    };
+    expect(Either.isLeft(decodeStatBlockRecordEither(malformed))).toBe(true);
   });
 
   test("exports Skeleton's SRD Stat Block vulnerabilities and immunities", () => {

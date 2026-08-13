@@ -64,10 +64,20 @@ import {
   settleCharacterSheetFromBattle,
 } from "./index.ts";
 
+import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+
 function battleCreatureInitFromStatBlock(
-  input: Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+  input: Omit<
+    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+    "ammunitionStocks"
+  >,
 ) {
-  return requireRight(parseBattleCreatureInitFromStatBlock(input));
+  return requireRight(
+    parseBattleCreatureInitFromStatBlock({
+      ...input,
+      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
+    }),
+  );
 }
 
 const characterLifecycleLayers = [
@@ -497,6 +507,7 @@ function startLifecycleBattle(sheet: CharacterSheet): {
       combatantId: lifecycleCharacterCombatantId,
       displayName: "Lifecycle Fighter",
       initiative: initiativeScore(10),
+      ammunitionStocks: [],
     }),
   );
   const session = requireRight(

@@ -591,6 +591,7 @@ function sleepCasterCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("sleep-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
@@ -631,6 +632,7 @@ function sleepTargetCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("sleep-target-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],

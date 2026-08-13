@@ -83,6 +83,7 @@ import { activeSelfTransformationNaturalWeaponsEffect } from "./spells-active-ef
 import { scoreModifier } from "./domain-helpers.ts";
 import { statBlockAttackActionOptions } from "./statblock.ts";
 import { statBlockProcedureResourcesAvailable } from "../stat-block-execution-state.ts";
+import { ammunitionForAttackIsAvailable } from "../battle-ammunition.ts";
 import {
   activeDruidWildShape,
   activeDruidWildShapeEffect,
@@ -416,37 +417,41 @@ export function attackActionOptionsForActor(
             ),
         ),
         ...wildShapeWornWeaponAttackOptions(state, actor, wildShape.effect),
-      ];
+      ].filter((attack) => ammunitionForAttackIsAvailable(actor, attack));
     }
     const unarmedStrike = unarmedStrikeWithActiveSelfTransformationOverride(
       actor,
       actor.origin.unarmedStrike,
     );
-    return actor.origin.attack == null ||
+    const options =
+      actor.origin.attack == null ||
       (actor.origin.attack.kind === "weapon" &&
         battleObjectIsOnGround(
           state,
           actor.combatantId,
           actor.origin.attack.weaponObjectId,
         ))
-      ? [unarmedStrike]
-      : [
-          ...uniqueAttackExecutionSelectionOptions(
-            attackActionVariantOptions(
-              weaponAttackWithActiveSpellEffects(
-                state,
-                actor,
-                actor.origin.attack,
-                mainHandWeaponItemIdForAttack(
+        ? [unarmedStrike]
+        : [
+            ...uniqueAttackExecutionSelectionOptions(
+              attackActionVariantOptions(
+                weaponAttackWithActiveSpellEffects(
                   state,
                   actor,
                   actor.origin.attack,
+                  mainHandWeaponItemIdForAttack(
+                    state,
+                    actor,
+                    actor.origin.attack,
+                  ),
                 ),
               ),
             ),
-          ),
-          unarmedStrike,
-        ];
+            unarmedStrike,
+          ];
+    return options.filter((attack) =>
+      ammunitionForAttackIsAvailable(actor, attack),
+    );
   }
 
   if (actor?.origin.kind === "statBlock") {
@@ -468,7 +473,8 @@ export function attackActionOptionsForActor(
         ) &&
         (multiattackAttackProcedureRefs.length === 0 ||
           (option.procedureRef !== undefined &&
-            multiattackAttackProcedureRefs.includes(option.procedureRef))),
+            multiattackAttackProcedureRefs.includes(option.procedureRef))) &&
+        ammunitionForAttackIsAvailable(actor, option),
     );
   }
 
@@ -568,7 +574,7 @@ export function offHandAttackActionOptionsForActor(
   };
   return attackActionVariantOptions(lightPropertyOffHand).filter(
     (attack): attack is BoundCharacterWeaponAttackActionOption =>
-      attack.kind === "weapon",
+      attack.kind === "weapon" && ammunitionForAttackIsAvailable(actor, attack),
   );
 }
 
@@ -1474,3 +1480,4 @@ function martialArtsLoadoutEligible(
       isMonkWeapon(origin.offHandAttack.weapon));
   return mainWeaponEligible && offHandWeaponEligible;
 }
+// KERNEL-COVERAGE: runtime-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE

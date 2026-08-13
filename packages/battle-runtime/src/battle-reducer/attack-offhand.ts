@@ -121,6 +121,7 @@ import type {
 } from "../battle-state-execution.ts";
 import { ATTACK_ROLL_HOLE_ID } from "./battle-runtime-protocol.ts";
 import { spellAttackRerollUnsupportedIssue } from "./spell-reroll-issues.ts";
+import { spendAmmunitionForAcceptedAttackPendingContinuation } from "../battle-ammunition.ts";
 import {
   boundAttackExecutionSelectionMatchesOption,
   type BoundSupportedAttackActionOption,
@@ -440,6 +441,12 @@ function resolveBonusActionAttack(
     input.subject.actorId,
     target.combatantId,
   );
+  attackRolledState = spendAmmunitionForAcceptedAttackPendingContinuation({
+    state: attackRolledState,
+    actorId: input.subject.actorId,
+    attack,
+    subject: input.subject,
+  });
   const critical = attackRollIsCriticalHit(
     effectiveAttackRoll,
     criticalThreshold,

@@ -156,6 +156,7 @@ function bardicInspirationBard(): BattleCreatureInit {
     initiative: initiativeScore(20),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("bardic-inspiration-selected-identity-bard"),
       characterUnitRefs: [
         {
@@ -193,6 +194,7 @@ function targetCreature(): BattleCreatureInit {
     initiative: initiativeScore(10),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("bardic-inspiration-selected-identity-target"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],

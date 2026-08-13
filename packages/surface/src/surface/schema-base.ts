@@ -2,6 +2,7 @@ import { Schema } from "effect";
 import * as AST from "effect/SchemaAST";
 import {
   ABILITIES,
+  AmmunitionKindSchema,
   CLASS_NAMES as SHARED_CLASS_NAMES,
   CREATURE_TYPES,
   STANDARD_ACTION_KINDS,
@@ -630,13 +631,7 @@ export const WeaponRangeSchema = Schema.Struct({
   long: Schema.Number,
 });
 
-export const AmmunitionKindSchema = Schema.Literal(
-  "arrow",
-  "bolt",
-  "bullet",
-  "needle",
-  "sling_bullet",
-);
+export { AmmunitionKindSchema };
 
 export const WeaponPropertyDetailSchema = Schema.Union(
   Schema.Struct({

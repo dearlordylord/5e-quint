@@ -45,6 +45,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     combatantId: ardenId,
     displayName: "Arden",
     initiative: sdk.initiativeScore(17 + 2),
+    ammunitionStocks: [],
     sheet: ardenSheet,
     unitLibrary: context.unitCatalog,
     statBlockCatalog: context.statBlockCatalog,
@@ -53,6 +54,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     combatantId: brynId,
     displayName: "Bryn",
     initiative: sdk.initiativeScore(12 + 1),
+    ammunitionStocks: [],
     sheet: brynSheet,
     unitLibrary: context.unitCatalog,
     statBlockCatalog: context.statBlockCatalog,
@@ -82,6 +84,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       initiative: sdk.initiativeScore(14 + 2),
       currentHp: sdk.hp(13),
       tempHp: sdk.hp(0),
+      ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     }),
   );
   for (const projected of skeletonInits) {
@@ -190,26 +193,25 @@ export const setupScenario: ScenarioSetup = (context) => {
   }
 
   return {
-    kind: "obstructed",
-    obstruction:
-      "The player- and GM-owned initiative rolls and starting-square assignment " +
-      "have been supplied, and the closest faithful canonical session composes. " +
-      "However, the GM selected rolled Skeleton damage, twenty arrows per Skeleton, " +
-      "and finite arena edges that are impassable and grant no cover. The damage " +
-      "procedure and arena are represented, but the scenario makes the selected " +
-      "ammunition quantity and its depletion material, " +
-      "while neither StatBlockBattleInitInput nor createScenarioSession has a field " +
-      "for per-Skeleton Shortbow ammunition. Returning the " +
-      "session as ready would silently discard that required setup fact.",
+    kind: "ready",
+    session: session.right,
     observation: {
       scenarioId: "generated-battle-002",
-      publicSurfaceObstruction: {
-        missingCapability: "per-combatant depletable stat-block ammunition",
-        affectedCombatants: skeletonIds,
-        affectedAction: "Shortbow",
+      initiativeRolls: {
+        arden: { d20: 17, modifier: 2, total: 19 },
+        bryn: { d20: 12, modifier: 1, total: 13 },
+        skeletonGroup: { d20: 14, modifier: 2, total: 16 },
       },
-      delegatedChoicesSupplied: true,
-      canonicalSessionComposed: true,
+      adventurerStartingSquares: {
+        arden: { x: 2, y: 5 },
+        bryn: { x: 2, y: 7 },
+      },
+      skeletonDamage: "rolled",
+      skeletonAmmunition: {
+        ammunition: "arrow",
+        quantityPerSkeleton: 20,
+      },
+      arenaEdges: "finite impassable edges with no Cover contribution",
     },
   };
 };

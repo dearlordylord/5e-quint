@@ -1,4 +1,8 @@
 import { optionalProperty } from "../../optional-property.ts";
+import {
+  ammunitionForAttackIsAvailable,
+  spendAmmunitionForAcceptedAttack,
+} from "../../battle-ammunition.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-hosted-weapon-attack
 import { DiceExprSchema } from "@dnd/surface/surface/schema";
@@ -244,6 +248,14 @@ function discoverSpellHostedWeaponAttackCastAct(
   if (componentWeapon === undefined) {
     return [];
   }
+  if (
+    !ammunitionForAttackIsAvailable(
+      state.combatants.get(actorId),
+      componentWeapon.attack,
+    )
+  ) {
+    return [];
+  }
   const targetHole = attackTargetHole(state, actorId, componentWeapon.attack);
   return targetHole.choices.length === 0
     ? []
@@ -273,6 +285,18 @@ function resolveSpellHostedWeaponAttack(
       input.input.state,
       "staleSubject",
       "Spell-hosted weapon attack component weapon is no longer available.",
+    );
+  }
+  if (
+    !ammunitionForAttackIsAvailable(
+      input.input.state.combatants.get(input.actorId),
+      componentWeapon.attack,
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "staleSubject",
+      "Spell-hosted weapon attack requires available matching ammunition.",
     );
   }
   if (input.fillSet.damageTypeChoice === undefined) {
@@ -352,9 +376,16 @@ function resolveSpellHostedWeaponAttack(
       ),
     },
     attack,
-    (state, actorId) =>
+    (state, actorId, acceptedAttack, timing) =>
       spendSpellCastResources({
-        state,
+        state:
+          timing.kind === "acceptedAttack"
+            ? spendAmmunitionForAcceptedAttack({
+                state,
+                actorId,
+                attack: acceptedAttack,
+              })
+            : state,
         actorId,
         invocation: input.invocation,
         errorState: input.input.state,

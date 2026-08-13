@@ -5,6 +5,7 @@ import { describe, expect, test } from "vitest";
 
 import { addBattleStatBlockCombatant } from "./battle-reducer/stat-block-combatant-execution.ts";
 import { battleCreatureInitFromStatBlock } from "./battle-init.ts";
+import { battleAmmunitionStock } from "./battle-ammunition.ts";
 import {
   battleExecutionScopeOrdinal,
   battleId,
@@ -61,6 +62,7 @@ describe("Stat Block combatant admission capability", () => {
       admission,
       currentHp: input.currentHp ?? Hp(1),
       tempHp: Hp(0),
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
     };
   }
 
@@ -117,6 +119,7 @@ describe("Stat Block combatant admission capability", () => {
     const initialized = battleCreatureInitFromStatBlock({
       combatantId: admittedCombatantId,
       initiative: initiativeScore(10),
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       statBlock: {
         ...source,
         statBlock: {
@@ -170,6 +173,7 @@ describe("Stat Block combatant admission capability", () => {
         admission,
         currentHp: Hp(1),
         tempHp: Hp(0),
+        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       },
     });
 
@@ -211,6 +215,7 @@ describe("Stat Block combatant admission capability", () => {
         admission,
         currentHp: Hp(1),
         tempHp: Hp(0),
+        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       },
     });
 
@@ -232,6 +237,7 @@ describe("Stat Block combatant admission capability", () => {
         admission,
         currentHp: Hp(1),
         tempHp: Hp(0),
+        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       },
     });
 

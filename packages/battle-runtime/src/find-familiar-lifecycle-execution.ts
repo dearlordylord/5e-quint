@@ -7,6 +7,7 @@ import { Hp } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 import type {
   BattleDroppedObjectOutcome,
+  BattleAmmunitionStock,
   BattleResolutionResult,
   BattleState,
 } from "./battle-state-execution.ts";
@@ -89,6 +90,7 @@ export function findFamiliarTemporarilyDismissedState(input: {
   readonly protocol: BattleCompanionProtocol;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
   readonly hitPoints: BattleCompanionHitPoints;
+  readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly reappearanceCombatantId: CombatantId;
   readonly ownerId: CombatantId;
 }): BattleCompanionTemporarilyDismissedState {
@@ -101,6 +103,7 @@ export function findFamiliarTemporarilyDismissedState(input: {
     creatureTypeOverride: input.creatureTypeOverride,
     reappearanceCombatantId: input.reappearanceCombatantId,
     hitPoints: input.hitPoints,
+    ammunitionStocks: input.ammunitionStocks,
   };
 }
 
@@ -202,12 +205,23 @@ export function temporarilyDismissFindFamiliar(
     return invalidFindFamiliarResult(input.state, "invalidFill", retainedForm);
   }
   /* v8 ignore stop */
+  const combatant = input.state.combatants.get(familiarId);
+  /* v8 ignore start -- The present companion and its live combatant are admitted and removed atomically. */
+  if (combatant === undefined) {
+    return invalidFindFamiliarResult(
+      input.state,
+      "invalidFill",
+      "Present Find Familiar combatant is missing.",
+    );
+  }
+  /* v8 ignore stop */
   const nextFamiliar = findFamiliarTemporarilyDismissedState({
     storedForm: retainedForm,
     identity: familiar.identity,
     protocol: familiar.protocol,
     creatureTypeOverride: familiar.creatureTypeOverride,
     hitPoints,
+    ammunitionStocks: combatant.ammunitionStocks,
     reappearanceCombatantId: familiarId,
     ownerId: input.casterId,
   });
@@ -349,6 +363,7 @@ export function reappearAdmittedTemporarilyDismissedFindFamiliar(
     combatantAdmission: input.admission.combatantAdmission,
     currentHp: familiar.hitPoints.currentHp,
     tempHp: familiar.hitPoints.tempHp,
+    ammunitionStocks: familiar.ammunitionStocks,
   });
   /* v8 ignore start -- Admitted reappearance commit: owner, identity, form, HP, and roster insertion were proven together before this helper returns. */
   if (nextState.tag === "invalid") {
@@ -420,6 +435,7 @@ export function withFindFamiliarCombatant(input: {
   readonly combatantAdmission: import("./stat-block-combatant-execution-state.ts").AdmittedBattleStatBlockCombatant;
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
+  readonly ammunitionStocks: readonly import("./battle-state-execution.ts").BattleAmmunitionStock[];
 }):
   | { readonly tag: "resolved"; readonly state: BattleState }
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }> {
@@ -477,6 +493,7 @@ export function withFindFamiliarCombatant(input: {
       admission: input.combatantAdmission,
       currentHp: input.currentHp ?? Hp(maxHp),
       tempHp: input.tempHp ?? Hp(0),
+      ammunitionStocks: input.ammunitionStocks,
     },
   });
   /* v8 ignore start -- Internal commit invariant: the familiar identity was collision-checked and its Stat Block combatant admission succeeded immediately before insertion. */

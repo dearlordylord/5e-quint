@@ -146,6 +146,7 @@ export function castRetainedFindFamiliarRuntime(
     resolvedForm: resolvedForm.form,
     initiative: input.initiative,
     placement: input.placement,
+    ammunitionStocks: input.ammunitionStocks,
     retainedTransition: "sessionOwned",
   });
   /* v8 ignore start -- Cast lifecycle failures are exercised at the lifecycle boundary; this wrapper only preserves their typed reason, message, and snapshot. */

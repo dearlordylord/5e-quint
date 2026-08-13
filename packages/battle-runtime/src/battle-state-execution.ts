@@ -181,6 +181,7 @@ import type * as Option from "effect/Option";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
   BoundCharacterWeaponAttackActionOption,
+  BoundAttackExecutionSelection,
   SupportedAttackActionOption,
 } from "./battle-action-options.ts";
 
@@ -4020,6 +4021,7 @@ type BattleCreatureStateCommon = {
   readonly zeroHpLifecycle: ZeroHpLifecycle;
   readonly reactionAvailable: boolean;
   readonly movementSpentFeet: MovementFeet;
+  readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly origin:
     | {
         readonly kind: "character";
@@ -4050,6 +4052,14 @@ type BattleCreatureStateCommon = {
     // restoration. Mechanics are taken from StatBlockBattleOrigin.mechanics;
     // the reducer never dispatches on statBlockId.
     | ({ readonly kind: "statBlock" } & StatBlockBattleOrigin);
+};
+
+export type BattleAmmunitionKind =
+  import("@dnd/shared/game-facts").AmmunitionKind;
+
+export type BattleAmmunitionStock = {
+  readonly ammunition: BattleAmmunitionKind;
+  readonly remaining: ResourceCount;
 };
 
 export type BattleCreatureState = BattleCreatureStateCommon &
@@ -4089,7 +4099,13 @@ export type BattleSubjectResolutionPhase =
       readonly kind: "subjectContinuation";
       readonly subject: BattleSubject;
       readonly handledInterruptTrigger?: BattleInterruptTrigger;
+      readonly acceptedAttackAmmunitionSpend?: BattleAcceptedAttackAmmunitionSpend;
     };
+
+export type BattleAcceptedAttackAmmunitionSpend = {
+  readonly actorId: CombatantId;
+  readonly attackSelection: BoundAttackExecutionSelection;
+};
 
 export type BattleState = {
   readonly battleId: BattleId;
@@ -7052,6 +7068,7 @@ type BattleCreatureSnapshotCommon = {
       readonly remainingFeet: MovementFeet;
     }[];
   };
+  readonly ammunitionStocks: readonly BattleAmmunitionStock[];
 };
 
 export type BattleCreatureSnapshot = BattleCreatureSnapshotCommon &
@@ -7218,3 +7235,4 @@ export type {
   GlyphStoredSpellInvocation,
   GlyphStoredSpellInvocationCandidate,
 } from "./glyph-stored-spell-invocation.ts";
+// KERNEL-COVERAGE: runtime-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE

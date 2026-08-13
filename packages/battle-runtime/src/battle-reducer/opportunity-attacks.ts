@@ -1,5 +1,6 @@
 import { Match } from "effect";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
+import { spendAmmunitionForAcceptedAttackPendingContinuation } from "../battle-ammunition.ts";
 // Opportunity attack resolution owns the movement-triggered Reaction procedure.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
@@ -407,6 +408,12 @@ function resolveReactionAttackCommand(
     subject.reactorId,
     subject.targetId,
   );
+  attackRolledState = spendAmmunitionForAcceptedAttackPendingContinuation({
+    state: attackRolledState,
+    actorId: subject.reactorId,
+    attack,
+    subject: input.subject,
+  });
   const criticalThreshold = criticalThresholdForAttack(
     input.state.combatants.get(subject.reactorId),
     attack,

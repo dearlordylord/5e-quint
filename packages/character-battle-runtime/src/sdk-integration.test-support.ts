@@ -76,6 +76,7 @@ import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
 import { characterSheetBattleInit } from "./index.ts";
+import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -194,6 +195,7 @@ export function battleSessionFromSheets(input: {
         combatantId: character.combatantId,
         displayName: character.sheet.characterId,
         initiative: initiativeScore(character.initiative),
+        ammunitionStocks: [],
         unitLibrary,
         statBlockCatalog,
       }),
@@ -1132,6 +1134,7 @@ export function monsterBattleInput(
     combatantId: id,
     statBlock,
     initiative: initiativeScore(initiative),
+    ammunitionStocks: testAmmunitionStocksForStatBlock(statBlock),
     ...(input.tempHp === undefined ? {} : { tempHp: Hp(input.tempHp) }),
   };
 }

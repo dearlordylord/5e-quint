@@ -16,6 +16,7 @@ import {
   Hp,
   movementFeet,
   proficiencyBonus,
+  resourceCount,
 } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
@@ -50,7 +51,9 @@ import {
   damageRollFillWithGroups,
   resolveBattleSubject,
   attackExecutionSelectionForSubjectForTest,
+  skeletonCreatureInit,
 } from "./battle-runtime.test-support.ts";
+import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -242,7 +245,9 @@ describe("Sanctuary targeting interdiction", () => {
       ],
     });
     if (needsSanctuary.tag !== "needsHoles") {
-      throw new Error("Expected Sanctuary interdiction hole.");
+      throw new Error(
+        `Expected Sanctuary interdiction hole: ${JSON.stringify(needsSanctuary)}`,
+      );
     }
     assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
       snapshot: needsSanctuary.snapshot,
@@ -274,6 +279,76 @@ describe("Sanctuary targeting interdiction", () => {
       throw new Error("Expected lost attack to resolve.");
     }
     expect(combatant(lost.state, wardedId).hp).toBe(Hp(12));
+  });
+
+  test("an attack prevented by Sanctuary before its roll does not expend ammunition", () => {
+    const warded = advanceToAttacker(
+      castSanctuary(
+        battleWithSanctuary({ ammunitionAttacker: true }),
+        wardedId,
+      ),
+    );
+    const shortbow = attackActionOptionsForActor(warded.state, attackerId).find(
+      (option) =>
+        option.kind === "statBlockAttack" &&
+        option.attack.ammunition === "arrow",
+    );
+    if (shortbow === undefined) {
+      throw new Error("Expected the ammunition attacker Shortbow option.");
+    }
+    const attack = discoverBattleActCandidates(warded.state).find(
+      (candidate) =>
+        candidate.subject.tag === "action" &&
+        candidate.subject.action === "attack" &&
+        candidate.subject.procedureRef === shortbow.procedureRef,
+    );
+    if (
+      attack === undefined ||
+      attack.subject.tag !== "action" ||
+      attack.subject.action !== "attack"
+    ) {
+      throw new Error("Expected the ammunition attacker Shortbow act.");
+    }
+    const targetFill = {
+      ...attackTargetFill(
+        requireHole(attack.initialHoles, "targetChoice"),
+        wardedId,
+        attack.subject,
+      ),
+      spatialFacts: [
+        {
+          kind: "attackTargetInRangedRange" as const,
+          actorId: attackerId,
+          targetId: wardedId,
+          ...attackExecutionSelectionForSubjectForTest(attack.subject),
+          rangeBand: "normal" as const,
+        },
+      ],
+    };
+    const needsSanctuary = resolveBattleSubject({
+      state: warded.state,
+      subject: attack.subject,
+      fills: [targetFill],
+    });
+    if (needsSanctuary.tag !== "needsHoles") {
+      throw new Error("Expected Sanctuary interdiction hole.");
+    }
+    const lost = resolveBattleSubject({
+      state: warded.state,
+      subject: attack.subject,
+      fills: [
+        targetFill,
+        sanctuaryOutcomeFill(
+          requireHole(needsSanctuary.holes, "sanctuaryInterdictionOutcome"),
+          { saveSucceeded: false, outcome: { kind: "loseAttackOrSpell" } },
+        ),
+      ],
+    });
+    expect(lost.tag).toBe("resolved");
+    if (lost.tag !== "resolved") return;
+    expect(combatant(lost.state, attackerId).ammunitionStocks).toEqual([
+      { ammunition: "arrow", remaining: resourceCount(20) },
+    ]);
   });
 
   test("successful save proceeds to the attack roll", () => {
@@ -1576,7 +1651,10 @@ function srdSpellRecord(unitId: string): SpellRecord {
 }
 
 function battleWithSanctuary(
-  input: { readonly casterLevel?: number } = {},
+  input: {
+    readonly casterLevel?: number;
+    readonly ammunitionAttacker?: boolean;
+  } = {},
 ): BattleRuntimeSession {
   const result = startBattle({
     battleId: battleId("sanctuary-targeting-interdiction"),
@@ -1611,7 +1689,13 @@ function battleWithSanctuary(
         input.casterLevel,
       ),
       characterCreature(wardedId, "Warded", 15),
-      characterCreature(attackerId, "Attacker", 10),
+      input.ammunitionAttacker === true
+        ? {
+            ...skeletonCreatureInit({ initiative: 10 }),
+            combatantId: attackerId,
+            displayName: "Ammunition Attacker",
+          }
+        : characterCreature(attackerId, "Attacker", 10),
       characterCreature(replacementId, "Replacement", 9),
     ],
   });
@@ -2009,6 +2093,7 @@ function characterCreature(
     initiative: initiativeScore(initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId(`${combatantIdValue}-character`),
       characterUnitRefs: [],
       classLevels: [{ className: "cleric", level: classLevel }],

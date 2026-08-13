@@ -69,6 +69,7 @@
             "value": 4
           },
           "attackType": "ranged",
+          "ammunition": "arrow",
           "name": "Shortbow",
           "onHit": [
             {

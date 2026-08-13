@@ -25,6 +25,7 @@ export const setupScenario: ScenarioSetup = ({
     combatantId: sdk.combatantId("external-fighter"),
     displayName: "External Fighter",
     initiative: sdk.initiativeScore(15),
+    ammunitionStocks: [],
   });
   const statBlock = statBlockCatalog.getStatBlock("stat_block_skeleton");
   if (sdk.isLeft(character) || statBlock._tag === "None") {
@@ -38,6 +39,7 @@ export const setupScenario: ScenarioSetup = ({
     combatantId: sdk.combatantId("external-skeleton"),
     statBlock: statBlock.value,
     initiative: sdk.initiativeScore(10),
+    ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
   });
   if (sdk.isLeft(monster)) {
     return {

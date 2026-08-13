@@ -1542,6 +1542,47 @@ describe("scenario setup public-SDK boundary", () => {
     );
   }, 120_000);
 
+  test("retains the second generated battle with independent Skeleton ammunition", async () => {
+    const scenarioDirectory = resolve(
+      repoRoot,
+      "scripts/raw-swarm/sdk-player/scenarios",
+    );
+    const characters = await evaluateScenarioCharacters(
+      resolve(scenarioDirectory, "generated-battle-002.characters.ts"),
+    );
+    expect(characters.tag).toBe("ready");
+    if (characters.tag !== "ready") return;
+
+    const result = await evaluateScenarioSetup(
+      resolve(scenarioDirectory, "generated-battle-002.setup.ts"),
+      characters.characterSheets,
+    );
+    expect(result).toMatchObject({
+      tag: "ready",
+      observation: {
+        scenarioId: "generated-battle-002",
+        skeletonAmmunition: {
+          ammunition: "arrow",
+          quantityPerSkeleton: 20,
+        },
+      },
+    });
+    if (result.tag !== "ready") return;
+
+    expect(result.session.battle.state.combatants.size).toBe(6);
+    for (const skeletonId of [
+      "arena-skeleton-1",
+      "arena-skeleton-2",
+      "arena-skeleton-3",
+      "arena-skeleton-4",
+    ]) {
+      expect(
+        result.session.battle.state.combatants.get(combatantId(skeletonId))
+          ?.ammunitionStocks,
+      ).toEqual([{ ammunition: "arrow", remaining: 20 }]);
+    }
+  }, 120_000);
+
   test("retains an authored setup obstruction", async () => {
     const directory = mkdtempSync(
       resolve(tmpdir(), "dnd-scenario-obstruction-"),

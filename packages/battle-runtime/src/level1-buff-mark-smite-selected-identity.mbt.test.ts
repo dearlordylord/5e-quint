@@ -45,6 +45,7 @@ import {
   difficultyClass,
   movementFeet,
   proficiencyBonus,
+  resourceCount,
   type Condition,
 } from "@dnd/shared/types";
 import {
@@ -2679,6 +2680,7 @@ function level1BuffMarkSmiteCreature(input: {
       currentHp: Hp(12),
       maxHp: Hp(12),
       tempHp: Hp(0),
+      ammunitionStocks: [],
       selectedLoadout:
         attack === null
           ? {}
@@ -2726,6 +2728,7 @@ function level1BuffMarkSmiteStatBlockCreature(input: {
       source: Either.getOrThrow(battleStatBlockCombatantSource(statBlock)),
       currentHp: maxHp,
       tempHp: Hp(0),
+      ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
     },
   };
 }

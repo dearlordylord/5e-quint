@@ -557,6 +557,11 @@ export type {
   BattleReducerRouteSubjectFamily,
 } from "./battle-reducer/reducer-route-protocol.ts";
 export { battleCreatureInitFromStatBlock } from "./battle-init.ts";
+export { battleAmmunitionStock } from "./battle-ammunition.ts";
+export type {
+  BattleAmmunitionKind,
+  BattleAmmunitionStock,
+} from "./battle-state-execution.ts";
 export { spellSaveDcForCaster } from "./battle-reducer/spell-save-dc.ts";
 export {
   breakBattleConcentration,

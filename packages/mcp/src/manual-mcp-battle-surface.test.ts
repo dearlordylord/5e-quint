@@ -8,6 +8,7 @@ import {
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   battleCreatureInitFromStatBlock,
+  battleAmmunitionStock,
   battleId,
   battleObjectId,
   admitCharacterWeaponAttackExecutionWeapon,
@@ -1237,6 +1238,7 @@ function statBlock(
       initiative: initiativeScore(input.initiative),
       currentHp: Hp(10),
       tempHp: Hp(0),
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
     }),
   );
   return { ...init, displayName: input.displayName ?? init.displayName };
@@ -1315,6 +1317,7 @@ function character(
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs,
       invocationFeatures: input.invocationFeatures ?? [],

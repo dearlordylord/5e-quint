@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 139,
-    "covered": 131,
+    "total": 140,
+    "covered": 132,
     "open": 2,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 108,
+      "battle": 109,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 131,
+      "covered": 132,
       "needs-qnt-owner": 2,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -4960,6 +4960,38 @@
         "UBIQUITOUS_LANGUAGE.md#Equipment"
       ],
       "title": "Battle Help ally/enemy decisions and Cleave second-creature discovery are procedure-local and independent of global relationship partitions"
+    },
+    {
+      "id": "BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/ammunition-lifecycle.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/ammunition-lifecycle.qnt"
+      ],
+      "reason": "The QNT owner proves only the kind-indexed scalar rule: positive matching stock is available, an accepted attack decrements exactly one, and unrelated kinds are preserved, with examples for all five surfaced kinds. The independent runtime contract covers explicit stock admission, zero-stock discovery suppression, ordinary and readied hit/miss sequencing across damage continuation, per-combatant isolation, and snapshot/codec persistence; it does not claim model-based sequencing parity for every attack host.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-ammunition.ts",
+        "packages/battle-runtime/src/battle-init.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-damage-apply.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
+        "packages/battle-runtime/src/battle-state-execution.ts",
+        "packages/surface/src/surface/schema-spell.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Equipment.md#Ammunition",
+        ".references/srd-5.2.1/Monsters/Overview.md#Ammunition and Ranged Attacks",
+        "UBIQUITOUS_LANGUAGE.md#Equipment",
+        "UBIQUITOUS_LANGUAGE.md#Resource"
+      ],
+      "title": "Battle ammunition attacks require positive matching carried stock and expend one piece per accepted attack"
     }
   ],
   "battleHoleFrontier": [
@@ -10767,6 +10799,18 @@
       "obligationIds": [],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/ordinary-creature-space-route-tests.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Owns matching-ammunition availability, nonnegative stock, exact one-piece accepted-attack expenditure, and per-kind stock independence.",
+      "obligationIds": ["BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/ammunition-lifecycle.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused run-block proof evidence for matching-stock availability, exact decrement, empty-stock rejection, and unrelated-stock preservation.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/ammunition-lifecycle-tests.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -11964,6 +12008,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/action-turn-procedures.qnt",
       "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/ammunition-lifecycle.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -16574,6 +16623,32 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/ordinary-creature-space-route.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "set",
+        "membership"
+      ],
+      "obligationId": "BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/ammunition-lifecycle-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/ammunition-lifecycle.qnt"
       ],
       "status": "generation-subset-clean"
     }

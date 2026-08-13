@@ -6,6 +6,16 @@ import {
 } from "./check-difficulty.ts";
 import type { ReadonlyNonEmptyArray } from "./non-empty-array.d.ts";
 
+export const AMMUNITION_KINDS = [
+  "arrow",
+  "bolt",
+  "bullet",
+  "needle",
+  "sling_bullet",
+] as const;
+export type AmmunitionKind = (typeof AMMUNITION_KINDS)[number];
+export const AmmunitionKindSchema = Schema.Literal(...AMMUNITION_KINDS);
+
 /** Dependency-safe authored identity vocabulary for execution projections. */
 export const UnitId = Schema.NonEmptyTrimmedString.pipe(Schema.brand("UnitId"));
 export type UnitId = typeof UnitId.Type;

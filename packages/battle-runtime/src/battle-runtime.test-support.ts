@@ -17,6 +17,10 @@ import {
 import { Match, Schema } from "effect";
 import * as Either from "effect/Either";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import {
+  battleAmmunitionStock,
+  requiredAmmunitionKinds,
+} from "./battle-ammunition.ts";
 import * as Option from "effect/Option";
 import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
@@ -3654,6 +3658,7 @@ export function characterSeed(input: {
       currentHp: Hp(input.currentHp ?? 12),
       maxHp: Hp(input.maxHp ?? 12),
       tempHp: Hp(input.tempHp ?? 0),
+      ammunitionStocks: [],
       ...(input.conditions === undefined
         ? {}
         : { conditions: input.conditions }),
@@ -3930,6 +3935,10 @@ export function statBlockCreatureInit(input: {
   readonly initiative: number;
   readonly currentHp?: number;
   readonly tempHp?: number;
+  readonly ammunitionStocks?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "statBlock" }
+  >["ammunitionStocks"];
 }): BattleCreatureInit {
   const statBlock = input.statBlock ?? statBlockRecord();
   if (statBlock.statBlock.hp.kind !== "literal") {
@@ -3938,6 +3947,12 @@ export function statBlockCreatureInit(input: {
     );
   }
   const maxHp = statBlock.statBlock.hp.value;
+  const ammunitionStocks =
+    input.ammunitionStocks ??
+    requiredAmmunitionKinds([
+      ...(statBlock.statBlock.actions?.attacks ?? []),
+      ...(statBlock.statBlock.legendaryActions?.actions.attacks ?? []),
+    ]).map((ammunition) => battleAmmunitionStock(ammunition, 20));
   return {
     combatantId: input.combatantId ?? goblinId,
     displayName: input.displayName ?? statBlock.statBlock.displayName,
@@ -3947,6 +3962,7 @@ export function statBlockCreatureInit(input: {
       source: Either.getOrThrow(battleStatBlockCombatantSource(statBlock)),
       currentHp: Hp(input.currentHp ?? maxHp),
       tempHp: Hp(input.tempHp ?? 0),
+      ammunitionStocks,
     },
   };
 }
@@ -4123,6 +4139,7 @@ export function skeletonCreatureInit(input: {
       ),
       currentHp: Hp(13),
       tempHp: Hp(0),
+      ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
     },
   };
 }
@@ -4155,6 +4172,7 @@ export function resistantSkeletonCreatureInit(input: {
       ),
       currentHp: Hp(13),
       tempHp: Hp(0),
+      ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
     },
   };
 }

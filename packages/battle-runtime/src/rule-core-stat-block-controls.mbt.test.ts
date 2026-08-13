@@ -322,6 +322,7 @@ function statBlockCreature(input: {
       ),
       currentHp: Hp(12),
       tempHp: Hp(0),
+      ammunitionStocks: [],
     },
   };
 }

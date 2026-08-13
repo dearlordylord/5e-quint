@@ -418,6 +418,7 @@ function movementCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId(input.characterId),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],

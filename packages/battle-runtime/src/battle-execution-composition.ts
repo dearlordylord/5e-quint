@@ -343,6 +343,11 @@ function battleResolutionWithExecutionSnapshot(
       ? (result.state.subjectResolutionPhase.handledInterruptTrigger ??
         handledInterruptTrigger)
       : handledInterruptTrigger;
+  const continuationAcceptedAttackAmmunitionSpend =
+    result.tag !== "invalid" &&
+    result.state.subjectResolutionPhase.kind === "subjectContinuation"
+      ? result.state.subjectResolutionPhase.acceptedAttackAmmunitionSpend
+      : undefined;
   const phasedResult =
     result.tag === "invalid"
       ? result
@@ -355,6 +360,10 @@ function battleResolutionWithExecutionSnapshot(
                 ? {
                     kind: "subjectContinuation" as const,
                     subject: battleSubjectForReplay(result.subject),
+                    ...optionalProperty(
+                      "acceptedAttackAmmunitionSpend",
+                      continuationAcceptedAttackAmmunitionSpend,
+                    ),
                     ...(continuationHandledInterruptTrigger !== undefined
                       ? {
                           handledInterruptTrigger:

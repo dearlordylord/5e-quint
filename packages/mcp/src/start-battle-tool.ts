@@ -222,6 +222,7 @@ function startableBattleCombatant(input: {
         displayName: characterBuildDisplayName(root.unitLibrary, session.build),
         sheet: session,
         initiative: character.initiative,
+        ammunitionStocks: character.ammunitionStocks,
         unitLibrary: root.unitLibrary,
         statBlockCatalog: root.statBlockCatalog,
       });
@@ -254,6 +255,7 @@ function startableBattleCombatant(input: {
         combatantId: statBlockCombatant.combatantId,
         statBlock: statBlock.value,
         initiative: statBlockCombatant.initiative,
+        ammunitionStocks: statBlockCombatant.ammunitionStocks,
         ...(encounterCombatant.currentHp === undefined
           ? {}
           : { currentHp: encounterCombatant.currentHp }),
@@ -305,6 +307,7 @@ function admitCompanionAdmissions(input: {
       sheet: owner.session,
       unitLibrary: input.root.unitLibrary,
       ownerCombatantId: owner.character.combatantId,
+      ammunitionStocks: admission.ammunitionStocks,
       ...(admission.companionCombatantId === undefined
         ? {}
         : { companionCombatantId: admission.companionCombatantId }),

@@ -2604,6 +2604,7 @@ describe("battle boundary admission owners", () => {
       state: ownerSession.state,
       casterId: wizardId,
       familiarId,
+      ammunitionStocks: [],
       resolvedForm: {
         statBlock: monsterResourceStatBlockWithUnsupportedAttackSections(),
         creatureTypeOverride: "fey",

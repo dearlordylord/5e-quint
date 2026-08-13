@@ -35,6 +35,7 @@ import {
 } from "./find-familiar-lifecycle-execution.ts";
 
 import type {
+  BattleAmmunitionStock,
   BattleResolutionResult,
   BattleState,
   BattleStateInitIssue,
@@ -124,6 +125,7 @@ export type FindFamiliarCastInput = {
   readonly state: BattleState;
   readonly casterId: CombatantId;
   readonly familiarId: CombatantId;
+  readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly catalog: StatBlockCatalog;
   readonly eligibility: FindFamiliarFormEligibility;
   readonly selection: FindFamiliarFormSelection;
@@ -146,6 +148,7 @@ export type WildCompanionCastInput = {
   readonly state: BattleState;
   readonly casterId: CombatantId;
   readonly familiarId: CombatantId;
+  readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly catalog: StatBlockCatalog;
   readonly eligibility: FindFamiliarFormEligibility;
   readonly selection: FindFamiliarFormSelection;
@@ -175,6 +178,7 @@ export type CompanionBattleAdmissionManifestation =
       readonly storedForm: CompanionBattleAdmissionStoredForm;
       readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
       readonly hitPoints: BattleCompanionHitPoints;
+      readonly ammunitionStocks: readonly BattleAmmunitionStock[];
       readonly initiative: InitiativeScore;
       readonly placement: Extract<
         BattleCompanionPlacement,
@@ -186,6 +190,7 @@ export type CompanionBattleAdmissionManifestation =
       readonly storedForm: CompanionBattleAdmissionStoredForm;
       readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
       readonly hitPoints: BattleCompanionHitPoints;
+      readonly ammunitionStocks: readonly BattleAmmunitionStock[];
       readonly reappearanceCombatantId: CombatantId;
     }
   | {
@@ -261,6 +266,7 @@ export function castFindFamiliar(
     resolvedForm: resolvedForm.form,
     initiative: input.initiative,
     placement: input.placement,
+    ammunitionStocks: input.ammunitionStocks,
     retainedTransition: "reject",
   });
 }
@@ -347,6 +353,7 @@ export function castResolvedFindFamiliar(
     familiar: nextFamiliar,
     initiative: input.initiative,
     statBlock: familiarStatBlockWithCreatureTypeOverride(resolvedForm),
+    ammunitionStocks: input.ammunitionStocks,
     ...(preservedHitPoints === null
       ? {}
       : {
@@ -467,6 +474,7 @@ export function castWildCompanion(
       statBlock: resolvedForm.form.statBlock,
       creatureTypeOverride: "fey",
     }),
+    ammunitionStocks: input.ammunitionStocks,
     ...(preservedHitPoints === null
       ? {}
       : {
@@ -560,6 +568,7 @@ export function admitCompanionToBattle(
     familiar: nextCompanion,
     initiative: input.manifestation.initiative,
     statBlock: familiarStatBlockWithCreatureTypeOverride(resolvedForm.form),
+    ammunitionStocks: input.manifestation.ammunitionStocks,
     currentHp: input.manifestation.hitPoints.currentHp,
     tempHp: input.manifestation.hitPoints.tempHp,
   });
@@ -607,6 +616,7 @@ function withAdmittedFindFamiliarCombatant(
     familiar: input.familiar,
     initiative: input.initiative,
     combatantAdmission: combatantAdmission.right,
+    ammunitionStocks: input.ammunitionStocks,
     ...optionalProperty("currentHp", input.currentHp),
     ...optionalProperty("tempHp", input.tempHp),
   });
@@ -656,6 +666,7 @@ function admitAbsentCompanionToBattle(
           protocol: input.protocol,
           creatureTypeOverride: input.manifestation.creatureTypeOverride,
           hitPoints: input.manifestation.hitPoints,
+          ammunitionStocks: input.manifestation.ammunitionStocks,
           reappearanceCombatantId: input.manifestation.reappearanceCombatantId,
           ownerId: input.ownerId,
         })

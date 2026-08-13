@@ -203,6 +203,7 @@ export function combatantSnapshot(
     dodging: combatant.dodging,
     reactionAvailable: combatant.reactionAvailable,
     movement: battleMovementBudgetForActor(state, combatant.combatantId),
+    ammunitionStocks: combatant.ammunitionStocks,
   };
   const origin = combatantOriginSnapshot(combatant);
   if (origin.kind === "character") {

@@ -210,6 +210,7 @@ import {
   selectedWeaponDamageDiceRollChoice,
 } from "./statblock-attacks.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
+import { spendAmmunitionForAcceptedAttackPendingContinuation } from "../battle-ammunition.ts";
 import {
   BRUTAL_STRIKE_EFFECT_DECISION_CHOICES,
   BRUTAL_STRIKE_ROLL_DECISION_CHOICES,
@@ -308,6 +309,7 @@ type SpendAttackProcedure<
   state: Parameters<typeof spendAttackAction>[0],
   actorId: Parameters<typeof spendAttackAction>[1],
   attack: Attack,
+  timing: { readonly kind: "acceptedAttack" | "attackPreventedBeforeRoll" },
 ) => ReturnType<typeof spendAttackAction>;
 
 export {
@@ -1340,7 +1342,9 @@ function resolveOrdinaryObjectAttack<
         "Attack damage can only be filled after a hit.",
       );
     }
-    return input.spendAttackProcedure(attackRolledState, attackerId, attack);
+    return input.spendAttackProcedure(attackRolledState, attackerId, attack, {
+      kind: "acceptedAttack",
+    });
   }
 
   const spellWeaponDamageRiders = activeSpellWeaponDamageRiders(
@@ -1375,6 +1379,7 @@ function resolveOrdinaryObjectAttack<
     attackRolledState,
     attackerId,
     attack,
+    { kind: "acceptedAttack" },
   );
   return spent.tag === "resolved"
     ? { ...spent, ...nonEmptyArrayProperty("objectDamages", [objectDamage]) }
@@ -1433,15 +1438,24 @@ function ordinaryObjectAttackDamage<
   if (input.fillSet.damageRoll === undefined) {
     return {
       tag: "resolution",
-      result: needsHolesResult(input.attackRolledState, input.input.subject, [
-        attackDamageHole(
-          input.attack,
-          critical,
-          input.effectiveAttackRoll,
-          [],
-          input.spellWeaponDamageRiders,
-        ),
-      ]),
+      result: needsHolesResult(
+        spendAmmunitionForAcceptedAttackPendingContinuation({
+          state: input.attackRolledState,
+          actorId: input.attackerId,
+          attack: input.attack,
+          subject: input.input.subject,
+        }),
+        input.input.subject,
+        [
+          attackDamageHole(
+            input.attack,
+            critical,
+            input.effectiveAttackRoll,
+            [],
+            input.spellWeaponDamageRiders,
+          ),
+        ],
+      ),
     };
   }
   const damageIssue = validateAttackDamageFill(
@@ -1601,7 +1615,9 @@ export function resolveSelectedAttackProcedure<
   }
   /* v8 ignore stop */
   if (sanctuaryCheck.tag === "lost") {
-    return spendAttackProcedure(input.state, attackerId, attack);
+    return spendAttackProcedure(input.state, attackerId, attack, {
+      kind: "attackPreventedBeforeRoll",
+    });
   }
   if (sanctuaryCheck.tag === "newTarget") {
     const replacementTarget = input.state.combatants.get(
@@ -2146,6 +2162,7 @@ export function resolveSelectedAttackProcedure<
         ),
         attackerId,
         attack,
+        { kind: "acceptedAttack" },
       );
     }
   }
@@ -2705,6 +2722,7 @@ export function resolveSelectedAttackProcedure<
         ),
         attackerId,
         attack,
+        { kind: "acceptedAttack" },
       );
       return spent.tag === "invalid"
         ? spent
@@ -2825,6 +2843,7 @@ export function resolveSelectedAttackProcedure<
       ),
       attackerId,
       attack,
+      { kind: "acceptedAttack" },
     );
     if (spent.tag === "invalid") {
       return spent;
@@ -2882,24 +2901,33 @@ export function resolveSelectedAttackProcedure<
       );
     }
     /* v8 ignore stop */
-    return needsHolesResult(hitAppliedState, input.subject, [
-      attackDamageHole(
+    return needsHolesResult(
+      spendAmmunitionForAcceptedAttackPendingContinuation({
+        state: hitAppliedState,
+        actorId: attackerId,
         attack,
-        critical,
-        effectiveAttackRoll,
-        eligibleDamageRiders,
-        spellWeaponDamageRiders,
-        spellMarkedDamageRiders,
-        ongoingFeatureDamageModifier(
-          attackRolledState,
-          attackRolledState.combatants.get(attackerId),
+        subject: input.subject,
+      }),
+      input.subject,
+      [
+        attackDamageHole(
           attack,
+          critical,
+          effectiveAttackRoll,
+          eligibleDamageRiders,
+          spellWeaponDamageRiders,
+          spellMarkedDamageRiders,
+          ongoingFeatureDamageModifier(
+            attackRolledState,
+            attackRolledState.combatants.get(attackerId),
+            attack,
+          ),
+          eligibleDamageDiceChoiceUnitIds,
+          eligibleDamageDieFloorChoiceUnitIds,
+          cunningStrikeDamageRollOptions(eligibleCunningStrikeDamageOptions),
         ),
-        eligibleDamageDiceChoiceUnitIds,
-        eligibleDamageDieFloorChoiceUnitIds,
-        cunningStrikeDamageRollOptions(eligibleCunningStrikeDamageOptions),
-      ),
-    ]);
+      ],
+    );
   }
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
@@ -3209,6 +3237,7 @@ export function resolveSelectedAttackProcedure<
         ),
         attackerId,
         attack,
+        { kind: "acceptedAttack" },
       );
       return spent.tag === "invalid"
         ? spent
@@ -3375,6 +3404,7 @@ export function resolveSelectedAttackProcedure<
       ),
       attackerId,
       attack,
+      { kind: "acceptedAttack" },
     );
     if (spent.tag === "invalid") {
       return spent;
@@ -3428,6 +3458,7 @@ export function resolveSelectedAttackProcedure<
     ),
     attackerId,
     attack,
+    { kind: "acceptedAttack" },
   );
   if (spent.tag === "invalid") {
     return spent;

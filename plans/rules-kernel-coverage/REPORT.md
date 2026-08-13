@@ -6,14 +6,14 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 
 ## Summary
 
-- Total obligations: 139
-- Covered obligations: 131
+- Total obligations: 140
+- Covered obligations: 132
 - Open transitional obligations: 2
 - Boundary or unsupported obligations: 6
 
 | Status                   | Count |
 | ------------------------ | ----: |
-| covered                  |   131 |
+| covered                  |   132 |
 | needs-qnt-owner          |     2 |
 | needs-parity-witness     |     0 |
 | needs-surface-evidence   |     0 |
@@ -23,7 +23,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | Runtime            | Count |
 | ------------------ | ----: |
 | shared-algebras    |     1 |
-| battle             |   108 |
+| battle             |   109 |
 | character-creation |    14 |
 | character-sheet    |    12 |
 | character-battle   |     4 |
@@ -171,6 +171,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE`                         | battle             | covered                  | `spell.invocation-glyph-stored-spell-release`                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION`           | battle             | covered                  | `spell.invocation-glyph-stored-concentration-full-duration`                                                                                                                                                                                                                                                                                                                                                                                      |
 | `BATTLE.RELATIONSHIP_DISCOVERY`                                   | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE`                           | battle             | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Battle Hole Frontier
 
@@ -781,6 +782,8 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt`                                                | semantic-core           | `BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY`, `BATTLE.SPELL.REACTION_CASTING_TIME`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `packages/shared-algebras/proofs/rule-core/ordinary-creature-space-route.qnt`                                       | semantic-core           | `BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `packages/shared-algebras/proofs/rule-core/ordinary-creature-space-route-tests.qnt`                                 | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `packages/shared-algebras/proofs/rule-core/ammunition-lifecycle.qnt`                                                | semantic-core           | `BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `packages/shared-algebras/proofs/rule-core/ammunition-lifecycle-tests.qnt`                                          | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## QNT Registry
 
@@ -1021,6 +1024,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/shared-algebras/proofs/rule-core/ability-check-proficiency-bonus.qnt`                                     | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/action-turn-procedures-inductive.qnt`                                    | exempt         | proof-only-example: Inductive proof companion for registered action-turn procedure core owners.                                                                                                          |
 | `packages/shared-algebras/proofs/rule-core/action-turn-procedures.qnt`                                              | qnt-owner-role | proof-only                                                                                                                                                                                               |
+| `packages/shared-algebras/proofs/rule-core/ammunition-lifecycle.qnt`                                                | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/armor-class-base.qnt`                                                    | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/attack-action-additional-attacks.qnt`                                    | qnt-owner-role | proof-only                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/attack-damage-composition-examples.qnt`                                  | qnt-owner-role | proof-only                                                                                                                                                                                               |
@@ -1323,6 +1327,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.RELATIONSHIP_DISCOVERY`                                   | generation-subset-clean | `pure-def`, `int`, `bool`, `comparison`, `boolean-connective`, `all-block`                                                                                                                                                                                                                                         |          |           |
 | `BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD`                       | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership`                                              |          |           |
 | `BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE`             | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`                                                                                                                                                                       |          |           |
+| `BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE`                           | generation-subset-clean | `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `set`, `membership`                                                                                                                                               |          |           |
 
 ### Generator Readiness Backlog
 

@@ -26,6 +26,12 @@ import type {
   StatBlockBattleCreatureState,
 } from "../battle-state-execution.ts";
 import { battleStateInitIssue } from "./domain-helpers.ts";
+import {
+  ammunitionStockIssues,
+  missingRequiredAmmunitionKinds,
+} from "../battle-ammunition.ts";
+import { statBlockAttackActionOptions } from "../stat-block-execution.ts";
+import type { BattleAmmunitionStock } from "../battle-state-execution.ts";
 
 export function addBattleStatBlockCombatant(input: {
   readonly state: BattleState;
@@ -35,6 +41,7 @@ export function addBattleStatBlockCombatant(input: {
     readonly admission: AdmittedBattleStatBlockCombatant;
     readonly currentHp: Hp;
     readonly tempHp: Hp;
+    readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   };
 }): Either.Either<BattleState, BattleStateInitIssue> {
   const { combatant } = input;
@@ -85,6 +92,20 @@ export function addBattleStatBlockCombatant(input: {
     );
   }
   const { initialization, origin } = combatant.admission;
+  const ammunitionStocks = combatant.ammunitionStocks;
+  const ammunitionIssues = ammunitionStockIssues(ammunitionStocks);
+  const missingKinds = missingRequiredAmmunitionKinds(
+    statBlockAttackActionOptions(origin.execution).map(
+      (option) => option.attack,
+    ),
+    ammunitionStocks,
+  );
+  if (ammunitionIssues.length > 0 || missingKinds.length > 0) {
+    return battleStateInitIssue(
+      ammunitionIssues[0] ??
+        `Stat Block battle initialization requires an explicit ${missingKinds[0]} ammunition stock.`,
+    );
+  }
   const creature: StatBlockBattleCreatureState = {
     combatantId: combatant.combatantId,
     initiative: combatant.initiative,
@@ -103,6 +124,7 @@ export function addBattleStatBlockCombatant(input: {
     zeroHpLifecycle: { policy: "diesAtZeroHp" },
     reactionAvailable: true,
     movementSpentFeet: movementFeet(0),
+    ammunitionStocks,
     armorClass: statBlockArmorClassState(initialization.armorClass),
     size: initialization.size,
     origin: { kind: "statBlock", ...origin },

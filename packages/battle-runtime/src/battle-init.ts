@@ -47,6 +47,7 @@ import type {
 } from "./druid-wild-shape-known-form-execution.ts";
 export type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
 import type {
+  BattleAmmunitionStock,
   BattleStateInitIssue,
   CharacterBattleUnarmoredArmorClassBases,
 } from "./battle-state-execution.ts";
@@ -282,6 +283,7 @@ export type CharacterBattleCreatureInit = {
   readonly currentHp: Hp;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
+  readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly conditions?: readonly Condition[];
   readonly positiveHpUnconscious?: BattlePositiveHpUnconscious;
   readonly zeroHpLifecycle?: CharacterZeroHpLifecycleInit;
@@ -304,6 +306,7 @@ export type StatBlockBattleInitInput = {
   // defaults to max
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
+  readonly ammunitionStocks: readonly BattleAmmunitionStock[];
 };
 
 export type StatBlockBattleCreatureInit = {
@@ -311,6 +314,7 @@ export type StatBlockBattleCreatureInit = {
   readonly source: BattleStatBlockCombatantSource;
   readonly currentHp: Hp;
   readonly tempHp: Hp;
+  readonly ammunitionStocks: readonly BattleAmmunitionStock[];
 };
 
 export type BattleCreatureInit = {
@@ -339,6 +343,8 @@ export function battleCreatureInitFromStatBlock(
       source: source.right,
       currentHp: input.currentHp ?? maxHp,
       tempHp: input.tempHp ?? toHp(0),
+      ammunitionStocks: input.ammunitionStocks,
     },
   });
 }
+// KERNEL-COVERAGE: runtime-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE

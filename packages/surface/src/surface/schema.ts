@@ -173,6 +173,7 @@ export {
 } from "./schema-spell.ts";
 export {
   AbilitySchema,
+  AmmunitionKindSchema,
   ArmorAcFormulaSchema,
   ArmorCategorySchema,
   AreaShapeSchema,

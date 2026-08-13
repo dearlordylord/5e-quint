@@ -24,7 +24,8 @@ let AttackRange
 
 let Attack
     : Type
-    = { attackAbility : Text
+    = { ammunition : Optional Text
+      , attackAbility : Text
       , attackBonus : { kind : Text, value : Integer }
       , attackType : Text
       , name : Text
@@ -34,7 +35,8 @@ let Attack
       }
 
 let scimitar : Attack =
-      { attackAbility = "dex"
+      { ammunition = None Text
+      , attackAbility = "dex"
       , attackBonus = { kind = "literal", value = +4 }
       , attackType = "melee"
       , name = "Scimitar"
@@ -66,6 +68,7 @@ let shortbow : Attack =
       { attackAbility = "dex"
       , attackBonus = { kind = "literal", value = +4 }
       , attackType = "ranged"
+      , ammunition = Some "arrow"
       , name = "Shortbow"
       , onHit =
         [ { amount =

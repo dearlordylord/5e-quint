@@ -59,10 +59,20 @@ import {
 } from "./index.ts";
 import { battleProcedureExecutionRefForHole } from "./sdk-integration.test-support.ts";
 
+import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+
 function battleCreatureInitFromStatBlock(
-  input: Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+  input: Omit<
+    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+    "ammunitionStocks"
+  >,
 ) {
-  return expectRight(parseBattleCreatureInitFromStatBlock(input));
+  return expectRight(
+    parseBattleCreatureInitFromStatBlock({
+      ...input,
+      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
+    }),
+  );
 }
 
 type SheetDerivedOutcome =
@@ -626,6 +636,7 @@ function startSheetDerivedSession(
       combatantId: characterCombatantId,
       displayName: "Sheet Derived Caster",
       initiative: initiativeScore(20),
+      ammunitionStocks: [],
     }),
   );
   const targetInit = battleCreatureInitFromRidingHorse();

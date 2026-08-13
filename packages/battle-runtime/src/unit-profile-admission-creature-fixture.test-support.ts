@@ -40,6 +40,10 @@ import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-ex
 import { battleObjectId } from "./identity.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
 import {
+  battleAmmunitionStock,
+  requiredAmmunitionKinds,
+} from "./battle-ammunition.ts";
+import {
   spellCasterId,
   spellTargetId,
   statBlockCatalog,
@@ -151,12 +155,24 @@ export function characterCreature(input: {
       ),
     ).values(),
   ];
+  const ammunitionKinds = new Set(
+    [attack, input.offHandAttack].flatMap((candidate) => {
+      if (candidate === null || candidate === undefined) return [];
+      const ammunition = candidate.weapon.properties.find(
+        (property) => property.kind === "ammunition",
+      );
+      return ammunition === undefined ? [] : [ammunition.ammunition];
+    }),
+  );
   return {
     combatantId: input.combatantId,
     displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [...ammunitionKinds].map((ammunition) =>
+        battleAmmunitionStock(ammunition, 20),
+      ),
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs,
       classLevels: input.classLevels ?? [{ className: "wizard", level: 1 }],
@@ -267,6 +283,10 @@ export function statBlockCreature(input: {
   readonly statBlock: StatBlockRecord;
   readonly initiative: number;
 }): BattleCreatureInit {
+  const attacks = [
+    ...(input.statBlock.statBlock.actions?.attacks ?? []),
+    ...(input.statBlock.statBlock.legendaryActions?.actions.attacks ?? []),
+  ];
   return {
     combatantId: input.combatantId,
     displayName: input.statBlock.statBlock.displayName,
@@ -278,6 +298,9 @@ export function statBlockCreature(input: {
       ),
       currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
       tempHp: Hp(0),
+      ammunitionStocks: requiredAmmunitionKinds(attacks).map((ammunition) =>
+        battleAmmunitionStock(ammunition, 20),
+      ),
     },
   };
 }

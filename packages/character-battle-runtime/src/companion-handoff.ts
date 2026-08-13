@@ -7,6 +7,7 @@ import {
   type BattleCompanionPlacement,
   type BattleCompanionState,
   type BattleCompanionStoredForm,
+  type BattleAmmunitionStock,
   type CompanionBattleAdmissionFormEligibility,
   type CompanionBattleEmbodiedAdmissionManifestation,
   type CompanionBattleStoredAdmissionManifestation,
@@ -50,6 +51,7 @@ export type CharacterSheetCompanionBattleAdmissionInput = {
   readonly state: BattleState;
   readonly unitLibrary: UnitCatalog;
   readonly ownerCombatantId: CombatantId;
+  readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly companionCombatantId?: CombatantId;
   readonly initiative?: InitiativeScore;
   readonly placement?: Extract<
@@ -91,6 +93,7 @@ export function admitCharacterSheetCompanionToBattle(
     companion: sheetCompanion.companion,
     unitLibrary: input.unitLibrary,
     statBlockCatalog: input.statBlockCatalog,
+    ammunitionStocks: input.ammunitionStocks,
     ...(input.companionCombatantId === undefined
       ? {}
       : { companionCombatantId: input.companionCombatantId }),
@@ -182,6 +185,7 @@ function companionAdmissionManifestation(input: {
   >["companion"];
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog: StatBlockCatalog;
+  readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly companionCombatantId?: CombatantId;
   readonly initiative?: InitiativeScore;
   readonly placement?: Extract<
@@ -218,6 +222,7 @@ function companionAdmissionManifestation(input: {
         storedForm: storedForm.right.storedForm,
         creatureTypeOverride: manifestation.creatureTypeOverride,
         hitPoints: manifestation.hitPoints,
+        ammunitionStocks: input.ammunitionStocks,
         initiative: input.initiative,
         placement: input.placement,
       },
@@ -237,6 +242,7 @@ function companionAdmissionManifestation(input: {
         storedForm: storedForm.right.storedForm,
         creatureTypeOverride: manifestation.creatureTypeOverride,
         hitPoints: manifestation.hitPoints,
+        ammunitionStocks: input.ammunitionStocks,
         reappearanceCombatantId: input.companionCombatantId,
       },
     });

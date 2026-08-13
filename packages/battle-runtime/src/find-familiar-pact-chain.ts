@@ -27,6 +27,10 @@ import {
 import { findPresentFamiliarById } from "./find-familiar-state.ts";
 import type { CombatantId } from "./identity.ts";
 import { combatantHasPactOfTheChainFindFamiliar } from "./find-familiar-pact-facts.ts";
+import {
+  ammunitionForAttackIsAvailable,
+  spendAmmunitionForAcceptedAttack,
+} from "./battle-ammunition.ts";
 export { combatantHasPactOfTheChainFindFamiliar } from "./find-familiar-pact-facts.ts";
 
 export type PactOfTheChainFamiliarAttackSubject = Extract<
@@ -85,12 +89,13 @@ export function resolvePactOfTheChainFamiliarReactionAttack(
   return resolveSelectedAttackProcedure(
     input,
     attack,
-    (state, _attackerId, selectedAttack) =>
+    (state, _attackerId, selectedAttack, timing) =>
       spendPactOfTheChainFamiliarReactionAttack({
         state,
         ownerId: input.subject.actorId,
         familiarId: input.subject.familiarId,
         attack: selectedAttack,
+        timing,
       }),
   );
 }
@@ -105,6 +110,7 @@ function pactFamiliarAttackActionOptionForInput(
   return (
     statBlockAttackActionOptions(actor.origin.execution).find(
       (attack): attack is StatBlockAttackActionOption =>
+        ammunitionForAttackIsAvailable(actor, attack) &&
         statBlockAttackProcedureSection(
           input.state,
           input.subject.familiarId,
@@ -124,6 +130,9 @@ function spendPactOfTheChainFamiliarReactionAttack(input: {
   readonly ownerId: CombatantId;
   readonly familiarId: CombatantId;
   readonly attack: StatBlockAttackActionOption;
+  readonly timing: {
+    readonly kind: "acceptedAttack" | "attackPreventedBeforeRoll";
+  };
 }): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
   const familiar = input.state.combatants.get(input.familiarId);
   if (!combatantCanTakeReactions(familiar)) {
@@ -160,11 +169,19 @@ function spendPactOfTheChainFamiliarReactionAttack(input: {
     stateWithOwnerExtraAttackOpened,
     input.familiarId,
   );
-  const nextState = spendStatBlockAttackResources({
+  const stateWithAttackResourcesSpent = spendStatBlockAttackResources({
     state: stateWithReactionSpent,
     actorId: input.familiarId,
     attack: input.attack,
   });
+  const nextState =
+    input.timing.kind === "acceptedAttack"
+      ? spendAmmunitionForAcceptedAttack({
+          state: stateWithAttackResourcesSpent,
+          actorId: input.familiarId,
+          attack: input.attack,
+        })
+      : stateWithAttackResourcesSpent;
   return {
     tag: "resolved",
     state: nextState,

@@ -6,6 +6,7 @@ import {
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   battleActSpellPresentation,
+  battleAmmunitionStock,
   battleId,
   characterId,
   combatantId,
@@ -27,6 +28,7 @@ import {
 import {
   characterDraftId,
   characterBuildHitPoints,
+  characterBuildCatalogEquipmentItem,
   abilityScoreAssignment,
   characterClassLevel,
   characterEquipmentItemId,
@@ -139,9 +141,32 @@ function testBattleCreatureStateWithoutKnockOut(
 }
 
 function startBattleFromCharacterBuildAndStatBlockRight(
-  input: Parameters<typeof startBattleFromCharacterBuildAndStatBlock>[0],
+  input: Omit<
+    Parameters<typeof startBattleFromCharacterBuildAndStatBlock>[0],
+    "character" | "statBlockBattleInput"
+  > & {
+    readonly character: Omit<
+      Parameters<
+        typeof startBattleFromCharacterBuildAndStatBlock
+      >[0]["character"],
+      "ammunitionStocks"
+    >;
+    readonly statBlockBattleInput: Omit<
+      Parameters<
+        typeof startBattleFromCharacterBuildAndStatBlock
+      >[0]["statBlockBattleInput"],
+      "ammunitionStocks"
+    >;
+  },
 ): BattleRuntimeSession {
-  const result = startBattleFromCharacterBuildAndStatBlock(input);
+  const result = startBattleFromCharacterBuildAndStatBlock({
+    ...input,
+    character: { ...input.character, ammunitionStocks: [] },
+    statBlockBattleInput: {
+      ...input.statBlockBattleInput,
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+    },
+  });
   if (Either.isLeft(result)) {
     throw new Error(characterBattleRuntimeIssueMessage(result.left));
   }
@@ -376,6 +401,7 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId,
             combatantId: "fighter",
             initiative: 10,
@@ -421,6 +447,7 @@ describe("MCP server route", () => {
           initialCombatants: [
             {
               kind: "characterSession",
+              ammunitionStocks: [],
               characterId: testCharacterId(draftId),
               combatantId: "fighter",
               initiative: 10,
@@ -1588,6 +1615,7 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
@@ -1655,12 +1683,14 @@ describe("MCP server route", () => {
       initialCombatants: [
         {
           kind: "characterSession",
+          ammunitionStocks: [],
           characterId: testCharacterId(draftId),
           combatantId: "fighter",
           initiative: 18,
         },
         {
           kind: "statBlock",
+          ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
           statBlockId: "stat_block_goblin_warrior",
           combatantId: "goblin",
           initiative: 7,
@@ -1795,12 +1825,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 18,
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: multiattackStatBlock.id,
             combatantId: "goblin",
             initiative: 7,
@@ -1894,12 +1926,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 18,
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
@@ -1945,12 +1979,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(firstDraftId),
             combatantId: "first-fighter",
             initiative: 11,
           },
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(secondDraftId),
             combatantId: "second-fighter",
             initiative: 17,
@@ -1995,12 +2031,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(firstDraftId),
             combatantId: "fighter",
             initiative: 18,
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
@@ -2018,12 +2056,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(secondDraftId),
             combatantId: "second-fighter",
             initiative: 16,
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "second-goblin",
             initiative: 8,
@@ -2070,12 +2110,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 18,
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
@@ -2624,12 +2666,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 18,
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             admissionSource: { kind: "encounterParticipant" },
@@ -2660,6 +2704,7 @@ describe("MCP server route", () => {
       initialCombatants: [
         {
           kind: "statBlock",
+          ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
           statBlockId: "stat_block_goblin_warrior",
           combatantId: "goblin",
           initiative: 7,
@@ -2687,6 +2732,7 @@ describe("MCP server route", () => {
           initialCombatants: [
             {
               kind: "characterSession",
+              ammunitionStocks: [],
               characterId: testCharacterId(draftId),
               combatantId: "fighter",
               initiative: 18,
@@ -2719,12 +2765,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 18,
           },
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(
               "draft:mcp-missing-additional-secondary",
             ),
@@ -2733,12 +2781,14 @@ describe("MCP server route", () => {
           },
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId("draft:mcp-missing-additional-third"),
             combatantId: "third-fighter",
             initiative: 14,
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
@@ -2783,6 +2833,7 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "first-goblin",
             initiative: 11,
@@ -2790,6 +2841,7 @@ describe("MCP server route", () => {
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "second-goblin",
             initiative: 8,
@@ -2838,6 +2890,7 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "wizard",
             initiative: 12,
@@ -2846,6 +2899,7 @@ describe("MCP server route", () => {
         companionAdmissions: [
           {
             ownerCharacterId: testCharacterId(draftId),
+            ammunitionStocks: [],
             companionCombatantId: "wizard-familiar",
             initiative: 18,
           },
@@ -2929,6 +2983,7 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "wizard",
             initiative: 18,
@@ -2937,6 +2992,7 @@ describe("MCP server route", () => {
         companionAdmissions: [
           {
             ownerCharacterId: testCharacterId(draftId),
+            ammunitionStocks: [],
             companionCombatantId: "wizard-familiar",
             initiative: 12,
           },
@@ -3062,6 +3118,7 @@ describe("MCP server route", () => {
           initialCombatants: [
             {
               kind: "characterSession",
+              ammunitionStocks: [],
               characterId,
               combatantId: `combatant:${draftId}`,
               initiative: 10,
@@ -3131,6 +3188,7 @@ describe("MCP server route", () => {
           initialCombatants: [
             {
               kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
               statBlockId: "stat_block_goblin_warrior",
               combatantId: "goblin",
               initiative: 10,
@@ -3140,10 +3198,12 @@ describe("MCP server route", () => {
           companionAdmissions: [
             {
               ownerCharacterId: "character:owner",
+              ammunitionStocks: [],
               companionCombatantId: "companion:a",
             },
             {
               ownerCharacterId: "character:owner",
+              ammunitionStocks: [],
               companionCombatantId: "companion:b",
             },
           ],
@@ -3161,6 +3221,7 @@ describe("MCP server route", () => {
           initialCombatants: [
             {
               kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
               statBlockId: "stat_block_synthetic_missing",
               combatantId: "missing",
               initiative: 10,
@@ -3196,6 +3257,7 @@ describe("MCP server route", () => {
           initialCombatants: [
             {
               kind: "characterSession",
+              ammunitionStocks: [],
               characterId: id,
               combatantId: "fighter",
               initiative: 10,
@@ -3222,6 +3284,7 @@ describe("MCP server route", () => {
           initialCombatants: [
             {
               kind: "characterSession",
+              ammunitionStocks: [],
               characterId: testCharacterId(draftId),
               combatantId: "wizard",
               initiative: 10,
@@ -3230,6 +3293,7 @@ describe("MCP server route", () => {
           companionAdmissions: [
             {
               ownerCharacterId: testCharacterId(draftId),
+              ammunitionStocks: [],
               companionCombatantId: "missing-retained-companion",
               positionId: "table-position:synthetic",
             },
@@ -3252,6 +3316,7 @@ describe("MCP server route", () => {
           initialCombatants: [
             {
               kind: "characterSession",
+              ammunitionStocks: [],
               characterId: testCharacterId(
                 "draft:start-without-retained-companion-default-id",
               ),
@@ -3264,6 +3329,7 @@ describe("MCP server route", () => {
               ownerCharacterId: testCharacterId(
                 "draft:start-without-retained-companion-default-id",
               ),
+              ammunitionStocks: [],
               positionId: "table-position:synthetic",
             },
           ],
@@ -3285,6 +3351,7 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
@@ -3307,6 +3374,7 @@ describe("MCP server route", () => {
           initialCombatants: [
             {
               kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
               statBlockId: "stat_block_goblin_warrior",
               combatantId: "goblin",
               initiative: 10,
@@ -3349,6 +3417,7 @@ describe("MCP server route", () => {
           initialCombatants: [
             {
               kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
               statBlockId: invalidMechanicsRecord.id,
               combatantId: "synthetic-invalid",
               initiative: 10,
@@ -3384,6 +3453,7 @@ describe("MCP server route", () => {
           initialCombatants: [
             {
               kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
               statBlockId: invalidDisplayRecord.id,
               combatantId: "synthetic-invalid-display",
               initiative: 10,
@@ -3412,12 +3482,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "wizard",
             initiative: 18,
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
@@ -3428,6 +3500,7 @@ describe("MCP server route", () => {
         companionAdmissions: [
           {
             ownerCharacterId: testCharacterId(draftId),
+            ammunitionStocks: [],
             companionCombatantId: "wizard-familiar",
             initiative: 12,
           },
@@ -3564,6 +3637,7 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "wizard",
             initiative: 12,
@@ -3572,6 +3646,7 @@ describe("MCP server route", () => {
         companionAdmissions: [
           {
             ownerCharacterId: testCharacterId(draftId),
+            ammunitionStocks: [],
             companionCombatantId: "wizard-familiar",
             initiative: 18,
           },
@@ -3875,6 +3950,7 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "wizard",
             initiative: 18,
@@ -3883,6 +3959,7 @@ describe("MCP server route", () => {
         companionAdmissions: [
           {
             ownerCharacterId: testCharacterId(draftId),
+            ammunitionStocks: [],
             companionCombatantId: "wizard-familiar",
             initiative: 18,
           },
@@ -3910,6 +3987,7 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "wizard",
             initiative: 18,
@@ -3918,6 +3996,7 @@ describe("MCP server route", () => {
         companionAdmissions: [
           {
             ownerCharacterId: testCharacterId(draftId),
+            ammunitionStocks: [],
             companionCombatantId: "wizard-familiar",
             initiative: 12,
           },
@@ -3974,6 +4053,7 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "wizard",
             initiative: 18,
@@ -4012,6 +4092,7 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 18,
@@ -4021,6 +4102,7 @@ describe("MCP server route", () => {
         companionAdmissions: [
           {
             ownerCharacterId: "missing-wizard",
+            ammunitionStocks: [],
             companionCombatantId: "orphan-familiar",
             initiative: 18,
           },
@@ -4045,13 +4127,16 @@ describe("MCP server route", () => {
           initialCombatants: [
             {
               kind: "statBlock",
+              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
               statBlockId: "stat_block_goblin_warrior",
               combatantId: "goblin",
               initiative: 18,
               admissionSource: { kind: "encounterParticipant" },
             },
           ],
-          companionAdmissions: [{ ownerCharacterId: "missing-wizard" }],
+          companionAdmissions: [
+            { ownerCharacterId: "missing-wizard", ammunitionStocks: [] },
+          ],
         }),
       ),
     ).toMatchObject({
@@ -4105,12 +4190,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 18,
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
@@ -4230,12 +4317,14 @@ describe("MCP server route", () => {
       initialCombatants: [
         {
           kind: "characterSession",
+          ammunitionStocks: [],
           characterId: testCharacterId(firstDraftId),
           combatantId: "fighter",
           initiative: 18,
         },
         {
           kind: "statBlock",
+          ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
           statBlockId: "stat_block_goblin_warrior",
           combatantId: "goblin",
           initiative: 7,
@@ -4245,6 +4334,7 @@ describe("MCP server route", () => {
     };
     const secondCharacter = {
       kind: "characterSession",
+      ammunitionStocks: [],
       characterId: testCharacterId(secondDraftId),
       combatantId: "second-fighter",
       initiative: 16,
@@ -4398,12 +4488,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 18,
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 7,
@@ -4804,12 +4896,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 12,
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
@@ -4906,12 +5000,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 12,
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
@@ -5068,12 +5164,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 12,
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
@@ -5133,12 +5231,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 12,
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
@@ -5219,6 +5319,7 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 12,
@@ -5226,6 +5327,7 @@ describe("MCP server route", () => {
           },
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 10,
@@ -5281,6 +5383,7 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 12,
@@ -5288,6 +5391,7 @@ describe("MCP server route", () => {
           },
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 10,
@@ -5383,12 +5487,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: testCharacterId(draftId),
             combatantId: "fighter",
             initiative: 12,
           },
           {
             kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
             statBlockId: "stat_block_goblin_warrior",
             combatantId: "goblin",
             initiative: 10,
@@ -6109,7 +6215,7 @@ describe("MCP server route", () => {
         {
           kind: "hitPoints",
           objectId: "dry-training-dummy",
-          damageType: "fire",
+          components: [{ damageType: "fire", rolledDamage: 4 }],
           rolledDamage: 4,
           effectiveDamage: 4,
           priorHitPoints: 8,
@@ -6375,12 +6481,14 @@ describe("MCP server route", () => {
         initialCombatants: [
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: "spare-the-dying-caster-character",
             combatantId: "fighter",
             initiative: 18,
           },
           {
             kind: "characterSession",
+            ammunitionStocks: [],
             characterId: "spare-the-dying-target-character",
             combatantId: "dying-ally",
             initiative: 7,
@@ -6617,7 +6725,7 @@ describe("MCP server route", () => {
         {
           kind: "hitPoints",
           objectId: "training-crystal",
-          damageType: "radiant",
+          components: [{ damageType: "radiant", rolledDamage: 6 }],
           rolledDamage: 6,
           effectiveDamage: 6,
           priorHitPoints: 5,
@@ -7036,14 +7144,12 @@ function fighterTwoLightWeaponBuild(
       ...fighter.equipment,
       owned: [
         ...fighter.equipment.owned,
-        {
+        characterBuildCatalogEquipmentItem({
           itemId: testCharacterEquipmentItemId("main", "weapon_shortsword"),
-          unitId: unitId("weapon_shortsword"),
-        },
-        {
+        }),
+        characterBuildCatalogEquipmentItem({
           itemId: testCharacterEquipmentItemId("off", "weapon_dagger"),
-          unitId: unitId("weapon_dagger"),
-        },
+        }),
       ],
       loadout: {
         armor: testCharacterEquipmentItemId("armor", "armor_chain_mail"),
@@ -7616,10 +7722,9 @@ function rogueCharacterBuild(
       ...fighter.equipment,
       owned: [
         ...fighter.equipment.owned,
-        {
+        characterBuildCatalogEquipmentItem({
           itemId: testCharacterEquipmentItemId("main", "weapon_dagger"),
-          unitId: unitId("weapon_dagger"),
-        },
+        }),
       ],
       loadout: {
         weapon: {

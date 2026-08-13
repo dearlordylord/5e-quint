@@ -1248,6 +1248,7 @@ function characterCreature(
     initiative: initiativeScore(initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId(`${combatantIdValue}-character`),
       characterUnitRefs: [],
       classLevels: [{ className, level: highestSpellSlotLevel >= 2 ? 3 : 1 }],

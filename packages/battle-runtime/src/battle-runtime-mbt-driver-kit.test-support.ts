@@ -99,6 +99,7 @@ import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts"
 import {
   ATTACK_DAMAGE_RIDER_SUPPORT_PROFILE,
   BATTLE_INVALID_REASON_CODES,
+  battleAmmunitionStock,
   battleId,
   battleObjectId,
   battleReducerStartRouteEvent,
@@ -17094,6 +17095,7 @@ function rogueCreatureInit(input: {
       currentHp: Hp(12),
       maxHp: Hp(12),
       tempHp: Hp(0),
+      ammunitionStocks: [],
       selectedLoadout: {
         weapon: {
           itemId: battleObjectId("main:weapon_dagger"),
@@ -17140,6 +17142,7 @@ function interruptShieldCharacterCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [],
       classLevels: [{ className: "wizard", level: 1 }],
@@ -17180,6 +17183,7 @@ function rogueSteadyAimCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("steady-aim-rogue-character"),
       characterUnitRefs: [
         {
@@ -17233,6 +17237,7 @@ function extraAttackCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId(`extra-attack-${unit.className}-character`),
       characterUnitRefs: [
         {
@@ -17290,6 +17295,7 @@ function adrenalineRushCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("adrenaline-rush-character"),
       characterUnitRefs: [adrenalineRushUnitRef(unit)],
       classLevels: [{ className: "fighter", level: 5 }],
@@ -17333,6 +17339,7 @@ function activeFeatureSpellBenefitCasterCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("active-feature-spell-benefit-caster"),
       characterUnitRefs: [unitRefWithSupportProfilesForMbt(featureUnit)],
       classLevels,
@@ -17377,6 +17384,7 @@ function activeFeatureSpellBenefitTargetCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("active-feature-spell-benefit-target"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: classLevel(1) }],
@@ -17409,6 +17417,7 @@ function scalarBuffCasterCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("scalar-buff-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
@@ -17455,6 +17464,7 @@ function saveGatedSpellOrderingCasterCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("save-gated-spell-ordering-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "wizard", level: 5 }],
@@ -17499,6 +17509,7 @@ function commandOrderingCasterCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("command-ordering-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "wizard", level: 5 }],
@@ -17544,6 +17555,7 @@ function spellAttackOrderingCasterCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("spell-attack-ordering-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "sorcerer", level: 1 }],
@@ -17591,6 +17603,7 @@ function healingSpellOrderingCasterCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("hit-point-restoration-spell-caster"),
       characterUnitRefs: [],
       classLevels: [{ className: "cleric", level: input.characterLevel }],
@@ -17637,6 +17650,7 @@ function preserveLifeOrderingCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("hit-point-restoration-feature-caster"),
       characterUnitRefs: [preserveLifeUnitRef(preserveLife, support)],
       classLevels: [{ className: "cleric", level: classLevel(3) }],
@@ -17672,6 +17686,7 @@ function healingOrderingTargetCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("hit-point-restoration-target"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
@@ -17722,6 +17737,7 @@ function deathSavingThrowCharacterInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId(input.characterId),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 1 }],
@@ -17758,6 +17774,7 @@ function concentrationBreakTeardownCasterInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("concentration-break-teardown-route-caster"),
       characterUnitRefs: [],
       classLevels: [{ className: "wizard", level: 3 }],
@@ -17976,6 +17993,7 @@ function skeletonCreatureInit(input: {
       ),
       currentHp: Hp(13),
       tempHp: Hp(0),
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
     },
   };
 }

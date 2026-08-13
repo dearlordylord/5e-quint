@@ -329,6 +329,7 @@ function spiritualWeaponCasterCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("spiritual-weapon-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 3 }],

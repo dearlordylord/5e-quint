@@ -1,5 +1,6 @@
 import type {
   battleCreatureInitFromStatBlock,
+  battleAmmunitionStock,
   battleId,
   battleObjectId,
   battleStateInitIssueMessage,
@@ -43,6 +44,7 @@ export type {
 } from "./scenario-session.ts";
 
 export type ScenarioSetupSdk = {
+  readonly battleAmmunitionStock: typeof battleAmmunitionStock;
   readonly battleCreatureInitFromStatBlock: typeof battleCreatureInitFromStatBlock;
   readonly battleId: typeof battleId;
   readonly battleObjectId: typeof battleObjectId;

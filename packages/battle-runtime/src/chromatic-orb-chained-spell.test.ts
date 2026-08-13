@@ -6,6 +6,7 @@ import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission
 import { describe, expect, test } from "vitest";
 import {
   battleId,
+  battleAmmunitionStock,
   characterId,
   combatantId,
   discoverBattleActCandidates,
@@ -1402,6 +1403,7 @@ function poisonImmuneSkeletonCreature(input: {
       ),
       currentHp: Hp(13),
       tempHp: Hp(0),
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
     },
   };
 }
@@ -1432,6 +1434,7 @@ function characterCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: [
         ...(input.characterUnitRefs ?? []),

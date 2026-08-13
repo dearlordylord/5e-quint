@@ -3,6 +3,7 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { StatBlockId, UnitId, type ClassName } from "@dnd/shared/game-facts";
 import {
   AbilitySchema,
+  AmmunitionKindSchema,
   AlternateActionCostSchema,
   ClassLevelChoiceCountSchema,
   CLASS_SPELLCASTING_CLASS_NAMES,
@@ -4897,9 +4898,8 @@ const CreatureAttackEffectAtomSchema = Schema.Union(
   EffectAtomSchema,
 );
 
-export const CreatureAttackRollMechanicsSchema = Schema.Struct({
+const CreatureAttackRollMechanicsCommonFields = {
   attackAbility: Schema.Union(AbilitySchema, Schema.Literal("spellcasting")),
-  attackType: Schema.Literal("melee", "ranged"),
   attackBonus: StatBlockValueSchema,
   reachFeet: optionalExact(Schema.Number),
   rangeFeet: optionalExact(
@@ -4910,7 +4910,19 @@ export const CreatureAttackRollMechanicsSchema = Schema.Struct({
   ),
   onHit: nonEmpty(CreatureAttackEffectAtomSchema),
   multiattackCount: optionalExact(StatBlockValueSchema),
-});
+} as const;
+
+export const CreatureAttackRollMechanicsSchema = Schema.Union(
+  Schema.Struct({
+    ...CreatureAttackRollMechanicsCommonFields,
+    attackType: Schema.Literal("melee"),
+  }),
+  Schema.Struct({
+    ...CreatureAttackRollMechanicsCommonFields,
+    attackType: Schema.Literal("ranged"),
+    ammunition: optionalExact(AmmunitionKindSchema),
+  }),
+);
 
 export const CreatureNamedAttackRollSchema = Schema.extend(
   CreatureAttackRollMechanicsSchema,
@@ -5851,3 +5863,4 @@ export const SpellRecordSchema = Schema.Struct({
   kind: Schema.Literal("spell"),
   mechanics: SpellMechanicsSchema,
 });
+// KERNEL-COVERAGE: runtime-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE

@@ -715,6 +715,7 @@ function starryWispCasterCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("starry-wisp-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 5 }],

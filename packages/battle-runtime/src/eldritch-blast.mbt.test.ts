@@ -310,6 +310,7 @@ function eldritchBlastCasterCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId("eldritch-blast-caster-character"),
       characterUnitRefs: [],
       classLevels: [{ className: "fighter", level: 5 }],

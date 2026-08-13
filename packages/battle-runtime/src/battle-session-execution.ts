@@ -247,13 +247,7 @@ export function resolveBattleSubject(
       snapshot: snapshotBattle(input.state),
     };
   }
-  const dispatchState =
-    phase.kind === "subjectContinuation" && !reportsReadyTrigger
-      ? {
-          ...input.state,
-          subjectResolutionPhase: { kind: "subjectSelection" as const },
-        }
-      : input.state;
+  const dispatchState = input.state;
   const admittedInput = { ...input, state: dispatchState };
   const admission = admitBattleResolutionInput(admittedInput);
   if (admission.tag === "staleCharacterProcedure") {

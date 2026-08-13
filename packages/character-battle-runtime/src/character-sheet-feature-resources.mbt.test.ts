@@ -68,10 +68,20 @@ import {
   settleCharacterSheetFromBattle,
 } from "./index.ts";
 
+import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
+
 function battleCreatureInitFromStatBlock(
-  input: Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+  input: Omit<
+    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+    "ammunitionStocks"
+  >,
 ) {
-  return requireRight(parseBattleCreatureInitFromStatBlock(input));
+  return requireRight(
+    parseBattleCreatureInitFromStatBlock({
+      ...input,
+      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
+    }),
+  );
 }
 
 const featureResourceScenarios = [
@@ -731,6 +741,7 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
       combatantId: sorcererCombatantId,
       displayName: "Sorcerer",
       initiative: initiativeScore(12),
+      ammunitionStocks: [],
     }),
   );
   if (characterInit.creatureInit.kind !== "character") {

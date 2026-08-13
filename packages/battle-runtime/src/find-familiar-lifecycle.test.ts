@@ -110,6 +110,7 @@ import {
   movementFeet,
   NonNegativeInteger,
   proficiencyBonus,
+  resourceCount,
   spellSlotLevel,
 } from "@dnd/shared/types";
 import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
@@ -244,6 +245,9 @@ function startFixtureBattle(
           source: Either.getOrThrow(battleStatBlockCombatantSource(skeleton)),
           currentHp: maxHp,
           tempHp: Hp(0),
+          ammunitionStocks: [
+            { ammunition: "arrow" as const, remaining: resourceCount(20) },
+          ],
         },
       },
       ...(input.includeEnemy === true
@@ -259,6 +263,12 @@ function startFixtureBattle(
                 ),
                 currentHp: maxHp,
                 tempHp: Hp(0),
+                ammunitionStocks: [
+                  {
+                    ammunition: "arrow" as const,
+                    remaining: resourceCount(20),
+                  },
+                ],
               },
             },
           ]
@@ -277,6 +287,12 @@ function startFixtureBattle(
                 ),
                 currentHp: maxHp,
                 tempHp: Hp(0),
+                ammunitionStocks: [
+                  {
+                    ammunition: "arrow" as const,
+                    remaining: resourceCount(20),
+                  },
+                ],
               },
             },
           ]),
@@ -582,6 +598,7 @@ function castCatFamiliar(
   return castFindFamiliar({
     state,
     casterId,
+    ammunitionStocks: [],
     catalog: statBlockCatalog,
     eligibility: familiarEligibility,
     selection: {
@@ -602,6 +619,7 @@ function castCatFamiliarAfterCasterTurn(
   return castFindFamiliar({
     state,
     casterId,
+    ammunitionStocks: [],
     catalog: statBlockCatalog,
     eligibility: familiarEligibility,
     selection: {
@@ -619,6 +637,7 @@ function castRatFamiliar(state: BattleState) {
   return castFindFamiliar({
     state,
     casterId,
+    ammunitionStocks: [],
     catalog: statBlockCatalog,
     eligibility: familiarEligibility,
     selection: {
@@ -742,6 +761,7 @@ function characterCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId(`${input.combatantId}-character`),
       characterUnitRefs: input.characterUnitRefs ?? [],
       classLevels: [
@@ -1043,6 +1063,7 @@ describe("Find Familiar lifecycle", () => {
       castRetainedFindFamiliarRuntime({
         session,
         casterId,
+        ammunitionStocks: [],
         familiarId,
         catalog: statBlockCatalog,
         eligibility: familiarEligibility,
@@ -1151,6 +1172,7 @@ describe("Find Familiar lifecycle", () => {
           currentHp: positiveCompanionHp(1),
           tempHp: Hp(0),
         },
+        ammunitionStocks: [],
         initiative: initiativeScore(14),
         placement: { kind: "unoccupiedSpaceWithinSpellRange" },
       },
@@ -1171,6 +1193,7 @@ describe("Find Familiar lifecycle", () => {
       castRetainedFindFamiliarRuntime({
         session: admitted.right,
         casterId,
+        ammunitionStocks: [],
         familiarId,
         catalog: statBlockCatalog,
         eligibility: familiarEligibility,
@@ -1187,6 +1210,7 @@ describe("Find Familiar lifecycle", () => {
       castRetainedFindFamiliarRuntime({
         session: admitted.right,
         casterId,
+        ammunitionStocks: [],
         familiarId: casterId,
         catalog: statBlockCatalog,
         eligibility: familiarEligibility,
@@ -1200,6 +1224,7 @@ describe("Find Familiar lifecycle", () => {
     const recast = castRetainedFindFamiliarRuntime({
       session: admitted.right,
       casterId,
+      ammunitionStocks: [],
       familiarId,
       catalog: statBlockCatalog,
       eligibility: familiarEligibility,
@@ -1318,6 +1343,7 @@ describe("Find Familiar lifecycle", () => {
         },
         creatureTypeOverride: "fey",
         reappearanceCombatantId: familiarId,
+        ammunitionStocks: [],
         hitPoints: {
           // Cast evidence: Hp(1) is a positive HP literal for this boundary
           // test fixture.
@@ -1584,6 +1610,7 @@ describe("Find Familiar lifecycle", () => {
         spellSlots: [{ spellLevel: 1, count: 1 }],
       }).state,
       casterId,
+      ammunitionStocks: [],
       catalog: statBlockCatalog,
       eligibility: familiarEligibility,
       selection: { tag: "normalNamedForm", formId: "cat" },
@@ -1640,6 +1667,7 @@ describe("Find Familiar lifecycle", () => {
     const cast = castWildCompanion({
       state: session.state,
       casterId,
+      ammunitionStocks: [],
       catalog: statBlockCatalog,
       eligibility: familiarEligibility,
       selection: { tag: "normalNamedForm", formId: "owl" },
@@ -1676,6 +1704,7 @@ describe("Find Familiar lifecycle", () => {
     const cast = castWildCompanion({
       state: session.state,
       casterId,
+      ammunitionStocks: [],
       catalog: statBlockCatalog,
       eligibility: familiarEligibility,
       selection: { tag: "normalNamedForm", formId: "cat" },
@@ -1748,6 +1777,7 @@ describe("Find Familiar lifecycle", () => {
         spellSlots: [{ spellLevel: 1, count: 1 }],
       }).state,
       casterId,
+      ammunitionStocks: [],
       catalog: statBlockCatalog,
       eligibility: familiarEligibility,
       selection: { tag: "normalNamedForm", formId: "cat" },
@@ -1898,6 +1928,89 @@ describe("Find Familiar lifecycle", () => {
       status: "present",
       placement: { kind: "unoccupiedSpaceWithin30Feet" },
     });
+  });
+
+  test("preserves a Pact Skeleton familiar's ammunition through dismissal and reappearance", () => {
+    const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+    const skeletonHp = literalHp(skeleton);
+    const started = startBattle({
+      battleId: battleId("pact-skeleton-ammunition-lifecycle"),
+      combatants: [
+        {
+          combatantId: casterId,
+          displayName: "Pact Owner",
+          initiative: initiativeScore(12),
+          creatureInit: {
+            kind: "statBlock",
+            source: Either.getOrThrow(battleStatBlockCombatantSource(skeleton)),
+            currentHp: skeletonHp,
+            tempHp: Hp(0),
+            ammunitionStocks: [
+              { ammunition: "arrow", remaining: resourceCount(20) },
+            ],
+          },
+        },
+        {
+          combatantId: familiarId,
+          displayName: "Pact Skeleton Familiar",
+          initiative: initiativeScore(11),
+          creatureInit: {
+            kind: "statBlock",
+            source: Either.getOrThrow(battleStatBlockCombatantSource(skeleton)),
+            currentHp: skeletonHp,
+            tempHp: Hp(0),
+            ammunitionStocks: [
+              { ammunition: "arrow", remaining: resourceCount(7) },
+            ],
+          },
+        },
+      ],
+    });
+    expect(Either.isRight(started)).toBe(true);
+    if (Either.isLeft(started)) return;
+    const presentState: BattleState = {
+      ...started.right.state,
+      companions: new Map([
+        [
+          casterId,
+          {
+            status: "present",
+            formAccess: "pactOfTheChain",
+            combatantId: familiarId,
+            ownerId: casterId,
+            identity: { tag: "battleOnly" },
+            protocol: { tag: "attackExceptionFamiliarLikeOneAtATime" },
+            creatureTypeOverride: "fey",
+            placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+          },
+        ],
+      ]),
+    };
+
+    const dismissed = temporarilyDismissFindFamiliar({
+      state: presentState,
+      casterId,
+    });
+    expect(dismissed.tag).toBe("resolved");
+    if (dismissed.tag !== "resolved") return;
+    expect(dismissed.state.companions.get(casterId)).toMatchObject({
+      status: "temporarilyDismissed",
+      ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(7) }],
+    });
+    assertBattleSnapshotCodecRoundTripForTest(dismissed.snapshot);
+
+    const reappeared = reappearTemporarilyDismissedFindFamiliar({
+      state: withFreshMagicAction(dismissed.state),
+      casterId,
+      catalog: statBlockCatalog,
+      initiative: initiativeScore(11),
+      placement: { kind: "unoccupiedSpaceWithin30Feet" },
+    });
+    expect(reappeared.tag).toBe("resolved");
+    if (reappeared.tag !== "resolved") return;
+    expect(
+      reappeared.state.combatants.get(familiarId)?.ammunitionStocks,
+    ).toEqual([{ ammunition: "arrow", remaining: resourceCount(7) }]);
   });
 
   test("rejects stale familiar lifecycle transitions at their public boundaries", () => {
@@ -2058,6 +2171,7 @@ describe("Find Familiar lifecycle", () => {
         },
         creatureTypeOverride: firstTypeOverride.creatureType,
         reappearanceCombatantId: otherCombatantId,
+        ammunitionStocks: [],
         hitPoints: {
           currentHp: Hp(1) as Parameters<
             typeof admitCompanionToBattle
@@ -2151,6 +2265,7 @@ describe("Find Familiar lifecycle", () => {
     const cast = castFindFamiliar({
       state: initial,
       casterId,
+      ammunitionStocks: [],
       catalog: statBlockCatalog,
       eligibility: familiarEligibility,
       selection: {

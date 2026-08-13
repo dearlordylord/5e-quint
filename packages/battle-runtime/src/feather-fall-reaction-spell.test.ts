@@ -507,6 +507,7 @@ function characterCreature(
     initiative: initiativeScore(initiative),
     creatureInit: {
       kind: "character",
+      ammunitionStocks: [],
       characterId: characterId(`${combatantIdValue}-character`),
       characterUnitRefs: [],
       classLevels: [{ className: "wizard", level: 3 }],

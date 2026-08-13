@@ -568,6 +568,7 @@ function castNormalFamiliarResult(
   return castFindFamiliar({
     state: state.battle.state,
     casterId,
+    ammunitionStocks: [],
     catalog: statBlockCatalog,
     eligibility: familiarEligibility,
     selection: { tag: "normalNamedForm", formId },

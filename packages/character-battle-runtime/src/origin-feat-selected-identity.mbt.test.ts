@@ -23,7 +23,12 @@ import {
   unitChoiceSourceHoleIdText,
   unitChoiceSourceUnitId,
 } from "@dnd/character-creation-runtime";
-import { battleId, combatantId, initiativeScore } from "@dnd/battle-runtime";
+import {
+  battleAmmunitionStock,
+  battleId,
+  combatantId,
+  initiativeScore,
+} from "@dnd/battle-runtime";
 import {
   characterSheetId,
   createFreshCharacterSheet,
@@ -368,6 +373,7 @@ function publicCharacterSheetBattleInitSelectedReferenceRetentionRoute(
     combatantId: combatantId("combatant:origin-feat-retention"),
     displayName: "Origin Feat Retention",
     initiative: alertInitiativeScoreForBuild(build),
+    ammunitionStocks: [],
   });
   if (Either.isLeft(projection)) {
     throw new Error(projection.left.issue.message);
@@ -390,11 +396,13 @@ function publicStartBattleSelectedReferenceRuntimeRoute(
       combatantId: combatantId("combatant:origin-feat-runtime-entry"),
       displayName: "Origin Feat Runtime Entry",
       initiative: alertInitiativeScoreForBuild(build),
+      ammunitionStocks: [],
     },
     statBlockBattleInput: {
       combatantId: combatantId("combatant:origin-feat-skeleton"),
       statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
       initiative: initiativeScore(10),
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
     },
   });
   if (Either.isLeft(entry)) {

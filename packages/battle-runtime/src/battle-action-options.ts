@@ -214,6 +214,7 @@ export type SupportedCreatureAttackRollMechanics = Omit<
   | "attackType"
   | "reachFeet"
   | "rangeFeet"
+  | "ammunition"
 > & {
   readonly attackBonus: LiteralStatBlockValue;
   readonly multiattackCount?: never;
@@ -223,11 +224,13 @@ export type SupportedCreatureAttackRollMechanics = Omit<
         readonly attackType: "melee";
         readonly reachFeet: number;
         readonly rangeFeet?: never;
+        readonly ammunition?: never;
       }
     | {
         readonly attackType: "ranged";
         readonly reachFeet?: never;
         readonly rangeFeet: { readonly normal: number; readonly long: number };
+        readonly ammunition?: import("@dnd/shared/game-facts").AmmunitionKind;
       }
   );
 

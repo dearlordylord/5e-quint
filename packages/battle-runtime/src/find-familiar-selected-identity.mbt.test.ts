@@ -456,6 +456,7 @@ function castCatFamiliar(state: BattleState) {
   return castFindFamiliar({
     state,
     casterId,
+    ammunitionStocks: [],
     catalog: statBlockCatalog,
     eligibility: familiarEligibility,
     selection: {
@@ -473,6 +474,7 @@ function castRatFamiliar(state: BattleState) {
   return castFindFamiliar({
     state,
     casterId,
+    ammunitionStocks: [],
     catalog: statBlockCatalog,
     eligibility: familiarEligibility,
     selection: {

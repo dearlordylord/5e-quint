@@ -4,6 +4,23 @@ import { describe, expect, test } from "vitest";
 import { decodeStartBattleArgs } from "./start-battle-tool-input.ts";
 
 describe("start battle tool input", () => {
+  test("rejects omitted ammunition stock instead of treating it as empty", () => {
+    const decoded = decodeStartBattleArgs({
+      battleId: "battle-with-omitted-ammunition",
+      initialCombatants: [
+        {
+          kind: "statBlock",
+          statBlockId: "stat_block_goblin",
+          combatantId: "goblin-a",
+          initiative: 14,
+          admissionSource: { kind: "encounterParticipant" },
+        },
+      ],
+    });
+
+    expect(Either.isLeft(decoded)).toBe(true);
+  });
+
   test("decodes a battle roster without encounter-wide relationship partitions", () => {
     const decoded = decodeStartBattleArgs({
       battleId: "battle-with-rule-local-relationships",
@@ -13,6 +30,7 @@ describe("start battle tool input", () => {
           statBlockId: "stat_block_goblin",
           combatantId: "goblin-a",
           initiative: 14,
+          ammunitionStocks: [],
           admissionSource: { kind: "encounterParticipant" },
         },
       ],
@@ -31,6 +49,7 @@ describe("start battle tool input", () => {
         characterId: "character-a",
         combatantId: "character-combatant-a",
         initiative: 16,
+        ammunitionStocks: [],
         side: "party",
       },
     ],
@@ -41,6 +60,7 @@ describe("start battle tool input", () => {
         statBlockId: "stat_block_goblin",
         combatantId: "goblin-a",
         initiative: 14,
+        ammunitionStocks: [],
         admissionSource: { kind: "encounterParticipant" },
         side: "opposition",
       },

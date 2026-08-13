@@ -110,6 +110,7 @@ export type CharacterBuildCreatureInput = {
   readonly bookOfShadowsPresence?: CharacterBattleBookOfShadowsPresence;
   readonly resourceExpenditures?: readonly CharacterSheetResourceExpenditure[];
   readonly druidWildShapeAvailableForms?: readonly StatBlockRecord[];
+  readonly ammunitionStocks: CharacterBattleCreatureInit["ammunitionStocks"];
   readonly armorClassBaseChoices?:
     | {
         readonly kind: "currentEquipment";
@@ -439,6 +440,7 @@ export function battleCreatureInitFromCharacterBuild(
         currentHp,
         maxHp,
         tempHp: input.tempHp ?? Hp(0),
+        ammunitionStocks: input.ammunitionStocks,
         ...(input.conditions === undefined
           ? {}
           : { conditions: input.conditions }),

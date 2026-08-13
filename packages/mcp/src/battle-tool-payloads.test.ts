@@ -26,7 +26,16 @@ import {
 } from "./battle-tool-payloads.ts";
 import { storeBattleResolution } from "./battle-tools.ts";
 import { createMcpCompositionRoot } from "./composition-root.ts";
-import { handleToolCall } from "./server.ts";
+import { handleToolCall as handleWireToolCall } from "./server.ts";
+import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
+
+function handleToolCall(
+  root: ReturnType<typeof createMcpCompositionRoot>,
+  name: string,
+  args: unknown,
+) {
+  return handleWireToolCall(root, name, battleToolWireArgs(name, args));
+}
 
 describe("battle tool payload boundaries", () => {
   test("projects the explicit no-session state", () => {
@@ -200,6 +209,7 @@ function startedStatBlockBattle() {
         combatantId: "goblin",
         initiative: 10,
         kind: "statBlock",
+        ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
         statBlockId: "stat_block_goblin_warrior",
       },
       {
@@ -207,6 +217,7 @@ function startedStatBlockBattle() {
         combatantId: "skeleton",
         initiative: 5,
         kind: "statBlock",
+        ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
         statBlockId: "stat_block_skeleton",
       },
     ],
