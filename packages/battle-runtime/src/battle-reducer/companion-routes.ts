@@ -112,7 +112,7 @@ function findFamiliarTouchDeliveryRouteForResolution(
       ? "battleCompanion"
       : "battleSpellSlotAndActionEconomy",
   );
-  return routeFill === "rolledDice" && result.tag === "resolved"
+  return result.tag === "resolved"
     ? [
         event,
         resolveBattleSubjectWithoutFillRoute(
@@ -158,7 +158,7 @@ function pactFamiliarReactionAttackRouteForResolution(
     result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
     owner,
   );
-  return routeFill === "rolledDice" && result.tag === "resolved"
+  return result.tag === "resolved"
     ? [
         event,
         resolveBattleSubjectWithoutFillRoute(

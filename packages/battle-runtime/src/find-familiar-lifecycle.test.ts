@@ -86,7 +86,10 @@ import { battleStatBlockProcedureExecutionRef } from "./identity.ts";
 import {
   deliverTouchSpellThroughFindFamiliar as deliverTouchSpellThroughFindFamiliarWithExecution,
   FindFamiliarProcedureExecution,
+  resolveAdmittedFindFamiliarReappearanceSubject,
 } from "./battle-reducer/find-familiar-procedures.ts";
+import { companionRouteForResolution } from "./battle-reducer/companion-routes.ts";
+import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
   characterBattleFeatureInitForTest,
@@ -138,6 +141,7 @@ if (unitCatalogResult.tag !== "ok") {
 const unitCatalog = unitCatalogResult.catalog;
 const findFamiliarSpell = requireSpellRecord("find_familiar");
 const cureWoundsSpell = requireSpellRecord("cure_wounds");
+const barkskinSpell = requireSpellRecord("barkskin");
 const healingWordSpell = requireSpellRecord("healing_word");
 const counterspellSpell = requireSpellRecord("counterspell");
 const shockingGraspSpell = requireSpellRecord("shocking_grasp");
@@ -289,8 +293,13 @@ function startFixtureBattle(
 }
 
 function startSpellcasterFixtureBattle(
-  input: { readonly enemyCanCounterspell?: boolean } = {},
+  input: {
+    readonly enemyCanCounterspell?: boolean;
+    readonly casterSpellProfile?: "druidTouchSpells" | "wizardShockingGrasp";
+  } = {},
 ): BattleRuntimeSession {
+  const usesWizardShockingGrasp =
+    input.casterSpellProfile === "wizardShockingGrasp";
   const result = startBattle({
     battleId: battleId("find-familiar-telepathy-test"),
     combatants: [
@@ -298,17 +307,25 @@ function startSpellcasterFixtureBattle(
         combatantId: casterId,
         displayName: "Caster",
         initiative: 12,
+        className: usesWizardShockingGrasp ? "wizard" : "druid",
         spellcasting: {
-          sourceClassName: "wizard",
+          sourceClassName: usesWizardShockingGrasp ? "wizard" : "druid",
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
-          cantrips: [shockingGraspSpell],
-          preparedSpells: [cureWoundsSpell, healingWordSpell],
+          cantrips: usesWizardShockingGrasp ? [shockingGraspSpell] : [],
+          preparedSpells: usesWizardShockingGrasp
+            ? []
+            : [cureWoundsSpell, healingWordSpell, barkskinSpell],
           featurePreparedSpells: [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],
-          spellSlots: [{ spellLevel: 1, count: 2 }],
+          spellSlots: usesWizardShockingGrasp
+            ? []
+            : [
+                { spellLevel: 1, count: 2 },
+                { spellLevel: 2, count: 1 },
+              ],
         },
       }),
       characterCreature({
@@ -480,6 +497,28 @@ function startWildCompanionDruidFixtureBattle(input: {
     throw new Error(battleStateInitIssueMessage(result.left));
   }
   return result.right;
+}
+
+function wildShapeResourcePoolRefForFixture(session: BattleRuntimeSession) {
+  const druid = session.state.combatants.get(casterId);
+  const ownership = session.context.characters
+    .get(casterId)
+    ?.resourceOwnership.find(
+      (candidate) => candidate.unit.id === "druid_wild_shape",
+    );
+  const resource =
+    druid?.origin.kind === "character" && ownership !== undefined
+      ? druid.origin.resources.find(
+          (candidate) =>
+            candidate.resourcePoolRef === ownership.resourcePoolRef,
+        )
+      : undefined;
+  if (resource === undefined) {
+    throw new Error(
+      "Wild Companion fixture must own its Wild Shape resource pool.",
+    );
+  }
+  return resource.resourcePoolRef;
 }
 
 function startWrongOwnerPactFixtureBattle(): BattleRuntimeSession {
@@ -656,6 +695,21 @@ function withFreshMagicAction(state: BattleState): BattleState {
       actionResources: [{ kind: "action", source: "turn" }],
     },
   };
+}
+
+function advanceThroughPresentFamiliarToCasterTurn(state: BattleState) {
+  const familiarTurn = endTurn({ state, actorId: casterId });
+  if (familiarTurn.tag !== "resolved") {
+    throw new Error("Expected the caster turn to advance to its familiar.");
+  }
+  const casterTurn = endTurn({
+    state: familiarTurn.state,
+    actorId: familiarId,
+  });
+  if (casterTurn.tag !== "resolved") {
+    throw new Error("Expected the familiar turn to advance to its caster.");
+  }
+  return casterTurn.state;
 }
 
 function withFamiliarHitPoints(
@@ -1578,6 +1632,59 @@ describe("Find Familiar lifecycle", () => {
     );
   });
 
+  test("generic companion admission accepts a retained Challenge Rating 0 Beast proof", () => {
+    const initial = startBattle({
+      battleId: battleId("companion-admission-cr0-beast"),
+      combatants: [
+        characterCreature({
+          combatantId: casterId,
+          displayName: "Wizard",
+          initiative: 12,
+        }),
+      ],
+    });
+    expect(Either.isRight(initial)).toBe(true);
+    if (Either.isLeft(initial)) return;
+
+    const admitted = admitCompanionToBattle({
+      state: initial.right.state,
+      ownerId: casterId,
+      identity: {
+        tag: "retainedBetweenBattles",
+        durableCompanionId: "durable:cr0-rat",
+      },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
+      catalog: statBlockCatalog,
+      formEligibility: {
+        formAccess: "findFamiliar",
+        eligibility: familiarEligibility,
+      },
+      manifestation: {
+        tag: "disappearedAtZeroHitPoints",
+        storedForm: {
+          formAccess: "findFamiliar",
+          formSelection: {
+            tag: "challengeRatingZeroBeast",
+            statBlockId: parseSharedStatBlockId("stat_block_rat"),
+          },
+          resolvedStatBlockId: parseSharedStatBlockId("stat_block_rat"),
+        },
+        creatureTypeOverride: "celestial",
+      },
+      initialCombatantOrder: initialCombatantOrder(casterId),
+    });
+
+    expect(Either.isRight(admitted)).toBe(true);
+    if (Either.isLeft(admitted)) return;
+    expect(
+      findFamiliarCompanionForOwner(admitted.right, casterId),
+    ).toMatchObject({
+      status: "disappearedAtZeroHitPoints",
+      creatureTypeOverride: "celestial",
+      formAccess: "findFamiliar",
+    });
+  });
+
   test("casts Wild Companion through Find Familiar with fixed Fey type and a spell slot spend", () => {
     const cast = castWildCompanion({
       state: startWildCompanionDruidFixtureBattle({
@@ -1619,24 +1726,8 @@ describe("Find Familiar lifecycle", () => {
     const session = startWildCompanionDruidFixtureBattle({
       wildShapeUsesRemaining: 2,
     });
-    const druid = session.state.combatants.get(casterId);
-    const wildShapeOwnership = session.context.characters
-      .get(casterId)
-      ?.resourceOwnership.find(
-        (ownership) => ownership.unit.id === "druid_wild_shape",
-      );
-    const wildShapeResource =
-      druid?.origin.kind === "character" && wildShapeOwnership !== undefined
-        ? druid.origin.resources.find(
-            (resource) =>
-              resource.resourcePoolRef === wildShapeOwnership.resourcePoolRef,
-          )
-        : undefined;
-    if (wildShapeOwnership === undefined || wildShapeResource === undefined) {
-      throw new Error(
-        "Wild Companion fixture must own its Wild Shape resource pool.",
-      );
-    }
+    const wildShapeResourcePoolRef =
+      wildShapeResourcePoolRefForFixture(session);
     const cast = castWildCompanion({
       state: session.state,
       casterId,
@@ -1645,7 +1736,7 @@ describe("Find Familiar lifecycle", () => {
       selection: { tag: "normalNamedForm", formId: "owl" },
       spend: {
         kind: "wildShapeUse",
-        resourcePoolRef: wildShapeResource.resourcePoolRef,
+        resourcePoolRef: wildShapeResourcePoolRef,
       },
       familiarId,
       initiative: initiativeScore(18),
@@ -1658,8 +1749,7 @@ describe("Find Familiar lifecycle", () => {
     expect(
       updatedDruid?.origin.kind === "character"
         ? updatedDruid.origin.resources.find(
-            (resource) =>
-              resource.resourcePoolRef === wildShapeOwnership.resourcePoolRef,
+            (resource) => resource.resourcePoolRef === wildShapeResourcePoolRef,
           )
         : undefined,
     ).toMatchObject({ usesRemaining: 1 });
@@ -1667,6 +1757,140 @@ describe("Find Familiar lifecycle", () => {
       formAccess: "findFamiliar",
       creatureTypeOverride: "fey",
     });
+  });
+
+  test("Wild Companion recast keeps its embodied identity and Hit Points while adopting a new form", () => {
+    const session = startWildCompanionDruidFixtureBattle({
+      wildShapeUsesRemaining: 2,
+    });
+    const wildShapeResourcePoolRef =
+      wildShapeResourcePoolRefForFixture(session);
+    const first = castWildCompanion({
+      state: session.state,
+      casterId,
+      catalog: statBlockCatalog,
+      eligibility: familiarEligibility,
+      selection: { tag: "normalNamedForm", formId: "owl" },
+      spend: {
+        kind: "wildShapeUse",
+        resourcePoolRef: wildShapeResourcePoolRef,
+      },
+      familiarId,
+      initiative: initiativeScore(18),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+    });
+    expect(first.tag).toBe("resolved");
+    if (first.tag !== "resolved") return;
+    const wounded = withFamiliarHitPoints(
+      advanceThroughPresentFamiliarToCasterTurn(first.state),
+      Hp(1),
+      Hp(3),
+    );
+    const recast = castWildCompanion({
+      state: wounded,
+      casterId,
+      catalog: statBlockCatalog,
+      eligibility: familiarEligibility,
+      selection: { tag: "normalNamedForm", formId: "rat" },
+      spend: {
+        kind: "wildShapeUse",
+        resourcePoolRef: wildShapeResourcePoolRef,
+      },
+      familiarId: replacementFamiliarId,
+      initiative: initiativeScore(15),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+    });
+
+    expect(recast.tag).toBe("resolved");
+    if (recast.tag !== "resolved") return;
+    expect(recast.state.combatants.has(replacementFamiliarId)).toBe(false);
+    expect(recast.state.combatants.get(familiarId)).toMatchObject({
+      hp: Hp(1),
+      tempHp: Hp(3),
+      initiative: initiativeScore(15),
+      origin: expect.objectContaining({ statBlockId: "stat_block_rat" }),
+    });
+    expect(findFamiliarCompanionForOwner(recast.state, casterId)).toMatchObject(
+      {
+        status: "present",
+        combatantId: familiarId,
+        identity: { tag: "battleOnly" },
+      },
+    );
+    const druid = recast.state.combatants.get(casterId);
+    expect(
+      druid?.origin.kind === "character"
+        ? druid.origin.resources.find(
+            (resource) => resource.resourcePoolRef === wildShapeResourcePoolRef,
+          )
+        : undefined,
+    ).toMatchObject({ usesRemaining: 0 });
+  });
+
+  test("Wild Companion recast restores a temporarily dismissed familiar with its retained Hit Points", () => {
+    const session = startWildCompanionDruidFixtureBattle({
+      wildShapeUsesRemaining: 2,
+    });
+    const wildShapeResourcePoolRef =
+      wildShapeResourcePoolRefForFixture(session);
+    const first = castWildCompanion({
+      state: session.state,
+      casterId,
+      catalog: statBlockCatalog,
+      eligibility: familiarEligibility,
+      selection: { tag: "normalNamedForm", formId: "cat" },
+      spend: {
+        kind: "wildShapeUse",
+        resourcePoolRef: wildShapeResourcePoolRef,
+      },
+      familiarId,
+      initiative: initiativeScore(18),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+    });
+    expect(first.tag).toBe("resolved");
+    if (first.tag !== "resolved") return;
+    const wounded = withFamiliarHitPoints(
+      advanceThroughPresentFamiliarToCasterTurn(first.state),
+      Hp(1),
+      Hp(3),
+    );
+    const dismissed = temporarilyDismissFindFamiliar({
+      state: wounded,
+      casterId,
+      heldObjectIds: [],
+    });
+    expect(dismissed.tag).toBe("resolved");
+    if (dismissed.tag !== "resolved") return;
+    const recastTurn = endTurn({
+      state: dismissed.state,
+      actorId: casterId,
+    });
+    expect(recastTurn.tag).toBe("resolved");
+    if (recastTurn.tag !== "resolved") return;
+
+    const recast = castWildCompanion({
+      state: recastTurn.state,
+      casterId,
+      catalog: statBlockCatalog,
+      eligibility: familiarEligibility,
+      selection: { tag: "normalNamedForm", formId: "rat" },
+      spend: {
+        kind: "wildShapeUse",
+        resourcePoolRef: wildShapeResourcePoolRef,
+      },
+      familiarId: replacementFamiliarId,
+      initiative: initiativeScore(15),
+      placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+    });
+
+    expect(recast.tag).toBe("resolved");
+    if (recast.tag !== "resolved") return;
+    expect(recast.state.combatants.get(replacementFamiliarId)).toMatchObject({
+      hp: Hp(1),
+      tempHp: Hp(3),
+      origin: expect.objectContaining({ statBlockId: "stat_block_rat" }),
+    });
+    expect(recast.state.combatants.has(familiarId)).toBe(false);
   });
 
   test("reappears a temporarily dismissed Wild Companion without Find Familiar spell access", () => {
@@ -2591,6 +2815,201 @@ describe("Find Familiar lifecycle", () => {
     ).toBe(true);
   });
 
+  test("delivers a Bonus Action Touch spell and rejects its stale act after shared senses spends that Bonus Action", () => {
+    const session = startSpellcasterFixtureBattle();
+    const cast = castCatFamiliar(session);
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+    const runtimeSession = battleRuntimeSessionForTest({
+      state: cast.state,
+      context: session.context,
+    });
+    const acts = discoverBattleActs(runtimeSession);
+    const delivery = acts.find(
+      (act) =>
+        act.subject.tag === "findFamiliarTouchSpell" &&
+        battleActSpellPresentation(act)?.invocation.spellId === "barkskin",
+    );
+    const sharedSenses = acts.find(
+      (act) => act.subject.tag === "findFamiliarSharedSenses",
+    );
+    expect(delivery?.subject.tag).toBe("findFamiliarTouchSpell");
+    expect(sharedSenses?.subject.tag).toBe("findFamiliarSharedSenses");
+    if (
+      delivery?.subject.tag !== "findFamiliarTouchSpell" ||
+      sharedSenses?.subject.tag !== "findFamiliarSharedSenses"
+    ) {
+      return;
+    }
+    const connection = findFamiliarConnectionFill(
+      requireHole(delivery.initialHoles, "findFamiliarConnection"),
+    );
+    const targetHole = requireHole(delivery.initialHoles, "targetChoice");
+    const target = {
+      kind: "targetChoice" as const,
+      holeId: targetHole.holeId,
+      value: enemyId,
+      spatialFacts: [
+        {
+          kind: "findFamiliarTouchSpellTarget" as const,
+          ownerId: casterId,
+          familiarId,
+          targetId: enemyId,
+          sourceProcedureRef: delivery.subject.procedureRef,
+        },
+        {
+          kind: "spellTargetKnownWilling" as const,
+          casterId,
+          targetId: enemyId,
+          sourceProcedureRef: delivery.subject.procedureRef,
+        },
+      ],
+    };
+    const shared = resolveBattleSubject({
+      state: cast.state,
+      subject: sharedSenses.subject,
+      fills: [
+        findFamiliarConnectionFill(
+          requireHole(sharedSenses.initialHoles, "findFamiliarConnection"),
+        ),
+      ],
+    });
+    expect(shared.tag).toBe("resolved");
+    if (shared.tag !== "resolved") return;
+
+    const staleDelivery = resolveBattleSubject({
+      state: shared.state,
+      subject: delivery.subject,
+      fills: [connection, target],
+    });
+    expect(staleDelivery).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+    expect(shared.state.combatants.get(familiarId)?.reactionAvailable).toBe(
+      true,
+    );
+
+    const delivered = resolveBattleSubject({
+      state: cast.state,
+      subject: delivery.subject,
+      fills: [connection, target],
+    });
+    expect(delivered).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ combatantId: enemyId, armorClass: 17 }),
+        ]),
+      },
+    });
+    if (delivered.tag !== "resolved") return;
+    expect(delivered.state.combatants.get(familiarId)?.reactionAvailable).toBe(
+      false,
+    );
+    expect(
+      companionRouteForResolution(
+        {
+          state: cast.state,
+          subject: delivery.subject,
+          fills: [connection, target],
+        },
+        delivered,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        subject: "companionTouchDelivery",
+        fill: "targetChoice",
+        owner: "battleCompanion",
+      }),
+      expect.objectContaining({
+        subject: "companionTouchDelivery",
+        owner: "battleActionEconomy",
+      }),
+    ]);
+  });
+
+  test("completes a familiar-delivered Touch attack when the familiar targets itself and disappears at 0 Hit Points", () => {
+    const session = startSpellcasterFixtureBattle({
+      casterSpellProfile: "wizardShockingGrasp",
+    });
+    const cast = castCatFamiliar(session);
+    expect(cast.tag).toBe("resolved");
+    if (cast.tag !== "resolved") return;
+    const delivery = discoverBattleActs(
+      battleRuntimeSessionForTest({
+        state: cast.state,
+        context: session.context,
+      }),
+    ).find(
+      (act) =>
+        act.subject.tag === "findFamiliarTouchSpell" &&
+        battleActSpellPresentation(act)?.invocation.spellId ===
+          "shocking_grasp",
+    );
+    expect(delivery?.subject.tag).toBe("findFamiliarTouchSpell");
+    if (delivery?.subject.tag !== "findFamiliarTouchSpell") return;
+    const connection = findFamiliarConnectionFill(
+      requireHole(delivery.initialHoles, "findFamiliarConnection"),
+    );
+    const target = {
+      kind: "targetChoice" as const,
+      holeId: requireHole(delivery.initialHoles, "targetChoice").holeId,
+      value: familiarId,
+      spatialFacts: [
+        {
+          kind: "findFamiliarTouchSpellTarget" as const,
+          ownerId: casterId,
+          familiarId,
+          targetId: familiarId,
+          sourceProcedureRef: delivery.subject.procedureRef,
+        },
+      ],
+    };
+    const attackFrontier = resolveBattleSubject({
+      state: cast.state,
+      subject: delivery.subject,
+      fills: [connection, target],
+    });
+    expect(attackFrontier.tag).toBe("needsHoles");
+    if (attackFrontier.tag !== "needsHoles") return;
+    const attack = attackRollFill(
+      requireHole(attackFrontier.holes, "attackRoll"),
+      { naturalD20: 15, total: 20 },
+    );
+    const damageFrontier = resolveBattleSubject({
+      state: cast.state,
+      subject: delivery.subject,
+      fills: [connection, target, attack],
+    });
+    expect(damageFrontier.tag).toBe("needsHoles");
+    if (damageFrontier.tag !== "needsHoles") return;
+    const damage = damageRollFill(
+      requireHole(damageFrontier.holes, "rolledDice"),
+      [8],
+    );
+
+    const delivered = resolveBattleSubject({
+      state: cast.state,
+      subject: delivery.subject,
+      fills: [connection, target, attack, damage],
+    });
+
+    expect(delivered.tag).toBe("resolved");
+    if (delivered.tag !== "resolved") return;
+    expect(delivered.state.combatants.has(familiarId)).toBe(false);
+    expect(
+      findFamiliarCompanionForOwner(delivered.state, casterId),
+    ).toMatchObject({
+      status: "disappearedAtZeroHitPoints",
+    });
+    expect(
+      delivered.state.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed",
+      ),
+    ).toBe(false);
+  });
+
   test("commits the familiar Reaction through a declined spell-cast interrupt and resumes the wrapper fills", () => {
     const session = startSpellcasterFixtureBattle({
       enemyCanCounterspell: true,
@@ -2683,6 +3102,7 @@ describe("Find Familiar lifecycle", () => {
   test("resumes a familiar-delivered touch attack spell through its wrapper after a spell-cast interrupt", () => {
     const session = startSpellcasterFixtureBattle({
       enemyCanCounterspell: true,
+      casterSpellProfile: "wizardShockingGrasp",
     });
     const cast = castCatFamiliar(session);
     expect(cast.tag).toBe("resolved");
@@ -3117,6 +3537,34 @@ describe("Find Familiar lifecycle", () => {
       state: reappearanceReadyState,
       context: session.context,
     });
+    const admittedReappearance = admitFindFamiliarReappearance({
+      state: reappearanceReadyState,
+      casterId,
+      catalog: statBlockCatalog,
+    });
+    expect(Either.isRight(admittedReappearance)).toBe(true);
+    if (Either.isLeft(admittedReappearance)) return;
+    const mechanicalPlacementFrontier =
+      resolveAdmittedFindFamiliarReappearanceSubject({
+        fills: [],
+        admission: admittedReappearance.right.mechanics,
+      });
+    expect(mechanicalPlacementFrontier.tag).toBe("needsHoles");
+    expect(
+      companionRouteForResolution(
+        {
+          state: reappearanceReadyState,
+          subject: reappearanceAct.subject,
+          fills: [],
+        },
+        mechanicalPlacementFrontier,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        subject: "companionLifecycle",
+        owner: "battleCompanion",
+      }),
+    ]);
     expect(
       resolveBattleSubject({
         state: reappearanceReadyState,
@@ -3298,6 +3746,18 @@ describe("Find Familiar lifecycle", () => {
     const connection = findFamiliarConnectionFill(
       requireHole(delivery.initialHoles, "findFamiliarConnection"),
     );
+    const untouched = resolveBattleSubject({
+      state: cast.state,
+      subject: delivery.subject,
+      fills: [],
+    });
+    expect(untouched.tag).toBe("needsHoles");
+    expect(
+      companionRouteForResolution(
+        { state: cast.state, subject: delivery.subject, fills: [] },
+        untouched,
+      ),
+    ).toBeUndefined();
     const connectionOnly = resolveBattleSubject({
       state: cast.state,
       subject: delivery.subject,
@@ -3383,24 +3843,40 @@ describe("Find Familiar lifecycle", () => {
     expect(awaitingHealingRoll.subject).toMatchObject(delivery.subject);
     expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
 
+    const healingRoll = damageRollFill(
+      requireHole(awaitingHealingRoll.holes, "rolledDice"),
+      [4, 4],
+    );
     const delivered = resolveBattleSubject({
       state: cast.state,
       subject: delivery.subject,
-      fills: [
-        connection,
-        targetFill,
-        {
-          kind: "rolledDice",
-          holeId: requireHole(awaitingHealingRoll.holes, "rolledDice").holeId,
-          value: [{ results: [DieRollResult(4), DieRollResult(4)] }],
-        },
-      ],
+      fills: [connection, targetFill, healingRoll],
     });
     expect(delivered.tag).toBe("resolved");
     if (delivered.tag !== "resolved") return;
     expect(delivered.state.combatants.get(familiarId)?.reactionAvailable).toBe(
       false,
     );
+    expect(
+      companionRouteForResolution(
+        {
+          state: cast.state,
+          subject: delivery.subject,
+          fills: [connection, targetFill, healingRoll],
+        },
+        delivered,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        subject: "companionTouchDelivery",
+        fill: "rolledDice",
+        owner: "battleSpellSlotAndActionEconomy",
+      }),
+      expect.objectContaining({
+        subject: "companionTouchDelivery",
+        owner: "battleActionEconomy",
+      }),
+    ]);
   });
 
   test("Pact of the Chain forgoes one owner Attack-action attack for a familiar Reaction attack", () => {
@@ -3429,10 +3905,12 @@ describe("Find Familiar lifecycle", () => {
       ]),
     );
 
+    const subject = pactScratchSubject(cast.state);
+    const fills = pactScratchFilledAttackFills(cast.state);
     const resolved = resolveBattleSubject({
       state: cast.state,
-      subject: pactScratchSubject(cast.state),
-      fills: pactScratchFilledAttackFills(cast.state),
+      subject,
+      fills,
     });
     expect(resolved.tag).toBe("resolved");
     if (resolved.tag !== "resolved") return;
@@ -3441,6 +3919,22 @@ describe("Find Familiar lifecycle", () => {
       false,
     );
     expect(Number(resolved.state.combatants.get(enemyId)?.hp)).toBe(11);
+    expect(
+      companionRouteForResolution(
+        { state: cast.state, subject, fills },
+        resolved,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        subject: "companionReactionAttack",
+        fill: "attackRoll",
+        owner: "battleAttackRoll",
+      }),
+      expect.objectContaining({
+        subject: "companionReactionAttack",
+        owner: "battleActionEconomy",
+      }),
+    ]);
   });
 
   test("Pact of the Chain familiar attack does not inherit owner natural-1 reroll support", () => {
@@ -3461,6 +3955,19 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(awaitingTarget.tag).toBe("needsHoles");
     if (awaitingTarget.tag !== "needsHoles") return;
+    expect(
+      companionRouteForResolution(
+        { state: cast.state, subject, fills: [] },
+        awaitingTarget,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "companionReactionAttack",
+        holes: ["targetChoice"],
+        owner: "battleStatBlockAction",
+      }),
+    ]);
     const target = familiarAttackTargetFill(
       requireHole(awaitingTarget.holes, "targetChoice"),
     );
@@ -3471,6 +3978,19 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(awaitingAttackRoll.tag).toBe("needsHoles");
     if (awaitingAttackRoll.tag !== "needsHoles") return;
+    expect(
+      companionRouteForResolution(
+        { state: cast.state, subject, fills: [target] },
+        awaitingAttackRoll,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        subject: "companionReactionAttack",
+        fill: "targetChoice",
+        holes: ["attackRoll"],
+        owner: "battleTargetSelection",
+      }),
+    ]);
     const attackRoll = requireHole(awaitingAttackRoll.holes, "attackRoll");
 
     const naturalOneWithoutDecision = resolveBattleSubject({
@@ -3549,6 +4069,19 @@ describe("Find Familiar lifecycle", () => {
       snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingReaction.tag !== "needsHoles") return;
+    expect(
+      companionRouteForResolution(
+        { state: cast.state, subject, fills: [target, attackRoll] },
+        awaitingReaction,
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        subject: "companionReactionAttack",
+        fill: "attackRoll",
+        holes: ["interruptDecision"],
+        owner: "battleAttackRoll",
+      }),
+    ]);
     const shieldChoice =
       awaitingReaction.snapshot.pendingInterrupt?.choices.find(
         (choice) => choice.kind === "castTriggeredReactionSpell",

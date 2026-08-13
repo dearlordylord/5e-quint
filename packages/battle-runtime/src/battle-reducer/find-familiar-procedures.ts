@@ -380,19 +380,15 @@ export function deliverTouchSpellThroughFindFamiliar(
     }
     return cast;
   }
-  if (!cast.state.combatants.has(prepared.familiarId)) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Find Familiar touch delivery requires the familiar to remain present.",
-    );
-  }
   if (prepared.targetChoiceCount === 0) {
     return invalidResult(
       input.state,
       "invalidFill",
       "Find Familiar touch delivery currently supports exactly one selected target choice.",
     );
+  }
+  if (!cast.state.combatants.has(prepared.familiarId)) {
+    return cast;
   }
   if (reactionCommitment === "committed") return cast;
   const spent = spendFindFamiliarTouchDeliveryReaction({
