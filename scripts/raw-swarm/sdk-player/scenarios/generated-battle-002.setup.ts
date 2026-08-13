@@ -81,7 +81,7 @@ export const setupScenario: ScenarioSetup = (context) => {
     sdk.battleCreatureInitFromStatBlock({
       combatantId,
       statBlock: skeleton,
-      initiative: sdk.initiativeScore(14 + 2),
+      initiative: sdk.initiativeScore(14 + 3),
       currentHp: sdk.hp(13),
       tempHp: sdk.hp(0),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
@@ -200,7 +200,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       initiativeRolls: {
         arden: { d20: 17, modifier: 2, total: 19 },
         bryn: { d20: 12, modifier: 1, total: 13 },
-        skeletonGroup: { d20: 14, modifier: 2, total: 16 },
+        skeletonGroup: { d20: 14, modifier: 3, total: 17 },
       },
       adventurerStartingSquares: {
         arden: { x: 2, y: 5 },

@@ -22,7 +22,64 @@ The session's canonical battle reducer state is `session.battle`; its immutable
 placements, ambient Illumination, vertical environment facts, and scenario objects.
 Use `context.sdk.scenarioRelation` to derive current distance, sight,
 Cover, and traversal between retained tokens; do not restate those facts by
-reading coordinates yourself. Its Cover vocabulary is the battle reducer's
+reading coordinates yourself. A creature attack remains table-owned: when its
+`targetChoice` hole has `requiresTableSpatialFact: true`, translate that
+canonical relation into the spatial witness requested by the hole. In
+particular, a ranged attack requires an `attackTargetInRangedRange` witness;
+an empty `spatialFacts` array is invalid. Derive its range band from the
+relation's `distanceFeet` and the hole's `attack.targetConstraint`, then retain
+the hole's procedure selection:
+
+```ts
+const relation = context.sdk.scenarioRelation({
+  session: context.session,
+  sourceId: targetHole.attack.actorId,
+  targetId,
+});
+```
+
+After observing and narrowing a `relation` result and a `rangedRange`
+constraint, build the witness only when the target is within long range:
+
+```ts
+const { normalFeet, longFeet } = targetHole.attack.targetConstraint;
+const { distanceFeet } = relation.relation;
+const rangeBand =
+  distanceFeet <= normalFeet
+    ? "normal"
+    : distanceFeet <= longFeet
+      ? "long"
+      : undefined;
+if (rangeBand === undefined) {
+  return {
+    kind: "continue",
+    session: context.session,
+    observation: {
+      targetId,
+      distanceFeet,
+      targetConstraint: targetHole.attack.targetConstraint,
+    },
+  };
+}
+const targetFill = {
+  kind: "targetChoice" as const,
+  holeId: targetHole.holeId,
+  value: targetId,
+  spatialFacts: [
+    {
+      kind: "attackTargetInRangedRange" as const,
+      actorId: targetHole.attack.actorId,
+      targetId,
+      rangeBand,
+      ...targetHole.attack.selection,
+    },
+  ],
+};
+```
+
+The reducer validates the supplied witness against the selected procedure and
+supported target constraint. `scenarioRelation` does not itself fill a
+creature-attack hole. Its Cover vocabulary is the battle reducer's
 `none | half | threeQuarters | total` vocabulary. For an ordinary Move, call
 `resolveScenarioMovement` with `kind: "route"`, the canonical Move subject, the nonempty sequence
 of grid coordinates entered after the actor's current square, a supported Speed

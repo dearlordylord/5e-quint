@@ -1542,7 +1542,7 @@ describe("scenario setup public-SDK boundary", () => {
     );
   }, 120_000);
 
-  test("retains the second generated battle with independent Skeleton ammunition", async () => {
+  test("retains the second generated battle with its authored Skeleton initiative and ammunition", async () => {
     const scenarioDirectory = resolve(
       repoRoot,
       "scripts/raw-swarm/sdk-player/scenarios",
@@ -1565,6 +1565,9 @@ describe("scenario setup public-SDK boundary", () => {
           ammunition: "arrow",
           quantityPerSkeleton: 20,
         },
+        initiativeRolls: {
+          skeletonGroup: { d20: 14, modifier: 3, total: 17 },
+        },
       },
     });
     if (result.tag !== "ready") return;
@@ -1580,6 +1583,10 @@ describe("scenario setup public-SDK boundary", () => {
         result.session.battle.state.combatants.get(combatantId(skeletonId))
           ?.ammunitionStocks,
       ).toEqual([{ ammunition: "arrow", remaining: 20 }]);
+      expect(
+        result.session.battle.state.combatants.get(combatantId(skeletonId))
+          ?.initiative,
+      ).toBe(17);
     }
   }, 120_000);
 
