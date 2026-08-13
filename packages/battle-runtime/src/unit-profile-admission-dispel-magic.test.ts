@@ -31,6 +31,7 @@ import type {
   BattleStoredLightEmitter,
   BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
+import type { BattleObjectInvisibleRevealLightEmitter } from "./battle-state-execution.ts";
 import { BattleHoleSchema, BattleSnapshotSchema } from "./index.ts";
 import {
   antimagicFieldUnitId,
@@ -43,6 +44,7 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   requireHole,
+  requireCombatant,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
@@ -1071,6 +1073,95 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     });
 
     expect(Either.isLeft(decoded)).toBe(true);
+  });
+
+  test("combatant targeting leaves unrelated active effects when no ongoing spell is tracked", () => {
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-dispel-unrelated-condition-immunity",
+    );
+    const unrelatedEffect: BattleActiveEffect = {
+      kind: "conditionImmunity",
+      sourceProcedureRef: unrelatedSource,
+      sourceCombatantId: spellTargetId,
+      condition: "frightened",
+      conditionHadNonSpellSource: false,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(10),
+      },
+    };
+    const state = stateWithCombatantActiveEffects({
+      target: { activeEffects: [unrelatedEffect], concentration: null },
+    });
+    const act = spellAct({
+      session: state,
+      spellId: dispelMagicUnitId,
+      slotLevel: 3,
+    });
+
+    const resolved = resolveBattleSubject({
+      state: state.state,
+      subject: act.subject,
+      fills: [
+        ongoingSpellTargetFill({
+          hole: requireHole(act.initialHoles, "ongoingSpellTargetChoice"),
+          target: { kind: "combatant", combatantId: spellTargetId },
+        }),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Dispel Magic to resolve.");
+    }
+    expect(
+      requireCombatant(resolved.state, spellTargetId).activeEffects,
+    ).toEqual([unrelatedEffect]);
+  });
+
+  test("untracked light emitters are ignored by ongoing spell target discovery", () => {
+    const emitter = {
+      kind: "objectInvisibleRevealLightEmitter" as const,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "synthetic-dispel-untracked-light",
+      ),
+      sourceCombatantId: spellTargetId,
+      objectId: battleObjectId("dispel-untracked-light-object"),
+      emission: { kind: "dim" as const, radiusFeet: movementFeet(5) },
+      expiresAt: {
+        kind: "endOfTurn" as const,
+        combatantId: spellTargetId,
+        round: Round(1),
+      },
+    } satisfies BattleObjectInvisibleRevealLightEmitter;
+    const state = stateWithLightEmitters([emitter]);
+    const act = spellAct({
+      session: state,
+      spellId: dispelMagicUnitId,
+      slotLevel: 3,
+    });
+    const targetHole = requireHole(
+      act.initialHoles,
+      "ongoingSpellTargetChoice",
+    );
+
+    expect(targetHole.choices).not.toContainEqual({
+      kind: "object",
+      objectId: emitter.objectId,
+    });
+    const resolved = resolveBattleSubject({
+      state: state.state,
+      subject: act.subject,
+      fills: [
+        ongoingSpellTargetFill({
+          hole: targetHole,
+          target: { kind: "combatant", combatantId: spellTargetId },
+        }),
+      ],
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      state: { lightEmitters: [emitter] },
+    });
   });
 });
 

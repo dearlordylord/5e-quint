@@ -16,6 +16,7 @@ import heroismInput from "../../surface/content/heroism.json";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { describe, expect, test } from "vitest";
 import {
+  battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -33,6 +34,7 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import {
   damageRollFillWithGroups,
+  requireCombatant,
   requireHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
@@ -1973,6 +1975,162 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       expect.objectContaining({ amount: 5, sourceCombatantId: spellCasterId }),
     ]);
   });
+
+  test("shield_of_faith recast replaces only the caster-owned AC bonus", () => {
+    const spell = spellRecord(shieldOfFaithUnitId);
+    const session = spellBattle({ preparedSpells: [spell] });
+    const act = bonusSpellAct({ session, spellId: shieldOfFaithUnitId });
+    const target = session.state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected Shield of Faith target.");
+    }
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-other-ac-bonus",
+    );
+    const stateWithPriorEffects: BattleState = {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellTargetId, {
+        ...target,
+        activeEffects: [
+          ...target.activeEffects,
+          {
+            kind: "spellArmorClassBonus" as const,
+            sourceProcedureRef: act.subject.procedureRef,
+            sourceCombatantId: spellCasterId,
+            bonus: 2,
+            negatesRepeatedDamageAllocation: false,
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: spellCasterId,
+            },
+          },
+          {
+            kind: "spellArmorClassBonus" as const,
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            bonus: 1,
+            negatesRepeatedDamageAllocation: false,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        ],
+      }),
+    };
+    const resolved = resolveBattleSubject({
+      state: stateWithPriorEffects,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          requireHole(act.initialHoles, "targetChoice"),
+          shieldOfFaithUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Shield of Faith recast to resolve.");
+    }
+    const bonuses = resolved.state.combatants
+      .get(spellTargetId)
+      ?.activeEffects.filter(
+        (effect) => effect.kind === "spellArmorClassBonus",
+      );
+    expect(bonuses).toEqual([
+      expect.objectContaining({
+        sourceProcedureRef: unrelatedSource,
+        bonus: 1,
+      }),
+      expect.objectContaining({
+        sourceProcedureRef: act.subject.procedureRef,
+        bonus: 2,
+      }),
+    ]);
+  });
+
+  test("spider_climb recast replaces its own climb grant without dropping another source", () => {
+    const spell = spellRecord(spiderClimbUnitId);
+    const session = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+    });
+    const act = spellAct({
+      session,
+      spellId: spiderClimbUnitId,
+      slotLevel: 2,
+    });
+    const target = session.state.combatants.get(spellTargetId);
+    if (target === undefined) {
+      throw new Error("Expected Spider Climb target.");
+    }
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-other-climb-grant",
+    );
+    const stateWithPriorEffects: BattleState = {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(spellTargetId, {
+        ...target,
+        activeEffects: [
+          ...target.activeEffects,
+          {
+            kind: "specialSpeedGrant" as const,
+            sourceProcedureRef: act.subject.procedureRef,
+            sourceCombatantId: spellCasterId,
+            speedKind: "climb" as const,
+            speed: { kind: "equalToSpeed" as const },
+            hover: false,
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: spellCasterId,
+            },
+          },
+          {
+            kind: "specialSpeedGrant" as const,
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            speedKind: "climb" as const,
+            speed: { kind: "equalToSpeed" as const },
+            hover: false,
+            expiresAt: {
+              kind: "duration" as const,
+              durationTicks: elapsedTimeTicks(10),
+            },
+          },
+        ],
+      }),
+    };
+    const resolved = resolveBattleSubject({
+      state: stateWithPriorEffects,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetFill(
+          requireHole(act.initialHoles, "targetChoice"),
+          spiderClimbUnitId,
+          spellCasterId,
+          spellTargetId,
+        ),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Spider Climb recast to resolve.");
+    }
+    expect(
+      requireCombatant(resolved.state, spellTargetId).activeEffects.filter(
+        (effect) => effect.kind === "specialSpeedGrant",
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        sourceProcedureRef: unrelatedSource,
+      }),
+      expect.objectContaining({
+        sourceProcedureRef: act.subject.procedureRef,
+      }),
+    ]);
+  });
 });
 
 function castFlyOnCaster(
@@ -2431,6 +2589,66 @@ describe("SRDINV30D deterministic Heroism Spell Unit admission", () => {
       ],
     });
     expect(resolved).toMatchObject({ tag: "resolved" });
+  });
+
+  test("Heroism concentration cleanup preserves an unrelated condition immunity", () => {
+    const spell = spellRecord(heroismUnitId);
+    const base = spellBattle({ preparedSpells: [spell] });
+    const caster = requireCombatant(base.state, spellCasterId);
+    const unrelatedSource = battleProcedureExecutionRefForTest(
+      "synthetic-heroism-unrelated-immunity",
+    );
+    const state: BattleState = {
+      ...base.state,
+      combatants: new Map(base.state.combatants).set(spellCasterId, {
+        ...caster,
+        activeEffects: [
+          ...caster.activeEffects,
+          {
+            kind: "conditionImmunity" as const,
+            sourceProcedureRef: unrelatedSource,
+            sourceCombatantId: spellCasterId,
+            condition: "frightened" as const,
+            conditionHadNonSpellSource: false,
+            expiresAt: {
+              kind: "concentration" as const,
+              combatantId: spellCasterId,
+            },
+          },
+        ],
+      }),
+    };
+    const session = battleRuntimeSessionForTest({ ...base, state });
+    const act = spellAct({ session, spellId: heroismUnitId });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(
+          targetHole,
+          heroismUnitId,
+          spellCasterId,
+          spellCasterId,
+        ),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Heroism to resolve.");
+    }
+    const broken = breakBattleConcentration(resolved.state, spellCasterId);
+    const brokenCaster = requireCombatant(broken, spellCasterId);
+    expect(brokenCaster.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "conditionImmunity",
+        sourceProcedureRef: unrelatedSource,
+        sourceCombatantId: spellCasterId,
+      }),
+    );
+    expect(brokenCaster.activeEffects).not.toContainEqual(
+      expect.objectContaining({ sourceProcedureRef: act.subject.procedureRef }),
+    );
   });
 });
 
