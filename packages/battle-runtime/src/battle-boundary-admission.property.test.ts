@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import fc from "fast-check";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
@@ -5,6 +6,7 @@ import { describe, expect, test } from "vitest";
 import { classLevel, resourceCount } from "@dnd/shared/types";
 import { unitId } from "@dnd/shared/game-facts";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 
 import {
   BattleHoleSchema,
@@ -77,10 +79,12 @@ import {
 import {
   battleMovementBudget,
   meleeWeaponOrUnarmedStrikeSelectionsForReactor,
+  opportunityAttackExecutionCandidates,
   opportunityAttackOptionForReactor,
   opportunityAttackSelectionForReactor,
   unarmedStrikeSaveDcAbilityModifier,
 } from "./battle-reducer/movement-speed.ts";
+import { combatantCanSee } from "./battle-reducer/creature-state-leaves.ts";
 import {
   deriveCreatureSpaceTraversalMovementFactFromTableRoute,
   type BattleCreatureSpaceTableRouteDerivationInput,
@@ -177,6 +181,7 @@ import {
   goblinScimitarHitReactionSetup,
   readyDeclarationFillForTest,
   endTurn,
+  testBattleCreatureStateWithConditions,
 } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -991,6 +996,70 @@ describe("battle boundary admission owners", () => {
         ],
       }),
     } as BattleState;
+    const candidateKinds = (
+      reactorId: typeof fighterId | typeof goblinId,
+      moverId: typeof fighterId | typeof goblinId,
+    ) =>
+      opportunityAttackExecutionCandidates(state, reactorId, moverId).map(
+        ({ selection }) =>
+          opportunityAttackOptionForReactor(
+            state,
+            reactorId,
+            moverId,
+            selection,
+          )?.kind,
+      );
+    expect(candidateKinds(goblinId, fighterId)).toContain("statBlockAttack");
+    expect(candidateKinds(fighterId, goblinId)).toEqual(
+      expect.arrayContaining(["weapon", "unarmedStrike"]),
+    );
+    expect(
+      opportunityAttackExecutionCandidates(state, fighterId, fighterId),
+    ).toEqual([]);
+    const blindedState = {
+      ...state,
+      combatants: new Map(state.combatants).set(
+        goblinId,
+        testBattleCreatureStateWithConditions(
+          goblinCombatant,
+          applyCondition(goblinCombatant.conditions, "blinded"),
+        ),
+      ),
+    } as BattleState;
+    expect(combatantCanSee(blindedState, goblinId, fighterId)).toBe(false);
+    expect(
+      opportunityAttackExecutionCandidates(blindedState, goblinId, fighterId),
+    ).toEqual([]);
+    const reactionSpentState = {
+      ...state,
+      combatants: new Map(state.combatants).set(goblinId, {
+        ...goblinCombatant,
+        reactionAvailable: false,
+      }),
+    } as BattleState;
+    expect(
+      opportunityAttackExecutionCandidates(
+        reactionSpentState,
+        goblinId,
+        fighterId,
+      ),
+    ).toEqual([]);
+    expect(
+      opportunityAttackExecutionCandidates(
+        {
+          ...state,
+          currentTurnResources: {
+            ...state.currentTurnResources,
+            disengaged: true,
+          },
+        },
+        goblinId,
+        fighterId,
+      ),
+    ).toEqual([]);
+    expect(
+      opportunityAttackExecutionCandidates(deniedState, goblinId, fighterId),
+    ).toEqual([]);
     expect(
       opportunityAttackOptionForReactor(deniedState, goblinId, fighterId, {
         reactorId: goblinId,
@@ -2333,7 +2402,17 @@ describe("battle boundary admission owners", () => {
       }),
       "targetChoice",
     );
-    const mageTargetFill = targetFill(mageTarget, wizardId);
+    if (mageTarget.procedureRef === undefined) {
+      throw new Error("Expected Mage Armor target procedure provenance.");
+    }
+    const mageTargetFill = targetFill(mageTarget, wizardId, [
+      {
+        kind: "spellTarget",
+        casterId: wizardId,
+        targetId: wizardId,
+        sourceProcedureRef: mageTarget.procedureRef,
+      },
+    ]);
     const mageResult = resolveBattleSubject({
       state: mageSession.state,
       subject: mageAct.subject,

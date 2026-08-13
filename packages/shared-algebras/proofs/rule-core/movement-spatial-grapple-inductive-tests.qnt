@@ -36,6 +36,13 @@ module movementSpatialGrappleInductiveTests {
     }))),
   }
 
+  run opportunity_attack_reach_transition_parity = all {
+    assert(opportunityAttackLeavesReach(5, 10, 5)),
+    assert(not(opportunityAttackLeavesReach(10, 15, 5))),
+    assert(not(opportunityAttackLeavesReach(5, 5, 5))),
+    assert(not(opportunityAttackLeavesReach(10, 5, 5))),
+  }
+
   run grapple_attempt_reaches_active_grapple_state = {
     val grapple = applyGrappleAttempt(NoGrapple, {
       grapplerSize: MediumSize,

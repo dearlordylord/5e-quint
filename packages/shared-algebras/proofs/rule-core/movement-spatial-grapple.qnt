@@ -153,6 +153,18 @@ module movementSpatialGrapple {
     not(turn.disengaged),
   }
 
+  pure def opportunityAttackLeavesReach(
+    beforeDistanceFeet: int,
+    afterDistanceFeet: int,
+    reachFeet: int,
+  ): bool = all {
+    beforeDistanceFeet >= 0,
+    afterDistanceFeet >= 0,
+    reachFeet >= 0,
+    beforeDistanceFeet <= reachFeet,
+    afterDistanceFeet > reachFeet,
+  }
+
   pure def spendMovement(
     state: MovementGrappleState,
     facts: MovementSpendFacts

@@ -26,10 +26,11 @@ reading coordinates yourself. Its Cover vocabulary is the battle reducer's
 `none | half | threeQuarters | total` vocabulary. For an ordinary Move, call
 `resolveScenarioMovement` with `kind: "route"`, the canonical Move subject, the nonempty sequence
 of grid coordinates entered after the actor's current square, a supported Speed
-kind, caller-owned Opportunity Attack facts, and any downstream fills. The
-scenario session derives traversal and Movement cost, while battle owns Movement
-resources and interrupts. The operation currently supports two-dimensional Walk
-routes only and reports other movement modes honestly.
+kind, and any downstream fills. The scenario session derives traversal,
+Movement cost, and ordinary Opportunity Attack threats from the canonical
+route; callers do not author those threats. Battle owns Movement resources and
+the resulting decline-or-resolve interrupt. The operation currently supports
+two-dimensional Walk routes only and reports other movement modes honestly.
 The retained setup's directed movement-ally facts, current creature conditions,
 sizes, terminal zero-HP lifecycle, and placements determine occupied-space
 traversal and Difficult Terrain; callers do not restate those facts in a Move.

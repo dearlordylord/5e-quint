@@ -8,7 +8,7 @@ import type {
 } from "../battle-state-execution.ts";
 import type { BattleProcedureExecutionRef } from "../identity.ts";
 import { sameMultisetBy } from "../mechanical-equality.ts";
-import { interruptAttackExecutionSelectionsEqual } from "./movement-speed.ts";
+import { opportunityAttackThreatEqual } from "./movement-speed.ts";
 
 export type BattleContinuationComparableFill = Extract<
   BattleFill,
@@ -328,7 +328,7 @@ function movementFillValuesEqual(
     a.speedKind === b.speedKind &&
     a.movementCostFeet === b.movementCostFeet &&
     acrobaticMovementFactsEqual(a.acrobaticMovement, b.acrobaticMovement) &&
-    opportunityAttackThreatsEqual(
+    opportunityAttackThreatListsEqual(
       a.provokedOpportunityAttacks,
       b.provokedOpportunityAttacks,
     )
@@ -355,17 +355,15 @@ function acrobaticMovementFactsEqual(
   );
 }
 
-function opportunityAttackThreatsEqual(
+function opportunityAttackThreatListsEqual(
   a: readonly BattleOpportunityAttackThreat[],
   b: readonly BattleOpportunityAttackThreat[],
 ): boolean {
   if (a.length !== b.length) return false;
   const unmatched = [...b];
   return a.every((threat) => {
-    const matchingIndex = unmatched.findIndex(
-      (other) =>
-        threat.reactorId === other.reactorId &&
-        interruptAttackExecutionSelectionsEqual(threat, other),
+    const matchingIndex = unmatched.findIndex((other) =>
+      opportunityAttackThreatEqual(threat, other),
     );
     if (matchingIndex === -1) return false;
     unmatched.splice(matchingIndex, 1);

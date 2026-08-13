@@ -33,6 +33,7 @@ export type {
   ScenarioEnvironment,
   ScenarioInitialRangedAttackEnemyRelationship,
   ScenarioMovementAllyRelationship,
+  ScenarioOpportunityAttackEnemyRelationship,
   ScenarioPlacement,
   ScenarioSession,
   ScenarioTokenId,

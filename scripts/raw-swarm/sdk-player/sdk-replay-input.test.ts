@@ -16,7 +16,6 @@ describe("SDK replay input", () => {
           },
           route: [{ x: 2, y: 3 }],
           speedKind: "walk",
-          provokedOpportunityAttacks: [],
           fills: [],
         },
       }),
@@ -29,7 +28,6 @@ describe("SDK replay input", () => {
           subject: { command: "move" },
           route: [{ x: 2, y: 3 }],
           speedKind: "walk",
-          provokedOpportunityAttacks: [],
         },
       },
     });

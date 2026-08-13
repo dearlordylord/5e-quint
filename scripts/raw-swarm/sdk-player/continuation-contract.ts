@@ -2,7 +2,6 @@ import type {
   AvailableBattleAct,
   BattleFill,
   BattleObjectId,
-  BattleOpportunityAttackThreat,
   BattleMovementSpeedKind,
   BattleRuntimeResolutionResult,
   BattleSubject,
@@ -56,7 +55,6 @@ export type PlayerSdk = {
           >;
           readonly route: readonly [CoordinateInput, ...CoordinateInput[]];
           readonly speedKind: BattleMovementSpeedKind;
-          readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
           readonly fills: readonly BattleFill[];
         }
       | {

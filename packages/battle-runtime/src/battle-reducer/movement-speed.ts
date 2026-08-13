@@ -8,6 +8,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 
 import {
   difficultyClass,
@@ -326,6 +327,74 @@ export function meleeWeaponOrUnarmedStrikeSelectionsForReactor(
       ? [selection]
       : [];
   });
+}
+
+export type BattleOpportunityAttackExecutionCandidate = Readonly<{
+  readonly reactorId: CombatantId;
+  readonly selection: BattleOpportunityAttackSelection;
+  readonly reachFeet: MovementFeet;
+}>;
+
+export function opportunityAttackThreatEqual(
+  left: BattleOpportunityAttackThreat,
+  right: BattleOpportunityAttackThreat,
+): boolean {
+  return (
+    left.reactorId === right.reactorId &&
+    interruptAttackExecutionSelectionsEqual(left, right)
+  );
+}
+
+export function opportunityAttackLeavesReach(input: {
+  readonly beforeDistanceFeet: MovementFeet;
+  readonly afterDistanceFeet: MovementFeet;
+  readonly reachFeet: MovementFeet;
+}): boolean {
+  return (
+    Number(input.beforeDistanceFeet) <= Number(input.reachFeet) &&
+    Number(input.afterDistanceFeet) > Number(input.reachFeet)
+  );
+}
+
+export function opportunityAttackExecutionCandidates(
+  state: BattleState,
+  reactorId: CombatantId,
+  moverId: CombatantId,
+): readonly BattleOpportunityAttackExecutionCandidate[] {
+  if (
+    reactorId === moverId ||
+    (moverId === currentActorId(state) &&
+      state.currentTurnResources.disengaged) ||
+    !combatantCanTakeReactions(state.combatants.get(reactorId)) ||
+    !combatantCanSee(state, reactorId, moverId)
+  ) {
+    return [];
+  }
+  return attackActionOptionsForActor(state, reactorId).reduce<
+    BattleOpportunityAttackExecutionCandidate[]
+  >((candidates, option) => {
+    const selection = attackExecutionSelectionForOption(option);
+    const attack = opportunityAttackOptionForReactor(
+      state,
+      reactorId,
+      moverId,
+      selection,
+    );
+    if (attack === undefined) return candidates;
+    const constraint = attackTargetConstraint(attack);
+    if (
+      constraint.kind !== "meleeReach" ||
+      candidates.some((candidate) =>
+        interruptAttackExecutionSelectionsEqual(candidate.selection, selection),
+      )
+    ) {
+      return candidates;
+    }
+    return [
+      ...candidates,
+      { reactorId, selection, reachFeet: constraint.reachFeet },
+    ];
+  }, []);
 }
 
 export function attackKindForDeflectRedirect(

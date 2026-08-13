@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import { execFileSync, spawn } from "node:child_process";
 import {
   appendFileSync,
@@ -21,7 +22,7 @@ import { buildConsumerDistribution } from "./consumer-distribution.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
 
-const TRACER_SCENARIO_ID = "tracer-001-goblin-warrior-vs-skeleton";
+const CONSUMER_SCENARIO_ID = "ready-mixed-consumer";
 
 function filesBelow(directory: string): readonly string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -48,7 +49,7 @@ describe("SDK player consumer distribution", () => {
     );
     const scenarioPath = resolve(
       repoRoot,
-      "scripts/raw-swarm/sdk-player/scenarios/tracer-001-goblin-warrior-vs-skeleton.md",
+      "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.md",
     );
 
     buildConsumerDistribution({
@@ -234,14 +235,14 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
     copyFileSync(
       resolve(
         repoRoot,
-        `scripts/raw-swarm/sdk-player/scenarios/${TRACER_SCENARIO_ID}.characters.ts`,
+        "scripts/raw-swarm/sdk-player/test-fixtures/ready-fighter.characters.ts",
       ),
       join(trustedDestination, "evidence/characters.ts"),
     );
     copyFileSync(
       resolve(
         repoRoot,
-        `scripts/raw-swarm/sdk-player/scenarios/${TRACER_SCENARIO_ID}.setup.ts`,
+        "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.setup.ts",
       ),
       join(trustedDestination, "evidence/setup.ts"),
     );
@@ -252,7 +253,7 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
         .map((path) => path.slice(destination.length + 1)),
     ).toEqual(["attempt.ts"]);
     expect(readFileSync(join(destination, "SCENARIO.md"), "utf8")).toContain(
-      "Goblin Warrior",
+      "External Fighter",
     );
     expect(
       filesBelow(destination).some((path) => path.endsWith("supervisor.mjs")),
@@ -310,7 +311,7 @@ export const continueBattle: PlayerContinuation = (context) => {
       [
         supervisor,
         "init",
-        TRACER_SCENARIO_ID,
+        CONSUMER_SCENARIO_ID,
         "a".repeat(40),
         "instructionalFallback",
         "b".repeat(64),
@@ -392,18 +393,6 @@ export const continueBattle: PlayerContinuation = (context) => {
     (act) => act.subject.tag === "runtimeCommand" && act.subject.command === "endTurn",
   );
   if (endTurn === undefined) throw new Error("Expected End Turn");
-  const fighterAttack = acts.find(
-    (act) =>
-      act.subject.tag === "action" &&
-      act.subject.action === "attack" &&
-      act.subject.actorId === "external-fighter",
-  );
-  if (
-    fighterAttack === undefined ||
-    fighterAttack.subject.tag !== "action" ||
-    fighterAttack.subject.action !== "attack" ||
-    !("attackAbility" in fighterAttack.subject)
-  ) throw new Error("Expected fighter Attack");
   const advanced = context.sdk.endBattleRuntimeTurn({
     session: context.session,
     actorId: endTurn.subject.actorId,
@@ -424,12 +413,6 @@ export const continueBattle: PlayerContinuation = (context) => {
     subject: skeletonMove.subject,
     route: [{ x: 2, y: 0 }],
     speedKind: "walk",
-    provokedOpportunityAttacks: [{
-      reactorId: fighterAttack.subject.actorId,
-      procedureRef: fighterAttack.subject.procedureRef,
-      attackAbility: fighterAttack.subject.attackAbility,
-      attackDamageType: fighterAttack.subject.attackDamageType,
-    }],
     fills: [],
   });
   if (awaitingOpportunity.tag !== "needsHoles" || awaitingOpportunity.snapshot.pendingInterrupt === null) {
@@ -454,7 +437,7 @@ export const continueBattle: PlayerContinuation = (context) => {
     fill: {
       kind: "interruptDecision",
       holeId: decisionHole.holeId,
-      value: { kind: "decline", responderId: fighterAttack.subject.actorId },
+      value: { kind: "decline", responderId: endTurn.subject.actorId },
     },
   });
   return {
@@ -557,6 +540,6 @@ export const continueBattle: PlayerContinuation = (context) => {
         cwd: trustedDestination,
         encoding: "utf8",
       }),
-    ).toContain("6 call(s) matched");
+    ).toContain("9 call(s) matched");
   }, 180_000);
 });

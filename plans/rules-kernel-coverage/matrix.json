@@ -50,6 +50,18 @@
           "ownerPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
           "stepAction": "step"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/battle-runtime/src/battle-boundary-admission.property.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
+        },
+        {
+          "kind": "contract-test",
+          "ownerPath": "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts"
         }
       ],
       "profiles": [
@@ -63,16 +75,23 @@
         "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
         "packages/battle-runtime/battle-runtime-movement-bridge.qnt"
       ],
-      "reason": "The rule core and battle bridge own Movement cost/resource and Opportunity Attack interruption semantics. The battle runtime emits an applied Movement outcome only after those semantics resolve; a table/session layer may use that outcome to commit its independently owned spatial placement without adding geometry to BattleState.",
+      "reason": "The rule core and battle bridge own Movement cost/resource and Opportunity Attack interruption semantics. For the composed direct-SDK route boundary, ScenarioSession owns exact tactical transitions and projects typed threats only when a declared directed enemy leaves a visible reactor's surfaced executable melee reach while the reactor can take a Reaction and the mover has not Disengaged. The battle runtime revalidates those threats and owns the interrupt. Focused rule-core proof cases cover the exact in-reach to outside-reach predicate; Runtime and Scenario contract witnesses cover executable candidate discovery, canonical route projection, blinded-viewer suppression, and replay without caller-authored threat facts. Geometry remains outside BattleState.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-session-execution.ts",
-        "packages/battle-runtime/src/battle-reducer/movement-procedures.ts"
+        "packages/battle-runtime/src/battle-reducer/movement-procedures.ts",
+        "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+        "packages/battle-runtime/src/battle-reducer/creature-state-leaves.ts",
+        "scripts/raw-swarm/sdk-player/scenario-session.ts"
       ],
       "status": "covered",
-      "surfaceEvidence": [],
-      "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Playing-the-Game.md#Opportunity-Attacks",
+        ".references/srd-5.2.1/Rules-Glossary.md#Opportunity-Attacks",
+        "UBIQUITOUS_LANGUAGE.md#Combat"
+      ],
+      "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and canonically projected Opportunity Attack frontier facts"
     },
     {
       "id": "BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE",

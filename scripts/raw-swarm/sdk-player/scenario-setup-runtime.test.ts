@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
+// KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
@@ -9,6 +10,7 @@ import {
   battleObjectId,
   combatantId,
   discoverBattleActs,
+  opportunityAttackExecutionCandidates,
   resolveBattleRuntimeSubject,
 } from "../../../packages/battle-runtime/src/index.ts";
 import { battleRuntimeSessionWithState } from "../../../packages/battle-runtime/src/battle-runtime-context.ts";
@@ -201,6 +203,7 @@ describe("scenario setup public-SDK boundary", () => {
         movementAllyRelationships: allies
           ? [{ moverId, allyId: occupantId }]
           : [],
+        opportunityAttackEnemyRelationships: [],
         objects: [],
       });
     const plan = (session: typeof setup.session) =>
@@ -212,7 +215,6 @@ describe("scenario setup public-SDK boundary", () => {
           { x: 2, y: 0 },
         ],
         speedKind: "walk",
-        provokedOpportunityAttacks: [],
         fills: [],
       });
 
@@ -283,7 +285,6 @@ describe("scenario setup public-SDK boundary", () => {
         subject: movementSubject,
         route: [{ x: 1, y: 0 }],
         speedKind: "walk",
-        provokedOpportunityAttacks: [],
         fills: [],
       }),
     ).toMatchObject({
@@ -366,13 +367,108 @@ describe("scenario setup public-SDK boundary", () => {
         subject: movementSubject,
         route: [{ x: 1, y: 0 }],
         speedKind: "walk",
-        provokedOpportunityAttacks: [],
         fills: [],
       }),
     ).toMatchObject({
       _tag: "Left",
       left: { message: expect.stringContaining("corpse") },
     });
+  }, 120_000);
+
+  test("derives an ordinary Opportunity Attack threat when a visible enemy leaves reach", async () => {
+    const setup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        `scripts/raw-swarm/sdk-player/scenarios/${TRACER_SCENARIO_ID}.setup.ts`,
+      ),
+      [],
+    );
+    expect(setup.tag).toBe("ready");
+    if (setup.tag !== "ready") return;
+    const moverId = combatantId("goblin-warrior");
+    const reactorId = combatantId("skeleton");
+    const scenario = createScenarioSession({
+      battle: setup.session.battle,
+      arena: {
+        cells: [-1, 0, 1].map((x) => ({
+          x,
+          y: 0,
+          terrain: "ordinary" as const,
+        })),
+        boundaries: [],
+      },
+      placements: [
+        { tokenId: moverId, coordinate: { x: 0, y: 0 } },
+        { tokenId: reactorId, coordinate: { x: 1, y: 0 } },
+      ],
+      ambientIllumination: "brightLight",
+      environment: { overhead: { kind: "open" }, barrierHeights: [] },
+      initialRangedAttackEnemyRelationships: [],
+      movementAllyRelationships: [],
+      opportunityAttackEnemyRelationships: [{ reactorId, moverId }],
+      objects: [],
+    });
+    expect(Either.isRight(scenario)).toBe(true);
+    if (Either.isLeft(scenario)) return;
+    const planned = planScenarioMovement({
+      session: scenario.right,
+      subject: { tag: "runtimeCommand", actorId: moverId, command: "move" },
+      route: [{ x: -1, y: 0 }],
+      speedKind: "walk",
+      fills: [],
+    });
+    const expectedThreats = opportunityAttackExecutionCandidates(
+      setup.session.battle.state,
+      reactorId,
+      moverId,
+    ).map(({ reactorId: candidateReactorId, selection }) => ({
+      reactorId: candidateReactorId,
+      ...selection,
+    }));
+    expect(expectedThreats).toHaveLength(2);
+    expect(planned).toMatchObject({
+      _tag: "Right",
+      right: {
+        fills: [
+          {
+            kind: "movement",
+            value: {
+              provokedOpportunityAttacks: expectedThreats,
+            },
+          },
+        ],
+      },
+    });
+    if (Either.isLeft(planned)) return;
+    const resolution = resolveBattleRuntimeSubject({
+      session: planned.right.session.battle,
+      subject: planned.right.subject,
+      fills: planned.right.fills,
+    });
+    expect(resolution).toMatchObject({
+      tag: "needsHoles",
+      snapshot: {
+        pendingInterrupt: {
+          trigger: "opportunityAttack",
+        },
+      },
+    });
+    expect(resolution.snapshot.pendingInterrupt?.choices).toHaveLength(
+      expectedThreats.length,
+    );
+    expect(
+      resolution.snapshot.pendingInterrupt?.choices.map(
+        ({ reactorId: choiceReactorId, kind }) => ({
+          reactorId: choiceReactorId,
+          kind,
+        }),
+      ),
+    ).toEqual(
+      expectedThreats.map(({ reactorId: expectedReactorId }) => ({
+        reactorId: expectedReactorId,
+        kind: "opportunityAttack",
+      })),
+    );
   }, 120_000);
 
   test("reports every missing tactical placement at composition", async () => {
@@ -400,6 +496,7 @@ describe("scenario setup public-SDK boundary", () => {
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
       initialRangedAttackEnemyRelationships: [],
       movementAllyRelationships: [],
+      opportunityAttackEnemyRelationships: [],
       objects: [],
     });
     expect(Either.isLeft(result)).toBe(true);
@@ -455,6 +552,7 @@ describe("scenario setup public-SDK boundary", () => {
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
       initialRangedAttackEnemyRelationships: [],
       movementAllyRelationships: [],
+      opportunityAttackEnemyRelationships: [],
       objects: [object, object],
     });
     expect(Either.isLeft(result)).toBe(true);
@@ -506,6 +604,7 @@ describe("scenario setup public-SDK boundary", () => {
         },
       ],
       movementAllyRelationships: [],
+      opportunityAttackEnemyRelationships: [],
       objects: [
         {
           objectId,
@@ -997,6 +1096,280 @@ describe("scenario setup public-SDK boundary", () => {
       "wolf-3b": "3,2",
       "wolf-3e": "3,5",
     });
+    const twoThreatMoverId = combatantId("beacon-warden-ember");
+    const twoThreatReactorIds = [
+      combatantId("beacon-warden-veil"),
+      combatantId("beacon-warden-aegis"),
+    ] as const;
+    const reservedPlacements = new Map([
+      [String(twoThreatMoverId), { x: 1, y: 1 }],
+      [String(twoThreatReactorIds[0]), { x: 1, y: 0 }],
+      [String(twoThreatReactorIds[1]), { x: 2, y: 1 }],
+    ]);
+    const remainingCoordinates = [
+      { x: 0, y: 0 },
+      { x: 2, y: 0 },
+      { x: 3, y: 0 },
+      { x: 0, y: 1 },
+      { x: 3, y: 1 },
+      { x: 1, y: 2 },
+      { x: 2, y: 2 },
+    ];
+    let remainingCoordinateIndex = 0;
+    const twoThreatPlacements = [
+      ...result.session.battle.state.combatants.keys(),
+    ].map((tokenId) => {
+      const reserved = reservedPlacements.get(String(tokenId));
+      if (reserved !== undefined) return { tokenId, coordinate: reserved };
+      const coordinate = remainingCoordinates[remainingCoordinateIndex];
+      remainingCoordinateIndex += 1;
+      if (coordinate === undefined) {
+        throw new Error("Expected a tactical placement for every combatant.");
+      }
+      return { tokenId, coordinate };
+    });
+    const twoThreatArena = {
+      cells: [0, 1, 2].flatMap((y) =>
+        [0, 1, 2, 3].map((x) => ({
+          x,
+          y,
+          terrain: "ordinary" as const,
+        })),
+      ),
+      boundaries: [],
+    };
+    const twoThreatInput = {
+      battle: result.session.battle,
+      arena: twoThreatArena,
+      placements: twoThreatPlacements,
+      ambientIllumination: "brightLight" as const,
+      environment: { overhead: { kind: "open" }, barrierHeights: [] },
+      initialRangedAttackEnemyRelationships: [],
+      movementAllyRelationships: [],
+      opportunityAttackEnemyRelationships: twoThreatReactorIds.map(
+        (reactorId) => ({ reactorId, moverId: twoThreatMoverId }),
+      ),
+      objects: [],
+    } as const;
+    const twoThreatScenario = createScenarioSession(twoThreatInput);
+    expect(Either.isRight(twoThreatScenario)).toBe(true);
+    if (Either.isLeft(twoThreatScenario)) return;
+    const twoThreatPlan = planScenarioMovement({
+      session: twoThreatScenario.right,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: twoThreatMoverId,
+        command: "move",
+      },
+      route: [{ x: 0, y: 2 }],
+      speedKind: "walk",
+      fills: [],
+    });
+    expect(Either.isRight(twoThreatPlan)).toBe(true);
+    if (Either.isRight(twoThreatPlan)) {
+      const movementFill = twoThreatPlan.right.fills[0];
+      expect(movementFill?.kind).toBe("movement");
+      if (movementFill?.kind !== "movement") return;
+      const expectedThreats = twoThreatReactorIds.flatMap((reactorId) =>
+        opportunityAttackExecutionCandidates(
+          result.session.battle.state,
+          reactorId,
+          twoThreatMoverId,
+        ).map(({ reactorId: candidateReactorId, selection }) => ({
+          reactorId: candidateReactorId,
+          ...selection,
+        })),
+      );
+      expect(expectedThreats).toHaveLength(4);
+      expect(movementFill.value.provokedOpportunityAttacks).toEqual(
+        expectedThreats,
+      );
+    }
+    const invalidRelationshipCases = [
+      {
+        expectedTag: "unknown-opportunity-attack-enemy-relationship-combatant",
+        relationships: [
+          {
+            reactorId: combatantId("unknown-reactor"),
+            moverId: twoThreatMoverId,
+          },
+        ],
+      },
+      {
+        expectedTag: "self-opportunity-attack-enemy-relationship",
+        relationships: [
+          { reactorId: twoThreatMoverId, moverId: twoThreatMoverId },
+        ],
+      },
+      {
+        expectedTag: "duplicate-opportunity-attack-enemy-relationship",
+        relationships: [
+          { reactorId: twoThreatReactorIds[0], moverId: twoThreatMoverId },
+          { reactorId: twoThreatReactorIds[0], moverId: twoThreatMoverId },
+        ],
+      },
+    ] as const;
+    for (const relationshipCase of invalidRelationshipCases) {
+      expect(
+        createScenarioSession({
+          ...twoThreatInput,
+          opportunityAttackEnemyRelationships: relationshipCase.relationships,
+        }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: {
+          issues: [{ tag: relationshipCase.expectedTag }],
+        },
+      });
+    }
+    const reverseRelationshipScenario = createScenarioSession({
+      ...twoThreatInput,
+      opportunityAttackEnemyRelationships: [
+        {
+          reactorId: twoThreatMoverId,
+          moverId: twoThreatReactorIds[0],
+        },
+      ],
+    });
+    expect(Either.isRight(reverseRelationshipScenario)).toBe(true);
+    if (Either.isRight(reverseRelationshipScenario)) {
+      const reversePlan = planScenarioMovement({
+        session: reverseRelationshipScenario.right,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: twoThreatMoverId,
+          command: "move",
+        },
+        route: [{ x: 0, y: 2 }],
+        speedKind: "walk",
+        fills: [],
+      });
+      expect(reversePlan).toMatchObject({
+        _tag: "Right",
+        right: {
+          fills: [{ value: { provokedOpportunityAttacks: [] } }],
+        },
+      });
+    }
+    const blockedSightScenario = createScenarioSession({
+      ...twoThreatInput,
+      arena: {
+        ...twoThreatArena,
+        boundaries: [
+          {
+            between: [
+              { x: 1, y: 0 },
+              { x: 1, y: 1 },
+            ] as const,
+            traversal: "open" as const,
+            sight: "blocked" as const,
+            cover: { kind: "intervening" as const, degree: "total" as const },
+          },
+        ],
+      },
+      opportunityAttackEnemyRelationships: [
+        { reactorId: twoThreatReactorIds[0], moverId: twoThreatMoverId },
+      ],
+    });
+    expect(Either.isRight(blockedSightScenario)).toBe(true);
+    if (Either.isRight(blockedSightScenario)) {
+      expect(
+        planScenarioMovement({
+          session: blockedSightScenario.right,
+          subject: {
+            tag: "runtimeCommand",
+            actorId: twoThreatMoverId,
+            command: "move",
+          },
+          route: [{ x: 0, y: 2 }],
+          speedKind: "walk",
+          fills: [],
+        }),
+      ).toMatchObject({
+        _tag: "Right",
+        right: { fills: [{ value: { provokedOpportunityAttacks: [] } }] },
+      });
+    }
+    const dimScenario = createScenarioSession({
+      ...twoThreatInput,
+      ambientIllumination: "dimLight",
+    });
+    expect(Either.isRight(dimScenario)).toBe(true);
+    if (Either.isRight(dimScenario)) {
+      expect(
+        planScenarioMovement({
+          session: dimScenario.right,
+          subject: {
+            tag: "runtimeCommand",
+            actorId: twoThreatMoverId,
+            command: "move",
+          },
+          route: [{ x: 0, y: 2 }],
+          speedKind: "walk",
+          fills: [],
+        }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: { message: expect.stringContaining("bright-light") },
+      });
+    }
+    const largeReactor = result.session.battle.state.combatants.get(
+      twoThreatReactorIds[0],
+    );
+    expect(largeReactor).toBeDefined();
+    if (largeReactor === undefined) return;
+    const largeScenario = createScenarioSession({
+      ...twoThreatInput,
+      battle: battleRuntimeSessionWithState(result.session.battle, {
+        ...result.session.battle.state,
+        combatants: new Map(result.session.battle.state.combatants).set(
+          twoThreatReactorIds[0],
+          { ...largeReactor, size: "large" },
+        ),
+      }),
+      opportunityAttackEnemyRelationships: [
+        { reactorId: twoThreatReactorIds[0], moverId: twoThreatMoverId },
+      ],
+    });
+    expect(Either.isRight(largeScenario)).toBe(true);
+    if (Either.isRight(largeScenario)) {
+      expect(
+        planScenarioMovement({
+          session: largeScenario.right,
+          subject: {
+            tag: "runtimeCommand",
+            actorId: twoThreatMoverId,
+            command: "move",
+          },
+          route: [{ x: 0, y: 2 }],
+          speedKind: "walk",
+          fills: [],
+        }),
+      ).toMatchObject({
+        _tag: "Left",
+        left: { message: expect.stringContaining("Small or Medium") },
+      });
+    }
+    expect(
+      planScenarioMovement({
+        session: twoThreatScenario.right,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: twoThreatMoverId,
+          command: "move",
+        },
+        route: [
+          { x: 0, y: 2 },
+          { x: 1, y: 1 },
+          { x: 0, y: 2 },
+        ],
+        speedKind: "walk",
+        fills: [],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { message: expect.stringContaining("more than once") },
+    });
     const moveSubject = {
       tag: "runtimeCommand" as const,
       actorId: combatantId("beacon-warden-ember"),
@@ -1007,7 +1380,6 @@ describe("scenario setup public-SDK boundary", () => {
       subject: moveSubject,
       route: [{ x: 9, y: 2 }],
       speedKind: "walk",
-      provokedOpportunityAttacks: [],
       fills: [],
     });
     expect(Either.isRight(plannedMove)).toBe(true);
@@ -1094,7 +1466,6 @@ describe("scenario setup public-SDK boundary", () => {
       subject: moveSubject,
       route: [{ x: 11, y: 3 }],
       speedKind: "walk",
-      provokedOpportunityAttacks: [],
       fills: [],
     });
     expect(blockedByCrystal).toMatchObject({
@@ -1112,7 +1483,6 @@ describe("scenario setup public-SDK boundary", () => {
         { x: 8, y: 3 },
       ],
       speedKind: "walk",
-      provokedOpportunityAttacks: [],
       fills: [],
     });
     expect(difficultTerrain).toMatchObject({

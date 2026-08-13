@@ -26,6 +26,12 @@ traversable Difficult Terrain, and Tiny creature spaces are traversable without
 becoming Difficult Terrain. Terminal dead combatants remain placed as corpses,
 not creatures; crossing is allowed, while ending in their space remains an
 explicit unsupported table-object adjudication.
+Supply `opportunityAttackEnemyRelationships` as directed `{ reactorId, moverId }`
+pairwise Table Decisions. They answer only whether the mover is the reactor's
+enemy for ordinary Opportunity Attacks; they are not encounter sides. For the
+currently supported bright-light Small/Medium grid projection, the session
+combines those decisions with current reactions, executable melee attacks,
+sight, exact attack reach, and each route transition.
 The retained `space` begins from these setup placements and later advances only
 through the composed scenario movement operation. Setup authors still provide
 only the starting placements. That same retained space canonically projects

@@ -1,6 +1,7 @@
 // Small leaf helpers shared by creature state and movement speed avoid a cycle
 // between those owners.
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT
+// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 
 import {
   hasCondition,
@@ -38,6 +39,7 @@ export function combatantCanSee(
   const invisibleBenefitDenied = combatantInvisibleBenefitDenied(seen);
   return (
     seen !== undefined &&
+    !hasCondition(viewer.conditions, "blinded") &&
     (seen.hidden === null || invisibleBenefitDenied) &&
     (!hasCondition(seen.conditions, "invisible") ||
       invisibleBenefitDenied ||

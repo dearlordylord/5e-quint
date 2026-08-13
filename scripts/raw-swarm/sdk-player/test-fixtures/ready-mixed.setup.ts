@@ -84,6 +84,12 @@ export const setupScenario: ScenarioSetup = ({
       },
     ],
     movementAllyRelationships: [],
+    opportunityAttackEnemyRelationships: [
+      {
+        reactorId: character.right.combatantId,
+        moverId: monster.right.combatantId,
+      },
+    ],
     objects: [],
   });
   return sdk.isLeft(session)

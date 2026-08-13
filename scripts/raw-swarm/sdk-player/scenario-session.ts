@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE
+// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import type {
   BattleIllumination,
   BattleId,
@@ -20,6 +21,9 @@ import {
   combatantEffectiveSize,
   deriveOrdinaryMovementTableRouteFacts,
   isBattleRuntimeSession,
+  opportunityAttackExecutionCandidates,
+  opportunityAttackLeavesReach,
+  opportunityAttackThreatEqual,
   resolveBattleRuntimeSubject,
   zeroHpLifecycleIsTerminal,
 } from "../../../packages/battle-runtime/src/index.ts";
@@ -54,6 +58,7 @@ import {
   type TokenId,
   type CoordinateInput,
   type StateFingerprint,
+  type SpatialState,
 } from "../../../packages/tactical-space/src/index.ts";
 import { Either, Match } from "effect";
 
@@ -93,6 +98,11 @@ export type ScenarioMovementAllyRelationship = Readonly<{
   readonly allyId: CombatantId;
 }>;
 
+export type ScenarioOpportunityAttackEnemyRelationship = Readonly<{
+  readonly reactorId: CombatantId;
+  readonly moverId: CombatantId;
+}>;
+
 export type ScenarioBattlefield = Readonly<{
   readonly arena: ArenaSnapshot;
   readonly space: SpatialSnapshot;
@@ -100,6 +110,7 @@ export type ScenarioBattlefield = Readonly<{
   readonly environment: ScenarioEnvironment;
   readonly initialRangedAttackEnemyRelationships: readonly ScenarioInitialRangedAttackEnemyRelationship[];
   readonly movementAllyRelationships: readonly ScenarioMovementAllyRelationship[];
+  readonly opportunityAttackEnemyRelationships: readonly ScenarioOpportunityAttackEnemyRelationship[];
   readonly objects: readonly ScenarioBattleObject[];
 }>;
 
@@ -175,7 +186,10 @@ export type ScenarioSessionFactIssue =
       readonly tag:
         | "duplicate-movement-ally-relationship"
         | "self-movement-ally-relationship"
-        | "unknown-movement-ally-relationship-combatant";
+        | "unknown-movement-ally-relationship-combatant"
+        | "duplicate-opportunity-attack-enemy-relationship"
+        | "self-opportunity-attack-enemy-relationship"
+        | "unknown-opportunity-attack-enemy-relationship-combatant";
       readonly combatantId: CombatantId;
       readonly message: string;
     }>;
@@ -288,6 +302,7 @@ export function createScenarioSession(input: {
   readonly environment: ScenarioEnvironment;
   readonly initialRangedAttackEnemyRelationships: readonly ScenarioInitialRangedAttackEnemyRelationship[];
   readonly movementAllyRelationships: readonly ScenarioMovementAllyRelationship[];
+  readonly opportunityAttackEnemyRelationships: readonly ScenarioOpportunityAttackEnemyRelationship[];
   readonly objects: readonly ScenarioBattleObject[];
 }): Either.Either<ScenarioSession, ScenarioSessionIssue> {
   const issues: ScenarioSessionFactIssue[] = [];
@@ -360,6 +375,34 @@ export function createScenarioSession(input: {
       });
     }
     movementAllyRelationships.add(relationshipKey);
+  }
+  const opportunityAttackEnemyRelationships = new Set<string>();
+  for (const relationship of input.opportunityAttackEnemyRelationships) {
+    const relationshipKey = `${String(relationship.reactorId)}\u0000${String(relationship.moverId)}`;
+    for (const combatantId of [relationship.reactorId, relationship.moverId]) {
+      if (!combatantIds.has(String(combatantId))) {
+        issues.push({
+          tag: "unknown-opportunity-attack-enemy-relationship-combatant",
+          combatantId,
+          message: `Movement Opportunity Attack enemy relationship names unknown scenario combatant ${String(combatantId)}.`,
+        });
+      }
+    }
+    if (relationship.reactorId === relationship.moverId) {
+      issues.push({
+        tag: "self-opportunity-attack-enemy-relationship",
+        combatantId: relationship.reactorId,
+        message: `Scenario combatant ${String(relationship.reactorId)} cannot be its own enemy for a movement Opportunity Attack.`,
+      });
+    }
+    if (opportunityAttackEnemyRelationships.has(relationshipKey)) {
+      issues.push({
+        tag: "duplicate-opportunity-attack-enemy-relationship",
+        combatantId: relationship.reactorId,
+        message: `Movement Opportunity Attack enemy relationship ${String(relationship.reactorId)} to ${String(relationship.moverId)} is declared more than once.`,
+      });
+    }
+    opportunityAttackEnemyRelationships.add(relationshipKey);
   }
   const objectIds = new Set<string>();
   for (const object of input.objects) {
@@ -517,6 +560,11 @@ export function createScenarioSession(input: {
         Object.freeze({ ...relationship }),
       ),
     ),
+    opportunityAttackEnemyRelationships: Object.freeze(
+      input.opportunityAttackEnemyRelationships.map((relationship) =>
+        Object.freeze({ ...relationship }),
+      ),
+    ),
     objects: Object.freeze(input.objects.map(freezeObject)),
   });
   return Either.right(makeScenarioSession(input.battle, battlefield));
@@ -561,28 +609,37 @@ export function scenarioRelation(input: {
   readonly sourceId: ScenarioTokenId;
   readonly targetId: ScenarioTokenId;
 }): ScenarioRelationResult {
-  const restoredSpace = spatialState(input.session);
-  const source = parseTokenId(String(input.sourceId));
-  const target = parseTokenId(String(input.targetId));
+  return scenarioRelationInSpace(
+    input.session,
+    spatialState(input.session),
+    input.sourceId,
+    input.targetId,
+  );
+}
+
+function scenarioRelationInSpace(
+  session: ScenarioSession,
+  space: SpatialState,
+  sourceId: ScenarioTokenId,
+  targetId: ScenarioTokenId,
+): ScenarioRelationResult {
+  const source = parseTokenId(String(sourceId));
+  const target = parseTokenId(String(targetId));
   if (source.tag === "error") {
     return {
       tag: "unknown-token",
-      tokenId: String(input.sourceId),
+      tokenId: String(sourceId),
       message: source.error.message,
     };
   }
   if (target.tag === "error") {
     return {
       tag: "unknown-token",
-      tokenId: String(input.targetId),
+      tokenId: String(targetId),
       message: target.error.message,
     };
   }
-  const relationResult = relationBetween(
-    restoredSpace,
-    source.value,
-    target.value,
-  );
+  const relationResult = relationBetween(space, source.value, target.value);
   if (relationResult.tag === "error") {
     return {
       tag: "unknown-token",
@@ -592,7 +649,8 @@ export function scenarioRelation(input: {
   }
   const relation = relationResult.value;
   const interveningObjects = scenarioObjectsBetween(
-    input.session,
+    session,
+    space,
     source.value,
     target.value,
   );
@@ -630,7 +688,6 @@ export function planScenarioMovement(input: {
   >;
   readonly route: readonly [CoordinateInput, ...CoordinateInput[]];
   readonly speedKind: BattleMovementSpeedKind;
-  readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
   readonly fills: readonly BattleFill[];
 }): Either.Either<ScenarioMovementPlan, ScenarioMovementIssue> {
   if (input.session.movementResolution.kind === "pending") {
@@ -690,6 +747,7 @@ export function planScenarioMovement(input: {
     readonly distanceFeet: MovementFeet;
   }> = [];
   const tacticalDifficultTerrainPositions = new Set<BattleTablePositionId>();
+  const provokedOpportunityAttacks: BattleOpportunityAttackThreat[] = [];
   const moverState = input.session.battle.state.combatants.get(
     input.subject.actorId,
   );
@@ -700,6 +758,43 @@ export function planScenarioMovement(input: {
     });
   }
   const moverSize = combatantEffectiveSize(moverState);
+  const opportunityAttackEnemyRelationships =
+    input.session.battlefield.opportunityAttackEnemyRelationships.filter(
+      ({ moverId }) => moverId === input.subject.actorId,
+    );
+  if (
+    opportunityAttackEnemyRelationships.length > 0 &&
+    input.session.battlefield.ambientIllumination !== "brightLight"
+  ) {
+    return Either.left({
+      tag: "scenario-movement-rejected",
+      message:
+        "Scenario Opportunity Attack route projection currently supports bright-light encounters only.",
+    });
+  }
+  for (const { reactorId } of opportunityAttackEnemyRelationships) {
+    const reactor = input.session.battle.state.combatants.get(reactorId);
+    if (
+      reactor !== undefined &&
+      combatantEffectiveSize(reactor) !== "small" &&
+      combatantEffectiveSize(reactor) !== "medium"
+    ) {
+      return Either.left({
+        tag: "scenario-movement-rejected",
+        message: `Scenario Opportunity Attack route projection supports only Small or Medium reactors; ${String(reactorId)} has a larger tactical footprint.`,
+      });
+    }
+  }
+  if (
+    opportunityAttackEnemyRelationships.length > 0 &&
+    moverSize !== "small" &&
+    moverSize !== "medium"
+  ) {
+    return Either.left({
+      tag: "scenario-movement-rejected",
+      message: `Scenario Opportunity Attack route projection supports only Small or Medium movers; ${String(input.subject.actorId)} has a different tactical footprint.`,
+    });
+  }
   const movementOccupants = [
     ...combatantByToken.values(),
   ].flatMap<BattleOrdinaryMovementRouteOccupant>((combatant) => {
@@ -786,6 +881,60 @@ export function planScenarioMovement(input: {
         message: `Scenario route could not commit its planned step: ${committed.error.tag}.`,
       });
     }
+    for (const relationship of opportunityAttackEnemyRelationships) {
+      const candidates = opportunityAttackExecutionCandidates(
+        input.session.battle.state,
+        relationship.reactorId,
+        input.subject.actorId,
+      );
+      for (const candidate of candidates) {
+        const threat = {
+          reactorId: candidate.reactorId,
+          ...candidate.selection,
+        };
+        const before = scenarioRelationInSpace(
+          input.session,
+          routeState,
+          relationship.reactorId,
+          input.subject.actorId,
+        );
+        const after = scenarioRelationInSpace(
+          input.session,
+          committed.value,
+          relationship.reactorId,
+          input.subject.actorId,
+        );
+        if (
+          before.tag === "relation" &&
+          after.tag === "relation" &&
+          before.relation.attackerCanSeeTarget &&
+          opportunityAttackLeavesReach({
+            beforeDistanceFeet: movementFeet(
+              Number(before.relation.distanceFeet),
+            ),
+            afterDistanceFeet: movementFeet(
+              Number(after.relation.distanceFeet),
+            ),
+            reachFeet: candidate.reachFeet,
+          })
+        ) {
+          if (
+            provokedOpportunityAttacks.some((threat) =>
+              opportunityAttackThreatEqual(threat, {
+                reactorId: candidate.reactorId,
+                ...candidate.selection,
+              }),
+            )
+          ) {
+            return Either.left({
+              tag: "scenario-movement-rejected",
+              message: `Scenario route leaves ${String(relationship.reactorId)}'s reach more than once; split the movement after resolving the first Opportunity Attack window.`,
+            });
+          }
+          provokedOpportunityAttacks.push(threat);
+        }
+      }
+    }
     routeState = committed.value;
   }
   const destination = routeSteps.at(-1)!;
@@ -818,7 +967,7 @@ export function planScenarioMovement(input: {
         speedKind: input.speedKind,
         movementCostFeet: movementFeet(movementCost),
         provokedOpportunityAttacks: Object.freeze(
-          input.provokedOpportunityAttacks.map((threat) =>
+          provokedOpportunityAttacks.map((threat) =>
             Object.freeze({ ...threat }),
           ),
         ),
@@ -1315,10 +1464,7 @@ function sameOpportunityAttackThreats(
       const counterpart = second[index];
       return (
         counterpart !== undefined &&
-        threat.reactorId === counterpart.reactorId &&
-        threat.procedureRef === counterpart.procedureRef &&
-        threat.attackAbility === counterpart.attackAbility &&
-        threat.attackDamageType === counterpart.attackDamageType
+        opportunityAttackThreatEqual(threat, counterpart)
       );
     })
   );
@@ -1339,10 +1485,11 @@ function sameUndirectedEdge(
 
 function scenarioObjectsBetween(
   session: ScenarioSession,
+  space: SpatialState,
   source: TokenId,
   target: TokenId,
 ): readonly ScenarioBattleObject[] {
-  const result = interveningTokens(spatialState(session), source, target);
+  const result = interveningTokens(space, source, target);
   if (result.tag === "error") return [];
   const tokenIds = new Set(result.value.tokens.map(String));
   return session.battlefield.objects.filter(({ objectId }) =>

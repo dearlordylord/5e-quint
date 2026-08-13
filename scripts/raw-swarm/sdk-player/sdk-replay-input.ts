@@ -49,10 +49,6 @@ export type SdkCallInput =
               ...{ readonly x: number; readonly y: number }[],
             ];
             readonly speedKind: (typeof BATTLE_MOVEMENT_SPEED_KINDS)[number];
-            readonly provokedOpportunityAttacks: Extract<
-              BattleFill,
-              { readonly kind: "movement" }
-            >["value"]["provokedOpportunityAttacks"];
             readonly fills: readonly BattleFill[];
           }
         | {
@@ -95,7 +91,6 @@ const ScenarioMovementInputSchema = Schema.Union(
       Schema.Struct({ x: Schema.Number, y: Schema.Number }),
     ),
     speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
-    provokedOpportunityAttacks: Schema.Unknown,
     fills: Schema.Array(BattleFillSchema),
   }),
   Schema.Struct({
@@ -149,23 +144,6 @@ export function decodeSdkCallInput(
               "Scenario movement requires the canonical Move battle subject.",
           };
         }
-        const movement = Schema.decodeUnknownEither(BattleFillSchema, {
-          onExcessProperty: "error",
-        })({
-          kind: "movement",
-          holeId: "scenario-movement",
-          value: {
-            speedKind: decoded.speedKind,
-            movementCostFeet: 5,
-            provokedOpportunityAttacks: decoded.provokedOpportunityAttacks,
-          },
-        });
-        if (Either.isLeft(movement) || movement.right.kind !== "movement") {
-          return {
-            tag: "invalid" as const,
-            message: `SDK call input is invalid: ${Either.isLeft(movement) ? movement.left.message : "expected Movement facts"}`,
-          };
-        }
         return {
           operation: "resolveScenarioMovement" as const,
           input: {
@@ -173,8 +151,6 @@ export function decodeSdkCallInput(
             subject: decoded.subject,
             route: decoded.route,
             speedKind: decoded.speedKind,
-            provokedOpportunityAttacks:
-              movement.right.value.provokedOpportunityAttacks,
             fills: decoded.fills,
           },
         };

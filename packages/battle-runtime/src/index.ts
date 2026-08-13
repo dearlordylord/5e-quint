@@ -659,6 +659,13 @@ export {
   type BattleRouteDerivedCreatureSpaceTraversalMovementFact,
 } from "./battle-reducer/creature-space-table-route.ts";
 
+export {
+  opportunityAttackExecutionCandidates,
+  opportunityAttackLeavesReach,
+  opportunityAttackThreatEqual,
+  type BattleOpportunityAttackExecutionCandidate,
+} from "./battle-reducer/movement-speed.ts";
+
 export { zeroHpLifecycleIsTerminal } from "./battle-reducer/creature-state-leaves.ts";
 
 export {

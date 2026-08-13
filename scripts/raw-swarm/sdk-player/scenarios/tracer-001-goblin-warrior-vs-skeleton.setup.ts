@@ -83,6 +83,16 @@ export const setupScenario: ScenarioSetup = (context) => {
       },
     ],
     movementAllyRelationships: [],
+    opportunityAttackEnemyRelationships: [
+      {
+        reactorId: goblin.right.combatantId,
+        moverId: skeleton.right.combatantId,
+      },
+      {
+        reactorId: skeleton.right.combatantId,
+        moverId: goblin.right.combatantId,
+      },
+    ],
     objects: [],
   });
   return sdk.isLeft(session)
