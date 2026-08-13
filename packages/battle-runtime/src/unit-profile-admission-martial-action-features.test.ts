@@ -97,6 +97,10 @@ import {
   battleWeaponOrUnarmedCriticalRange19SupportForUnit,
   battleWeaponMasteryPushSupportForUnit,
   battleWeaponMasterySlowSupportForUnit,
+  battleD20TestNaturalOneRerollSupportForUnit,
+  magicActionSaveGatedConditionProfileForUnit,
+  passiveSpeedKindGrantsProfileForUnit,
+  hideActionObscurementPermissionProfileForUnit,
   passiveSavingThrowRollModeProfileForUnit,
   TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
   TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
@@ -117,6 +121,42 @@ import {
 } from "./battle-runtime.test-support.ts";
 import type { UnitRecord } from "./unit-profile-admission.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+
+function d20RerollMechanics(unit: UnitRecord) {
+  if (
+    unit.kind !== "species_trait" ||
+    unit.mechanics.family !== "d20_test_natural_one_reroll"
+  )
+    throw new Error("Expected d20 reroll mechanics.");
+  return unit.mechanics;
+}
+
+function abjureFoesMechanics(unit: UnitRecord) {
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "abjure_foes")
+    throw new Error("Expected Abjure Foes mechanics.");
+  return unit.mechanics;
+}
+
+function rovingMechanics(unit: UnitRecord) {
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "composite")
+    throw new Error("Expected composite mechanics.");
+  return unit.mechanics;
+}
+
+function naturallyStealthyMechanics(unit: UnitRecord) {
+  if (
+    unit.kind !== "species_trait" ||
+    unit.mechanics.family !== "hide_action_obscurement_permission"
+  )
+    throw new Error("Expected Naturally Stealthy mechanics.");
+  return unit.mechanics;
+}
+
+function dangerSenseMechanics(unit: UnitRecord) {
+  if (unit.kind !== "class_feature" || unit.mechanics.family !== "passive")
+    throw new Error("Expected Danger Sense mechanics.");
+  return unit.mechanics;
+}
 
 const UNSUPPORTED_PASSIVE_SAVE_CONDITIONS = CONDITIONS.filter(
   (condition) => condition !== "poisoned" && condition !== "frightened",
@@ -2589,4 +2629,117 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
       }),
     );
   });
+});
+
+describe("M87 support-profile admission near misses", () => {
+  test.each([
+    {
+      name: "halfling luck with the wrong triggering die face",
+      unit: unitMechanicsVariant(
+        unitLibrary.requireUnit("species_halfling_luck"),
+        {
+          id: "synthetic-halfling-luck-wrong-face",
+          mechanics: {
+            ...d20RerollMechanics(
+              unitLibrary.requireUnit("species_halfling_luck"),
+            ),
+            trigger: { kind: "d20_test_roll_is", dieFace: 2 },
+          },
+        },
+      ),
+      project: battleD20TestNaturalOneRerollSupportForUnit,
+      expected: "unsupported",
+    },
+    {
+      name: "abjure foes with a two-minute duration",
+      unit: unitMechanicsVariant(
+        unitLibrary.requireUnit("paladin_abjure_foes"),
+        {
+          id: "synthetic-abjure-foes-duration",
+          mechanics: {
+            ...abjureFoesMechanics(
+              unitLibrary.requireUnit("paladin_abjure_foes"),
+            ),
+            onFail: {
+              ...abjureFoesMechanics(
+                unitLibrary.requireUnit("paladin_abjure_foes"),
+              ).onFail,
+              duration: {
+                ...abjureFoesMechanics(
+                  unitLibrary.requireUnit("paladin_abjure_foes"),
+                ).onFail.duration,
+                amount: 2,
+              },
+            },
+          },
+        },
+      ),
+      project: magicActionSaveGatedConditionProfileForUnit,
+      expected: null,
+    },
+    {
+      name: "ranger roving with an extra composite part",
+      unit: unitMechanicsVariant(unitLibrary.requireUnit("ranger_roving"), {
+        id: "synthetic-roving-extra-part",
+        mechanics: {
+          ...rovingMechanics(unitLibrary.requireUnit("ranger_roving")),
+          parts: [
+            ...rovingMechanics(unitLibrary.requireUnit("ranger_roving")).parts,
+            rovingMechanics(unitLibrary.requireUnit("ranger_roving")).parts[0],
+          ],
+        },
+      }),
+      project: passiveSpeedKindGrantsProfileForUnit,
+      expected: null,
+    },
+    {
+      name: "naturally stealthy with a same-size obscurer",
+      unit: unitMechanicsVariant(
+        unitLibrary.requireUnit("species_halfling_naturally_stealthy"),
+        {
+          id: "synthetic-naturally-stealthy-same-size",
+          mechanics: {
+            ...naturallyStealthyMechanics(
+              unitLibrary.requireUnit("species_halfling_naturally_stealthy"),
+            ),
+            allowedObscurement: {
+              kind: "obscured_only_by_creature",
+              creatureSizeRelationToSelf: "same_size",
+            },
+          },
+        },
+      ),
+      project: hideActionObscurementPermissionProfileForUnit,
+      expected: null,
+    },
+    {
+      name: "danger sense with a malformed save-ability filter",
+      unit: unitMechanicsVariant(
+        unitLibrary.requireUnit("barbarian_danger_sense"),
+        {
+          id: "synthetic-danger-sense-filter",
+          mechanics: {
+            ...dangerSenseMechanics(
+              unitLibrary.requireUnit("barbarian_danger_sense"),
+            ),
+            grants: [
+              {
+                ...dangerSenseMechanics(
+                  unitLibrary.requireUnit("barbarian_danger_sense"),
+                ).grants[0],
+                saveAbilityFilter: "dex",
+              },
+            ],
+          },
+        },
+      ),
+      project: passiveSavingThrowRollModeProfileForUnit,
+      expected: null,
+    },
+  ] as const)(
+    "$name rejects malformed authored mechanics",
+    ({ unit, project, expected }) => {
+      expect(project(unit)).toBe(expected);
+    },
+  );
 });
