@@ -9,6 +9,8 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { resourceCount } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { DISTANT_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
+import { battleSpellEffectOccurrenceId } from "./identity.ts";
+import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import {
   characterBattleResourceIsPointPool,
   type CharacterBattleMetamagicOptionFact,
@@ -30,6 +32,7 @@ import {
   spellTouchedObjectTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import type { BattleTrackedOngoingSpellLightEmitter } from "./index.ts";
 import type {
   BattleRuntimeSession,
   BattleState,
@@ -904,6 +907,10 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
       spellCasterId,
       spellSlotInvocationRef(continualFlameUnitId, 2, "objectLight"),
     );
+    const priorSourceEffectId = battleSpellEffectOccurrenceId(
+      `${spellCasterId}:${procedureRef}:${objectId}:object-light:1`,
+    );
+    const sourceSpellLevel = testBattleSpellEffectLevel(2);
     const state: BattleState = {
       ...baseSession.state,
       lightEmitters: [
@@ -911,6 +918,8 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
           kind: "spellLightEmitter",
           sourceProcedureRef: procedureRef,
           sourceCombatantId: spellCasterId,
+          sourceEffectId: priorSourceEffectId,
+          sourceSpellLevel,
           attachment: { kind: "object", objectId },
           emission: {
             kind: "brightAndDim",
@@ -946,15 +955,33 @@ describe("SRDINV70B deterministic object-light Spell Unit admission", () => {
         "Expected same-object Continual Flame recast to resolve.",
       );
     }
-    expect(resolved.state.lightEmitters).toHaveLength(2);
+    const emitters = resolved.state.lightEmitters.filter(
+      (emitter): emitter is BattleTrackedOngoingSpellLightEmitter =>
+        emitter.kind === "spellLightEmitter" &&
+        "sourceEffectId" in emitter &&
+        emitter.sourceCombatantId === spellCasterId &&
+        emitter.attachment.kind === "object" &&
+        emitter.attachment.objectId === objectId,
+    );
+    expect(emitters).toHaveLength(2);
+    const nextSourceEffectId = battleSpellEffectOccurrenceId(
+      `${spellCasterId}:${procedureRef}:${objectId}:object-light:2`,
+    );
+    expect(emitters.map((emitter) => emitter.sourceEffectId)).toEqual(
+      expect.arrayContaining([priorSourceEffectId, nextSourceEffectId]),
+    );
     expect(
-      resolved.state.lightEmitters.filter(
-        (emitter) =>
-          emitter.kind === "spellLightEmitter" &&
-          emitter.sourceCombatantId === spellCasterId &&
-          emitter.attachment.kind === "object" &&
-          emitter.attachment.objectId === objectId,
+      emitters.every(
+        (emitter) => emitter.sourceSpellLevel === sourceSpellLevel,
       ),
-    ).toHaveLength(2);
+    ).toBe(true);
   });
 });
+
+function testBattleSpellEffectLevel(value: number) {
+  const parsed = parseBattleSpellEffectLevel(value);
+  if (parsed === null) {
+    throw new Error(`Invalid spell effect level ${value}.`);
+  }
+  return parsed;
+}

@@ -1971,6 +1971,10 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       ...session.state,
       combatants: new Map(session.state.combatants).set(spellCasterId, {
         ...target,
+        concentration: {
+          sourceProcedureRef: act.subject.procedureRef,
+          effectKind: "spellEffect",
+        },
         activeEffects: [
           ...target.activeEffects,
           {
@@ -1981,8 +1985,8 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
             delta: { dice: 1, dieSize: 4, sign: "+" as const },
             skill: "stealth" as const,
             expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
+              kind: "concentration" as const,
+              combatantId: spellCasterId,
             },
           },
           {
@@ -2022,16 +2026,19 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     const modifiers = resolved.state.combatants
       .get(spellCasterId)
       ?.activeEffects.filter((effect) => effect.kind === "d20RollModifier");
-    expect(modifiers).toEqual([
-      expect.objectContaining({
-        sourceProcedureRef: unrelatedSource,
-        skill: "perception",
-      }),
-      expect.objectContaining({
-        sourceProcedureRef: act.subject.procedureRef,
-        skill: "perception",
-      }),
-    ]);
+    expect(modifiers).toHaveLength(2);
+    expect(modifiers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sourceProcedureRef: unrelatedSource,
+          skill: "perception",
+        }),
+        expect.objectContaining({
+          sourceProcedureRef: act.subject.procedureRef,
+          skill: "perception",
+        }),
+      ]),
+    );
   });
 
   test("resistance recast resets only its own once-per-turn reduction", () => {
@@ -2045,35 +2052,43 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     );
     const state: BattleState = {
       ...base.state,
-      combatants: new Map(base.state.combatants).set(spellTargetId, {
-        ...target,
-        activeEffects: [
-          {
-            kind: "spellDamageReduction" as const,
+      combatants: new Map(base.state.combatants)
+        .set(spellCasterId, {
+          ...requireCombatant(base.state, spellCasterId),
+          concentration: {
             sourceProcedureRef: act.subject.procedureRef,
-            sourceCombatantId: spellCasterId,
-            damageType: "acid" as const,
-            amount: { dice: 1 as const, dieSize: 4 as const },
-            usedThisTurn: true,
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: spellCasterId,
-            },
+            effectKind: "spellEffect",
           },
-          {
-            kind: "spellDamageReduction" as const,
-            sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellCasterId,
-            damageType: "cold" as const,
-            amount: { dice: 1 as const, dieSize: 4 as const },
-            usedThisTurn: true,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
+        })
+        .set(spellTargetId, {
+          ...target,
+          activeEffects: [
+            {
+              kind: "spellDamageReduction" as const,
+              sourceProcedureRef: act.subject.procedureRef,
+              sourceCombatantId: spellCasterId,
+              damageType: "acid" as const,
+              amount: { dice: 1 as const, dieSize: 4 as const },
+              usedThisTurn: true,
+              expiresAt: {
+                kind: "concentration" as const,
+                combatantId: spellCasterId,
+              },
             },
-          },
-        ],
-      }),
+            {
+              kind: "spellDamageReduction" as const,
+              sourceProcedureRef: unrelatedSource,
+              sourceCombatantId: spellCasterId,
+              damageType: "cold" as const,
+              amount: { dice: 1 as const, dieSize: 4 as const },
+              usedThisTurn: true,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          ],
+        }),
     };
     const resolved = resolveBattleSubject({
       state,
@@ -2093,22 +2108,27 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Resistance recast to resolve.");
     }
-    expect(
-      requireCombatant(resolved.state, spellTargetId).activeEffects,
-    ).toEqual([
-      expect.objectContaining({
-        kind: "spellDamageReduction",
-        sourceProcedureRef: unrelatedSource,
-        damageType: "cold",
-        usedThisTurn: true,
-      }),
-      expect.objectContaining({
-        kind: "spellDamageReduction",
-        sourceProcedureRef: act.subject.procedureRef,
-        damageType: "fire",
-        usedThisTurn: false,
-      }),
-    ]);
+    const effects = requireCombatant(
+      resolved.state,
+      spellTargetId,
+    ).activeEffects;
+    expect(effects).toHaveLength(2);
+    expect(effects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "spellDamageReduction",
+          sourceProcedureRef: unrelatedSource,
+          damageType: "cold",
+          usedThisTurn: true,
+        }),
+        expect.objectContaining({
+          kind: "spellDamageReduction",
+          sourceProcedureRef: act.subject.procedureRef,
+          damageType: "fire",
+          usedThisTurn: false,
+        }),
+      ]),
+    );
   });
 });
 
@@ -2618,25 +2638,30 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Protection from Poison recast to resolve.");
     }
-    expect(
-      requireCombatant(resolved.state, spellTargetId).activeEffects,
-    ).toEqual([
-      expect.objectContaining({
-        kind: "damageResistance",
-        sourceProcedureRef: unrelatedSource,
-        damageType: "acid",
-      }),
-      expect.objectContaining({
-        kind: "conditionSavingThrowRollMode",
-        sourceProcedureRef: act.subject.procedureRef,
-        condition: "poisoned",
-      }),
-      expect.objectContaining({
-        kind: "damageResistance",
-        sourceProcedureRef: act.subject.procedureRef,
-        damageType: "poison",
-      }),
-    ]);
+    const effects = requireCombatant(
+      resolved.state,
+      spellTargetId,
+    ).activeEffects;
+    expect(effects).toHaveLength(3);
+    expect(effects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "damageResistance",
+          sourceProcedureRef: unrelatedSource,
+          damageType: "acid",
+        }),
+        expect.objectContaining({
+          kind: "conditionSavingThrowRollMode",
+          sourceProcedureRef: act.subject.procedureRef,
+          condition: "poisoned",
+        }),
+        expect.objectContaining({
+          kind: "damageResistance",
+          sourceProcedureRef: act.subject.procedureRef,
+          damageType: "poison",
+        }),
+      ]),
+    );
   });
 });
 
@@ -2916,32 +2941,40 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
     );
     const state: BattleState = {
       ...base.state,
-      combatants: new Map(base.state.combatants).set(spellTargetId, {
-        ...target,
-        activeEffects: [
-          {
-            kind: "damageResistance" as const,
+      combatants: new Map(base.state.combatants)
+        .set(spellCasterId, {
+          ...requireCombatant(base.state, spellCasterId),
+          concentration: {
             sourceProcedureRef: act.subject.procedureRef,
-            sourceCombatantId: spellCasterId,
-            damageType: "acid" as const,
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: spellCasterId,
-              durationTicks: protectionFromEnergyDurationTicks,
-            },
+            effectKind: "spellEffect",
           },
-          {
-            kind: "damageResistance" as const,
-            sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellCasterId,
-            damageType: "cold" as const,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
+        })
+        .set(spellTargetId, {
+          ...target,
+          activeEffects: [
+            {
+              kind: "damageResistance" as const,
+              sourceProcedureRef: act.subject.procedureRef,
+              sourceCombatantId: spellCasterId,
+              damageType: "acid" as const,
+              expiresAt: {
+                kind: "concentration" as const,
+                combatantId: spellCasterId,
+                durationTicks: protectionFromEnergyDurationTicks,
+              },
             },
-          },
-        ],
-      }),
+            {
+              kind: "damageResistance" as const,
+              sourceProcedureRef: unrelatedSource,
+              sourceCombatantId: spellCasterId,
+              damageType: "cold" as const,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          ],
+        }),
     };
     const resolved = resolveBattleSubject({
       state,
@@ -2961,20 +2994,25 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Protection from Energy recast to resolve.");
     }
-    expect(
-      requireCombatant(resolved.state, spellTargetId).activeEffects,
-    ).toEqual([
-      expect.objectContaining({
-        kind: "damageResistance",
-        sourceProcedureRef: unrelatedSource,
-        damageType: "cold",
-      }),
-      expect.objectContaining({
-        kind: "damageResistance",
-        sourceProcedureRef: act.subject.procedureRef,
-        damageType: "fire",
-      }),
-    ]);
+    const effects = requireCombatant(
+      resolved.state,
+      spellTargetId,
+    ).activeEffects;
+    expect(effects).toHaveLength(2);
+    expect(effects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "damageResistance",
+          sourceProcedureRef: unrelatedSource,
+          damageType: "cold",
+        }),
+        expect.objectContaining({
+          kind: "damageResistance",
+          sourceProcedureRef: act.subject.procedureRef,
+          damageType: "fire",
+        }),
+      ]),
+    );
   });
 });
 

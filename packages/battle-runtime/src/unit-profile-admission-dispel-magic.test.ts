@@ -1075,7 +1075,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     expect(Either.isLeft(decoded)).toBe(true);
   });
 
-  test("combatant targeting leaves unrelated active effects when no ongoing spell is tracked", () => {
+  test("deferred support boundary: untracked combatant effects remain untouched", () => {
     const unrelatedSource = battleProcedureExecutionRefForTest(
       "synthetic-dispel-unrelated-condition-immunity",
     );
@@ -1113,12 +1113,15 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Dispel Magic to resolve.");
     }
-    expect(
-      requireCombatant(resolved.state, spellTargetId).activeEffects,
-    ).toEqual([unrelatedEffect]);
+    const effects = requireCombatant(
+      resolved.state,
+      spellTargetId,
+    ).activeEffects;
+    expect(effects).toHaveLength(1);
+    expect(effects).toContainEqual(unrelatedEffect);
   });
 
-  test("untracked light emitters are ignored by ongoing spell target discovery", () => {
+  test("deferred support boundary: untracked light emitters stay outside target discovery", () => {
     const emitter = {
       kind: "objectInvisibleRevealLightEmitter" as const,
       sourceProcedureRef: battleProcedureExecutionRefForTest(

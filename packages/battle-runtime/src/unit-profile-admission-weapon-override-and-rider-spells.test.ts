@@ -1577,7 +1577,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
     ).toBe(false);
   });
 
-  test("magic_weapon recast preserves an unrelated caster effect", () => {
+  test("magic_weapon first cast preserves an unrelated caster effect", () => {
     const magicWeapon = spellRecord(magicWeaponUnitId);
     const session = spellBattle({
       preparedSpells: [magicWeapon],
@@ -1613,7 +1613,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
       }),
     };
     const targetHole = requireHole(act.initialHoles, "magicWeaponTargetItem");
-    const recast = resolveBattleSubject({
+    const cast = resolveBattleSubject({
       state,
       subject: act.subject,
       fills: [
@@ -1623,12 +1623,12 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
         }),
       ],
     });
-    expect(recast).toMatchObject({ tag: "resolved" });
-    if (recast.tag !== "resolved") {
-      throw new Error("Expected Magic Weapon recast to resolve.");
+    expect(cast).toMatchObject({ tag: "resolved" });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Magic Weapon cast to resolve.");
     }
     expect(
-      requireCombatant(recast.state, spellCasterId).activeEffects,
+      requireCombatant(cast.state, spellCasterId).activeEffects,
     ).toContainEqual(
       expect.objectContaining({
         kind: "damageResistance",
@@ -1637,7 +1637,7 @@ describe("L12G deterministic Magic Weapon item enhancement admission", () => {
     );
     expect(
       battleWeaponItemHasMagicWeaponEnhancement(
-        recast.state,
+        cast.state,
         spellCasterId,
         battleObjectId("main:weapon_longsword"),
       ),

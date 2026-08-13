@@ -642,17 +642,21 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       },
     });
     const cast = castFailedHypnoticPattern(state);
-    expect(requireCombatant(cast.state, spellTargetId).activeEffects).toEqual([
-      expect.objectContaining({
-        kind: "hypnoticPatternControl",
-        sourceProcedureRef: unrelatedSource,
-      }),
-      expect.objectContaining({
-        kind: "hypnoticPatternControl",
-        sourceCombatantId: spellCasterId,
-        expiresAt: expect.objectContaining({ kind: "concentration" }),
-      }),
-    ]);
+    const effects = requireCombatant(cast.state, spellTargetId).activeEffects;
+    expect(effects).toHaveLength(2);
+    expect(effects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "hypnoticPatternControl",
+          sourceProcedureRef: unrelatedSource,
+        }),
+        expect.objectContaining({
+          kind: "hypnoticPatternControl",
+          sourceCombatantId: spellCasterId,
+          expiresAt: expect.objectContaining({ kind: "concentration" }),
+        }),
+      ]),
+    );
   });
 });
 

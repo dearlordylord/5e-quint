@@ -1004,37 +1004,45 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     );
     const state: BattleState = {
       ...base.state,
-      combatants: new Map(base.state.combatants).set(spellTargetId, {
-        ...target,
-        activeEffects: [
-          {
-            kind: "creatureTypeProtection" as const,
+      combatants: new Map(base.state.combatants)
+        .set(spellCasterId, {
+          ...requireCombatant(base.state, spellCasterId),
+          concentration: {
             sourceProcedureRef: act.subject.procedureRef,
-            sourceCombatantId: spellCasterId,
-            attackRollMode: "disadvantage" as const,
-            protectedAgainstCreatureTypes: ["undead"] as const,
-            preventedConditions: ["charmed", "frightened"] as const,
-            preventsPossession: true,
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: spellCasterId,
-            },
+            effectKind: "spellEffect",
           },
-          {
-            kind: "creatureTypeProtection" as const,
-            sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellCasterId,
-            attackRollMode: "disadvantage" as const,
-            protectedAgainstCreatureTypes: ["fey"] as const,
-            preventedConditions: [],
-            preventsPossession: false,
-            expiresAt: {
-              kind: "duration" as const,
-              durationTicks: elapsedTimeTicks(10),
+        })
+        .set(spellTargetId, {
+          ...target,
+          activeEffects: [
+            {
+              kind: "creatureTypeProtection" as const,
+              sourceProcedureRef: act.subject.procedureRef,
+              sourceCombatantId: spellCasterId,
+              attackRollMode: "disadvantage" as const,
+              protectedAgainstCreatureTypes: ["undead"] as const,
+              preventedConditions: ["charmed", "frightened"] as const,
+              preventsPossession: true,
+              expiresAt: {
+                kind: "concentration" as const,
+                combatantId: spellCasterId,
+              },
             },
-          },
-        ],
-      }),
+            {
+              kind: "creatureTypeProtection" as const,
+              sourceProcedureRef: unrelatedSource,
+              sourceCombatantId: spellCasterId,
+              attackRollMode: "disadvantage" as const,
+              protectedAgainstCreatureTypes: ["fey"] as const,
+              preventedConditions: [],
+              preventsPossession: false,
+              expiresAt: {
+                kind: "duration" as const,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          ],
+        }),
     };
     const resolved = resolveBattleSubject({
       state,
@@ -1054,26 +1062,31 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         "Expected Protection from Evil and Good recast to resolve.",
       );
     }
-    expect(
-      requireCombatant(resolved.state, spellTargetId).activeEffects,
-    ).toEqual([
-      expect.objectContaining({
-        kind: "creatureTypeProtection",
-        sourceProcedureRef: unrelatedSource,
-        protectedAgainstCreatureTypes: ["fey"],
-      }),
-      expect.objectContaining({
-        kind: "creatureTypeProtection",
-        sourceProcedureRef: act.subject.procedureRef,
-        protectedAgainstCreatureTypes: [
-          "aberration",
-          "celestial",
-          "elemental",
-          "fey",
-          "fiend",
-          "undead",
-        ],
-      }),
-    ]);
+    const effects = requireCombatant(
+      resolved.state,
+      spellTargetId,
+    ).activeEffects;
+    expect(effects).toHaveLength(2);
+    expect(effects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "creatureTypeProtection",
+          sourceProcedureRef: unrelatedSource,
+          protectedAgainstCreatureTypes: ["fey"],
+        }),
+        expect.objectContaining({
+          kind: "creatureTypeProtection",
+          sourceProcedureRef: act.subject.procedureRef,
+          protectedAgainstCreatureTypes: [
+            "aberration",
+            "celestial",
+            "elemental",
+            "fey",
+            "fiend",
+            "undead",
+          ],
+        }),
+      ]),
+    );
   });
 });

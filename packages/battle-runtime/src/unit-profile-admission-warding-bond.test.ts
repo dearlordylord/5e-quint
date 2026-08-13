@@ -1255,14 +1255,18 @@ describe("L12G-FOLLOWUP-WARDING-BOND-LINKED-EFFECT-RUNTIME deterministic Warding
     const cast = castWardingBond(
       battleRuntimeSessionForTest({ ...session, state }),
     );
-    expect(requireCombatant(cast, spellTargetId).activeEffects).toEqual([
-      expect.objectContaining({
-        kind: "damageResistance",
-        sourceProcedureRef: unrelatedSource,
-        damageType: "cold",
-      }),
-      expect.objectContaining({ kind: "wardingBond" }),
-    ]);
+    const effects = requireCombatant(cast, spellTargetId).activeEffects;
+    expect(effects).toHaveLength(2);
+    expect(effects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "damageResistance",
+          sourceProcedureRef: unrelatedSource,
+          damageType: "cold",
+        }),
+        expect.objectContaining({ kind: "wardingBond" }),
+      ]),
+    );
   });
 });
 

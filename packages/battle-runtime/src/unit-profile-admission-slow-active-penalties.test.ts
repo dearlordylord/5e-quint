@@ -837,39 +837,51 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     );
     const state: BattleState = {
       ...base.state,
-      combatants: new Map(base.state.combatants).set(spellTargetId, {
-        ...target,
-        activeEffects: [
-          {
-            kind: "slowActivePenalties" as const,
+      combatants: new Map(base.state.combatants)
+        .set(spellCasterId, {
+          ...requireCombatant(base.state, spellCasterId),
+          concentration: {
             sourceProcedureRef: act.subject.procedureRef,
-            sourceCombatantId: spellCasterId,
-            save: {
-              ability: "wis" as const,
-              dc: { kind: "caster_spell_save_dc" as const },
-            },
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: spellCasterId,
-              durationTicks: elapsedTimeTicks(10),
-            },
+            effectKind: "spellEffect",
           },
-          {
-            kind: "slowActivePenalties" as const,
+        })
+        .set(spellTargetId, {
+          ...target,
+          concentration: {
             sourceProcedureRef: unrelatedSource,
-            sourceCombatantId: spellCasterId,
-            save: {
-              ability: "wis" as const,
-              dc: { kind: "caster_spell_save_dc" as const },
-            },
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: spellCasterId,
-              durationTicks: elapsedTimeTicks(10),
-            },
+            effectKind: "spellEffect",
           },
-        ],
-      }),
+          activeEffects: [
+            {
+              kind: "slowActivePenalties" as const,
+              sourceProcedureRef: act.subject.procedureRef,
+              sourceCombatantId: spellCasterId,
+              save: {
+                ability: "wis" as const,
+                dc: { kind: "caster_spell_save_dc" as const },
+              },
+              expiresAt: {
+                kind: "concentration" as const,
+                combatantId: spellCasterId,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+            {
+              kind: "slowActivePenalties" as const,
+              sourceProcedureRef: unrelatedSource,
+              sourceCombatantId: spellTargetId,
+              save: {
+                ability: "wis" as const,
+                dc: { kind: "caster_spell_save_dc" as const },
+              },
+              expiresAt: {
+                kind: "concentration" as const,
+                combatantId: spellTargetId,
+                durationTicks: elapsedTimeTicks(10),
+              },
+            },
+          ],
+        }),
     };
     const resolved = resolveBattleSubject({
       state,
@@ -884,18 +896,23 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Slow recast to resolve.");
     }
-    expect(
-      requireCombatant(resolved.state, spellTargetId).activeEffects,
-    ).toEqual([
-      expect.objectContaining({
-        kind: "slowActivePenalties",
-        sourceProcedureRef: unrelatedSource,
-      }),
-      expect.objectContaining({
-        kind: "slowActivePenalties",
-        sourceProcedureRef: act.subject.procedureRef,
-      }),
-    ]);
+    const effects = requireCombatant(
+      resolved.state,
+      spellTargetId,
+    ).activeEffects;
+    expect(effects).toHaveLength(2);
+    expect(effects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "slowActivePenalties",
+          sourceProcedureRef: unrelatedSource,
+        }),
+        expect.objectContaining({
+          kind: "slowActivePenalties",
+          sourceProcedureRef: act.subject.procedureRef,
+        }),
+      ]),
+    );
   });
 });
 

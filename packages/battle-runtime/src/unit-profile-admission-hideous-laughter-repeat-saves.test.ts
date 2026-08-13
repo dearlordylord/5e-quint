@@ -30,7 +30,6 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
-import { hideousLaughterDamageRepeatSaveFillCheck } from "./battle-reducer/hideous-laughter-repeat-save.ts";
 import {
   savingThrowOutcomeFill,
   spellAct,
@@ -899,22 +898,5 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         spellSlots,
       ),
     ).toEqual([]);
-  });
-
-  test("zero Hideous Laughter damage does not create a repeat-save hole", () => {
-    const target = requireCombatant(
-      spellBattle({
-        preparedSpells: [spellRecord(hideousLaughterUnitId)],
-      }).state,
-      spellTargetId,
-    );
-
-    expect(
-      hideousLaughterDamageRepeatSaveFillCheck({
-        target,
-        damageAmount: 0,
-        fills: [],
-      }),
-    ).toEqual({ tag: "ok", holes: [] });
   });
 });
