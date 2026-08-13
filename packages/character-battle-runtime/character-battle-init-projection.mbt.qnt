@@ -7,6 +7,7 @@ module characterBattleInitProjectionMbt {
     | BattleInitProjectionInit
     | BattleInitProjectionSheetHitPointsArmorClassConditionsAndProfiles
     | BattleInitProjectionSheetSpellcastingAndMetamagic
+    | BattleInitProjectionRuntimeDetachedSpellChoice
     | BattleInitProjectionPurePactMagicSlotProjection
     | BattleInitProjectionMixedSpellAndPactSlotInitRejected
     | BattleInitProjectionBuildMaximumAboveBuildMaximumRejected
@@ -27,6 +28,10 @@ module characterBattleInitProjectionMbt {
     spellLevel3Expended: int,
     passiveArmorClassProfileCount: int,
     metamagicKnownOptions: int,
+    selectedCantripCount: int,
+    projectedCantripCount: int,
+    selectedLeveledSpellCount: int,
+    projectedLeveledSpellCount: int,
   }
 
   type BattleInitProjectionState = {
@@ -54,6 +59,10 @@ module characterBattleInitProjectionMbt {
     spellLevel3Expended: 0,
     passiveArmorClassProfileCount: 0,
     metamagicKnownOptions: 0,
+    selectedCantripCount: 0,
+    projectedCantripCount: 0,
+    selectedLeveledSpellCount: 0,
+    projectedLeveledSpellCount: 0,
   }
 
   action recordProjection(
@@ -120,18 +129,18 @@ module characterBattleInitProjectionMbt {
   }
 
   action doRejectBuildMaximumAboveBuildMaximum = all {
-    qState.replayIndex == 4,
+    qState.replayIndex == 5,
     recordProjection(
       BattleInitProjectionBuildMaximumAboveBuildMaximumRejected,
       false,
       "Character battle initialization max HP exceeds build-derived max HP.",
       emptyProjectionFacts,
-      5,
+      6,
     ),
   }
 
   action doProjectPurePactMagicSlot = all {
-    qState.replayIndex == 2,
+    qState.replayIndex == 3,
     recordProjection(
       BattleInitProjectionPurePactMagicSlotProjection,
       true,
@@ -142,35 +151,55 @@ module characterBattleInitProjectionMbt {
         .with("maxHp", 9)
         .with("armorClass", 12)
         .with("spellLevel1Count", 1),
-      3,
+      4,
     ),
   }
 
   action doRejectMixedSpellAndPactSlotInit = all {
-    qState.replayIndex == 3,
+    qState.replayIndex == 4,
     recordProjection(
       BattleInitProjectionMixedSpellAndPactSlotInitRejected,
       false,
       "Battle handoff cannot project mixed Spell Slot and Pact Slot state without source-distinct battle slots.",
       emptyProjectionFacts,
-      4,
+      5,
+    ),
+  }
+
+  action doProjectRuntimeDetachedSpellChoice = all {
+    qState.replayIndex == 2,
+    recordProjection(
+      BattleInitProjectionRuntimeDetachedSpellChoice,
+      true,
+      "none",
+      emptyProjectionFacts
+        .with("characterIdentity", "character:battle-init-runtime-detached-spell")
+        .with("currentHp", 7)
+        .with("maxHp", 7)
+        .with("armorClass", 12)
+        .with("selectedCantripCount", 2)
+        .with("projectedCantripCount", 1)
+        .with("selectedLeveledSpellCount", 1)
+        .with("projectedLeveledSpellCount", 0),
+      3,
     ),
   }
 
   action doRejectStableRecoveryProgressDuringInit = all {
-    qState.replayIndex == 5,
+    qState.replayIndex == 6,
     recordProjection(
       BattleInitProjectionStableRecoveryProgressDuringInitRejected,
       false,
       "Battle handoff cannot preserve in-progress Stable recovery timers.",
       emptyProjectionFacts,
-      6,
+      7,
     ),
   }
 
   action step = any {
     doProjectSheetHitPointsArmorClassConditionsAndProfiles,
     doProjectSheetSpellcastingAndMetamagic,
+    doProjectRuntimeDetachedSpellChoice,
     doProjectPurePactMagicSlot,
     doRejectMixedSpellAndPactSlotInit,
     doRejectBuildMaximumAboveBuildMaximum,

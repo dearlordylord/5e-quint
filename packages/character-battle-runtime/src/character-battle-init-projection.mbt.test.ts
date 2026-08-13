@@ -22,9 +22,9 @@ import {
 import {
   characterSheetId,
   convertFontOfMagicSorceryPointsToSpellSlot,
-  createFreshCharacterSheet as createFreshCharacterSheetCore,
+  rebuildCharacterSheet as rebuildCharacterSheetCore,
   type CharacterSheet,
-  type CharacterSheetInput,
+  type CharacterSheetRebuildInput,
 } from "@dnd/character-sheet-runtime";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -62,6 +62,7 @@ const battleInitProjectionScenarios = [
   "init",
   "sheet-hit-points-armor-class-conditions-and-profiles",
   "sheet-spellcasting-and-metamagic",
+  "runtime-detached-spell-choice",
   "pure-pact-magic-slot-projection",
   "mixed-spell-and-pact-slot-init-rejected",
   "build-maximum-above-build-maximum-rejected",
@@ -76,6 +77,8 @@ const battleInitProjectionScenarioByVariant = {
     "sheet-hit-points-armor-class-conditions-and-profiles",
   BattleInitProjectionSheetSpellcastingAndMetamagic:
     "sheet-spellcasting-and-metamagic",
+  BattleInitProjectionRuntimeDetachedSpellChoice:
+    "runtime-detached-spell-choice",
   BattleInitProjectionPurePactMagicSlotProjection:
     "pure-pact-magic-slot-projection",
   BattleInitProjectionMixedSpellAndPactSlotInitRejected:
@@ -104,6 +107,10 @@ type BattleInitProjection = {
   readonly spellLevel3Expended: number;
   readonly passiveArmorClassProfileCount: number;
   readonly metamagicKnownOptions: number;
+  readonly selectedCantripCount: number;
+  readonly projectedCantripCount: number;
+  readonly selectedLeveledSpellCount: number;
+  readonly projectedLeveledSpellCount: number;
   readonly replayIndex: number;
 };
 
@@ -118,6 +125,7 @@ const driverSchema = {
   init: {},
   doProjectSheetHitPointsArmorClassConditionsAndProfiles: {},
   doProjectSheetSpellcastingAndMetamagic: {},
+  doProjectRuntimeDetachedSpellChoice: {},
   doProjectPurePactMagicSlot: {},
   doRejectMixedSpellAndPactSlotInit: {},
   doRejectBuildMaximumAboveBuildMaximum: {},
@@ -175,6 +183,9 @@ function createBattleInitProjectionDriver() {
       doProjectSheetSpellcastingAndMetamagic: () => {
         projection = sheetSpellcastingAndMetamagicProjection();
       },
+      doProjectRuntimeDetachedSpellChoice: () => {
+        projection = runtimeDetachedSpellChoiceProjection();
+      },
       doProjectPurePactMagicSlot: () => {
         projection = purePactMagicSlotProjection();
       },
@@ -196,7 +207,7 @@ function createBattleInitProjectionDriver() {
 function sheetHitPointsArmorClassConditionsAndProfilesProjection(): BattleInitProjection {
   const combatantIdValue = combatantId("combatant:battle-init-fighter");
   const sheet = expectRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheet({
       characterId: characterSheetId("character:battle-init-fighter"),
       build: defenseBuild({ wearingArmor: true }),
       hitPointMaximumReduction: Hp(2),
@@ -220,7 +231,7 @@ function sheetHitPointsArmorClassConditionsAndProfilesProjection(): BattleInitPr
 
 function sheetSpellcastingAndMetamagicProjection(): BattleInitProjection {
   const sheet = expectRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheet({
       characterId: characterSheetId("character:battle-init-sorcerer"),
       build: sorcererMetamagicBuild(),
       currentHp: Hp(24),
@@ -252,7 +263,7 @@ function sheetSpellcastingAndMetamagicProjection(): BattleInitProjection {
 
 function purePactMagicSlotProjection(): BattleInitProjection {
   const sheet = expectRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheet({
       characterId: characterSheetId("character:battle-init-warlock"),
       build: warlockPactMagicBuild(),
       currentHp: Hp(8),
@@ -267,15 +278,57 @@ function purePactMagicSlotProjection(): BattleInitProjection {
   });
   return projectionFromCombatant({
     outcome: "pure-pact-magic-slot-projection",
-    replayIndex: 3,
+    replayIndex: 4,
     combatant,
   });
+}
+
+function runtimeDetachedSpellChoiceProjection(): BattleInitProjection {
+  const build = wizardRuntimeDetachedSpellChoiceBuild();
+  const sheet = expectRight(
+    rebuildCharacterSheet({
+      characterId: characterSheetId(
+        "character:battle-init-runtime-detached-spell",
+      ),
+      build,
+      currentHp: Hp(7),
+      tempHp: Hp(0),
+      unitLibrary,
+    }),
+  );
+  const projection = projectCharacterBattle({
+    battleIdText: "battle:init-runtime-detached-spell",
+    combatantId: combatantId("combatant:battle-init-runtime-detached-spell"),
+    sheet,
+  });
+  return {
+    ...projectionFromCombatant({
+      outcome: "runtime-detached-spell-choice",
+      replayIndex: 3,
+      combatant: projection.combatant,
+    }),
+    selectedCantripCount:
+      build.spellcasting?.sources.flatMap((source) => source.cantrips).length ??
+      0,
+    projectedCantripCount:
+      projection.init.creatureInit.kind === "character"
+        ? (projection.init.creatureInit.spellcasting?.cantrips.length ?? 0)
+        : 0,
+    selectedLeveledSpellCount:
+      build.spellcasting?.sources.flatMap((source) => source.preparedSpells)
+        .length ?? 0,
+    projectedLeveledSpellCount:
+      projection.init.creatureInit.kind === "character"
+        ? (projection.init.creatureInit.spellcasting?.preparedSpells.length ??
+          0)
+        : 0,
+  };
 }
 
 function rejectMixedSpellAndPactSlotInitProjection(): BattleInitProjection {
   const result = characterSheetBattleInit({
     sheet: expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheet({
         characterId: characterSheetId("character:battle-init-mixed-slots"),
         build: mixedSpellAndPactSlotBuild(),
         currentHp: Hp(8),
@@ -295,7 +348,7 @@ function rejectMixedSpellAndPactSlotInitProjection(): BattleInitProjection {
     outcome: "mixed-spell-and-pact-slot-init-rejected",
     accepted: Either.isRight(result),
     message: Either.isLeft(result) ? result.left.message : "none",
-    replayIndex: 4,
+    replayIndex: 5,
   });
 }
 
@@ -314,14 +367,14 @@ function rejectBuildMaximumAboveBuildMaximumProjection(): BattleInitProjection {
     outcome: "build-maximum-above-build-maximum-rejected",
     accepted: Either.isRight(result),
     message: Either.isLeft(result) ? result.left.message : "none",
-    replayIndex: 5,
+    replayIndex: 6,
   });
 }
 
 function rejectStableRecoveryProgressDuringInitProjection(): BattleInitProjection {
   const result = characterSheetBattleInit({
     sheet: expectRight(
-      createFreshCharacterSheet({
+      rebuildCharacterSheet({
         characterId: characterSheetId("character:stable-recovery-init"),
         build: defenseBuild({ wearingArmor: true }),
         currentHp: Hp(0),
@@ -347,7 +400,7 @@ function rejectStableRecoveryProgressDuringInitProjection(): BattleInitProjectio
     outcome: "stable-recovery-progress-during-init-rejected",
     accepted: Either.isRight(result),
     message: Either.isLeft(result) ? result.left.message : "none",
-    replayIndex: 6,
+    replayIndex: 7,
   });
 }
 
@@ -356,6 +409,14 @@ function startCharacterBattle(input: {
   readonly combatantId: ReturnType<typeof combatantId>;
   readonly sheet: CharacterSheet;
 }): CharacterBattleCombatant {
+  return projectCharacterBattle(input).combatant;
+}
+
+function projectCharacterBattle(input: {
+  readonly battleIdText: string;
+  readonly combatantId: ReturnType<typeof combatantId>;
+  readonly sheet: CharacterSheet;
+}) {
   const characterInit = expectRight(
     characterSheetBattleInit({
       sheet: input.sheet,
@@ -383,7 +444,7 @@ function startCharacterBattle(input: {
   if (!isCharacterBattleCombatant(combatant)) {
     throw new Error("Expected character-origin battle combatant.");
   }
-  return combatant;
+  return { combatant, init: characterInit };
 }
 
 function isCharacterBattleCombatant(
@@ -422,6 +483,8 @@ function projectionFromCombatant(input: {
     ),
     metamagicKnownOptions:
       input.combatant.origin.metamagic?.knownOptions.length ?? 0,
+    selectedCantripCount: 0,
+    projectedCantripCount: 0,
     replayIndex: input.replayIndex,
   });
 }
@@ -453,12 +516,15 @@ function supportProfileKindCount(
 }
 
 type CharacterSheetTestInput = Omit<
-  CharacterSheetInput,
-  "conditions" | "hitPointMaximumReduction" | "spellSlotExpenditures"
+  CharacterSheetRebuildInput,
+  | "companion"
+  | "conditions"
+  | "hitPointMaximumReduction"
+  | "spellSlotExpenditures"
 > &
   Partial<
     Pick<
-      CharacterSheetInput,
+      CharacterSheetRebuildInput,
       | "conditions"
       | "hitPointMaximumReduction"
       | "spellSlotExpenditures"
@@ -466,8 +532,9 @@ type CharacterSheetTestInput = Omit<
     >
   >;
 
-function createFreshCharacterSheet(input: CharacterSheetTestInput) {
-  return createFreshCharacterSheetCore({
+function rebuildCharacterSheet(input: CharacterSheetTestInput) {
+  return rebuildCharacterSheetCore({
+    companion: { tag: "none" },
     conditions: [],
     hitPointMaximumReduction: Hp(0),
     ...input,
@@ -595,6 +662,49 @@ function sorcererMetamagicBuild(): CharacterBuild {
   };
 }
 
+function wizardRuntimeDetachedSpellChoiceBuild(): CharacterBuild {
+  return {
+    progression: {
+      startingClass: classUnitId(authoredUnitId("class_wizard")),
+      advancements: [],
+    },
+    background: authoredUnitId("background_soldier"),
+    species: authoredUnitId("species_orc"),
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: 8,
+        dex: 14,
+        con: 13,
+        int: 16,
+        wis: 10,
+        cha: 12,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: [],
+    equipment: { owned: [], loadout: {} },
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: authoredUnitId("class_wizard"),
+          spellcastingAbility: "int",
+          cantrips: [
+            authoredUnitId("true_strike"),
+            authoredUnitId("mage_hand"),
+          ],
+          spellbook: [authoredUnitId("unseen_servant")],
+          preparedSpells: [authoredUnitId("unseen_servant")],
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {},
+    },
+  };
+}
+
 function warlockPactMagicBuild(): CharacterBuild {
   return {
     progression: {
@@ -708,6 +818,10 @@ function projectFromParts(
     spellLevel3Expended: input.spellLevel3Expended ?? 0,
     passiveArmorClassProfileCount: input.passiveArmorClassProfileCount ?? 0,
     metamagicKnownOptions: input.metamagicKnownOptions ?? 0,
+    selectedCantripCount: input.selectedCantripCount ?? 0,
+    projectedCantripCount: input.projectedCantripCount ?? 0,
+    selectedLeveledSpellCount: input.selectedLeveledSpellCount ?? 0,
+    projectedLeveledSpellCount: input.projectedLeveledSpellCount ?? 0,
     replayIndex: input.replayIndex,
   };
 }
@@ -764,6 +878,22 @@ function normalizeBattleInitProjectionQuintState(
     metamagicKnownOptions: numberFromQuintInt(
       facts["metamagicKnownOptions"],
       "facts.metamagicKnownOptions",
+    ),
+    selectedCantripCount: numberFromQuintInt(
+      facts["selectedCantripCount"],
+      "facts.selectedCantripCount",
+    ),
+    projectedCantripCount: numberFromQuintInt(
+      facts["projectedCantripCount"],
+      "facts.projectedCantripCount",
+    ),
+    selectedLeveledSpellCount: numberFromQuintInt(
+      facts["selectedLeveledSpellCount"],
+      "facts.selectedLeveledSpellCount",
+    ),
+    projectedLeveledSpellCount: numberFromQuintInt(
+      facts["projectedLeveledSpellCount"],
+      "facts.projectedLeveledSpellCount",
     ),
     replayIndex: numberFromQuintInt(state["replayIndex"], "qState.replayIndex"),
   };

@@ -6367,7 +6367,9 @@ describe("Character Build battle projection", () => {
       }),
     ).toMatchObject({
       _tag: "Left",
-      left: { message: expect.stringContaining("Unknown Unit") },
+      left: {
+        message: expect.stringContaining("Unknown Character Build Unit"),
+      },
     });
     expect(
       battleCreatureInitFromCharacterBuild({
@@ -6386,7 +6388,9 @@ describe("Character Build battle projection", () => {
       }),
     ).toMatchObject({
       _tag: "Left",
-      left: { message: expect.stringContaining("Unknown Unit") },
+      left: {
+        message: expect.stringContaining("Unknown Character Build Unit"),
+      },
     });
     expect(
       battleCreatureInitFromCharacterBuild({
@@ -6516,6 +6520,33 @@ describe("Character Build battle projection", () => {
       _tag: "Left",
       left: { message: expect.stringContaining("Unknown Unit") },
     });
+    const missingCantripId = authoredUnitId("synthetic:missing-cantrip");
+    const missingPreparedSpellId = authoredUnitId(
+      "synthetic:missing-prepared-spell",
+    );
+    const missingBothSpellKinds = characterSpellcasting({
+      build: {
+        ...wizard,
+        spellcasting: {
+          ...wizardSpellcasting,
+          sources: [
+            {
+              ...wizardSource,
+              cantrips: [missingCantripId],
+              preparedSpells: [missingPreparedSpellId],
+            },
+          ],
+        },
+      },
+      unitLibrary,
+    });
+    expect(missingBothSpellKinds).toMatchObject({ _tag: "Left" });
+    if (Either.isLeft(missingBothSpellKinds)) {
+      expect(missingBothSpellKinds.left.message).toContain(missingCantripId);
+      expect(missingBothSpellKinds.left.message).toContain(
+        missingPreparedSpellId,
+      );
+    }
     expect(
       battleCreatureInitFromCharacterBuild({
         combatantId: combatantId("missing-spellcasting-unit"),
@@ -6538,7 +6569,9 @@ describe("Character Build battle projection", () => {
       }),
     ).toMatchObject({
       _tag: "Left",
-      left: { message: expect.stringContaining("Unknown Unit") },
+      left: {
+        message: expect.stringContaining("Unknown Character Build Unit"),
+      },
     });
 
     const missingArmorUnitId = authoredUnitId(
@@ -6619,6 +6652,45 @@ describe("Character Build battle projection", () => {
     ).toMatchObject({
       _tag: "Left",
       left: { message: expect.stringContaining("class Unit") },
+    });
+  });
+
+  test("omits catalog-declared spell choices without installed Spell Definitions", () => {
+    const wizard = trueStrikeWizardBuild();
+    const wizardSpellcasting = wizard.spellcasting;
+    if (wizardSpellcasting === undefined) {
+      throw new Error("Expected Wizard spellcasting fixture.");
+    }
+    const [wizardSource] = wizardSpellcasting.sources;
+
+    expect(
+      characterSpellcasting({
+        build: {
+          ...wizard,
+          spellcasting: {
+            ...wizardSpellcasting,
+            sources: [
+              {
+                ...wizardSource,
+                cantrips: [
+                  authoredUnitId("true_strike"),
+                  authoredUnitId("mage_hand"),
+                ],
+                spellbook: [authoredUnitId("unseen_servant")],
+                preparedSpells: [authoredUnitId("unseen_servant")],
+              },
+            ],
+          },
+        },
+        unitLibrary,
+      }),
+    ).toMatchObject({
+      _tag: "Right",
+      right: {
+        cantrips: [expect.objectContaining({ id: "true_strike" })],
+        preparedSpells: [],
+        spellbookRitualSpellAccesses: [],
+      },
     });
   });
 
@@ -8807,7 +8879,9 @@ describe("Character Build battle projection", () => {
       }),
     ).toMatchObject({
       _tag: "Left",
-      left: { message: expect.stringContaining("Unknown Unit") },
+      left: {
+        message: expect.stringContaining("Unknown Character Build Unit"),
+      },
     });
   });
 

@@ -16,7 +16,10 @@ projections before any sheet state is written.
 Owned boundary functions:
 
 - `characterSheetBattleInit` projects an existing Character Sheet plus caller
-  battle facts into battle-runtime creature initialization.
+  battle facts into battle-runtime creature initialization. Canonical
+  class-spell-list selections without an installed Spell Definition remain on
+  the Character Sheet but are omitted from the battle spellcasting projection;
+  unknown identities outside that source spell list are rejected.
 - `battleCreatureInitFromCharacterBuild` accepts an `armorClassBaseChoice` when
   the build has multiple available class-feature AC formulas; the choice is
   forwarded to Character Sheet AC projection before battle state is created.

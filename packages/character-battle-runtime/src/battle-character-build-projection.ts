@@ -29,7 +29,6 @@ import {
   characterCreationIssueMessage,
   characterBuildFeatureUnitIds,
   characterBuildSpellcastingSlotCapacity,
-  characterBuildUnitRefs,
   classUnitIdToClassName,
   computeTotalLevel,
   characterEquipmentItemSourceFromId,
@@ -75,6 +74,11 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
+import {
+  classSpellChoiceIsRuntimeDetached,
+  omitRuntimeDetachedClassSpellChoices,
+  type ClassSpellChoiceKind,
+} from "./class-spell-choice-projection.ts";
 
 export type BattleCreatureInitIssue = {
   readonly tag: "battleCreatureInitIssue";
@@ -95,8 +99,11 @@ export function characterArmorClassState(input: {
   const state = characterSheetArmorClassState(input);
   if (Either.isLeft(state)) return battleCreatureInitIssue(state.left.message);
   const bonuses = [...state.right.bonuses];
-  for (const ref of characterBuildUnitRefs(input.build, input.unitLibrary)) {
-    const unit = getRequiredUnit(input.unitLibrary, ref.unitId);
+  for (const featureUnitId of characterBuildFeatureUnitIds(
+    input.build,
+    input.unitLibrary,
+  )) {
+    const unit = getRequiredUnit(input.unitLibrary, featureUnitId);
     if (Either.isLeft(unit)) {
       return battleCreatureInitIssue(unit.left.message);
     }
@@ -600,8 +607,11 @@ function martialArtsAttackProjectionForBuild(input: {
     className: entry.className,
     level: classLevel(entry.level),
   }));
-  for (const ref of characterBuildUnitRefs(input.build, input.unitLibrary)) {
-    const unit = getRequiredUnit(input.unitLibrary, ref.unitId);
+  for (const featureUnitId of characterBuildFeatureUnitIds(
+    input.build,
+    input.unitLibrary,
+  )) {
+    const unit = getRequiredUnit(input.unitLibrary, featureUnitId);
     if (Either.isLeft(unit)) {
       return battleCreatureInitIssue(unit.left.message);
     }
@@ -789,19 +799,23 @@ export function characterSpellcasting(input: {
   if (Either.isLeft(sources)) {
     return battleCreatureInitIssue(sources.left.message);
   }
-  const cantrips = spellRecordsForIds(
+  const cantrips = battleProjectedSpellRecordsForIds({
     unitLibrary,
-    sources.right.sources.flatMap((source) => source.cantrips),
-  );
-  if (Either.isLeft(cantrips)) {
-    return battleCreatureInitIssue(cantrips.left.message);
-  }
-  const preparedSpells = spellRecordsForIds(
+    sourceClassName: sources.right.sourceClassName,
+    spellIds: sources.right.sources.flatMap((source) => source.cantrips),
+    selectionKind: "cantrip",
+  });
+  const preparedSpells = battleProjectedSpellRecordsForIds({
     unitLibrary,
-    sources.right.sources.flatMap((source) => source.preparedSpells),
+    sourceClassName: sources.right.sourceClassName,
+    spellIds: sources.right.sources.flatMap((source) => source.preparedSpells),
+    selectionKind: "leveledSpell",
+  });
+  const spellRecordIssues = [cantrips, preparedSpells].flatMap((projection) =>
+    Either.isLeft(projection) ? [projection.left.message] : [],
   );
-  if (Either.isLeft(preparedSpells)) {
-    return battleCreatureInitIssue(preparedSpells.left.message);
+  if (Either.isLeft(cantrips) || Either.isLeft(preparedSpells)) {
+    return battleCreatureInitIssue(spellRecordIssues.join("; "));
   }
   const featurePreparedSpells = featurePreparedSpellAccess({
     build,
@@ -879,7 +893,43 @@ function spellbookRitualSpellAccess(input: {
   readonly CharacterBattleSpellbookRitualSpellAccessInit[],
   BattleCreatureInitIssue
 > {
-  const accesses = characterSheetSpellbookRitualAccessesForBuild(input);
+  const projectSource = (
+    source: CharacterBuildSpellcastingSource,
+  ): CharacterBuildSpellcastingSource => {
+    const sourceClassName = classUnitIdToClassName({
+      unitLibrary: input.unitLibrary,
+      classUnitId: source.sourceUnitId,
+    });
+    return Either.isLeft(sourceClassName)
+      ? source
+      : {
+          ...source,
+          spellbook: omitRuntimeDetachedClassSpellChoices({
+            unitLibrary: input.unitLibrary,
+            sourceClassName: sourceClassName.right,
+            spellIds: source.spellbook,
+            choiceKind: "leveledSpell",
+          }),
+        };
+  };
+  const spellcasting = input.build.spellcasting;
+  const ritualProjectionBuild =
+    spellcasting === undefined
+      ? input.build
+      : {
+          ...input.build,
+          spellcasting: {
+            ...spellcasting,
+            sources: [
+              projectSource(spellcasting.sources[0]),
+              ...spellcasting.sources.slice(1).map(projectSource),
+            ] as const,
+          },
+        };
+  const accesses = characterSheetSpellbookRitualAccessesForBuild({
+    ...input,
+    build: ritualProjectionBuild,
+  });
   return Either.isLeft(accesses)
     ? battleCreatureInitIssue(accesses.left.message)
     : Either.right(
@@ -1193,6 +1243,41 @@ function spellRecordsForIds<const UnitIds extends readonly UnitRecord["id"][]>(
   return Either.right(
     spells as { readonly [Index in keyof UnitIds]: SpellRecord },
   );
+}
+
+function battleProjectedSpellRecordsForIds(input: {
+  readonly unitLibrary: UnitCatalog;
+  readonly sourceClassName: ClassName;
+  readonly spellIds: readonly UnitRecord["id"][];
+  readonly selectionKind: ClassSpellChoiceKind;
+}): Either.Either<readonly SpellRecord[], BattleCreatureInitIssue> {
+  const spells: SpellRecord[] = [];
+  const issues: string[] = [];
+  for (const spellId of input.spellIds) {
+    const unit = input.unitLibrary.getUnit(spellId);
+    if (Option.isNone(unit)) {
+      if (
+        classSpellChoiceIsRuntimeDetached({
+          unitLibrary: input.unitLibrary,
+          sourceClassName: input.sourceClassName,
+          spellId,
+          choiceKind: input.selectionKind,
+        })
+      ) {
+        continue;
+      }
+      issues.push(`Unknown Unit id: ${spellId}`);
+      continue;
+    }
+    if (unit.value.kind !== "spell") {
+      issues.push(`Expected spell Unit: ${spellId}`);
+      continue;
+    }
+    spells.push(unit.value);
+  }
+  return issues.length === 0
+    ? Either.right(spells)
+    : battleCreatureInitIssue(issues.join("; "));
 }
 
 export function getRequiredUnit(

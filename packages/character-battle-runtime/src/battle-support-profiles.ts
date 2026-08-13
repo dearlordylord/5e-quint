@@ -8,6 +8,7 @@ import {
 } from "@dnd/battle-runtime";
 import {
   characterBuildUnitRefs,
+  classUnitIdToClassName,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
@@ -19,6 +20,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
+import { omitRuntimeDetachedClassSpellChoices } from "./class-spell-choice-projection.ts";
 
 // KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey unit-feature.passive-damage-resistance unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
@@ -78,7 +80,7 @@ export function characterBattleSupportProjection(
     ] as ReadonlyNonEmptyArray<BattleSupportProfileIssue>);
   }
   const buildUnitRefs = traverseValidation(
-    characterBuildUnitRefs(build, unitLibrary),
+    characterBattleSupportUnitRefs(build, unitLibrary),
     (unitRef) =>
       withBattleSupportProfiles(
         unitRef,
@@ -123,6 +125,61 @@ export function characterBattleSupportProjection(
     ]),
     sourceFacts: sourceFacts.right,
   });
+}
+
+function characterBattleSupportUnitRefs(
+  build: CharacterBuild,
+  unitLibrary: UnitCatalog,
+): ReturnType<typeof characterBuildUnitRefs> {
+  const spellcasting = build.spellcasting;
+  if (spellcasting === undefined) {
+    return characterBuildUnitRefs(build, unitLibrary);
+  }
+  const projectSource = (
+    source: (typeof spellcasting.sources)[number],
+  ): (typeof spellcasting.sources)[number] => {
+    const className = classUnitIdToClassName({
+      classUnitId: source.sourceUnitId,
+      unitLibrary,
+    });
+    if (Either.isLeft(className)) {
+      return source;
+    }
+    return {
+      ...source,
+      cantrips: omitRuntimeDetachedClassSpellChoices({
+        unitLibrary,
+        sourceClassName: className.right,
+        spellIds: source.cantrips,
+        choiceKind: "cantrip",
+      }),
+      spellbook: omitRuntimeDetachedClassSpellChoices({
+        unitLibrary,
+        sourceClassName: className.right,
+        spellIds: source.spellbook,
+        choiceKind: "leveledSpell",
+      }),
+      preparedSpells: omitRuntimeDetachedClassSpellChoices({
+        unitLibrary,
+        sourceClassName: className.right,
+        spellIds: source.preparedSpells,
+        choiceKind: "leveledSpell",
+      }),
+    };
+  };
+  return characterBuildUnitRefs(
+    {
+      ...build,
+      spellcasting: {
+        ...spellcasting,
+        sources: [
+          projectSource(spellcasting.sources[0]),
+          ...spellcasting.sources.slice(1).map(projectSource),
+        ],
+      },
+    },
+    unitLibrary,
+  );
 }
 
 export type BattleSupportProfileIssue = {

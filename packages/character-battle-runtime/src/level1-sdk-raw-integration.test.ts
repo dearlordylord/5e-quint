@@ -82,7 +82,10 @@ import {
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
 
-import { settleCharacterSheetFromBattle } from "./index.ts";
+import {
+  characterSpellcasting,
+  settleCharacterSheetFromBattle,
+} from "./index.ts";
 
 import {
   attackRollFill,
@@ -914,6 +917,61 @@ describe("level 1 SDK RAW integration", () => {
       casterId: wizardBurningHandsCasterId,
       spellId: burningHandsSpellId,
     });
+  });
+
+  test("a fresh finalized level-1 Wizard sheet keeps a selected runtime-detached cantrip off the battle spell projection", () => {
+    const wizardBuild = finalizedLevelOneWizardBuild({
+      draftIdText: "draft:l1-sdk-wizard-table-adjudicated-cantrip",
+      expectedBuildLabel: "Wizard table-adjudicated cantrip",
+      cantrips: ["mage_hand", fireBoltSpellId, "ray_of_frost"],
+      spellbook: [
+        "detect_magic",
+        "feather_fall",
+        "mage_armor",
+        magicMissileSpellId,
+        "sleep",
+        "thunderwave",
+      ],
+      preparedSpells: [
+        "detect_magic",
+        "mage_armor",
+        magicMissileSpellId,
+        "sleep",
+      ],
+    });
+
+    expect(wizardBuild.spellcasting?.sources[0]?.cantrips).toEqual([
+      "mage_hand",
+      fireBoltSpellId,
+      "ray_of_frost",
+    ]);
+    expect(
+      requireRight(
+        characterSpellcasting({ build: wizardBuild, unitLibrary }),
+      ).cantrips.map((spell) => spell.id),
+    ).toEqual([fireBoltSpellId, "ray_of_frost"]);
+
+    const wizardSheet = characterSheet({
+      characterIdText: "character:l1-sdk-wizard-table-adjudicated-cantrip",
+      build: wizardBuild,
+      combatantId: fireBoltWizardId,
+      initiative: 20,
+    });
+    const session = battleSessionFromSheets({
+      battleIdText: "battle:l1-sdk-wizard-table-adjudicated-cantrip",
+      characters: [wizardSheet],
+      monsters: [
+        monsterBattleInput(
+          monsterId,
+          10,
+          srdStatBlock(authoredStatBlockId("stat_block_skeleton")),
+        ),
+      ],
+    });
+
+    expect(
+      requireCharacterCombatant(session.state, fireBoltWizardId),
+    ).toBeDefined();
   });
 
   test("Sorcerer and Wizard Thunderwave resolve from level-1 spell access as a self-origin Cube Saving Throw with push and boom facts", () => {
