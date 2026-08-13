@@ -24,6 +24,7 @@ import {
   characterAttackSubjectForTest,
 } from "./battle-runtime.test-support.ts";
 import guidanceInput from "../../surface/content/guidance.json";
+import baneInput from "../../surface/content/bane.json";
 import protectionFromEnergyInput from "../../surface/content/protection_from_energy.json";
 import protectionFromPoisonInput from "../../surface/content/protection_from_poison.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
@@ -617,6 +618,72 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         maybeSpellAct({
           session: spellBattle({ cantrips: [spell], spellSlots: [] }),
           spellId: spell.id,
+        }),
+      ).toBeUndefined();
+    }
+  });
+
+  test("save-gated roll modifier admission rejects unsupported target counts and modifiers", () => {
+    type BanePhaseInput = (typeof baneInput.mechanics.phases)[number];
+    const unsupportedPhaseMutations = {
+      synthetic_save_gated_roll_modifier_missing_target_count: (
+        phase: BanePhaseInput,
+      ) => {
+        const selection = phase.attachment.value.selection;
+        return {
+          ...phase,
+          attachment: {
+            ...phase.attachment,
+            value: {
+              ...phase.attachment.value,
+              selection: {
+                ...selection,
+                count: {
+                  kind: "threshold_tiers",
+                  axis: "slot",
+                  base: 3,
+                  tiers: [{ atLevel: 2, value: 4 }],
+                },
+              },
+            },
+          },
+        };
+      },
+      synthetic_save_gated_roll_modifier_zero_delta: (
+        phase: BanePhaseInput,
+      ) => ({
+        ...phase,
+        onFail: {
+          ...phase.onFail,
+          delta: {
+            kind: "fixed_number" as const,
+            amount: 0,
+            sign: "-" as const,
+          },
+        },
+      }),
+    } as const;
+
+    for (const [id, mutatePhase] of Object.entries(unsupportedPhaseMutations)) {
+      const spell = decodeSpellRecordForTest({
+        ...baneInput,
+        id,
+        name: id,
+        provenance: { kind: "synthetic-test", section: id },
+        mechanics: {
+          ...baneInput.mechanics,
+          phases: baneInput.mechanics.phases.map((phase) => mutatePhase(phase)),
+        },
+      });
+
+      expect(
+        maybeSpellAct({
+          session: spellBattle({
+            preparedSpells: [spell],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+          spellId: spell.id,
+          slotLevel: 1,
         }),
       ).toBeUndefined();
     }

@@ -3,6 +3,7 @@ import { unitId } from "@dnd/shared/game-facts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import type { BattleProcedureExecutionRef } from "./index.ts";
 import aidInput from "../../surface/content/aid.json";
+import falseLifeInput from "../../surface/content/false_life.json";
 import heroismInput from "../../surface/content/heroism.json";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30A false_life longstrider shield_of_faith
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30D heroism
@@ -1500,6 +1501,14 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
         ...delta,
         base: { ...delta.base, dice: 1, dieSize: 4 },
       }),
+      synthetic_max_hp_random_per_level_dice: (delta: AidDeltaInput) => ({
+        ...delta,
+        perLevel: { ...delta.perLevel, dice: 1 },
+      }),
+      synthetic_max_hp_random_per_level_die_size: (delta: AidDeltaInput) => ({
+        ...delta,
+        perLevel: { ...delta.perLevel, dieSize: 4 },
+      }),
     } as const;
 
     for (const [id, mutateDelta] of Object.entries(unsupportedDeltaMutations)) {
@@ -1515,6 +1524,106 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
             effects: phase.effects.map((effect) => ({
               ...effect,
               delta: mutateDelta(effect.delta),
+            })),
+          })),
+        },
+      });
+
+      expect(
+        maybeSpellAct({
+          session: spellBattle({
+            preparedSpells: [spell],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
+          spellId: spell.id,
+          slotLevel: 2,
+        }),
+      ).toBeUndefined();
+    }
+  });
+
+  test("scalar-buff admission rejects synthetic target selections without a supported count", () => {
+    const [phase] = aidInput.mechanics.phases;
+    const selection = phase.attachment.value.selection;
+    const spell = decodeSpellRecordForTest({
+      ...aidInput,
+      id: "synthetic_scalar_buff_missing_target_count",
+      name: "synthetic_scalar_buff_missing_target_count",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic_scalar_buff_missing_target_count",
+      },
+      mechanics: {
+        ...aidInput.mechanics,
+        phases: [
+          {
+            ...phase,
+            attachment: {
+              ...phase.attachment,
+              value: {
+                ...phase.attachment.value,
+                selection: {
+                  ...selection,
+                  count: {
+                    kind: "threshold_tiers",
+                    axis: "slot",
+                    base: 3,
+                    tiers: [{ atLevel: 3, value: 4 }],
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    expect(
+      maybeSpellAct({
+        session: spellBattle({
+          preparedSpells: [spell],
+          spellSlots: [{ spellLevel: 2, count: 1 }],
+        }),
+        spellId: spell.id,
+        slotLevel: 2,
+      }),
+    ).toBeUndefined();
+  });
+
+  test("temporary Hit Point admission rejects unsupported synthetic scaling axes and starts", () => {
+    type FalseLifeAmountInput =
+      (typeof falseLifeInput.mechanics.phases)[number]["effects"][number]["amount"];
+    const unsupportedAmountMutations = {
+      synthetic_temp_hp_character_axis: (amount: FalseLifeAmountInput) => ({
+        ...amount,
+        axis: "character" as const,
+      }),
+      synthetic_temp_hp_wrong_starting_level: (
+        amount: FalseLifeAmountInput,
+      ) => ({
+        ...amount,
+        startingAtLevel: 1,
+      }),
+      synthetic_temp_hp_resource_spent: (_amount: FalseLifeAmountInput) => ({
+        kind: "resource_spent" as const,
+      }),
+    } as const;
+
+    for (const [id, mutateAmount] of Object.entries(
+      unsupportedAmountMutations,
+    )) {
+      const spell = decodeSpellRecordForTest({
+        ...falseLifeInput,
+        id,
+        name: id,
+        provenance: { kind: "synthetic-test", section: id },
+        mechanics: {
+          ...falseLifeInput.mechanics,
+          phases: falseLifeInput.mechanics.phases.map((phase) => ({
+            ...phase,
+            effects: phase.effects.map((effect) => ({
+              ...effect,
+              amount: mutateAmount(effect.amount),
             })),
           })),
         },

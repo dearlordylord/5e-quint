@@ -15,6 +15,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import thaumaturgyInput from "../../surface/content/thaumaturgy.json";
 
 import {
   battleId,
@@ -46,6 +47,9 @@ import {
   type BattleRuntimeSession,
   type BattleState,
 } from "./index.ts";
+import { decodeSpellRecordForTest } from "./unit-profile-admission-spell-record.test-support.ts";
+import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import { maybeSpellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -216,6 +220,72 @@ describe("Thaumaturgy Booming Voice", () => {
         difficultyClass(13),
       ),
     ).not.toHaveProperty("rollMode");
+  });
+
+  test("rejects unsupported synthetic Booming Voice operation, filter, and attachment profiles", () => {
+    type ThaumaturgyEffectInput =
+      (typeof thaumaturgyInput.mechanics.operations)[number]["effect"];
+    const unsupportedEffectMutations = {
+      synthetic_thaumaturgy_numeric_effect: (
+        _effect: ThaumaturgyEffectInput,
+      ) => ({
+        kind: "modify_roll_numeric" as const,
+        delta: {
+          kind: "fixed_number" as const,
+          amount: 1,
+          sign: "+" as const,
+        },
+        on: ["ability_check"] as const,
+      }),
+      synthetic_thaumaturgy_ability_filter_shape: (
+        effect: ThaumaturgyEffectInput,
+      ) => ({
+        ...effect,
+        abilityFilter: {
+          kind: "same_choice_as" as const,
+          holeId: "synthetic_thaumaturgy_ability_choice",
+        },
+      }),
+      synthetic_thaumaturgy_against_self: (effect: ThaumaturgyEffectInput) => ({
+        ...effect,
+        affects: "rolls_against_self" as const,
+      }),
+      synthetic_thaumaturgy_skill_choice: (effect: ThaumaturgyEffectInput) => ({
+        ...effect,
+        skillFilter: {
+          kind: "choice" as const,
+          options: ["intimidation", "persuasion"] as const,
+        },
+      }),
+    } as const;
+
+    for (const [id, mutateEffect] of Object.entries(
+      unsupportedEffectMutations,
+    )) {
+      const spell = decodeSpellRecordForTest({
+        ...thaumaturgyInput,
+        id,
+        name: id,
+        provenance: { kind: "synthetic-test", section: id },
+        mechanics: {
+          ...thaumaturgyInput.mechanics,
+          operations: thaumaturgyInput.mechanics.operations.map(
+            (operation) => ({
+              ...operation,
+              effect: mutateEffect(operation.effect),
+            }),
+          ),
+        },
+      });
+
+      expect(
+        // This goes through the public spell-admission/discovery API.
+        maybeSpellAct({
+          session: spellBattle({ cantrips: [spell] }),
+          spellId: spell.id,
+        }),
+      ).toBeUndefined();
+    }
   });
 });
 
