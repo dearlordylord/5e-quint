@@ -7,6 +7,7 @@
     "../review-preflight.ts",
     "../generate-scenario.ts",
     "../author-scenario-setup.ts",
+    "../author-scenario-characters.ts",
     "../scenario-campaign.ts",
     "scenario-setup-contract.ts",
     "scenario-setup-runtime.ts",
@@ -22,6 +23,16 @@
     "types": ["node"],
     "paths": {
       "@dnd/battle-runtime": ["../../../packages/battle-runtime/src/index.ts"],
+      "@dnd/character-creation-runtime": [
+        "../../../packages/character-creation-runtime/src/index.ts"
+      ],
+      "@dnd/character-battle-runtime": [
+        "../../../packages/character-battle-runtime/src/index.ts"
+      ],
+      "@dnd/character-sheet-runtime": [
+        "../../../packages/character-sheet-runtime/src/index.ts"
+      ],
+      "@dnd/scenario-character-sdk": ["./scenario-character-contract.ts"],
       "@dnd/scenario-setup-sdk": ["./scenario-setup-contract.ts"],
       "@dnd/shared/*": ["../../../packages/shared/src/*"],
       "@dnd/shared-algebras/*": ["../../../packages/shared-algebras/src/*"],

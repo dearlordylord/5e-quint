@@ -1,21 +1,22 @@
 import { spawnSync } from "node:child_process";
-import { constants } from "node:fs";
-import { copyFileSync, existsSync, mkdtempSync, rmSync } from "node:fs";
+import {
+  constants,
+  copyFileSync,
+  existsSync,
+  mkdtempSync,
+  rmSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
-import { Either } from "effect";
+import { Either, Match } from "effect";
 
 import { admittedScenarioIdentity } from "./scenario-admission.ts";
 import {
   consumerPermissionProfileAvailable,
   createConsumerCodexHome,
 } from "./sdk-player/consumer-codex-profile.ts";
-import { buildScenarioSetupDistribution } from "./sdk-player/consumer-distribution.ts";
+import { buildScenarioCharacterDistribution } from "./sdk-player/consumer-distribution.ts";
 import { evaluateScenarioCharacters } from "./sdk-player/scenario-character-runtime.ts";
-import {
-  evaluateScenarioSetup,
-  scenarioSetupStatBlocks,
-} from "./sdk-player/scenario-setup-runtime.ts";
 import {
   currentGitRevision,
   decodeScenarioId,
@@ -30,36 +31,26 @@ async function main(args: readonly string[]): Promise<void> {
   const [scenarioInput, ...unexpected] = args;
   const scenarioId = decodeScenarioId(scenarioInput);
   if (Either.isLeft(scenarioId) || unexpected.length > 0) {
-    fail("Usage: author-scenario-setup.ts <scenario-id>");
+    fail("Usage: author-scenario-characters.ts <scenario-id>");
   }
   const revision = currentGitRevision();
   if (revision.tag === "dirty") {
-    fail("Scenario setup authoring requires a clean Git worktree.");
+    fail("Scenario character authoring requires a clean Git worktree.");
   }
   const scenarioPath = resolve(
     repoRoot,
     `scripts/raw-swarm/sdk-player/scenarios/${scenarioId.right}.md`,
   );
   const reviewPath = `${scenarioPath}.scenario-review.json`;
-  const charactersPath = resolve(
+  const outputPath = resolve(
     repoRoot,
     `scripts/raw-swarm/sdk-player/scenarios/${scenarioId.right}.characters.ts`,
   );
-  const outputPath = resolve(
-    repoRoot,
-    `scripts/raw-swarm/sdk-player/scenarios/${scenarioId.right}.setup.ts`,
-  );
-  if (
-    !existsSync(scenarioPath) ||
-    !existsSync(reviewPath) ||
-    !existsSync(charactersPath)
-  ) {
-    fail(
-      "Scenario setup requires admitted prose, its review, and controller-authored characters.",
-    );
+  if (!existsSync(scenarioPath) || !existsSync(reviewPath)) {
+    fail("Scenario characters require an admitted prose scenario and review.");
   }
   if (existsSync(outputPath)) {
-    fail(`Refusing to overwrite scenario setup: ${outputPath}`);
+    fail(`Refusing to overwrite scenario characters: ${outputPath}`);
   }
   const admission = admittedScenarioIdentity({
     scenarioId: scenarioId.right,
@@ -68,22 +59,13 @@ async function main(args: readonly string[]): Promise<void> {
   });
   if (Either.isLeft(admission)) fail(admission.left);
 
-  const scratch = mkdtempSync(resolve(tmpdir(), "dnd-scenario-setup-"));
+  const scratch = mkdtempSync(resolve(tmpdir(), "dnd-scenario-characters-"));
   const codexHome = createConsumerCodexHome();
   try {
-    const characters = await evaluateScenarioCharacters(charactersPath);
-    if (characters.tag === "invalid") fail(characters.message);
-    if (characters.tag === "obstructed") {
-      fail(`Scenario characters are obstructed: ${characters.obstruction}`);
-    }
-    const statBlocks = scenarioSetupStatBlocks();
-    if (statBlocks.tag === "invalid") fail(statBlocks.message);
-    buildScenarioSetupDistribution({
+    buildScenarioCharacterDistribution({
       destination: scratch,
       scenarioPath,
       scenarioReviewPath: reviewPath,
-      statBlocks: statBlocks.statBlocks,
-      characterObservation: characters.observation,
     });
     const profileAvailable = consumerPermissionProfileAvailable(
       codexHome,
@@ -108,9 +90,9 @@ async function main(args: readonly string[]): Promise<void> {
         "-c",
         'model_reasoning_effort="medium"',
         [
-          "Read SCENARIO_SETUP.md, SCENARIO.md, SCENARIO_REVIEW.json, CHARACTERS.json, PUBLIC_SDK.md, STAT_BLOCKS.json, and the public declarations.",
-          "Edit setup.ts into the closest faithful ordinary TypeScript setup and run its documented typecheck.",
-          "Return an explicit obstruction when the public setup surface cannot represent the scenario; do not invent support.",
+          "Read SCENARIO_CHARACTERS.md, SCENARIO.md, SCENARIO_REVIEW.json, the public SDK READMEs, and declarations.",
+          "Edit characters.ts into one faithful controller-owned ordinary TypeScript character composition.",
+          "Run both documented commands and iterate until the module is ready or returns a precise public-SDK obstruction.",
           "Do not inspect paths outside this scratch consumer.",
         ].join(" "),
       ],
@@ -122,10 +104,12 @@ async function main(args: readonly string[]): Promise<void> {
     );
     if (result.error !== undefined) throw result.error;
     if (result.signal !== null) {
-      fail(`Scenario setup agent stopped by ${result.signal}.`);
+      fail(`Scenario character agent stopped by ${result.signal}.`);
     }
     if (result.status !== 0) {
-      fail(`Scenario setup agent exited with status ${String(result.status)}.`);
+      fail(
+        `Scenario character agent exited with status ${String(result.status)}.`,
+      );
     }
     const typecheck = spawnSync(
       process.execPath,
@@ -135,24 +119,31 @@ async function main(args: readonly string[]): Promise<void> {
     if (typecheck.error !== undefined) throw typecheck.error;
     if (typecheck.signal !== null || typecheck.status !== 0) {
       fail(
-        `Scenario setup did not typecheck:\n${typecheck.stdout}${typecheck.stderr}`,
+        `Scenario characters did not typecheck:\n${typecheck.stdout}${typecheck.stderr}`,
       );
     }
-    const setupPath = resolve(scratch, "setup.ts");
-    const evaluated = await evaluateScenarioSetup(
-      setupPath,
-      characters.characterSheets,
-    );
+    const charactersPath = resolve(scratch, "characters.ts");
+    const evaluated = await evaluateScenarioCharacters(charactersPath);
     if (evaluated.tag === "invalid") fail(evaluated.message);
     const after = currentGitRevision();
     if (after.tag === "dirty" || after.sha !== revision.sha) {
-      fail("Git revision changed during scenario setup authoring.");
+      fail("Git revision changed during scenario character authoring.");
     }
-    copyFileSync(setupPath, outputPath, constants.COPYFILE_EXCL);
+    copyFileSync(charactersPath, outputPath, constants.COPYFILE_EXCL);
     console.log(
-      evaluated.tag === "ready"
-        ? `Authored ready scenario setup: ${outputPath}`
-        : `Authored obstructed scenario setup: ${outputPath}\n${evaluated.obstruction}`,
+      Match.value(evaluated).pipe(
+        Match.when(
+          { tag: "ready" },
+          ({ characterSheets }) =>
+            `Authored ${String(characterSheets.length)} Character Sheets: ${outputPath}`,
+        ),
+        Match.when(
+          { tag: "obstructed" },
+          ({ obstruction }) =>
+            `Authored obstructed scenario characters: ${outputPath}\n${obstruction}`,
+        ),
+        Match.exhaustive,
+      ),
     );
   } finally {
     rmSync(scratch, { recursive: true });

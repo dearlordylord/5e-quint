@@ -29,6 +29,11 @@ const header = {
   replaySupervisorSha256: "b".repeat(64),
   scenarioSha256: "d".repeat(64),
   scenarioReviewSha256: "e".repeat(64),
+  charactersSha256: "f".repeat(64),
+  characterOutcome: "ready",
+  characterSheets: [],
+  characterSheetsSha256: sha256Canonical([]),
+  characterObservation: { characters: "property" },
   setupSha256: "c".repeat(64),
   setupOutcome: "ready",
   initialSession: { step: 0 },
@@ -37,6 +42,32 @@ const header = {
 } as const;
 
 describe("SDK player transcript boundary", () => {
+  test("accepts a terminal character-composition obstruction", () => {
+    const characterObstruction = {
+      type: "sdk-player-header",
+      scenarioId: "property-scenario",
+      gitSha: "a".repeat(40),
+      startedAt: "2026-08-12T12:00:00.000Z",
+      consumerIsolation: "instructionalFallback",
+      replaySupervisorSha256: "b".repeat(64),
+      scenarioSha256: "d".repeat(64),
+      scenarioReviewSha256: "e".repeat(64),
+      charactersSha256: "f".repeat(64),
+      characterOutcome: "obstructed",
+      characterObservation: { missing: "supported-character-choice" },
+      obstruction: "A required canonical Character Sheet cannot be completed.",
+    } as const;
+
+    expect(parseSdkTranscript([characterObstruction])).toMatchObject({
+      tag: "valid",
+      value: {
+        header: { characterOutcome: "obstructed" },
+        calls: [],
+      },
+    });
+    expect(parseSdkTranscript([characterObstruction, {}]).tag).toBe("invalid");
+  });
+
   test("accepts every canonical sequential discover-call stream", () => {
     fc.assert(
       fc.property(fc.array(jsonValue, { maxLength: 20 }), (results) => {

@@ -26,6 +26,10 @@ Current executable state:
   failures are returned as one flat non-empty collection of structured
   `CharacterSheetConstructionIssue` values; issues do not retain a joined
   display message.
+- `parseFreshCharacterSheet` is the stored-state boundary for the same nominal
+  invariant. It parses the complete sheet, then requires full build-derived
+  current Hit Points and otherwise unspent initial play state. Use
+  `parseCharacterSheet` instead when mutable in-play state is expected.
 - Fresh empty collections have one spelling: the sheet contains `[]` for
   conditions, spent Hit Dice, rest-feature uses, resource expenditures, and
   spellcasting slot-expenditure lists. Feature-owned state uses absence only

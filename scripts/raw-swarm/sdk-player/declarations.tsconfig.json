@@ -1,5 +1,9 @@
 {
-  "include": ["consumer-entry.ts", "scenario-setup-contract.ts"],
+  "include": [
+    "consumer-entry.ts",
+    "scenario-character-contract.ts",
+    "scenario-setup-contract.ts"
+  ],
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
@@ -9,6 +13,18 @@
     "baseUrl": "../../..",
     "paths": {
       "@dnd/battle-runtime": ["packages/battle-runtime/src/index.ts"],
+      "@dnd/character-creation-runtime": [
+        "packages/character-creation-runtime/src/index.ts"
+      ],
+      "@dnd/character-battle-runtime": [
+        "packages/character-battle-runtime/src/index.ts"
+      ],
+      "@dnd/character-sheet-runtime": [
+        "packages/character-sheet-runtime/src/index.ts"
+      ],
+      "@dnd/scenario-character-sdk": [
+        "scripts/raw-swarm/sdk-player/scenario-character-contract.ts"
+      ],
       "@dnd/scenario-setup-sdk": [
         "scripts/raw-swarm/sdk-player/scenario-setup-contract.ts"
       ],

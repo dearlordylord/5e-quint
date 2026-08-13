@@ -38,19 +38,32 @@ const HeaderCommonFields = {
   replaySupervisorSha256: HashSchema,
   scenarioSha256: HashSchema,
   scenarioReviewSha256: HashSchema,
+  charactersSha256: HashSchema,
+  characterObservation: Schema.Unknown,
+} as const;
+const ReadyCharacterFields = {
+  ...HeaderCommonFields,
+  characterOutcome: Schema.Literal("ready"),
+  characterSheets: Schema.Unknown,
+  characterSheetsSha256: HashSchema,
   setupSha256: HashSchema,
   setupObservation: Schema.Unknown,
 } as const;
 const HeaderSchema = Schema.Union(
   Schema.Struct({
-    ...HeaderCommonFields,
+    ...ReadyCharacterFields,
     setupOutcome: Schema.Literal("ready"),
     initialSession: Schema.Unknown,
     initialSessionSha256: HashSchema,
   }),
   Schema.Struct({
-    ...HeaderCommonFields,
+    ...ReadyCharacterFields,
     setupOutcome: Schema.Literal("obstructed"),
+    obstruction: Schema.NonEmptyTrimmedString,
+  }),
+  Schema.Struct({
+    ...HeaderCommonFields,
+    characterOutcome: Schema.Literal("obstructed"),
     obstruction: Schema.NonEmptyTrimmedString,
   }),
 );
@@ -88,16 +101,30 @@ export type SdkCallRecord = Schema.Schema.Type<typeof CallSchema>;
 
 type ReadySdkTranscriptHeader = Omit<
   Extract<SdkTranscriptHeader, { readonly setupOutcome: "ready" }>,
-  "initialSession" | "setupObservation"
+  | "characterObservation"
+  | "characterSheets"
+  | "initialSession"
+  | "setupObservation"
 > & {
+  readonly characterObservation: JsonValue;
+  readonly characterSheets: JsonValue;
   readonly initialSession: JsonValue;
   readonly setupObservation: JsonValue;
 };
 
 type ObstructedSdkTranscriptHeader = Omit<
   Extract<SdkTranscriptHeader, { readonly setupOutcome: "obstructed" }>,
-  "setupObservation"
-> & { readonly setupObservation: JsonValue };
+  "characterObservation" | "characterSheets" | "setupObservation"
+> & {
+  readonly characterObservation: JsonValue;
+  readonly characterSheets: JsonValue;
+  readonly setupObservation: JsonValue;
+};
+
+type CharacterObstructedSdkTranscriptHeader = Omit<
+  Extract<SdkTranscriptHeader, { readonly characterOutcome: "obstructed" }>,
+  "characterObservation"
+> & { readonly characterObservation: JsonValue };
 
 type ParsedSdkTranscript =
   | {
@@ -106,6 +133,10 @@ type ParsedSdkTranscript =
     }
   | {
       readonly header: ObstructedSdkTranscriptHeader;
+      readonly calls: readonly [];
+    }
+  | {
+      readonly header: CharacterObstructedSdkTranscriptHeader;
       readonly calls: readonly [];
     };
 
@@ -123,6 +154,28 @@ export function parseSdkTranscript(
   if (Either.isLeft(header)) {
     return { tag: "invalid", message: "SDK transcript requires one header." };
   }
+  if (!isJsonValue(header.right.characterObservation)) {
+    return {
+      tag: "invalid",
+      message: "SDK transcript header has invalid character evidence.",
+    };
+  }
+  const characterObservation = header.right.characterObservation;
+  if (header.right.characterOutcome === "obstructed") {
+    return callInputs.length === 0
+      ? {
+          tag: "valid",
+          value: {
+            header: { ...header.right, characterObservation },
+            calls: [],
+          },
+        }
+      : {
+          tag: "invalid",
+          message:
+            "An obstructed character composition cannot contain player calls.",
+        };
+  }
   if (
     header.right.setupOutcome === "ready" &&
     (!isJsonValue(header.right.initialSession) ||
@@ -135,10 +188,15 @@ export function parseSdkTranscript(
     };
   }
   const setupObservation = header.right.setupObservation;
-  if (!isJsonValue(setupObservation)) {
+  const characterSheets = header.right.characterSheets;
+  if (
+    !isJsonValue(characterSheets) ||
+    sha256Canonical(characterSheets) !== header.right.characterSheetsSha256 ||
+    !isJsonValue(setupObservation)
+  ) {
     return {
       tag: "invalid",
-      message: "SDK transcript header has a non-JSON setup observation.",
+      message: "SDK transcript header has invalid character or setup evidence.",
     };
   }
   if (header.right.setupOutcome === "obstructed") {
@@ -153,6 +211,8 @@ export function parseSdkTranscript(
       value: {
         header: {
           ...header.right,
+          characterObservation,
+          characterSheets,
           setupObservation,
         },
         calls: [],
@@ -245,6 +305,8 @@ export function parseSdkTranscript(
     value: {
       header: {
         ...header.right,
+        characterObservation,
+        characterSheets,
         initialSession,
         setupObservation,
       },

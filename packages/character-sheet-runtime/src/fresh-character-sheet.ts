@@ -1,17 +1,24 @@
 import { DAMAGE_TYPES } from "@dnd/shared/types";
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import { Hp, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import {
   DRUID_WILD_SHAPE_IDENTIFIED_FORM_ISSUE_CODES,
   DRUID_WILD_SHAPE_KNOWN_FORM_ROSTER_ISSUE_CODES,
 } from "@dnd/character-creation-runtime";
 import { DRUID_CIRCLE_LAND_CHOICES } from "@dnd/surface/surface/types";
-import { Brand, Schema } from "effect";
+import { Brand, Either, Schema } from "effect";
 
 import {
   CHARACTER_SHEET_CONSTRUCTION_ISSUE_NO_DETAIL_CODES,
   type CharacterSheet,
   type CharacterSheetConstructionIssue,
 } from "./sheet-types.ts";
+import {
+  isNonSpellcastingBuild,
+  isSpellcastingBuild,
+} from "./stored-sheet-parser.ts";
+
+// Hp validates the branded value; the assertion retains the proven literal zero.
+export const FRESH_CHARACTER_SHEET_ZERO_HP = Hp(0) as Hp & 0;
 
 const PositiveHpSchema = Schema.Number.pipe(
   Schema.int(),
@@ -120,6 +127,78 @@ export type FreshCharacterSheet =
   | FreshNonSpellcastingCharacterSheet;
 
 export const freshCharacterSheet = Brand.nominal<FreshCharacterSheet>();
+
+export function freshCharacterSheetFromParsedState(
+  sheet: CharacterSheet,
+): Either.Either<FreshCharacterSheet, string> {
+  const {
+    tag: _tag,
+    characterId: _characterId,
+    build: _build,
+    ...facts
+  } = sheet;
+  if (isNonSpellcastingBuild(sheet.build)) {
+    const decoded = Schema.decodeUnknownEither(
+      FreshNonSpellcastingCharacterSheetProjectionSchema,
+      { onExcessProperty: "error" },
+    )(facts);
+    if (Either.isLeft(decoded)) {
+      return Either.left(
+        "Fresh Character Sheet requires unspent initial play state.",
+      );
+    }
+    const { druidWildShapeKnownForms: _decodedKnownForms, ...decodedFacts } =
+      decoded.right;
+    return Either.right(
+      freshCharacterSheet({
+        tag: sheet.tag,
+        characterId: sheet.characterId,
+        build: sheet.build,
+        ...decodedFacts,
+        hitPointMaximumReduction: FRESH_CHARACTER_SHEET_ZERO_HP,
+        hitPoints: {
+          ...decodedFacts.hitPoints,
+          currentHp: Hp(decodedFacts.hitPoints.currentHp),
+          tempHp: FRESH_CHARACTER_SHEET_ZERO_HP,
+        },
+        ...(sheet.druidWildShapeKnownForms === undefined
+          ? {}
+          : { druidWildShapeKnownForms: sheet.druidWildShapeKnownForms }),
+      }),
+    );
+  }
+  if (isSpellcastingBuild(sheet.build)) {
+    const decoded = Schema.decodeUnknownEither(
+      FreshSpellcastingCharacterSheetProjectionSchema,
+      { onExcessProperty: "error" },
+    )(facts);
+    if (Either.isLeft(decoded)) {
+      return Either.left(
+        "Fresh Character Sheet requires unspent initial play state.",
+      );
+    }
+    const { druidWildShapeKnownForms: _decodedKnownForms, ...decodedFacts } =
+      decoded.right;
+    return Either.right(
+      freshCharacterSheet({
+        tag: sheet.tag,
+        characterId: sheet.characterId,
+        build: sheet.build,
+        ...decodedFacts,
+        hitPointMaximumReduction: FRESH_CHARACTER_SHEET_ZERO_HP,
+        hitPoints: {
+          ...decodedFacts.hitPoints,
+          currentHp: Hp(decodedFacts.hitPoints.currentHp),
+          tempHp: FRESH_CHARACTER_SHEET_ZERO_HP,
+        },
+        ...(sheet.druidWildShapeKnownForms === undefined
+          ? {}
+          : { druidWildShapeKnownForms: sheet.druidWildShapeKnownForms }),
+      }),
+    );
+  }
+  return Either.left("Fresh Character Sheet requires a supported build.");
+}
 
 export function isFreshSpellcastingCharacterSheet(
   sheet: FreshCharacterSheet,

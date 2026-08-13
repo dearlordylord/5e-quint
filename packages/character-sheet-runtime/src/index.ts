@@ -1,5 +1,6 @@
 export {
   createFreshCharacterSheet,
+  parseFreshCharacterSheet,
   parseCharacterSheet,
   rebuildCharacterSheet,
 } from "./sheet-lifecycle.ts";

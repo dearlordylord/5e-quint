@@ -1,6 +1,6 @@
 # Scenario setup author
 
-Read `SCENARIO.md`, `SCENARIO_REVIEW.json`, `PUBLIC_SDK.md`,
+Read `SCENARIO.md`, `SCENARIO_REVIEW.json`, `CHARACTERS.json`, `PUBLIC_SDK.md`,
 `STAT_BLOCKS.json`, and the declarations available through
 `@dnd/scenario-setup-sdk`.
 
@@ -10,10 +10,12 @@ initial `BattleRuntimeSession`. Do not invent substitute creatures, silently
 drop required combatants, or encode later tactics in setup code.
 
 Project only facts that the scenario fixes before play. Do not choose facts the
-scenario delegates to a player, controller, or GM, including character builds,
-spell choices, Initiative rolls, starting resources, or unresolved Table
-Decisions identified by the retained review. If the current public setup API
-cannot defer a required choice to its owner, return `kind: "obstructed"`.
+scenario delegates to a player, controller, or GM. Completed player-owned
+Character Sheets are supplied through `context.characterSheets`; consume them
+without changing their builds, spells, equipment, or resources. Initiative
+rolls and unresolved Table Decisions identified by the retained review remain
+with their owners. If the current public setup API cannot defer a required
+choice to its owner, return `kind: "obstructed"`.
 
 When the public setup surface cannot represent the prose scenario, return
 `kind: "obstructed"` with a precise explanation and JSON observation. That is

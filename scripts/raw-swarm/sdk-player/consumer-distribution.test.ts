@@ -2,19 +2,24 @@ import { execFileSync, spawn } from "node:child_process";
 import {
   appendFileSync,
   copyFileSync,
+  cpSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
+  rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, test } from "vitest";
+import { buildSync } from "esbuild";
 
 import { repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
 import { buildConsumerDistribution } from "./consumer-distribution.ts";
+import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
+import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
 
 const TRACER_SCENARIO_ID = "tracer-001-goblin-warrior-vs-skeleton";
 
@@ -23,6 +28,16 @@ function filesBelow(directory: string): readonly string[] {
     const path = join(directory, entry.name);
     return entry.isDirectory() ? filesBelow(path) : [path];
   });
+}
+
+function copyDistribution(source: string, destination: string): void {
+  cpSync(source, destination, { recursive: true });
+  const configPath = join(destination, "tsconfig.json");
+  const config = readFileSync(configPath, "utf8").replaceAll(
+    source,
+    destination,
+  );
+  writeFileSync(configPath, config);
 }
 
 describe("SDK player consumer distribution", () => {
@@ -41,25 +56,149 @@ describe("SDK player consumer distribution", () => {
       trustedDestination,
       scenarioPath,
     });
+    const characterBoundaryPath = join(destination, "character-boundary.ts");
+    copyFileSync(
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/test-fixtures/ready-fighter.characters.ts",
+      ),
+      characterBoundaryPath,
+    );
+    const characterConfigPath = join(destination, "character-tsconfig.json");
+    const characterConfig = JSON.parse(
+      readFileSync(join(destination, "tsconfig.json"), "utf8"),
+    ) as Readonly<Record<string, unknown>>;
+    writeFileSync(
+      characterConfigPath,
+      `${JSON.stringify(
+        { ...characterConfig, include: ["character-boundary.ts"] },
+        null,
+        2,
+      )}\n`,
+    );
+    execFileSync(
+      process.execPath,
+      [
+        join(destination, "tooling/typescript/bin/tsc"),
+        "--noEmit",
+        "-p",
+        characterConfigPath,
+      ],
+      { cwd: destination, stdio: "pipe" },
+    );
+    buildSync({
+      entryPoints: [
+        resolve(
+          repoRoot,
+          "scripts/raw-swarm/sdk-player/scenario-character-client.ts",
+        ),
+      ],
+      outfile: join(destination, "character-client.mjs"),
+      bundle: true,
+      platform: "node",
+      format: "esm",
+      target: "node24",
+      logLevel: "silent",
+    });
+    expect(
+      execFileSync(
+        process.execPath,
+        [join(destination, "character-client.mjs"), characterBoundaryPath],
+        { cwd: destination, encoding: "utf8" },
+      ),
+    ).toContain('"tag": "ready"');
+    const externalCharacters = await evaluateScenarioCharacters(
+      characterBoundaryPath,
+    );
+    expect(externalCharacters.tag).toBe("ready");
+    if (externalCharacters.tag !== "ready") return;
+    const mixedSetupPath = join(destination, "external-mixed-setup.ts");
+    copyFileSync(
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/test-fixtures/ready-mixed.setup.ts",
+      ),
+      mixedSetupPath,
+    );
+    writeFileSync(
+      characterConfigPath,
+      `${JSON.stringify(
+        { ...characterConfig, include: ["external-mixed-setup.ts"] },
+        null,
+        2,
+      )}\n`,
+    );
+    execFileSync(
+      process.execPath,
+      [
+        join(destination, "tooling/typescript/bin/tsc"),
+        "--noEmit",
+        "-p",
+        characterConfigPath,
+      ],
+      { cwd: destination, stdio: "pipe" },
+    );
+    await expect(
+      evaluateScenarioSetup(mixedSetupPath, externalCharacters.characterSheets),
+    ).resolves.toMatchObject({ tag: "ready", observation: { combatants: 2 } });
+    const readyRoot = mkdtempSync(join(tmpdir(), "dnd-player-ready-mixed-"));
+    const readyPlayer = join(readyRoot, "player");
+    const readyTrusted = join(readyRoot, "trusted");
+    copyDistribution(destination, readyPlayer);
+    copyDistribution(trustedDestination, readyTrusted);
+    mkdirSync(join(readyTrusted, "evidence"));
+    copyFileSync(
+      characterBoundaryPath,
+      join(readyTrusted, "evidence/characters.ts"),
+    );
+    copyFileSync(mixedSetupPath, join(readyTrusted, "evidence/setup.ts"));
+    const readySupervisor = join(readyTrusted, "supervisor.mjs");
+    execFileSync(
+      process.execPath,
+      [
+        readySupervisor,
+        "init",
+        "ready-mixed-scenario",
+        "a".repeat(40),
+        "instructionalFallback",
+        "b".repeat(64),
+        "c".repeat(64),
+        "d".repeat(64),
+      ],
+      { cwd: readyTrusted, stdio: "pipe" },
+    );
+    const readyTranscript = readFileSync(
+      join(readyTrusted, "evidence/sdk-calls.jsonl"),
+      "utf8",
+    );
+    expect(readyTranscript).toContain('"characterOutcome":"ready"');
+    expect(readyTranscript).toContain('"raw-swarm:external-fighter"');
+    expect(readyTranscript).toContain('"setupOutcome":"ready"');
+    expect(
+      execFileSync(process.execPath, [readySupervisor, "replay"], {
+        cwd: readyTrusted,
+        encoding: "utf8",
+      }),
+    ).toContain("SDK player replay deterministic: 0 call(s) matched");
+    rmSync(characterBoundaryPath);
+    rmSync(mixedSetupPath);
+    rmSync(characterConfigPath);
     writeFileSync(join(destination, "SCENARIO_REVIEW.json"), "{}\n");
     const obstructionRoot = mkdtempSync(
       join(tmpdir(), "dnd-player-obstruction-"),
     );
     const obstructionPlayer = join(obstructionRoot, "player");
     const obstructionTrusted = join(obstructionRoot, "trusted");
-    buildConsumerDistribution({
-      destination: obstructionPlayer,
-      trustedDestination: obstructionTrusted,
-      scenarioPath,
-    });
+    copyDistribution(destination, obstructionPlayer);
+    copyDistribution(trustedDestination, obstructionTrusted);
     mkdirSync(join(obstructionTrusted, "evidence"));
     writeFileSync(
-      join(obstructionTrusted, "evidence/setup.ts"),
-      `import type { ScenarioSetup } from "@dnd/scenario-setup-sdk";
+      join(obstructionTrusted, "evidence/characters.ts"),
+      `import type { ScenarioCharacters } from "@dnd/scenario-character-sdk";
 
-export const setupScenario: ScenarioSetup = () => ({
+export const composeScenarioCharacters: ScenarioCharacters = () => ({
   kind: "obstructed",
-  obstruction: "Required character-build setup is unavailable.",
+  obstruction: "Required character composition is unavailable.",
   observation: { missing: "character-build" },
 });
 `,
@@ -84,14 +223,21 @@ export const setupScenario: ScenarioSetup = () => ({
         cwd: obstructionTrusted,
         encoding: "utf8",
       }),
-    ).toContain("SDK setup obstruction replay deterministic");
+    ).toContain("SDK character-composition obstruction replay deterministic");
     expect(
       readFileSync(
         join(obstructionTrusted, "evidence/sdk-calls.jsonl"),
         "utf8",
       ),
-    ).toContain('"setupOutcome":"obstructed"');
+    ).toContain('"characterOutcome":"obstructed"');
     mkdirSync(join(trustedDestination, "evidence"));
+    copyFileSync(
+      resolve(
+        repoRoot,
+        `scripts/raw-swarm/sdk-player/scenarios/${TRACER_SCENARIO_ID}.characters.ts`,
+      ),
+      join(trustedDestination, "evidence/characters.ts"),
+    );
     copyFileSync(
       resolve(
         repoRoot,

@@ -19,6 +19,7 @@ import {
   createFreshCharacterSheet,
   freshCharacterSheetProjection,
   isFreshSpellcastingCharacterSheet,
+  parseFreshCharacterSheet,
 } from "./index.ts";
 
 describe("fresh Character Sheet construction", () => {
@@ -68,6 +69,34 @@ describe("fresh Character Sheet construction", () => {
         })({ ...projection, displayName: "presentation must stay outside" }),
       ),
     ).toBe(true);
+  });
+
+  test("rejects a valid stored sheet whose current HP is already depleted", () => {
+    const result = createFreshCharacterSheet({
+      characterId: characterSheetId("character:depleted"),
+      build,
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: [],
+      unitLibrary,
+    });
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isLeft(result)) return;
+
+    expect(
+      parseFreshCharacterSheet(
+        {
+          ...result.right,
+          hitPoints: { ...result.right.hitPoints, currentHp: 1 },
+        },
+        unitLibrary,
+      ),
+    ).toEqual(
+      Either.left({
+        tag: "characterSheetIssue",
+        message: "Fresh Character Sheet requires full current Hit Points.",
+      }),
+    );
   });
 
   test("accumulates independent HP, Spell Slot, Pact Slot, and feature-input issues", () => {

@@ -46,12 +46,14 @@ under `scripts/raw-swarm/out/` and are gitignored.
 This section owns the intended workflow. The checked-in campaign runner
 implements stochastic whole-prose generation plus final RAW and artifact-policy
 review. The direct-SDK tracer implements the single-controller execution and
-evidence seam. A scenario now supplies adjacent ordinary TypeScript that builds
-its initial session through a narrow public-SDK setup context. The first setup
-context exposes the canonical SRD stat-block catalog; character-build
-composition, multiple controllers, and branching remain later workflow
-increments. Missing setup capability is reported as an obstruction rather than
-modeled in a harness language.
+evidence seam. A controller-owned ordinary TypeScript module now creates
+canonical Character Sheets through the real character-creation runtime; a
+separate neutral setup module consumes those sheets and canonical SRD Stat
+Blocks to build the initial battle session. Unresolved Initiative rolls and
+spatial setup remain explicit next capability edges; scenario-authored
+Initiative totals are already ordinary setup input. Multiple battle controllers
+and branching remain later workflow increments. Missing capability is reported
+as an obstruction rather than modeled in a harness language.
 
 ### Generate battle scenarios as prose
 
@@ -158,30 +160,42 @@ output filenames from the validated scenario id. Admitted
 artifacts go under `sdk-player/scenarios/`; rejected diagnostic output goes
 under ignored `out/rejected-scenarios/` and is not playable input.
 
-An admitted prose artifact is not parsed. A separate external coding agent
-authors an adjacent `<scenario-id>.setup.ts` against
-`@dnd/scenario-setup-sdk`. The setup is ordinary TypeScript that either returns
-the canonical initial `BattleRuntimeSession` or reports a precise obstruction.
-It may select from `STAT_BLOCKS.json`; it must not substitute missing creatures,
-drop required combatants, or encode later tactics. From a clean revision run:
+An admitted prose artifact is not parsed. A controller agent first authors an
+adjacent `<scenario-id>.characters.ts` against the canonical character-creation
+and Character Sheet APIs. It owns the builds delegated by the prose and returns
+actual fresh `CharacterSheet` values, not a harness build description. A separate
+neutral setup agent authors `<scenario-id>.setup.ts` against
+`@dnd/scenario-setup-sdk`, consumes those sheets plus canonical Stat Blocks, and
+either returns the initial `BattleRuntimeSession` or reports a precise
+obstruction. It must not substitute missing creatures, drop required
+combatants, choose unowned Initiative rolls, or encode later tactics. From a
+clean revision run:
 
 ```sh
 SCENARIO=generated-battle-example
+
+mise exec -- pnpm exec tsx scripts/raw-swarm/author-scenario-characters.ts \
+  "$SCENARIO"
+
+# Commit the retained character source before the clean-revision setup step.
+# If character composition is obstructed, retain that result and skip setup.
 
 mise exec -- pnpm exec tsx scripts/raw-swarm/author-scenario-setup.ts \
   "$SCENARIO"
 ```
 
-The author receives only the prose, its exact admission review, public
-declarations and documentation, and the public catalog summary in a disposable
-scratch consumer. It may project scenario-fixed facts only; delegated player or
-GM choices and unresolved Table Decisions remain with their owners. If the
-setup API cannot defer them, the setup returns an obstruction. Only the
-resulting setup source is retained. This is the same code-consumer boundary as
-play, not a scenario interpreter or generated build schema. When the optional
-Codex filesystem profile is unavailable, this cooperative authoring step falls
-back to explicit scratch-only instructions; it does not claim hostile-code
-isolation.
+Each author receives only the prose, its exact admission review, relevant public
+declarations and documentation, and the public catalog facts in a disposable
+scratch consumer. Character composition may resolve only controller-owned
+build choices. Neutral setup may project scenario-fixed facts and consume the
+completed sheets; GM choices, Initiative rolls without authored totals, and
+unresolved Table Decisions remain with their owners. Commit the retained
+character source before setup authoring so both later setup and evidence use a
+clean, reproducible revision. Only the resulting ordinary TypeScript sources are retained.
+This is the same code-consumer boundary as play, not a scenario interpreter or
+generated build schema. When the optional Codex filesystem profile is
+unavailable, this cooperative authoring step falls back to explicit scratch-only
+instructions; it does not claim hostile-code isolation.
 
 ### Execute through the public SDK
 
@@ -260,9 +274,11 @@ required part of the target SDK-player workflow.
 ## Run a direct-SDK scenario
 
 The first tracer remains a manually authored Goblin Warrior versus Skeleton
-scenario. Every runnable scenario is identified by an adjacent `.md` prose
-file, admitted `.scenario-review.json`, and `.setup.ts` public-SDK setup file;
-the runner refuses incomplete triplets. It does not parse prose or introduce a
+scenario. Every scenario run starts from adjacent `.md` prose, admitted
+`.scenario-review.json`, and controller-owned `.characters.ts` files. A ready
+character composition additionally requires a neutral `.setup.ts`; an
+obstructed composition is retained and replayed without one. The runner refuses
+an incomplete set for the reached state. It does not parse prose or introduce a
 scenario interpreter. The player receives a scratch directory outside the
 checkout with:
 
@@ -281,14 +297,18 @@ external-consumer test boundary, not a hostile-code security sandbox: the
 player is instructed to use only the provided files and public SDK, and the
 harness does not attempt to defend against malicious submitted JavaScript.
 
-Before play, the supervisor typechecks and evaluates the exact adjacent setup
-source. The transcript header is the single owner of its SHA-256, complete
-initial-session projection/hash, and setup observation. Replay re-evaluates the
-same setup and requires every one of those facts to match before applying the
+Before play, the supervisor always typechecks and evaluates the exact adjacent
+character-composition source. After ready composition it also evaluates setup.
+The common transcript header owns the character source hash and observation.
+Ready composition adds the canonical Character Sheet projection plus setup
+source and setup-observation evidence; ready setup adds the initial-session
+projection and hash. Replay
+re-evaluates every reached source and requires those facts to match before the
 first recorded SDK call.
 
-An obstructed setup is a successful diagnostic run, not a failed or fabricated
-battle. The runner retains its setup source and one-call-free transcript, does
+An obstructed character composition or setup is a successful diagnostic run,
+not a failed or fabricated battle. The runner retains the available authored
+source and a call-free transcript, does
 not launch the player, and supports the same replay, report ingestion, and
 whole-trace review flow.
 
@@ -349,12 +369,15 @@ provided files. Neither claim turns submitted TypeScript into untrusted code;
 that is deliberately outside this game-testing prototype.
 
 Retained evidence lives under
-`scripts/raw-swarm/out/<scenario>-sdk-player/`: `SCENARIO.md`,
-`SCENARIO_REVIEW.json`, the agent log and final message, the latest observation,
-the final attempt, the replay bundle, and `evidence/` containing the scenario
-setup source, append-only program, frozen-prefix facts, canonical SDK JSONL,
-observations, and final conclusion. The disposable compiler and declaration
-distribution remains in the deleted scratch directory.
+`scripts/raw-swarm/out/<scenario>-sdk-player/`. Every outcome retains
+`SCENARIO.md`, `SCENARIO_REVIEW.json`, the replay bundle, canonical SDK JSONL,
+and the reached authored sources. Ready character composition adds its sheet
+projection and setup source; ready setup adds the append-only program and
+frozen-prefix facts. Player execution retains only the log, observations, and
+attempts actually reached, while completed execution also has the final message
+and conclusion. Terminal character/setup obstructions intentionally omit later
+artifacts. The disposable compiler and
+declaration distribution remains in the deleted scratch directory.
 
 Run the focused executable gate with:
 

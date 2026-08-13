@@ -78,7 +78,9 @@ import {
   type CharacterSheetSpentHitDiePool,
 } from "./sheet-types.ts";
 import {
+  FRESH_CHARACTER_SHEET_ZERO_HP,
   freshCharacterSheet,
+  freshCharacterSheetFromParsedState,
   type FreshCharacterSheet,
 } from "./fresh-character-sheet.ts";
 import {
@@ -97,9 +99,6 @@ import {
   parseStoredSpellSlots,
   recordHasExactKeys,
 } from "./stored-sheet-parser.ts";
-
-// Hp validates the branded value; the assertion retains the proven literal zero.
-const FRESH_CHARACTER_SHEET_ZERO_HP = Hp(0) as Hp & 0;
 
 export function createFreshCharacterSheet(
   input: CharacterSheetInput,
@@ -712,6 +711,39 @@ export function parseCharacterSheet(
     },
     spellSlots.right,
   );
+}
+
+export function parseFreshCharacterSheet(
+  value: unknown,
+  unitLibrary: UnitCatalog,
+): Either.Either<FreshCharacterSheet, CharacterSheetIssue> {
+  const parsed = parseCharacterSheet(value, unitLibrary);
+  if (Either.isLeft(parsed)) return Either.left(parsed.left);
+  const sheet = parsed.right;
+  const maximum = characterSheetHitPointCapacity({
+    build: sheet.build,
+    unitLibrary,
+    currentHp:
+      sheet.hitPoints.tag === "positive"
+        ? sheet.hitPoints.currentHp
+        : sheet.hitPoints.tag === "knockedOut"
+          ? Hp(1)
+          : Hp(0),
+    hitPointMaximumReduction: sheet.hitPointMaximumReduction,
+  });
+  if (
+    Either.isLeft(maximum) ||
+    sheet.hitPoints.tag !== "positive" ||
+    maximum.right.currentHp !== maximum.right.hitPointMaximum
+  ) {
+    return characterSheetIssue(
+      "Fresh Character Sheet requires full current Hit Points.",
+    );
+  }
+  const fresh = freshCharacterSheetFromParsedState(sheet);
+  return Either.isRight(fresh)
+    ? Either.right(fresh.right)
+    : characterSheetIssue(fresh.left);
 }
 
 function heroicInspirationFromInput(

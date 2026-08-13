@@ -135,18 +135,15 @@ export const FinalScenarioReviewSchema = Schema.Struct({
   policyReview: ScenarioPolicyReviewSchema,
 }).pipe(Schema.extend(ScenarioContentAdmissionSchema));
 
-type ScenarioAdmissionReviews = Pick<
-  Schema.Schema.Type<typeof FinalScenarioReviewSchema>,
-  | "contentAvailabilityIntent"
-  | "admitReviewedUnsupported"
-  | "rawReview"
-  | "contentReview"
-  | "policyReview"
->;
-
 type ScenarioContentAdmission = Schema.Schema.Type<
   typeof ScenarioContentAdmissionSchema
 >;
+
+type ScenarioAdmissionReviews = ScenarioContentAdmission &
+  Pick<
+    Schema.Schema.Type<typeof FinalScenarioReviewSchema>,
+    "admitReviewedUnsupported" | "rawReview" | "policyReview"
+  >;
 
 function decodeScenarioContentAdmission(input: {
   readonly contentAvailabilityIntent: ContentAvailabilityIntent;
@@ -176,45 +173,58 @@ function rawDisposition(
   );
 }
 
+function contentDisposition(
+  review: ScenarioContentAdmission,
+  rawReview: ScenarioRawReview,
+  admitReviewedUnsupported: boolean,
+): "admitted" | "rejected" {
+  return Match.value(review).pipe(
+    Match.when(
+      { contentAvailabilityIntent: "availableOnly" },
+      ({ contentReview }) =>
+        Match.value(contentReview).pipe(
+          Match.when({ classification: "supplied" }, () =>
+            rawDisposition(rawReview, admitReviewedUnsupported),
+          ),
+          Match.when(
+            { classification: "invalidUnavailableSelection" },
+            () => "rejected" as const,
+          ),
+          Match.exhaustive,
+        ),
+    ),
+    Match.when(
+      { contentAvailabilityIntent: "probeUnavailableContent" },
+      ({ contentReview }) =>
+        Match.value(contentReview).pipe(
+          Match.when({ classification: "explicitUnavailableProbe" }, () =>
+            rawDisposition(rawReview, admitReviewedUnsupported),
+          ),
+          Match.when(
+            { classification: "invalidUnavailableSelection" },
+            () => "rejected" as const,
+          ),
+          Match.when(
+            { classification: "missingUnavailableProbe" },
+            () => "rejected" as const,
+          ),
+          Match.exhaustive,
+        ),
+    ),
+    Match.exhaustive,
+  );
+}
+
 export function finalScenarioDisposition(
   review: ScenarioAdmissionReviews,
 ): "admitted" | "rejected" {
   return Match.value(review.policyReview).pipe(
     Match.when({ classification: "violation" }, () => "rejected" as const),
     Match.when({ classification: "safe" }, () =>
-      Match.value({
-        contentAvailabilityIntent: review.contentAvailabilityIntent,
-        contentReview: review.contentReview,
-      }).pipe(
-        Match.when(
-          {
-            contentAvailabilityIntent: "availableOnly",
-            contentReview: { classification: "supplied" },
-          },
-          () =>
-            rawDisposition(review.rawReview, review.admitReviewedUnsupported),
-        ),
-        Match.when(
-          {
-            contentAvailabilityIntent: "probeUnavailableContent",
-            contentReview: { classification: "explicitUnavailableProbe" },
-          },
-          () =>
-            rawDisposition(review.rawReview, review.admitReviewedUnsupported),
-        ),
-        Match.when(
-          {
-            contentReview: { classification: "invalidUnavailableSelection" },
-          },
-          () => "rejected" as const,
-        ),
-        Match.when(
-          {
-            contentReview: { classification: "missingUnavailableProbe" },
-          },
-          () => "rejected" as const,
-        ),
-        Match.exhaustive,
+      contentDisposition(
+        review,
+        review.rawReview,
+        review.admitReviewedUnsupported,
       ),
     ),
     Match.exhaustive,

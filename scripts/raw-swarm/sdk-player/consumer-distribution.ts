@@ -11,6 +11,7 @@ import { buildSync } from "esbuild";
 
 import { repoRoot } from "../transcript.ts";
 import { attemptSource } from "./attempt-source.ts";
+import type { JsonValue } from "./continuation-contract.ts";
 
 export type ConsumerDistributionInput = {
   readonly destination: string;
@@ -26,6 +27,13 @@ export type ScenarioSetupDistributionInput = {
     readonly id: string;
     readonly name: string;
   }[];
+  readonly characterObservation: JsonValue;
+};
+
+export type ScenarioCharacterDistributionInput = {
+  readonly destination: string;
+  readonly scenarioPath: string;
+  readonly scenarioReviewPath: string;
 };
 
 const declarationDiagnosticCodes = new Set(["TS4023", "TS4058", "TS7056"]);
@@ -76,10 +84,14 @@ function emitPublicDeclarations(destination: string): void {
   const requiredDeclarations = [
     "scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
     "scripts/raw-swarm/sdk-player/continuation-contract.d.ts",
+    "scripts/raw-swarm/sdk-player/scenario-character-contract.d.ts",
     "scripts/raw-swarm/sdk-player/scenario-setup-contract.d.ts",
     "packages/battle-runtime/src/index.d.ts",
     "packages/battle-runtime/src/battle-state-execution.d.ts",
     "packages/battle-runtime/src/battle-session-execution.d.ts",
+    "packages/character-creation-runtime/src/index.d.ts",
+    "packages/character-battle-runtime/src/index.d.ts",
+    "packages/character-sheet-runtime/src/index.d.ts",
   ];
   for (const relativePath of requiredDeclarations) {
     if (!existsSync(resolve(declarationsDirectory, relativePath))) {
@@ -105,6 +117,12 @@ function consumerTsconfig(baseUrl: string, include: readonly string[]): string {
               "declarations/scripts/raw-swarm/sdk-player/consumer-entry.d.ts",
             ),
           ],
+          "@dnd/scenario-character-sdk": [
+            resolve(
+              baseUrl,
+              "declarations/scripts/raw-swarm/sdk-player/scenario-character-contract.d.ts",
+            ),
+          ],
           "@dnd/scenario-setup-sdk": [
             resolve(
               baseUrl,
@@ -115,6 +133,24 @@ function consumerTsconfig(baseUrl: string, include: readonly string[]): string {
             resolve(
               baseUrl,
               "declarations/packages/battle-runtime/src/index.d.ts",
+            ),
+          ],
+          "@dnd/character-battle-runtime": [
+            resolve(
+              baseUrl,
+              "declarations/packages/character-battle-runtime/src/index.d.ts",
+            ),
+          ],
+          "@dnd/character-creation-runtime": [
+            resolve(
+              baseUrl,
+              "declarations/packages/character-creation-runtime/src/index.d.ts",
+            ),
+          ],
+          "@dnd/character-sheet-runtime": [
+            resolve(
+              baseUrl,
+              "declarations/packages/character-sheet-runtime/src/index.d.ts",
             ),
           ],
           "@dnd/shared/*": [
@@ -243,6 +279,10 @@ export function buildScenarioSetupDistribution(
     `${JSON.stringify(input.statBlocks, null, 2)}\n`,
   );
   writeFileSync(
+    resolve(input.destination, "CHARACTERS.json"),
+    `${JSON.stringify(input.characterObservation, null, 2)}\n`,
+  );
+  writeFileSync(
     resolve(input.destination, "tsconfig.json"),
     consumerTsconfig(input.destination, ["setup.ts"]),
   );
@@ -262,4 +302,63 @@ export const setupScenario: ScenarioSetup = () => ({
     resolve(input.destination, "tooling/typescript"),
     { recursive: true, dereference: true },
   );
+}
+
+export function buildScenarioCharacterDistribution(
+  input: ScenarioCharacterDistributionInput,
+): void {
+  mkdirSync(input.destination, { recursive: true });
+  emitPublicDeclarations(input.destination);
+  copyFileSync(input.scenarioPath, resolve(input.destination, "SCENARIO.md"));
+  copyFileSync(
+    input.scenarioReviewPath,
+    resolve(input.destination, "SCENARIO_REVIEW.json"),
+  );
+  copyFileSync(
+    resolve(repoRoot, "packages/character-creation-runtime/README.md"),
+    resolve(input.destination, "CHARACTER_CREATION_SDK.md"),
+  );
+  copyFileSync(
+    resolve(repoRoot, "packages/character-sheet-runtime/README.md"),
+    resolve(input.destination, "CHARACTER_SHEET_SDK.md"),
+  );
+  copyFileSync(
+    resolve(repoRoot, "scripts/raw-swarm/sdk-player/SCENARIO_CHARACTERS.md"),
+    resolve(input.destination, "SCENARIO_CHARACTERS.md"),
+  );
+  writeFileSync(
+    resolve(input.destination, "tsconfig.json"),
+    consumerTsconfig(input.destination, ["characters.ts"]),
+  );
+  writeFileSync(
+    resolve(input.destination, "characters.ts"),
+    `import type { ScenarioCharacters } from "@dnd/scenario-character-sdk";
+
+export const composeScenarioCharacters: ScenarioCharacters = () => ({
+  kind: "obstructed",
+  obstruction: "Replace this starter with the closest faithful canonical Character Sheets.",
+  observation: { characters: "not-authored" },
+});
+`,
+  );
+  cpSync(
+    resolve(repoRoot, "node_modules/typescript"),
+    resolve(input.destination, "tooling/typescript"),
+    { recursive: true, dereference: true },
+  );
+  buildSync({
+    entryPoints: [
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/scenario-character-client.ts",
+      ),
+    ],
+    outfile: resolve(input.destination, "character-client.mjs"),
+    bundle: true,
+    platform: "node",
+    format: "esm",
+    target: "node24",
+    sourcemap: false,
+    logLevel: "silent",
+  });
 }

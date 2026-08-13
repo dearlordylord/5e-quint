@@ -2,11 +2,15 @@ Adversarially review the direct-SDK player evidence whose transcript is
 {{TRANSCRIPT_PATH}}.
 
 Derive the retained run directory from that transcript path. Read SCENARIO.md,
-SCENARIO_REVIEW.json, evidence/setup.ts, and the transcript header. If setup is
-ready, also read the retained program, observations, final outcome, and agent
-summary. If setup is obstructed, those player artifacts intentionally do not
-exist: review whether the setup faithfully identified a real scenario/SDK
-obstruction without inventing or dropping scenario facts.
+SCENARIO_REVIEW.json, evidence/characters.ts, and the transcript header. If
+character composition is ready, also read evidence/setup.ts and check that the
+controller-owned fresh Character Sheets satisfy the prose without leaking
+Initiative, placement, or tactics into composition. If setup is ready, also read
+the retained program, observations, final outcome, and agent summary. If
+character composition or setup is obstructed, later player artifacts
+intentionally do not exist: review whether the responsible boundary faithfully
+identified a real scenario/SDK obstruction without inventing or dropping
+scenario facts.
 
 Treat recorded canonical SDK calls and results, not a player's prose summary,
 as execution authority. Try to falsify setup, Initiative, turn ownership,

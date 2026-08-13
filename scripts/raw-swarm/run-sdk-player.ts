@@ -96,14 +96,18 @@ async function main(args: readonly string[]): Promise<void> {
     repoRoot,
     `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.setup.ts`,
   );
+  const charactersPath = resolve(
+    repoRoot,
+    `scripts/raw-swarm/sdk-player/scenarios/${acceptedScenarioId}.characters.ts`,
+  );
   const scenarioReviewPath = `${scenarioPath}.scenario-review.json`;
   if (
     !existsSync(scenarioPath) ||
     !existsSync(scenarioReviewPath) ||
-    !existsSync(setupPath)
+    !existsSync(charactersPath)
   ) {
     fail(
-      `Scenario requires adjacent .md, .scenario-review.json, and .setup.ts files: ${acceptedScenarioId}`,
+      `Scenario requires adjacent .md, .scenario-review.json, and .characters.ts files; ready characters additionally require .setup.ts: ${acceptedScenarioId}`,
     );
   }
   const admission = admittedScenarioIdentity({
@@ -125,7 +129,10 @@ async function main(args: readonly string[]): Promise<void> {
     });
     copyFileSync(scenarioReviewPath, resolve(scratch, "SCENARIO_REVIEW.json"));
     mkdirSync(resolve(trusted, "evidence"));
-    copyFileSync(setupPath, resolve(trusted, "evidence/setup.ts"));
+    copyFileSync(charactersPath, resolve(trusted, "evidence/characters.ts"));
+    if (existsSync(setupPath)) {
+      copyFileSync(setupPath, resolve(trusted, "evidence/setup.ts"));
+    }
     mkdirSync(resolve(scratch, ".requests"));
     mkdirSync(resolve(scratch, ".responses"));
     const profileAvailable = consumerPermissionProfileAvailable(
@@ -158,7 +165,7 @@ async function main(args: readonly string[]): Promise<void> {
     );
     if (!existsSync(resolve(trusted, "evidence/frozen-prefix.json"))) {
       console.log(
-        `Scenario setup recorded an obstruction; player execution was not started: ${acceptedScenarioId}`,
+        `Scenario preparation recorded an obstruction; player execution was not started: ${acceptedScenarioId}`,
       );
       return;
     }

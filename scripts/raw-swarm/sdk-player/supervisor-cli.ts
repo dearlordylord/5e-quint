@@ -33,6 +33,7 @@ import type {
   PlayerSdk,
 } from "./continuation-contract.ts";
 import { authoredAttemptBody } from "./attempt-source.ts";
+import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
 import { isJsonValue } from "./json-value.ts";
 import { decodeSdkCallInput, type SdkCallInput } from "./sdk-replay-input.ts";
@@ -52,6 +53,7 @@ const latestObservationPath = resolve("OBSERVATION.json");
 const finalPath = resolve("evidence/final.json");
 const playerRoot = resolve(process.env.RAW_SWARM_PLAYER_ROOT ?? process.cwd());
 const submissionsPath = resolve("submissions");
+const charactersPath = resolve("evidence/characters.ts");
 const setupPath = resolve("evidence/setup.ts");
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
@@ -171,11 +173,51 @@ async function initialize(
 ): Promise<void> {
   if (existsSync(transcriptPath)) fail("SDK player evidence already exists.");
   mkdirSync(resolve("evidence"), { recursive: true });
-  if (!existsSync(setupPath)) fail("Scenario setup source is missing.");
+  if (!existsSync(charactersPath))
+    fail("Scenario character source is missing.");
   const setupConfigPath = resolve("evidence/setup-tsconfig.json");
   const setupConfig = JSON.parse(
     readFileSync(resolve("tsconfig.json"), "utf8"),
   ) as Readonly<Record<string, unknown>>;
+  writeFileSync(
+    setupConfigPath,
+    `${JSON.stringify(
+      { ...setupConfig, include: [charactersPath] },
+      null,
+      2,
+    )}\n`,
+  );
+  try {
+    typecheckSubmission(charactersPath, setupConfigPath);
+  } finally {
+    rmSync(setupConfigPath, { force: true });
+  }
+  const characters = await evaluateScenarioCharacters(charactersPath);
+  if (characters.tag === "invalid") fail(characters.message);
+  const headerIdentity = {
+    type: "sdk-player-header",
+    scenarioId,
+    gitSha,
+    startedAt: new Date().toISOString(),
+    consumerIsolation,
+    replaySupervisorSha256,
+    charactersSha256: sha256Text(readFileSync(charactersPath, "utf8")),
+    characterObservation: characters.observation,
+    scenarioSha256,
+    scenarioReviewSha256,
+  } as const;
+  if (characters.tag === "obstructed") {
+    appendFileSync(
+      transcriptPath,
+      `${JSON.stringify({
+        ...headerIdentity,
+        characterOutcome: "obstructed",
+        obstruction: characters.obstruction,
+      })}\n`,
+    );
+    return;
+  }
+  if (!existsSync(setupPath)) fail("Scenario setup source is missing.");
   writeFileSync(
     setupConfigPath,
     `${JSON.stringify({ ...setupConfig, include: [setupPath] }, null, 2)}\n`,
@@ -185,20 +227,21 @@ async function initialize(
   } finally {
     rmSync(setupConfigPath, { force: true });
   }
-  const setup = await evaluateScenarioSetup(setupPath);
+  const setup = await evaluateScenarioSetup(
+    setupPath,
+    characters.characterSheets,
+  );
   if (setup.tag === "invalid") fail(setup.message);
+  const characterSheets = jsonValue(characters.characterSheets);
   const setupSha256 = sha256Text(readFileSync(setupPath, "utf8"));
   const headerCommon = {
-    type: "sdk-player-header",
-    scenarioId,
-    gitSha,
-    startedAt: new Date().toISOString(),
-    consumerIsolation,
-    replaySupervisorSha256,
+    ...headerIdentity,
+    characterOutcome: "ready",
+    characterSheets,
+    characterSheetsSha256: sha256Canonical(characterSheets),
+    characterObservation: characters.observation,
     setupSha256,
     setupObservation: setup.observation,
-    scenarioSha256,
-    scenarioReviewSha256,
   } as const;
   Match.value(setup).pipe(
     Match.when({ tag: "obstructed" }, ({ obstruction }) => {
@@ -303,6 +346,7 @@ type ReplayResult =
     }
   | {
       readonly tag: "obstructed";
+      readonly owner: "characterComposition" | "setup";
       readonly obstruction: string;
       readonly calls: readonly [];
     };
@@ -311,12 +355,53 @@ async function replay(): Promise<ReplayResult> {
   const parsed = parseSdkTranscript(transcriptRecords());
   if (parsed.tag === "invalid") fail(parsed.message);
   if (
+    sha256Text(readFileSync(charactersPath, "utf8")) !==
+    parsed.value.header.charactersSha256
+  ) {
+    fail("Scenario character source hash diverged during replay.");
+  }
+  const characters = await evaluateScenarioCharacters(charactersPath);
+  if (characters.tag === "invalid") fail(characters.message);
+  if (parsed.value.header.characterOutcome === "obstructed") {
+    if (
+      characters.tag !== "obstructed" ||
+      characters.obstruction !== parsed.value.header.obstruction ||
+      canonicalJson(characters.observation) !==
+        canonicalJson(parsed.value.header.characterObservation)
+    ) {
+      fail("Scenario character obstruction diverged during replay.");
+    }
+    return {
+      tag: "obstructed",
+      owner: "characterComposition",
+      obstruction: characters.obstruction,
+      calls: [],
+    };
+  }
+  if (characters.tag === "obstructed") {
+    fail("Scenario character composition diverged during replay.");
+  }
+  const characterSheets = jsonValue(characters.characterSheets);
+  if (
+    sha256Canonical(characterSheets) !==
+      parsed.value.header.characterSheetsSha256 ||
+    canonicalJson(characterSheets) !==
+      canonicalJson(parsed.value.header.characterSheets) ||
+    canonicalJson(characters.observation) !==
+      canonicalJson(parsed.value.header.characterObservation)
+  ) {
+    fail("Scenario character composition diverged during replay.");
+  }
+  if (
     sha256Text(readFileSync(setupPath, "utf8")) !==
     parsed.value.header.setupSha256
   ) {
     fail("Scenario setup source hash diverged during replay.");
   }
-  const initial = await evaluateScenarioSetup(setupPath);
+  const initial = await evaluateScenarioSetup(
+    setupPath,
+    characters.characterSheets,
+  );
   if (initial.tag === "invalid") fail(initial.message);
   if (parsed.value.header.setupOutcome === "obstructed") {
     if (
@@ -329,6 +414,7 @@ async function replay(): Promise<ReplayResult> {
     }
     return {
       tag: "obstructed",
+      owner: "setup",
       obstruction: initial.obstruction,
       calls: [],
     };
@@ -764,9 +850,24 @@ async function main(args: readonly string[]): Promise<void> {
   if (command === "replay" && rest.length === 0) {
     const replayed = await replay();
     console.log(
-      replayed.tag === "ready"
-        ? `SDK player replay deterministic: ${replayed.calls.length} call(s) matched.`
-        : `SDK setup obstruction replay deterministic: ${replayed.obstruction}`,
+      Match.value(replayed).pipe(
+        Match.when(
+          { tag: "ready" },
+          ({ calls }) =>
+            `SDK player replay deterministic: ${calls.length} call(s) matched.`,
+        ),
+        Match.when(
+          { tag: "obstructed", owner: "characterComposition" },
+          ({ obstruction }) =>
+            `SDK character-composition obstruction replay deterministic: ${obstruction}`,
+        ),
+        Match.when(
+          { tag: "obstructed", owner: "setup" },
+          ({ obstruction }) =>
+            `SDK setup obstruction replay deterministic: ${obstruction}`,
+        ),
+        Match.exhaustive,
+      ),
     );
     return;
   }
