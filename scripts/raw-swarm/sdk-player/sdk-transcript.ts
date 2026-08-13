@@ -10,8 +10,9 @@ import type { JsonValue } from "./continuation-contract.ts";
 import { isJsonValue } from "./json-value.ts";
 
 export const SDK_PLAYER_OPERATIONS = [
-  "scenarioInitialRelation",
+  "scenarioRelation",
   "discoverBattleActs",
+  "resolveScenarioMovement",
   "resolveBattleRuntimeSubject",
   "resolveBattleRuntimeInterrupt",
   "endBattleRuntimeTurn",

@@ -1,5 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard spell.invocation-jump-movement-replacement unit-feature.acrobatic-movement unit-feature.creature-space-movement-permission
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
+// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 
 import { optionalProperty } from "../optional-property.ts";
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
@@ -17,6 +17,7 @@ import {
 import { MovementFeet, movementFeet } from "@dnd/shared/types";
 import { Match } from "effect";
 import { attackExecutionSelectionKey } from "../battle-action-options.ts";
+import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleAcrobaticMovementFact,
@@ -117,7 +118,10 @@ export function resolveMovementProcedure(
   input: Extract<
     AdmittedBattleResolutionInput,
     { readonly admissionKind: "general" }
-  > & { readonly subject: MovementProcedureSubject },
+  > & {
+    readonly subject: MovementProcedureSubject;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  },
 ): BattleResolutionResult {
   return Match.value(input.subject).pipe(
     Match.when({ command: "move" }, (subject) =>
@@ -134,7 +138,9 @@ export function resolveMovementProcedure(
 }
 
 function resolveMoveCommand(
-  input: AdmittedBattleResolutionInput,
+  input: AdmittedBattleResolutionInput & {
+    readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  },
 ): BattleResolutionResult {
   if (!canSpendMovement(input.state.currentTurnResources)) {
     return invalidResult(
@@ -193,7 +199,10 @@ function resolveMoveCommand(
     input.state,
     movement.movement,
   );
-  if (threats.length > 0) {
+  if (
+    threats.length > 0 &&
+    input.handledInterruptTrigger !== "opportunityAttack"
+  ) {
     const reactionWindow = maybeOpenInterruptWindow(
       input.state,
       {
@@ -1088,6 +1097,7 @@ export function resolveMoveAfterMovement(input: {
     tag: "resolved",
     state: movementEffects.state,
     snapshot: snapshotBattle(movementEffects.state),
+    movements: [input.movement],
   };
 }
 

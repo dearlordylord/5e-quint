@@ -17,7 +17,11 @@ import {
   createFreshCharacterSheet,
 } from "../../../packages/character-sheet-runtime/src/index.ts";
 import { armorClass } from "../../../packages/shared-algebras/src/armor-class-algebra.ts";
-import { damageAmount, Hp } from "../../../packages/shared/src/types.ts";
+import {
+  damageAmount,
+  DieRollResult,
+  Hp,
+} from "../../../packages/shared/src/types.ts";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -27,9 +31,11 @@ import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
 import {
   createScenarioSession,
-  scenarioInitialRelation,
+  continueScenarioMovement,
+  scenarioRelation,
   scenarioEnemyWithinFiveFeetCanSeeAttacker,
   scenarioObjectAttackFills,
+  planScenarioMovement,
   scenarioSessionWithBattleResult,
 } from "./scenario-session.ts";
 
@@ -292,7 +298,7 @@ describe("scenario setup public-SDK boundary", () => {
     if (Either.isLeft(composed)) return;
 
     expect(
-      scenarioInitialRelation({
+      scenarioRelation({
         session: composed.right,
         sourceId: combatantId("goblin-warrior"),
         targetId: combatantId("skeleton"),
@@ -392,7 +398,7 @@ describe("scenario setup public-SDK boundary", () => {
     expect(result.session.battle.state.combatants.size).toBe(10);
     expect(result.session.battlefield).toMatchObject({
       arena: { cellSizeFeet: 5 },
-      initialSpace: { revision: 11 },
+      space: { revision: 11 },
       ambientIllumination: "brightLight",
       environment: {
         overhead: { kind: "open" },
@@ -411,7 +417,7 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(result.session.battlefield.arena.cells).toHaveLength(120);
     expect(result.session.battlefield.arena.boundaries).toHaveLength(28);
-    expect(result.session.battlefield.initialSpace.placements).toHaveLength(11);
+    expect(result.session.battlefield.space.placements).toHaveLength(11);
     expect(result.session.battlefield.environment.barrierHeights).toHaveLength(
       20,
     );
@@ -423,7 +429,7 @@ describe("scenario setup public-SDK boundary", () => {
 
     const crystalId = result.session.battlefield.objects[0]!.objectId;
     expect(
-      scenarioInitialRelation({
+      scenarioRelation({
         session: result.session,
         sourceId: combatantId("beacon-warden-ember"),
         targetId: crystalId,
@@ -440,7 +446,7 @@ describe("scenario setup public-SDK boundary", () => {
       },
     });
     expect(
-      scenarioInitialRelation({
+      scenarioRelation({
         session: result.session,
         sourceId: combatantId("missing-scout"),
         targetId: crystalId,
@@ -448,7 +454,7 @@ describe("scenario setup public-SDK boundary", () => {
     ).toEqual({
       tag: "unknown-token",
       tokenId: "missing-scout",
-      message: "Scenario token missing-scout has no initial placement.",
+      message: "Scenario token missing-scout has no current placement.",
     });
     const damaged = scenarioSessionWithBattleResult(
       result.session,
@@ -487,7 +493,7 @@ describe("scenario setup public-SDK boundary", () => {
         hitPoints: 30,
       });
       expect(
-        scenarioInitialRelation({
+        scenarioRelation({
           session: damaged.right,
           sourceId: combatantId("beacon-warden-ember"),
           targetId: crystalId,
@@ -529,7 +535,7 @@ describe("scenario setup public-SDK boundary", () => {
     ).toEqual(["8,3", "8,4", "13,3", "13,4"]);
     expect(
       Object.fromEntries(
-        result.session.battlefield.initialSpace.placements.map(
+        result.session.battlefield.space.placements.map(
           ({ token, coordinate }) => [token, `${coordinate.x},${coordinate.y}`],
         ),
       ),
@@ -545,6 +551,130 @@ describe("scenario setup public-SDK boundary", () => {
       "goblin-warrior-5d": "5,4",
       "wolf-3b": "3,2",
       "wolf-3e": "3,5",
+    });
+    const moveSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: combatantId("beacon-warden-ember"),
+      command: "move" as const,
+    };
+    const plannedMove = planScenarioMovement({
+      session: result.session,
+      subject: moveSubject,
+      route: [{ x: 9, y: 2 }],
+      speedKind: "walk",
+      provokedOpportunityAttacks: [],
+      fills: [],
+    });
+    expect(Either.isRight(plannedMove)).toBe(true);
+    if (Either.isRight(plannedMove)) {
+      expect(plannedMove.right.fills[0]).toMatchObject({
+        kind: "movement",
+        value: { movementCostFeet: 5 },
+      });
+      const interrupted = scenarioSessionWithBattleResult(
+        plannedMove.right.session,
+        plannedMove.right.session.battle,
+      );
+      expect(interrupted).toMatchObject({
+        _tag: "Right",
+        right: {
+          movementResolution: { kind: "pending" },
+          battlefield: { space: { revision: 11 } },
+        },
+      });
+      if (Either.isRight(interrupted)) {
+        const resumed = continueScenarioMovement({
+          session: interrupted.right,
+          fills: [
+            {
+              kind: "rolledDice",
+              holeId: "battle:spike-growth-movement-damage",
+              value: [{ results: [DieRollResult(3)] }],
+            },
+          ],
+        });
+        expect(resumed).toMatchObject({
+          _tag: "Right",
+          right: {
+            subject: moveSubject,
+            fills: [
+              { kind: "movement", value: { movementCostFeet: 5 } },
+              {
+                kind: "rolledDice",
+                holeId: "battle:spike-growth-movement-damage",
+              },
+            ],
+            session: {
+              movementResolution: { kind: "pending" },
+              battlefield: { space: { revision: 11 } },
+            },
+          },
+        });
+      }
+      const battleMove = resolveBattleRuntimeSubject({
+        session: plannedMove.right.session.battle,
+        subject: moveSubject,
+        fills: plannedMove.right.fills,
+      });
+      expect(battleMove).toMatchObject({
+        tag: "resolved",
+        movements: [{ moverId: "beacon-warden-ember", movementCostFeet: 5 }],
+      });
+      if (battleMove.tag === "resolved") {
+        const moved = scenarioSessionWithBattleResult(
+          plannedMove.right.session,
+          battleMove.session,
+          battleMove.objectDamages,
+          battleMove.movements,
+        );
+        expect(Either.isRight(moved)).toBe(true);
+        if (Either.isRight(moved)) {
+          expect(
+            scenarioRelation({
+              session: moved.right,
+              sourceId: moveSubject.actorId,
+              targetId: crystalId,
+            }),
+          ).toMatchObject({
+            tag: "relation",
+            relation: { distanceFeet: 10 },
+          });
+          expect(result.session.battlefield.space.revision).toBe(11);
+          expect(moved.right.battlefield.space.revision).toBe(12);
+        }
+      }
+    }
+    const blockedByCrystal = planScenarioMovement({
+      session: result.session,
+      subject: moveSubject,
+      route: [{ x: 11, y: 3 }],
+      speedKind: "walk",
+      provokedOpportunityAttacks: [],
+      fills: [],
+    });
+    expect(blockedByCrystal).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "scenario-movement-rejected",
+        message: expect.stringContaining("beacon-crystal"),
+      },
+    });
+    const difficultTerrain = planScenarioMovement({
+      session: result.session,
+      subject: moveSubject,
+      route: [
+        { x: 9, y: 2 },
+        { x: 8, y: 3 },
+      ],
+      speedKind: "walk",
+      provokedOpportunityAttacks: [],
+      fills: [],
+    });
+    expect(difficultTerrain).toMatchObject({
+      _tag: "Right",
+      right: {
+        fills: [{ kind: "movement", value: { movementCostFeet: 15 } }],
+      },
     });
     const totalCoverBoundaries =
       result.session.battlefield.arena.boundaries.filter(

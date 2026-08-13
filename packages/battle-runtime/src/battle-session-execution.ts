@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import { optionalProperty } from "./optional-property.ts";
 import { Match } from "effect";
 import * as Either from "effect/Either";
@@ -57,6 +58,7 @@ export type BattleRuntimeResolutionResult =
       readonly droppedObjects?: ResolvedBattleResult["droppedObjects"];
       readonly shovePushes?: ResolvedBattleResult["shovePushes"];
       readonly teleports?: ResolvedBattleResult["teleports"];
+      readonly movements?: ResolvedBattleResult["movements"];
     }
   | {
       readonly tag: "needsHoles";
@@ -263,7 +265,12 @@ export function resolveBattleSubject(
       snapshot: snapshotBattle(input.state),
     };
   }
-  const mechanical = resolveAdmittedBattleSubject(admission.input);
+  const mechanical = resolveAdmittedBattleSubject(
+    admission.input,
+    phase.kind === "subjectContinuation" && !reportsReadyTrigger
+      ? phase.handledInterruptTrigger
+      : undefined,
+  );
   const result = reportsReadyTrigger
     ? mechanicalResultWithPreservedSubjectPhase(
         mechanical,

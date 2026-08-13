@@ -2,13 +2,16 @@ import type {
   AvailableBattleAct,
   BattleFill,
   BattleObjectId,
+  BattleOpportunityAttackThreat,
+  BattleMovementSpeedKind,
   BattleRuntimeResolutionResult,
   BattleSubject,
   CombatantId,
 } from "@dnd/battle-runtime";
 import type { ScenarioSession } from "./scenario-session.ts";
 import type { ScenarioSessionUpdateIssue } from "./scenario-session.ts";
-import type { ScenarioInitialRelationResult } from "./scenario-session.ts";
+import type { ScenarioRelationResult } from "./scenario-session.ts";
+import type { CoordinateInput } from "../../../packages/tactical-space/src/index.ts";
 
 export type ScenarioBattleResolutionResult =
   | (BattleRuntimeResolutionResult extends infer Result
@@ -20,6 +23,11 @@ export type ScenarioBattleResolutionResult =
       readonly tag: "scenarioSessionConflict";
       readonly session: ScenarioSession;
       readonly issue: ScenarioSessionUpdateIssue;
+    }
+  | {
+      readonly tag: "scenarioMovementRejected";
+      readonly session: ScenarioSession;
+      readonly message: string;
     };
 
 export type EndBattleRuntimeTurnInput = {
@@ -29,14 +37,34 @@ export type EndBattleRuntimeTurnInput = {
 };
 
 export type PlayerSdk = {
-  readonly scenarioInitialRelation: (input: {
+  readonly scenarioRelation: (input: {
     readonly session: ScenarioSession;
     readonly sourceId: CombatantId | BattleObjectId;
     readonly targetId: CombatantId | BattleObjectId;
-  }) => ScenarioInitialRelationResult;
+  }) => ScenarioRelationResult;
   readonly discoverBattleActs: (
     session: ScenarioSession,
   ) => readonly AvailableBattleAct[];
+  readonly resolveScenarioMovement: (
+    input:
+      | {
+          readonly kind: "route";
+          readonly session: ScenarioSession;
+          readonly subject: Extract<
+            BattleSubject,
+            { readonly tag: "runtimeCommand"; readonly command: "move" }
+          >;
+          readonly route: readonly [CoordinateInput, ...CoordinateInput[]];
+          readonly speedKind: BattleMovementSpeedKind;
+          readonly provokedOpportunityAttacks: readonly BattleOpportunityAttackThreat[];
+          readonly fills: readonly BattleFill[];
+        }
+      | {
+          readonly kind: "continue";
+          readonly session: ScenarioSession;
+          readonly fills: readonly BattleFill[];
+        },
+  ) => ScenarioBattleResolutionResult;
   readonly resolveBattleRuntimeSubject: (input: {
     readonly session: ScenarioSession;
     readonly subject: BattleSubject;

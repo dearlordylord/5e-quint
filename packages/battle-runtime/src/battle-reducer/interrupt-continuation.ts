@@ -130,12 +130,25 @@ export function resumeInterruptedProcedure(
     });
   }
   if (continuation.kind === "movement") {
-    return resolveMoveAfterMovement({
+    const result = resolveMoveAfterMovement({
       state,
       subject: continuation.subject,
       movement: continuation.movement,
       remainingFills: [],
     });
+    return result.tag !== "needsHoles"
+      ? result
+      : {
+          ...result,
+          state: {
+            ...result.state,
+            subjectResolutionPhase: {
+              kind: "subjectContinuation",
+              subject: result.subject,
+              handledInterruptTrigger,
+            },
+          },
+        };
   }
   if (continuation.kind === "movementThenAfterDamageSequence") {
     return openAfterDamageSequenceInterruptWindow({

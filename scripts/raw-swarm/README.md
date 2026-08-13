@@ -53,7 +53,7 @@ the initial battle session. Its neutral author first projects only fixed facts;
 a controller then reviews that exact source and supplies delegated pre-battle
 choices such as Initiative rolls and starting-square assignments through
 ordinary SDK code. The retained `ScenarioSession` pairs the untouched battle
-runtime session with canonical five-foot arena/placement snapshots and
+runtime session with canonical five-foot arena/current-placement snapshots and
 table-owned illumination and scenario-object facts. Multiple battle controllers and branching
 remain later workflow increments. Missing capability is reported as an
 obstruction rather than modeled in a harness language.

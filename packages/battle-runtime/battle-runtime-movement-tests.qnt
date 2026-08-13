@@ -7,6 +7,7 @@ module battleRuntimeMovementTests {
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeProneMovement.* from "./battle-runtime-prone-movement"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
+  import movementSpatialGrapple as MovementRule from "../shared-algebras/proofs/rule-core/movement-spatial-grapple"
 
   run test_movement_spends_budget = {
     val moved = moveFighter(
@@ -17,6 +18,18 @@ module battleRuntimeMovementTests {
     all {
       assert(moved.fighter.movementSpent == 10),
       assert(movementRemaining(moved.fighter) == 20),
+    }
+  }
+
+  run test_table_derived_route_cost_spends_ordinary_and_difficult_terrain_distance = {
+    val routeCost = {
+      distanceFeet: 10,
+      extraCostFeet: 5,
+    }
+    val moved = MovementRule::spendMovement(MovementRule::initialMovementGrappleState, routeCost)
+    all {
+      assert(MovementRule::movementCostFeet(routeCost) == 15),
+      assert(moved.movementSpentFeet == 15),
     }
   }
 

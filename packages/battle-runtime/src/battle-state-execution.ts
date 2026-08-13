@@ -4088,6 +4088,7 @@ export type BattleSubjectResolutionPhase =
   | {
       readonly kind: "subjectContinuation";
       readonly subject: BattleSubject;
+      readonly handledInterruptTrigger?: BattleInterruptTrigger;
     };
 
 export type BattleState = {
@@ -6910,6 +6911,7 @@ export type BattleResolutionResult =
       readonly droppedObjects?: readonly BattleDroppedObjectOutcome[];
       readonly shovePushes?: readonly BattleShovePushOutcome[];
       readonly teleports?: readonly BattleTeleportOutcome[];
+      readonly movements?: readonly BattleResolvedMovement[];
     }
   | {
       readonly tag: "needsHoles";

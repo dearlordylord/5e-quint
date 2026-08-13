@@ -9,6 +9,7 @@ import {
   attackDamageDispositionFill,
   damageRollFillWithGroups,
   movementFill,
+  interruptDecisionFill,
   requireCombatant,
   requireHole,
   requireResultHole,
@@ -31,6 +32,7 @@ import {
   Hp,
   movementFeet,
   resolveBattleSubject,
+  resolveBattleInterrupt,
   spellSlotInvocationRef,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   type BattleFill,
@@ -50,6 +52,7 @@ import {
 import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer/spell-reroll-issues.ts";
 import {
   battleActiveEffectExecutionRefForTest,
+  attackExecutionSelectionForSubjectForTest,
   battleAreaId,
   battleProcedureExecutionRefForTest,
   concentrationSavingThrowFill,
@@ -57,6 +60,7 @@ import {
   requireCharacterSpellProcedureRefForTest,
   readyTriggerDescriptionForTest,
   wizardSpellcasting,
+  characterAttackSubjectForTest,
 } from "./battle-runtime.test-support.ts";
 import type { BattleProcedureExecutionRef } from "./identity.ts";
 
@@ -1241,6 +1245,125 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
     expect(resolved.state.readiedResponses.has(spellTargetId)).toBe(false);
     expect(requireCombatant(resolved.state, spellTargetId)).toMatchObject({
       movementSpentFeet: movementFeet(0),
+    });
+  });
+
+  test("declined Opportunity Attack remains handled across a Spike Growth movement damage hole", () => {
+    const { sourceProcedureRef, state } = spikeGrowthTargetTurnState({
+      targetHp: 2,
+      targetHasRelentlessEndurance: true,
+    });
+    const subject = {
+      tag: "runtimeCommand" as const,
+      actorId: spellTargetId,
+      command: "move" as const,
+    };
+    const movementHole = requireResultHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "movement",
+    );
+    const movement = movementFill(movementHole, {
+      movementCostFeet: 15,
+      provokedOpportunityAttacks: [
+        {
+          reactorId: spellCasterId,
+          ...attackExecutionSelectionForSubjectForTest(
+            characterAttackSubjectForTest(
+              state,
+              spellCasterId,
+              "Unarmed Strike",
+            ),
+          ),
+        },
+      ],
+      areaDifficultTerrain: spikeGrowthAreaDifficultTerrain(
+        sourceProcedureRef,
+        {
+          totalDistanceFeet: 10,
+          difficultTerrainDistanceFeet: 5,
+          damageDistanceFeet: 5,
+        },
+      ),
+    });
+    const awaitingOpportunity = resolveBattleSubject({
+      state,
+      subject,
+      fills: [movement],
+    });
+    const decision = requireResultHole(
+      awaitingOpportunity,
+      "interruptDecision",
+    );
+    if (awaitingOpportunity.tag !== "needsHoles") {
+      throw new Error("Expected Opportunity Attack decision.");
+    }
+    const awaitingDamage = resolveBattleInterrupt({
+      state: awaitingOpportunity.state,
+      fill: interruptDecisionFill(decision, {
+        kind: "decline",
+        responderId: spellCasterId,
+      }),
+    });
+    expect(awaitingDamage).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "rolledDice" })],
+      state: {
+        subjectResolutionPhase: {
+          kind: "subjectContinuation",
+          handledInterruptTrigger: "opportunityAttack",
+        },
+      },
+    });
+    const damage = requireResultHole(awaitingDamage, "rolledDice");
+    if (awaitingDamage.tag !== "needsHoles") {
+      throw new Error("Expected Spike Growth movement damage hole.");
+    }
+    const awaitingDisposition = resolveBattleSubject({
+      state: awaitingDamage.state,
+      subject,
+      fills: [movement, damageRollFillWithGroups(damage, [[1, 1]])],
+    });
+    expect(awaitingDisposition).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "attackDamageDisposition" })],
+      state: {
+        subjectResolutionPhase: {
+          kind: "subjectContinuation",
+          handledInterruptTrigger: "opportunityAttack",
+        },
+      },
+    });
+    const disposition = requireResultHole(
+      awaitingDisposition,
+      "attackDamageDisposition",
+    );
+    const replacement = disposition.choices.find(
+      (choice) => choice.kind === "zeroHitPointReplacement",
+    );
+    if (replacement === undefined) {
+      throw new Error("Expected Relentless Endurance disposition.");
+    }
+    if (awaitingDisposition.tag !== "needsHoles") {
+      throw new Error("Expected zero-hit-point replacement choice.");
+    }
+    const resolved = resolveBattleSubject({
+      state: awaitingDisposition.state,
+      subject,
+      fills: [
+        movement,
+        damageRollFillWithGroups(damage, [[1, 1]]),
+        attackDamageDispositionFill(disposition, replacement),
+      ],
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      movements: [
+        expect.objectContaining({
+          moverId: spellTargetId,
+          movementCostFeet: movementFeet(15),
+        }),
+      ],
+      snapshot: { pendingInterrupt: null },
     });
   });
 

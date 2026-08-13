@@ -1400,19 +1400,28 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         "Area Difficult Terrain movement must spend total distance plus 1 extra foot for every foot moved through Difficult Terrain.",
     });
 
-    const moved = requireResolved(
-      resolveBattleSubject({
-        state: greased,
-        subject,
-        fills: [
-          movementFill(hole, {
-            movementCostFeet: 15,
-            provokedOpportunityAttacks: [],
-            areaDifficultTerrain,
-          }),
-        ],
-      }),
-    ).state;
+    const movementResult = resolveBattleSubject({
+      state: greased,
+      subject,
+      fills: [
+        movementFill(hole, {
+          movementCostFeet: 15,
+          provokedOpportunityAttacks: [],
+          areaDifficultTerrain,
+        }),
+      ],
+    });
+    expect(movementResult).toMatchObject({
+      tag: "resolved",
+      movements: [
+        {
+          moverId: wizardId,
+          movementCostFeet: movementFeet(15),
+          spendsTurnMovement: true,
+        },
+      ],
+    });
+    const moved = requireResolved(movementResult).state;
 
     expect(moved.combatants.get(wizardId)).toMatchObject({
       movementSpentFeet: movementFeet(15),

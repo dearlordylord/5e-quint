@@ -18,15 +18,22 @@ The supervisor owns one linear SDK-session lineage. Start with `context.session`
 pass that exact current value to each operation, and replace your local session
 with every resolution result's `session`. Stale or foreign sessions are rejected.
 The session's canonical battle reducer state is `session.battle`; its immutable
-`session.battlefield` projection retains the authored five-foot arena, initial
+`session.battlefield` projection retains the authored five-foot arena, current
 placements, ambient Illumination, vertical environment facts, and scenario objects.
-Use `context.sdk.scenarioInitialRelation` to derive initial distance, sight,
+Use `context.sdk.scenarioRelation` to derive current distance, sight,
 Cover, and traversal between retained tokens; do not restate those facts by
 reading coordinates yourself. Its Cover vocabulary is the battle reducer's
-`none | half | threeQuarters | total` vocabulary. `initialSpace` is immutable
-setup evidence, not current
-movement state. Until the SDK exposes movement evolution, report any tactic
-that requires a later position as an execution obstruction.
+`none | half | threeQuarters | total` vocabulary. For an ordinary Move, call
+`resolveScenarioMovement` with `kind: "route"`, the canonical Move subject, the nonempty sequence
+of grid coordinates entered after the actor's current square, a supported Speed
+kind, caller-owned Opportunity Attack facts, and any downstream fills. The
+scenario session derives traversal and Movement cost, while battle owns Movement
+resources and interrupts. The operation currently supports two-dimensional Walk
+routes only and reports other movement modes honestly.
+If that operation returns downstream holes, call the same operation with
+`kind: "continue"` and only their fills. The session retains the original Move
+subject, derived Movement fill, and planned placement across downstream holes
+and Opportunity Attack decisions; do not restate the route.
 Canonical object-damage outcomes advance each scenario object's current Hit
 Points. For an ordinary object attack, choose only the object id and pass an
 empty `spatialFacts` array; the scenario SDK projects range, sight, Cover, AC,

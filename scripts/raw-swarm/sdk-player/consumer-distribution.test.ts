@@ -270,14 +270,17 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
 export const continueBattle: PlayerContinuation = (context) => {
   const acts = context.sdk.discoverBattleActs(context.session);
   type SubjectInput = Parameters<typeof context.sdk.resolveBattleRuntimeSubject>[0];
+  type MovementInput = Parameters<typeof context.sdk.resolveScenarioMovement>[0];
   type InterruptInput = Parameters<typeof context.sdk.resolveBattleRuntimeInterrupt>[0];
   type EndTurnInput = Parameters<typeof context.sdk.endBattleRuntimeTurn>[0];
   const compileEveryOperation = (
     subjectInput: SubjectInput,
+    movementInput: MovementInput,
     interruptInput: InterruptInput,
     endTurnInput: EndTurnInput,
   ) => ({
     subject: context.sdk.resolveBattleRuntimeSubject(subjectInput),
+    movement: context.sdk.resolveScenarioMovement(movementInput),
     interrupt: context.sdk.resolveBattleRuntimeInterrupt(interruptInput),
     endTurn: context.sdk.endBattleRuntimeTurn(endTurnInput),
   });
@@ -389,29 +392,78 @@ export const continueBattle: PlayerContinuation = (context) => {
     (act) => act.subject.tag === "runtimeCommand" && act.subject.command === "endTurn",
   );
   if (endTurn === undefined) throw new Error("Expected End Turn");
+  const fighterAttack = acts.find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "attack" &&
+      act.subject.actorId === "external-fighter",
+  );
+  if (
+    fighterAttack === undefined ||
+    fighterAttack.subject.tag !== "action" ||
+    fighterAttack.subject.action !== "attack" ||
+    !("attackAbility" in fighterAttack.subject)
+  ) throw new Error("Expected fighter Attack");
   const advanced = context.sdk.endBattleRuntimeTurn({
     session: context.session,
     actorId: endTurn.subject.actorId,
   });
-  const invalid = context.sdk.resolveBattleRuntimeSubject({
+  const skeletonActs = context.sdk.discoverBattleActs(advanced.session);
+  const skeletonMove = skeletonActs.find(
+    (act) =>
+      act.subject.tag === "runtimeCommand" &&
+      act.subject.command === "move" &&
+      act.subject.actorId === "external-skeleton",
+  );
+  if (skeletonMove === undefined || skeletonMove.subject.tag !== "runtimeCommand" || skeletonMove.subject.command !== "move") {
+    throw new Error("Expected skeleton Move");
+  }
+  const awaitingOpportunity = context.sdk.resolveScenarioMovement({
+    kind: "route",
     session: advanced.session,
-    subject: endTurn.subject,
+    subject: skeletonMove.subject,
+    route: [{ x: 2, y: 0 }],
+    speedKind: "walk",
+    provokedOpportunityAttacks: [{
+      reactorId: fighterAttack.subject.actorId,
+      procedureRef: fighterAttack.subject.procedureRef,
+      attackAbility: fighterAttack.subject.attackAbility,
+      attackDamageType: fighterAttack.subject.attackDamageType,
+    }],
     fills: [],
   });
-  const noInterrupt = context.sdk.resolveBattleRuntimeInterrupt({
+  if (awaitingOpportunity.tag !== "needsHoles" || awaitingOpportunity.snapshot.pendingInterrupt === null) {
+    throw new Error("Expected Opportunity Attack decision");
+  }
+  const decisionHole = awaitingOpportunity.snapshot.pendingInterrupt.decisionHole;
+  const prematureContinuation = context.sdk.resolveScenarioMovement({
+    kind: "continue",
+    session: awaitingOpportunity.session,
+    fills: [],
+  });
+  const invalid = context.sdk.resolveBattleRuntimeInterrupt({
+    session: prematureContinuation.session,
+    fill: {
+      kind: "interruptDecision",
+      holeId: decisionHole.holeId,
+      value: { kind: "decline", responderId: skeletonMove.subject.actorId },
+    },
+  });
+  const moved = context.sdk.resolveBattleRuntimeInterrupt({
     session: invalid.session,
     fill: {
       kind: "interruptDecision",
-      holeId: "probe:no-interrupt",
-      value: { kind: "decline", responderId: endTurn.subject.actorId },
+      holeId: decisionHole.holeId,
+      value: { kind: "decline", responderId: fighterAttack.subject.actorId },
     },
   });
   return {
     kind: "continue",
-    session: noInterrupt.session,
+    session: moved.session,
     observation: {
-      staleSubjectResult: invalid.tag,
-      noInterruptResult: noInterrupt.tag,
+      invalidInterruptResult: invalid.tag,
+      prematureContinuationResult: prematureContinuation.tag,
+      movementResult: moved.tag,
     },
   };`),
     );
@@ -425,7 +477,7 @@ export const continueBattle: PlayerContinuation = (context) => {
         cwd: trustedDestination,
         encoding: "utf8",
       }),
-    ).toContain("6 call(s) matched");
+    ).toContain("9 call(s) matched");
     const callEvidence = readFileSync(
       join(trustedDestination, "evidence/sdk-calls.jsonl"),
       "utf8",
@@ -435,6 +487,7 @@ export const continueBattle: PlayerContinuation = (context) => {
     expect(callEvidence).toContain(
       '"operation":"resolveBattleRuntimeInterrupt"',
     );
+    expect(callEvidence).toContain('"operation":"resolveScenarioMovement"');
     expect(callEvidence).toContain('"$set"');
     const [header, ...calls] = callEvidence
       .trim()
@@ -445,7 +498,7 @@ export const continueBattle: PlayerContinuation = (context) => {
         arena: { cellSizeFeet: 5 },
         ambientIllumination: "brightLight",
         objects: [],
-        initialSpace: { revision: 2 },
+        space: { revision: 2 },
       },
     });
     for (const call of calls) {
@@ -455,11 +508,38 @@ export const continueBattle: PlayerContinuation = (context) => {
             arena: { cellSizeFeet: 5 },
             ambientIllumination: "brightLight",
             objects: [],
-            initialSpace: { revision: 2 },
           },
         });
       }
     }
+    expect(calls.at(-1)?.outputSession).toMatchObject({
+      battlefield: { space: { revision: 3 } },
+      movementResolution: { kind: "idle" },
+    });
+    const pendingMovementCalls = calls.filter(
+      (call) =>
+        call.operation === "resolveScenarioMovement" ||
+        call.operation === "resolveBattleRuntimeInterrupt",
+    );
+    expect(pendingMovementCalls.slice(0, 3)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          outputSession: expect.objectContaining({
+            battlefield: expect.objectContaining({
+              space: expect.objectContaining({ revision: 2 }),
+            }),
+            movementResolution: expect.objectContaining({ kind: "pending" }),
+          }),
+        }),
+      ]),
+    );
+    expect(
+      pendingMovementCalls
+        .slice(0, 3)
+        .every((call) =>
+          JSON.stringify(call.outputSession).includes('"kind":"pending"'),
+        ),
+    ).toBe(true);
 
     const programPath = join(trustedDestination, "evidence/program.ts");
     const frozenProgram = readFileSync(programPath, "utf8");

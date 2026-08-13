@@ -59,6 +59,7 @@ const BATTLE_ATTACK_ROUTE_RESOLVERS = {
 
 export function resolveAdmittedBattleSubject(
   input: AdmittedBattleResolutionInput,
+  handledInterruptTrigger?: BattleInterruptTrigger,
 ): BattleResolutionResult {
   const executionRegistry = spellProcedureExecutionRegistry();
   return battleResolutionWithExecutionSnapshot(
@@ -67,8 +68,10 @@ export function resolveAdmittedBattleSubject(
       input,
       executionRegistry,
       BATTLE_ATTACK_ROUTE_RESOLVERS,
+      handledInterruptTrigger === undefined ? {} : { handledInterruptTrigger },
     ),
     executionRegistry,
+    handledInterruptTrigger,
   );
 }
 
@@ -328,11 +331,18 @@ function battleResolutionWithExecutionSnapshot(
   inputState: BattleState,
   result: BattleResolutionResult,
   executionRegistry: ReturnType<typeof spellProcedureExecutionRegistry>,
+  handledInterruptTrigger?: BattleInterruptTrigger,
 ): BattleResolutionResult {
   const resolvedSubjectPhase =
     result.tag === "resolved"
       ? completedReportedReadyResumePhase(inputState, result.state)
       : undefined;
+  const continuationHandledInterruptTrigger =
+    result.tag !== "invalid" &&
+    result.state.subjectResolutionPhase.kind === "subjectContinuation"
+      ? (result.state.subjectResolutionPhase.handledInterruptTrigger ??
+        handledInterruptTrigger)
+      : handledInterruptTrigger;
   const phasedResult =
     result.tag === "invalid"
       ? result
@@ -345,6 +355,12 @@ function battleResolutionWithExecutionSnapshot(
                 ? {
                     kind: "subjectContinuation" as const,
                     subject: battleSubjectForReplay(result.subject),
+                    ...(continuationHandledInterruptTrigger !== undefined
+                      ? {
+                          handledInterruptTrigger:
+                            continuationHandledInterruptTrigger,
+                        }
+                      : {}),
                   }
                 : (resolvedSubjectPhase ?? {
                     kind: "subjectSelection" as const,

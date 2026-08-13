@@ -1,4 +1,5 @@
 import {
+  BATTLE_MOVEMENT_SPEED_KINDS,
   BattleFillSchema,
   BattleSubjectSchema,
   CombatantId,
@@ -17,7 +18,7 @@ type EndBattleRuntimeTurnReplayInput = Omit<
 
 export type SdkCallInput =
   | {
-      readonly operation: "scenarioInitialRelation";
+      readonly operation: "scenarioRelation";
       readonly input: {
         readonly sourceId: string;
         readonly targetId: string;
@@ -33,6 +34,31 @@ export type SdkCallInput =
         readonly subject: BattleSubject;
         readonly fills: readonly BattleFill[];
       };
+    }
+  | {
+      readonly operation: "resolveScenarioMovement";
+      readonly input:
+        | {
+            readonly kind: "route";
+            readonly subject: Extract<
+              BattleSubject,
+              { readonly tag: "runtimeCommand"; readonly command: "move" }
+            >;
+            readonly route: readonly [
+              { readonly x: number; readonly y: number },
+              ...{ readonly x: number; readonly y: number }[],
+            ];
+            readonly speedKind: (typeof BATTLE_MOVEMENT_SPEED_KINDS)[number];
+            readonly provokedOpportunityAttacks: Extract<
+              BattleFill,
+              { readonly kind: "movement" }
+            >["value"]["provokedOpportunityAttacks"];
+            readonly fills: readonly BattleFill[];
+          }
+        | {
+            readonly kind: "continue";
+            readonly fills: readonly BattleFill[];
+          };
     }
   | {
       readonly operation: "resolveBattleRuntimeInterrupt";
@@ -61,6 +87,22 @@ const ResolveInputSchema = Schema.Struct({
   subject: BattleSubjectSchema,
   fills: Schema.Array(BattleFillSchema),
 });
+const ScenarioMovementInputSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("route"),
+    subject: BattleSubjectSchema,
+    route: Schema.NonEmptyArray(
+      Schema.Struct({ x: Schema.Number, y: Schema.Number }),
+    ),
+    speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+    provokedOpportunityAttacks: Schema.Unknown,
+    fills: Schema.Array(BattleFillSchema),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("continue"),
+    fills: Schema.Array(BattleFillSchema),
+  }),
+);
 const InterruptInputSchema = Schema.Struct({ fill: BattleFillSchema });
 const EndTurnInputSchema = Schema.Struct({
   actorId: CombatantId,
@@ -71,9 +113,9 @@ export function decodeSdkCallInput(
   call: Pick<SdkCallRecord, "operation" | "input">,
 ): ParseResult<SdkCallInput> {
   return Match.value(call.operation).pipe(
-    Match.when("scenarioInitialRelation", () =>
+    Match.when("scenarioRelation", () =>
       decodeInput(InitialRelationInputSchema, call.input, (decoded) => ({
-        operation: "scenarioInitialRelation",
+        operation: "scenarioRelation",
         input: decoded,
       })),
     ),
@@ -88,6 +130,55 @@ export function decodeSdkCallInput(
         operation: "resolveBattleRuntimeSubject",
         input: decoded,
       })),
+    ),
+    Match.when("resolveScenarioMovement", () =>
+      decodeInput(ScenarioMovementInputSchema, call.input, (decoded) => {
+        if (decoded.kind === "continue") {
+          return {
+            operation: "resolveScenarioMovement" as const,
+            input: decoded,
+          };
+        }
+        if (
+          decoded.subject.tag !== "runtimeCommand" ||
+          decoded.subject.command !== "move"
+        ) {
+          return {
+            tag: "invalid" as const,
+            message:
+              "Scenario movement requires the canonical Move battle subject.",
+          };
+        }
+        const movement = Schema.decodeUnknownEither(BattleFillSchema, {
+          onExcessProperty: "error",
+        })({
+          kind: "movement",
+          holeId: "scenario-movement",
+          value: {
+            speedKind: decoded.speedKind,
+            movementCostFeet: 5,
+            provokedOpportunityAttacks: decoded.provokedOpportunityAttacks,
+          },
+        });
+        if (Either.isLeft(movement) || movement.right.kind !== "movement") {
+          return {
+            tag: "invalid" as const,
+            message: `SDK call input is invalid: ${Either.isLeft(movement) ? movement.left.message : "expected Movement facts"}`,
+          };
+        }
+        return {
+          operation: "resolveScenarioMovement" as const,
+          input: {
+            kind: "route" as const,
+            subject: decoded.subject,
+            route: decoded.route,
+            speedKind: decoded.speedKind,
+            provokedOpportunityAttacks:
+              movement.right.value.provokedOpportunityAttacks,
+            fills: decoded.fills,
+          },
+        };
+      }),
     ),
     Match.when("resolveBattleRuntimeInterrupt", () =>
       decodeInput(InterruptInputSchema, call.input, (decoded) =>

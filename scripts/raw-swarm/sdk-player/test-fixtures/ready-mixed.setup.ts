@@ -63,6 +63,7 @@ export const setupScenario: ScenarioSetup = ({
       cells: [
         { x: 0, y: 0, terrain: "ordinary" },
         { x: 1, y: 0, terrain: "ordinary" },
+        { x: 2, y: 0, terrain: "ordinary" },
       ],
       boundaries: [],
     },

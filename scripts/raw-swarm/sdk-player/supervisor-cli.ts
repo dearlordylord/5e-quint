@@ -37,7 +37,10 @@ import { authoredAttemptBody } from "./attempt-source.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
 import {
-  scenarioInitialRelation,
+  continueScenarioMovement,
+  planScenarioMovement,
+  scenarioSessionAfterRejectedMovement,
+  scenarioRelation,
   scenarioObjectAttackFills,
   scenarioSessionWithBattleResult,
   scenarioTokenId,
@@ -294,7 +297,11 @@ function transcriptRecords(): readonly unknown[] {
 }
 
 function resolutionProjection(result: ScenarioBattleResolutionResult): unknown {
-  if (result.tag === "scenarioSessionConflict") return jsonValue(result);
+  if (
+    result.tag === "scenarioSessionConflict" ||
+    result.tag === "scenarioMovementRejected"
+  )
+    return jsonValue(result);
   const { snapshot, ...outcome } = result;
   return jsonValue({
     ...outcome,
@@ -314,6 +321,7 @@ const byResolutionTag = Match.discriminator("tag");
 function retainScenarioBattlefield(
   session: ScenarioSession,
   result: BattleRuntimeResolutionResult,
+  cancelInvalidMovement = false,
 ): ScenarioBattleResolutionResult {
   return Match.value(result).pipe(
     byResolutionTag("resolved", (resolved) => {
@@ -321,6 +329,7 @@ function retainScenarioBattlefield(
         session,
         resolved.session,
         resolved.objectDamages,
+        resolved.movements,
       );
       return Either.isLeft(updated)
         ? {
@@ -344,7 +353,10 @@ function retainScenarioBattlefield(
         : { ...needsHoles, session: updated.right };
     }),
     byResolutionTag("invalid", (invalid) => {
-      const updated = scenarioSessionWithBattleResult(session, invalid.session);
+      const updated =
+        cancelInvalidMovement && session.movementResolution.kind === "pending"
+          ? scenarioSessionAfterRejectedMovement(session, invalid.session)
+          : scenarioSessionWithBattleResult(session, invalid.session);
       return Either.isLeft(updated)
         ? {
             tag: "scenarioSessionConflict" as const,
@@ -359,7 +371,7 @@ function retainScenarioBattlefield(
 
 function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
   return Match.value(call).pipe(
-    byOperation("scenarioInitialRelation", ({ input }) => {
+    byOperation("scenarioRelation", ({ input }) => {
       const sourceId = scenarioTokenId(session, input.sourceId);
       const targetId = scenarioTokenId(session, input.targetId);
       const missingTokenId =
@@ -369,9 +381,9 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
           ? {
               tag: "unknown-token" as const,
               tokenId: missingTokenId,
-              message: `Scenario token ${missingTokenId} has no initial placement.`,
+              message: `Scenario token ${missingTokenId} has no current placement.`,
             }
-          : scenarioInitialRelation({ session, sourceId, targetId });
+          : scenarioRelation({ session, sourceId, targetId });
       return { session, result: jsonValue(result), value: result };
     }),
     byOperation("discoverBattleActs", () => {
@@ -404,6 +416,35 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
         fills: projectedFills.right,
       });
       const result = retainScenarioBattlefield(session, battleResult);
+      return {
+        session: result.session,
+        result: resolutionProjection(result),
+        value: result,
+      };
+    }),
+    byOperation("resolveScenarioMovement", ({ input }) => {
+      const planned =
+        input.kind === "route"
+          ? planScenarioMovement({ session, ...input })
+          : continueScenarioMovement({ session, fills: input.fills });
+      if (Either.isLeft(planned)) {
+        const result: ScenarioBattleResolutionResult = {
+          tag: "scenarioMovementRejected",
+          session,
+          message: planned.left.message,
+        };
+        return { session, result: resolutionProjection(result), value: result };
+      }
+      const battleResult = resolveBattleRuntimeSubject({
+        session: planned.right.session.battle,
+        subject: planned.right.subject,
+        fills: planned.right.fills,
+      });
+      const result = retainScenarioBattlefield(
+        planned.right.session,
+        battleResult,
+        input.kind === "route",
+      );
       return {
         session: result.session,
         result: resolutionProjection(result),
@@ -796,11 +837,13 @@ async function runSubmittedSource(source: string): Promise<unknown> {
       );
     };
     const sdk: PlayerSdk = {
-      scenarioInitialRelation: ({ session, ...input }) =>
-        call("scenarioInitialRelation", session, input),
+      scenarioRelation: ({ session, ...input }) =>
+        call("scenarioRelation", session, input),
       discoverBattleActs: (session) => call("discoverBattleActs", session, {}),
       resolveBattleRuntimeSubject: ({ session, ...input }) =>
         call("resolveBattleRuntimeSubject", session, input),
+      resolveScenarioMovement: ({ session, ...input }) =>
+        call("resolveScenarioMovement", session, input),
       resolveBattleRuntimeInterrupt: ({ session, ...input }) =>
         call("resolveBattleRuntimeInterrupt", session, input),
       endBattleRuntimeTurn: ({ session, ...input }) =>

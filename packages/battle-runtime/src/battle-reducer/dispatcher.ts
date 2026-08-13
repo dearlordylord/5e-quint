@@ -219,11 +219,12 @@ export function resolveAdmittedBattleSubject(
   input: AdmittedBattleResolutionInput,
   executionRegistry: SpellProcedureExecutionRegistry,
   attackResolvers: BattleAttackRouteResolvers,
+  interruptRouteOptions: BattleInterruptRouteOptions = {},
 ): BattleResolutionResult {
   return resolveBattleSubjectInternal(input, {
     executionRegistry,
     attackResolvers,
-    interruptRouteOptions: {},
+    interruptRouteOptions,
   });
 }
 
@@ -663,7 +664,11 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       });
     }
     if (isMovementProcedureSubject(subject)) {
-      return resolveMovementProcedure({ ...input, subject });
+      return resolveMovementProcedure({
+        ...input,
+        subject,
+        ...handledInterruptRouteOption,
+      });
     }
     if (
       subject.tag === "runtimeCommand" &&

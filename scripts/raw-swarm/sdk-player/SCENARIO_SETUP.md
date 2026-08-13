@@ -18,8 +18,9 @@ Supply only the directed `initialRangedAttackEnemyRelationships` needed by the
 scenario. Each `{ attackerId, enemyId }` is a pairwise Table Decision scoped to
 the initial ranged-attack proximity question. It is not an encounter-wide side,
 party, or faction model; omit pairs whose relationship the table has not decided.
-The retained `initialSpace` is immutable setup evidence. Player queries derive
-relations from it; this setup boundary does not claim to track later movement.
+The retained `space` begins from these setup placements and later advances only
+through the composed scenario movement operation. Setup authors still provide
+only the starting placements.
 
 A scenario object is a table-owned target fact: use canonical `BattleObjectId`,
 `ArmorClass`, `BattleObjectDamageDisposition`, and tactical-space
