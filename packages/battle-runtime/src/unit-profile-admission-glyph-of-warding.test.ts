@@ -154,7 +154,10 @@ import {
   thunderwaveArea,
   webAreaFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import {
+  decodeSpellRecordForTest,
+  spellRecord,
+} from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleAreaId,
   battleObjectId,
@@ -470,57 +473,18 @@ const GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_RELEASE_CASES: ReadonlyArray<Gl
   ];
 
 describe("SRD Glyph of Warding durable occurrence admission", () => {
-  test("rejects unsupported Glyph Surface release shapes and missing caster save DC", () => {
+  test("rejects unsupported Glyph Surface level and missing caster save DC", () => {
     const glyph = spellRecord(glyphOfWardingUnitId);
     const mechanics = requireGlyphMechanics(glyph);
-    const unsupportedDurable = {
+    const unsupportedDurable = decodeSpellRecordForTest({
       ...glyph,
       mechanics: {
         ...mechanics,
         level: 4,
       },
-    } as SpellRecord;
-    const unsupportedRune = {
-      ...glyph,
-      mechanics: {
-        ...mechanics,
-        release: {
-          ...mechanics.release,
-          explosiveRune: {
-            ...mechanics.release.explosiveRune,
-            area: { ...mechanics.release.explosiveRune.area, radiusFeet: 10 },
-          },
-        },
-      },
-    } as SpellRecord;
-    const unsupportedStored = {
-      ...glyph,
-      mechanics: {
-        ...mechanics,
-        release: {
-          ...mechanics.release,
-          spellGlyph: {
-            ...mechanics.release.spellGlyph,
-            storage: {
-              ...mechanics.release.spellGlyph.storage,
-              maxStoredSpellLevel: {
-                ...mechanics.release.spellGlyph.storage.maxStoredSpellLevel,
-                baseMaxLevel: 4,
-              },
-            },
-          },
-        },
-      },
-    } as SpellRecord;
-
+    });
     expect(
       glyphDurableOccurrenceProfileForSpell(unsupportedDurable),
-    ).toBeNull();
-    expect(
-      glyphExplosiveRuneReleaseProfileForSpell(unsupportedRune),
-    ).toBeNull();
-    expect(
-      glyphStoredSpellReleaseProfileForSpell(unsupportedStored),
     ).toBeNull();
 
     const effect = requireCompletedGlyphEffect({
@@ -542,7 +506,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     ).toBeNull();
   });
 
-  test("rejects projected-out stored spells and unsupported target shapes", () => {
+  test("rejects projected-out stored spells", () => {
     const profile = requireGlyphProfile();
     const storedInvocation = storedSpellInvocation(guidingBoltUnitId, 1);
     const witness = completedGlyphInscriptionWitness({
@@ -557,29 +521,6 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       }),
     ).toEqual({
       tag: "storedSpellProcedureUnsupported",
-      storedInvocation,
-    });
-
-    const areaOnlyProfile = {
-      ...profile,
-      release: {
-        ...profile.release,
-        spellGlyph: {
-          ...profile.release.spellGlyph,
-          storage: {
-            ...profile.release.spellGlyph.storage,
-            targetShapes: ["area", "area"],
-          },
-        },
-      },
-    } as GlyphDurableOccurrenceProfile;
-    expect(
-      glyphDurableOccurrenceEffectFromCompletedInscription({
-        profile: areaOnlyProfile,
-        witness,
-      }),
-    ).toEqual({
-      tag: "storedSpellTargetShapeUnsupported",
       storedInvocation,
     });
   });

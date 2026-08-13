@@ -279,7 +279,7 @@ describe("save-gate helper admission boundaries", () => {
         ...base.mechanics,
         phases: [
           saveGatePhaseWithSelection(base, {
-            ...selection,
+            mode: "any_number",
             targetKinds: ["object"],
           }),
         ],
@@ -327,35 +327,35 @@ describe("save-gate helper admission boundaries", () => {
   });
 
   test("save-gated damage admission rejects dynamic damage references and amounts", () => {
-    const fireball = spellRecord(acidSplashUnitId);
-    const primaryReference = fireballWithFailure(
-      fireball,
-      "synthetic_fireball_dynamic_primary_damage_type",
+    const acidSplash = spellRecord(acidSplashUnitId);
+    const primaryReference = acidSplashWithFailure(
+      acidSplash,
+      "synthetic_acid_splash_dynamic_primary_damage_type",
       (failure) => {
         if (failure.kind !== "damage") {
-          throw new Error("Expected Fireball damage failure.");
+          throw new Error("Expected Acid Splash damage failure.");
         }
         return { ...failure, damageType: { kind: "all_damage_types" } };
       },
     );
-    const primaryAmount = fireballWithFailure(
-      fireball,
-      "synthetic_fireball_dynamic_primary_amount",
+    const primaryAmount = acidSplashWithFailure(
+      acidSplash,
+      "synthetic_acid_splash_dynamic_primary_amount",
       (failure) => {
         if (failure.kind !== "damage") {
-          throw new Error("Expected Fireball damage failure.");
+          throw new Error("Expected Acid Splash damage failure.");
         }
         return { ...failure, amount: { kind: "resource_spent" } };
       },
     );
-    const additionalReference = fireballWithCompositeFailure(
-      fireball,
-      "synthetic_fireball_dynamic_additional_damage_type",
+    const additionalReference = acidSplashWithCompositeFailure(
+      acidSplash,
+      "synthetic_acid_splash_dynamic_additional_damage_type",
       (damage) => ({ ...damage, damageType: { kind: "all_damage_types" } }),
     );
-    const additionalAmount = fireballWithCompositeFailure(
-      fireball,
-      "synthetic_fireball_dynamic_additional_amount",
+    const additionalAmount = acidSplashWithCompositeFailure(
+      acidSplash,
+      "synthetic_acid_splash_dynamic_additional_amount",
       (damage) => ({ ...damage, amount: { kind: "resource_spent" } }),
     );
 
@@ -371,15 +371,13 @@ describe("save-gate helper admission boundaries", () => {
       thunderwave,
       "synthetic_thunderwave_damage_shape_mismatch",
       (failure) => {
-        if (failure.kind !== "composite") {
-          throw new Error("Expected Thunderwave composite failure.");
-        }
-        const [damage, ...riders] = failure.effects;
+        const composite = compositeFailure(failure);
+        const [damage, ...riders] = composite.effects;
         if (damage?.kind !== "damage") {
           throw new Error("Expected Thunderwave damage effect.");
         }
         return {
-          ...failure,
+          ...composite,
           effects: [{ ...damage, damageType: "fire" }, ...riders],
         };
       },
@@ -388,15 +386,13 @@ describe("save-gate helper admission boundaries", () => {
       thunderwave,
       "synthetic_thunderwave_missing_creature_push",
       (failure) => {
-        if (failure.kind !== "composite") {
-          throw new Error("Expected Thunderwave composite failure.");
-        }
-        const [damage, ...riders] = failure.effects;
+        const composite = compositeFailure(failure);
+        const [damage, ...riders] = composite.effects;
         if (damage?.kind !== "damage") {
           throw new Error("Expected Thunderwave damage effect.");
         }
         return {
-          ...failure,
+          ...composite,
           effects: [
             damage,
             ...riders.filter((rider) => rider.kind !== "force_move"),
@@ -417,17 +413,12 @@ describe("save-gate helper admission boundaries", () => {
       dissonantWhispers,
       "synthetic_dissonant_whispers_movement_shape_mismatch",
       (failure) => {
-        if (failure.kind !== "composite") {
-          throw new Error("Expected Dissonant Whispers composite failure.");
-        }
-        return {
-          ...failure,
-          effects: failure.effects.map((effect) =>
-            effect.kind === "forced_reaction_movement"
-              ? { kind: "apply_condition", condition: "blinded" }
-              : effect,
-          ),
-        };
+        const composite = compositeFailure(failure);
+        return mapCompositeEffects(composite, (effect) =>
+          effect.kind === "forced_reaction_movement"
+            ? { kind: "apply_condition", condition: "blinded" as const }
+            : effect,
+        );
       },
     );
 
@@ -437,27 +428,24 @@ describe("save-gate helper admission boundaries", () => {
     expect(damageAdmission(movementMismatch)).toEqual([]);
   });
 
-  test("save-gated condition support rejects malformed Contagion riders and chosen-ability filters", () => {
+  test("save-gated condition support rejects unsupported Contagion riders and chosen-ability filters", () => {
     const contagion = spellRecord(contagionUnitId);
     const wrongShape = contagionWithFailure(
       contagion,
       "synthetic_contagion_wrong_shape",
-      (failure) => ({
-        ...failure,
-        effects: failure.effects.map((effect) =>
+      (failure) => {
+        const composite = compositeFailure(failure);
+        return mapCompositeEffects(composite, (effect) =>
           effect.kind === "apply_condition" && effect.condition === "poisoned"
-            ? { ...effect, condition: "blinded" }
+            ? { ...effect, condition: "blinded" as const }
             : effect,
-        ),
-      }),
+        );
+      },
     );
     const wrongCadence = contagionWithFailure(
       contagion,
       "synthetic_contagion_wrong_repeat_cadence",
-      (failure) => ({
-        ...failure,
-        effects: failure.effects,
-      }),
+      (failure) => compositeFailure(failure),
       (phase) => ({
         ...phase,
         repeatSaves: [
@@ -477,26 +465,26 @@ describe("save-gate helper admission boundaries", () => {
     const missingOn = contagionWithFailure(
       contagion,
       "synthetic_contagion_missing_save_disadvantage_on",
-      (failure) => ({
-        ...failure,
-        effects: failure.effects.map((effect) =>
+      (failure) => {
+        const composite = compositeFailure(failure);
+        return mapCompositeEffects(composite, (effect) =>
           effect.kind === "modify_roll_advantage"
-            ? { ...effect, on: ["attack_roll"] }
+            ? { ...effect, on: ["attack_roll"] as const }
             : effect,
-        ),
-      }),
+        );
+      },
     );
     const nonHoleFilter = contagionWithFailure(
       contagion,
       "synthetic_contagion_non_hole_save_filter",
-      (failure) => ({
-        ...failure,
-        effects: failure.effects.map((effect) =>
+      (failure) => {
+        const composite = compositeFailure(failure);
+        return mapCompositeEffects(composite, (effect) =>
           effect.kind === "modify_roll_advantage"
-            ? { ...effect, saveAbilityFilter: ["str"] }
+            ? { ...effect, saveAbilityFilter: ["str"] as const }
             : effect,
-        ),
-      }),
+        );
+      },
     );
 
     expect(damageAdmission(wrongShape)).toEqual([]);
@@ -510,26 +498,26 @@ describe("save-gate helper admission boundaries", () => {
     const unsupportedRider = viciousMockeryWithFailure(
       mockery,
       "synthetic_vicious_mockery_unsupported_rider",
-      (failure) => ({
-        ...failure,
-        effects: failure.effects.map((effect) =>
+      (failure) => {
+        const composite = compositeFailure(failure);
+        return mapCompositeEffects(composite, (effect) =>
           effect.kind === "modify_roll_advantage"
-            ? { ...effect, on: ["ability_check"] }
+            ? { ...effect, on: ["ability_check"] as const }
             : effect,
-        ),
-      }),
+        );
+      },
     );
     const wrongRiderCount = viciousMockeryWithFailure(
       mockery,
       "synthetic_vicious_mockery_wrong_rider_count",
-      (failure) => ({
-        ...failure,
-        effects: failure.effects.map((effect) =>
+      (failure) => {
+        const composite = compositeFailure(failure);
+        return mapCompositeEffects(composite, (effect) =>
           effect.kind === "modify_roll_advantage"
             ? { ...effect, count: 2 }
             : effect,
-        ),
-      }),
+        );
+      },
     );
     expect(cantripDamageAdmission(unsupportedRider)).toEqual([]);
     expect(cantripDamageAdmission(wrongRiderCount)).toEqual([]);
@@ -560,13 +548,17 @@ function saveGateAreaSelection(spell: SpellRecord): TargetSelection {
   ) {
     throw new Error("Expected a save-gated area attachment.");
   }
-  return phase.attachment.value.selection;
+  const selection = phase.attachment.value.selection;
+  if (selection === undefined) {
+    throw new Error("Expected a save-gated area target selection.");
+  }
+  return selection;
 }
 
 function saveGatePhaseWithSelection(
   spell: SpellRecord,
   selection: TargetSelection,
-): ActivationPhase {
+): unknown {
   const phase = firstSaveGatePhase(spell);
   if (
     phase.attachment.kind !== "hole" ||
@@ -574,11 +566,12 @@ function saveGatePhaseWithSelection(
   ) {
     throw new Error("Expected a save-gated area attachment.");
   }
+  const areaValue = phase.attachment.value;
   return {
     ...phase,
     attachment: {
       ...phase.attachment,
-      value: { ...phase.attachment.value, selection },
+      value: { ...areaValue, selection },
     },
   };
 }
@@ -609,6 +602,10 @@ function firstPhase(spell: SpellRecord): ActivationPhase {
 
 type SaveGatePhase = Extract<ActivationPhase, { readonly kind: "save_gate" }>;
 type SaveGateFailure = SaveGatePhase["onFail"];
+type CompositeFailure = Extract<
+  SaveGateFailure,
+  { readonly kind: "composite" }
+>;
 type DirectPhase = Extract<ActivationPhase, { readonly kind: "direct" }>;
 type DirectPhaseEffect = NonNullable<DirectPhase["effects"]>[number];
 
@@ -623,18 +620,19 @@ function cantripDamageAdmission(spell: SpellRecord) {
   return supportedCantripSaveGateDamageProfile(spellAdmissionSource(spell), 5);
 }
 
-function fireballWithFailure(
+function acidSplashWithFailure(
   base: SpellRecord,
   id: string,
   mapFailure: (failure: SaveGateFailure) => SaveGateFailure,
 ): SpellRecord {
+  const mechanics = activationMechanics(base);
   const phase = firstSaveGatePhase(base);
   return decodeSpellRecordForTest({
     ...base,
     id,
     mechanics: {
-      ...base.mechanics,
-      phases: base.mechanics.phases.map((candidate, index) =>
+      ...mechanics,
+      phases: mechanics.phases.map((candidate, index) =>
         index === 0
           ? { ...phase, onFail: mapFailure(phase.onFail) }
           : candidate,
@@ -643,13 +641,14 @@ function fireballWithFailure(
   });
 }
 
-function fireballWithCompositeFailure(
+function acidSplashWithCompositeFailure(
   base: SpellRecord,
   id: string,
   mapAdditionalDamage: (
     damage: Extract<SaveGateFailure, { readonly kind: "damage" }>,
   ) => Extract<SaveGateFailure, { readonly kind: "damage" }>,
 ): SpellRecord {
+  const mechanics = activationMechanics(base);
   const phase = firstSaveGatePhase(base);
   if (phase.onFail.kind !== "damage") {
     if (phase.onFail.kind !== "composite") {
@@ -668,8 +667,8 @@ function fireballWithCompositeFailure(
       ...base,
       id,
       mechanics: {
-        ...base.mechanics,
-        phases: base.mechanics.phases.map((candidate, index) =>
+        ...mechanics,
+        phases: mechanics.phases.map((candidate, index) =>
           index === 0
             ? {
                 ...phase,
@@ -692,8 +691,8 @@ function fireballWithCompositeFailure(
     ...base,
     id,
     mechanics: {
-      ...base.mechanics,
-      phases: base.mechanics.phases.map((candidate, index) =>
+      ...activationMechanics(base),
+      phases: activationMechanics(base).phases.map((candidate, index) =>
         index === 0
           ? {
               ...phase,
@@ -719,7 +718,7 @@ function thunderwaveWithFailure(
     ...base,
     id,
     mechanics: {
-      ...base.mechanics,
+      ...activationMechanics(base),
       phases: [{ ...phase, onFail: mapFailure(phase.onFail) }, direct],
     },
   });
@@ -736,7 +735,7 @@ function thunderwaveWithDirectEffectMutation(
     ...base,
     id,
     mechanics: {
-      ...base.mechanics,
+      ...activationMechanics(base),
       phases: [
         phase,
         {
@@ -758,7 +757,7 @@ function dissonantWhispersWithFailure(
     ...base,
     id,
     mechanics: {
-      ...base.mechanics,
+      ...activationMechanics(base),
       phases: [{ ...phase, onFail: mapFailure(phase.onFail) }],
     },
   });
@@ -775,7 +774,7 @@ function contagionWithFailure(
     ...base,
     id,
     mechanics: {
-      ...base.mechanics,
+      ...activationMechanics(base),
       phases: [{ ...mapPhase(phase), onFail: mapFailure(phase.onFail) }],
     },
   });
@@ -791,7 +790,7 @@ function viciousMockeryWithFailure(
     ...base,
     id,
     mechanics: {
-      ...base.mechanics,
+      ...activationMechanics(base),
       phases: [{ ...phase, onFail: mapFailure(phase.onFail) }],
     },
   });
@@ -808,4 +807,34 @@ function firstDirectPhase(spell: SpellRecord): DirectPhase {
     throw new Error("Expected a direct phase.");
   }
   return phase;
+}
+
+function activationMechanics(spell: SpellRecord) {
+  if (spell.mechanics.family !== "activation") {
+    throw new Error("Expected activation mechanics.");
+  }
+  return spell.mechanics;
+}
+
+function compositeFailure(failure: SaveGateFailure): CompositeFailure {
+  if (failure.kind !== "composite") {
+    throw new Error("Expected a composite save-gate failure.");
+  }
+  return failure;
+}
+
+function mapCompositeEffects(
+  failure: CompositeFailure,
+  mapEffect: (
+    effect: CompositeFailure["effects"][number],
+  ) => CompositeFailure["effects"][number],
+): CompositeFailure {
+  const [first, ...rest] = failure.effects;
+  if (first === undefined) {
+    throw new Error("Expected a non-empty composite effect list.");
+  }
+  return {
+    ...failure,
+    effects: [mapEffect(first), ...rest.map(mapEffect)],
+  };
 }
