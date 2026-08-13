@@ -822,7 +822,8 @@
         "packages/battle-runtime/src/find-familiar-state.ts",
         "packages/battle-runtime/src/find-familiar-telepathy.ts",
         "packages/battle-runtime/src/find-familiar-pact-chain.ts",
-        "packages/battle-runtime/src/battle-reducer/find-familiar-procedures.ts"
+        "packages/battle-runtime/src/battle-reducer/find-familiar-procedures.ts",
+        "packages/battle-runtime/src/battle-reducer/companion-routes.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -4286,10 +4287,16 @@
           "stepAction": "step"
         },
         {
-          "deterministicReplayRationale": "The exact-damage details route witness is a deterministic replay because qReplayIndex selects a closed sequence of route scenarios. The TS witness compares production route projections to QNT-owned route and rule-core component facts; random branch interleavings are not the risk at this connector boundary, and detailed Damage Roll, Critical Hit, adjustment, and Hit Point semantics remain owned by focused rule-core slices.",
+          "deterministicReplayRationale": "The exact-damage details route witness is a deterministic replay because qReplayIndex selects a closed sequence of route scenarios. The TS witness compares production route projections to QNT-owned route and rule-core component facts; random branch interleavings are not the risk at this connector boundary, and detailed Damage Roll, Critical Hit, damage adjustment, and Hit Point math remain owned by focused rule-core slices.",
           "kind": "deterministic-qnt-replay",
           "ownerPath": "packages/battle-runtime/src/exact-damage-details-route.mbt.test.ts",
           "qntSpecPath": "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/find-familiar-companion-lifecycle.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -4303,7 +4310,8 @@
         "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
         "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
         "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt",
-        "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt"
       ],
       "reason": "This is executable cleanroom architecture evidence, not a new whole-battle rule owner. The generic route vocabulary defines reducer entrypoint events, subject families, fill families, hole-family frontier facts, and battle-owned durable owner groups without authored catalog identity. Shared route fact and surface files carry typed route vocabulary for spatial-effect and weapon-hosted capability connectors without authored catalog identity. Each route connector driver composes an existing focused rule witness with qRoute, requiring the TS MBT driver and cleanroom rehearsal to prove that the same QNT-observed behavior is reachable through startBattle, discoverBattleActs, and resolveBattleSubject. Detailed spell targeting, save gating, healing, damage, and zero-Hit-Point semantics remain owned by their focused rule QNT rows.",
       "runtime": "battle",
@@ -4311,7 +4319,8 @@
         "packages/battle-runtime/src/battle-state-execution.ts",
         "packages/battle-runtime/src/battle-reducer/api-lifecycle.ts",
         "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
-        "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-reducer/companion-routes.ts"
       ],
       "status": "covered",
       "surfaceEvidence": [
@@ -9585,6 +9594,12 @@
       "evidence": "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt is the reducer-route connector fixture for exact damage details. It proves detailed damage projections are reachable through shared reducer route events while Damage Roll, Critical Hit, damage adjustment, and Hit Point math remain owned by focused rule-core slices.",
       "obligationIds": ["BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"],
       "ownerPath": "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt is the reducer-route connector fixture for Find Familiar lifecycle, Touch delivery, and Pact familiar attacks, including terminal no-roll paths.",
+      "obligationIds": ["BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
       "role": "mbt-fixture"
     },
     {

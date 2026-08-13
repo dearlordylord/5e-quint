@@ -2783,6 +2783,9 @@ describe("Find Familiar lifecycle", () => {
     expect(awaitingHealingRoll.tag).toBe("needsHoles");
     expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
     if (awaitingHealingRoll.tag !== "needsHoles") return;
+    expect(
+      awaitingHealingRoll.state.combatants.get(familiarId)?.reactionAvailable,
+    ).toBe(false);
 
     const delivered = deliverTouchSpellThroughFindFamiliar({
       state: cast.state,
@@ -2984,6 +2987,9 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(damageFrontier.tag).toBe("needsHoles");
     if (damageFrontier.tag !== "needsHoles") return;
+    expect(
+      damageFrontier.state.combatants.get(familiarId)?.reactionAvailable,
+    ).toBe(false);
     const damage = damageRollFill(
       requireHole(damageFrontier.holes, "rolledDice"),
       [8],
@@ -3324,7 +3330,7 @@ describe("Find Familiar lifecycle", () => {
     ).toBe(false);
   });
 
-  test("rejects touch-delivery completion when another transition spent the familiar Reaction", () => {
+  test("commits the familiar Reaction before applying the delivered Touch spell", () => {
     const session = startSpellcasterFixtureBattle();
     const cast = castCatFamiliar(session);
     expect(cast.tag).toBe("resolved");
@@ -3338,17 +3344,6 @@ describe("Find Familiar lifecycle", () => {
     );
     expect(cureWoundsAct?.subject.tag).toBe("actionSpell");
     if (cureWoundsAct?.subject.tag !== "actionSpell") return;
-    const familiar = cast.state.combatants.get(familiarId);
-    expect(familiar).toBeDefined();
-    if (familiar === undefined) return;
-    const stateAfterCompetingReaction = {
-      ...cast.state,
-      combatants: new Map(cast.state.combatants).set(familiarId, {
-        ...familiar,
-        reactionAvailable: false,
-      }),
-    };
-
     const targetFill = {
       kind: "targetChoice" as const,
       holeId: ATTACK_TARGET_HOLE_ID,
@@ -3378,21 +3373,22 @@ describe("Find Familiar lifecycle", () => {
           fills: [targetFill],
         },
       },
-      FindFamiliarProcedureExecution.fromResolver(() => ({
-        tag: "resolved",
-        state: stateAfterCompetingReaction,
-        snapshot: snapshotBattle(stateAfterCompetingReaction),
-      })),
+      FindFamiliarProcedureExecution.fromResolver((admitted) => {
+        expect(
+          admitted.state.combatants.get(familiarId)?.reactionAvailable,
+        ).toBe(false);
+        return {
+          tag: "resolved",
+          state: admitted.state,
+          snapshot: snapshotBattle(admitted.state),
+        };
+      }),
       "uncommitted",
     );
-    expect(result).toMatchObject({
-      tag: "invalid",
-      reason: "invalidFill",
-      message:
-        "Find Familiar touch delivery requires the familiar's available Reaction at completion.",
-    });
-    expect(result.snapshot.combatants).toEqual(
-      snapshotBattle(cast.state).combatants,
+    expect(result.tag).toBe("resolved");
+    if (result.tag !== "resolved") return;
+    expect(result.state.combatants.get(familiarId)?.reactionAvailable).toBe(
+      false,
     );
   });
 
@@ -3842,6 +3838,9 @@ describe("Find Familiar lifecycle", () => {
     if (awaitingHealingRoll.tag !== "needsHoles") return;
     expect(awaitingHealingRoll.subject).toMatchObject(delivery.subject);
     expect(cast.state.combatants.get(familiarId)?.reactionAvailable).toBe(true);
+    expect(
+      awaitingHealingRoll.state.combatants.get(familiarId)?.reactionAvailable,
+    ).toBe(false);
 
     const healingRoll = damageRollFill(
       requireHole(awaitingHealingRoll.holes, "rolledDice"),

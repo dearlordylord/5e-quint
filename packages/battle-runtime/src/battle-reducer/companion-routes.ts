@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 import type {
   BattleActDiscoveryCandidate,
   BattleResolutionInput,
