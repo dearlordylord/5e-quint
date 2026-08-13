@@ -137,6 +137,53 @@ describe("persistent spatial spell boundary procedures", () => {
     });
   });
 
+  test("Gust of Wind preserves a pending Death Save frontier before ending the turn", () => {
+    const initial = spellBattle({
+      preparedSpells: [spellRecord(gustOfWindUnitId)],
+      spellSlots: [{ spellLevel: 2, count: 1 }],
+      casterClassLevels: [{ className: "wizard", level: 3 }],
+      extraTargetIds: [deathSaveFrontierActorId],
+      extraTargetHp: 0,
+      extraTargetMaxHp: 12,
+    });
+    const castAct = spellAct({
+      session: initial,
+      spellId: gustOfWindUnitId,
+      slotLevel: 2,
+    });
+    const cast = requireResolved(
+      resolveBattleSubject({
+        state: initial.state,
+        subject: castAct.subject,
+        fills: [
+          gustOfWindLineSavingThrowOutcomeFill(
+            requireHole(castAct.initialHoles, "savingThrowOutcome"),
+            [{ targetId: spellTargetId, succeeded: true }],
+          ),
+        ],
+      }),
+    );
+    const targetTurn = requireResolved(
+      endTurn({ state: cast.state, actorId: spellCasterId }),
+    );
+    const saveAct = gustOfWindLineEndTurnSaveAct(targetTurn.state);
+    const pending = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: saveAct.subject,
+      fills: [
+        gustOfWindLineSavingThrowOutcomeFill(
+          requireHole(saveAct.initialHoles, "savingThrowOutcome"),
+          [{ targetId: spellTargetId, succeeded: true }],
+        ),
+      ],
+    });
+
+    expect(pending).toMatchObject({
+      tag: "needsHoles",
+      holes: [expect.objectContaining({ kind: "deathSavingThrow" })],
+    });
+  });
+
   test("Gust of Wind direction change spends one Bonus Action and rejects stale subjects", () => {
     const initial = spellBattle({
       preparedSpells: [spellRecord(gustOfWindUnitId)],
