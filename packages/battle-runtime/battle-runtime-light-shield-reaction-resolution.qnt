@@ -4,7 +4,6 @@
 
 module battleRuntimeLightShieldReactionResolution {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeLightSpellAttacks.* from "./battle-runtime-light-spell-attacks"
   import battleRuntimeShieldReactionDecision.* from "./battle-runtime-shield-reaction-decision"
 
@@ -24,18 +23,17 @@ module battleRuntimeLightShieldReactionResolution {
   pure def lightShieldReactionCandidate(
     frame: PendingReactionFrame,
   ): LightShieldReactionCandidate =
-    match frame.procedure {
-      | ShieldReactionProcedure =>
-          if (not(shieldReactionFrameIsFreshGoblinTarget(frame)) or
-              frame.trigger != AttackHit)
+    match frame.request {
+      | AttackHitShieldReactionRequest(request) =>
+          if (not(shieldReactionFrameIsFreshGoblinTarget(frame)))
             NoLightShieldReactionCandidate
           else
-            match frame.continuation {
-              | ResumeProduceFlameHurl =>
+            match request {
+              | ShieldResumesProduceFlameHurl =>
                   HasLightShieldReactionCandidate({
                     continuation: LightShieldProduceFlameHurl,
                   })
-              | ResumeFlameBladeAttack =>
+              | ShieldResumesFlameBladeAttack =>
                   HasLightShieldReactionCandidate({
                     continuation: LightShieldFlameBladeAttack,
                   })
@@ -101,8 +99,6 @@ module battleRuntimeLightShieldReactionResolution {
     match decision {
       | ShieldReactionDecisionTakenClosed(data) =>
           resumeLightShieldReactionAfterTake(data.state, frame.continuation)
-      | ShieldReactionDecisionTakenOpen(data) =>
-          data.state
       | _ => state
     }
   }
@@ -119,8 +115,6 @@ module battleRuntimeLightShieldReactionResolution {
     match decision {
       | ShieldReactionDecisionDeclinedClosed(data) =>
           resumeLightShieldReactionAfterDecline(data.state, frame.continuation)
-      | ShieldReactionDecisionDeclinedOpen(data) =>
-          data.state
       | _ => state
     }
   }

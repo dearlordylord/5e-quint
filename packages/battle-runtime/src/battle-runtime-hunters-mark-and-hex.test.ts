@@ -44,6 +44,7 @@ import {
   rageResource,
   requiredAbilityCheckRollMode,
   requireHole,
+  requireCharacterSpellProcedureRefForTest,
   requireResolved,
   resolveBattleSubject,
   Schema,
@@ -58,6 +59,7 @@ import {
   tickDurationEffects,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
+import { SPELL_CAST_REACTION_FACTS_HOLE_ID } from "./index.ts";
 
 describe("battle runtime: Hunter's Mark and Hex", () => {
   test("Hunter's Mark adds Force damage to attack-roll hits against the mark and transfers after the mark drops", () => {
@@ -832,6 +834,89 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       reason: "staleSubject",
       message: "This turn has already expended a Spell Slot.",
     });
+  });
+
+  test("Counterspell suspends Hunter's Mark after its Bonus Action is spent but before Spell Slot or effect commitment", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-hunters-mark-counterspell-window"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "ranger", level: 1 }],
+          spellcasting: {
+            ...wizardSpellcasting({
+              cantrips: [],
+              preparedSpells: [spellRecord("hunters_mark")],
+            }),
+            sourceClassName: "ranger",
+          },
+        }),
+        characterSeed({
+          combatantId: skeletonId,
+          displayName: "Counterspell reactor",
+          initiative: 10,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("counterspell")],
+            spellSlots: [{ spellLevel: 3, count: 1 }],
+          }),
+        }),
+      ],
+    });
+    const markAct = discoverBattleActs(session).find(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        battleActSpellPresentation(candidate)?.invocation.spellId ===
+          "hunters_mark",
+    );
+    if (markAct === undefined) {
+      throw new Error("Expected Hunter's Mark Bonus Action spell act.");
+    }
+
+    const awaitingCounterspell = resolveBattleSubject({
+      state: session.state,
+      subject: markAct.subject,
+      fills: [
+        targetFill(findHole(markAct.initialHoles, "targetChoice"), skeletonId),
+        {
+          kind: "targetSpatialFacts",
+          holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
+          spatialFacts: [
+            {
+              kind: "counterspellTriggerCasterVisibleWithinRange",
+              reactorId: skeletonId,
+              casterId: fighterId,
+              sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+                session,
+                skeletonId,
+                spellSlotInvocationRef("counterspell", 3, "counterspell"),
+              ),
+              rangeFeet: movementFeet(60),
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(awaitingCounterspell).toMatchObject({
+      tag: "needsHoles",
+      snapshot: {
+        pendingInterrupt: { trigger: "spellCast" },
+        turn: { bonusActionAvailable: false },
+      },
+    });
+    if (awaitingCounterspell.tag !== "needsHoles") {
+      throw new Error("Expected Hunter's Mark spell-cast Reaction window.");
+    }
+    const caster = awaitingCounterspell.state.combatants.get(fighterId);
+    if (caster?.origin.kind !== "character") {
+      throw new Error("Expected Hunter's Mark character caster.");
+    }
+    expect(caster.activeEffects).toEqual([]);
+    expect(
+      caster.origin.spellcasting?.spellSlots.find(
+        (slot) => Number(slot.spellLevel) === 1,
+      )?.expended,
+    ).toBe(0);
   });
 
   test("Hex routes target and ability choices independently before applying Necrotic attack-hit damage and chosen-ability check Disadvantage", () => {

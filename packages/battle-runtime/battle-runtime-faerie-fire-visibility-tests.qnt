@@ -1,49 +1,21 @@
 // -*- mode: Bluespec; -*-
-// TEMPORARY RESIDUAL: these scenarios depend on the master-owned Light/concentration/prone lane; delete this root and its closure exception only after synchronization.
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-attack-roll-advantage-save
 
-module battleRuntimeSaveSpellResidualTests {
+module battleRuntimeFaerieFireVisibilityTests {
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
-  import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
-  import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
+  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeSpellAttackRollAndVisibilityFacts.* from "./battle-runtime-spell-attack-roll-and-visibility-facts"
   import battleRuntimeSaveConditionFaerieFire.* from "./battle-runtime-save-condition-faerie-fire"
+  import battleRuntimeSaveGatedFacts.* from "./battle-runtime-save-gated-facts"
+  import battleRuntimeCreatureTypeProtectionAttackRoll.* from "./battle-runtime-creature-type-protection-attack-roll"
   import battleRuntimeLightEmitters.* from "./battle-runtime-light-emitters"
-
-  run test_roll_modifier_concentration_effects_end_when_caster_concentration_breaks = {
-    val concentrating = {
-      ...endTurn(initialState),
-      fighter: {
-        ...initialState.fighter,
-        concentrating: true,
-        activeEffects: Set(BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus({ skill: StealthSkill }), PassWithoutTraceStealthBonus),
-      },
-      goblin: {
-        ...initialState.goblin,
-        activeEffects: Set(BaneD20RollPenalty, BlessD20RollBonus, GuidanceAbilityCheckBonus({ skill: StealthSkill }), PassWithoutTraceStealthBonus),
-      },
-    }
-    val result = resolveGoblinAttack(concentrating, 20, 18, 5, false)
-    all {
-      assert(not(result.fighter.concentrating)),
-      assert(not(result.fighter.activeEffects.contains(BaneD20RollPenalty))),
-      assert(not(result.fighter.activeEffects.contains(BlessD20RollBonus))),
-      assert(not(result.fighter.activeEffects.contains(GuidanceAbilityCheckBonus({ skill: StealthSkill })))),
-      assert(not(result.fighter.activeEffects.contains(PassWithoutTraceStealthBonus))),
-      assert(not(result.goblin.activeEffects.contains(BaneD20RollPenalty))),
-      assert(not(result.goblin.activeEffects.contains(BlessD20RollBonus))),
-      assert(not(result.goblin.activeEffects.contains(GuidanceAbilityCheckBonus({ skill: StealthSkill })))),
-      assert(not(result.goblin.activeEffects.contains(PassWithoutTraceStealthBonus))),
-    }
-  }
 
   run test_faerie_fire_applies_outline_until_concentration_break = {
     val lit = resolveFaerieFire(initialState, true, false)
     val broken = breakConcentrationSpellEffects(lit, Fighter)
     all {
-      assert(lit.actionAvailable == false),
+      assert(not(lit.actionAvailable)),
       assert(battleActorHasCommittedSpellSlotUse(lit, Fighter)),
       assert(lit.fighter.concentrating),
       assert(not(lit.fighter.activeEffects.contains(FaerieFireOutline))),
@@ -61,6 +33,12 @@ module battleRuntimeSaveSpellResidualTests {
       assert(activeEffectsDenyInvisibleBenefit(lit.goblin.activeEffects)),
       assert(spellAttackRollModeFromActiveEffects(Set(), lit.goblin.activeEffects, true) == AdvantageSpellAttackRoll),
       assert(spellAttackRollModeFromActiveEffects(Set(), lit.goblin.activeEffects, false) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromActiveEffects(Set(ViciousMockeryNextAttackDisadvantage), lit.goblin.activeEffects, true) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromBlurredActiveEffects(Set(), Set(Blurred, FaerieFireOutline), true, false) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection), true) == NormalSpellAttackRoll),
+      assert(spellAttackRollModeFromCreatureTypeScopedActiveEffects(UndeadCreature, Set(), Set(FaerieFireOutline, ProtectionFromEvilAndGoodCreatureTypeProtection), false) == DisadvantageSpellAttackRoll),
+      assert(saveGatedAttackRollAdvantageTargeting(FaerieFireSaveGate) == AreaSaveTargets),
+      assert(saveGatedAttackRollAdvantageFailedSaveActiveEffects(FaerieFireSaveGate) == Set(FaerieFireOutline)),
       assert(not(broken.goblin.activeEffects.contains(FaerieFireOutline))),
       assert(not(battleRuntimeLightEmitters(broken).contains(SpellLightEmitter({
         source: Fighter,
@@ -114,5 +92,4 @@ module battleRuntimeSaveSpellResidualTests {
       assert(not(objectOutlinesDenyInvisibleBenefit(broken.objectOutlines, FaerieFireObjectTarget))),
     }
   }
-
 }

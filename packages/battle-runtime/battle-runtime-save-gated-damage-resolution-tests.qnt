@@ -180,4 +180,14 @@ module battleRuntimeSaveGatedDamageResolutionTests {
     }
   }
 
+  run test_acid_splash_damage_can_break_target_concentration = {
+    val concentratingGoblin = { ...initialState, goblin: { ...initialState.goblin, concentrating: true, activeEffects: Set(GuidanceAbilityCheckBonus({ skill: StealthSkill })) } }
+    val result = resolveAcidSplash(concentratingGoblin, false, true, 4, true, false)
+    all {
+      assert(result.goblin.hp == 6),
+      assert(not(result.goblin.concentrating)),
+      assert(result.goblin.activeEffects == Set()),
+    }
+  }
+
 }

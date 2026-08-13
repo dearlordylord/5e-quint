@@ -510,20 +510,21 @@ function moveActionBonusActionTurnResources(
   return combatantHasMoveActionBonusActionRestriction(actor)
     ? enableMovementActionBonusActionExclusion(
         resources,
-        Number(actor?.movementSpentFeet ?? 0) > 0,
+        Number(actor.movementSpentFeet) > 0,
       )
     : resources;
 }
 
 function combatantHasMoveActionBonusActionRestriction(
   combatant: BattleCreatureState | undefined,
-): boolean {
+): combatant is BattleCreatureState {
   return (
-    combatant?.activeEffects.some(
+    combatant !== undefined &&
+    combatant.activeEffects.some(
       (effect) =>
         effect.kind === "unitFeatureCondition" &&
         effect.turnRestriction?.kind === "moveActionOrBonusAction",
-    ) ?? false
+    )
   );
 }
 

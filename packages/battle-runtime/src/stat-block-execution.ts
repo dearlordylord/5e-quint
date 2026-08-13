@@ -6,7 +6,7 @@ import {
   resourceCount,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
-import { Brand } from "effect";
+import { Brand, Match } from "effect";
 import * as Either from "effect/Either";
 import type {
   CreatureLimitedUse,
@@ -642,12 +642,11 @@ export function restoreStatBlockExecutionAdmissions<
       );
       continue;
     }
-    if (
-      !resourcePoolStructuresEqual(
-        snapshot.resourcePools,
-        expected.execution.resourcePools,
-      )
-    ) {
+    const restoredResourcePools = restoredResourcePoolsInExecutionOrder(
+      snapshot.resourcePools,
+      expected.execution.resourcePools,
+    );
+    if (restoredResourcePools === null) {
       issues.push(
         statBlockExecutionRestoreIssue(
           restorationIndex,
@@ -663,10 +662,7 @@ export function restoreStatBlockExecutionAdmissions<
         execution: admittedStatBlockExecutionState({
           scopeRef: snapshot.scopeRef,
           procedureBindings: expected.execution.procedureBindings,
-          resourcePools: restoredResourcePoolsInExecutionOrder(
-            snapshot.resourcePools,
-            expected.execution.resourcePools,
-          ),
+          resourcePools: restoredResourcePools,
         }),
       }),
     );
@@ -768,19 +764,29 @@ function requireAllocatedAttackRef(
 function restoredResourcePoolsInExecutionOrder(
   snapshotPools: readonly StatBlockResourcePoolState[],
   executionPools: readonly StatBlockResourcePoolState[],
-): readonly StatBlockResourcePoolState[] {
+): readonly StatBlockResourcePoolState[] | null {
+  if (
+    snapshotPools.length !== executionPools.length ||
+    new Set(snapshotPools.map((pool) => pool.resourcePoolRef)).size !==
+      snapshotPools.length
+  ) {
+    return null;
+  }
   const snapshotPoolByRef = new Map(
     snapshotPools.map((pool) => [pool.resourcePoolRef, pool]),
   );
-  return executionPools.map((executionPool) => {
+  const restored: StatBlockResourcePoolState[] = [];
+  for (const executionPool of executionPools) {
     const snapshotPool = snapshotPoolByRef.get(executionPool.resourcePoolRef);
-    if (snapshotPool === undefined) {
-      throw new Error(
-        "Validated execution resources must contain every expected pool.",
-      );
+    if (
+      snapshotPool === undefined ||
+      !resourcePoolStructuresMatch(snapshotPool, executionPool)
+    ) {
+      return null;
     }
-    return snapshotPool;
-  });
+    restored.push(snapshotPool);
+  }
+  return restored;
 }
 
 function persistedValuesEqual(actual: unknown, expected: unknown): boolean {
@@ -834,37 +840,23 @@ function repeatedNonEmpty<T>(
   return [value, ...Array.from({ length: count - 1 }, () => value)];
 }
 
-function resourcePoolStructuresEqual(
-  actual: readonly StatBlockResourcePoolState[],
-  expected: readonly StatBlockResourcePoolState[],
+function resourcePoolStructuresMatch(
+  actual: StatBlockResourcePoolState,
+  expected: StatBlockResourcePoolState,
 ): boolean {
-  const expectedByRef = new Map(
-    expected.map((pool) => [pool.resourcePoolRef, pool]),
-  );
-  return (
-    actual.length === expected.length &&
-    new Set(actual.map((pool) => pool.resourcePoolRef)).size ===
-      actual.length &&
-    actual.every((pool) => {
-      const expectedPool = expectedByRef.get(pool.resourcePoolRef);
-      if (
-        expectedPool === undefined ||
-        pool.resourcePoolRef !== expectedPool.resourcePoolRef ||
-        pool.kind !== expectedPool.kind
-      ) {
-        return false;
-      }
-      if (
-        (pool.kind === "daily" || pool.kind === "legendaryActions") &&
-        (expectedPool.kind === "daily" ||
-          expectedPool.kind === "legendaryActions")
-      ) {
-        return pool.usesMax === expectedPool.usesMax;
-      }
-      return pool.kind !== "recharge" || expectedPool.kind !== "recharge"
-        ? true
-        : pool.minimumRoll === expectedPool.minimumRoll;
-    })
+  if (actual.resourcePoolRef !== expected.resourcePoolRef) return false;
+  return Match.value(actual).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      daily: (pool) =>
+        expected.kind === "daily" && pool.usesMax === expected.usesMax,
+      recharge: (pool) =>
+        expected.kind === "recharge" &&
+        pool.minimumRoll === expected.minimumRoll,
+      recharge_after_rest: () => expected.kind === "recharge_after_rest",
+      legendaryActions: (pool) =>
+        expected.kind === "legendaryActions" &&
+        pool.usesMax === expected.usesMax,
+    }),
   );
 }
 

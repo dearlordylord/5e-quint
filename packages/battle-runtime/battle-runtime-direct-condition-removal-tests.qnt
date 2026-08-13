@@ -6,6 +6,7 @@ module battleRuntimeDirectConditionRemovalTests {
   import battleRuntimeDirectConditionRemoval.* from "./battle-runtime-direct-condition-removal"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
+  import battleRuntimeInvisibility.* from "./battle-runtime-invisibility"
 
   run test_lesser_restoration_cast_removes_selected_condition = {
     val targetEffects = Set(

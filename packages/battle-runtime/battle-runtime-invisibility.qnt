@@ -1,16 +1,35 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.SANCTUARY.TARGETING_INTERDICTION BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-direct-condition
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-direct-condition
 
-module battleRuntimeConditionSpellResolution {
+module battleRuntimeInvisibility {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeActorCombatants.* from "./battle-runtime-actor-combatants"
-  import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
+  import battleRuntimeTargetActionEffectEarlyEnd.* from "./battle-runtime-target-action-effect-early-end"
+
+  pure def invisibilityConditionActiveEffect(source: Actor): ActiveEffect =
+    InvisibilityCondition({ source: source, durationTicks: 600 })
+
+  pure def activeEffectsContainInvisibilityCondition(effects: Set[ActiveEffect]): bool =
+    effects.exists(effect => match effect {
+      | InvisibilityCondition(_) => true
+      | _ => false
+    })
+
+  pure def activeEffectsInvisibilityDurationTicks(effects: Set[ActiveEffect]): int =
+    effects.map(effect => match effect {
+      | InvisibilityCondition(data) => data.durationTicks
+      | _ => 0
+    }).fold(0, (highest, ticks) => if (highest > ticks) highest else ticks)
+
+  pure def combatantWithInvisibilityCondition(target: Combatant, source: Actor): Combatant =
+    {
+      ...target,
+      activeEffects: activeEffectsWithoutInvisibilityConditionFrom(target.activeEffects, source).union(Set(invisibilityConditionActiveEffect(source))),
+    }
 
   pure def invisibilityConditionMaxTargets(slotLevel: int): int =
     if (slotLevel >= 2) 1 + (slotLevel - 2) else 0
@@ -47,25 +66,5 @@ module battleRuntimeConditionSpellResolution {
         ...withTargets,
         fighter: { ...withTargets.fighter, concentrating: true },
       }, Fighter)
-    }
-
-  pure def resolveSanctuaryWardSpell(state: BattleState, target: Actor): BattleState =
-    if (
-      currentActor(state) != Fighter or
-      not(state.bonusActionAvailable) or
-      state.fighter.unconscious or
-      state.fighter.incapacitated or
-      fighterHasRage(state) or
-      not(canExpendSpellSlotThisTurn(state))
-    )
-      state
-    else {
-      val afterCasterEarlyEnd = battleStateAfterSanctuaryEarlyEndForActor(state, Fighter)
-      val targetCombatant = combatantForActor(afterCasterEarlyEnd, target)
-      stateWithActorCombatant(
-        commitActorSpellSlotUse({ ...afterCasterEarlyEnd, bonusActionAvailable: false }, Fighter),
-        target,
-        combatantWithSanctuaryWard(targetCombatant, Fighter),
-      )
     }
 }

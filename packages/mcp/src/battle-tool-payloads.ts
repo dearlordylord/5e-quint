@@ -1,7 +1,6 @@
 import {
   battleAdmittedSpellPresentations,
   battlePresentedSnapshot,
-  battleSnapshotProjection,
   battleSubjectPresentation,
   discoverBattleActs,
   presentBattleActs,
@@ -72,9 +71,8 @@ export function battleSessionPayload(
 export function battleResolutionPayload(
   root: McpCompositionRoot,
   result: BattleRuntimeResolutionResult,
-  session: BattleRuntimeSession,
 ) {
-  const presentation = battleResultPresentationProjection(result, session);
+  const presentation = battleResultPresentationProjection(result);
   return Either.map(presentation, (value) => ({
     result: battleResolutionResultPayload(result, value.snapshot),
     ...value,
@@ -85,19 +83,20 @@ export function battleResolutionPayload(
 
 function battleResultPresentationProjection(
   result: BattleRuntimeResolutionResult,
-  session: BattleRuntimeSession,
 ): Either.Either<
   ActiveBattlePresentationProjection,
   BattleSnapshotPresentationIssues
 > {
   return Either.map(
-    presentBattleSnapshot(session, result.snapshot),
+    presentBattleSnapshot(result.session, result.snapshot),
     (snapshot) => ({
       snapshot,
-      availableActs: presentBattleActs(session, result.snapshot.acts),
-      admittedSpellPresentations: battleAdmittedSpellPresentations(session),
+      availableActs: presentBattleActs(result.session, result.snapshot.acts),
+      admittedSpellPresentations: battleAdmittedSpellPresentations(
+        result.session,
+      ),
       presentedInterruptChoices: presentedInterruptChoices(
-        session,
+        result.session,
         result.snapshot.pendingInterrupt?.choices ?? [],
       ),
     }),
@@ -136,8 +135,7 @@ function battlePresentationProjection(
     admittedSpellPresentations: battleAdmittedSpellPresentations(session),
     presentedInterruptChoices: presentedInterruptChoices(
       session,
-      battleSnapshotProjection(session.state).snapshot.pendingInterrupt
-        ?.choices ?? [],
+      snapshot.pendingInterrupt?.choices ?? [],
     ),
   }));
 }

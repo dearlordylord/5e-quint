@@ -29,11 +29,7 @@ module battleRuntimeSaveGatedShieldReactionResolutionTests {
     val awaiting = resolveIceKnife(initialState, 15, 10, 4, false, false, false, 6, true, true)
     all {
       assert(pendingReactionFrame(awaiting.interruptStack[0]) == HasPendingReactionFrame({
-        trigger: AttackHit,
-        procedure: ShieldReactionProcedure,
-        eligibleReactors: Set(Goblin),
-        offeredReactors: Set(),
-        continuation: ResumeIceKnife,
+        request: AttackHitShieldReactionRequest(ShieldResumesIceKnife),
       })),
       assert(awaiting.goblin.hp == 10),
       assert(awaiting.actionAvailable),
@@ -43,11 +39,7 @@ module battleRuntimeSaveGatedShieldReactionResolutionTests {
 
   run test_save_gated_shield_rejects_non_ice_knife_continuation_without_spend = {
     val awaiting = openReactionWindow(initialState, {
-      trigger: AttackHit,
-      procedure: ShieldReactionProcedure,
-      eligibleReactors: Set(Goblin),
-      offeredReactors: Set(),
-      continuation: ResumeRayOfFrost,
+      request: AttackHitShieldReactionRequest(ShieldResumesRayOfFrost),
     })
     all {
       assert(resolveSaveGatedShieldReactionOffer(awaiting, Goblin) == awaiting),

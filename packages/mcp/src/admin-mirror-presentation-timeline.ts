@@ -164,7 +164,10 @@ function eventAction(
   }
 
   if (previousProjection?.battle === null && projection.battle !== null) {
-    const actor = currentActorDisplayName(projection) ?? "current actor";
+    const actor = displayNameForCombatant(
+      projection,
+      projection.battle.currentActorId,
+    );
     return {
       detail: `${projection.battle.battleId} started in round ${projection.battle.round}.`,
       summary: `Battle started: ${actor}'s turn`,
@@ -178,8 +181,10 @@ function eventAction(
     previousProjection.battle.currentActorId !==
       projection.battle.currentActorId
   ) {
-    const actor =
-      currentActorDisplayName(projection) ?? projection.battle.currentActorId;
+    const actor = displayNameForCombatant(
+      projection,
+      projection.battle.currentActorId,
+    );
     return {
       detail: `Turn advanced from ${previousProjection.battle.currentActorId} to ${projection.battle.currentActorId}.`,
       summary: `Round ${projection.battle.round}: ${actor}'s turn`,

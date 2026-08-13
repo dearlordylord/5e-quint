@@ -14,14 +14,17 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 //   - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Slot, Concentration,
 //     Spell Invocation, Spell Effect, Speed, Damage Type, and Unarmed Strike.
 
-import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  elapsedTimeTicks,
+  ELAPSED_TIME_TICKS_PER_HOUR,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   attackBonus,
   AbilityModifier,
   type ProficiencyBonus as ProficiencyBonusType,
 } from "@dnd/shared/types";
 import type { DamageType, EffectAtom } from "@dnd/surface/surface/types";
-import { Either, Match } from "effect";
+import { Match } from "effect";
 
 import {
   type ActionSpellBattleResolutionInput,
@@ -87,6 +90,9 @@ type DirectActivationPhase = Extract<
 >;
 type CastTimeEffectModeChoice = NonNullable<DirectActivationPhase["mode"]>;
 type CastTimeEffectModeOption = CastTimeEffectModeChoice["options"][number];
+const SELF_TRANSFORMATION_DURATION_TICKS = elapsedTimeTicks(
+  ELAPSED_TIME_TICKS_PER_HOUR,
+);
 
 function admitSelfTransformationMode(
   spell: BattleSpellAdmissionSource,
@@ -137,13 +143,15 @@ function selfTransformationModeSpellProjection(input: {
     spell.mechanics.castingTime.kind !== "action" ||
     spell.mechanics.range.kind !== "self" ||
     spell.mechanics.duration.kind !== "concentration" ||
-    spell.mechanics.phases.length !== 1
+    spell.mechanics.duration.upTo.unit !== "hour" ||
+    spell.mechanics.duration.upTo.amount !== 1
   ) {
     return null;
   }
-  const phase = spell.mechanics.phases[0];
+  const [phase, secondPhase] = spell.mechanics.phases;
   if (
     phase === undefined ||
+    secondPhase !== undefined ||
     phase.kind !== "direct" ||
     phase.attachment.kind !== "self" ||
     phase.effects !== undefined ||
@@ -159,20 +167,15 @@ function selfTransformationModeSpellProjection(input: {
   if (modeProjection === null) {
     return null;
   }
-  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
-    spell.mechanics.duration.upTo,
-  );
-  return Either.isLeft(durationTicks)
-    ? null
-    : {
-        modeChoices: modeProjection.modeChoices,
-        naturalWeaponFacts: modeProjection.naturalWeaponFacts,
-        expiresAt: {
-          kind: "concentration",
-          combatantId: input.actorId,
-          durationTicks: durationTicks.right,
-        },
-      };
+  return {
+    modeChoices: modeProjection.modeChoices,
+    naturalWeaponFacts: modeProjection.naturalWeaponFacts,
+    expiresAt: {
+      kind: "concentration",
+      combatantId: input.actorId,
+      durationTicks: SELF_TRANSFORMATION_DURATION_TICKS,
+    },
+  };
 }
 
 function selfTransformationModeOptionsProjection(

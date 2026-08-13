@@ -11,6 +11,11 @@ import type {
   BattleState,
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
+import {
+  HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_ID,
+  WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID,
+} from "./domain-constants.ts";
+import { sourceDamageRollPenaltyRollFillMatchesDamageRoll } from "./damage-helpers.ts";
 
 export type BattleAttackContinuationResolutionInput = {
   readonly state: BattleState;
@@ -56,12 +61,30 @@ export function resolveAttackFollowUpContinuations(
   >,
   input: BattleAttackContinuationResolutionInput,
 ): BattleResolutionResult {
-  const cleave = attackResolvers.resolveWeaponMasteryCleaveContinuation(input);
+  const cleave = attackResolvers.resolveWeaponMasteryCleaveContinuation({
+    ...input,
+    fills: input.fills.filter(
+      (fill) =>
+        fill.kind !== "rolledDice" ||
+        !sourceDamageRollPenaltyRollFillMatchesDamageRoll(
+          fill,
+          HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_ID,
+        ),
+    ),
+  });
   if (cleave.tag !== "resolved") {
     return cleave;
   }
   return attackResolvers.resolveHuntersPreyHordeBreakerContinuation({
     ...input,
     state: cleave.state,
+    fills: input.fills.filter(
+      (fill) =>
+        fill.kind !== "rolledDice" ||
+        !sourceDamageRollPenaltyRollFillMatchesDamageRoll(
+          fill,
+          WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID,
+        ),
+    ),
   });
 }

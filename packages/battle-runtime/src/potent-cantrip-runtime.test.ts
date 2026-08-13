@@ -3,15 +3,27 @@ import { characterUnitProcedureBindings } from "./character-execution-admission.
 import { describe, expect, test } from "vitest";
 import { classLevel } from "@dnd/shared/types";
 
+import type { BattleActiveEffect } from "./battle-state-execution.ts";
+import { battleCreatureWithSpellActiveEffects } from "./active-effect/lifecycle.ts";
+import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import {
+  statBlockCreature,
+  statBlockWithCreatureType,
+} from "./unit-profile-admission-creature-fixture.test-support.ts";
+
 import {
   characterBattleFeatureInitForTest,
   attackRollFill,
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
   battleId,
   battleObjectId,
   characterSeed,
+  combatantId,
   damageRollFill,
   discoverBattleActCandidates,
+  elapsedTimeTicks,
   findAct,
   findHole,
   Hp,
@@ -36,6 +48,7 @@ import {
 
 const potentCantripUnit = unitLibrary.requireUnit("wizard_potent_cantrip");
 const potentCantripUnitRef = supportedBattleUnitRef(potentCantripUnit);
+const charmSourceId = combatantId("potent-cantrip-charm-source");
 
 describe("Potent Cantrip runtime", () => {
   test("projects the admitted Potent Cantrip profile into character battle state", () => {
@@ -176,6 +189,154 @@ describe("Potent Cantrip runtime", () => {
 
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(11);
     expect(resolved.snapshot.lightEmitters).toEqual([]);
+    expect(resolved.state.combatants.get(skeletonId)?.activeEffects).toEqual(
+      [],
+    );
+  });
+
+  test("a missed damaging cantrip deals no Potent Cantrip damage through immunity", () => {
+    const session = potentCantripBattle({
+      cantrips: ["ray_of_frost"],
+      coldImmuneTarget: true,
+    });
+    const state = session.state;
+    const subject = findAct(session, magicSubject("ray_of_frost")).subject;
+    const targetChoice = targetFill(
+      requireHole(
+        resolveBattleSubject({ state, subject, fills: [] }),
+        "targetChoice",
+      ),
+      skeletonId,
+    );
+    const attackMiss = attackRollFill(
+      requireHole(
+        resolveBattleSubject({
+          state,
+          subject,
+          fills: [targetChoice],
+        }),
+        "attackRoll",
+      ),
+      { total: 4, naturalD20: 3 },
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetChoice, attackMiss],
+      }),
+      "rolledDice",
+    );
+    const hpBefore = state.combatants.get(skeletonId)?.hp;
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetChoice, attackMiss, damageRollFill(damage, 5)],
+      }),
+    );
+
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(hpBefore);
+  });
+
+  test("Potent Cantrip miss damage resolves target-damaged relationship effects", () => {
+    const session = potentCantripBattle({
+      cantrips: ["ray_of_frost"],
+      withCharmSource: true,
+    });
+    const target = session.state.combatants.get(skeletonId);
+    if (target === undefined) {
+      throw new Error("Expected the cantrip target.");
+    }
+    const charmEffect = {
+      kind: "spellCondition",
+      effectRef: battleActiveEffectExecutionRefForTest(
+        "potent-cantrip-relationship-effect",
+      ),
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "potent-cantrip-relationship-source",
+      ),
+      sourceCombatantId: charmSourceId,
+      condition: "charmed",
+      conditionHadNonSpellSource: false,
+      escape: { kind: "targetDamagedByCasterOrAlly" },
+      turnStartDamage: null,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: elapsedTimeTicks(1),
+      },
+    } as const satisfies BattleActiveEffect;
+    const state = {
+      ...session.state,
+      combatants: new Map(session.state.combatants).set(
+        skeletonId,
+        battleCreatureWithSpellActiveEffects(target, [charmEffect]),
+      ),
+    };
+    const subject = findAct(
+      battleRuntimeSessionForTest({ state, context: session.context }),
+      magicSubject("ray_of_frost"),
+    ).subject;
+    const targetChoice = targetFill(
+      requireHole(
+        resolveBattleSubject({ state, subject, fills: [] }),
+        "targetChoice",
+      ),
+      skeletonId,
+    );
+    const attackMiss = attackRollFill(
+      requireHole(
+        resolveBattleSubject({ state, subject, fills: [targetChoice] }),
+        "attackRoll",
+      ),
+      { total: 4, naturalD20: 3 },
+    );
+    const damage = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetChoice, attackMiss],
+      }),
+      "rolledDice",
+    );
+    const damageFill = damageRollFill(damage, 5);
+    const relationship = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [targetChoice, attackMiss, damageFill],
+      }),
+      "damageRelationshipDecisions",
+    );
+    const [firstQuestion, ...remainingQuestions] = relationship.questions;
+    if (firstQuestion === undefined) {
+      throw new Error("Expected a target-damaged relationship question.");
+    }
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          targetChoice,
+          attackMiss,
+          damageFill,
+          {
+            kind: "damageRelationshipDecisions",
+            holeId: relationship.holeId,
+            answers: [
+              { questionId: firstQuestion.questionId, answer: true },
+              ...remainingQuestions.map((question) => ({
+                questionId: question.questionId,
+                answer: true,
+              })),
+            ],
+          },
+        ],
+      }),
+    );
+
     expect(resolved.state.combatants.get(skeletonId)?.activeEffects).toEqual(
       [],
     );
@@ -351,7 +512,16 @@ describe("Potent Cantrip runtime", () => {
 
 function potentCantripBattle(input: {
   readonly cantrips: readonly Parameters<typeof spellRecord>[0][];
+  readonly coldImmuneTarget?: boolean;
+  readonly withCharmSource?: boolean;
 }) {
+  const target = input.coldImmuneTarget
+    ? statBlockCreature({
+        combatantId: skeletonId,
+        initiative: 10,
+        statBlock: coldImmuneUndeadStatBlock(),
+      })
+    : skeletonCreatureInit({ initiative: 10 });
   return startBattleSessionRight({
     battleId: battleId("potent-cantrip-runtime"),
     combatants: [
@@ -373,7 +543,28 @@ function potentCantripBattle(input: {
           spellSlots: [],
         }),
       }),
-      skeletonCreatureInit({ initiative: 10 }),
+      target,
+      ...(input.withCharmSource
+        ? [
+            characterSeed({
+              combatantId: charmSourceId,
+              displayName: "Charm Source",
+              initiative: 5,
+              attack: null,
+            }),
+          ]
+        : []),
     ],
   });
+}
+
+function coldImmuneUndeadStatBlock() {
+  const base = statBlockWithCreatureType("undead");
+  return {
+    ...base,
+    statBlock: {
+      ...base.statBlock,
+      immunities: { damageTypes: ["cold"] as const },
+    },
+  };
 }

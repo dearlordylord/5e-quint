@@ -30,15 +30,6 @@ module battleRuntimeHideousLaughterTests {
     }
   }
 
-  run test_hideous_laughter_suppresses_standing_from_prone = {
-    val laughedAtFighter = {
-      ...initialState,
-      fighter: hideousLaughterTarget(initialState.fighter, Fighter, false, Goblin, Fighter),
-    }
-    val stood = standFighterFromProneUnlessHideousLaughter(laughedAtFighter)
-    assert(stood == laughedAtFighter)
-  }
-
   run test_hideous_laughter_expires_after_one_minute_duration = {
     val expiring = {
       ...initialState,
@@ -90,6 +81,15 @@ module battleRuntimeHideousLaughterTests {
       assert(hideousLaughterDamageRepeatSaveRollMode(target) == AdvantageSavingThrow),
       assert(hideousLaughterDamageRepeatSaveRollModeWithHeightened(target) == NormalSavingThrow),
     }
+  }
+
+  run test_hideous_laughter_suppresses_standing_from_prone = {
+    val laughedAtFighter = {
+      ...initialState,
+      fighter: hideousLaughterTarget(initialState.fighter, Fighter, false, Goblin, Fighter),
+    }
+    val stood = standFighterFromProneUnlessHideousLaughter(laughedAtFighter)
+    assert(stood == laughedAtFighter)
   }
 
 }

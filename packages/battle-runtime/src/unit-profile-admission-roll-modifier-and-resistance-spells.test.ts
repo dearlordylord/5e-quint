@@ -461,7 +461,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       ),
       mode: { tag: "cast" },
     });
-    expect(skillHole.choices).toContain("stealth");
+    expect(skillHole.choices).toContain("perception");
     expect(targetHole.choices).toEqual([spellCasterId, spellTargetId]);
 
     expect(
@@ -494,7 +494,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
             spellTargetId,
           ),
         ),
-        skillChoiceFill(skillHole, "stealth"),
+        skillChoiceFill(skillHole, "perception"),
       ],
     });
     expect(unwillingTarget).toMatchObject({
@@ -512,7 +512,7 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
           spellCasterId,
           spellCasterId,
         ),
-        skillChoiceFill(skillHole, "stealth"),
+        skillChoiceFill(skillHole, "perception"),
       ],
     });
 
@@ -528,8 +528,11 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
         sourceProcedureRef: act.subject.procedureRef,
         on: ["ability_check"],
         delta: { dice: 1, dieSize: 4, sign: "+" },
-        skill: "stealth",
+        skill: "perception",
       }),
+    );
+    expect(passivePerceptionModifierDelta(resolved.state, spellCasterId)).toBe(
+      0,
     );
   });
 
@@ -718,6 +721,9 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
             effect.sourceProcedureRef === act.subject.procedureRef,
         ),
     ).toBe(false);
+    expect(passivePerceptionModifierDelta(resolved.state, spellCasterId)).toBe(
+      0,
+    );
   });
 
   test("enhance ability requires a chosen ability and projects Ability Check Advantage for that ability", () => {

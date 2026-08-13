@@ -132,6 +132,27 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         ],
         turn: { actionResources: [] },
       },
+      routeEvents: [
+        {
+          kind: "resolveBattleSubject",
+          subject: "spellBaseArmorClassEffect",
+          fill: "targetChoice",
+          holes: [],
+          owner: "battleTargetSelection",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "spellBaseArmorClassEffect",
+          holes: [],
+          owner: "battleActiveEffect",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "spellBaseArmorClassEffect",
+          holes: [],
+          owner: "battleArmorClass",
+        },
+      ],
     });
     expect(
       requireResolved(result).state.combatants.get(wizardId),

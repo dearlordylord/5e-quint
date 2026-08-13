@@ -6,6 +6,7 @@ import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   combatantId,
+  concentrationSavingThrowFill,
   elapsedTimeTicks,
   fighterId,
   fighterVsGoblinBattle,
@@ -23,10 +24,12 @@ import {
   applyTemporaryHitPoints,
   breakCombatantConcentration,
   concentrationSavingThrowHole,
+  damageLifecycleConcentrationSavingThrowFillCheck,
   damageAllowsKnockOut,
   deathSavingThrowHole,
   hpDamageProjection,
   removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly,
+  resolveBattleConcentrationDamage,
   startTurnDeathSavingThrowRequired,
 } from "./battle-reducer/damage-apply.ts";
 import {
@@ -199,11 +202,214 @@ describe("damage and hit point lifecycle helpers", () => {
     ).toMatchObject({ tempHp: 1 });
   });
 
+  test("damage at 0 Hit Points advances failures, and massive damage kills", () => {
+    const fighter = fighterVsGoblinBattle().combatants.get(fighterId);
+    if (fighter === undefined || fighter.positiveHpUnconscious !== null) {
+      throw new Error("Expected the synthetic character.");
+    }
+
+    const atZero = applyHpDamage(fighter, Number(fighter.hp), {
+      deathFailuresAtZeroHp: 1,
+    });
+    const oneFailure = applyHpDamage(atZero, 1, {
+      deathFailuresAtZeroHp: 1,
+    });
+    expect(oneFailure.zeroHpLifecycle).toMatchObject({
+      policy: "usesDeathSavingThrows",
+      deathSaves: { deathSaves: { failures: 1 }, dead: false },
+    });
+
+    const killedByCriticalDamage = applyHpDamage(oneFailure, 1, {
+      deathFailuresAtZeroHp: 2,
+    });
+    expect(killedByCriticalDamage.zeroHpLifecycle).toMatchObject({
+      policy: "usesDeathSavingThrows",
+      deathSaves: { deathSaves: { failures: 3 }, dead: true },
+    });
+    expect(
+      applyHpDamage(killedByCriticalDamage, 1, {
+        deathFailuresAtZeroHp: 1,
+      }),
+    ).toBe(killedByCriticalDamage);
+
+    const killedByMassiveDamage = applyHpDamage(
+      fighter,
+      Number(fighter.hp) + Number(fighter.maxHp),
+      { deathFailuresAtZeroHp: 1 },
+    );
+    expect(killedByMassiveDamage.zeroHpLifecycle).toMatchObject({
+      policy: "usesDeathSavingThrows",
+      deathSaves: { deathSaves: { failures: 3 }, dead: true },
+    });
+  });
+
+  test("only a character awaiting a Death Saving Throw consumes a start-turn roll", () => {
+    const state = fighterVsGoblinBattle();
+    const fighter = state.combatants.get(fighterId);
+    if (fighter === undefined || fighter.positiveHpUnconscious !== null) {
+      throw new Error("Expected the synthetic character.");
+    }
+
+    expect(
+      applyStartTurnDeathSavingThrow(
+        state.combatants,
+        fighterId,
+        DieRollResult(10),
+      ),
+    ).toBe(state.combatants);
+
+    const atZero = applyHpDamage(fighter, Number(fighter.hp), {
+      deathFailuresAtZeroHp: 1,
+    });
+    if (atZero.zeroHpLifecycle.policy !== "usesDeathSavingThrows") {
+      throw new Error("Expected the character Death Saving Throw lifecycle.");
+    }
+    const stable = {
+      ...atZero,
+      zeroHpLifecycle: {
+        ...atZero.zeroHpLifecycle,
+        deathSaves: { ...atZero.zeroHpLifecycle.deathSaves, stable: true },
+      },
+    };
+    const stableCombatants = new Map(state.combatants).set(fighterId, stable);
+    expect(startTurnDeathSavingThrowRequired(stable)).toBe(false);
+    expect(
+      applyStartTurnDeathSavingThrow(
+        stableCombatants,
+        fighterId,
+        DieRollResult(20),
+      ),
+    ).toBe(stableCombatants);
+  });
+
+  test("healing, but not Temporary Hit Points, ends a knocked-out rest", () => {
+    const target = fighterVsGoblinBattle().combatants.get(goblinId);
+    if (target === undefined || target.positiveHpUnconscious !== null) {
+      throw new Error("Expected the synthetic target.");
+    }
+    const knockedOut = applyHpDamage(target, Number(target.hp), {
+      deathFailuresAtZeroHp: 1,
+      damageDisposition: { kind: "knockOut" },
+    });
+
+    const buffered = applyTemporaryHitPoints(knockedOut, 4);
+    expect(buffered.positiveHpUnconscious).not.toBeNull();
+    expect(Number(buffered.tempHp)).toBe(4);
+
+    const healed = applyHpHealing(buffered, 2);
+    expect(Number(healed.hp)).toBe(3);
+    expect(healed.positiveHpUnconscious).toBeNull();
+  });
+
+  test("Concentration damage resolution ignores near-misses and rejects unrelated fills", () => {
+    const state = fighterVsGoblinBattle();
+    const fighter = state.combatants.get(fighterId);
+    const goblin = state.combatants.get(goblinId);
+    if (fighter === undefined || goblin === undefined) {
+      throw new Error("Expected the synthetic combatants.");
+    }
+    const fighterProcedureRef = battleProcedureExecutionRefForTest(
+      "synthetic-fighter-concentration-damage",
+    );
+    const goblinProcedureRef = battleProcedureExecutionRefForTest(
+      "synthetic-goblin-concentration-damage",
+    );
+    const concentratingFighter = {
+      ...fighter,
+      concentration: {
+        sourceProcedureRef: fighterProcedureRef,
+        effectKind: "spellEffect" as const,
+      },
+    };
+    const concentratingGoblin = {
+      ...goblin,
+      concentration: {
+        sourceProcedureRef: goblinProcedureRef,
+        effectKind: "spellEffect" as const,
+      },
+    };
+    const concentratingState = {
+      ...state,
+      combatants: new Map(state.combatants)
+        .set(fighterId, concentratingFighter)
+        .set(goblinId, concentratingGoblin),
+    };
+
+    expect(
+      resolveBattleConcentrationDamage({
+        state: concentratingState,
+        combatantId: fighterId,
+        damageAmount: 0,
+        savingThrowSucceeded: false,
+      }),
+    ).toBe(concentratingState);
+    expect(
+      resolveBattleConcentrationDamage({
+        state: concentratingState,
+        combatantId: combatantId("absent-combatant"),
+        damageAmount: 4,
+        savingThrowSucceeded: false,
+      }),
+    ).toBe(concentratingState);
+
+    const fighterHole = concentrationSavingThrowHole(concentratingFighter, 4);
+    const goblinHole = concentrationSavingThrowHole(concentratingGoblin, 4);
+    if (fighterHole === null || goblinHole === null) {
+      throw new Error("Expected Concentration Saving Throw holes.");
+    }
+    const fighterFill = concentrationSavingThrowFill(fighterHole, true);
+    const goblinFill = concentrationSavingThrowFill(goblinHole, true);
+    if (
+      fighterFill.kind !== "concentrationSavingThrow" ||
+      goblinFill.kind !== "concentrationSavingThrow"
+    ) {
+      throw new Error("Expected Concentration Saving Throw fills.");
+    }
+
+    expect(
+      damageLifecycleConcentrationSavingThrowFillCheck({
+        state: concentratingState,
+        target: concentratingGoblin,
+        damageAmount: 4,
+        fills: [],
+      }),
+    ).toMatchObject({ tag: "needsHoles", holes: [{ combatantId: goblinId }] });
+    expect(
+      damageLifecycleConcentrationSavingThrowFillCheck({
+        state: concentratingState,
+        target: concentratingGoblin,
+        damageAmount: 4,
+        fills: [goblinFill, fighterFill],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      message:
+        "Concentration Saving Throw fill does not match the damaged target or linked Warding Bond caster.",
+    });
+    expect(
+      damageLifecycleConcentrationSavingThrowFillCheck({
+        state,
+        target: goblin,
+        damageAmount: 4,
+        fills: [fighterFill],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      message:
+        "Concentration Saving Throw fill is only valid for a concentrating damaged target.",
+    });
+  });
+
   test("damage application returns the original state for zero-damage and unknown targets", () => {
     const state = fighterVsGoblinBattle();
     const target = state.combatants.get(goblinId);
-    if (target === undefined || target.positiveHpUnconscious !== null) {
-      throw new Error("Expected the synthetic target.");
+    const fighter = state.combatants.get(fighterId);
+    if (
+      target === undefined ||
+      target.positiveHpUnconscious !== null ||
+      fighter === undefined
+    ) {
+      throw new Error("Expected the synthetic combatants.");
     }
     const zeroDamage = applyBattleHitPointDamage({
       state,
@@ -224,6 +430,29 @@ describe("damage and hit point lifecycle helpers", () => {
         attackDamageRiders: [],
       }),
     ).toBe(state);
+    expect(
+      removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
+        state,
+        fighterId,
+        combatantId("missing-target"),
+        [],
+      ),
+    ).toBe(state);
+
+    const unsupportedReplacement = applyHpDamage(fighter, Number(fighter.hp), {
+      deathFailuresAtZeroHp: 1,
+      damageDisposition: {
+        kind: "zeroHitPointReplacement",
+        procedureRef: battleProcedureExecutionRefForTest(
+          "synthetic-unavailable-replacement",
+        ),
+      },
+    });
+    const ordinaryDrop = applyHpDamage(fighter, Number(fighter.hp), {
+      deathFailuresAtZeroHp: 1,
+      damageDisposition: { kind: "ordinaryDamage" },
+    });
+    expect(unsupportedReplacement).toEqual(ordinaryDrop);
 
     const knockout = applyHpDamage(target, Number(target.hp), {
       deathFailuresAtZeroHp: 1,
@@ -296,10 +525,6 @@ describe("damage and hit point lifecycle helpers", () => {
     });
     expect(damagedAtZero.hp).toBe(zeroGoblin.hp);
 
-    const concentratingFighter = state.combatants.get(fighterId);
-    if (concentratingFighter === undefined) {
-      throw new Error("Expected the synthetic concentrating combatant.");
-    }
     const concentrationProcedureRef = battleProcedureExecutionRefForTest(
       "synthetic-knockout-concentration",
     );
@@ -307,7 +532,7 @@ describe("damage and hit point lifecycle helpers", () => {
       ...state,
       combatants: new Map(state.combatants)
         .set(fighterId, {
-          ...concentratingFighter,
+          ...fighter,
           concentration: {
             sourceProcedureRef: concentrationProcedureRef,
             effectKind: "spellEffect" as const,

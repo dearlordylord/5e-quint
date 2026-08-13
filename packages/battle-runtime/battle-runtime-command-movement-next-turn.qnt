@@ -79,17 +79,21 @@ module battleRuntimeCommandMovementNextTurn {
       ) {
         | CommandFleeNoMovementEndsTurn => endTurn(withoutPending)
         | CommandFleeMovementRejected => state
-        | CommandFleeOpportunityAttackContinuation =>
-            openReactionWindow(state, {
-              trigger: OpportunityAttack,
-              procedure: OpportunityAttackReactionProcedure,
-              eligibleReactors: if (actor == Fighter) Set(Goblin) else Set(Fighter),
-              offeredReactors: Set(),
-              continuation: ResumeCommandFleeMovement({
-                speedKind: speedKind,
-                movementCost: movementCost,
+        | CommandFleeOpportunityAttackContinuation => {
+            val awaitingReaction = openReactionWindow(state, {
+              request: OpportunityAttackReactionRequest({
+                mover: actor,
+                continuation: OpportunityAttackResumesCommandFleeMovement({
+                  speedKind: speedKind,
+                  movementCost: movementCost,
+                }),
               }),
             })
+            if (reactionWindowOpened(state, awaitingReaction))
+              awaitingReaction
+            else
+              endTurn(stateWithCommandMovement(withoutPending, actor, speedKind, movementCost))
+          }
         | CommandFleeMovementEndsTurn =>
             endTurn(stateWithCommandMovement(withoutPending, actor, speedKind, movementCost))
       }

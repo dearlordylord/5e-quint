@@ -22,11 +22,10 @@ module battleRuntimeSaveGatedShieldReactionResolution {
   pure def saveGatedShieldReactionCandidate(
     frame: PendingReactionFrame,
   ): SaveGatedShieldReactionCandidate =
-    match frame.procedure {
-      | ShieldReactionProcedure =>
+    match frame.request {
+      | AttackHitShieldReactionRequest(request) =>
           if (shieldReactionFrameIsFreshGoblinTarget(frame) and
-              frame.trigger == AttackHit and
-              frame.continuation == ResumeIceKnife)
+              request == ShieldResumesIceKnife)
             HasSaveGatedShieldReactionCandidate({
               continuation: SaveGatedShieldIceKnife,
             })
@@ -88,8 +87,6 @@ module battleRuntimeSaveGatedShieldReactionResolution {
     match decision {
       | ShieldReactionDecisionTakenClosed(data) =>
           resumeSaveGatedShieldReactionAfterTake(data.state, frame.continuation)
-      | ShieldReactionDecisionTakenOpen(data) =>
-          data.state
       | _ => state
     }
   }
@@ -106,8 +103,6 @@ module battleRuntimeSaveGatedShieldReactionResolution {
     match decision {
       | ShieldReactionDecisionDeclinedClosed(data) =>
           resumeSaveGatedShieldReactionAfterDecline(data.state, frame.continuation)
-      | ShieldReactionDecisionDeclinedOpen(data) =>
-          data.state
       | _ => state
     }
   }

@@ -24,12 +24,12 @@ module battleRuntimeSaveGatedCounterspellResolution {
     candidate: CounterspellReactionCandidate,
   ): SaveGatedCounterspellContinuationOption =
     match candidate.continuation {
-      | ResumeIceKnife =>
+      | CounterspellResumesIceKnife =>
           HasSaveGatedCounterspellContinuation({
             context: candidate.context,
             continuation: SaveGatedCounterspellIceKnife,
           })
-      | ResumeSaveGateDamage =>
+      | CounterspellResumesSaveGateDamage =>
           HasSaveGatedCounterspellContinuation({
             context: candidate.context,
             continuation: SaveGatedCounterspellDamage,
@@ -50,11 +50,10 @@ module battleRuntimeSaveGatedCounterspellResolution {
 
   pure def resolveSaveGatedCounterspellReactionFrame(
     state: BattleState,
-    reactor: Actor,
     frame: SaveGatedCounterspellFrame,
   ): BattleState =
     stateAfterCounterspellResolution(
-      resolveCounterspellReaction(state, reactor, frame.context),
+      resolveCounterspellReaction(state, frame.context),
       resumeState => resumeSaveGatedCounterspellContinuation(
         resumeState,
         frame.continuation,
@@ -63,44 +62,41 @@ module battleRuntimeSaveGatedCounterspellResolution {
 
   pure def resolvePendingSaveGatedCounterspellReaction(
     state: BattleState,
-    reactor: Actor,
     candidate: CounterspellReactionCandidate,
   ): BattleState =
     match saveGatedCounterspellContinuation(candidate) {
       | NoSaveGatedCounterspellContinuation => state
       | HasSaveGatedCounterspellContinuation(saveFrame) =>
-          resolveSaveGatedCounterspellReactionFrame(state, reactor, saveFrame)
+          resolveSaveGatedCounterspellReactionFrame(state, saveFrame)
     }
 
   pure def resolvePendingSaveGatedCounterspellFrame(
     state: BattleState,
-    reactor: Actor,
     frame: PendingReactionFrame,
   ): BattleState =
     match pendingCounterspellReaction(frame) {
       | NoPendingCounterspellReaction => state
       | HasPendingCounterspellReaction(counterspellFrame) =>
-          resolvePendingSaveGatedCounterspellReaction(state, reactor, counterspellFrame)
+          resolvePendingSaveGatedCounterspellReaction(state, counterspellFrame)
     }
 
-  pure def resolveSaveGatedCounterspellReactionOffer(state: BattleState, reactor: Actor): BattleState =
+  pure def resolveSaveGatedCounterspellReactionOffer(state: BattleState): BattleState =
     if (state.interruptStack.length() == 0)
       state
     else {
       match state.interruptStack[state.interruptStack.length() - 1] {
         | PendingReaction(frame) =>
-            resolvePendingSaveGatedCounterspellFrame(state, reactor, frame)
+            resolvePendingSaveGatedCounterspellFrame(state, frame)
         | _ => state
       }
     }
 
   pure def declineSaveGatedCounterspellReactionFrame(
     state: BattleState,
-    reactor: Actor,
     frame: SaveGatedCounterspellFrame,
   ): BattleState =
     stateAfterCounterspellResolution(
-      declineCounterspellReaction(state, reactor, frame.context),
+      declineCounterspellReaction(state, frame.context),
       resumeState => resumeSaveGatedCounterspellContinuation(
         resumeState,
         frame.continuation,
@@ -109,33 +105,31 @@ module battleRuntimeSaveGatedCounterspellResolution {
 
   pure def declinePendingSaveGatedCounterspellReaction(
     state: BattleState,
-    reactor: Actor,
     candidate: CounterspellReactionCandidate,
   ): BattleState =
     match saveGatedCounterspellContinuation(candidate) {
       | NoSaveGatedCounterspellContinuation => state
       | HasSaveGatedCounterspellContinuation(saveFrame) =>
-          declineSaveGatedCounterspellReactionFrame(state, reactor, saveFrame)
+          declineSaveGatedCounterspellReactionFrame(state, saveFrame)
     }
 
   pure def declinePendingSaveGatedCounterspellFrame(
     state: BattleState,
-    reactor: Actor,
     frame: PendingReactionFrame,
   ): BattleState =
     match pendingCounterspellReaction(frame) {
       | NoPendingCounterspellReaction => state
       | HasPendingCounterspellReaction(counterspellFrame) =>
-          declinePendingSaveGatedCounterspellReaction(state, reactor, counterspellFrame)
+          declinePendingSaveGatedCounterspellReaction(state, counterspellFrame)
     }
 
-  pure def declineSaveGatedCounterspellReactionOfferAndResume(state: BattleState, reactor: Actor): BattleState =
+  pure def declineSaveGatedCounterspellReactionOfferAndResume(state: BattleState): BattleState =
     if (state.interruptStack.length() == 0)
       state
     else {
       match state.interruptStack[state.interruptStack.length() - 1] {
         | PendingReaction(frame) =>
-            declinePendingSaveGatedCounterspellFrame(state, reactor, frame)
+            declinePendingSaveGatedCounterspellFrame(state, frame)
         | _ => state
       }
     }

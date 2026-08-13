@@ -73,6 +73,8 @@ module ruleCoreReactionsMbt {
   var qReactorReadiedMovementHeld: bool
   var qReactorReadiedSpellHeld: bool
   var qReactorMovementSpentFeet: int
+  var qInterruptedHitPoints: int
+  var qReactorHitPoints: int
   var qInterruptedConcentration: bool
   var qReactorConcentration: bool
   var qReactionWindow: ReactionWindowState
@@ -90,6 +92,8 @@ module ruleCoreReactionsMbt {
   pure def opportunityAttackTrigger: str = "opportunityAttack"
   pure def attackHitTrigger: str = "attackHit"
   pure def movementResumeCostFeet: int = 10
+  pure def opportunityAttackDamage: int = 1
+  pure def initialHitPoints: int = 12
   pure def readiedMovementShortCostFeet: int = 5
   pure def readiedMovementFillCostFeet: int = 10
 
@@ -136,12 +140,15 @@ module ruleCoreReactionsMbt {
     pendingTrigger: str,
     holes: Set[str],
     result: WitnessResult,
+    interruptedHitPoints: int,
   ): bool = all {
     qInterruptedMovementSpentFeet' = state.interruptedActor.movementSpentFeet,
     qReactorReactionAvailable' = state.reactor.turn.reactionAvailable,
     qReactorReadiedMovementHeld' = state.reactor.turn.readiedMovementHeld,
     qReactorReadiedSpellHeld' = qReactorReadiedSpellHeld,
     qReactorMovementSpentFeet' = state.reactor.movementSpentFeet,
+    qInterruptedHitPoints' = interruptedHitPoints,
+    qReactorHitPoints' = qReactorHitPoints,
     qInterruptedConcentration' = state.concentration.interruptedActor == Concentrating,
     qReactorConcentration' = state.concentration.reactor == Concentrating,
     qReactionWindow' = state.reactionWindow,
@@ -157,6 +164,8 @@ module ruleCoreReactionsMbt {
     qReactorReadiedMovementHeld' = qReactorReadiedMovementHeld,
     qReactorReadiedSpellHeld' = qReactorReadiedSpellHeld,
     qReactorMovementSpentFeet' = qReactorMovementSpentFeet,
+    qInterruptedHitPoints' = qInterruptedHitPoints,
+    qReactorHitPoints' = qReactorHitPoints,
     qInterruptedConcentration' = qInterruptedConcentration,
     qReactorConcentration' = qReactorConcentration,
     qReactionWindow' = qReactionWindow,
@@ -172,6 +181,8 @@ module ruleCoreReactionsMbt {
     qReactorReadiedMovementHeld' = false,
     qReactorReadiedSpellHeld' = false,
     qReactorMovementSpentFeet' = 0,
+    qInterruptedHitPoints' = initialHitPoints,
+    qReactorHitPoints' = initialHitPoints,
     qInterruptedConcentration' = false,
     qReactorConcentration' = false,
     qReactionWindow' = NoReactionWindow,
@@ -190,12 +201,14 @@ module ruleCoreReactionsMbt {
     })
     all {
       qReactionWindow == NoReactionWindow,
+      qReactorReactionAvailable,
       openHoles == Set(),
       recordProtocolState(
         offered,
         opportunityAttackTrigger,
         Set("ReactionDecision"),
-        WNeedsHoles
+        WNeedsHoles,
+        qInterruptedHitPoints
       ),
     }
   }
@@ -215,7 +228,42 @@ module ruleCoreReactionsMbt {
     all {
       qPendingTrigger == opportunityAttackTrigger,
       openHoles == Set("ReactionDecision"),
-      recordProtocolState(resumed, noPendingTrigger, Set(), WResolved),
+      recordProtocolState(
+        resumed,
+        noPendingTrigger,
+        Set(),
+        WResolved,
+        qInterruptedHitPoints
+      ),
+    }
+  }
+
+  action doTakeOpportunityAttack = {
+    val choice = resolveReactionChoice(
+      qReactorTurn,
+      qReactionWindow,
+      TakeOpportunityAttackReaction
+    )
+    val resumed = qReactionProtocolState
+      .with("reactor", qReactor.with("turn", choice.turn))
+      .with("reactionWindow", choice.reactionWindow)
+      .with(
+        "interruptedActor",
+        qInterruptedActor.with(
+          "movementSpentFeet",
+          qInterruptedMovementSpentFeet + movementResumeCostFeet
+        )
+      )
+    all {
+      qPendingTrigger == opportunityAttackTrigger,
+      openHoles == Set("ReactionDecision"),
+      recordProtocolState(
+        resumed,
+        noPendingTrigger,
+        Set(),
+        WResolved,
+        qInterruptedHitPoints - opportunityAttackDamage
+      ),
     }
   }
 
@@ -229,6 +277,8 @@ module ruleCoreReactionsMbt {
       qReactorReadiedMovementHeld' = readiedTurn.readiedMovementHeld,
       qReactorReadiedSpellHeld' = false,
       qReactorMovementSpentFeet' = 0,
+      qInterruptedHitPoints' = initialHitPoints,
+      qReactorHitPoints' = initialHitPoints,
       qInterruptedConcentration' = false,
       qReactorConcentration' = false,
       qReactionWindow' = qReactionWindow,
@@ -251,7 +301,8 @@ module ruleCoreReactionsMbt {
         offered,
         attackHitTrigger,
         Set("ReactionDecision"),
-        WNeedsHoles
+        WNeedsHoles,
+        qInterruptedHitPoints
       ),
     }
   }
@@ -264,7 +315,13 @@ module ruleCoreReactionsMbt {
     all {
       qPendingTrigger == attackHitTrigger,
       openHoles == Set("ReactionDecision"),
-      recordProtocolState(declined, noPendingTrigger, Set("DamageRoll"), WNeedsHoles),
+      recordProtocolState(
+        declined,
+        noPendingTrigger,
+        Set("DamageRoll"),
+        WNeedsHoles,
+        qInterruptedHitPoints
+      ),
     }
   }
 
@@ -276,7 +333,13 @@ module ruleCoreReactionsMbt {
     all {
       qPendingTrigger == attackHitTrigger,
       openHoles == Set("ReactionDecision"),
-      recordProtocolState(resolved, noPendingTrigger, Set("DamageRoll"), WNeedsHoles),
+      recordProtocolState(
+        resolved,
+        noPendingTrigger,
+        Set("DamageRoll"),
+        WNeedsHoles,
+        qInterruptedHitPoints
+      ),
     }
   }
 
@@ -288,7 +351,13 @@ module ruleCoreReactionsMbt {
     all {
       qPendingTrigger == attackHitTrigger,
       openHoles == Set("ReactionDecision"),
-      recordProtocolState(resolved, noPendingTrigger, Set("DamageRoll"), WNeedsHoles),
+      recordProtocolState(
+        resolved,
+        noPendingTrigger,
+        Set("DamageRoll"),
+        WNeedsHoles,
+        qInterruptedHitPoints
+      ),
     }
   }
 
@@ -306,6 +375,8 @@ module ruleCoreReactionsMbt {
     qReactorReadiedMovementHeld' = qReactorReadiedMovementHeld,
     qReactorReadiedSpellHeld' = qReactorReadiedSpellHeld,
     qReactorMovementSpentFeet' = qReactorMovementSpentFeet,
+    qInterruptedHitPoints' = qInterruptedHitPoints,
+    qReactorHitPoints' = qReactorHitPoints,
     qInterruptedConcentration' = qInterruptedConcentration,
     qReactorConcentration' = startConcentration(qConcentration, Reactor, true).reactor == Concentrating,
     qReactionWindow' = qReactionWindow,
@@ -328,6 +399,8 @@ module ruleCoreReactionsMbt {
       qReactorReadiedMovementHeld' = qReactorReadiedMovementHeld,
       qReactorReadiedSpellHeld' = qReactorReadiedSpellHeld,
       qReactorMovementSpentFeet' = qReactorMovementSpentFeet,
+      qInterruptedHitPoints' = qInterruptedHitPoints,
+      qReactorHitPoints' = qReactorHitPoints,
       qInterruptedConcentration' = qInterruptedConcentration,
       qReactorConcentration' = resolved.concentration == Concentrating,
       qReactionWindow' = qReactionWindow,
@@ -351,6 +424,8 @@ module ruleCoreReactionsMbt {
       qReactorReadiedMovementHeld' = qReactorReadiedMovementHeld,
       qReactorReadiedSpellHeld' = qReactorReadiedSpellHeld,
       qReactorMovementSpentFeet' = qReactorMovementSpentFeet,
+      qInterruptedHitPoints' = qInterruptedHitPoints,
+      qReactorHitPoints' = qReactorHitPoints,
       qInterruptedConcentration' = qInterruptedConcentration,
       qReactorConcentration' = resolved.concentration == Concentrating,
       qReactionWindow' = qReactionWindow,
@@ -363,6 +438,7 @@ module ruleCoreReactionsMbt {
   action step = any {
     doOfferOpportunityAttack,
     doDeclineOpportunityAttack,
+    doTakeOpportunityAttack,
     doReadyMovementFixture,
     doOfferReadiedMovement,
     doDeclineReadiedMovement,

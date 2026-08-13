@@ -19,7 +19,7 @@ module battleRuntimeWeaponCounterspellResolution {
     candidate: CounterspellReactionCandidate,
   ): WeaponCounterspellContinuationOption =
     match candidate.continuation {
-      | ResumeTrueStrikeWeaponAttack =>
+      | CounterspellResumesTrueStrikeWeaponAttack =>
           HasWeaponCounterspellContinuation({
             context: candidate.context,
           })
@@ -31,87 +31,84 @@ module battleRuntimeWeaponCounterspellResolution {
 
   pure def resolveWeaponCounterspellReactionFrame(
     state: BattleState,
-    reactor: Actor,
     frame: WeaponCounterspellFrame,
   ): BattleState =
     stateAfterCounterspellResolution(
-      resolveCounterspellReaction(state, reactor, frame.context),
+      resolveCounterspellReaction(state, frame.context),
       resumeState => resumeWeaponCounterspellContinuation(resumeState),
     )
 
   pure def resolvePendingWeaponCounterspellReaction(
     state: BattleState,
-    reactor: Actor,
     candidate: CounterspellReactionCandidate,
   ): BattleState =
     match weaponCounterspellContinuation(candidate) {
       | NoWeaponCounterspellContinuation => state
       | HasWeaponCounterspellContinuation(weaponFrame) =>
-          resolveWeaponCounterspellReactionFrame(state, reactor, weaponFrame)
+          resolveWeaponCounterspellReactionFrame(state, weaponFrame)
     }
 
   pure def resolvePendingWeaponCounterspellFrame(
     state: BattleState,
-    reactor: Actor,
     frame: PendingReactionFrame,
   ): BattleState =
     match pendingCounterspellReaction(frame) {
       | NoPendingCounterspellReaction => state
       | HasPendingCounterspellReaction(counterspellFrame) =>
-          resolvePendingWeaponCounterspellReaction(state, reactor, counterspellFrame)
+          resolvePendingWeaponCounterspellReaction(state, counterspellFrame)
     }
 
-  pure def resolveWeaponCounterspellReactionOffer(state: BattleState, reactor: Actor): BattleState =
+  pure def resolveWeaponCounterspellReactionOffer(state: BattleState): BattleState =
     if (state.interruptStack.length() == 0)
       state
     else {
       match state.interruptStack[state.interruptStack.length() - 1] {
         | PendingReaction(frame) =>
-            resolvePendingWeaponCounterspellFrame(state, reactor, frame)
+            resolvePendingWeaponCounterspellFrame(state, frame)
         | _ => state
       }
     }
 
   pure def declineWeaponCounterspellReactionFrame(
     state: BattleState,
-    reactor: Actor,
     frame: WeaponCounterspellFrame,
   ): BattleState =
     stateAfterCounterspellResolution(
-      declineCounterspellReaction(state, reactor, frame.context),
+      declineCounterspellReaction(state, frame.context),
       resumeState => resumeWeaponCounterspellContinuation(resumeState),
     )
 
   pure def declinePendingWeaponCounterspellReaction(
     state: BattleState,
-    reactor: Actor,
     candidate: CounterspellReactionCandidate,
   ): BattleState =
     match weaponCounterspellContinuation(candidate) {
       | NoWeaponCounterspellContinuation => state
       | HasWeaponCounterspellContinuation(weaponFrame) =>
-          declineWeaponCounterspellReactionFrame(state, reactor, weaponFrame)
+          declineWeaponCounterspellReactionFrame(state, weaponFrame)
     }
 
   pure def declinePendingWeaponCounterspellFrame(
     state: BattleState,
-    reactor: Actor,
     frame: PendingReactionFrame,
   ): BattleState =
     match pendingCounterspellReaction(frame) {
       | NoPendingCounterspellReaction => state
       | HasPendingCounterspellReaction(counterspellFrame) =>
-          declinePendingWeaponCounterspellReaction(state, reactor, counterspellFrame)
+          declinePendingWeaponCounterspellReaction(state, counterspellFrame)
     }
 
-  pure def declineWeaponCounterspellReactionOfferAndResume(state: BattleState, reactor: Actor): BattleState =
+  pure def declineWeaponCounterspellReactionOfferAndResume(
+    state: BattleState,
+  ): BattleState =
     if (state.interruptStack.length() == 0)
       state
     else {
       match state.interruptStack[state.interruptStack.length() - 1] {
         | PendingReaction(frame) =>
-            declinePendingWeaponCounterspellFrame(state, reactor, frame)
+            declinePendingWeaponCounterspellFrame(state, frame)
         | _ => state
       }
     }
+
 }

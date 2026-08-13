@@ -275,7 +275,8 @@
         "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
-        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-opportunity-attack.qnt"
       ],
       "reason": "The shared rule core and focused MBT own the generic Reaction window plus the held and released readied-Movement branch, including the fact that its movement does not consume ordinary turn movement. Focused runtime regressions separately exercise the canonical declaration choices and ordinary Action and Attack release branches. Together the evidence proves that the runtime stores the player-authored perceivable trigger and selected offered action or movement, opens the Reaction only after a table report, expires it at the actor's next turn, and restores any interrupted subject continuation. This row does not claim that the QNT movement branch alone models every response discriminant.",
       "runtime": "battle",
@@ -417,7 +418,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt",
         "packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt",
-        "packages/battle-runtime/battle-runtime-brutal-strike-bridge.qnt"
+        "packages/battle-runtime/battle-runtime-brutal-strike-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-fighter-rage-resistances.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -605,11 +607,11 @@
       "profiles": ["spell.invocation-direct-condition"],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt",
-        "packages/battle-runtime/battle-runtime-sanctuary.qnt",
         "packages/battle-runtime/battle-runtime-concentration.qnt",
         "packages/battle-runtime/battle-runtime-timed-effects.qnt",
-        "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt",
-        "packages/battle-runtime/battle-runtime-actor-combatants.qnt"
+        "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
+        "packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt",
+        "packages/battle-runtime/battle-runtime-invisibility.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -685,7 +687,8 @@
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
         "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt"
+        "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt",
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -699,7 +702,7 @@
         ".references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage",
         ".references/srd-5.2.1/Playing-the-Game.md#Making an Attack"
       ],
-      "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application and Attack Roll projection"
+      "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application, Dim Light emitter projection, and Attack Roll projection"
     },
     {
       "id": "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
@@ -2351,7 +2354,7 @@
         "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
-        "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
+        "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -2669,8 +2672,9 @@
       "profiles": ["spell.invocation-sanctuary-targeting-interdiction"],
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-sanctuary.qnt",
-        "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt",
-        "packages/battle-runtime/battle-runtime-actor-combatants.qnt"
+        "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
+        "packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -4455,6 +4459,8 @@
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
         "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+        "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
         "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
         "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
@@ -4462,7 +4468,7 @@
         "packages/battle-runtime/battle-runtime-replay-equivalence.qnt",
         "packages/battle-runtime/battle-runtime-interrupt-bridge.qnt"
       ],
-      "reason": "This row covers the reducer protocol shape beyond the single Reaction offer. The reaction-window owner projects interrupt stack frames through the existing rule-core ReactionWindowState depth, decline, and advance-continuation semantics; the focused attack-damage and triggered-reaction owners resume suspended non-spell procedures, while the Counterspell decision owner and its direct, weapon-hosted, and save-gated continuation owners resume the exact triggering spell family from the post-Reaction BattleState; and the replay-equivalence owner computes replay-from-root projection by combining the recorded continuation subject/fills with newly supplied suffix fills. The focused interrupt-stack witness covers nested decline, active Spell Effect mutation, and replay-from-root equivalence against the production reducer. The SRD anchors Reaction timing and the Attack Roll, Critical Hit, damage, and zero-Hit-Point consequence facts retained across this boundary; choosing concrete interrupt stack frames and replay calls is reducer protocol evidence, not a separate RAW ordering interpretation.",
+      "reason": "This row covers the reducer protocol shape beyond the single Reaction offer. The reaction-window owner projects trigger-discriminated interrupt frames through the existing rule-core ReactionWindowState depth, decline, and advance-continuation semantics. The focused attack-damage and triggered-reaction owners resume suspended non-spell procedures; the actor-parametric Opportunity Attack owner carries reactor and provoker direction through accepted movement continuations; the Hellish Rebuke owner carries damager and damaged-reactor direction through Reaction, Spell Slot, save-gated damage, close, and resume; Counterspell owners resume the exact triggering spell family; and the replay-equivalence owner combines the recorded continuation subject/fills with newly supplied suffix fills. The focused interrupt-stack witness covers nested decline, active Spell Effect mutation, and replay-from-root equivalence against the production reducer. The SRD anchors Reaction timing and the Attack Roll, Opportunity Attack, Critical Hit, damage, after-damage spell Reaction, and zero-Hit-Point consequence facts retained across this boundary; choosing concrete interrupt stack frames and replay calls is reducer protocol evidence, not a separate RAW ordering interpretation.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -4479,14 +4485,16 @@
         ".references/srd-5.2.1/Playing-the-Game.md#Critical-Hits",
         ".references/srd-5.2.1/Playing-the-Game.md#Damage-at-0-Hit-Points",
         ".references/srd-5.2.1/Rules-Glossary.md#Reaction",
+        ".references/srd-5.2.1/Rules-Glossary.md#Opportunity-Attacks",
         ".references/srd-5.2.1/Rules-Glossary.md#Ready-Action",
         ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Reaction-and-Bonus-Action-Triggers",
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Hellish-Rebuke",
         "UBIQUITOUS_LANGUAGE.md#Action Lifecycle",
         "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
         "UBIQUITOUS_LANGUAGE.md#Hit Points and Death",
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
-      "title": "Battle protocol interrupt stack nesting, narrowed procedure frames, decline/resume discipline, active Spell Effect resume, and replay-from-root equivalence"
+      "title": "Battle protocol interrupt stack nesting, trigger-discriminated procedure frames, decline/resume discipline, active Spell Effect resume, and replay-from-root equivalence"
     },
     {
       "id": "BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING",
@@ -7885,6 +7893,7 @@
         "BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING",
         "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
         "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
         "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-light-emitters.qnt",
@@ -8112,11 +8121,10 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt owns non-SpellCast Reaction decisions, suspended procedure continuation, and after-damage Hellish Rebuke resolution semantics.",
+      "evidence": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt owns non-SpellCast Reaction decisions and suspended procedure continuation semantics; Hellish Rebuke after-damage Reaction admission and resolution belong to its focused owner.",
       "obligationIds": [
         "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
-        "BATTLE.REACTION.OFFER_DECLINE_RESUME",
-        "BATTLE.SPELL.REACTION_CASTING_TIME"
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
       "role": "semantic-core"
@@ -8205,10 +8213,7 @@
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-sanctuary.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
-      "obligationIds": [
-        "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
-        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"
-      ],
+      "obligationIds": ["BATTLE.SANCTUARY.TARGETING_INTERDICTION"],
       "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary.qnt",
       "role": "semantic-core"
     },
@@ -9272,13 +9277,10 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt is profile-scoped QNT proof support for direct condition and Sanctuary spell resolution; the existing focused owners remain the generator semantic cores.",
-      "obligationIds": [
-        "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
-        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"
-      ],
-      "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt",
-      "role": "proof-only"
+      "evidence": "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt owns Sanctuary spell activation and target ward application semantics.",
+      "obligationIds": ["BATTLE.SANCTUARY.TARGETING_INTERDICTION"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
+      "role": "semantic-core"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-hunters-prey.qnt carries Hunter's Prey option admission and battle hit-rider semantics for the broad Unit feature procedure obligation.",
@@ -10556,6 +10558,45 @@
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-turn-advancement-death-save-tests.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt owns actor-parametric Opportunity Attack attacker, provoker, damage, and attack-outcome projection semantics.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-fighter-rage-resistances.qnt owns focused Fighter Rage damage Resistance projection semantics.",
+      "obligationIds": ["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-fighter-rage-resistances.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt owns shared target-action early-ending semantics for Sanctuary wards and source-owned Invisibility effects.",
+      "obligationIds": [
+        "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
+        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-invisibility.qnt owns focused Invisibility direct-condition application, target limit, duration, and cleanup semantics.",
+      "obligationIds": ["BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-invisibility.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt owns Hellish Rebuke damager/damaged direction, after-damage Reaction admission, window take/decline, slot-level save damage, frame close, and resume semantics.",
+      "obligationIds": [
+        "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
+        "BATTLE.SPELL.REACTION_CASTING_TIME"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
+      "role": "semantic-core"
     }
   ],
   "qntRegistry": [
@@ -10672,11 +10713,6 @@
     },
     {
       "classification": "qnt-owner-role",
-      "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt",
-      "role": "proof-only"
-    },
-    {
-      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
       "role": "semantic-core"
     },
@@ -10773,6 +10809,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-fighter-rage-resistances.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-fill-kinds.qnt",
       "role": "semantic-core"
     },
@@ -10838,6 +10879,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-hidden.qnt",
       "role": "proof-only"
     },
@@ -10870,6 +10916,11 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-interrupt-bridge.qnt",
       "role": "bridge"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-invisibility.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -11173,6 +11224,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt",
       "role": "proof-only"
     },
@@ -11263,6 +11319,11 @@
       "classification": "exempt",
       "evidence": "Exact reducer-route choice payload vocabulary leaf imported by focused route connector MBT drivers without owning reducer semantics.",
       "ownerPath": "packages/battle-runtime/battle-runtime-route-choice-payloads.qnt"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
+      "role": "semantic-core"
     },
     {
       "classification": "qnt-owner-role",
@@ -11551,6 +11612,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-subject-kinds.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt",
       "role": "semantic-core"
     },
     {
@@ -13086,7 +13152,8 @@
         "packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt",
-        "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt"
+        "packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-opportunity-attack.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13300,7 +13367,8 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt",
         "packages/battle-runtime/battle-runtime-fighter-rage-facts.qnt",
-        "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt",
+        "packages/battle-runtime/battle-runtime-fighter-rage-resistances.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13340,7 +13408,7 @@
         "record",
         "record-update",
         "pure-def",
-        "constant-def",
+        "constant-val",
         "int",
         "bool",
         "if-expression",
@@ -13348,12 +13416,24 @@
         "arithmetic",
         "comparison",
         "boolean-connective",
-        "pattern-match"
+        "pattern-match",
+        "set",
+        "map",
+        "filter",
+        "fold",
+        "exists",
+        "set-operators",
+        "membership",
+        "size"
       ],
       "obligationId": "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
       "proofOnly": [],
       "semanticCore": [
-        "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt"
+        "packages/battle-runtime/battle-runtime-direct-condition-lifecycle.qnt",
+        "packages/battle-runtime/battle-runtime-concentration.qnt",
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+        "packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt",
+        "packages/battle-runtime/battle-runtime-invisibility.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -13409,15 +13489,20 @@
         "record",
         "record-update",
         "pure-def",
+        "constant-def",
+        "int",
         "bool",
         "if-expression",
         "let-binding",
+        "arithmetic",
         "comparison",
         "boolean-connective",
         "pattern-match",
         "set",
         "exists",
         "map",
+        "filter",
+        "fold",
         "set-operators",
         "membership"
       ],
@@ -13426,7 +13511,8 @@
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
         "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt"
+        "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt",
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14870,7 +14956,8 @@
         "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
         "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",
-        "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt"
+        "packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15119,7 +15206,11 @@
       ],
       "obligationId": "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
       "proofOnly": [],
-      "semanticCore": ["packages/battle-runtime/battle-runtime-sanctuary.qnt"],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-sanctuary.qnt",
+        "packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt",
+        "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt"
+      ],
       "status": "generation-subset-clean"
     },
     {
@@ -16011,6 +16102,7 @@
         "record-update",
         "pure-def",
         "constant-def",
+        "constant-val",
         "int",
         "bool",
         "if-expression",
@@ -16022,9 +16114,13 @@
         "pattern-match",
         "set",
         "map",
+        "filter",
+        "fold",
+        "exists",
         "set-operators",
         "membership",
-        "list"
+        "list",
+        "size"
       ],
       "obligationId": "BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY",
       "proofOnly": [],
@@ -16032,6 +16128,8 @@
         "packages/battle-runtime/battle-runtime-reaction-window.qnt",
         "packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt",
         "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+        "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+        "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
         "packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt",
         "packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt",
         "packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt",

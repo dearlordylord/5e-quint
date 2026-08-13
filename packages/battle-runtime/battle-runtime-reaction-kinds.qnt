@@ -32,12 +32,4 @@ module battleRuntimeReactionKinds {
     | BattleRuntimeDamageInterruptionProcedure
     | BattleRuntimeNoReactionProcedure
 
-  type BattleRuntimeContinuationKind =
-    | BattleRuntimeAttackDamageContinuation
-    | BattleRuntimeSpellCastContinuation
-    | BattleRuntimeSpellAttackContinuation
-    | BattleRuntimeSaveGateContinuation
-    | BattleRuntimeMovementContinuation
-    | BattleRuntimeFallDamageContinuation
-    | BattleRuntimeAfterDamageContinuation
 }

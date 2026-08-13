@@ -24,24 +24,22 @@ module battleRuntimeSpellCastReactionResolution {
   pure def directSpellReactionCandidate(
     frame: PendingReactionFrame,
   ): DirectSpellReactionCandidate =
-    match frame.procedure {
-      | CounterspellReactionProcedure(counterspell) =>
-          if (reactionProcedureMatchesTrigger(frame.trigger, frame.procedure))
-            match directSpellAttackReactionContinuation(frame.continuation) {
+    match frame.request {
+      | SpellCastCounterspellReactionRequest(request) =>
+          if (not(pendingReactionFrameIsCanonical(frame)))
+            NoDirectSpellReactionCandidate
+          else
+            match directSpellAttackContinuationForCounterspell(request.continuation) {
               | NoDirectSpellAttackReactionContinuation =>
                   NoDirectSpellReactionCandidate
               | HasDirectSpellAttackReactionContinuation(continuation) =>
                   HasDirectSpellReactionCandidate({
                     context: {
-                      counterspell: counterspell,
-                      eligibleReactors: frame.eligibleReactors,
-                      offeredReactors: frame.offeredReactors,
+                      counterspell: request.counterspell,
                     },
                     continuation: continuation,
                   })
             }
-          else
-            NoDirectSpellReactionCandidate
       | _ => NoDirectSpellReactionCandidate
     }
 
@@ -56,42 +54,22 @@ module battleRuntimeSpellCastReactionResolution {
 
   pure def declineDirectSpellReactionFrame(
     state: BattleState,
-    reactor: Actor,
     frame: DirectSpellReactionFrame,
   ): BattleState =
     stateAfterCounterspellResolution(
-      declineCounterspellReaction(state, reactor, frame.context),
+      declineCounterspellReaction(state, frame.context),
       resumeState => resumeDirectSpellAttackReactionContinuation(
         resumeState,
         frame.continuation,
       ),
     )
 
-  pure def declineDirectSpellReactionOfferAndResume(
-    state: BattleState,
-    reactor: Actor,
-  ): BattleState =
-    if (state.interruptStack.length() == 0)
-      state
-    else {
-      match state.interruptStack[state.interruptStack.length() - 1] {
-        | PendingReaction(frame) =>
-            match directSpellReactionFrame(directSpellReactionCandidate(frame)) {
-              | NoDirectSpellReactionFrame => state
-              | HasDirectSpellReactionFrame(directFrame) =>
-                  declineDirectSpellReactionFrame(state, reactor, directFrame)
-            }
-        | _ => state
-      }
-    }
-
   pure def resolveDirectSpellReactionFrame(
     state: BattleState,
-    reactor: Actor,
     frame: DirectSpellReactionFrame,
   ): BattleState =
     stateAfterCounterspellResolution(
-      resolveCounterspellReaction(state, reactor, frame.context),
+      resolveCounterspellReaction(state, frame.context),
       resumeState => resumeDirectSpellAttackReactionContinuation(
         resumeState,
         frame.continuation,
@@ -100,7 +78,6 @@ module battleRuntimeSpellCastReactionResolution {
 
   pure def resolveDirectSpellReactionOffer(
     state: BattleState,
-    reactor: Actor,
   ): BattleState =
     if (state.interruptStack.length() == 0)
       state
@@ -110,7 +87,24 @@ module battleRuntimeSpellCastReactionResolution {
             match directSpellReactionFrame(directSpellReactionCandidate(frame)) {
               | NoDirectSpellReactionFrame => state
               | HasDirectSpellReactionFrame(directFrame) =>
-                  resolveDirectSpellReactionFrame(state, reactor, directFrame)
+                  resolveDirectSpellReactionFrame(state, directFrame)
+            }
+        | _ => state
+      }
+    }
+
+  pure def declineDirectSpellReactionOfferAndResume(
+    state: BattleState,
+  ): BattleState =
+    if (state.interruptStack.length() == 0)
+      state
+    else {
+      match state.interruptStack[state.interruptStack.length() - 1] {
+        | PendingReaction(frame) =>
+            match directSpellReactionFrame(directSpellReactionCandidate(frame)) {
+              | NoDirectSpellReactionFrame => state
+              | HasDirectSpellReactionFrame(directFrame) =>
+                  declineDirectSpellReactionFrame(state, directFrame)
             }
         | _ => state
       }

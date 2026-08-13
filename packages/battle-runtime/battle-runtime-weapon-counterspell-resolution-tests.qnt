@@ -9,21 +9,18 @@ module battleRuntimeWeaponCounterspellResolutionTests {
 
   run test_counterspell_successful_save_resumes_true_strike_weapon_attack = {
     val awaiting = openReactionWindow(initialState, {
-      trigger: SpellCast,
-      procedure: CounterspellReactionProcedure({
-        triggeringCaster: Fighter,
-        triggeringCastingResource: CounterspellMagicAction,
-        triggeringSpellLevel: 0,
-        triggeringSpellUsesSlot: false,
-        counterspellSlotLevel: 3,
-        triggeringCasterConSaveSucceeded: true,
-        counterspellSpellCastReaction: CounterspellSpellCastNotCountered,
+      request: SpellCastCounterspellReactionRequest({
+        counterspell: {
+          triggeringCaster: Fighter,
+          triggeringCastingResource: CounterspellMagicAction,
+          triggeringSpellUsesSlot: false,
+          triggeringCasterConSaveSucceeded: true,
+          counterspellSpellCastReaction: CounterspellSpellCastNoNestedReactionAttempt,
+        },
+        continuation: CounterspellResumesTrueStrikeWeaponAttack,
       }),
-      eligibleReactors: Set(Goblin),
-      offeredReactors: Set(),
-      continuation: ResumeTrueStrikeWeaponAttack,
     })
-    val resolved = resolveWeaponCounterspellReactionOffer(awaiting, Goblin)
+    val resolved = resolveWeaponCounterspellReactionOffer(awaiting)
     all {
       assert(resolved.interruptStack == []),
       assert(not(resolved.goblin.reactionAvailable)),
@@ -31,6 +28,32 @@ module battleRuntimeWeaponCounterspellResolutionTests {
       assert(battleActorHasCommittedSpellSlotUse(resolved, Goblin)),
       assert(not(resolved.actionAvailable)),
       assert(resolved.goblin.hp == 0),
+    }
+  }
+
+  run test_declining_weapon_counterspell_resumes_true_strike_into_shield_window = {
+    val awaiting = openReactionWindow(initialState, {
+      request: SpellCastCounterspellReactionRequest({
+        counterspell: {
+          triggeringCaster: Fighter,
+          triggeringCastingResource: CounterspellMagicAction,
+          triggeringSpellUsesSlot: false,
+          triggeringCasterConSaveSucceeded: true,
+          counterspellSpellCastReaction: CounterspellSpellCastNoNestedReactionAttempt,
+        },
+        continuation: CounterspellResumesTrueStrikeWeaponAttack,
+      }),
+    })
+    val resumed = declineWeaponCounterspellReactionOfferAndResume(awaiting)
+    all {
+      assert(resumed.interruptStack == [PendingReaction({
+        request: AttackHitShieldReactionRequest(ShieldResumesTrueStrikeWeaponAttack),
+      })]),
+      assert(resumed.goblin.reactionAvailable),
+      assert(not(battleActorHasSpellSlotUse(resumed, Goblin))),
+      assert(not(battleActorHasSpellSlotUse(resumed, Fighter))),
+      assert(resumed.goblin.hp == 10),
+      assert(resumed.actionAvailable),
     }
   }
 }

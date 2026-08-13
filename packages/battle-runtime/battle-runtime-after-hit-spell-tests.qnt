@@ -4,7 +4,6 @@
 module battleRuntimeAfterHitSpellTests {
   import battleRuntimeSpellAttackRollAndVisibilityFacts.* from "./battle-runtime-spell-attack-roll-and-visibility-facts"
   import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeLight.* from "./battle-runtime-light"
   import battleRuntimeLightEmitters.* from "./battle-runtime-light-emitters"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"

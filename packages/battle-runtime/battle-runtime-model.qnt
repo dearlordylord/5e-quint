@@ -15,6 +15,12 @@ module battleRuntimeModel {
   import battleRuntimeSorcerousBurstDamageChoice.* from "./battle-runtime-sorcerous-burst-damage-choice"
 
   type Actor = Fighter | Goblin
+
+  pure def opposingActor(actor: Actor): Actor =
+    match actor {
+      | Fighter => Goblin
+      | Goblin => Fighter
+    }
   // FIXME: damage type is not only about battle (you can get damaged out of battle). similar with creature size, hand use, maybe more common domain truths. make sure there's shared module for it
   type DamageType = Acid | Bludgeoning | Poison | Force | Cold | Slashing | Piercing | Radiant | Necrotic | Lightning | Psychic | Fire | Thunder
   type Ability = StrAbility | DexAbility | ConAbility | IntAbility | WisAbility | ChaAbility
@@ -383,7 +389,6 @@ module battleRuntimeModel {
     | HellishRebukeDamagerOutside60Feet
 
   type HellishRebukeAfterDamageContinuation = {
-    damager: Actor,
     damaged: Actor,
     slotLevel: int,
   }
@@ -411,51 +416,66 @@ module battleRuntimeModel {
   // wider battle projections; this bounded summary is the two-actor parity
   // projection, not an SRD limit.
   type PendingCounterspellSpellCastReaction =
-    | CounterspellSpellCastNotCountered
-    | CounterspellSpellCastCounteredByReaction({
-        reactor: Actor,
-        counterspellSlotLevel: int,
-        counterspellCasterConSaveSucceeded: bool,
+    | CounterspellSpellCastNoNestedReactionAttempt
+    | CounterspellSpellCastNestedReactionAttempt({
+        outerCounterspellCasterConSaveSucceeded: bool,
       })
 
   type PendingCounterspellReaction = {
     triggeringCaster: Actor,
     triggeringCastingResource: CounterspellCastingResource,
-    triggeringSpellLevel: int,
     triggeringSpellUsesSlot: bool,
-    counterspellSlotLevel: int,
     triggeringCasterConSaveSucceeded: bool,
     counterspellSpellCastReaction: PendingCounterspellSpellCastReaction,
   }
 
-  type PendingReactionProcedure =
-    | ShieldReactionProcedure
-    | CounterspellReactionProcedure(PendingCounterspellReaction)
-    | OpportunityAttackReactionProcedure
-    | ReadiedSpellReleaseReactionProcedure
-    | DamageInterruptionReactionProcedure
+  pure def counterspellReactionReactor(counterspell: PendingCounterspellReaction): Actor =
+    opposingActor(counterspell.triggeringCaster)
+
+  pure def nestedCounterspellReactionReactor(counterspell: PendingCounterspellReaction): Actor =
+    counterspell.triggeringCaster
 
   type LastTurnActor = NoTurnEnded | LastTurnFighter | LastTurnGoblin
   type FighterCriticalRange = DefaultCriticalRange | ImprovedCriticalRange19
 
-  // Continuations carry the replay lane interrupted by a Reaction window. This
-  // model keeps representative deterministic fills for those lanes;
-  // TypeScript carries the caller-provided fills in the runtime frame.
-  type ReactionContinuation =
-    | ResumeAttack({ damage: int })
-    | ResumeRayOfFrost
-    | ResumePoisonSpray
-    | ResumeChillTouch
-    | ResumeTrueStrikeWeaponAttack
-    | ResumeProduceFlameHurl
-    | ResumeFlameBladeAttack
-    | ResumeIceKnife
-    | ResumeSaveGateDamage
-    | ResumeAfterDamage
-    | ResumeHellishRebukeAfterDamage(HellishRebukeAfterDamageContinuation)
-    | ResumeMovement({ speedKind: MovementSpeedKind, movementCost: int })
-    | ResumeCommandFleeMovement({ speedKind: MovementSpeedKind, movementCost: int })
-    | ResumeDissonantWhispersMovementThenAfterDamage({ speedKind: MovementSpeedKind, movementCost: int })
+  type ShieldReactionContinuation =
+    | ShieldResumesRayOfFrost
+    | ShieldResumesPoisonSpray
+    | ShieldResumesChillTouch
+    | ShieldResumesTrueStrikeWeaponAttack
+    | ShieldResumesProduceFlameHurl
+    | ShieldResumesFlameBladeAttack
+    | ShieldResumesIceKnife
+
+  type CounterspellReactionContinuation =
+    | CounterspellResumesRayOfFrost
+    | CounterspellResumesPoisonSpray
+    | CounterspellResumesChillTouch
+    | CounterspellResumesTrueStrikeWeaponAttack
+    | CounterspellResumesIceKnife
+    | CounterspellResumesSaveGateDamage
+
+  type OpportunityAttackReactionContinuation =
+    | OpportunityAttackResumesMovement({ speedKind: MovementSpeedKind, movementCost: int })
+    | OpportunityAttackResumesCommandFleeMovement({ speedKind: MovementSpeedKind, movementCost: int })
+    | OpportunityAttackResumesDissonantWhispersReactionMovement
+
+  type OpportunityAttackReactionRequestData = {
+    mover: Actor,
+    continuation: OpportunityAttackReactionContinuation,
+  }
+
+  type PendingReactionRequest =
+    | AttackHitShieldReactionRequest(ShieldReactionContinuation)
+    | SpellCastCounterspellReactionRequest({
+        counterspell: PendingCounterspellReaction,
+        continuation: CounterspellReactionContinuation,
+      })
+    | OpportunityAttackReactionRequest(OpportunityAttackReactionRequestData)
+    | AttackHitFighterReadiedSpellReleaseReactionRequest({
+        damage: int,
+      })
+    | AfterDamageHellishRebukeReactionRequest(HellishRebukeAfterDamageContinuation)
 
   type DissonantWhispersForcedMovementReplay =
     | DissonantWhispersMovementMissing
@@ -468,15 +488,11 @@ module battleRuntimeModel {
   type DissonantWhispersForcedMovementResult =
     | DissonantWhispersInvalidMovementFill
     | DissonantWhispersNeedsMovementFill
-    | DissonantWhispersResolvedAfterDamage(BattleState)
-    | DissonantWhispersOpportunityAttackWindow(BattleState)
+    | DissonantWhispersForcedMovementResolved(BattleState)
+    | DissonantWhispersOpportunityAttackPending(BattleState)
 
   type PendingReactionFrame = {
-    trigger: ReactionTrigger,
-    procedure: PendingReactionProcedure,
-    eligibleReactors: Set[Actor],
-    offeredReactors: Set[Actor],
-    continuation: ReactionContinuation,
+    request: PendingReactionRequest,
   }
   type AttackDamageConcentrationContinuation =
     | ResumeAttackDamageToGoblin
@@ -498,31 +514,22 @@ module battleRuntimeModel {
       | OpportunityAttack => BattleRuntimeOpportunityAttack
     }
 
-  pure def reactionContinuationKind(continuation: ReactionContinuation): BattleRuntimeContinuationKind =
-    match continuation {
-      | ResumeAttack(_) => BattleRuntimeAttackDamageContinuation
-      | ResumeRayOfFrost => BattleRuntimeSpellAttackContinuation
-      | ResumePoisonSpray => BattleRuntimeSpellAttackContinuation
-      | ResumeChillTouch => BattleRuntimeSpellAttackContinuation
-      | ResumeTrueStrikeWeaponAttack => BattleRuntimeSpellAttackContinuation
-      | ResumeProduceFlameHurl => BattleRuntimeSpellAttackContinuation
-      | ResumeFlameBladeAttack => BattleRuntimeSpellAttackContinuation
-      | ResumeIceKnife => BattleRuntimeSpellAttackContinuation
-      | ResumeSaveGateDamage => BattleRuntimeSaveGateContinuation
-      | ResumeAfterDamage => BattleRuntimeAfterDamageContinuation
-      | ResumeHellishRebukeAfterDamage(_) => BattleRuntimeAfterDamageContinuation
-      | ResumeMovement(_) => BattleRuntimeMovementContinuation
-      | ResumeCommandFleeMovement(_) => BattleRuntimeMovementContinuation
-      | ResumeDissonantWhispersMovementThenAfterDamage(_) => BattleRuntimeMovementContinuation
+  pure def reactionFrameTrigger(frame: PendingReactionFrame): ReactionTrigger =
+    match frame.request {
+      | AttackHitShieldReactionRequest(_) => AttackHit
+      | SpellCastCounterspellReactionRequest(_) => SpellCast
+      | OpportunityAttackReactionRequest(_) => OpportunityAttack
+      | AttackHitFighterReadiedSpellReleaseReactionRequest(_) => AttackHit
+      | AfterDamageHellishRebukeReactionRequest(_) => AfterDamage
     }
 
-  pure def battleRuntimeReactionProcedure(procedure: PendingReactionProcedure): BattleRuntimeReactionProcedure =
-    match procedure {
-      | ShieldReactionProcedure => BattleRuntimeShieldReactionProcedure
-      | CounterspellReactionProcedure(_) => BattleRuntimeCounterspellReactionProcedure
-      | OpportunityAttackReactionProcedure => BattleRuntimeOpportunityAttackProcedure
-      | ReadiedSpellReleaseReactionProcedure => BattleRuntimeReadiedSpellReleaseProcedure
-      | DamageInterruptionReactionProcedure => BattleRuntimeDamageInterruptionProcedure
+  pure def reactionFrameReactor(frame: PendingReactionFrame): Actor =
+    match frame.request {
+      | AttackHitShieldReactionRequest(_) => Goblin
+      | SpellCastCounterspellReactionRequest(request) => counterspellReactionReactor(request.counterspell)
+      | OpportunityAttackReactionRequest(request) => opposingActor(request.mover)
+      | AttackHitFighterReadiedSpellReleaseReactionRequest(_) => Fighter
+      | AfterDamageHellishRebukeReactionRequest(request) => request.damaged
     }
 
   type ZeroHpLifecycle = DiesAtZeroHp | UsesDeathSavingThrows

@@ -1056,7 +1056,6 @@ export function resolveDruidWildShapeUnitFeature(
       "Druid Wild Shape form is not battle-available.",
     );
   }
-  const form = formAdmission.statBlock;
   const equipmentCandidates = wildShapeLoadoutObjectRefs(
     characterEffectiveLoadout(input.state, actor),
   );
@@ -1162,7 +1161,7 @@ export function resolveDruidWildShapeUnitFeature(
     state: stateWithResourceSpend,
     actor: nextActor,
     procedureRef: input.subject.procedureRef,
-    form,
+    formAdmission,
     formLimbs: equipmentDisposition.formLimbs,
     equipmentDisposition: wildShapeActiveEquipmentDispositions(
       equipmentDisposition.dispositions,

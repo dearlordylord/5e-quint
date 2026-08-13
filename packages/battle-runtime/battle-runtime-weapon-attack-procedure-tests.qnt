@@ -8,6 +8,18 @@ module battleRuntimeWeaponAttackProcedureTests {
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"
   import attackActionAdditionalAttacks.* from "../shared-algebras/proofs/rule-core/attack-action-additional-attacks"
 
+  run test_off_hand_requires_prior_light_attack_and_spends_bonus_action = {
+    val rejected = offHandAttackFighter(initialState, 15, 10, 4)
+    val afterAttack = resolveAttack(initialState, 1, 1, fighterWeaponAttackDamageRoll(4), false)
+    val offHand = offHandAttackFighter(afterAttack, 15, 10, 4)
+    all {
+      assert(rejected == initialState),
+      assert(afterAttack.lightWeaponAttackMade),
+      assert(not(offHand.bonusActionAvailable)),
+      assert(offHand.goblin.hp == 6),
+    }
+  }
+
 
   run test_class_feature_extra_attack_spends_one_action_and_grants_one_slot = {
     val first = resolveAttack(withFighterExtraAttack(initialState), 1, 1, fighterWeaponAttackDamageRoll(0), true)

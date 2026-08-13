@@ -312,13 +312,10 @@ export function bonusActionDashSubjectForSpeedKind(
 }
 
 export function hideAbilityCheckHole(
-  state?: BattleState,
-  actorId?: CombatantId,
+  state: BattleState,
+  actorId: CombatantId,
 ): BattleAbilityCheckHole {
-  const rollMode =
-    state === undefined || actorId === undefined
-      ? undefined
-      : requiredAbilityCheckRollMode(state, actorId, "dex");
+  const rollMode = requiredAbilityCheckRollMode(state, actorId, "dex");
   return {
     holeInstanceKey: HIDE_ABILITY_CHECK_HOLE_INSTANCE,
     holeId: HIDE_ABILITY_CHECK_HOLE_ID,
@@ -333,17 +330,14 @@ export function hideAbilityCheckHole(
 
 export function searchAbilityCheckHole(
   dc: DifficultyClass,
-  state?: BattleState,
-  actorId?: CombatantId,
+  state: BattleState,
+  actorId: CombatantId,
   targetId?: CombatantId,
 ): BattleAbilityCheckHole {
-  const rollMode =
-    state === undefined || actorId === undefined
-      ? undefined
-      : requiredAbilityCheckRollMode(state, actorId, "wis", {
-          skill: "perception",
-          ...optionalProperty("targetId", targetId),
-        });
+  const rollMode = requiredAbilityCheckRollMode(state, actorId, "wis", {
+    skill: "perception",
+    ...optionalProperty("targetId", targetId),
+  });
   return {
     holeInstanceKey: SEARCH_ABILITY_CHECK_HOLE_INSTANCE,
     holeId: SEARCH_ABILITY_CHECK_HOLE_ID,
@@ -963,20 +957,15 @@ export function bonusActionStandardActionActs(
       }),
   );
   const dashTemporaryHitPointActs =
-    bonusActionDashTemporaryHitPointsProfilesForActor(actor).flatMap(
-      (entry) => {
-        if (!alternateActionCostActionAvailable(state, actorId, "dash")) {
-          return [];
-        }
-        return representedMovementSpeedKinds(actor).map((speedKind) => ({
-          subject: bonusActionDashSubjectForSpeedKind(
-            actorId,
-            entry.procedureRef,
-            speedKind,
-          ),
-          initialHoles: [],
-        }));
-      },
+    bonusActionDashTemporaryHitPointsProfilesForActor(actor).flatMap((entry) =>
+      representedMovementSpeedKinds(actor).map((speedKind) => ({
+        subject: bonusActionDashSubjectForSpeedKind(
+          actorId,
+          entry.procedureRef,
+          speedKind,
+        ),
+        initialHoles: [],
+      })),
     );
   return [...alternateCostActs, ...dashTemporaryHitPointActs];
 }

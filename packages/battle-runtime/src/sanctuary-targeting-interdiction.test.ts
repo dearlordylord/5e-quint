@@ -310,6 +310,14 @@ describe("Sanctuary targeting interdiction", () => {
     expect(needsAttackRoll).toMatchObject({
       tag: "needsHoles",
       holes: [expect.objectContaining({ kind: "attackRoll" })],
+      routeEvents: expect.arrayContaining([
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "wardedTargetInterdiction",
+          holes: [],
+          owner: "battleHoleFrontier",
+        },
+      ]),
     });
   });
 
@@ -355,6 +363,15 @@ describe("Sanctuary targeting interdiction", () => {
     expect(retargeted).toMatchObject({
       tag: "needsHoles",
       holes: [expect.objectContaining({ kind: "attackRoll" })],
+      routeEvents: expect.arrayContaining([
+        {
+          kind: "resolveBattleSubject",
+          subject: "wardedTargetInterdiction",
+          fill: "targetChoice",
+          holes: [],
+          owner: "battleTargetSelection",
+        },
+      ]),
     });
   });
 
@@ -1354,6 +1371,14 @@ describe("Sanctuary targeting interdiction", () => {
     expect(needsDamage).toMatchObject({
       tag: "needsHoles",
       holes: [expect.objectContaining({ kind: "rolledDice" })],
+      routeEvents: expect.arrayContaining([
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "wardedTargetInterdiction",
+          holes: [],
+          owner: "battleAreaShape",
+        },
+      ]),
     });
     if (needsDamage.tag !== "needsHoles") {
       throw new Error("Expected Burning Hands damage roll hole.");
@@ -1437,6 +1462,22 @@ describe("Sanctuary targeting interdiction", () => {
         expect.objectContaining({ kind: "sanctuaryWard" }),
       ]),
     );
+    expect(resolved.routeEvents).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "wardedTargetInterdiction",
+          holes: [],
+          owner: "battleSpellSlotAndActionEconomy",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "wardedTargetInterdiction",
+          holes: [],
+          owner: "battleActiveEffect",
+        },
+      ]),
+    );
   });
 
   test("ward ends when the warded creature makes an attack roll, casts a spell, or deals damage", () => {
@@ -1472,6 +1513,22 @@ describe("Sanctuary targeting interdiction", () => {
     expect(combatant(needsDamage.state, attackerId).activeEffects).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: "sanctuaryWard" }),
+      ]),
+    );
+    expect(needsDamage.routeEvents).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "wardedTargetInterdiction",
+          holes: [],
+          owner: "battleAttackRoll",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "wardedTargetInterdiction",
+          holes: [],
+          owner: "battleActiveEffect",
+        },
       ]),
     );
 
@@ -1580,6 +1637,17 @@ function castSanctuary(
   if (resolved.tag !== "resolved") {
     throw new Error("Expected Sanctuary cast to resolve.");
   }
+  expect(resolved.routeEvents).toEqual(
+    expect.arrayContaining([
+      {
+        kind: "resolveBattleSubject",
+        subject: "wardedTargetInterdiction",
+        fill: "targetChoice",
+        holes: [],
+        owner: "battleTargetSelection",
+      },
+    ]),
+  );
   return battleRuntimeSessionForTest({
     state: resolved.state,
     context: session.context,

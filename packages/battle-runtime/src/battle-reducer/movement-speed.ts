@@ -47,6 +47,7 @@ import { attackTargetConstraint } from "./statblock-attacks.ts";
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.ts";
 import {
+  combatantCanTakeReactions,
   combatantCanSee,
   combatantHandUses,
   currentActorId,
@@ -209,6 +210,7 @@ export function opportunityAttackThreatsForMovement(
   }
   return movement.provokedOpportunityAttacks.filter(
     (threat) =>
+      combatantCanTakeReactions(state.combatants.get(threat.reactorId)) &&
       opportunityAttackOptionForReactor(
         state,
         threat.reactorId,

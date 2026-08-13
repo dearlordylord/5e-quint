@@ -184,6 +184,118 @@ describe("battle runtime: Stunning Strike", () => {
     expect(requiredAttackRollMode(resolved.state, fighterId, goblinId)).toBe(
       "advantage",
     );
+
+    const goblinTurn = requireResolved(
+      endTurn({ state: resolved.state, actorId: fighterId }),
+    );
+    const nextMonkTurn = requireResolved(
+      endTurn({ state: goblinTurn.state, actorId: goblinId }),
+    );
+    const targetAtNextMonkTurn = nextMonkTurn.state.combatants.get(goblinId);
+    if (targetAtNextMonkTurn === undefined) {
+      throw new Error("Expected Stunning Strike target on the next Monk turn.");
+    }
+    expect(effectiveWalkSpeed(nextMonkTurn.state, targetAtNextMonkTurn)).toBe(
+      30,
+    );
+    expect(
+      requiredAttackRollMode(nextMonkTurn.state, fighterId, goblinId),
+    ).toBeUndefined();
+  });
+
+  test("declining Stunning Strike rejects a Saving Throw from the replaced attempt", () => {
+    const window = stunningStrikeHitWindow();
+    const save = requireHole(
+      resolveBattleSubject({
+        state: window.state,
+        subject: window.subject,
+        fills: [
+          ...window.hitFills,
+          unitFeatureDecisionFill(window.decision, "attempt"),
+        ],
+      }),
+      "savingThrowOutcome",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: window.state,
+        subject: window.subject,
+        fills: [
+          ...window.hitFills,
+          unitFeatureDecisionFill(window.decision, "decline"),
+          stunningStrikeSavingThrowFill(save, false),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Stunning Strike Saving Throw is not valid when the rider is declined.",
+    });
+  });
+
+  test("a stored hit replay is rejected after the last Focus Point is spent", () => {
+    const window = stunningStrikeHitWindow(
+      stunningStrikeBattle({ focusUsesRemaining: 1 }),
+    );
+    const save = requireHole(
+      resolveBattleSubject({
+        state: window.state,
+        subject: window.subject,
+        fills: [
+          ...window.hitFills,
+          unitFeatureDecisionFill(window.decision, "attempt"),
+        ],
+      }),
+      "savingThrowOutcome",
+    );
+    const spent = requireResolved(
+      resolveBattleSubject({
+        state: window.state,
+        subject: window.subject,
+        fills: [
+          ...window.hitFills,
+          unitFeatureDecisionFill(window.decision, "attempt"),
+          stunningStrikeSavingThrowFill(save, true),
+        ],
+      }),
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state: spent.state, actorId: fighterId }),
+    );
+    const nextMonkTurn = requireResolved(
+      endTurn({ state: goblinTurn.state, actorId: goblinId }),
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: nextMonkTurn.state,
+        subject: window.subject,
+        fills: [
+          ...window.hitFills,
+          unitFeatureDecisionFill(window.decision, "attempt"),
+          stunningStrikeSavingThrowFill(save, false),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      message:
+        "Stunning Strike is only valid for an eligible Monk weapon or Unarmed Strike hit.",
+    });
+    const actor = nextMonkTurn.state.combatants.get(fighterId);
+    expect(
+      actor?.origin.kind === "character" ? actor.origin.resources : [],
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          resourcePoolRef: stunningStrikeBinding(window.state).execution.spends
+            .resourcePoolRef,
+          usesRemaining: 0,
+        }),
+      ]),
+    );
   });
 
   test("does not offer the rider after one Stunning Strike use in the same turn", () => {

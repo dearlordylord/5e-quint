@@ -134,7 +134,10 @@ model modules, starting with
 `battle-runtime-model.qnt`, and let focused specs direct-import those modules
 when they need the moved names. Domain behavior helpers can live in narrower
 QNT modules, such as `battle-runtime-find-familiar.qnt`,
-`battle-runtime-light.qnt`, and `battle-runtime-creature-type-protection.qnt`,
+`battle-runtime-light.qnt`, `battle-runtime-light-emitters.qnt`,
+`battle-runtime-light-spell-lifecycle.qnt`, and
+`battle-runtime-light-spell-attacks.qnt`, and
+`battle-runtime-creature-type-protection.qnt`,
 `battle-runtime-armor-class.qnt`,
 `battle-runtime-armor-spell-resolution.qnt`, `battle-runtime-thaumaturgy.qnt`,
 and `battle-runtime-bardic-inspiration.qnt`, and `battle-runtime-hit-points.qnt`,
@@ -149,7 +152,12 @@ and `battle-runtime-bardic-inspiration.qnt`, and `battle-runtime-hit-points.qnt`
 `battle-runtime-marked-spells.qnt`,
 `battle-runtime-reaction-window.qnt`, `battle-runtime-concentration.qnt`,
 `battle-runtime-actor-combatants.qnt`, and
-`battle-runtime-sanctuary.qnt`, `battle-runtime-feather-fall.qnt`, and
+`battle-runtime-sanctuary.qnt`, `battle-runtime-invisibility.qnt`,
+`battle-runtime-target-action-effect-early-end.qnt`,
+`battle-runtime-hellish-rebuke-reaction.qnt`,
+`battle-runtime-opportunity-attack.qnt`,
+`battle-runtime-fighter-rage-resistances.qnt`,
+`battle-runtime-feather-fall.qnt`, and
 `battle-runtime-jump-movement.qnt`, and
 `battle-runtime-weapon-hit-spell-riders.qnt`,
 `battle-runtime-weapon-hit-turn-effects.qnt`, and

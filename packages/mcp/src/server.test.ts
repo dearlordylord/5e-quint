@@ -436,6 +436,123 @@ describe("MCP server route", () => {
     });
   });
 
+  test("reports a supplied catalog whose supported resource id has incompatible mechanics", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:list-incompatible-resource-catalog";
+    const druid = root.unitLibrary.requireUnit("class_druid");
+    if (druid.kind !== "class") {
+      throw new Error("Expected the Druid class Unit.");
+    }
+    const build = characterBuildForClassProgression({
+      base: fighterCharacterBuild(root.unitLibrary),
+      classUnit: druid,
+      keepClassChoices: false,
+      level: 2,
+    });
+    root.sessionStore.characters.set(
+      availableCharacterSessionRight({
+        build,
+        characterId: testCharacterId(draftId),
+        currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+        druidWildShapeKnownFormStatBlockIds: [
+          statBlockId("stat_block_rat"),
+          statBlockId("stat_block_riding_horse"),
+          statBlockId("stat_block_spider"),
+          statBlockId("stat_block_wolf"),
+        ],
+        hitPointMaximumReduction: Hp(0),
+        tempHp: Hp(0),
+        unitLibrary: root.unitLibrary,
+      }),
+    );
+    const wildShape = root.unitLibrary.requireUnit("druid_wild_shape");
+    const fontOfMagic = root.unitLibrary.requireUnit("sorcerer_font_of_magic");
+    if (
+      wildShape.kind !== "class_feature" ||
+      fontOfMagic.kind !== "class_feature" ||
+      fontOfMagic.mechanics.family !== "resource_pool"
+    ) {
+      throw new Error("Expected the resource projection test Units.");
+    }
+    const incompatibleCatalog = unitLibraryWithOverrides(root.unitLibrary, [
+      {
+        ...wildShape,
+        mechanics: fontOfMagic.mechanics,
+        name: "Synthetic incompatible use-count resource",
+      },
+    ]);
+
+    expect(
+      readPayload(
+        handleToolCall(
+          { ...root, unitLibrary: incompatibleCatalog },
+          "list_characters",
+          {},
+        ),
+      ),
+    ).toMatchObject({
+      details: {
+        code: "CHARACTER_LIST_INVALID",
+        message:
+          "Class feature use-count resource requires an installed rest-reset class feature.",
+      },
+    });
+  });
+
+  test("lists Pact Magic slots for an available Warlock", () => {
+    const root = createMcpCompositionRoot();
+    const draftId = "draft:list-warlock-pact-slots";
+    const warlock = root.unitLibrary.requireUnit("class_warlock");
+    if (warlock.kind !== "class") {
+      throw new Error("Expected the Warlock class Unit.");
+    }
+    const build: CharacterBuild = {
+      ...characterBuildForClassProgression({
+        base: fighterCharacterBuild(root.unitLibrary),
+        classUnit: warlock,
+        keepClassChoices: false,
+        level: 1,
+      }),
+      spellcasting: {
+        slotPools: {
+          pactMagic: { kind: "pactMagic", slotLevel: 1, count: 1 },
+        },
+        sources: [
+          {
+            cantrips: [unitId("eldritch_blast"), unitId("mage_hand")],
+            preparedSpells: [unitId("charm_person"), unitId("hellish_rebuke")],
+            sourceUnitId: unitId("class_warlock"),
+            spellbook: [],
+            spellcastingAbility: "cha",
+            spellcastingFocuses: ["arcane_focus"],
+          },
+        ],
+      },
+    };
+    root.sessionStore.characters.set(
+      availableCharacterSessionRight({
+        build,
+        characterId: testCharacterId(draftId),
+        currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+        hitPointMaximumReduction: Hp(0),
+        tempHp: Hp(0),
+        unitLibrary: root.unitLibrary,
+      }),
+    );
+
+    expect(
+      readPayload(handleToolCall(root, "list_characters", {})),
+    ).toMatchObject({
+      characters: [
+        {
+          characterId: testCharacterId(draftId),
+          pactSlots: { count: 1, expended: 0, slotLevel: 1 },
+          status: "available",
+        },
+      ],
+    });
+  });
+
   test("builds SRD catalogs and keeps selected Stat Block state identity-only", () => {
     const root = createMcpCompositionRoot();
     const selected = root.sessionStore.selectStatBlock(
@@ -1408,6 +1525,16 @@ describe("MCP server route", () => {
         details: { code: "INVALID_ARGUMENTS" },
       },
     );
+
+    for (const [name, args] of [
+      ["fill_battle_hole", {}],
+      ["resolve_battle_act", {}],
+      ["resolve_battle_act", { subjectJson: "not-json" }],
+    ] as const) {
+      expect(readPayload(handleWireToolCall(root, name, args))).toMatchObject({
+        details: { code: "INVALID_ARGUMENTS" },
+      });
+    }
 
     for (const [name, args] of [
       [
@@ -6610,6 +6737,16 @@ describe("MCP server route", () => {
       snapshot: {
         pendingInterrupt: { trigger: "attackHit" },
       },
+    });
+    expect(
+      readPayload(handleToolCall(root, "read_battle_state", {})),
+    ).toMatchObject({
+      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
+      presentedInterruptChoices: [
+        expect.objectContaining({
+          choice: expect.objectContaining({ kind: "releaseReadiedSpell" }),
+        }),
+      ],
     });
     const releaseChoices =
       afterAttackRoll.snapshot.pendingInterrupt.choices.filter(

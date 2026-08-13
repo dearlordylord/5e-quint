@@ -22,11 +22,10 @@ module battleRuntimeWeaponShieldReactionResolution {
   pure def weaponShieldReactionCandidate(
     frame: PendingReactionFrame,
   ): WeaponShieldReactionCandidate =
-    match frame.procedure {
-      | ShieldReactionProcedure =>
+    match frame.request {
+      | AttackHitShieldReactionRequest(request) =>
           if (shieldReactionFrameIsFreshGoblinTarget(frame) and
-              frame.trigger == AttackHit and
-              frame.continuation == ResumeTrueStrikeWeaponAttack)
+              request == ShieldResumesTrueStrikeWeaponAttack)
             HasWeaponShieldReactionCandidate({
               continuation: WeaponShieldTrueStrikeAttack,
             })
@@ -86,8 +85,6 @@ module battleRuntimeWeaponShieldReactionResolution {
     match decision {
       | ShieldReactionDecisionTakenClosed(data) =>
           resumeWeaponShieldReactionAfterTake(data.state, frame.continuation)
-      | ShieldReactionDecisionTakenOpen(data) =>
-          data.state
       | _ => state
     }
   }
@@ -104,8 +101,6 @@ module battleRuntimeWeaponShieldReactionResolution {
     match decision {
       | ShieldReactionDecisionDeclinedClosed(data) =>
           resumeWeaponShieldReactionAfterDecline(data.state, frame.continuation)
-      | ShieldReactionDecisionDeclinedOpen(data) =>
-          data.state
       | _ => state
     }
   }

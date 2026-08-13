@@ -2858,6 +2858,104 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     );
   });
 
+  test("forcing an enemy to save against Shove extends Rage through the public frontier", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("battle-rage-shove-save-lifecycle"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "barbarian", level: 1 }],
+          resources: [rageResource()],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const rageProcedureRef = requireCharacterUnitProcedureRefForTest(
+      session,
+      fighterId,
+      "barbarian_rage",
+    );
+    const raging = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: {
+          tag: "unitFeature",
+          actorId: fighterId,
+          procedureRef: rageProcedureRef,
+        },
+        fills: [],
+      }),
+    ).state;
+    const fighterRoundTwo = requireResolved(
+      endTurn({
+        state: requireResolved(endTurn({ state: raging, actorId: fighterId }))
+          .state,
+        actorId: goblinId,
+      }),
+    ).state;
+    const subject = discoverBattleActCandidates(fighterRoundTwo).find(
+      (candidate) =>
+        candidate.subject.tag === "action" &&
+        candidate.subject.action === "shove",
+    )?.subject;
+    if (subject?.tag !== "action" || subject.action !== "shove") {
+      throw new Error("Expected a discovered Shove action.");
+    }
+    const target = requireHole(
+      resolveBattleSubject({ state: fighterRoundTwo, subject, fills: [] }),
+      "targetChoice",
+    );
+    const targetSelection = targetFill(target, goblinId);
+    const outcome = requireHole(
+      resolveBattleSubject({
+        state: fighterRoundTwo,
+        subject,
+        fills: [targetSelection],
+      }),
+      "shoveOutcome",
+    );
+
+    expect(outcome).toMatchObject({
+      actorId: fighterId,
+      targetId: goblinId,
+      relationshipFactRequest: {
+        kind: "savingThrowTargetIsEnemy",
+        actorId: fighterId,
+      },
+    });
+
+    const shoved = requireResolved(
+      resolveBattleSubject({
+        state: fighterRoundTwo,
+        subject,
+        fills: [
+          targetSelection,
+          shoveOutcomeFill(outcome, { succeeded: true }, [
+            {
+              kind: "savingThrowTargetIsEnemy",
+              actorId: fighterId,
+              targetId: goblinId,
+              targetIsEnemy: true,
+            },
+          ]),
+        ],
+      }),
+    );
+    const extendedRage = shoved.state.combatants
+      .get(fighterId)
+      ?.activeOngoingFeatureOccurrences.get(rageProcedureRef);
+    if (extendedRage?.kind !== "roundExtended") {
+      throw new Error("Expected Shove to extend Rage.");
+    }
+
+    expect(Number(extendedRage.expiresAt.round)).toBe(3);
+    expect(extendedRage.expiresAt).toEqual({
+      kind: "endOfTurn",
+      combatantId: fighterId,
+      round: 3,
+    });
+  });
+
   test("true-form Shove DC uses the projected Unarmed Strike ability modifier", () => {
     const state = startBattleRight({
       battleId: battleId("battle-dexterous-shove"),

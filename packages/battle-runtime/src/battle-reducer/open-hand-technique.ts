@@ -8,12 +8,14 @@ import { Match } from "effect";
 
 import type {
   BattleFill,
+  BattleCreatureState,
   BattleHole,
   BattleShovePushDisposition,
   BattleShovePushOutcome,
   BattleState,
   BattleUnitFeatureDecisionHole,
   BattleUnitFeatureSavingThrowOutcomeHole,
+  CharacterBattleCreatureState,
 } from "../battle-state-execution.ts";
 import type { BattleActiveEffect } from "../active-effect/types.ts";
 import type { MonkFocusFlurryOfBlowsStrikeSubject } from "../battle-subjects.ts";
@@ -23,7 +25,10 @@ import {
   type UnitSupportProcedureExecution,
 } from "../character-execution-queries.ts";
 
-import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state-execution.ts";
+import {
+  battleCreatureStateWithKnockOutPreservedConditions,
+  isCharacterBattleCreatureState,
+} from "./creature-state-execution.ts";
 import { isMonkFocusFlurryOfBlowsActionResource } from "./monk-focus.ts";
 import { combatantProficiencyBonus } from "./movement-speed.ts";
 import { scoreModifier } from "./domain-helpers.ts";
@@ -46,6 +51,8 @@ type OpenHandTechniqueSavingThrowChoice = Extract<
 >;
 
 type OpenHandTechniqueFlurryHit = {
+  readonly actor: CharacterBattleCreatureState;
+  readonly target: BattleCreatureState;
   readonly actorId: CombatantId;
   readonly targetId: CombatantId;
   readonly subject: MonkFocusFlurryOfBlowsStrikeSubject;
@@ -65,14 +72,7 @@ export type OpenHandTechniqueAfterHitResult =
   | { readonly tag: "needsHoles"; readonly holes: readonly BattleHole[] }
   | { readonly tag: "invalid"; readonly message: string };
 
-export function openHandTechniqueDecisionHoleForFlurryHit(
-  state: BattleState,
-  subject: unknown,
-  actorId: CombatantId,
-  targetId: CombatantId,
-): BattleUnitFeatureDecisionHole | null {
-  const hit = openHandTechniqueFlurryHit(state, subject, actorId, targetId);
-  if (hit === null) return null;
+function openHandTechniqueDecisionHole(): BattleUnitFeatureDecisionHole {
   return {
     kind: "unitFeatureDecision",
     holeId: OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID,
@@ -110,19 +110,7 @@ export function resolveOpenHandTechniqueAfterHit(input: {
         };
   }
   if (input.decision === undefined) {
-    const hole = openHandTechniqueDecisionHoleForFlurryHit(
-      input.state,
-      input.subject,
-      input.actorId,
-      input.targetId,
-    );
-    return hole === null
-      ? {
-          tag: "invalid",
-          message:
-            "Open Hand Technique decision requires an eligible Flurry of Blows hit.",
-        }
-      : { tag: "needsHoles", holes: [hole] };
+    return { tag: "needsHoles", holes: [openHandTechniqueDecisionHole()] };
   }
   /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (input.decision.holeId !== OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID) {
@@ -266,14 +254,10 @@ function openHandTechniqueSavingThrowHole(
     choice === "pushAwayOnFailedSave"
       ? hit.execution.technique.effects.pushAwayOnFailedSave.save.ability
       : hit.execution.technique.effects.applyConditionOnFailedSave.save.ability;
-  const actor = state.combatants.get(hit.actorId);
-  if (actor === undefined) {
-    throw new Error("Open Hand Technique save hole requires an actor.");
-  }
-  const wisdomModifier =
-    actor.origin.kind === "character"
-      ? scoreModifier(actor.origin.d20Statistics.abilityScores.wis)
-      : 0;
+  const actor = hit.actor;
+  const wisdomModifier = scoreModifier(
+    actor.origin.d20Statistics.abilityScores.wis,
+  );
   return {
     kind: "savingThrowOutcome",
     holeId: OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID,
@@ -300,8 +284,7 @@ function applyOpenHandTechniqueOpportunityAttackDenial(
   state: BattleState,
   hit: OpenHandTechniqueFlurryHit,
 ): BattleState {
-  const target = state.combatants.get(hit.targetId);
-  if (target === undefined) return state;
+  const target = hit.target;
   const effect: BattleActiveEffect = {
     kind: "opportunityAttackDenied",
     sourceProcedureRef: hit.procedureRef,
@@ -369,15 +352,7 @@ function applyOpenHandTechniqueApplyProne(
   state: BattleState,
   hit: OpenHandTechniqueFlurryHit,
 ): OpenHandTechniqueAfterHitResult {
-  const target = state.combatants.get(hit.targetId);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (target === undefined) {
-    return {
-      tag: "invalid",
-      message: "Open Hand Technique Topple target is no longer in this battle.",
-    };
-  }
-  /* v8 ignore stop */
+  const target = hit.target;
   return {
     tag: "ok",
     state: {
@@ -425,7 +400,8 @@ function openHandTechniqueFlurryHit(
 ): OpenHandTechniqueFlurryHit | null {
   if (!isMonkFocusFlurryOfBlowsStrikeSubject(subject)) return null;
   const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind !== "character" || !state.combatants.has(targetId)) {
+  const target = state.combatants.get(targetId);
+  if (!isCharacterBattleCreatureState(actor) || target === undefined) {
     return null;
   }
   if (
@@ -475,6 +451,8 @@ function openHandTechniqueFlurryHit(
     return null;
   }
   return {
+    actor,
+    target,
     actorId,
     targetId,
     subject,

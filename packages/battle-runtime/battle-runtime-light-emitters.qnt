@@ -1,7 +1,8 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DISPEL_MAGIC_ONGOING_SPELL_ENDING
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-dancing-lights-movable-dim-light spell.invocation-held-light-emitter spell.invocation-object-light spell.invocation-spell-created-held-object
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-attack-roll-advantage-save spell.invocation-dancing-lights-movable-dim-light spell.invocation-held-light-emitter spell.invocation-object-light spell.invocation-spell-created-held-object
 
 module battleRuntimeLightEmitters {
   import battleRuntimeModel.* from "./battle-runtime-model"
@@ -49,7 +50,7 @@ module battleRuntimeLightEmitters {
 
   pure def dancingLightsDimLightRadiusFeet: int = 10
 
-  pure def dancingLightsDurationTicks: int = 600
+  pure def dancingLightsDurationTicks: int = 10
 
   pure def dancingLightsRangeFeet: int = 120
 

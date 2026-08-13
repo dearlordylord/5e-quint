@@ -2199,7 +2199,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-light-emitter-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2273,7 +2273,11 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-held-light-emitter-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-held-light-duration-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2315,7 +2319,11 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-flame-blade-lifecycle-tests.qnt"
+        },
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/battle-runtime/battle-runtime-flame-blade-attack-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2342,7 +2350,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-dancing-lights-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2524,7 +2532,7 @@
       "id": "spell.reaction-hellish-rebuke",
       "profileKind": "reaction",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
+        "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -2540,7 +2548,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-hellish-rebuke-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -2640,7 +2648,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-dissonant-whispers-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -3158,7 +3166,9 @@
       "profileKind": "spell-invocation",
       "qntOwners": [
         "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
-        "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt"
+        "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt",
+        "packages/battle-runtime/battle-runtime-light-emitters.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -3175,15 +3185,11 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-residual-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-faerie-fire-visibility-tests.qnt"
         },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-faerie-fire.test.ts"
-        },
-        {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
         }
       ]
     },
@@ -3372,6 +3378,7 @@
       "id": "spell.invocation-sanctuary-targeting-interdiction",
       "profileKind": "spell-invocation",
       "qntOwners": [
+        "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
         "packages/battle-runtime/battle-runtime-sanctuary.qnt"
       ],
       "runtimeOwners": [
@@ -3385,7 +3392,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -4168,7 +4175,7 @@
       "id": "spell.invocation-direct-condition",
       "profileKind": "spell-invocation",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt"
+        "packages/battle-runtime/battle-runtime-invisibility.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts"
@@ -4181,7 +4188,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt"
+          "ownerPath": "packages/battle-runtime/battle-runtime-invisibility-tests.qnt"
         },
         {
           "kind": "runtime-test",
@@ -8556,7 +8563,7 @@
         "profileId": "spell.reaction-hellish-rebuke",
         "profileKind": "reaction",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
+          "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt"
         ]
       },
       {
@@ -8919,14 +8926,16 @@
             "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application and Attack Roll projection"
+            "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application, Dim Light emitter projection, and Attack Roll projection"
           }
         ],
         "profileId": "spell.invocation-attack-roll-advantage-save",
         "profileKind": "spell-invocation",
         "qntOwners": [
+          "packages/battle-runtime/battle-runtime-light-emitters.qnt",
           "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
-          "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt"
+          "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
+          "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt"
         ]
       },
       {
@@ -9059,6 +9068,7 @@
         "profileId": "spell.invocation-sanctuary-targeting-interdiction",
         "profileKind": "spell-invocation",
         "qntOwners": [
+          "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
           "packages/battle-runtime/battle-runtime-sanctuary.qnt"
         ]
       },
@@ -9533,7 +9543,7 @@
         "profileId": "spell.invocation-direct-condition",
         "profileKind": "spell-invocation",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt"
+          "packages/battle-runtime/battle-runtime-invisibility.qnt"
         ]
       },
       {
@@ -12106,14 +12116,16 @@
                   "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
                   "runtime": "battle",
                   "status": "covered",
-                  "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application and Attack Roll projection"
+                  "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application, Dim Light emitter projection, and Attack Roll projection"
                 }
               ],
               "profileId": "spell.invocation-attack-roll-advantage-save",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/battle-runtime/battle-runtime-light-emitters.qnt",
                 "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
-                "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt"
+                "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
+                "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt"
               ]
             }
           ],
@@ -12949,7 +12961,7 @@
               "profileId": "spell.reaction-hellish-rebuke",
               "profileKind": "reaction",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
+                "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt"
               ]
             },
             {
@@ -13244,7 +13256,7 @@
               "profileId": "spell.invocation-direct-condition",
               "profileKind": "spell-invocation",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt"
+                "packages/battle-runtime/battle-runtime-invisibility.qnt"
               ]
             }
           ],
@@ -15162,6 +15174,7 @@
               "profileId": "spell.invocation-sanctuary-targeting-interdiction",
               "profileKind": "spell-invocation",
               "qntOwners": [
+                "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
                 "packages/battle-runtime/battle-runtime-sanctuary.qnt"
               ]
             }
@@ -35253,7 +35266,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-emitter-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -36019,7 +36032,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-dancing-lights-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -36495,7 +36508,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-dissonant-whispers-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -37469,7 +37482,9 @@
           "profileKind": "spell-invocation",
           "qntOwners": [
             "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
-            "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt"
+            "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
+            "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt",
+            "packages/battle-runtime/battle-runtime-light-emitters.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -37486,15 +37501,11 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-save-spell-residual-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-faerie-fire-visibility-tests.qnt"
             },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-faerie-fire.test.ts"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-spell-save-and-rider-facts-tests.qnt"
             }
           ]
         }
@@ -37917,7 +37928,11 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-flame-blade-lifecycle-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-flame-blade-attack-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -39725,7 +39740,7 @@
           "id": "spell.invocation-direct-condition",
           "profileKind": "spell-invocation",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt"
+            "packages/battle-runtime/battle-runtime-invisibility.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts"
@@ -39738,7 +39753,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-invisibility-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -40322,7 +40337,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-light-emitter-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -41892,7 +41907,11 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-held-light-emitter-tests.qnt"
+            },
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/battle-runtime/battle-runtime-held-light-duration-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -42832,6 +42851,7 @@
           "id": "spell.invocation-sanctuary-targeting-interdiction",
           "profileKind": "spell-invocation",
           "qntOwners": [
+            "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
             "packages/battle-runtime/battle-runtime-sanctuary.qnt"
           ],
           "runtimeOwners": [
@@ -42845,7 +42865,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary-tests.qnt"
             },
             {
               "kind": "runtime-test",
@@ -47204,7 +47224,7 @@
           "id": "spell.reaction-hellish-rebuke",
           "profileKind": "reaction",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
+            "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/battle-state-execution.ts",
@@ -47220,7 +47240,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt"
+              "ownerPath": "packages/battle-runtime/battle-runtime-hellish-rebuke-tests.qnt"
             },
             {
               "kind": "runtime-test",

@@ -627,6 +627,7 @@ export async function verifyBaselineVertical(client: Client) {
     "Adrenaline Rush: Dash",
     "Second Wind",
     "Move",
+    "Ready",
     "End Turn",
   ]);
   const longswordSubject = attackSubjectFromActs(
@@ -663,9 +664,13 @@ export async function verifyBaselineVertical(client: Client) {
     "Attack",
     "Attack",
     "Attack",
+    "Attack",
     ...GENERIC_COMBAT_ACTION_LABELS,
+    "Unarmed Strike (Grapple)",
+    "Unarmed Strike (Shove)",
     "Nimble Escape",
     "Move",
+    "Ready",
     "End Turn",
   ]);
   const goblinAttack = attackSubjectFromActs(goblinActs, "goblin", "Scimitar");
@@ -803,6 +808,7 @@ export async function verifyWidthVertical(client: Client) {
     "Second Wind",
     "Action Surge",
     "Move",
+    "Ready",
     "End Turn",
   ]);
   const flailSubject = attackSubjectFromActs(fighterActs, "fighter", "Flail");

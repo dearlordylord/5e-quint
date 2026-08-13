@@ -361,3 +361,25 @@ export function zeroHpLifecycleIsTerminal(
     Match.exhaustive,
   );
 }
+
+export function combatantCanTakeActions(
+  combatant: BattleCreatureState | undefined,
+): combatant is BattleCreatureState {
+  return (
+    combatant != null &&
+    !isIncapacitated(combatant.conditions) &&
+    !zeroHpLifecycleIsTerminal(combatant)
+  );
+}
+
+export function combatantCanTakeReactions(
+  combatant: BattleCreatureState | undefined,
+): boolean {
+  return (
+    combatantCanTakeActions(combatant) &&
+    combatant.reactionAvailable &&
+    !combatant.activeEffects.some(
+      (effect) => effect.kind === "slowActivePenalties",
+    )
+  );
+}

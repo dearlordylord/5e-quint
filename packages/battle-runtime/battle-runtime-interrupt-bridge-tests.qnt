@@ -10,20 +10,16 @@ module battleRuntimeInterruptBridgeTests {
       BattleRuntimeOpportunityAttack,
       BattleRuntimeOpportunityAttackProcedure,
       true,
-      false,
-      true,
       true,
       true,
     )
-    assert(decision == BattleRuntimeTookReaction({ frameComplete: true, reactionAvailableAfterChoice: false }))
+    assert(decision == BattleRuntimeTookReaction({ reactionAvailableAfterChoice: false }))
   }
 
   run test_mismatched_reaction_procedure_is_invalid = {
     val decision = battleRuntimeTakeReactionDecision(
       BattleRuntimeOpportunityAttack,
       BattleRuntimeShieldReactionProcedure,
-      true,
-      false,
       true,
       true,
       true,
@@ -36,12 +32,10 @@ module battleRuntimeInterruptBridgeTests {
       BattleRuntimeAfterDamage,
       BattleRuntimeDamageInterruptionProcedure,
       true,
-      false,
-      true,
       true,
       true,
     )
-    assert(decision == BattleRuntimeTookReaction({ frameComplete: true, reactionAvailableAfterChoice: false }))
+    assert(decision == BattleRuntimeTookReaction({ reactionAvailableAfterChoice: false }))
   }
 
   run test_counterspell_reaction_uses_spell_cast_reaction_contract = {
@@ -49,16 +43,14 @@ module battleRuntimeInterruptBridgeTests {
       BattleRuntimeSpellCast,
       BattleRuntimeCounterspellReactionProcedure,
       true,
-      false,
-      true,
       true,
       true,
     )
-    assert(decision == BattleRuntimeTookReaction({ frameComplete: true, reactionAvailableAfterChoice: false }))
+    assert(decision == BattleRuntimeTookReaction({ reactionAvailableAfterChoice: false }))
   }
 
   run test_decline_does_not_spend_reaction = {
-    assert(battleRuntimeDeclineReactionDecision(true, false, true) == BattleRuntimeDeclinedReaction({ frameComplete: true }))
+    assert(battleRuntimeDeclineReactionDecision(true) == BattleRuntimeDeclinedReaction)
   }
 
 }

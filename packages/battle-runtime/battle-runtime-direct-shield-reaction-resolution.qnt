@@ -24,13 +24,12 @@ module battleRuntimeDirectShieldReactionResolution {
   pure def directShieldReactionCandidate(
     frame: PendingReactionFrame,
   ): DirectShieldReactionCandidate =
-    match frame.procedure {
-      | ShieldReactionProcedure =>
-          if (not(shieldReactionFrameIsFreshGoblinTarget(frame)) or
-              frame.trigger != AttackHit)
+    match frame.request {
+      | AttackHitShieldReactionRequest(request) =>
+          if (not(shieldReactionFrameIsFreshGoblinTarget(frame)))
             NoDirectShieldReactionCandidate
           else
-            match directSpellAttackReactionContinuation(frame.continuation) {
+            match directSpellAttackContinuationForShield(request) {
               | NoDirectSpellAttackReactionContinuation =>
                   NoDirectShieldReactionCandidate
               | HasDirectSpellAttackReactionContinuation(continuation) =>
@@ -62,8 +61,6 @@ module battleRuntimeDirectShieldReactionResolution {
     match decision {
       | ShieldReactionDecisionTakenClosed(data) =>
           resumeDirectShieldReactionAfterTake(data.state, frame.continuation)
-      | ShieldReactionDecisionTakenOpen(data) =>
-          data.state
       | _ => state
     }
   }
@@ -80,8 +77,6 @@ module battleRuntimeDirectShieldReactionResolution {
     match decision {
       | ShieldReactionDecisionDeclinedClosed(data) =>
           resumeDirectShieldReactionAfterDecline(data.state, frame.continuation)
-      | ShieldReactionDecisionDeclinedOpen(data) =>
-          data.state
       | _ => state
     }
   }

@@ -21,10 +21,7 @@ module battleRuntimeSaveGatedDamageResolution {
   import battleRuntimeHidden.* from "./battle-runtime-hidden"
 
   import battleRuntimeMirrorImage.* from "./battle-runtime-mirror-image"
-  import battleRuntimeRayOfEnfeeblement.* from "./battle-runtime-ray-of-enfeeblement"
   import battleRuntimeSaveGatedDamageTarget.* from "./battle-runtime-save-gated-damage-target"
-  import battleRuntimeSaveGatedObjectFacts.* from "./battle-runtime-save-gated-object-facts"
-  import battleRuntimeRayOfEnfeeblementDamageResolution.* from "./battle-runtime-ray-of-enfeeblement-damage-resolution"
 
   pure def mindSpikeDurationTicks: int = 60 * 10
   pure def saveGatedDamageConcentrationDurationEffects(
@@ -307,14 +304,14 @@ module battleRuntimeSaveGatedDamageResolution {
         attackerPerceivesTargetWithBlindsightOrTruesight,
         mirrorImageDuplicateHighestRoll,
       )
-      if (hit and not(mirrorImageRedirects) and shieldOfferBoundary == IceKnifeShieldOfferPending and state.goblin.reactionAvailable and not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
-        openReactionWindow(rolled, {
-          trigger: AttackHit,
-          procedure: ShieldReactionProcedure,
-          eligibleReactors: Set(Goblin),
-          offeredReactors: Set(),
-          continuation: ResumeIceKnife,
-        })
+      if (
+        hit and
+        not(mirrorImageRedirects) and
+        shieldOfferBoundary == IceKnifeShieldOfferPending and
+        not(state.goblin.activeEffects.contains(ShieldArmorClassBonus)) and
+        shieldReactionWindowCanOpen(state, ShieldResumesIceKnife)
+      ) {
+        openShieldReactionWindow(rolled, ShieldResumesIceKnife)
       } else {
         val attackResolvedGoblin =
           if (mirrorImageRedirects)

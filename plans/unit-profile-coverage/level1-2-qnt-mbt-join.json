@@ -227,6 +227,10 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -1242,6 +1246,10 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -1541,6 +1549,10 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -1746,6 +1758,10 @@
         },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
           "role": "semantic-core"
         }
       ],
@@ -2417,6 +2433,10 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -2847,7 +2867,7 @@
       "joinStatus": "covered",
       "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
       "obligationStatus": "covered",
-      "obligationTitle": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application and Attack Roll projection",
+      "obligationTitle": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application, Dim Light emitter projection, and Attack Roll projection",
       "parityWitnesses": [
         {
           "kind": "focused-mbt",
@@ -2870,6 +2890,10 @@
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-light-emitters.qnt",
           "role": "semantic-core"
         }
       ],
@@ -2994,6 +3018,10 @@
         },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
           "role": "semantic-core"
         }
       ],
@@ -3885,6 +3913,10 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -4215,6 +4247,10 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -4276,7 +4312,7 @@
           "role": "semantic-core"
         },
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt",
+          "ownerPath": "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt",
           "role": "semantic-core"
         }
       ],
@@ -4813,6 +4849,10 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -5274,6 +5314,10 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -5572,6 +5616,10 @@
         },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
           "role": "semantic-core"
         }
       ],
@@ -6422,6 +6470,10 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -7067,6 +7119,10 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -7365,6 +7421,10 @@
         },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
           "role": "semantic-core"
         }
       ],
@@ -7968,6 +8028,10 @@
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
           "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
+          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -8097,12 +8161,16 @@
           "role": "semantic-core"
         },
         {
-          "ownerPath": "packages/battle-runtime/battle-runtime-condition-spell-resolution.qnt",
-          "role": "proof-only"
+          "ownerPath": "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
+          "role": "semantic-core"
         },
         {
           "ownerPath": "packages/battle-runtime/battle-runtime-actor-combatants.qnt",
           "role": "proof-only"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-target-action-effect-early-end.qnt",
+          "role": "semantic-core"
         }
       ],
       "runtime": "battle",
@@ -8220,6 +8288,10 @@
         },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
           "role": "semantic-core"
         }
       ],
@@ -8539,6 +8611,10 @@
         },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
           "role": "semantic-core"
         }
       ],
@@ -9497,6 +9573,10 @@
         },
         {
           "ownerPath": "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/battle-runtime-opportunity-attack.qnt",
           "role": "semantic-core"
         }
       ],

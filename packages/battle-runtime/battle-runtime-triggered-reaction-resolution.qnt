@@ -1,51 +1,78 @@
 // -*- mode: Bluespec; -*-
-// KERNEL-COVERAGE: qnt-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.reaction-hellish-rebuke
+// KERNEL-COVERAGE: qnt-owner BATTLE.REACTION.OFFER_DECLINE_RESUME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 
 module battleRuntimeTriggeredReactionResolution {
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
-  import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
-  import battleRuntimeSaveGatedDamageTarget.* from "./battle-runtime-save-gated-damage-target"
-  import battleRuntimeSaveGatedDamageResolution.* from "./battle-runtime-save-gated-damage-resolution"
   import battleRuntimeMovement.* from "./battle-runtime-movement"
   import battleRuntimeCommandMovementNextTurn.* from "./battle-runtime-command-movement-next-turn"
   import battleRuntimeAttackDamageConcentrationReaction.* from "./battle-runtime-attack-damage-concentration-reaction"
-  import battleRuntimeWeaponAttacks.* from "./battle-runtime-weapon-attacks"
+  import battleRuntimeOpportunityAttack.* from "./battle-runtime-opportunity-attack"
+  import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
 
-  pure def resumeNonSpellReactionContinuation(
+  pure def resumeOpportunityAttackReactionContinuation(
     state: BattleState,
-    continuation: ReactionContinuation,
+    request: OpportunityAttackReactionRequestData,
   ): BattleState =
-    match continuation {
-      | ResumeAttack(_) =>
-          resumeAttackDamageReactionContinuation(state, continuation)
-      | ResumeSaveGateDamage =>
-          resolveAcidSplash(state, false, true, 4, true, true)
-      | ResumeAfterDamage => state
-      | ResumeHellishRebukeAfterDamage(_) => state
-      | ResumeMovement(movement) =>
-          applyFighterMovementWithSpeedKind(
+    match request.continuation {
+      | OpportunityAttackResumesMovement(movement) =>
+          applyActorMovementWithSpeedKind(
             state,
+            request.mover,
             movement.speedKind,
             movement.movementCost,
           )
-      | ResumeCommandFleeMovement(movement) =>
-          followCommandFlee(
-            state,
-            movement.speedKind,
-            movement.movementCost,
-            false,
-          )
-      | ResumeDissonantWhispersMovementThenAfterDamage(_) =>
-          openDissonantWhispersAfterDamageSequence(state)
-      // Shield-family continuations are owned by typed Shield resolvers; an
-      // unjoined continuation stays unchanged in this generic lane.
-      | _ => state
+      | OpportunityAttackResumesCommandFleeMovement(movement) =>
+          if (currentActor(state) == request.mover)
+            followCommandFlee(
+              state,
+              movement.speedKind,
+              movement.movementCost,
+              false,
+            )
+          else
+            state
+      | OpportunityAttackResumesDissonantWhispersReactionMovement =>
+          // The frame records the already-validated Reaction movement fill.
+          // Spatial displacement remains table/runtime state in this slice,
+          // and its completion spends neither turn movement nor a phantom
+          // second Reaction after Dissonant Whispers damage.
+          state
     }
 
-  pure def declineNonSpellReactionOfferAndResume(
+  pure def declineOpportunityAttackReactionOfferAndResume(
+    state: BattleState,
+    reactor: Actor,
+    request: OpportunityAttackReactionRequestData,
+  ): BattleState = {
+    val afterDecision = stateAfterDecliningReactionOffer(state, reactor)
+    if (not(reactionDecisionClosedFrame(state, afterDecision)))
+      afterDecision
+    else
+      resumeOpportunityAttackReactionContinuation(afterDecision, request)
+  }
+
+  pure def declineReadiedSpellReleaseReactionOfferAndResume(
+    state: BattleState,
+    reactor: Actor,
+    damage: int,
+  ): BattleState = {
+    val afterDecision = stateAfterDecliningReactionOffer(state, reactor)
+    if (not(reactionDecisionClosedFrame(state, afterDecision)))
+      afterDecision
+    else
+      resumeAttackDamageReactionContinuation(
+        afterDecision,
+        damage,
+      )
+  }
+
+  // Shield, Counterspell, and Hellish Rebuke have narrowed resolution owners.
+  // This dispatcher deliberately owns only Opportunity Attack and the
+  // Fighter's readied-spell release branches below.
+  pure def declineTriggeredReactionOfferAndResume(
     state: BattleState,
     reactor: Actor,
   ): BattleState =
@@ -54,29 +81,29 @@ module battleRuntimeTriggeredReactionResolution {
     else {
       val top = state.interruptStack[state.interruptStack.length() - 1]
       match top {
-        | PendingReaction(frame) => {
-            if (
-              frame.trigger == SpellCast or
-                reactionProcedureRequiresSpellSlot(frame.procedure)
-            )
-              state
-            else
-              {
-                val afterDecision = stateAfterDecliningReactionOffer(state, reactor)
-                if (reactionDecisionClosedFrame(state, afterDecision))
-                  resumeNonSpellReactionContinuation(
-                    afterDecision,
-                    frame.continuation,
+        | PendingReaction(frame) =>
+            match frame.request {
+              | AttackHitShieldReactionRequest(_) => state
+              | SpellCastCounterspellReactionRequest(_) => state
+              | AfterDamageHellishRebukeReactionRequest(_) => state
+              | OpportunityAttackReactionRequest(request) =>
+                  declineOpportunityAttackReactionOfferAndResume(
+                    state,
+                    reactor,
+                    request,
                   )
-                else
-                  afterDecision
-              }
-          }
+              | AttackHitFighterReadiedSpellReleaseReactionRequest(request) =>
+                  declineReadiedSpellReleaseReactionOfferAndResume(
+                    state,
+                    reactor,
+                    request.damage,
+                  )
+            }
         | _ => state
       }
     }
 
-  pure def resolveNonSpellReactionOffer(
+  pure def resolveTriggeredReactionOffer(
     state: BattleState,
     reactor: Actor,
   ): BattleState =
@@ -84,104 +111,78 @@ module battleRuntimeTriggeredReactionResolution {
       state
     else {
       match state.interruptStack[state.interruptStack.length() - 1] {
-        | PendingReaction(frame) =>
-            if (
-              frame.trigger == SpellCast or
-                reactionProcedureRequiresSpellSlot(frame.procedure)
-            )
-              state
-            else {
-              val decision = battleRuntimeTakeReactionDecision(
-                battleRuntimeReactionTrigger(frame.trigger),
-                battleRuntimeReactionProcedure(frame.procedure),
-                frame.eligibleReactors.contains(reactor),
-                frame.offeredReactors.contains(reactor),
-                reactorCanReact(state, reactor),
-                true,
-                reactionFrameCompleteAfterOffering(frame, reactor),
-              )
-              match decision {
-                | BattleRuntimeTookReaction(_) => {
-                    val afterReactionSpend = spendReaction(state, reactor)
-                    val afterReactionProcedure =
-                      match frame.trigger {
-                        | OpportunityAttack =>
-                            resolveGoblinOpportunityAttack(
-                              afterReactionSpend,
-                              20,
-                              18,
-                              4,
-                              true,
-                            )
-                        | AttackHit =>
-                            if (
-                              frame.procedure ==
-                                ReadiedSpellReleaseReactionProcedure
-                            )
-                              releaseFighterReadiedSpell(afterReactionSpend)
-                            else
-                              afterReactionSpend
-                        | _ => afterReactionSpend
+        | PendingReaction(frame) => {
+            match frame.request {
+              | AttackHitShieldReactionRequest(_) => state
+              | SpellCastCounterspellReactionRequest(_) => state
+              | AfterDamageHellishRebukeReactionRequest(_) => state
+              | OpportunityAttackReactionRequest(request) => {
+                  val decision = battleRuntimeTakeReactionDecision(
+                    battleRuntimeReactionTrigger(OpportunityAttack),
+                    BattleRuntimeOpportunityAttackProcedure,
+                    reactor != request.mover and reactionFrameCanOffer(frame, reactor),
+                    reactorCanReact(state, reactor),
+                    true,
+                  )
+                  match decision {
+                    | BattleRuntimeTookReaction(_) => {
+                        val afterReactionSpend = spendReaction(state, reactor)
+                        val afterReactionProcedure = resolveOpportunityAttack(
+                          afterReactionSpend,
+                          reactor,
+                          request.mover,
+                          20,
+                          18,
+                          4,
+                          true,
+                        )
+                        val afterDecision = stateAfterDecliningReactionOffer(
+                          afterReactionProcedure,
+                          reactor,
+                        )
+                        if (reactionDecisionClosedFrame(state, afterDecision))
+                          resumeOpportunityAttackReactionContinuation(
+                            afterDecision,
+                            request,
+                          )
+                        else
+                          afterDecision
                       }
-                    val afterDecision = stateAfterDecliningReactionOffer(
-                      afterReactionProcedure,
-                      reactor,
-                    )
-                    if (reactionDecisionClosedFrame(state, afterDecision))
-                      resumeNonSpellReactionContinuation(
-                        afterDecision,
-                        frame.continuation,
-                      )
-                    else
-                      afterDecision
+                    | _ => state
                   }
-                | _ => state
-              }
+                }
+              | AttackHitFighterReadiedSpellReleaseReactionRequest(request) => {
+                  val decision = battleRuntimeTakeReactionDecision(
+                    battleRuntimeReactionTrigger(AttackHit),
+                    BattleRuntimeReadiedSpellReleaseProcedure,
+                    reactor == Fighter and reactionFrameCanOffer(frame, reactor),
+                    reactorCanReact(state, reactor),
+                    fighterCanReleaseReadiedSpell(state),
+                  )
+                  match decision {
+                    | BattleRuntimeTookReaction(_) => {
+                        val afterProcedure = releaseFighterReadiedSpell(
+                          spendReaction(state, reactor),
+                        )
+                        val afterDecision = stateAfterDecliningReactionOffer(
+                          afterProcedure,
+                          reactor,
+                        )
+                        if (reactionDecisionClosedFrame(state, afterDecision))
+                          resumeAttackDamageReactionContinuation(
+                            afterDecision,
+                            request.damage,
+                          )
+                        else
+                          afterDecision
+                      }
+                    | _ => state
+                  }
+                }
             }
+          }
         | _ => state
       }
     }
 
-  pure def resolveHellishRebukeAfterDamage(
-    state: BattleState,
-    continuation: HellishRebukeAfterDamageContinuation,
-    savingThrowSucceeded: bool,
-    damageRoll: int,
-    concentrationSaveSucceeded: bool,
-  ): BattleState =
-    if (
-      continuation.damaged == continuation.damager or
-      continuation.slotLevel < 1 or
-      not(reactorCanReact(state, continuation.damaged)) or
-      not(canActorExpendSpellSlotThisTurn(state, continuation.damaged))
-    )
-      state
-    else {
-      val afterReactionSpend = spendReaction(state, continuation.damaged)
-      val damagedTarget = match continuation.damager {
-        | Fighter => {
-            ...afterReactionSpend,
-            fighter: saveGatedDamageTarget(
-              HellishRebukeSaveGate,
-              afterReactionSpend.fighter,
-              savingThrowSucceeded,
-              damageRoll,
-              concentrationSaveSucceeded,
-              continuation.damaged,
-            ),
-          }
-        | Goblin => {
-            ...afterReactionSpend,
-            goblin: saveGatedDamageTarget(
-              HellishRebukeSaveGate,
-              afterReactionSpend.goblin,
-              savingThrowSucceeded,
-              damageRoll,
-              concentrationSaveSucceeded,
-              continuation.damaged,
-            ),
-          }
-      }
-      commitActorSpellSlotUse(damagedTarget, continuation.damaged)
-    }
 }

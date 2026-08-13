@@ -2,7 +2,6 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.DAMAGE_SAVE_OR_ATTACK_PROCEDURE
 
 module battleRuntimeSpellAttackDirectResolution {
-  import battleRuntimeSpellAttackFacts.* from "./battle-runtime-spell-attack-facts"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeArmorClass.* from "./battle-runtime-armor-class"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
@@ -121,15 +120,28 @@ module battleRuntimeSpellAttackDirectResolution {
     | NoDirectSpellAttackReactionContinuation
     | HasDirectSpellAttackReactionContinuation(DirectSpellAttackReactionContinuation)
 
-  pure def directSpellAttackReactionContinuation(
-    continuation: ReactionContinuation,
+  pure def directSpellAttackContinuationForShield(
+    continuation: ShieldReactionContinuation,
   ): DirectSpellAttackReactionContinuationOption =
     match continuation {
-      | ResumeRayOfFrost =>
+      | ShieldResumesRayOfFrost =>
           HasDirectSpellAttackReactionContinuation(DirectSpellAttackRayOfFrost)
-      | ResumePoisonSpray =>
+      | ShieldResumesPoisonSpray =>
           HasDirectSpellAttackReactionContinuation(DirectSpellAttackPoisonSpray)
-      | ResumeChillTouch =>
+      | ShieldResumesChillTouch =>
+          HasDirectSpellAttackReactionContinuation(DirectSpellAttackChillTouch)
+      | _ => NoDirectSpellAttackReactionContinuation
+    }
+
+  pure def directSpellAttackContinuationForCounterspell(
+    continuation: CounterspellReactionContinuation,
+  ): DirectSpellAttackReactionContinuationOption =
+    match continuation {
+      | CounterspellResumesRayOfFrost =>
+          HasDirectSpellAttackReactionContinuation(DirectSpellAttackRayOfFrost)
+      | CounterspellResumesPoisonSpray =>
+          HasDirectSpellAttackReactionContinuation(DirectSpellAttackPoisonSpray)
+      | CounterspellResumesChillTouch =>
           HasDirectSpellAttackReactionContinuation(DirectSpellAttackChillTouch)
       | _ => NoDirectSpellAttackReactionContinuation
     }
@@ -286,15 +298,10 @@ module battleRuntimeSpellAttackDirectResolution {
     else if (fighterSpellAttackMirrorImageRedirects(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight))
       recordFighterSpellAttackMirrorImageDuplicateHit(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight)
     else if (shieldOfferBoundary == DirectSpellAttackShieldOfferPending and
-             state.goblin.reactionAvailable and
-             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
-      openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
-        trigger: AttackHit,
-        procedure: ShieldReactionProcedure,
-        eligibleReactors: Set(Goblin),
-        offeredReactors: Set(),
-        continuation: ResumeRayOfFrost,
-      })
+             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus)) and
+             shieldReactionWindowCanOpen(state, ShieldResumesRayOfFrost)) {
+      val reactionBase = recordFighterAttackRoll(revealFighterHidden(state))
+      openShieldReactionWindow(reactionBase, ShieldResumesRayOfFrost)
     }
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
@@ -338,15 +345,10 @@ module battleRuntimeSpellAttackDirectResolution {
     else if (fighterSpellAttackMirrorImageRedirects(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight))
       recordFighterSpellAttackMirrorImageDuplicateHit(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight)
     else if (shieldOfferBoundary == DirectSpellAttackShieldOfferPending and
-             state.goblin.reactionAvailable and
-             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
-      openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
-        trigger: AttackHit,
-        procedure: ShieldReactionProcedure,
-        eligibleReactors: Set(Goblin),
-        offeredReactors: Set(),
-        continuation: ResumePoisonSpray,
-      })
+             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus)) and
+             shieldReactionWindowCanOpen(state, ShieldResumesPoisonSpray)) {
+      val reactionBase = recordFighterAttackRoll(revealFighterHidden(state))
+      openShieldReactionWindow(reactionBase, ShieldResumesPoisonSpray)
     }
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))
@@ -390,15 +392,10 @@ module battleRuntimeSpellAttackDirectResolution {
     else if (fighterSpellAttackMirrorImageRedirects(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight))
       recordFighterSpellAttackMirrorImageDuplicateHit(state, mirrorImageDuplicateHighestRoll, attackerPerceivesTargetWithBlindsightOrTruesight)
     else if (shieldOfferBoundary == DirectSpellAttackShieldOfferPending and
-             state.goblin.reactionAvailable and
-             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus))) {
-      openReactionWindow(recordFighterAttackRoll(revealFighterHidden(state)), {
-        trigger: AttackHit,
-        procedure: ShieldReactionProcedure,
-        eligibleReactors: Set(Goblin),
-        offeredReactors: Set(),
-        continuation: ResumeChillTouch,
-      })
+             not(state.goblin.activeEffects.contains(ShieldArmorClassBonus)) and
+             shieldReactionWindowCanOpen(state, ShieldResumesChillTouch)) {
+      val reactionBase = recordFighterAttackRoll(revealFighterHidden(state))
+      openShieldReactionWindow(reactionBase, ShieldResumesChillTouch)
     }
     else {
       val rolled = recordFighterAttackRoll(revealFighterHidden(state))

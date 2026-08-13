@@ -170,14 +170,14 @@ function creatureSizeChangeSpellProjection(
     spell.mechanics.range.feet !== 30 ||
     spell.mechanics.duration.kind !== "concentration" ||
     spell.mechanics.duration.upTo.unit !== "minute" ||
-    spell.mechanics.duration.upTo.amount !== 1 ||
-    spell.mechanics.phases.length !== 1
+    spell.mechanics.duration.upTo.amount !== 1
   ) {
     return [];
   }
-  const phase = spell.mechanics.phases[0];
+  const [phase, secondPhase] = spell.mechanics.phases;
   if (
     phase?.kind !== "save_gate" ||
+    secondPhase !== undefined ||
     phase.ability !== "con" ||
     phase.dc.kind !== "caster_spell_save_dc" ||
     phase.saveAppliesIf !== "unwilling_creature_target" ||
@@ -436,7 +436,7 @@ function resolveCreatureSizeChange(
   const effected = applyCreatureSizeChangeEffect(
     concentrationBase,
     input.actorId,
-    [target.combatantId],
+    target.combatantId,
     input.invocation,
     input.metamagicApplications,
   );
@@ -446,9 +446,6 @@ function resolveCreatureSizeChange(
   const resourced = spendConfiguredSpellCastResources({
     resolution: input,
     state: effected,
-    ...(input.storedGlyphRelease !== undefined
-      ? { startConcentration: false }
-      : {}),
   });
   if (resourced.tag === "invalid") {
     return resourced;
@@ -468,7 +465,7 @@ function resolveCreatureSizeChange(
 function applyCreatureSizeChangeEffect(
   state: BattleState,
   actorId: CombatantId,
-  targetIds: readonly CombatantId[],
+  targetId: CombatantId,
   invocation: BattleExecutableSpellInvocation<CreatureSizeChangeExecution>,
   metamagicApplications:
     | readonly SpellMetamagicApplicationFact[]
@@ -478,27 +475,23 @@ function applyCreatureSizeChangeEffect(
     invocation.activeEffect,
     metamagicApplications,
   );
-  return targetIds.reduce<BattleState>((nextState, targetId) => {
-    const target = nextState.combatants.get(targetId);
-    if (target === undefined) {
-      return nextState;
-    }
-    const nextEffect = {
-      ...activeEffect,
-      sourceProcedureRef: invocation.sourceProcedureRef,
-      sourceCombatantId: actorId,
-    };
-    const replacement = activeEffectsWithCreatureSizeChangeReplaced(
-      target.activeEffects,
-      nextEffect,
-    );
-    return replaceTargetActiveEffectsEndingDisplacedConcentrations(
-      nextState,
-      targetId,
-      replacement.activeEffects,
-      replacement.displacedEffects,
-    );
-  }, state);
+  const target = state.combatants.get(targetId);
+  if (target === undefined) return state;
+  const nextEffect = {
+    ...activeEffect,
+    sourceProcedureRef: invocation.sourceProcedureRef,
+    sourceCombatantId: actorId,
+  };
+  const replacement = activeEffectsWithCreatureSizeChangeReplaced(
+    target.activeEffects,
+    nextEffect,
+  );
+  return replaceTargetActiveEffectsEndingDisplacedConcentrations(
+    state,
+    targetId,
+    replacement.activeEffects,
+    replacement.displacedEffects,
+  );
 }
 
 function creatureSizeChangeEffectWithMetamagic(
@@ -511,21 +504,13 @@ function creatureSizeChangeEffectWithMetamagic(
   if (durationModifier === null) {
     return activeEffect;
   }
-  return durationModifier.kind === "concentrationDurationDoubledToCap"
-    ? {
-        ...activeEffect,
-        expiresAt: {
-          ...activeEffect.expiresAt,
-          durationTicks: durationModifier.durationTicks,
-        },
-      }
-    : {
-        ...activeEffect,
-        expiresAt: {
-          ...activeEffect.expiresAt,
-          durationTicks: durationModifier.durationTicks,
-        },
-      };
+  return {
+    ...activeEffect,
+    expiresAt: {
+      ...activeEffect.expiresAt,
+      durationTicks: durationModifier.durationTicks,
+    },
+  };
 }
 
 function creatureSizeChangeConcentrationWithMetamagic(

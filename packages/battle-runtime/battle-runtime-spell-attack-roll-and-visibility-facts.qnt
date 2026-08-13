@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-attack-roll-advantage-save
 
 module battleRuntimeSpellAttackRollAndVisibilityFacts {
   import battleRuntimeModel.* from "./battle-runtime-model"

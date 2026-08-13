@@ -8,10 +8,7 @@ import type {
 } from "../battle-state-execution.ts";
 import type { CombatantId } from "../identity.ts";
 import { battleCreatureType } from "./domain-helpers.ts";
-import {
-  conditionApplicationPreventedByCreatureTypeProtection,
-  resolveBattlePossessionAttempt,
-} from "./spell-condition-effects-helpers.ts";
+import { conditionApplicationPreventedByCreatureTypeProtection } from "./spell-condition-effects-helpers.ts";
 import {
   battleReducerRouteFill,
   battleReducerRouteHoles,
@@ -115,18 +112,6 @@ function protectionConditionAttemptRouteForResolution(
   ) {
     return undefined;
   }
-  const target = input.state.combatants.get(input.subject.actorId);
-  if (
-    target === undefined ||
-    !conditionApplicationPreventedByCreatureTypeProtection(
-      input.state,
-      input.subject.sourceCombatantId,
-      target,
-      input.subject.condition,
-    )
-  ) {
-    return undefined;
-  }
   return [
     protectionCharmDiscover([], "battleActiveEffect"),
     protectionCharmResolveWithoutFill([], "battleConditionLifecycle"),
@@ -144,17 +129,6 @@ function protectionPossessionAttemptRouteForResolution(
   ) {
     return undefined;
   }
-  const disposition = resolveBattlePossessionAttempt({
-    state: input.state,
-    sourceCombatantId: input.subject.sourceCombatantId,
-    targetId: input.subject.actorId,
-  });
-  if (
-    disposition.tag !== "prevented" ||
-    disposition.prevention !== "creatureTypeProtection"
-  ) {
-    return undefined;
-  }
   return [
     protectionCharmDiscover([], "battleActiveEffect"),
     protectionCharmResolveWithoutFill([], "battleCreatureState"),
@@ -165,9 +139,6 @@ function protectionRelevantEffectSaveRouteForResolution(
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
   if (result.tag !== "needsHoles") {
-    return undefined;
-  }
-  if (!battleReducerRouteHoles(result.holes).includes("savingThrowOutcome")) {
     return undefined;
   }
   return [

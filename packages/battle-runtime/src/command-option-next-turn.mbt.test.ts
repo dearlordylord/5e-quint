@@ -1,7 +1,8 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-command-halt-grovel spell.invocation-command-drop-held-object spell.invocation-command-approach-route spell.invocation-command-flee-route
 
-import { describe, expect, it } from "vitest";
+import { isDeepStrictEqual } from "node:util";
+import { describe, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -126,7 +127,7 @@ type CommandOptionNextTurnProjection = {
   readonly targetProne: boolean;
   readonly targetEffectCount: number;
   readonly actionAvailable: boolean;
-  readonly bonusActionAvailable: boolean;
+  readonly currentTurnBonusActionUnspent: boolean;
   readonly movementSpentFeet: number;
   readonly currentActor: "Fighter" | "Goblin";
   readonly pendingCommandOption: PendingCommandOption;
@@ -155,7 +156,7 @@ const initialProjection: CommandOptionNextTurnProjection = {
   targetProne: false,
   targetEffectCount: 0,
   actionAvailable: true,
-  bonusActionAvailable: true,
+  currentTurnBonusActionUnspent: true,
   movementSpentFeet: 0,
   currentActor: "Fighter",
   pendingCommandOption: "none",
@@ -825,7 +826,8 @@ function projectState(input: {
     targetProne: hasCondition(target.conditions, "prone"),
     targetEffectCount: target.activeEffects.length,
     actionAvailable: snapshot.turn.actionResources.length > 0,
-    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    currentTurnBonusActionUnspent:
+      input.state.currentTurnResources.currentHasBonusAction,
     movementSpentFeet: Number(targetSnapshot.movement.spentFeet),
     currentActor: actorName(snapshot.currentActorId),
     pendingCommandOption: pendingCommandOption(target.activeEffects),
@@ -910,9 +912,9 @@ function normalizeQuintState(raw: unknown): CommandOptionNextTurnProjection {
       state["qActionAvailable"],
       "qActionAvailable",
     ),
-    bonusActionAvailable: booleanValue(
-      state["qBonusActionAvailable"],
-      "qBonusActionAvailable",
+    currentTurnBonusActionUnspent: booleanValue(
+      state["qCurrentTurnBonusActionUnspent"],
+      "qCurrentTurnBonusActionUnspent",
     ),
     movementSpentFeet: numberFromQuintInt(
       state["qMovementSpentFeet"],
@@ -936,18 +938,10 @@ function normalizeQuintState(raw: unknown): CommandOptionNextTurnProjection {
 }
 
 function compareState(
-  runtime: CommandOptionNextTurnProjection,
-  quint: CommandOptionNextTurnProjection,
+  spec: CommandOptionNextTurnProjection,
+  impl: CommandOptionNextTurnProjection,
 ): boolean {
-  try {
-    expect(runtime).toEqual(quint);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-    throw error;
-  }
-  return true;
+  return isDeepStrictEqual(spec, impl);
 }
 
 function currentActorField(

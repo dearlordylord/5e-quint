@@ -5,6 +5,7 @@
 module battleRuntimeCounterspellReactionDecision {
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
 
@@ -21,13 +22,11 @@ module battleRuntimeCounterspellReactionDecision {
 
   type CounterspellReactionContext = {
     counterspell: PendingCounterspellReaction,
-    eligibleReactors: Set[Actor],
-    offeredReactors: Set[Actor],
   }
 
   type CounterspellReactionCandidate = {
     context: CounterspellReactionContext,
-    continuation: ReactionContinuation,
+    continuation: CounterspellReactionContinuation,
   }
 
   type PendingCounterspellReactionOption =
@@ -37,16 +36,14 @@ module battleRuntimeCounterspellReactionDecision {
   pure def pendingCounterspellReaction(
     frame: PendingReactionFrame,
   ): PendingCounterspellReactionOption =
-    match frame.procedure {
-      | CounterspellReactionProcedure(counterspell) =>
-          if (reactionProcedureMatchesTrigger(frame.trigger, frame.procedure))
+    match frame.request {
+      | SpellCastCounterspellReactionRequest(request) =>
+          if (pendingReactionFrameIsCanonical(frame))
             HasPendingCounterspellReaction({
               context: {
-                counterspell: counterspell,
-                eligibleReactors: frame.eligibleReactors,
-                offeredReactors: frame.offeredReactors,
+                counterspell: request.counterspell,
               },
-              continuation: frame.continuation,
+              continuation: request.continuation,
             })
           else
             NoPendingCounterspellReaction
@@ -110,9 +107,9 @@ module battleRuntimeCounterspellReactionDecision {
 
   pure def declineCounterspellReaction(
     state: BattleState,
-    reactor: Actor,
     context: CounterspellReactionContext,
   ): CounterspellReactionResolution = {
+    val reactor = counterspellReactionReactor(context.counterspell)
     val afterDecision = stateAfterDecliningReactionOffer(state, reactor)
     if (reactionDecisionClosedFrame(state, afterDecision))
       CounterspellReactionDeclinedResume({
@@ -125,31 +122,23 @@ module battleRuntimeCounterspellReactionDecision {
 
   pure def resolveCounterspellReaction(
     state: BattleState,
-    reactor: Actor,
     context: CounterspellReactionContext,
-  ): CounterspellReactionResolution =
+  ): CounterspellReactionResolution = {
+    val reactor = counterspellReactionReactor(context.counterspell)
     if (battleRuntimeReactionDecisionWasTaken(battleRuntimeTakeReactionDecision(
       battleRuntimeReactionTrigger(SpellCast),
-      battleRuntimeReactionProcedure(CounterspellReactionProcedure(context.counterspell)),
-      context.eligibleReactors.contains(reactor),
-      context.offeredReactors.contains(reactor),
+      BattleRuntimeCounterspellReactionProcedure,
+      true,
       reactorCanReact(state, reactor),
       canActorExpendSpellSlotThisTurn(state, reactor),
-      reactionOfferCompletesFrame(
-        context.eligibleReactors,
-        context.offeredReactors,
-        reactor,
-      ),
     ))) {
       val afterReactionSpend = spendReaction(state, reactor)
       val afterReactionProcedure = castCounterspellReactionSpell(
         afterReactionSpend,
-        reactor,
         context.counterspell,
       )
       val spellCastEnded = counterspellEndsSpellCastInState(
         afterReactionSpend,
-        reactor,
         context.counterspell,
       )
       val afterDecision =
@@ -173,5 +162,6 @@ module battleRuntimeCounterspellReactionDecision {
     }
     else
       CounterspellReactionState({ state: state })
+  }
 
 }

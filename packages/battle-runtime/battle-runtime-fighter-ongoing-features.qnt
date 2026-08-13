@@ -6,7 +6,7 @@ module battleRuntimeFighterOngoingFeatures {
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnOrder.* from "./battle-runtime-turn-order"
   import battleRuntimeConcentration.* from "./battle-runtime-concentration"
-  import battleRuntimeSanctuary.* from "./battle-runtime-sanctuary"
+  import battleRuntimeTargetActionEffectEarlyEnd.* from "./battle-runtime-target-action-effect-early-end"
   import battleRuntimeHitPoints.* from "./battle-runtime-hit-points"
   import battleRuntimeFighterRageFacts.* from "./battle-runtime-fighter-rage-facts"
 
@@ -21,15 +21,6 @@ module battleRuntimeFighterOngoingFeatures {
 
   pure def fighterHasRecklessAttack(state: BattleState): bool =
     fighterRecklessAttackOccurrence(state) == ActiveStartOfTurnOngoingFeature
-
-  pure def fighterRageResistances(state: BattleState): Set[DamageType] =
-    {
-      val projection = battleRuntimeRageResistanceProjection(fighterHasRage(state))
-      Set()
-        .union(if (projection.bludgeoning) Set(Bludgeoning) else Set())
-        .union(if (projection.piercing) Set(Piercing) else Set())
-        .union(if (projection.slashing) Set(Slashing) else Set())
-    }
 
   pure def fighterRoundExtendedOngoingFeatureMaxExpiresRound(state: BattleState): int =
     match fighterRageOccurrence(state) {

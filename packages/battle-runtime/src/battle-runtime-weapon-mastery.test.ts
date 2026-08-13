@@ -24,6 +24,7 @@ import {
   attackDamageHoleAfterHit,
   resolveLongswordHit,
   resolveLongswordMiss,
+  findHole,
   requireHole,
   targetFill,
   attackTargetFill,
@@ -34,6 +35,7 @@ import {
   interruptDecisionFill,
   savingThrowOutcomeFill,
   damageRollFill,
+  damageRollFillWithGroups,
   attackDamageDispositionFill,
   battleTablePositionId,
   characterSeed,
@@ -64,8 +66,10 @@ import {
   Hp,
   movementDeltaFeet,
   movementFeet,
+  movementFill,
   resolveBattleInterrupt,
   resolveBattleSubject,
+  supportedBattleUnitRef,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
 import type {
@@ -73,8 +77,13 @@ import type {
   BattleSubject,
   CombatantId,
 } from "./battle-runtime.test-support.ts";
-import { wardingBondUnitId } from "./unit-profile-admission-catalog.test-support.ts";
+import {
+  fighterRemarkableAthleteUnitId,
+  wardingBondUnitId,
+} from "./unit-profile-admission-catalog.test-support.ts";
 import { weaponMasteryCleaveExtraAttack } from "./battle-reducer/attack-roll.ts";
+import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
+import { resolveHuntersPreyHordeBreakerContinuation } from "./battle-reducer/attack-main.ts";
 import { WEAPON_MASTERY_SAP_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import {
   battleUnitRefWithSupportProfiles,
@@ -85,6 +94,11 @@ import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
+import {
+  spellAct,
+  spellTargetListFill,
+} from "./unit-profile-admission-spell-fill.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 
 function requireMechanicalCharacterProcedureRef(
   state: BattleState,
@@ -1149,6 +1163,285 @@ describe("battle runtime: Weapon Mastery", () => {
     const resolved = requireResolved(resolvedResult);
 
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(Hp(6));
+    expect(
+      resolved.state.currentTurnResources
+        .weaponMasteryCleaveAttackersUsedThisTurn,
+    ).toEqual([fighterId]);
+  });
+
+  test("Cleave applies a fresh Ray of Enfeeblement damage penalty after Remarkable Athlete movement", () => {
+    const remarkableAthlete = unitLibrary.requireUnit(
+      fighterRemarkableAthleteUnitId,
+    );
+    const rayOfEnfeeblement = spellRecord("ray_of_enfeeblement");
+    const session = startBattleSessionRight({
+      battleId: battleId(
+        "battle-weapon-mastery-cleave-critical-movement-enfeeblement",
+      ),
+      combatants: [
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Ray of Enfeeblement caster",
+          initiative: 30,
+          classLevels: [{ className: "wizard", level: 3 }],
+          attack: null,
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [rayOfEnfeeblement],
+            spellSlots: [{ spellLevel: 2, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "fighter", level: 3 }],
+          characterUnitRefs: [
+            ...masteryCleaveUnitRefs(),
+            supportedBattleUnitRef(remarkableAthlete),
+          ],
+          unitFeatures: [
+            characterBattleFeatureInitForTest(remarkableAthlete, [
+              { className: "fighter", level: classLevel(3) },
+            ]),
+          ],
+          weaponMasteries: greataxeWeaponMasterySelections(),
+          attack: testGreataxeAttack(),
+        }),
+        statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          displayName: "Cleave second target",
+          initiative: 9,
+        }),
+      ],
+    });
+    const ray = spellAct({ session, spellId: "ray_of_enfeeblement" });
+    const rayTarget = findHole(ray.initialHoles, "spellTargetList");
+    const rayTargetFill = spellTargetListFill(
+      rayTarget,
+      wizardId,
+      "ray_of_enfeeblement",
+      [fighterId],
+    );
+    const raySave = requireHole(
+      resolveBattleSubject({
+        state: session.state,
+        subject: ray.subject,
+        fills: [rayTargetFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const enfeebled = requireResolved(
+      resolveBattleSubject({
+        state: session.state,
+        subject: ray.subject,
+        fills: [
+          rayTargetFill,
+          savingThrowOutcomeFill(raySave, [
+            { targetId: fighterId, succeeded: false },
+          ]),
+        ],
+      }),
+    ).state;
+    const fighterTurn = requireResolved(
+      endTurn({ state: enfeebled, actorId: wizardId }),
+    ).state;
+
+    const subject = fighterAttackSubject(fighterTurn, "Greataxe");
+    const primaryTarget = attackInitialTargetHole(fighterTurn, subject);
+    const primaryRoll = attackRollHoleAfterTarget(
+      fighterTurn,
+      primaryTarget,
+      subject,
+      goblinId,
+    );
+    const targetChoice = attackTargetFill(
+      primaryTarget,
+      fighterId,
+      goblinId,
+      attackExecutionSelectionForSubjectForTest(subject),
+    );
+    const attackRoll = attackRollFill(primaryRoll, {
+      total: 18,
+      naturalD20: 14,
+      rollMode: "disadvantage",
+    });
+    const primaryDamage = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [targetChoice, attackRoll],
+      }),
+      "rolledDice",
+    );
+    const primaryDamageFill = damageRollFill(primaryDamage, 6);
+    const primaryPenalty = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [targetChoice, attackRoll, primaryDamageFill],
+      }),
+      "rolledDice",
+    );
+    expect(primaryPenalty).toHaveProperty("sourceDamageRollPenalty");
+    const primaryFills = [
+      targetChoice,
+      attackRoll,
+      primaryDamageFill,
+      damageRollFillWithGroups(primaryPenalty, [[2]]),
+    ];
+    const cleaveDecisionResult = resolveBattleSubject({
+      state: fighterTurn,
+      subject,
+      fills: primaryFills,
+    });
+    if (cleaveDecisionResult.tag !== "needsHoles") {
+      throw new Error("Expected the Cleave decision frontier.");
+    }
+    const cleaveDecision = requireHole(
+      cleaveDecisionResult,
+      "unitFeatureDecision",
+    );
+    const secondTarget = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(cleaveDecision, "use"),
+        ],
+      }),
+      "targetChoice",
+    );
+    const secondTargetFill = targetFill(secondTarget, skeletonId, [
+      attackTargetSpatialFact(
+        fighterId,
+        skeletonId,
+        attackExecutionSelectionForSubjectForTest(subject),
+      ),
+      {
+        kind: "cleaveSecondTargetWithin5FeetOfFirstTarget",
+        attackerId: fighterId,
+        firstTargetId: goblinId,
+        secondTargetId: skeletonId,
+      },
+    ]);
+    const throughSecondTarget = [
+      ...primaryFills,
+      unitFeatureDecisionFill(cleaveDecision, "use"),
+      secondTargetFill,
+    ];
+    const cleaveRoll = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: throughSecondTarget,
+      }),
+      "attackRoll",
+    );
+    const criticalCleaveRoll = attackRollFill(cleaveRoll, {
+      total: 24,
+      naturalD20: 20,
+      rollMode: "disadvantage",
+    });
+    const remarkableAthleteDecision = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [...throughSecondTarget, criticalCleaveRoll],
+      }),
+      "unitFeatureDecision",
+    );
+    expect(remarkableAthleteDecision).toMatchObject({
+      label: "Use Remarkable Athlete movement",
+    });
+    const throughMovementDecision = [
+      ...throughSecondTarget,
+      criticalCleaveRoll,
+      unitFeatureDecisionFill(remarkableAthleteDecision, "use"),
+    ];
+    const movement = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: throughMovementDecision,
+      }),
+      "movement",
+    );
+    const throughMovement = [
+      ...throughMovementDecision,
+      movementFill(movement, {
+        movementCostFeet: 10,
+        provokedOpportunityAttacks: [],
+      }),
+    ];
+    const cleaveDamage = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: throughMovement,
+      }),
+      "rolledDice",
+    );
+    const cleaveDamageFill = damageRollFillWithGroups(cleaveDamage, [[4, 4]]);
+    const cleavePenalty = requireHole(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [...throughMovement, cleaveDamageFill],
+      }),
+      "rolledDice",
+    );
+    expect(cleavePenalty).toMatchObject({
+      sourceDamageRollPenalty: {
+        affectedCombatantId: fighterId,
+        damageRollHoleId: cleaveDamage.holeId,
+      },
+    });
+    expect(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [
+          ...primaryFills,
+          unitFeatureDecisionFill(cleaveDecision, "decline"),
+          damageRollFillWithGroups(cleavePenalty, [[2]]),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Weapon Mastery additional weapon attack fills require using the attack.",
+    });
+    const primaryAttack = attackActionOptionForSubject(fighterTurn, subject);
+    if (primaryAttack === undefined) {
+      throw new Error("Expected the selected Greataxe attack option.");
+    }
+    expect(
+      resolveHuntersPreyHordeBreakerContinuation({
+        state: cleaveDecisionResult.state,
+        subject,
+        firstTargetId: goblinId,
+        attack: primaryAttack,
+        fills: [damageRollFillWithGroups(cleavePenalty, [[2]])],
+        handledInterruptTrigger: "attackHit",
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      message:
+        "Source damage roll penalty does not match the Horde Breaker damage event.",
+    });
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: fighterTurn,
+        subject,
+        fills: [
+          ...throughMovement,
+          cleaveDamageFill,
+          damageRollFillWithGroups(cleavePenalty, [[2]]),
+        ],
+      }),
+    );
+    expect(resolved.state.combatants.get(goblinId)?.hp).toBe(Hp(3));
+    expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(Hp(4));
     expect(
       resolved.state.currentTurnResources
         .weaponMasteryCleaveAttackersUsedThisTurn,

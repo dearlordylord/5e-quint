@@ -2,9 +2,8 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.reaction-shield
 
 module battleRuntimeLightShieldReactionResolutionTests {
-  import battleRuntimeLight.* from "./battle-runtime-light"
-  import battleRuntimeLightSpellAttacks.* from "./battle-runtime-light-spell-attacks"
   import battleRuntimeLightSpellLifecycle.* from "./battle-runtime-light-spell-lifecycle"
+  import battleRuntimeLightSpellAttacks.* from "./battle-runtime-light-spell-attacks"
   import battleRuntimeLightShieldReactionResolution.* from "./battle-runtime-light-shield-reaction-resolution"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeTurnAdvancement.* from "./battle-runtime-turn-advancement"

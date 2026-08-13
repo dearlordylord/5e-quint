@@ -716,32 +716,6 @@ export type BattleAttackDamageInterruptionFrame = {
   readonly phase: "attackDamage";
   readonly continuation: BattleAttackDamageInterruptionContinuation;
 };
-export type BattleAttackDamageInterruptionBoundaryPhase = Extract<
-  BattleInterruptTrigger,
-  "attackHit" | "attackDamage"
->;
-export type BattleAttackDamageInterruptionFacts = {
-  readonly participant: BattleAttackHostSubject;
-  readonly targetId: CombatantId;
-  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
-  readonly attackResult: BattleAttackRollResult;
-  readonly damageInput: BattleAttackDamageEvent;
-  readonly criticalConsequence: BattleAttackDamageCriticalConsequence;
-  readonly continuation: BattleAttackDamageInterruptionContinuation;
-};
-export type BattleAttackDamageInterruptionBoundaryInput =
-  BattleAttackDamageInterruptionFacts & {
-    readonly phase: BattleAttackDamageInterruptionBoundaryPhase;
-  };
-export type BattleAttackDamageInterruptionBoundaryResult =
-  | {
-      readonly tag: "decoded";
-      readonly frame: BattleAttackDamageInterruptionFrame;
-    }
-  | {
-      readonly tag: "invalidPhase";
-      readonly phase: "attackHit";
-    };
 export type BattleInterruptedProcedure =
   | {
       readonly kind: "replay";

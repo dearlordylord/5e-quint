@@ -5575,14 +5575,16 @@
                 "obligationId": "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
                 "runtime": "battle",
                 "status": "covered",
-                "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application and Attack Roll projection"
+                "title": "Battle failed-save spell attack-roll Advantage effects from Saving Throw holes through active-effect application, Dim Light emitter projection, and Attack Roll projection"
               }
             ],
             "profileId": "spell.invocation-attack-roll-advantage-save",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/battle-runtime/battle-runtime-light-emitters.qnt",
               "packages/battle-runtime/battle-runtime-save-condition-faerie-fire.qnt",
-              "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt"
+              "packages/battle-runtime/battle-runtime-spell-attack-facts.qnt",
+              "packages/battle-runtime/battle-runtime-spell-attack-roll-and-visibility-facts.qnt"
             ]
           }
         ],
@@ -5953,7 +5955,7 @@
             "profileId": "spell.reaction-hellish-rebuke",
             "profileKind": "reaction",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt"
+              "packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt"
             ]
           },
           {
@@ -6931,6 +6933,7 @@
             "profileId": "spell.invocation-sanctuary-targeting-interdiction",
             "profileKind": "spell-invocation",
             "qntOwners": [
+              "packages/battle-runtime/battle-runtime-sanctuary-spell-resolution.qnt",
               "packages/battle-runtime/battle-runtime-sanctuary.qnt"
             ]
           }

@@ -6,7 +6,6 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
-  ABILITIES,
   DAMAGE_TYPES,
   movementFeet,
   type Ability,
@@ -54,7 +53,6 @@ import type {
 } from "../../procedure-execution/spell-invocation-vocabulary.ts";
 import {
   sameStringSet,
-  scalarBuffSpellTargetCount,
   scalarBuffSpellTargetCountBySlot,
   singleTargetSpellRangeFeet,
   supportedDamageAmountExpr,
@@ -474,7 +472,7 @@ export function oneAdditionalTargetPerSpellSlotAboveBaseLevel(
   selection: TargetSelection,
   spellLevel: number,
 ): ((slotLevel: SpellSlotLevel) => number) | null {
-  if (selection.mode !== "choose_up_to" || selection.count === undefined) {
+  if (selection.mode !== "choose_up_to" || selection.repeatsAllowed === true) {
     return null;
   }
   const count = selection.count;
@@ -482,7 +480,7 @@ export function oneAdditionalTargetPerSpellSlotAboveBaseLevel(
     typeof count === "number" ||
     count.kind !== "linear" ||
     count.base !== 1 ||
-    (count.baseLevel ?? spellLevel) !== spellLevel ||
+    count.baseLevel !== spellLevel ||
     count.perSlotAboveBase !== 1
   ) {
     return null;
@@ -776,7 +774,6 @@ export function blindnessDeafnessSaveGateConditionSpell(
     phase.onSuccess.kind !== "none" ||
     targetSelection === null ||
     targetSelection.mode !== "choose_up_to" ||
-    targetSelection.count === undefined ||
     failedCondition === null ||
     typeof failedCondition === "string" ||
     !("kind" in failedCondition) ||
@@ -801,8 +798,7 @@ export function blindnessDeafnessSaveGateConditionSpell(
   );
   if (
     targetCountBySlot === null ||
-    (targetSelection.targetKinds !== undefined &&
-      !sameStringSet(targetSelection.targetKinds, ["creature"]))
+    !isCreatureOnlyTargetSelection(targetSelection)
   ) {
     return null;
   }
@@ -893,7 +889,7 @@ function paralyzedTargetListSaveGateConditionSpell(input: {
     phase.onSuccess.kind !== "none" ||
     targetSelection === null ||
     targetSelection.mode !== "choose_up_to" ||
-    targetSelection.count === undefined ||
+    !isCreatureOnlyTargetSelection(targetSelection) ||
     !matchesOptionalCreatureTypeFilter(
       targetSelection,
       input.targetCreatureTypes,
@@ -953,6 +949,15 @@ function matchesOptionalCreatureTypeFilter(
     : sameStringSet(typeFilter ?? [], targetCreatureTypes);
 }
 
+function isCreatureOnlyTargetSelection(
+  targetSelection: TargetSelection,
+): boolean {
+  return (
+    targetSelection.targetKinds === undefined ||
+    sameStringSet(targetSelection.targetKinds, ["creature"])
+  );
+}
+
 function creatureTypeCharmedSaveGateConditionSpell(input: {
   readonly spell: BattleSpellAdmissionSource;
   readonly duration: { readonly unit: "hour"; readonly amount: 1 | 24 };
@@ -993,7 +998,7 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
     phase.onSuccess.kind !== "none" ||
     targetSelection === null ||
     targetSelection.mode !== "choose_up_to" ||
-    targetSelection.count === undefined ||
+    !isCreatureOnlyTargetSelection(targetSelection) ||
     targetSelection.typeFilter?.length !== 1 ||
     targetSelection.typeFilter[0] !== input.targetCreatureType ||
     failedEffect?.kind !== "apply_condition" ||
@@ -1007,21 +1012,21 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
   if (Either.isLeft(durationTicks)) {
     return null;
   }
+  const targetCountBySlot = oneAdditionalTargetPerSpellSlotAboveBaseLevel(
+    targetSelection,
+    spell.mechanics.level,
+  );
+  if (targetCountBySlot === null) {
+    return null;
+  }
 
   return {
     phase,
-    targeting: (slotLevel): SaveGatedConditionSpellTargeting => {
-      const targetCount = scalarBuffSpellTargetCount(
-        targetSelection,
-        spell.mechanics.level,
-        slotLevel,
-      );
-      return {
-        kind: "targetList",
-        minTargets: 1,
-        maxTargets: targetCount ?? 1,
-      };
-    },
+    targeting: (slotLevel): SaveGatedConditionSpellTargeting => ({
+      kind: "targetList",
+      minTargets: 1,
+      maxTargets: targetCountBySlot(slotLevel),
+    }),
     targetCreatureTypes: [input.targetCreatureType],
     effect: {
       kind: "fixed",
@@ -1697,45 +1702,16 @@ function isContagionChosenAbilitySaveDisadvantage(
 function chosenAbilitySaveDisadvantageChoices(
   effect: ModifyRollAdvantageEffect,
 ): readonly [Ability, ...Ability[]] | null {
-  const filter: unknown = effect.saveAbilityFilter;
-  if (!isAbilityChoiceHoleFilter(filter)) {
+  const filter = effect.saveAbilityFilter;
+  if (
+    filter === undefined ||
+    Array.isArray(filter) ||
+    !("kind" in filter) ||
+    filter.kind !== "hole"
+  ) {
     return null;
   }
   return filter.value.options;
-}
-
-function isAbilityChoiceHoleFilter(
-  value: unknown,
-): value is AbilityChoiceHoleFilter {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return false;
-  }
-  const candidate = value as {
-    readonly kind?: unknown;
-    readonly value?: unknown;
-  };
-  if (
-    candidate.kind !== "hole" ||
-    typeof candidate.value !== "object" ||
-    candidate.value === null ||
-    Array.isArray(candidate.value)
-  ) {
-    return false;
-  }
-  const choice = candidate.value as {
-    readonly kind?: unknown;
-    readonly options?: unknown;
-  };
-  return (
-    choice.kind === "choice" &&
-    Array.isArray(choice.options) &&
-    choice.options.length > 0 &&
-    choice.options.every(isAbility)
-  );
-}
-
-function isAbility(value: unknown): value is Ability {
-  return ABILITIES.some((ability) => ability === value);
 }
 
 export function supportedFailedSavePostDamageRiders(
@@ -1846,17 +1822,12 @@ function saveGatedDamagePhaseCount(
   if (postSaveAreaEffect === null) {
     return 1;
   }
-  if (
-    postSaveAreaEffect.kind === "fireballObjectIgnition" ||
-    postSaveAreaEffect.kind === "thunderwave"
-  ) {
-    return 2;
-  }
-  if (postSaveAreaEffect.kind === "shatterObjectDamage") {
-    return 1;
-  }
-  const exhaustive: never = postSaveAreaEffect;
-  return exhaustive;
+  return Match.value(postSaveAreaEffect).pipe(
+    Match.when({ kind: "fireballObjectIgnition" }, () => 2),
+    Match.when({ kind: "thunderwave" }, () => 2),
+    Match.when({ kind: "shatterObjectDamage" }, () => 1),
+    Match.exhaustive,
+  );
 }
 
 function saveGatedDamageSaveRollModeRule(

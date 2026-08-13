@@ -39,16 +39,7 @@ const PURE_VOCABULARY_LEAVES = new Map([
 
 // Existing integration proofs may only retain their current closure size. A
 // root that reaches the defaults must graduate by deleting its entry.
-const EXCEPTIONS = {
-  // Master split the Light execution facts into three direct owners. This root
-  // exercises all three and remains below its existing line ceiling.
-  "packages/battle-runtime/battle-runtime-light-concentration-movement-reaction-tests.qnt":
-    { maxFiles: 108, maxLines: 20_500 },
-  "packages/battle-runtime/battle-runtime-save-spell-residual-tests.qnt": {
-    maxFiles: 71,
-    maxLines: 14_000,
-  },
-};
+const EXCEPTIONS = {};
 
 function roundedLineCeiling(lines) {
   return Math.ceil(lines / 500) * 500;

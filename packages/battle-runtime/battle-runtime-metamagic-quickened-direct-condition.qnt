@@ -8,7 +8,7 @@ module battleRuntimeMetamagicQuickenedDirectCondition {
   import unitFeatureQuickenedActionSpellProcedureSupportCore.* from "../shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core"
   import battleRuntimeModel.* from "./battle-runtime-model"
   import battleRuntimeMetamagicQuickenedCommon.* from "./battle-runtime-metamagic-quickened-common"
-  import battleRuntimeConditionSpellResolution.* from "./battle-runtime-condition-spell-resolution"
+  import battleRuntimeInvisibility.* from "./battle-runtime-invisibility"
 
   pure def quickenedSpellCanModifyDirectCondition(
     state: BattleState,

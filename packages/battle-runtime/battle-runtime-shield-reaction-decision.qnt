@@ -5,6 +5,7 @@
 module battleRuntimeShieldReactionDecision {
   import battleRuntimeInterruptBridge.* from "./battle-runtime-interrupt-bridge"
   import battleRuntimeModel.* from "./battle-runtime-model"
+  import battleRuntimeReactionKinds.* from "./battle-runtime-reaction-kinds"
   import battleRuntimeReactionWindow.* from "./battle-runtime-reaction-window"
   import battleRuntimeSpellCastResources.* from "./battle-runtime-spell-cast-resources"
 
@@ -12,15 +13,14 @@ module battleRuntimeShieldReactionDecision {
 
   type ShieldReactionDecision =
     | ShieldReactionDecisionUnchanged
-    | ShieldReactionDecisionTakenOpen({ state: BattleState })
     | ShieldReactionDecisionTakenClosed({ state: BattleState })
-    | ShieldReactionDecisionDeclinedOpen({ state: BattleState })
     | ShieldReactionDecisionDeclinedClosed({ state: BattleState })
 
   pure def shieldReactionFrameIsFreshGoblinTarget(
     frame: PendingReactionFrame,
   ): bool =
-    frame.eligibleReactors == Set(Goblin) and frame.offeredReactors == Set()
+    pendingReactionFrameIsCanonical(frame) and
+      reactionFrameReactor(frame) == Goblin
 
   pure def declineShieldReactionDecision(
     state: BattleState,
@@ -29,10 +29,8 @@ module battleRuntimeShieldReactionDecision {
     val afterDecision = stateAfterDecliningReactionOffer(state, reactor)
     if (afterDecision == state)
       ShieldReactionDecisionUnchanged
-    else if (reactionDecisionClosedFrame(state, afterDecision))
-      ShieldReactionDecisionDeclinedClosed({ state: afterDecision })
     else
-      ShieldReactionDecisionDeclinedOpen({ state: afterDecision })
+      ShieldReactionDecisionDeclinedClosed({ state: afterDecision })
   }
 
   pure def takeShieldReactionDecision(
@@ -42,12 +40,10 @@ module battleRuntimeShieldReactionDecision {
     val reactorIsGoblin = reactor == Goblin
     val decision = battleRuntimeTakeReactionDecision(
       battleRuntimeReactionTrigger(AttackHit),
-      battleRuntimeReactionProcedure(ShieldReactionProcedure),
+      BattleRuntimeShieldReactionProcedure,
       reactorIsGoblin,
-      false,
       reactorCanReact(state, reactor),
       canActorExpendSpellSlotThisTurn(state, reactor),
-      reactorIsGoblin,
     )
     match decision {
       | BattleRuntimeTookReaction(_) => {
@@ -60,10 +56,7 @@ module battleRuntimeShieldReactionDecision {
             afterReactionProcedure,
             reactor,
           )
-          if (reactionDecisionClosedFrame(state, afterDecision))
-            ShieldReactionDecisionTakenClosed({ state: afterDecision })
-          else
-            ShieldReactionDecisionTakenOpen({ state: afterDecision })
+          ShieldReactionDecisionTakenClosed({ state: afterDecision })
         }
       | _ => ShieldReactionDecisionUnchanged
     }
