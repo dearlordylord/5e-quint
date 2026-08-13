@@ -2848,19 +2848,19 @@ describe("Find Familiar lifecycle", () => {
     const target = {
       kind: "targetChoice" as const,
       holeId: targetHole.holeId,
-      value: enemyId,
+      value: casterId,
       spatialFacts: [
         {
           kind: "findFamiliarTouchSpellTarget" as const,
           ownerId: casterId,
           familiarId,
-          targetId: enemyId,
+          targetId: casterId,
           sourceProcedureRef: delivery.subject.procedureRef,
         },
         {
           kind: "spellTargetKnownWilling" as const,
           casterId,
-          targetId: enemyId,
+          targetId: casterId,
           sourceProcedureRef: delivery.subject.procedureRef,
         },
       ],
@@ -2899,7 +2899,7 @@ describe("Find Familiar lifecycle", () => {
       tag: "resolved",
       snapshot: {
         combatants: expect.arrayContaining([
-          expect.objectContaining({ combatantId: enemyId, armorClass: 17 }),
+          expect.objectContaining({ combatantId: casterId, armorClass: 17 }),
         ]),
       },
     });
