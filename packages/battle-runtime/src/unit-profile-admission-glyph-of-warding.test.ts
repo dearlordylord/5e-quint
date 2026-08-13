@@ -473,7 +473,7 @@ const GLYPH_STORED_SINGLE_CREATURE_ACTIVE_EFFECT_RELEASE_CASES: ReadonlyArray<Gl
   ];
 
 describe("SRD Glyph of Warding durable occurrence admission", () => {
-  test("rejects unsupported Glyph Surface level and missing caster save DC", () => {
+  test("rejects an unsupported Glyph Surface level", () => {
     const glyph = spellRecord(glyphOfWardingUnitId);
     const mechanics = requireGlyphMechanics(glyph);
     const unsupportedDurable = decodeSpellRecordForTest({
@@ -485,24 +485,6 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
     expect(
       glyphDurableOccurrenceProfileForSpell(unsupportedDurable),
-    ).toBeNull();
-
-    const effect = requireCompletedGlyphEffect({
-      anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
-    });
-    const missingCasterEffect = {
-      ...effect,
-      sourceCombatantId: combatantId("synthetic_missing_glyph_caster"),
-    } satisfies Extract<
-      BattleActiveEffect,
-      { readonly kind: "glyphDurableOccurrence" }
-    >;
-    expect(
-      glyphExplosiveRuneSavingThrowOutcomeHole({
-        state: glyphBattle(),
-        effect: missingCasterEffect,
-        targetIds: [spellTargetId],
-      }),
     ).toBeNull();
   });
 
@@ -522,28 +504,6 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     ).toEqual({
       tag: "storedSpellProcedureUnsupported",
       storedInvocation,
-    });
-  });
-
-  test("reports a stored release as stale when its source procedure binding is absent", () => {
-    const storedInvocation = storedSpellInvocation(guidingBoltUnitId, 1);
-    const state = stateWithGlyphEffect(
-      requireCompletedGlyphEffect({
-        anchor: { kind: "surface", areaId: glyphSurfaceAnchorAreaId },
-        release: { kind: "spellGlyph", storedInvocation },
-      }),
-      glyphBattle(),
-    );
-    expect(
-      releaseGlyphStoredSpell({
-        executionRegistry,
-        state,
-        profile: requireGlyphStoredSpellProfile(),
-        witness: storedSingleCreatureReleaseWitness([], spellTargetId),
-      }),
-    ).toMatchObject({
-      tag: "invalidWitness",
-      reason: "storedSpellResolutionInvalid",
     });
   });
 

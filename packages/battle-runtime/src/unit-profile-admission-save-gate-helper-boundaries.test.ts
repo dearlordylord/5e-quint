@@ -275,6 +275,10 @@ describe("save-gate helper admission boundaries", () => {
     const nonCreature = decodeSpellRecordForTest({
       ...base,
       id: "synthetic_calm_emotions_non_creature_target",
+      name: "Synthetic Calm Effect With Object Targets",
+      provenance: syntheticProvenance(
+        "synthetic_calm_emotions_non_creature_target",
+      ),
       mechanics: {
         ...base.mechanics,
         phases: [
@@ -288,6 +292,10 @@ describe("save-gate helper admission boundaries", () => {
     const wrongCreatureFilter = decodeSpellRecordForTest({
       ...base,
       id: "synthetic_calm_emotions_wrong_creature_filter",
+      name: "Synthetic Calm Effect With Beast Filter",
+      provenance: syntheticProvenance(
+        "synthetic_calm_emotions_wrong_creature_filter",
+      ),
       mechanics: {
         ...base.mechanics,
         phases: [
@@ -309,6 +317,8 @@ describe("save-gate helper admission boundaries", () => {
     const nonSavePhase = decodeSpellRecordForTest({
       ...base,
       id: "synthetic_ray_non_save_phase",
+      name: "Synthetic Weakening Ray Without Save Gate",
+      provenance: syntheticProvenance("synthetic_ray_non_save_phase"),
       mechanics: { ...base.mechanics, phases: [directPhase] },
     });
     const savePhase = firstSaveGatePhase(base);
@@ -316,6 +326,8 @@ describe("save-gate helper admission boundaries", () => {
     const missingRepeatSave = decodeSpellRecordForTest({
       ...base,
       id: "synthetic_ray_missing_repeat_save",
+      name: "Synthetic Weakening Ray Without Repeat Save",
+      provenance: syntheticProvenance("synthetic_ray_missing_repeat_save"),
       mechanics: {
         ...base.mechanics,
         phases: [phaseWithoutRepeatSaves],
@@ -630,6 +642,8 @@ function acidSplashWithFailure(
   return decodeSpellRecordForTest({
     ...base,
     id,
+    name: syntheticName(id),
+    provenance: syntheticProvenance(id),
     mechanics: {
       ...mechanics,
       phases: mechanics.phases.map((candidate, index) =>
@@ -666,6 +680,8 @@ function acidSplashWithCompositeFailure(
     return decodeSpellRecordForTest({
       ...base,
       id,
+      name: syntheticName(id),
+      provenance: syntheticProvenance(id),
       mechanics: {
         ...mechanics,
         phases: mechanics.phases.map((candidate, index) =>
@@ -690,6 +706,8 @@ function acidSplashWithCompositeFailure(
   return decodeSpellRecordForTest({
     ...base,
     id,
+    name: syntheticName(id),
+    provenance: syntheticProvenance(id),
     mechanics: {
       ...activationMechanics(base),
       phases: activationMechanics(base).phases.map((candidate, index) =>
@@ -717,6 +735,8 @@ function thunderwaveWithFailure(
   return decodeSpellRecordForTest({
     ...base,
     id,
+    name: syntheticName(id),
+    provenance: syntheticProvenance(id),
     mechanics: {
       ...activationMechanics(base),
       phases: [{ ...phase, onFail: mapFailure(phase.onFail) }, direct],
@@ -734,6 +754,8 @@ function thunderwaveWithDirectEffectMutation(
   return decodeSpellRecordForTest({
     ...base,
     id,
+    name: syntheticName(id),
+    provenance: syntheticProvenance(id),
     mechanics: {
       ...activationMechanics(base),
       phases: [
@@ -756,6 +778,8 @@ function dissonantWhispersWithFailure(
   return decodeSpellRecordForTest({
     ...base,
     id,
+    name: syntheticName(id),
+    provenance: syntheticProvenance(id),
     mechanics: {
       ...activationMechanics(base),
       phases: [{ ...phase, onFail: mapFailure(phase.onFail) }],
@@ -773,6 +797,8 @@ function contagionWithFailure(
   return decodeSpellRecordForTest({
     ...base,
     id,
+    name: syntheticName(id),
+    provenance: syntheticProvenance(id),
     mechanics: {
       ...activationMechanics(base),
       phases: [{ ...mapPhase(phase), onFail: mapFailure(phase.onFail) }],
@@ -789,6 +815,8 @@ function viciousMockeryWithFailure(
   return decodeSpellRecordForTest({
     ...base,
     id,
+    name: syntheticName(id),
+    provenance: syntheticProvenance(id),
     mechanics: {
       ...activationMechanics(base),
       phases: [{ ...phase, onFail: mapFailure(phase.onFail) }],
@@ -807,6 +835,14 @@ function firstDirectPhase(spell: SpellRecord): DirectPhase {
     throw new Error("Expected a direct phase.");
   }
   return phase;
+}
+
+function syntheticName(id: string): string {
+  return id.replaceAll("_", " ");
+}
+
+function syntheticProvenance(id: string) {
+  return { kind: "synthetic-test" as const, section: id };
 }
 
 function activationMechanics(spell: SpellRecord) {
