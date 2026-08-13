@@ -20,19 +20,19 @@ untracked `docs/research/` or `packages/battle-runtime/coverage_tmp*` artifacts.
 ## Current authoritative baseline
 
 - Date: 2026-08-13
-- Measured code tree committed as: `700d98007`
+- Measured code tree committed as: `c3c2b078f`
 - Command: `pnpm coverage`
 - Result: exit 0 under the original package timeouts
-- Battle-runtime: 236/236 files passed
+- Battle-runtime: 236/236 files passed; 2,558 passed / 128 skipped
 - Every executable package other than battle-runtime remains at or above 99%
   for statements, branches, functions, and lines.
 
 | Metric     |   Covered / total | Coverage | Uncovered | Gap to 99% |
 | ---------- | ----------------: | -------: | --------: | ---------: |
-| Statements | 122,868 / 125,508 |   97.89% |     2,640 |      1,385 |
-| Branches   |   31,867 / 33,336 |   95.59% |     1,469 |      1,136 |
+| Statements | 122,917 / 125,508 |   97.93% |     2,591 |      1,336 |
+| Branches   |   31,916 / 33,379 |   95.61% |     1,463 |      1,130 |
 | Functions  |     4,876 / 4,876 |  100.00% |         0 |          0 |
-| Lines      | 122,868 / 125,508 |   97.89% |     2,640 |      1,385 |
+| Lines      | 122,917 / 125,508 |   97.93% |     2,591 |      1,336 |
 
 Recompute the 99% gaps after every production-denominator change.
 
@@ -44,7 +44,7 @@ Recompute the 99% gaps after every production-denominator change.
 - Do not forge internal battle state to reach admission-proven or
   schema-impossible guards. Narrow or remove such guards only with concrete
   proof.
-- The current public gaps are 1,385 statements/lines and 1,136 branches.
+- The current public gaps are 1,336 statements/lines and 1,130 branches.
 
 ## Verification and completion
 
