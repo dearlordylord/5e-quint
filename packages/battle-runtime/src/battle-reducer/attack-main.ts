@@ -97,9 +97,12 @@ import {
   damageAmountByTypeEntriesToMap,
   damageAmountByTypeMapEntries,
   fixedAttackDamageByTypeEntries,
+  isSourceDamageRollPenaltyRollFill,
   ongoingFeatureDamageModifier,
+  prospectiveAttackDamageTypes,
   sourceDamageRollPenaltyRollHoleForDamageRoll,
   sourceDamageRollPenaltyRollForDamageRoll,
+  sourceDamageRollPenaltyRollFillMatchesDamageRoll,
   unexpectedSourceDamageRollPenaltyRoll,
 } from "./damage-helpers.ts";
 
@@ -147,9 +150,11 @@ import {
   GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID,
   GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_INSTANCE,
   WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID,
+  WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_DAMAGE_DISPOSITION_HOLE_INSTANCE,
   HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_ID,
+  HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_INSTANCE,
   BRUTAL_STRIKE_DECISION_HOLE_ID,
@@ -186,7 +191,6 @@ import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.t
 
 import {
   attackCanCarryKnockOutChoice,
-  attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
   frenzyDamageTypeDecision,
   eligibleAttackDamageDieFloorProcedureRefs,
@@ -1893,17 +1897,20 @@ export function resolveSelectedAttackProcedure<
       selectedDamageRiders,
       selectedCunningStrike,
     );
+  const fixedBaseDamageByTypeEntries = hit
+    ? fixedAttackDamageByTypeEntries(
+        attackRolledState,
+        attackRolledState.combatants.get(attackerId),
+        attack,
+        effectiveAttackRoll,
+      )
+    : null;
   const fixedDamageByTypeBeforeTargetAdjustments = hit
     ? eligibleDamageRiders.length > 0 ||
       spellMarkedDamageRiders.length > 0 ||
       spellWeaponDamageRiders.length > 0
       ? null
-      : fixedAttackDamageByTypeEntries(
-          attackRolledState,
-          attackRolledState.combatants.get(attackerId),
-          attack,
-          effectiveAttackRoll,
-        )
+      : fixedBaseDamageByTypeEntries
     : null;
   const fixedDamageAmount =
     fixedDamageByTypeBeforeTargetAdjustments === null
@@ -1925,7 +1932,9 @@ export function resolveSelectedAttackProcedure<
         attackRoll: effectiveAttackRoll,
         attackKind: attackKindForDeflectRedirect(attack),
         attackHitTriggerKind: attackHitTriggerKind(attack),
-        damageTypes: attackPotentialDamageTypes(
+        damageTypes: prospectiveAttackDamageTypes(
+          attackRolledState,
+          attackRolledState.combatants.get(attackerId),
           attack,
           critical,
           effectiveAttackRoll,
@@ -2622,10 +2631,12 @@ export function resolveSelectedAttackProcedure<
         damageAmountByTypeEntriesToMap(damageRollByType),
         fillSet.damageRoll.holeId,
       );
+    const primarySourceDamageRollPenaltyRolls =
+      primaryAttackSourceDamageRollPenaltyRolls(input.fills);
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
       unexpectedSourceDamageRollPenaltyRoll(
-        fillSet.sourceDamageRollPenaltyRolls,
+        primarySourceDamageRollPenaltyRolls,
         expectedSourcePenaltyHole === null ? [] : [expectedSourcePenaltyHole],
       ) !== undefined
     ) {
@@ -2642,7 +2653,7 @@ export function resolveSelectedAttackProcedure<
       damageAmountByTypeEntriesToMap(damageRollByType),
       fillSet.damageRoll.holeId,
       sourceDamageRollPenaltyRollForDamageRoll(
-        fillSet.sourceDamageRollPenaltyRolls,
+        primarySourceDamageRollPenaltyRolls,
         damageSource,
         damageAmountByTypeEntriesToMap(damageRollByType),
         fillSet.damageRoll.holeId,
@@ -3193,6 +3204,22 @@ export function resolveWeaponMasteryCleaveContinuation(input: {
     return invalidResult(input.state, "invalidFill", fillSet.message);
   }
   /* v8 ignore stop */
+  const unexpectedSourcePenaltyRoll = fillSet.sourceDamageRollPenaltyRolls.find(
+    (roll) =>
+      !sourceDamageRollPenaltyRollFillMatchesDamageRoll(
+        roll,
+        WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID,
+      ),
+  );
+  /* v8 ignore start -- Malformed fill: a direct Cleave continuation may carry only source-side penalty rolls owned by Cleave damage. */
+  if (unexpectedSourcePenaltyRoll !== undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Source damage roll penalty does not match the Cleave damage event.",
+    );
+  }
+  /* v8 ignore stop */
   const cleaveResolved = resolveWeaponMasteryCleaveAfterPrimaryDamage({
     state: input.state,
     subject: input.subject,
@@ -3244,6 +3271,7 @@ type WeaponMasteryTurnAdditionalWeaponAttackFills = {
   readonly attackRoll: ParsedAttackFillSet["weaponMasteryCleaveAttackRoll"];
   readonly damageRoll: ParsedAttackFillSet["weaponMasteryCleaveDamageRoll"];
   readonly damageDispositionFilled: boolean;
+  readonly sourceDamageRollPenaltyRolls: ParsedAttackFillSet["sourceDamageRollPenaltyRolls"];
 };
 
 type ProcedureExecutionAdditionalWeaponAttackFills = {
@@ -3252,6 +3280,7 @@ type ProcedureExecutionAdditionalWeaponAttackFills = {
   readonly attackRoll: ParsedAttackFillSet["huntersPreyHordeBreakerAttackRoll"];
   readonly damageRoll: ParsedAttackFillSet["huntersPreyHordeBreakerDamageRoll"];
   readonly damageDispositionFilled: boolean;
+  readonly sourceDamageRollPenaltyRolls: ParsedAttackFillSet["sourceDamageRollPenaltyRolls"];
 };
 
 type AdditionalWeaponAttackFills =
@@ -3262,7 +3291,11 @@ type AdditionalWeaponAttackActiveFills<
   Fills extends AdditionalWeaponAttackFills,
 > = Pick<
   Fills,
-  "target" | "attackRoll" | "damageRoll" | "damageDispositionFilled"
+  | "target"
+  | "attackRoll"
+  | "damageRoll"
+  | "damageDispositionFilled"
+  | "sourceDamageRollPenaltyRolls"
 >;
 
 type WeaponMasteryTurnAdditionalWeaponAttackFamily = {
@@ -3377,6 +3410,10 @@ function weaponMasteryCleaveAdditionalWeaponAttackFills(
     attackRoll: fillSet.weaponMasteryCleaveAttackRoll,
     damageRoll: fillSet.weaponMasteryCleaveDamageRoll,
     damageDispositionFilled: fillSet.weaponMasteryCleaveDamageDispositionFilled,
+    sourceDamageRollPenaltyRolls: sourceDamageRollPenaltyRollsForDamageRollHole(
+      fillSet.sourceDamageRollPenaltyRolls,
+      WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID,
+    ),
   };
 }
 
@@ -3390,6 +3427,10 @@ function huntersPreyHordeBreakerAdditionalWeaponAttackFills(
     damageRoll: fillSet.huntersPreyHordeBreakerDamageRoll,
     damageDispositionFilled:
       fillSet.huntersPreyHordeBreakerDamageDispositionFilled,
+    sourceDamageRollPenaltyRolls: sourceDamageRollPenaltyRollsForDamageRollHole(
+      fillSet.sourceDamageRollPenaltyRolls,
+      HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_ID,
+    ),
   };
 }
 
@@ -3402,6 +3443,17 @@ function additionalWeaponAttackFillsAreAbsent(
   );
 }
 
+function sourceDamageRollPenaltyRollsForDamageRollHole(
+  rolls: ParsedAttackFillSet["sourceDamageRollPenaltyRolls"],
+  damageRollHoleId:
+    | typeof WEAPON_MASTERY_CLEAVE_DAMAGE_HOLE_ID
+    | typeof HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_ID,
+): ParsedAttackFillSet["sourceDamageRollPenaltyRolls"] {
+  return rolls.filter((roll) =>
+    sourceDamageRollPenaltyRollFillMatchesDamageRoll(roll, damageRollHoleId),
+  );
+}
+
 function additionalWeaponAttackFillsAfterDecisionAreAbsent(
   fills: AdditionalWeaponAttackFills,
 ): boolean {
@@ -3409,7 +3461,8 @@ function additionalWeaponAttackFillsAfterDecisionAreAbsent(
     fills.target === undefined &&
     fills.attackRoll === undefined &&
     fills.damageRoll === undefined &&
-    !fills.damageDispositionFilled
+    !fills.damageDispositionFilled &&
+    fills.sourceDamageRollPenaltyRolls.length === 0
   );
 }
 
@@ -3561,6 +3614,7 @@ function additionalWeaponAttackActiveFills<
     attackRoll: fills.attackRoll,
     damageRoll: fills.damageRoll,
     damageDispositionFilled: fills.damageDispositionFilled,
+    sourceDamageRollPenaltyRolls: fills.sourceDamageRollPenaltyRolls,
   };
 }
 
@@ -3715,7 +3769,10 @@ function resolveMissedAdditionalWeaponAttack(input: {
   | { readonly tag: "result"; readonly result: BattleResolutionResult } {
   if (!input.hit) {
     /* v8 ignore start -- Malformed fill set: a missed additional weapon attack exposes no damage-roll hole. */
-    if (input.family.fills.damageRoll !== undefined) {
+    if (
+      input.family.fills.damageRoll !== undefined ||
+      input.family.fills.sourceDamageRollPenaltyRolls.length > 0
+    ) {
       return {
         tag: "result",
         result: invalidResult(
@@ -4028,7 +4085,9 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
         attackRoll: effectiveCleaveAttackRoll,
         attackKind: attackKindForDeflectRedirect(cleaveAttack),
         attackHitTriggerKind: attackHitTriggerKind(cleaveAttack),
-        damageTypes: attackPotentialDamageTypes(
+        damageTypes: prospectiveAttackDamageTypes(
+          cleaveAttackRolledState,
+          cleaveAttackRolledState.combatants.get(input.subject.actorId),
           cleaveAttack,
           cleaveCritical,
           effectiveCleaveAttackRoll,
@@ -4153,12 +4212,35 @@ function resolveWeaponMasteryCleaveAfterPrimaryDamage(input: {
   const cleaveDamageSource = cleaveAttackRolledState.combatants.get(
     input.subject.actorId,
   );
+  const expectedSourcePenaltyHole =
+    sourceDamageRollPenaltyRollHoleForDamageRoll(
+      cleaveDamageSource,
+      damageAmountByTypeEntriesToMap(damageByType),
+      input.fillSet.weaponMasteryCleaveDamageRoll.holeId,
+    );
+  /* v8 ignore start -- Malformed fill: only the source-side penalty bound to this Cleave damage event may appear in the follow-up phase. */
+  if (
+    unexpectedSourceDamageRollPenaltyRoll(
+      decision.family.fills.sourceDamageRollPenaltyRolls,
+      expectedSourcePenaltyHole === null ? [] : [expectedSourcePenaltyHole],
+    ) !== undefined
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      ),
+    };
+  }
+  /* v8 ignore stop */
   const sourcePenalty = applyAvailableSourceDamageRollPenalty(
     cleaveDamageSource,
     damageAmountByTypeEntriesToMap(damageByType),
     input.fillSet.weaponMasteryCleaveDamageRoll.holeId,
     sourceDamageRollPenaltyRollForDamageRoll(
-      input.fillSet.sourceDamageRollPenaltyRolls,
+      decision.family.fills.sourceDamageRollPenaltyRolls,
       cleaveDamageSource,
       damageAmountByTypeEntriesToMap(damageByType),
       input.fillSet.weaponMasteryCleaveDamageRoll.holeId,
@@ -4299,6 +4381,8 @@ function attackFollowUpFillsAfterPrimaryDamage(
 ): readonly BattleFill[] {
   const primaryConcentrationSavingThrows =
     primaryAttackConcentrationSavingThrows(fills);
+  const primarySourceDamageRollPenaltyRolls =
+    primaryAttackSourceDamageRollPenaltyRolls(fills);
   return fills.filter(
     (fill) =>
       !(
@@ -4307,7 +4391,18 @@ function attackFollowUpFillsAfterPrimaryDamage(
       ) &&
       fill.kind !== "grappleOutcome" &&
       (fill.kind !== "concentrationSavingThrow" ||
-        !primaryConcentrationSavingThrows.includes(fill)),
+        !primaryConcentrationSavingThrows.includes(fill)) &&
+      (fill.kind !== "rolledDice" ||
+        !primarySourceDamageRollPenaltyRolls.includes(fill)),
+  );
+}
+
+function primaryAttackSourceDamageRollPenaltyRolls(
+  fills: readonly BattleFill[],
+): readonly Extract<BattleFill, { readonly kind: "rolledDice" }>[] {
+  return primaryAttackFills(fills).filter(
+    (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
+      fill.kind === "rolledDice" && isSourceDamageRollPenaltyRollFill(fill),
   );
 }
 
@@ -4317,15 +4412,7 @@ function primaryAttackConcentrationSavingThrows(
   BattleFill,
   { readonly kind: "concentrationSavingThrow" }
 >[] {
-  const cleaveStartIndex = fills.findIndex(
-    (fill) =>
-      fill.kind === "unitFeatureDecision" &&
-      (fill.holeId === WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID ||
-        fill.holeId === HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_ID),
-  );
-  const primaryFills =
-    cleaveStartIndex === -1 ? fills : fills.slice(0, cleaveStartIndex);
-  return primaryFills.filter(
+  return primaryAttackFills(fills).filter(
     (
       fill,
     ): fill is Extract<
@@ -4333,6 +4420,18 @@ function primaryAttackConcentrationSavingThrows(
       { readonly kind: "concentrationSavingThrow" }
     > => fill.kind === "concentrationSavingThrow",
   );
+}
+
+function primaryAttackFills(
+  fills: readonly BattleFill[],
+): readonly BattleFill[] {
+  const cleaveStartIndex = fills.findIndex(
+    (fill) =>
+      fill.kind === "unitFeatureDecision" &&
+      (fill.holeId === WEAPON_MASTERY_CLEAVE_DECISION_HOLE_ID ||
+        fill.holeId === HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_ID),
+  );
+  return cleaveStartIndex === -1 ? fills : fills.slice(0, cleaveStartIndex);
 }
 
 export function resolveHuntersPreyHordeBreakerContinuation(input: {
@@ -4352,6 +4451,22 @@ export function resolveHuntersPreyHordeBreakerContinuation(input: {
   if (fillSet.tag === "invalid") {
     /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
     return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+  /* v8 ignore stop */
+  const unexpectedSourcePenaltyRoll = fillSet.sourceDamageRollPenaltyRolls.find(
+    (roll) =>
+      !sourceDamageRollPenaltyRollFillMatchesDamageRoll(
+        roll,
+        HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_ID,
+      ),
+  );
+  /* v8 ignore start -- Malformed fill: a direct Horde Breaker continuation may carry only source-side penalty rolls owned by Horde Breaker damage. */
+  if (unexpectedSourcePenaltyRoll !== undefined) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Source damage roll penalty does not match the Horde Breaker damage event.",
+    );
   }
   /* v8 ignore stop */
   const resolved = resolveHuntersPreyHordeBreakerAfterPrimaryDamage({
@@ -4592,7 +4707,9 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
         attackRoll: effectiveHordeBreakerAttackRoll,
         attackKind: attackKindForDeflectRedirect(hordeBreakerAttack),
         attackHitTriggerKind: attackHitTriggerKind(hordeBreakerAttack),
-        damageTypes: attackPotentialDamageTypes(
+        damageTypes: prospectiveAttackDamageTypes(
+          rolledState,
+          rolledState.combatants.get(input.subject.actorId),
           hordeBreakerAttack,
           critical,
           effectiveHordeBreakerAttackRoll,
@@ -4719,11 +4836,66 @@ function resolveHuntersPreyHordeBreakerAfterPrimaryDamage(input: {
     hordeBreakerSpellWeaponDamageRiders,
     hordeBreakerSpellMarkedDamageRiders,
   );
+  const hordeBreakerDamageSource = rolledState.combatants.get(
+    input.subject.actorId,
+  );
+  const expectedSourcePenaltyHole =
+    sourceDamageRollPenaltyRollHoleForDamageRoll(
+      hordeBreakerDamageSource,
+      damageAmountByTypeEntriesToMap(damageByType),
+      input.fillSet.huntersPreyHordeBreakerDamageRoll.holeId,
+    );
+  /* v8 ignore start -- Malformed fill: only the source-side penalty bound to this Horde Breaker damage event may appear in the follow-up phase. */
+  if (
+    unexpectedSourceDamageRollPenaltyRoll(
+      decision.family.fills.sourceDamageRollPenaltyRolls,
+      expectedSourcePenaltyHole === null ? [] : [expectedSourcePenaltyHole],
+    ) !== undefined
+  ) {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      ),
+    };
+  }
+  /* v8 ignore stop */
+  const sourcePenalty = applyAvailableSourceDamageRollPenalty(
+    hordeBreakerDamageSource,
+    damageAmountByTypeEntriesToMap(damageByType),
+    input.fillSet.huntersPreyHordeBreakerDamageRoll.holeId,
+    sourceDamageRollPenaltyRollForDamageRoll(
+      decision.family.fills.sourceDamageRollPenaltyRolls,
+      hordeBreakerDamageSource,
+      damageAmountByTypeEntriesToMap(damageByType),
+      input.fillSet.huntersPreyHordeBreakerDamageRoll.holeId,
+    ),
+  );
+  /* v8 ignore start -- Malformed fill: a source-side damage penalty roll must match an active penalty and this exact damage event. */
+  if (sourcePenalty.tag === "invalid") {
+    return {
+      tag: "result",
+      result: invalidResult(
+        input.state,
+        "invalidFill",
+        "Source damage roll penalty does not match an active source-side damage penalty.",
+      ),
+    };
+  }
+  /* v8 ignore stop */
+  if (sourcePenalty.tag === "needsHoles") {
+    return {
+      tag: "result",
+      result: needsHolesResult(rolledState, input.subject, [
+        ...sourcePenalty.holes,
+      ]),
+    };
+  }
   const damageEvent = {
     kind: "rolledDamage" as const,
-    damageRollByType: damageAmountByTypeMapEntries(
-      damageAmountByTypeEntriesToMap(damageByType),
-    ),
+    damageRollByType: damageAmountByTypeMapEntries(sourcePenalty.damageByType),
   } satisfies BattleAttackDamageEvent;
   const damageAmount = attackDamageEventAmountForTarget(
     rolledState,

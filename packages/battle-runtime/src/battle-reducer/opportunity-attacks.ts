@@ -60,6 +60,7 @@ import {
   fixedAttackDamageAmount,
   fixedAttackDamageByTypeEntries,
   ongoingFeatureDamageModifier,
+  prospectiveAttackDamageTypes,
   sourceDamageRollPenaltyRollHoleForDamageRoll,
   sourceDamageRollPenaltyRollForDamageRoll,
   unexpectedSourceDamageRollPenaltyRoll,
@@ -96,7 +97,6 @@ import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlet
 import { invalidResult } from "./result-helpers.ts";
 import { parseAttackRollRelationshipFacts } from "./roll-trigger-relationship-facts.ts";
 import {
-  attackPotentialDamageTypes,
   eligibleAttackDamageRiders,
   frenzyDamageTypeDecision,
   eligibleAttackDamageDieFloorProcedureRefs,
@@ -511,7 +511,9 @@ function resolveReactionAttackCommand(
         attackRoll: effectiveAttackRoll,
         attackKind: attackKindForDeflectRedirect(attack),
         attackHitTriggerKind: attackHitTriggerKind(attack),
-        damageTypes: attackPotentialDamageTypes(
+        damageTypes: prospectiveAttackDamageTypes(
+          attackRolledState,
+          attackRolledState.combatants.get(subject.reactorId),
           attack,
           critical,
           effectiveAttackRoll,
