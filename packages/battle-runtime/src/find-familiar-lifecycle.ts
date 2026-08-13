@@ -176,26 +176,15 @@ type FindFamiliarCastPrior =
       readonly familiar: BattleCompanionDismissedForeverState;
     };
 
-type FindFamiliarCastReactionIssue =
-  | {
-      readonly tag: "missingPresentIdentity";
-      readonly message: "Present Find Familiar combatant identity is missing.";
-    }
-  | {
-      readonly tag: "missingLiveCombatant";
-      readonly message: "Present Find Familiar combatant is missing.";
-    };
+type FindFamiliarCastReactionIssue = {
+  readonly tag: "missingLiveCombatant";
+  readonly message: "Present Find Familiar combatant is missing.";
+};
 
 function findFamiliarPresentCombatant(input: {
   readonly state: BattleState;
-  readonly familiarId: CombatantId | undefined;
+  readonly familiarId: CombatantId;
 }): Either.Either<BattleCreatureState, FindFamiliarCastReactionIssue> {
-  if (input.familiarId === undefined) {
-    return Either.left({
-      tag: "missingPresentIdentity",
-      message: "Present Find Familiar combatant identity is missing.",
-    });
-  }
   const combatant = input.state.combatants.get(input.familiarId);
   return combatant === undefined
     ? Either.left({
@@ -402,11 +391,11 @@ export function castResolvedFindFamiliar(
     state: input.state,
     prior,
   });
-  /* v8 ignore start -- Corrupt retained state: a present familiar always owns its live combatant Reaction resource. */
+  /* v8 ignore start -- A stale present companion can retain identity after its live combatant is missing. */
   if (Either.isLeft(reactionAvailable)) {
     return invalidFindFamiliarResult(
       input.state,
-      "invalidFill",
+      "missingCombatant",
       reactionAvailable.left.message,
     );
   }
@@ -529,11 +518,11 @@ export function castWildCompanion(
     state: spent.state,
     prior,
   });
-  /* v8 ignore start -- Corrupt retained state: a present Wild Companion always owns its live combatant Reaction resource. */
+  /* v8 ignore start -- A stale present companion can retain identity after its live combatant is missing. */
   if (Either.isLeft(reactionAvailable)) {
     return invalidFindFamiliarResult(
       spent.state,
-      "invalidFill",
+      "missingCombatant",
       reactionAvailable.left.message,
     );
   }
