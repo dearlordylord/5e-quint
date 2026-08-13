@@ -36,6 +36,7 @@ module battleRuntimeFindFamiliarLifecycleTests {
         creatureTypeOverride: FindFamiliarFey,
         initiative: 18,
         placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
+        reactionAvailable: true,
       })),
       assert(findFamiliarCombatants(cat) == Set(Goblin)),
       assert(battleCombatantsWithFindFamiliar(Set(Fighter), cat) == Set(Fighter, Goblin)),
@@ -48,6 +49,7 @@ module battleRuntimeFindFamiliarLifecycleTests {
         creatureTypeOverride: FindFamiliarCelestial,
         initiative: 12,
         placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
+        reactionAvailable: true,
       })),
     }
   }
@@ -142,6 +144,7 @@ module battleRuntimeFindFamiliarLifecycleTests {
         protocol: OrdinaryFamiliarLikeOneAtATime,
         form: FindFamiliarBat,
         creatureTypeOverride: FindFamiliarFiend,
+        reactionAvailable: true,
       })),
       assert(dismissed.itemDropBoundaryEvents == Set({
         owner: Fighter,
@@ -162,6 +165,7 @@ module battleRuntimeFindFamiliarLifecycleTests {
         creatureTypeOverride: FindFamiliarFiend,
         initiative: 15,
         placement: FindFamiliarUnoccupiedSpaceWithin30Feet,
+        reactionAvailable: true,
       })),
       assert(reappeared.magicActionSpent),
       assert(forever.lifecycle == DismissedForeverFindFamiliar({
@@ -195,6 +199,7 @@ module battleRuntimeFindFamiliarLifecycleTests {
         protocol: OwnerLongRestFamiliarLikeOneAtATime,
         form: FindFamiliarBat,
         creatureTypeOverride: FindFamiliarFey,
+        reactionAvailable: true,
       })),
       assert(dismissed.magicActionSpent),
       assert(dismissed.itemDropBoundaryEvents == Set()),
@@ -202,15 +207,17 @@ module battleRuntimeFindFamiliarLifecycleTests {
   }
 
   run test_find_familiar_zero_hit_points_disappears_until_recast = {
-    val present = castFindFamiliarLifecycle(
-      NoFindFamiliar,
-      Set(Fighter),
-      Fighter,
-      Goblin,
-      FindFamiliarCat,
-      FindFamiliarFey,
-      18
-    )
+    val present = PresentFindFamiliar({
+      owner: Fighter,
+      familiar: Goblin,
+      identity: BattleOnlyFindFamiliarIdentity,
+      protocol: OrdinaryFamiliarLikeOneAtATime,
+      form: FindFamiliarCat,
+      creatureTypeOverride: FindFamiliarFey,
+      initiative: 18,
+      placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
+      reactionAvailable: false,
+    })
     val disappeared = zeroHitPointDisappearFindFamiliarLifecycle(present, Set(3))
     val recast = castFindFamiliarLifecycle(
       disappeared.lifecycle,
@@ -229,6 +236,7 @@ module battleRuntimeFindFamiliarLifecycleTests {
         protocol: OrdinaryFamiliarLikeOneAtATime,
         form: FindFamiliarCat,
         creatureTypeOverride: FindFamiliarFey,
+        reactionAvailable: false,
       })),
       assert(disappeared.itemDropBoundaryEvents == Set({
         owner: Fighter,
@@ -245,6 +253,7 @@ module battleRuntimeFindFamiliarLifecycleTests {
         creatureTypeOverride: FindFamiliarFey,
         initiative: 17,
         placement: FindFamiliarUnoccupiedSpaceWithinSpellRange,
+        reactionAvailable: false,
       })),
     }
   }
@@ -263,9 +272,13 @@ module battleRuntimeFindFamiliarLifecycleTests {
     val outOfRangeConnection = findFamiliarTelepathicConnection(present, Fighter, false)
     val sharedSenses = shareFindFamiliarSenses(present, Fighter, true, true)
     val noBonusActionSharedSenses = shareFindFamiliarSenses(present, Fighter, true, false)
-    val delivered = findFamiliarTouchSpellDelivery(present, Fighter, true, true, true)
-    val nonTouch = findFamiliarTouchSpellDelivery(present, Fighter, false, true, true)
-    val noReaction = findFamiliarTouchSpellDelivery(present, Fighter, true, true, false)
+    val presentWithoutReaction = match present {
+      | PresentFindFamiliar(value) => PresentFindFamiliar({ ...value, reactionAvailable: false })
+      | _ => present
+    }
+    val delivered = findFamiliarTouchSpellDelivery(present, Fighter, true, true)
+    val nonTouch = findFamiliarTouchSpellDelivery(present, Fighter, false, true)
+    val noReaction = findFamiliarTouchSpellDelivery(presentWithoutReaction, Fighter, true, true)
 
     all {
       assert(connection == Set({
@@ -300,12 +313,16 @@ module battleRuntimeFindFamiliarLifecycleTests {
       FindFamiliarFey,
       11
     )
-    val resolved = pactOfTheChainFamiliarReactionAttack(present, Fighter, true, true, true, true)
-    val nonPact = pactOfTheChainFamiliarReactionAttack(present, Fighter, false, true, true, true)
-    val noOwnerAttack = pactOfTheChainFamiliarReactionAttack(present, Fighter, true, false, true, true)
-    val noReaction = pactOfTheChainFamiliarReactionAttack(present, Fighter, true, true, false, true)
-    val unsupportedAttack = pactOfTheChainFamiliarReactionAttack(present, Fighter, true, true, true, false)
-    val wrongOwner = pactOfTheChainFamiliarReactionAttack(present, Goblin, true, true, true, true)
+    val presentWithoutReaction = match present {
+      | PresentFindFamiliar(value) => PresentFindFamiliar({ ...value, reactionAvailable: false })
+      | _ => present
+    }
+    val resolved = pactOfTheChainFamiliarReactionAttack(present, Fighter, true, true, true)
+    val nonPact = pactOfTheChainFamiliarReactionAttack(present, Fighter, false, true, true)
+    val noOwnerAttack = pactOfTheChainFamiliarReactionAttack(present, Fighter, true, false, true)
+    val noReaction = pactOfTheChainFamiliarReactionAttack(presentWithoutReaction, Fighter, true, true, true)
+    val unsupportedAttack = pactOfTheChainFamiliarReactionAttack(present, Fighter, true, true, false)
+    val wrongOwner = pactOfTheChainFamiliarReactionAttack(present, Goblin, true, true, true)
 
     all {
       assert(resolved == PactFamiliarReactionAttackResolved),

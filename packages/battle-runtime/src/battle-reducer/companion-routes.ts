@@ -1,3 +1,5 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 import type {
   BattleActDiscoveryCandidate,
   BattleResolutionInput,
@@ -112,7 +114,7 @@ function findFamiliarTouchDeliveryRouteForResolution(
       ? "battleCompanion"
       : "battleSpellSlotAndActionEconomy",
   );
-  return routeFill === "rolledDice" && result.tag === "resolved"
+  return result.tag === "resolved"
     ? [
         event,
         resolveBattleSubjectWithoutFillRoute(
@@ -158,7 +160,7 @@ function pactFamiliarReactionAttackRouteForResolution(
     result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
     owner,
   );
-  return routeFill === "rolledDice" && result.tag === "resolved"
+  return result.tag === "resolved"
     ? [
         event,
         resolveBattleSubjectWithoutFillRoute(

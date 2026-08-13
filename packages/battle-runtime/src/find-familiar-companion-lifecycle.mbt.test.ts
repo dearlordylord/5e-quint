@@ -3,6 +3,7 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.find-familiar-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
+// KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 // RAW trace:
 // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Find Familiar:
 //   chosen familiar form, Celestial/Fey/Fiend type override, telepathic
@@ -136,6 +137,7 @@ const targetId = combatantId("find-familiar-mbt-target");
 const initialTargetHp = 12;
 const findFamiliarSpell = spellRecord("find_familiar");
 const cureWoundsSpell = spellRecord("cure_wounds");
+const barkskinSpell = spellRecord("barkskin");
 const familiarEligibility = requireFindFamiliarEligibility(
   findFamiliarFormEligibilityForSpell(findFamiliarSpell),
 );
@@ -157,6 +159,7 @@ const findFamiliarCompanionRouteDriverSchema = {
   doRouteFamiliarDismissalReappearance: {},
   doRouteSharedSenses: {},
   doRouteTouchDelivery: {},
+  doRouteTouchDeliveryNoRoll: {},
   doRoutePactFamiliarAttack: {},
   step: {},
 } as const;
@@ -214,6 +217,9 @@ function createFindFamiliarCompanionRouteDriver() {
       },
       doRouteTouchDelivery: () => {
         route = observeTouchDeliveryRoute();
+      },
+      doRouteTouchDeliveryNoRoll: () => {
+        route = observeNoRollTouchDeliveryRoute();
       },
       doRoutePactFamiliarAttack: () => {
         route = observePactFamiliarAttackRoute();
@@ -440,6 +446,28 @@ function observeTouchDeliveryRoute(): readonly ReducerRouteEvent[] {
   ];
 }
 
+function observeNoRollTouchDeliveryRoute(): readonly ReducerRouteEvent[] {
+  const session = createCatFamiliar(initialRuntimeState()).battle;
+  const act = touchDeliveryAct(session, "barkskin");
+  const connectionFill = findFamiliarConnectionFill(
+    requireHole(act.initialHoles, "findFamiliarConnection"),
+  );
+  const targetFill = willingTouchSpellTargetFill(
+    requireHole(act.initialHoles, "targetChoice"),
+    act.subject.procedureRef,
+  );
+  const resolved = resolveBattleSubject({
+    state: session.state,
+    subject: act.subject,
+    fills: [connectionFill, targetFill],
+  });
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(act, "Find Familiar no-roll Touch delivery discovery"),
+    ...routeEventsOf(resolved, "Find Familiar no-roll Touch delivery target"),
+  ];
+}
+
 function observePactFamiliarAttackRoute(): readonly ReducerRouteEvent[] {
   const session = createCatFamiliar(initialRuntimeState()).battle;
   const act = pactFamiliarAttackAct(session);
@@ -465,30 +493,20 @@ function observePactFamiliarAttackRoute(): readonly ReducerRouteEvent[] {
   const attackRoll = attackRollFill(
     requireHole(awaitingAttackRoll.holes, "attackRoll"),
   );
-  const awaitingDamage = resolveBattleSubject({
+  const resolved = resolveBattleSubject({
     state: session.state,
     subject: act.subject,
     fills: [target, attackRoll],
   });
-  if (awaitingDamage.tag !== "needsHoles") {
-    throw new Error("Expected Pact familiar damage roll hole.");
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected fixed-damage Pact familiar attack resolution.");
   }
-  const resolved = resolveBattleSubject({
-    state: session.state,
-    subject: act.subject,
-    fills: [
-      target,
-      attackRoll,
-      fixedDamageRollFill(requireHole(awaitingDamage.holes, "rolledDice")),
-    ],
-  });
   return [
     battleReducerStartRouteEvent(),
     ...routeEventsOf(act, "Pact familiar attack discovery"),
     ...routeEventsOf(awaitingTarget, "Pact familiar attack stat-block action"),
     ...routeEventsOf(awaitingAttackRoll, "Pact familiar attack target"),
-    ...routeEventsOf(awaitingDamage, "Pact familiar attack roll"),
-    ...routeEventsOf(resolved, "Pact familiar attack damage"),
+    ...routeEventsOf(resolved, "Pact familiar attack roll"),
   ];
 }
 
@@ -500,14 +518,17 @@ function initialRuntimeState(): FindFamiliarCompanionRuntimeState {
         combatantId: casterId,
         displayName: "Pact Caster",
         initiative: 20,
-        classLevels: [{ className: "warlock", level: 1 }],
+        classLevels: [
+          { className: "warlock", level: 3 },
+          { className: "druid", level: 3 },
+        ],
         spellcasting: {
-          sourceClassName: "warlock",
+          sourceClassName: "druid",
           spellcastingAbilityModifier: abilityModifier(3),
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [],
-          preparedSpells: [cureWoundsSpell],
+          preparedSpells: [cureWoundsSpell, barkskinSpell],
           featurePreparedSpells: [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [
@@ -516,7 +537,10 @@ function initialRuntimeState(): FindFamiliarCompanionRuntimeState {
               spell: findFamiliarSpell,
             },
           ],
-          spellSlots: [{ spellLevel: 1, count: 1 }],
+          spellSlots: [
+            { spellLevel: 1, count: 1 },
+            { spellLevel: 2, count: 1 },
+          ],
         },
       }),
       characterCreature({
@@ -765,7 +789,10 @@ function sharedSensesAct(session: BattleRuntimeSession): AvailableBattleAct & {
   return act;
 }
 
-function touchDeliveryAct(session: BattleRuntimeSession): AvailableBattleAct & {
+function touchDeliveryAct(
+  session: BattleRuntimeSession,
+  spellId: "cure_wounds" | "barkskin" = "cure_wounds",
+): AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "findFamiliarTouchSpell" }
@@ -781,11 +808,10 @@ function touchDeliveryAct(session: BattleRuntimeSession): AvailableBattleAct & {
       >;
     } =>
       candidate.subject.tag === "findFamiliarTouchSpell" &&
-      battleActSpellPresentation(candidate)?.invocation.spellId ===
-        "cure_wounds",
+      battleActSpellPresentation(candidate)?.invocation.spellId === spellId,
   );
   if (act === undefined) {
-    throw new Error("Expected Find Familiar Touch delivery act.");
+    throw new Error(`Expected Find Familiar ${spellId} Touch delivery act.`);
   }
   return act;
 }
@@ -895,6 +921,36 @@ function pactScratchSubject(
     actorId: casterId,
     familiarId,
     procedureRef,
+    statBlockDamageNotation: "static",
+  };
+}
+
+function willingTouchSpellTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  procedureRef: Extract<
+    BattleSubject,
+    { readonly tag: "findFamiliarTouchSpell" }
+  >["procedureRef"],
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: casterId,
+    spatialFacts: [
+      {
+        kind: "findFamiliarTouchSpellTarget",
+        ownerId: casterId,
+        familiarId,
+        targetId: casterId,
+        sourceProcedureRef: procedureRef,
+      },
+      {
+        kind: "spellTargetKnownWilling",
+        casterId,
+        targetId: casterId,
+        sourceProcedureRef: procedureRef,
+      },
+    ],
   };
 }
 
@@ -920,19 +976,15 @@ function pactScratchFilledAttackFills(
   const attackRoll = attackRollFill(
     requireHole(awaitingAttackRoll.holes, "attackRoll"),
   );
-  const awaitingDamage = resolveBattleSubject({
+  const resolved = resolveBattleSubject({
     state,
     subject,
     fills: [target, attackRoll],
   });
-  if (awaitingDamage.tag !== "needsHoles") {
-    throw new Error("Expected Pact familiar damage roll hole.");
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected fixed-damage Pact familiar attack resolution.");
   }
-  return [
-    target,
-    attackRoll,
-    fixedDamageRollFill(requireHole(awaitingDamage.holes, "rolledDice")),
-  ];
+  return [target, attackRoll];
 }
 
 function familiarAttackTargetFill(
@@ -966,20 +1018,6 @@ function attackRollFill(
       total: 23,
       naturalD20: DieRollResult(19),
     },
-  };
-}
-
-function fixedDamageRollFill(
-  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
-): Extract<BattleFill, { readonly kind: "rolledDice" }> {
-  return {
-    kind: "rolledDice",
-    holeId: hole.holeId,
-    value: [
-      {
-        results: [],
-      },
-    ],
   };
 }
 

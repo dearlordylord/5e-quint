@@ -837,6 +837,8 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
     identity: entry.familiar.identity,
     protocol: entry.familiar.protocol,
     creatureTypeOverride: entry.familiar.creatureTypeOverride,
+    reactionAvailable:
+      input.state.combatants.get(input.targetId)?.reactionAvailable ?? false,
   };
   const removed = removeBattleCombatants({
     state: input.state,

@@ -330,8 +330,18 @@ export function deliverTouchSpellThroughFindFamiliar(
   if (prepared.tag === "invalid") {
     return invalidResult(input.state, prepared.reason, prepared.message);
   }
+  const reactionState =
+    reactionCommitment === "committed" || prepared.targetChoiceCount === 0
+      ? { tag: "resolved" as const, state: input.state }
+      : spendFindFamiliarTouchDeliveryReaction({
+          state: input.state,
+          familiarId: prepared.familiarId,
+        });
+  if (reactionState.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", reactionState.message);
+  }
   const candidate = {
-    state: input.state,
+    state: reactionState.state,
     subject: input.subject,
     fills: prepared.fills,
     reactionContinuation: input.reactionContinuation,
@@ -361,52 +371,14 @@ export function deliverTouchSpellThroughFindFamiliar(
   if (cast.tag === "invalid") {
     return { ...cast, snapshot: snapshotBattle(input.state) };
   }
-  if (cast.tag === "needsHoles") {
-    if (
-      reactionCommitment === "uncommitted" &&
-      cast.state.interruptStack.length > input.state.interruptStack.length
-    ) {
-      const committed = spendFindFamiliarTouchDeliveryReaction({
-        state: cast.state,
-        familiarId: prepared.familiarId,
-      });
-      return committed.tag === "invalid"
-        ? invalidResult(input.state, "invalidFill", committed.message)
-        : {
-            ...cast,
-            state: committed.state,
-            snapshot: snapshotBattle(committed.state),
-          };
-    }
-    return cast;
-  }
-  if (!cast.state.combatants.has(prepared.familiarId)) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Find Familiar touch delivery requires the familiar to remain present.",
-    );
-  }
-  if (prepared.targetChoiceCount === 0) {
+  if (cast.tag === "resolved" && prepared.targetChoiceCount === 0) {
     return invalidResult(
       input.state,
       "invalidFill",
       "Find Familiar touch delivery currently supports exactly one selected target choice.",
     );
   }
-  if (reactionCommitment === "committed") return cast;
-  const spent = spendFindFamiliarTouchDeliveryReaction({
-    state: cast.state,
-    familiarId: prepared.familiarId,
-  });
-  if (spent.tag === "invalid") {
-    return invalidResult(input.state, "invalidFill", spent.message);
-  }
-  return {
-    tag: "resolved",
-    state: spent.state,
-    snapshot: snapshotBattle(spent.state),
-  };
+  return cast;
 }
 
 function admittedFindFamiliarSpell(
