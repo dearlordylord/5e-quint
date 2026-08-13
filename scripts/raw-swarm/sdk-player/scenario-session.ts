@@ -1,0 +1,811 @@
+import type {
+  BattleIllumination,
+  BattleId,
+  BattleObjectDamageDisposition,
+  BattleObjectDamageOutcome,
+  BattleObjectId,
+  BattleFill,
+  BattleRuntimeSession,
+  BattleSubject,
+  CombatantId,
+} from "@dnd/battle-runtime";
+import {
+  isBattleRuntimeSession,
+  resolveBattleRuntimeSubject,
+} from "../../../packages/battle-runtime/src/index.ts";
+import type { ArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import { isIncapacitated } from "../../../packages/shared-algebras/src/conditions-algebra.ts";
+import type { CoverType, Hp, MovementFeet } from "@dnd/shared/types";
+import {
+  arenaSnapshot,
+  createState,
+  interveningTokens,
+  parseArena,
+  parseCoordinate,
+  parseTokenId,
+  placeToken,
+  relationBetween,
+  restoreState,
+  snapshot,
+  type ArenaDefinition,
+  type ArenaSnapshot,
+  type BoundaryOpenness,
+  type CellCoordinate,
+  type CoverDegree,
+  type PlaceTokenError,
+  type SpatialSnapshot,
+  type TokenId,
+  type CoordinateInput,
+} from "../../../packages/tactical-space/src/index.ts";
+import { Either, Match } from "effect";
+
+declare const scenarioSessionBrand: unique symbol;
+
+export type ScenarioBattleObject = Readonly<{
+  readonly objectId: BattleObjectId;
+  readonly armorClass: ArmorClass;
+  readonly damageDisposition: BattleObjectDamageDisposition;
+  readonly traversal: BoundaryOpenness;
+  readonly sight: BoundaryOpenness;
+  readonly interveningCover: CoverDegree;
+}>;
+
+export type ScenarioBarrierHeight = Readonly<{
+  readonly between: readonly [CoordinateInput, CoordinateInput];
+  readonly heightFeet: MovementFeet;
+}>;
+
+export type ScenarioEnvironment = Readonly<{
+  readonly overhead:
+    | Readonly<{ readonly kind: "open" }>
+    | Readonly<{
+        readonly kind: "ceiling";
+        readonly heightFeet: MovementFeet;
+      }>;
+  readonly barrierHeights: readonly ScenarioBarrierHeight[];
+}>;
+
+export type ScenarioInitialRangedAttackEnemyRelationship = Readonly<{
+  readonly attackerId: CombatantId;
+  readonly enemyId: CombatantId;
+}>;
+
+export type ScenarioBattlefield = Readonly<{
+  readonly arena: ArenaSnapshot;
+  readonly initialSpace: SpatialSnapshot;
+  readonly ambientIllumination: BattleIllumination;
+  readonly environment: ScenarioEnvironment;
+  readonly initialRangedAttackEnemyRelationships: readonly ScenarioInitialRangedAttackEnemyRelationship[];
+  readonly objects: readonly ScenarioBattleObject[];
+}>;
+
+export type ScenarioPlacement = Readonly<{
+  readonly tokenId: CombatantId | BattleObjectId;
+  readonly coordinate: CoordinateInput;
+}>;
+
+export type ScenarioTokenId = CombatantId | BattleObjectId;
+
+export type ScenarioSession = Readonly<{
+  readonly battle: BattleRuntimeSession;
+  readonly battlefield: ScenarioBattlefield;
+  readonly [scenarioSessionBrand]: true;
+}>;
+
+export type ScenarioSessionFactIssue =
+  | Readonly<{
+      readonly tag: "arena-definition";
+      readonly path: string;
+      readonly message: string;
+    }>
+  | Readonly<{
+      readonly tag: "placement";
+      readonly tokenId: string;
+      readonly coordinate: CoordinateInput;
+      readonly message: string;
+    }>
+  | Readonly<{
+      readonly tag: "duplicate-object-id" | "combatant-object-id-collision";
+      readonly objectId: BattleObjectId;
+      readonly message: string;
+    }>
+  | Readonly<{
+      readonly tag: "barrier-height";
+      readonly between: readonly [CoordinateInput, CoordinateInput];
+      readonly heightFeet: MovementFeet;
+      readonly message: string;
+    }>
+  | Readonly<{
+      readonly tag: "missing-placement";
+      readonly tokenId: string;
+      readonly message: string;
+    }>
+  | Readonly<{
+      readonly tag: "unexpected-placement";
+      readonly tokenId: string;
+      readonly message: string;
+    }>
+  | Readonly<{
+      readonly tag:
+        | "duplicate-ranged-attack-enemy-relationship"
+        | "self-ranged-attack-enemy-relationship"
+        | "unknown-ranged-attack-relationship-combatant";
+      readonly combatantId: CombatantId;
+      readonly message: string;
+    }>;
+
+export type ScenarioSessionIssue = Readonly<{
+  readonly tag: "invalid-scenario-session";
+  readonly issues: readonly [
+    ScenarioSessionFactIssue,
+    ...ScenarioSessionFactIssue[],
+  ];
+}>;
+
+export type ScenarioSessionUpdateIssue =
+  | Readonly<{
+      readonly tag: "battle-lineage-conflict";
+      readonly expectedBattleId: BattleId;
+      readonly receivedBattleId: BattleId;
+      readonly message: string;
+    }>
+  | Readonly<{
+      readonly tag: "unknown-object-damage";
+      readonly objectId: BattleObjectId;
+      readonly message: string;
+    }>
+  | Readonly<{
+      readonly tag: "object-damage-state-conflict";
+      readonly objectId: BattleObjectId;
+      readonly outcomePriorHitPoints: Hp;
+      readonly message: string;
+    }>;
+
+const sessions = new WeakSet<object>();
+
+function freezeObject(object: ScenarioBattleObject): ScenarioBattleObject {
+  return Object.freeze({
+    ...object,
+    damageDisposition: Object.freeze({ ...object.damageDisposition }),
+  });
+}
+
+function makeScenarioSession(
+  battle: BattleRuntimeSession,
+  battlefield: ScenarioBattlefield,
+): ScenarioSession {
+  const session = Object.freeze({ battle, battlefield });
+  sessions.add(session);
+  // The brand is compile-time only; WeakSet membership is the runtime proof
+  // that this value passed createScenarioSession's composition checks.
+  return session as ScenarioSession;
+}
+
+function nonEmptyIssues(
+  issues: readonly ScenarioSessionFactIssue[],
+):
+  | readonly [ScenarioSessionFactIssue, ...ScenarioSessionFactIssue[]]
+  | undefined {
+  const first = issues[0];
+  return first === undefined ? undefined : [first, ...issues.slice(1)];
+}
+
+function placementIssueMessage(
+  error: PlaceTokenError,
+  tokenId: string,
+): string {
+  const byTag = Match.discriminator("tag");
+  return Match.value(error).pipe(
+    byTag("invalid-coordinate", ({ message }) => message),
+    byTag(
+      "missing-cell",
+      () => `Scenario token ${tokenId} was placed outside the tactical arena.`,
+    ),
+    byTag(
+      "duplicate-token",
+      () => `Scenario token ${tokenId} has more than one placement.`,
+    ),
+    byTag("revision-limit", ({ message }) => message),
+    Match.exhaustive,
+  );
+}
+
+export function createScenarioSession(input: {
+  readonly battle: BattleRuntimeSession;
+  readonly arena: ArenaDefinition;
+  readonly placements: readonly ScenarioPlacement[];
+  readonly ambientIllumination: BattleIllumination;
+  readonly environment: ScenarioEnvironment;
+  readonly initialRangedAttackEnemyRelationships: readonly ScenarioInitialRangedAttackEnemyRelationship[];
+  readonly objects: readonly ScenarioBattleObject[];
+}): Either.Either<ScenarioSession, ScenarioSessionIssue> {
+  const issues: ScenarioSessionFactIssue[] = [];
+  const parsedArena = parseArena(input.arena);
+  if (parsedArena.tag === "error") {
+    const [first, ...rest] = parsedArena.issues;
+    const arenaFactIssue = ({ path, message }: typeof first) => ({
+      tag: "arena-definition" as const,
+      path,
+      message,
+    });
+    issues.push(arenaFactIssue(first), ...rest.map(arenaFactIssue));
+  }
+
+  const combatantIds = new Set(
+    [...input.battle.state.combatants.keys()].map(String),
+  );
+  const rangedAttackEnemyRelationships = new Set<string>();
+  for (const relationship of input.initialRangedAttackEnemyRelationships) {
+    const relationshipKey = `${String(relationship.attackerId)}\u0000${String(relationship.enemyId)}`;
+    for (const combatantId of [relationship.attackerId, relationship.enemyId]) {
+      if (!combatantIds.has(String(combatantId))) {
+        issues.push({
+          tag: "unknown-ranged-attack-relationship-combatant",
+          combatantId,
+          message: `Initial ranged-attack enemy relationship names unknown scenario combatant ${String(combatantId)}.`,
+        });
+      }
+    }
+    if (relationship.attackerId === relationship.enemyId) {
+      issues.push({
+        tag: "self-ranged-attack-enemy-relationship",
+        combatantId: relationship.attackerId,
+        message: `Scenario combatant ${String(relationship.attackerId)} cannot be its own enemy for the initial ranged-attack proximity decision.`,
+      });
+    }
+    if (rangedAttackEnemyRelationships.has(relationshipKey)) {
+      issues.push({
+        tag: "duplicate-ranged-attack-enemy-relationship",
+        combatantId: relationship.attackerId,
+        message: `Initial ranged-attack enemy relationship ${String(relationship.attackerId)} to ${String(relationship.enemyId)} is declared more than once.`,
+      });
+    }
+    rangedAttackEnemyRelationships.add(relationshipKey);
+  }
+  const objectIds = new Set<string>();
+  for (const object of input.objects) {
+    const objectId = String(object.objectId);
+    if (objectIds.has(objectId)) {
+      issues.push({
+        tag: "duplicate-object-id",
+        objectId: object.objectId,
+        message: `Scenario object ${objectId} is declared more than once.`,
+      });
+    }
+    objectIds.add(objectId);
+    if (combatantIds.has(objectId)) {
+      issues.push({
+        tag: "combatant-object-id-collision",
+        objectId: object.objectId,
+        message: `Scenario object ${objectId} collides with a combatant id.`,
+      });
+    }
+  }
+
+  const parsedPlacements: Array<{
+    readonly token: TokenId;
+    readonly coordinate: CellCoordinate;
+    readonly supplied: ScenarioPlacement;
+  }> = [];
+  for (const placement of input.placements) {
+    const token = parseTokenId(String(placement.tokenId));
+    const coordinate = parseCoordinate(placement.coordinate);
+    if (token.tag === "error") {
+      issues.push({
+        tag: "placement",
+        tokenId: String(placement.tokenId),
+        coordinate: placement.coordinate,
+        message: token.error.message,
+      });
+    }
+    if (coordinate.tag === "error") {
+      issues.push({
+        tag: "placement",
+        tokenId: String(placement.tokenId),
+        coordinate: placement.coordinate,
+        message: coordinate.error.message,
+      });
+    }
+    if (token.tag === "ok" && coordinate.tag === "ok") {
+      parsedPlacements.push({
+        token: token.value,
+        coordinate: coordinate.value,
+        supplied: placement,
+      });
+    }
+  }
+
+  if (parsedArena.tag === "error") {
+    // The arena parser's nonempty issue list was appended above.
+    return Either.left({
+      tag: "invalid-scenario-session",
+      issues: [issues[0]!, ...issues.slice(1)],
+    });
+  }
+
+  const arena = arenaSnapshot(parsedArena.value);
+  let spatialState = createState(parsedArena.value);
+  for (const placement of parsedPlacements) {
+    const placed = placeToken(
+      spatialState,
+      placement.token,
+      placement.coordinate,
+    );
+    if (placed.tag === "error") {
+      issues.push({
+        tag: "placement",
+        tokenId: String(placement.supplied.tokenId),
+        coordinate: placement.supplied.coordinate,
+        message: placementIssueMessage(
+          placed.error,
+          String(placement.supplied.tokenId),
+        ),
+      });
+      continue;
+    }
+    spatialState = placed.value;
+  }
+  const space = snapshot(spatialState);
+
+  for (const barrier of input.environment.barrierHeights) {
+    const matchingBoundary = arena.boundaries.some(
+      ({ between, traversal }) =>
+        traversal === "blocked" && sameUndirectedEdge(between, barrier.between),
+    );
+    if (!matchingBoundary) {
+      const subject = barrier.between.map(({ x, y }) => `${x},${y}`).join("–");
+      issues.push({
+        tag: "barrier-height",
+        between: barrier.between,
+        heightFeet: barrier.heightFeet,
+        message: `Barrier height ${subject} does not identify a blocked tactical-space boundary.`,
+      });
+    }
+  }
+
+  const expectedTokens = new Set([...combatantIds, ...objectIds]);
+  const placedTokens = new Set(
+    space.placements.map(({ token }) => String(token)),
+  );
+  for (const token of expectedTokens) {
+    if (!placedTokens.has(token)) {
+      issues.push({
+        tag: "missing-placement",
+        tokenId: token,
+        message: `Scenario token ${token} has no tactical-space placement.`,
+      });
+    }
+  }
+  for (const token of placedTokens) {
+    if (!expectedTokens.has(token)) {
+      issues.push({
+        tag: "unexpected-placement",
+        tokenId: token,
+        message: `Tactical-space token ${token} is neither a combatant nor a scenario object.`,
+      });
+    }
+  }
+
+  const invalid = nonEmptyIssues(issues);
+  if (invalid !== undefined) {
+    return Either.left({ tag: "invalid-scenario-session", issues: invalid });
+  }
+  const battlefield = Object.freeze({
+    arena,
+    initialSpace: space,
+    ambientIllumination: input.ambientIllumination,
+    environment: Object.freeze({
+      overhead: Object.freeze({ ...input.environment.overhead }),
+      barrierHeights: Object.freeze(
+        input.environment.barrierHeights.map((barrier) =>
+          Object.freeze({
+            between: Object.freeze([
+              Object.freeze({ ...barrier.between[0] }),
+              Object.freeze({ ...barrier.between[1] }),
+            ] as const),
+            heightFeet: barrier.heightFeet,
+          }),
+        ),
+      ),
+    }),
+    initialRangedAttackEnemyRelationships: Object.freeze(
+      input.initialRangedAttackEnemyRelationships.map((relationship) =>
+        Object.freeze({ ...relationship }),
+      ),
+    ),
+    objects: Object.freeze(input.objects.map(freezeObject)),
+  });
+  return Either.right(makeScenarioSession(input.battle, battlefield));
+}
+
+export type ScenarioInitialRelationResult =
+  | Readonly<{
+      readonly tag: "relation";
+      readonly relation: ScenarioSpatialRelation;
+    }>
+  | Readonly<{
+      readonly tag: "unknown-token";
+      readonly tokenId: string;
+      readonly message: string;
+    }>;
+
+export type ScenarioSpatialRelation = Readonly<{
+  readonly source: TokenId;
+  readonly target: TokenId;
+  readonly direction: import("../../../packages/tactical-space/src/index.ts").Direction;
+  readonly distanceFeet: import("../../../packages/tactical-space/src/index.ts").DistanceFeet;
+  readonly attackerCanSeeTarget: boolean;
+  readonly cover: CoverType;
+  readonly traversal: BoundaryOpenness;
+}>;
+
+export function scenarioTokenId(
+  session: ScenarioSession,
+  input: string,
+): ScenarioTokenId | undefined {
+  const combatantId = [...session.battle.state.combatants.keys()].find(
+    (candidate) => String(candidate) === input,
+  );
+  if (combatantId !== undefined) return combatantId;
+  return session.battlefield.objects.find(
+    ({ objectId }) => String(objectId) === input,
+  )?.objectId;
+}
+
+export function scenarioInitialRelation(input: {
+  readonly session: ScenarioSession;
+  readonly sourceId: ScenarioTokenId;
+  readonly targetId: ScenarioTokenId;
+}): ScenarioInitialRelationResult {
+  const spatialState = initialSpatialState(input.session);
+  const source = parseTokenId(String(input.sourceId));
+  const target = parseTokenId(String(input.targetId));
+  if (source.tag === "error") {
+    return {
+      tag: "unknown-token",
+      tokenId: String(input.sourceId),
+      message: source.error.message,
+    };
+  }
+  if (target.tag === "error") {
+    return {
+      tag: "unknown-token",
+      tokenId: String(input.targetId),
+      message: target.error.message,
+    };
+  }
+  const relationResult = relationBetween(
+    spatialState,
+    source.value,
+    target.value,
+  );
+  if (relationResult.tag === "error") {
+    return {
+      tag: "unknown-token",
+      tokenId: String(relationResult.error.token),
+      message: `Scenario token ${String(relationResult.error.token)} has no initial placement.`,
+    };
+  }
+  const relation = relationResult.value;
+  const interveningObjects = scenarioObjectsBetween(
+    input.session,
+    source.value,
+    target.value,
+  );
+  return {
+    tag: "relation",
+    relation: {
+      source: relation.source,
+      target: relation.target,
+      direction: relation.direction,
+      distanceFeet: relation.distanceFeet,
+      attackerCanSeeTarget:
+        relation.sight === "clear" &&
+        interveningObjects.every(({ sight }) => sight === "open"),
+      cover: battleCover(
+        interveningObjects.reduce(
+          (cover, object) =>
+            moreProtectiveCover(cover, object.interveningCover),
+          relation.cover,
+        ),
+      ),
+      traversal: interveningObjects.some(
+        ({ traversal }) => traversal === "blocked",
+      )
+        ? "blocked"
+        : "open",
+    },
+  };
+}
+
+export type ScenarioObjectAttackProjectionIssue = Readonly<{
+  readonly tag: "object-attack-projection";
+  readonly message: string;
+}>;
+
+export function scenarioObjectAttackFills(input: {
+  readonly session: ScenarioSession;
+  readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
+}): Either.Either<readonly BattleFill[], ScenarioObjectAttackProjectionIssue> {
+  const objectTargetFill = input.fills.find(
+    (fill) =>
+      fill.kind === "objectTargetChoice" &&
+      (fill.spatialFacts.length === 0 ||
+        fill.spatialFacts.some(({ kind }) => kind === "attackObjectTarget")),
+  );
+  if (objectTargetFill?.kind !== "objectTargetChoice") {
+    return Either.right(input.fills);
+  }
+  const object = input.session.battlefield.objects.find(
+    ({ objectId }) => objectId === objectTargetFill.value,
+  );
+  if (object === undefined) {
+    return Either.left({
+      tag: "object-attack-projection",
+      message: `Unknown scenario object ${String(objectTargetFill.value)}.`,
+    });
+  }
+  const frontier = resolveBattleRuntimeSubject({
+    session: input.session.battle,
+    subject: input.subject,
+    fills: [],
+  });
+  const targetHole =
+    frontier.tag === "needsHoles"
+      ? frontier.holes.find(
+          (hole) =>
+            hole.kind === "targetChoice" &&
+            hole.holeId === objectTargetFill.holeId &&
+            hole.attack?.acceptsObjectTarget === true,
+        )
+      : undefined;
+  if (targetHole?.kind !== "targetChoice" || targetHole.attack === undefined) {
+    return Either.left({
+      tag: "object-attack-projection",
+      message:
+        "The selected battle procedure has no ordinary-object target frontier.",
+    });
+  }
+  const attack = targetHole.attack;
+  const relation = scenarioInitialRelation({
+    session: input.session,
+    sourceId: attack.actorId,
+    targetId: object.objectId,
+  });
+  if (relation.tag !== "relation") {
+    return Either.left({
+      tag: "object-attack-projection",
+      message: relation.message,
+    });
+  }
+  const distanceFeet = Number(relation.relation.distanceFeet);
+  const range = Match.value(attack.targetConstraint).pipe(
+    Match.when({ kind: "meleeReach" }, ({ reachFeet }) =>
+      distanceFeet <= Number(reachFeet)
+        ? Either.right({ kind: "meleeReach" } as const)
+        : Either.left(
+            `Object is ${distanceFeet} feet away, outside ${Number(reachFeet)}-foot reach.`,
+          ),
+    ),
+    Match.when({ kind: "rangedRange" }, ({ normalFeet, longFeet }) =>
+      distanceFeet <= Number(normalFeet)
+        ? Either.right({
+            kind: "rangedRange" as const,
+            band: "normal" as const,
+            enemyWithin5FeetCanSeeAttacker:
+              scenarioEnemyWithinFiveFeetCanSeeAttacker(
+                input.session,
+                attack.actorId,
+              ),
+          })
+        : distanceFeet <= Number(longFeet)
+          ? Either.right({
+              kind: "rangedRange" as const,
+              band: "long" as const,
+              enemyWithin5FeetCanSeeAttacker:
+                scenarioEnemyWithinFiveFeetCanSeeAttacker(
+                  input.session,
+                  attack.actorId,
+                ),
+            })
+          : Either.left(
+              `Object is ${distanceFeet} feet away, outside ${Number(longFeet)}-foot long range.`,
+            ),
+    ),
+    Match.exhaustive,
+  );
+  if (Either.isLeft(range)) {
+    return Either.left({
+      tag: "object-attack-projection",
+      message: range.left,
+    });
+  }
+  const canonicalFill: BattleFill = {
+    ...objectTargetFill,
+    spatialFacts: [
+      {
+        kind: "attackObjectTarget",
+        actorId: attack.actorId,
+        objectId: object.objectId,
+        range: range.right,
+        attackerCanSeeObject: relation.relation.attackerCanSeeTarget,
+        cover: relation.relation.cover,
+        armorClass: object.armorClass,
+        damageDisposition: object.damageDisposition,
+      },
+    ],
+  };
+  return Either.right(
+    input.fills.map((fill) =>
+      fill === objectTargetFill ? canonicalFill : fill,
+    ),
+  );
+}
+
+export function scenarioSessionIssueMessage(
+  issue: ScenarioSessionIssue,
+): string {
+  return issue.issues.map(({ message }) => message).join(" ");
+}
+
+export function isScenarioSession(value: unknown): value is ScenarioSession {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    sessions.has(value) &&
+    isBattleRuntimeSession(Reflect.get(value, "battle"))
+  );
+}
+
+export function scenarioSessionWithBattleResult(
+  session: ScenarioSession,
+  battle: BattleRuntimeSession,
+  objectDamages: readonly BattleObjectDamageOutcome[] = [],
+): Either.Either<ScenarioSession, ScenarioSessionUpdateIssue> {
+  if (session.battle.state.battleId !== battle.state.battleId) {
+    return Either.left({
+      tag: "battle-lineage-conflict",
+      expectedBattleId: session.battle.state.battleId,
+      receivedBattleId: battle.state.battleId,
+      message: `Scenario battle ${String(session.battle.state.battleId)} cannot adopt battle ${String(battle.state.battleId)}.`,
+    });
+  }
+  let objects = session.battlefield.objects;
+  for (const outcome of objectDamages) {
+    const index = objects.findIndex(
+      ({ objectId }) => objectId === outcome.objectId,
+    );
+    if (index < 0) {
+      return Either.left({
+        tag: "unknown-object-damage",
+        objectId: outcome.objectId,
+        message: `Battle damage referred to unknown scenario object ${String(outcome.objectId)}.`,
+      });
+    }
+    if (outcome.kind === "tableResolved") continue;
+    const object = objects[index]!;
+    if (
+      object.damageDisposition.kind === "tableResolved" ||
+      object.damageDisposition.hitPoints !== outcome.priorHitPoints
+    ) {
+      return Either.left({
+        tag: "object-damage-state-conflict",
+        objectId: outcome.objectId,
+        outcomePriorHitPoints: outcome.priorHitPoints,
+        message: `Battle damage for scenario object ${String(outcome.objectId)} does not continue from its current Hit Points.`,
+      });
+    }
+    const replacement = freezeObject({
+      ...object,
+      damageDisposition:
+        object.damageDisposition.kind === "hitPointsWithDamageThreshold"
+          ? {
+              kind: "hitPointsWithDamageThreshold",
+              hitPoints: outcome.nextHitPoints,
+              damageThreshold: object.damageDisposition.damageThreshold,
+            }
+          : { kind: "hitPoints", hitPoints: outcome.nextHitPoints },
+    });
+    objects = Object.freeze([
+      ...objects.slice(0, index),
+      replacement,
+      ...objects.slice(index + 1),
+    ]);
+  }
+  return Either.right(
+    makeScenarioSession(
+      battle,
+      Object.freeze({ ...session.battlefield, objects }),
+    ),
+  );
+}
+
+function initialSpatialState(session: ScenarioSession) {
+  const restored = restoreState(
+    session.battlefield.arena,
+    session.battlefield.initialSpace,
+  );
+  if (restored.tag === "error") {
+    throw new Error(
+      "A recognized scenario session must retain internally consistent spatial evidence.",
+    );
+  }
+  return restored.value;
+}
+
+function sameUndirectedEdge(
+  first: readonly [CoordinateInput, CoordinateInput],
+  second: readonly [CoordinateInput, CoordinateInput],
+): boolean {
+  const sameCoordinate = (a: CoordinateInput, b: CoordinateInput): boolean =>
+    a.x === b.x && a.y === b.y;
+  return (
+    (sameCoordinate(first[0], second[0]) &&
+      sameCoordinate(first[1], second[1])) ||
+    (sameCoordinate(first[0], second[1]) && sameCoordinate(first[1], second[0]))
+  );
+}
+
+function scenarioObjectsBetween(
+  session: ScenarioSession,
+  source: TokenId,
+  target: TokenId,
+): readonly ScenarioBattleObject[] {
+  const result = interveningTokens(
+    initialSpatialState(session),
+    source,
+    target,
+  );
+  if (result.tag === "error") return [];
+  const tokenIds = new Set(result.value.tokens.map(String));
+  return session.battlefield.objects.filter(({ objectId }) =>
+    tokenIds.has(String(objectId)),
+  );
+}
+
+function moreProtectiveCover(
+  first: CoverDegree,
+  second: CoverDegree,
+): CoverDegree {
+  const rank: Readonly<Record<CoverDegree, number>> = {
+    none: 0,
+    half: 1,
+    "three-quarters": 2,
+    total: 3,
+  };
+  return rank[first] >= rank[second] ? first : second;
+}
+
+function battleCover(cover: CoverDegree): CoverType {
+  return Match.value(cover).pipe(
+    Match.when("none", () => "none" as const),
+    Match.when("half", () => "half" as const),
+    Match.when("three-quarters", () => "threeQuarters" as const),
+    Match.when("total", () => "total" as const),
+    Match.exhaustive,
+  );
+}
+
+export function scenarioEnemyWithinFiveFeetCanSeeAttacker(
+  session: ScenarioSession,
+  attackerId: CombatantId,
+): boolean {
+  const enemyIds = session.battlefield.initialRangedAttackEnemyRelationships
+    .filter((relationship) => relationship.attackerId === attackerId)
+    .map((relationship) => relationship.enemyId);
+  return enemyIds.some((enemyId) => {
+    const enemy = session.battle.state.combatants.get(enemyId);
+    if (enemy === undefined || isIncapacitated(enemy.conditions)) return false;
+    const relation = scenarioInitialRelation({
+      session,
+      sourceId: enemyId,
+      targetId: attackerId,
+    });
+    return (
+      relation.tag === "relation" &&
+      Number(relation.relation.distanceFeet) <= 5 &&
+      relation.relation.attackerCanSeeTarget
+    );
+  });
+}

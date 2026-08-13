@@ -34,19 +34,9 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
 import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
-import {
-  damageAmount,
-  Hp,
-  type Condition,
-  type DamageAmount,
-  type DieRollResult,
-} from "@dnd/shared/types";
+import { type Condition, type DieRollResult } from "@dnd/shared/types";
 import type { Ability, DamageType, DiceExpr } from "@dnd/surface/surface/types";
-import type {
-  BattleObjectId,
-  BattleProcedureExecutionRef,
-  CombatantId,
-} from "../identity.ts";
+import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import type { PassiveSavingThrowRollModeProfile } from "../unit-feature-execution-constants.ts";
 import {
   scalarBuffTemporaryHitPointsExpression,
@@ -85,8 +75,6 @@ import {
   type BattleDamageRelationshipDecisions,
   type BattleFill,
   type BattleHoleId,
-  type BattleObjectDamageDisposition,
-  type BattleObjectDamageOutcome,
   type BattleSpellTargetListRelationshipFact,
   type BattleSavingThrowFlatBonusProjection,
   type BattleSavingThrowRollModeProjection,
@@ -259,11 +247,6 @@ type CarefulSpellProcedureFacts = {
   readonly procedure: RuntimeSpellProcedure["procedure"];
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
 };
-
-const OBJECT_DAMAGE_IMMUNITIES = [
-  "poison",
-  "psychic",
-] as const satisfies ReadonlyArray<DamageType>;
 
 type SpellAttackDamageInvocationWithMaxDieAdditionalDiceLimit = Extract<
   RuntimeDamageSpellProcedure,
@@ -2319,46 +2302,6 @@ export function spellObjectDamageByType(
   );
 }
 
-export function spellObjectDamageOutcomeFromDamageByType(input: {
-  readonly objectId: BattleObjectId;
-  readonly damageType: DamageType;
-  readonly damageByType: ReadonlyMap<DamageType, number>;
-  readonly disposition: BattleObjectDamageDisposition;
-}): BattleObjectDamageOutcome {
-  const entries = damageAmountByTypeMapEntries(input.damageByType);
-  const rolledDamage = entries.reduce(
-    (total, entry) => total + entry.amount,
-    0,
-  );
-  return Match.value(input.disposition).pipe(
-    Match.when({ kind: "tableResolved" }, () => ({
-      kind: "tableResolved" as const,
-      objectId: input.objectId,
-      damageType: input.damageType,
-      rolledDamage: damageAmount(rolledDamage),
-    })),
-    Match.when({ kind: "hitPoints" }, (disposition) =>
-      objectHitPointDamageOutcome({
-        objectId: input.objectId,
-        damageType: input.damageType,
-        rolledDamage,
-        priorHitPoints: disposition.hitPoints,
-        damageThreshold: null,
-      }),
-    ),
-    Match.when({ kind: "hitPointsWithDamageThreshold" }, (disposition) =>
-      objectHitPointDamageOutcome({
-        objectId: input.objectId,
-        damageType: input.damageType,
-        rolledDamage,
-        priorHitPoints: disposition.hitPoints,
-        damageThreshold: disposition.damageThreshold,
-      }),
-    ),
-    Match.exhaustive,
-  );
-}
-
 export function spellObjectRolledDamage(
   invocation: SpellObjectDamageInvocation,
   damageRoll: Extract<BattleFill, { readonly kind: "rolledDice" }>,
@@ -2374,40 +2317,6 @@ export function spellObjectRolledDamage(
     0,
   );
   return diceTotal + (invocation.damage.expr.flat ?? 0);
-}
-
-function objectHitPointDamageOutcome(input: {
-  readonly objectId: BattleObjectId;
-  readonly damageType: DamageType;
-  readonly rolledDamage: number;
-  readonly priorHitPoints: Hp;
-  readonly damageThreshold: DamageAmount | null;
-}): Extract<BattleObjectDamageOutcome, { readonly kind: "hitPoints" }> {
-  const objectImmune = objectDamageTypeIsImmune(input.damageType);
-  const thresholdBlocksDamage =
-    input.damageThreshold !== null &&
-    input.rolledDamage < Number(input.damageThreshold);
-  const effectiveDamage =
-    objectImmune || thresholdBlocksDamage ? 0 : input.rolledDamage;
-  const nextHitPoints = Hp(
-    Math.max(0, Number(input.priorHitPoints) - effectiveDamage),
-  );
-  return {
-    kind: "hitPoints",
-    objectId: input.objectId,
-    damageType: input.damageType,
-    rolledDamage: damageAmount(input.rolledDamage),
-    effectiveDamage: damageAmount(effectiveDamage),
-    priorHitPoints: input.priorHitPoints,
-    nextHitPoints,
-    destroyed: nextHitPoints === 0,
-  };
-}
-
-function objectDamageTypeIsImmune(damageType: DamageType): boolean {
-  return OBJECT_DAMAGE_IMMUNITIES.some(
-    (immuneDamageType): boolean => immuneDamageType === damageType,
-  );
 }
 
 export function repeatedDamageAllocationNegatedForTarget(

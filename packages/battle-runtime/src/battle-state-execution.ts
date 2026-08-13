@@ -160,6 +160,7 @@ import {
   MovementFeet,
   movementFeet,
   type Condition,
+  type CoverType,
   type DamageDieSize,
   type ReadonlyNonEmptyArray,
   type ResourceCount,
@@ -1526,6 +1527,22 @@ export type BattleOpportunityAttackThreat = {
   readonly reactorId: CombatantId;
 } & BattleOpportunityAttackSelection;
 export type BattleTargetSpatialFact =
+  | {
+      readonly kind: "attackObjectTarget";
+      readonly actorId: CombatantId;
+      readonly objectId: BattleObjectId;
+      readonly range:
+        | { readonly kind: "meleeReach" }
+        | {
+            readonly kind: "rangedRange";
+            readonly band: BattleAttackRangeBand;
+            readonly enemyWithin5FeetCanSeeAttacker: boolean;
+          };
+      readonly attackerCanSeeObject: boolean;
+      readonly cover: CoverType;
+      readonly armorClass: ArmorClass;
+      readonly damageDisposition: BattleObjectDamageDisposition;
+    }
   | ({
       readonly kind: "attackTargetInMeleeReach";
       readonly actorId: CombatantId;
@@ -4297,7 +4314,8 @@ export type BattleTargetChoiceHole = Extract<
   readonly attack?: {
     readonly actorId: CombatantId;
     readonly selection: BattleAttackExecutionSelection;
-    readonly targetConstraint: "meleeReach" | "rangedRange";
+    readonly targetConstraint: AttackTargetConstraint;
+    readonly acceptsObjectTarget?: true;
   };
 };
 export type BattleHelpAttackAllyDecisionHole = {
@@ -4548,12 +4566,18 @@ export type BattleObjectIgnitionDisposition =
   | { readonly kind: "flammableUnattended" }
   | { readonly kind: "notFlammable" }
   | { readonly kind: "wornOrCarried" };
+export type BattleObjectDamageComponent = {
+  readonly damageType: DamageType;
+  readonly rolledDamage: DamageAmount;
+};
 export type BattleObjectDamageOutcome =
   | {
       readonly kind: "hitPoints";
       readonly objectId: BattleObjectId;
-      readonly damageType: DamageType;
+      readonly components: ReadonlyNonEmptyArray<BattleObjectDamageComponent>;
       readonly rolledDamage: DamageAmount;
+      readonly damageAfterImmunities: DamageAmount;
+      readonly damageThreshold: DamageAmount | null;
       readonly effectiveDamage: DamageAmount;
       readonly priorHitPoints: Hp;
       readonly nextHitPoints: Hp;
@@ -4562,7 +4586,7 @@ export type BattleObjectDamageOutcome =
   | {
       readonly kind: "tableResolved";
       readonly objectId: BattleObjectId;
-      readonly damageType: DamageType;
+      readonly components: ReadonlyNonEmptyArray<BattleObjectDamageComponent>;
       readonly rolledDamage: DamageAmount;
     };
 export type BattleObjectIgnitionOutcome = {
@@ -6368,7 +6392,8 @@ export type BattleFill =
             | "spellObjectIgnition"
             | "spellManufacturedMetalObjectTarget"
             | "spellObjectTarget"
-            | "spellObjectTargetSight";
+            | "spellObjectTargetSight"
+            | "attackObjectTarget";
         }
       >[];
     }

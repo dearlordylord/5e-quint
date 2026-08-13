@@ -1,4 +1,5 @@
 // Shared object-target spell attack resolution for direct casts and readied releases.
+// KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
 
 import {
   attackRollHits,
@@ -61,7 +62,8 @@ import {
 import {
   applySpellLightEmitterEffects,
   spellObjectDamageByType,
-  spellObjectDamageOutcomeFromDamageByType,
+  objectDamageComponentsFromMap,
+  objectDamageOutcomeFromComponents,
   spellObjectIgnitionFact,
   spellObjectTargetFact,
   spellObjectTargetSightFact,
@@ -545,10 +547,19 @@ function resolveObjectTargetSpellAttackCore(
     { kind: "object", objectId: input.fillSet.objectTarget.objectId },
     input.invocation,
   );
-  const objectDamage = spellObjectDamageOutcomeFromDamageByType({
+  const objectDamageComponents = objectDamageComponentsFromMap(
+    sourcePenalty.damageByType,
+  );
+  if (objectDamageComponents.tag === "emptyDamageByType") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "A resolved object-damage spell requires at least one rolled damage component.",
+    );
+  }
+  const objectDamage = objectDamageOutcomeFromComponents({
     objectId: input.fillSet.objectTarget.objectId,
-    damageType: damageInvocation.damage.damageType,
-    damageByType: sourcePenalty.damageByType,
+    components: objectDamageComponents.components,
     disposition: objectFact.damageDisposition,
   });
   const objectIgnitions =

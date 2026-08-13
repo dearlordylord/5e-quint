@@ -24,7 +24,11 @@ import {
   STANDARD_ACTION_KINDS,
   type StandardActionKind,
 } from "@dnd/shared/game-facts";
-import { CONDITIONS as ALL_CONDITIONS, ResourceCount } from "@dnd/shared/types";
+import {
+  CONDITIONS as ALL_CONDITIONS,
+  COVER_TYPES,
+  ResourceCount,
+} from "@dnd/shared/types";
 import { BattleCreatureDisplayNameSchema } from "../battle-creature-display-name.ts";
 import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
 import {
@@ -622,7 +626,29 @@ const BattleObjectIgnitionDispositionSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("wornOrCarried") }),
 );
 
+const BattleAttackObjectTargetSpatialFactSchema = Schema.Struct({
+  kind: Schema.Literal("attackObjectTarget"),
+  actorId: CombatantId,
+  objectId: BattleObjectId,
+  range: Schema.Union(
+    Schema.Struct({ kind: Schema.Literal("meleeReach") }),
+    Schema.Struct({
+      kind: Schema.Literal("rangedRange"),
+      band: Schema.Literal(...BATTLE_ATTACK_RANGE_BANDS),
+      enemyWithin5FeetCanSeeAttacker: Schema.Boolean,
+    }),
+  ),
+  attackerCanSeeObject: Schema.Boolean,
+  cover: Schema.Literal(...COVER_TYPES),
+  armorClass: BattleArmorClassSchema,
+  damageDisposition: BattleObjectDamageDispositionSchema,
+});
+type BattleAttackObjectTargetSpatialFactEncoded = Schema.Schema.Encoded<
+  typeof BattleAttackObjectTargetSpatialFactSchema
+>;
+
 const BattleTargetSpatialFactSchema = Schema.Union(
+  BattleAttackObjectTargetSpatialFactSchema,
   Schema.Union(
     Schema.Struct({
       kind: Schema.Literal("attackTargetInMeleeReach"),
@@ -1124,12 +1150,19 @@ const BattleSavingThrowRelationshipFactRequestSchema = Schema.Struct({
   actorId: CombatantId,
 });
 
-export const BattleObjectDamageOutcomeSchema = Schema.Union(
+const BattleObjectDamageOutcomeFieldsSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("hitPoints"),
     objectId: BattleObjectId,
-    damageType: DamageTypeSchema,
+    components: Schema.NonEmptyArray(
+      Schema.Struct({
+        damageType: DamageTypeSchema,
+        rolledDamage: DamageAmount,
+      }),
+    ),
     rolledDamage: DamageAmount,
+    damageAfterImmunities: DamageAmount,
+    damageThreshold: Schema.NullOr(DamageAmount),
     effectiveDamage: DamageAmount,
     priorHitPoints: HpSchema,
     nextHitPoints: HpSchema,
@@ -1138,10 +1171,58 @@ export const BattleObjectDamageOutcomeSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("tableResolved"),
     objectId: BattleObjectId,
-    damageType: DamageTypeSchema,
+    components: Schema.NonEmptyArray(
+      Schema.Struct({
+        damageType: DamageTypeSchema,
+        rolledDamage: DamageAmount,
+      }),
+    ),
     rolledDamage: DamageAmount,
   }),
 );
+
+export const BattleObjectDamageOutcomeSchema =
+  BattleObjectDamageOutcomeFieldsSchema.pipe(
+    Schema.filter(battleObjectDamageOutcomeIsConsistent, {
+      message: () =>
+        "Object damage components, totals, Hit Point transition, and destruction state must agree.",
+    }),
+  );
+
+function battleObjectDamageOutcomeIsConsistent(
+  outcome: typeof BattleObjectDamageOutcomeFieldsSchema.Type,
+): boolean {
+  const rolledDamage = outcome.components.reduce(
+    (total, component) => total + Number(component.rolledDamage),
+    0,
+  );
+  if (Number(outcome.rolledDamage) !== rolledDamage) return false;
+  if (outcome.kind === "tableResolved") return true;
+  const damageAfterImmunities = outcome.components.reduce(
+    (total, component) =>
+      component.damageType === "poison" || component.damageType === "psychic"
+        ? total
+        : total + Number(component.rolledDamage),
+    0,
+  );
+  const effectiveDamage = Number(outcome.effectiveDamage);
+  const thresholdBlocksDamage =
+    outcome.damageThreshold !== null &&
+    damageAfterImmunities < Number(outcome.damageThreshold);
+  const expectedEffectiveDamage = thresholdBlocksDamage
+    ? 0
+    : damageAfterImmunities;
+  const nextHitPoints = Math.max(
+    0,
+    Number(outcome.priorHitPoints) - effectiveDamage,
+  );
+  return (
+    Number(outcome.damageAfterImmunities) === damageAfterImmunities &&
+    effectiveDamage === expectedEffectiveDamage &&
+    Number(outcome.nextHitPoints) === nextHitPoints &&
+    outcome.destroyed === (nextHitPoints === 0)
+  );
+}
 
 export const BattleObjectIgnitionOutcomeSchema = Schema.Struct({
   kind: Schema.Literal("startsBurning"),
@@ -1392,7 +1473,20 @@ const BattleHolePayloadUnionSchema = Schema.Union(
       Schema.Struct({
         actorId: CombatantId,
         selection: BattleAttackExecutionSelectionSchema,
-        targetConstraint: Schema.Literal("meleeReach", "rangedRange"),
+        targetConstraint: Schema.Union(
+          Schema.Struct({
+            kind: Schema.Literal("meleeReach"),
+            reachFeet: MovementFeet,
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("rangedRange"),
+            normalFeet: MovementFeet,
+            longFeet: MovementFeet,
+          }),
+        ),
+        acceptsObjectTarget: Schema.optionalWith(Schema.Literal(true), {
+          exact: true,
+        }),
       }),
       { exact: true },
     ),
@@ -3185,6 +3279,7 @@ type BattleFillEncoded =
       readonly holeId: string;
       readonly value: string;
       readonly spatialFacts: readonly (
+        | BattleAttackObjectTargetSpatialFactEncoded
         | {
             readonly kind: "spellObjectTarget";
             readonly casterId: string;
@@ -4308,6 +4403,7 @@ export const BattleFillSchema: Schema.Schema<
       value: BattleObjectId,
       spatialFacts: Schema.Array(
         Schema.Union(
+          BattleAttackObjectTargetSpatialFactSchema,
           Schema.Struct({
             kind: Schema.Literal("spellObjectTarget"),
             casterId: CombatantId,

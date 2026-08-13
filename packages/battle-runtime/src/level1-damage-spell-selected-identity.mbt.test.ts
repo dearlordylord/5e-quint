@@ -1811,7 +1811,10 @@ function assertStarryWispObjectResolution(
     objectDamage === undefined ||
     objectDamage.kind !== "hitPoints" ||
     objectDamage.objectId !== starryWispObjectId ||
-    objectDamage.damageType !== "radiant" ||
+    objectDamage.components.length !== 1 ||
+    objectDamage.components[0]?.damageType !== "radiant" ||
+    Number(objectDamage.components[0].rolledDamage) !==
+      starryWispObjectDamageRoll ||
     Number(objectDamage.rolledDamage) !== starryWispObjectDamageRoll ||
     Number(objectDamage.effectiveDamage) !== starryWispObjectDamageRoll ||
     Number(objectDamage.priorHitPoints) !== Number(starryWispObjectHitPoints) ||

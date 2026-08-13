@@ -21,8 +21,8 @@ import {
   endBattleRuntimeTurn,
   resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
+  snapshotBattle,
   type BattleRuntimeResolutionResult,
-  type BattleRuntimeSession,
 } from "../../../packages/battle-runtime/src/index.ts";
 import { Either, Match, Schema } from "effect";
 
@@ -31,10 +31,18 @@ import type {
   PlayerContinuation,
   PlayerContinuationOutcome,
   PlayerSdk,
+  ScenarioBattleResolutionResult,
 } from "./continuation-contract.ts";
 import { authoredAttemptBody } from "./attempt-source.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
+import {
+  scenarioInitialRelation,
+  scenarioObjectAttackFills,
+  scenarioSessionWithBattleResult,
+  scenarioTokenId,
+  type ScenarioSession,
+} from "./scenario-session.ts";
 import { isJsonValue } from "./json-value.ts";
 import { decodeSdkCallInput, type SdkCallInput } from "./sdk-replay-input.ts";
 import {
@@ -285,7 +293,8 @@ function transcriptRecords(): readonly unknown[] {
     .map((line): unknown => JSON.parse(line));
 }
 
-function resolutionProjection(result: BattleRuntimeResolutionResult): unknown {
+function resolutionProjection(result: ScenarioBattleResolutionResult): unknown {
+  if (result.tag === "scenarioSessionConflict") return jsonValue(result);
   const { snapshot, ...outcome } = result;
   return jsonValue({
     ...outcome,
@@ -294,24 +303,107 @@ function resolutionProjection(result: BattleRuntimeResolutionResult): unknown {
 }
 
 type AppliedCall = {
-  readonly session: BattleRuntimeSession;
+  readonly session: ScenarioSession;
   readonly result: unknown;
   readonly value: unknown;
 };
 
 const byOperation = Match.discriminator("operation");
+const byResolutionTag = Match.discriminator("tag");
 
-function applyCall(
-  session: BattleRuntimeSession,
-  call: SdkCallInput,
-): AppliedCall {
+function retainScenarioBattlefield(
+  session: ScenarioSession,
+  result: BattleRuntimeResolutionResult,
+): ScenarioBattleResolutionResult {
+  return Match.value(result).pipe(
+    byResolutionTag("resolved", (resolved) => {
+      const updated = scenarioSessionWithBattleResult(
+        session,
+        resolved.session,
+        resolved.objectDamages,
+      );
+      return Either.isLeft(updated)
+        ? {
+            tag: "scenarioSessionConflict" as const,
+            session,
+            issue: updated.left,
+          }
+        : { ...resolved, session: updated.right };
+    }),
+    byResolutionTag("needsHoles", (needsHoles) => {
+      const updated = scenarioSessionWithBattleResult(
+        session,
+        needsHoles.session,
+      );
+      return Either.isLeft(updated)
+        ? {
+            tag: "scenarioSessionConflict" as const,
+            session,
+            issue: updated.left,
+          }
+        : { ...needsHoles, session: updated.right };
+    }),
+    byResolutionTag("invalid", (invalid) => {
+      const updated = scenarioSessionWithBattleResult(session, invalid.session);
+      return Either.isLeft(updated)
+        ? {
+            tag: "scenarioSessionConflict" as const,
+            session,
+            issue: updated.left,
+          }
+        : { ...invalid, session: updated.right };
+    }),
+    Match.exhaustive,
+  );
+}
+
+function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
   return Match.value(call).pipe(
+    byOperation("scenarioInitialRelation", ({ input }) => {
+      const sourceId = scenarioTokenId(session, input.sourceId);
+      const targetId = scenarioTokenId(session, input.targetId);
+      const missingTokenId =
+        sourceId === undefined ? input.sourceId : input.targetId;
+      const result =
+        sourceId === undefined || targetId === undefined
+          ? {
+              tag: "unknown-token" as const,
+              tokenId: missingTokenId,
+              message: `Scenario token ${missingTokenId} has no initial placement.`,
+            }
+          : scenarioInitialRelation({ session, sourceId, targetId });
+      return { session, result: jsonValue(result), value: result };
+    }),
     byOperation("discoverBattleActs", () => {
-      const acts = discoverBattleActs(session);
+      const acts = discoverBattleActs(session.battle);
       return { session, result: jsonValue(acts), value: acts };
     }),
     byOperation("resolveBattleRuntimeSubject", ({ input }) => {
-      const result = resolveBattleRuntimeSubject({ session, ...input });
+      const projectedFills = scenarioObjectAttackFills({
+        session,
+        subject: input.subject,
+        fills: input.fills,
+      });
+      if (Either.isLeft(projectedFills)) {
+        const result: ScenarioBattleResolutionResult = {
+          tag: "invalid",
+          session,
+          reason: "invalidFill",
+          message: projectedFills.left.message,
+          snapshot: snapshotBattle(session.battle.state),
+        };
+        return {
+          session,
+          result: resolutionProjection(result),
+          value: result,
+        };
+      }
+      const battleResult = resolveBattleRuntimeSubject({
+        session: session.battle,
+        subject: input.subject,
+        fills: projectedFills.right,
+      });
+      const result = retainScenarioBattlefield(session, battleResult);
       return {
         session: result.session,
         result: resolutionProjection(result),
@@ -319,7 +411,11 @@ function applyCall(
       };
     }),
     byOperation("resolveBattleRuntimeInterrupt", ({ input }) => {
-      const result = resolveBattleRuntimeInterrupt({ session, ...input });
+      const battleResult = resolveBattleRuntimeInterrupt({
+        session: session.battle,
+        ...input,
+      });
+      const result = retainScenarioBattlefield(session, battleResult);
       return {
         session: result.session,
         result: resolutionProjection(result),
@@ -327,7 +423,11 @@ function applyCall(
       };
     }),
     byOperation("endBattleRuntimeTurn", ({ input }) => {
-      const result = endBattleRuntimeTurn({ session, ...input });
+      const battleResult = endBattleRuntimeTurn({
+        session: session.battle,
+        ...input,
+      });
+      const result = retainScenarioBattlefield(session, battleResult);
       return {
         session: result.session,
         result: resolutionProjection(result),
@@ -341,7 +441,7 @@ function applyCall(
 type ReplayResult =
   | {
       readonly tag: "ready";
-      readonly session: BattleRuntimeSession;
+      readonly session: ScenarioSession;
       readonly calls: readonly SdkCallRecord[];
     }
   | {
@@ -550,7 +650,7 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
 
 function validateOutcome(
   value: unknown,
-  currentSession: BattleRuntimeSession,
+  currentSession: ScenarioSession,
 ): PlayerContinuationOutcome {
   if (!isRecord(value)) {
     fail("Continuation must return a PlayerContinuationOutcome.");
@@ -618,7 +718,7 @@ async function runSubmittedSource(source: string): Promise<unknown> {
 
   const recordedCall = <A>(
     operation: SdkPlayerOperation,
-    suppliedSession: BattleRuntimeSession,
+    suppliedSession: ScenarioSession,
     sessionIsCurrent: boolean,
     input: unknown,
     invoke: () => { readonly value: A; readonly applied: AppliedCall },
@@ -673,7 +773,7 @@ async function runSubmittedSource(source: string): Promise<unknown> {
   try {
     const call = <A>(
       operation: SdkPlayerOperation,
-      suppliedSession: BattleRuntimeSession,
+      suppliedSession: ScenarioSession,
       input: unknown,
     ): A => {
       const sessionIsCurrent =
@@ -696,6 +796,8 @@ async function runSubmittedSource(source: string): Promise<unknown> {
       );
     };
     const sdk: PlayerSdk = {
+      scenarioInitialRelation: ({ session, ...input }) =>
+        call("scenarioInitialRelation", session, input),
       discoverBattleActs: (session) => call("discoverBattleActs", session, {}),
       resolveBattleRuntimeSubject: ({ session, ...input }) =>
         call("resolveBattleRuntimeSubject", session, input),

@@ -50,15 +50,49 @@ export const setupScenario: ScenarioSetup = (context) => {
     battleId: sdk.battleId("tracer-001-goblin-warrior-vs-skeleton"),
     combatants: [goblin.right, skeleton.right],
   });
-  return sdk.isLeft(started)
+  if (sdk.isLeft(started)) {
+    return {
+      kind: "obstructed",
+      obstruction: sdk.battleStateInitIssueMessage(started.left),
+      observation: { operation: "startBattle" },
+    };
+  }
+  const session = sdk.createScenarioSession({
+    battle: started.right,
+    arena: {
+      cells: [
+        { x: 0, y: 0, terrain: "ordinary" },
+        { x: 1, y: 0, terrain: "ordinary" },
+      ],
+      boundaries: [],
+    },
+    placements: [
+      { tokenId: goblin.right.combatantId, coordinate: { x: 0, y: 0 } },
+      { tokenId: skeleton.right.combatantId, coordinate: { x: 1, y: 0 } },
+    ],
+    ambientIllumination: "brightLight",
+    environment: { overhead: { kind: "open" }, barrierHeights: [] },
+    initialRangedAttackEnemyRelationships: [
+      {
+        attackerId: goblin.right.combatantId,
+        enemyId: skeleton.right.combatantId,
+      },
+      {
+        attackerId: skeleton.right.combatantId,
+        enemyId: goblin.right.combatantId,
+      },
+    ],
+    objects: [],
+  });
+  return sdk.isLeft(session)
     ? {
         kind: "obstructed",
-        obstruction: sdk.battleStateInitIssueMessage(started.left),
-        observation: { operation: "startBattle" },
+        obstruction: sdk.scenarioSessionIssueMessage(session.left),
+        observation: { operation: "createScenarioSession" },
       }
     : {
         kind: "ready",
-        session: started.right,
+        session: session.right,
         observation: {
           combatants: ["goblin-warrior", "skeleton"],
           initiatives: [15, 10],

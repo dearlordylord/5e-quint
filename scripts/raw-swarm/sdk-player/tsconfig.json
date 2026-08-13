@@ -36,6 +36,7 @@
       "@dnd/scenario-setup-sdk": ["./scenario-setup-contract.ts"],
       "@dnd/shared/*": ["../../../packages/shared/src/*"],
       "@dnd/shared-algebras/*": ["../../../packages/shared-algebras/src/*"],
+      "@dnd/tactical-space": ["../../../packages/tactical-space/src/index.ts"],
       "@dnd/surface/*": ["../../../packages/surface/src/*"]
     },
     "allowImportingTsExtensions": true,

@@ -50,15 +50,49 @@ export const setupScenario: ScenarioSetup = ({
     battleId: sdk.battleId("external-mixed-session"),
     combatants: [character.right, monster.right],
   });
-  return sdk.isLeft(started)
+  if (sdk.isLeft(started)) {
+    return {
+      kind: "obstructed",
+      obstruction: sdk.battleStateInitIssueMessage(started.left),
+      observation: { phase: "start" },
+    };
+  }
+  const session = sdk.createScenarioSession({
+    battle: started.right,
+    arena: {
+      cells: [
+        { x: 0, y: 0, terrain: "ordinary" },
+        { x: 1, y: 0, terrain: "ordinary" },
+      ],
+      boundaries: [],
+    },
+    placements: [
+      { tokenId: character.right.combatantId, coordinate: { x: 0, y: 0 } },
+      { tokenId: monster.right.combatantId, coordinate: { x: 1, y: 0 } },
+    ],
+    ambientIllumination: "brightLight",
+    environment: { overhead: { kind: "open" }, barrierHeights: [] },
+    initialRangedAttackEnemyRelationships: [
+      {
+        attackerId: character.right.combatantId,
+        enemyId: monster.right.combatantId,
+      },
+      {
+        attackerId: monster.right.combatantId,
+        enemyId: character.right.combatantId,
+      },
+    ],
+    objects: [],
+  });
+  return sdk.isLeft(session)
     ? {
         kind: "obstructed",
-        obstruction: sdk.battleStateInitIssueMessage(started.left),
-        observation: { phase: "start" },
+        obstruction: sdk.scenarioSessionIssueMessage(session.left),
+        observation: { phase: "scenario-session" },
       }
     : {
         kind: "ready",
-        session: started.right,
+        session: session.right,
         observation: { combatants: 2 },
       };
 };

@@ -1029,7 +1029,9 @@ describe("battle fill protocol boundary owners", () => {
       armorClass: armorClass(13),
       damageDisposition: { kind: "hitPoints", hitPoints: Hp(5) },
     });
-    const objectSpatialFact = objectBase.spatialFacts[0];
+    const objectSpatialFact = objectBase.spatialFacts.find(
+      (fact) => fact.kind === "spellObjectTarget",
+    );
     if (objectSpatialFact === undefined) {
       throw new Error("Expected object-target sight fact.");
     }

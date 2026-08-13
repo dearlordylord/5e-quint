@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_SIZE_CHANGE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-creature-size-change
@@ -102,6 +103,12 @@ import {
   shoveForTarget,
 } from "./movement-speed.ts";
 import { attackTargetConstraint } from "./statblock-attacks.ts";
+import {
+  attackRollMissToHitReplacementHolePayloadForAttacker,
+  eligibleAttackDamageDieFloorProcedureRefs,
+  eligibleWeaponDamageDiceRollChoiceProcedureRefs,
+} from "./statblock-attacks.ts";
+import { activeSpellWeaponDamageRiders } from "./damage-helpers.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
   THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
@@ -669,7 +676,9 @@ export function attackTargetHole(
   state: BattleState,
   actorId: CombatantId,
   attack: BoundSupportedAttackActionOption,
-): BattleTargetChoiceHole {
+): BattleTargetChoiceHole & {
+  readonly attack: NonNullable<BattleTargetChoiceHole["attack"]>;
+} {
   return {
     kind: "targetChoice",
     holeId: ATTACK_TARGET_HOLE_ID,
@@ -691,10 +700,68 @@ export function attackTargetHole(
     attack: {
       actorId,
       selection: attackExecutionSelectionForOption(attack),
-      targetConstraint: attackTargetConstraint(attack).kind,
+      targetConstraint: attackTargetConstraint(attack),
     },
     choices: attackTargetChoices(state, actorId, attack),
   };
+}
+
+export function ordinaryAttackTargetHole(
+  state: BattleState,
+  actorId: CombatantId,
+  attack: BoundSupportedAttackActionOption,
+): BattleTargetChoiceHole {
+  const hole = attackTargetHole(state, actorId, attack);
+  return ordinaryObjectAttackOptionIsSupported(state, actorId, attack)
+    ? {
+        ...hole,
+        attack: { ...hole.attack, acceptsObjectTarget: true },
+      }
+    : hole;
+}
+
+export function ordinaryObjectAttackOptionIsSupported(
+  state: BattleState,
+  actorId: CombatantId,
+  attack: BoundSupportedAttackActionOption,
+): boolean {
+  return Match.value(attack).pipe(
+    Match.when({ kind: "weapon" }, (option) => {
+      const actor = state.combatants.get(actorId);
+      return (
+        actor?.origin.kind === "character" &&
+        !option.hasWeaponMastery &&
+        activeSpellWeaponDamageRiders(actor, option).length === 0 &&
+        eligibleWeaponDamageDiceRollChoiceProcedureRefs(state, actorId, option)
+          .length === 0 &&
+        eligibleAttackDamageDieFloorProcedureRefs(
+          state,
+          actorId,
+          option,
+          option.procedureRef,
+        ).length === 0 &&
+        actor.origin.execution.procedureBindings.every(
+          (binding) =>
+            binding.procedure.kind !== "unitFeature" ||
+            binding.procedure.execution.kind !== "attackDamageRider",
+        ) &&
+        attackRollMissToHitReplacementHolePayloadForAttacker(actor)
+          .missToHitReplacements === undefined
+      );
+    }),
+    Match.when({ kind: "unarmedStrike" }, () => false),
+    Match.when(
+      { kind: "statBlockAttack" },
+      (option) =>
+        option.traitAttackRollModes === undefined &&
+        option.attack.onHit.every(
+          (effect) =>
+            effect.kind === "damage" ||
+            effect.kind === "conditional_bonus_damage",
+        ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 export function searchTargetHole(

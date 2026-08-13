@@ -2642,7 +2642,7 @@ function attackTargetFill(
     throw new Error("Expected bound targetChoice attack selection.");
   }
   return targetFill(hole, defenderId, [
-    hole.attack.targetConstraint === "rangedRange"
+    hole.attack.targetConstraint.kind === "rangedRange"
       ? {
           kind: "attackTargetInRangedRange",
           actorId: attackerId,

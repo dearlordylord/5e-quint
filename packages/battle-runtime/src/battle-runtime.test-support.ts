@@ -2496,7 +2496,7 @@ export function targetFill(
                   hole.attack.actorId,
                   targetId,
                   hole.attack.selection,
-                  hole.attack.targetConstraint === "rangedRange"
+                  hole.attack.targetConstraint.kind === "rangedRange"
                     ? "normal"
                     : undefined,
                 ),
@@ -2698,7 +2698,7 @@ export function attackTargetFill(
       targetId,
       boundSelection,
       hole.kind === "targetChoice" &&
-        hole.attack?.targetConstraint === "rangedRange"
+        hole.attack?.targetConstraint.kind === "rangedRange"
         ? "normal"
         : undefined,
     ),

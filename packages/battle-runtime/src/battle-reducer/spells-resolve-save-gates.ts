@@ -10,7 +10,7 @@
 // Owns save-gated damage, condition, and attack-roll-advantage procedures.
 
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
-// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
 import { optionalProperty } from "../optional-property.ts";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
@@ -83,7 +83,8 @@ import {
   heightenedSpellTargetChoiceHole,
   spellAbilityChoiceHole,
   spellObjectDamageByType,
-  spellObjectDamageOutcomeFromDamageByType,
+  objectDamageComponentsFromMap,
+  objectDamageOutcomeFromComponents,
   spellSavingThrowOutcomeHole,
   spellSavingThrowTargeting,
   spellTargetHole,
@@ -1756,11 +1757,18 @@ export function resolveSaveGateDamageSpellAct(input: {
     if (check.tag === "needsHoles") {
       missingSourcePenaltyHoles.push(...check.holes);
     } else {
-      objectDamages = postSaveAreaObjectDamages({
+      const areaObjectDamages = postSaveAreaObjectDamages({
         facts: objectDamageFacts,
-        invocation: damageInvocation,
         damageByType: check.damageByType,
       });
+      if (areaObjectDamages.tag === "emptyDamageByType") {
+        return invalidResult(
+          input.input.state,
+          "invalidFill",
+          "Resolved area object damage requires at least one rolled damage component.",
+        );
+      }
+      objectDamages = areaObjectDamages.objectDamages;
     }
   }
   if (missingSourcePenaltyHoles.length > 0) {
@@ -3651,20 +3659,25 @@ function postSaveAreaObjectDamages(input: {
       { readonly kind: "shatterArea" }
     >["nonmagicalUnattendedObjectDamageFacts"][number]
   >;
-  readonly invocation: Extract<
-    BattleExecutableSpellInvocation,
-    { readonly procedure: "saveGatedDamage" }
-  >;
   readonly damageByType: ReadonlyMap<DamageType, number>;
-}): readonly BattleObjectDamageOutcome[] {
-  return input.facts.map((fact) =>
-    spellObjectDamageOutcomeFromDamageByType({
-      objectId: fact.objectId,
-      damageType: input.invocation.damage.damageType,
-      damageByType: input.damageByType,
-      disposition: fact.disposition,
-    }),
-  );
+}):
+  | Readonly<{
+      readonly tag: "objectDamages";
+      readonly objectDamages: readonly BattleObjectDamageOutcome[];
+    }>
+  | Readonly<{ readonly tag: "emptyDamageByType" }> {
+  const components = objectDamageComponentsFromMap(input.damageByType);
+  if (components.tag === "emptyDamageByType") return components;
+  return {
+    tag: "objectDamages",
+    objectDamages: input.facts.map((fact) =>
+      objectDamageOutcomeFromComponents({
+        objectId: fact.objectId,
+        components: components.components,
+        disposition: fact.disposition,
+      }),
+    ),
+  };
 }
 
 function validateThunderwaveAreaEffect(input: {

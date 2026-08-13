@@ -1,7 +1,7 @@
 // Main Attack action resolution extracted from attack-resolution.ts.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.ATTACK_BRANCHES
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
@@ -12,7 +12,10 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 
-import { optionalProperty } from "../optional-property.ts";
+import {
+  nonEmptyArrayProperty,
+  optionalProperty,
+} from "../optional-property.ts";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { Match } from "effect";
 
@@ -46,6 +49,7 @@ import {
   attackRollModeWithOptionalOngoingFeature,
   attackRollOngoingFeatureActivationProfile,
   attackRollOngoingFeatureActivations,
+  consumeSelfAttackRollEffects,
   weaponMasteryCleaveAttackRollHole,
   weaponMasteryCleaveDamageHole,
   weaponMasteryCleaveDecisionHole,
@@ -68,6 +72,7 @@ import {
   recordAttackRollOngoingFeatures,
   ongoingFeatureEnemyRelationshipDecisionRequired,
   requiredAttackRollMode,
+  requiredOrdinaryObjectAttackRollMode,
   tacticalMasterAttackWithReplacement,
   tacticalMasterReplacementDecisionHole,
 } from "./attack-roll.ts";
@@ -128,6 +133,8 @@ import { snapshotBattle } from "./battle-snapshot.ts";
 import {
   attackTargetHole,
   grappleOutcomeHole,
+  ordinaryAttackTargetHole,
+  ordinaryObjectAttackOptionIsSupported,
   revealHidden,
 } from "./hole-helpers.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
@@ -145,7 +152,7 @@ import {
 import { applyBattleMovement } from "./battle-movement.ts";
 import { parseBattleMovement } from "./movement-procedures.ts";
 
-import { attackFillSet } from "./attack-fill-set.ts";
+import { attackFillSet, selectedAttackFillSet } from "./attack-fill-set.ts";
 import {
   GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_ID,
   GRAPPLER_PUNCH_AND_GRAB_DECISION_HOLE_INSTANCE,
@@ -191,6 +198,7 @@ import { combatantHasGrapplerSupportProfile } from "./grappler-support-profile.t
 
 import {
   attackCanCarryKnockOutChoice,
+  attackTargetConstraint,
   eligibleAttackDamageRiders,
   frenzyDamageTypeDecision,
   eligibleAttackDamageDieFloorProcedureRefs,
@@ -239,6 +247,7 @@ import type {
   BattleInterruptedProcedure,
   BattleResolutionResult,
   BattleShovePushOutcome,
+  SpellAttackDamageComponent,
   BattleState,
   BattleTargetSpatialFact,
   BattleUnitFeatureDecisionHole,
@@ -247,13 +256,18 @@ import {
   sameBattleSubject,
   type BattleMovementSpeedKind,
 } from "../battle-subjects.ts";
-import type { AttackFillSet } from "./battle-runtime-protocol.ts";
+import type {
+  AttackFillSet,
+  OrdinaryObjectAttackFillSet,
+} from "./battle-runtime-protocol.ts";
 import type {
   BoundSupportedAttackActionOption,
   SupportedAttackActionOption,
 } from "../battle-action-options.ts";
 import { battleTablePositionId, type CombatantId } from "../identity.ts";
 import type { BattleProcedureExecutionRef } from "../identity.ts";
+import type { DamageType } from "@dnd/surface/surface/types";
+import { objectDamageOutcomeFromComponents } from "./object-damage.ts";
 import {
   attackRollHitsWithCriticalThreshold,
   attackRollIsCriticalHit,
@@ -1155,6 +1169,311 @@ function grapplerPunchAndGrabFillIsAbsent(
   );
 }
 
+function resolveOrdinaryObjectAttack<
+  Attack extends BoundSupportedAttackActionOption,
+>(input: {
+  readonly input: AttackProcedureResolutionInput;
+  readonly attack: Attack;
+  readonly attackerId: CombatantId;
+  readonly fillSet: OrdinaryObjectAttackFillSet;
+  readonly spendAttackProcedure: SpendAttackProcedure<Attack>;
+}): BattleResolutionResult {
+  const { attack, attackerId, fillSet } = input;
+  if (
+    input.input.subject.tag !== "action" ||
+    input.input.subject.action !== "attack" ||
+    !ordinaryObjectAttackOptionIsSupported(
+      input.input.state,
+      attackerId,
+      attack,
+    )
+  ) {
+    return invalidResult(
+      input.input.state,
+      "unsupportedActOption",
+      "This attack procedure does not support an ordinary object target.",
+    );
+  }
+  const objectFact =
+    fillSet.target.spatialFacts.length === 1
+      ? fillSet.target.spatialFacts[0]
+      : undefined;
+  const objectFactIssues =
+    objectFact === undefined
+      ? ["exactly one object attack table fact is required"]
+      : [
+          ...(objectFact.actorId === attackerId
+            ? []
+            : ["the table fact actor does not match the attacker"]),
+          ...(objectFact.objectId === fillSet.target.objectId
+            ? []
+            : ["the table fact object does not match the selected object"]),
+          ...(objectFact.cover === "total"
+            ? ["Total Cover prevents direct targeting"]
+            : []),
+          ...(attackTargetConstraint(attack).kind === objectFact.range.kind
+            ? []
+            : ["the table range fact does not satisfy the selected attack"]),
+        ];
+  if (objectFact === undefined || objectFactIssues.length > 0) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      `Invalid object attack target: ${objectFactIssues.join("; ")}.`,
+    );
+  }
+  if (fillSet.attackRoll === undefined) {
+    if (fillSet.damageRoll !== undefined) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
+      );
+    }
+    return needsHolesResult(input.input.state, input.input.subject, [
+      attackRollHole(
+        input.input.state.combatants.get(attackerId),
+        attack,
+        requiredOrdinaryObjectAttackRollMode(
+          input.input.state,
+          attackerId,
+          attack,
+          objectFact,
+        ),
+      ),
+    ]);
+  }
+  if (
+    !attackRollResultIsValid(fillSet.attackRoll) ||
+    fillSet.attackRoll.activatedOngoingFeatureProcedureRef !== undefined ||
+    fillSet.attackRoll.missToHitReplacementProcedureRef !== undefined ||
+    fillSet.attackRoll.spellAttackReroll !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Object attack roll does not match the ordinary attack-roll protocol.",
+    );
+  }
+  const requiredRollMode = requiredOrdinaryObjectAttackRollMode(
+    input.input.state,
+    attackerId,
+    attack,
+    objectFact,
+  );
+  if (
+    !input.input.state.currentTurnResources.attackRollMadeThisTurn &&
+    !attackRollModeMatches(fillSet.attackRoll, requiredRollMode)
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Attack roll mode does not match the current object attack rule.",
+    );
+  }
+  const attacker = input.input.state.combatants.get(attackerId);
+  if (
+    d20TestNaturalOneRerollRollDecisionRequired({
+      actor: attacker,
+      originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+      rollMode: fillSet.attackRoll.rollMode,
+      rolledD20s: fillSet.attackRoll.rolledD20s,
+      decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+    })
+  ) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      attackRollHoleWithD20TestNaturalOneRerollOption(
+        attackRollHole(attacker, attack, requiredRollMode),
+      ),
+    ]);
+  }
+  const rerollIssue = d20TestNaturalOneRerollRollIssue({
+    actor: attacker,
+    total: fillSet.attackRoll.total,
+    originalNaturalD20: Number(fillSet.attackRoll.naturalD20),
+    rollMode: fillSet.attackRoll.rollMode,
+    rolledD20s: fillSet.attackRoll.rolledD20s,
+    decision: fillSet.attackRoll.d20TestNaturalOneReroll,
+    requiredRollMode,
+    otherD20RerollPresent: false,
+  });
+  if (rerollIssue !== null) {
+    return invalidResult(input.input.state, "invalidFill", rerollIssue);
+  }
+  const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
+    fillSet.attackRoll,
+  );
+  const coverBonus =
+    objectFact.cover === "half"
+      ? 2
+      : objectFact.cover === "threeQuarters"
+        ? 5
+        : 0;
+  const hit = attackRollHitsWithCriticalThreshold(
+    effectiveAttackRoll,
+    Number(objectFact.armorClass) + coverBonus,
+    criticalThresholdForAttack(
+      input.input.state.combatants.get(attackerId),
+      attack,
+    ),
+  );
+  const attackRollState = battleStateAfterTargetActionEarlyEndForActor(
+    input.input.state,
+    attackerId,
+  );
+  const attackRollObservedState = {
+    ...revealHidden(attackRollState, attackerId),
+    currentTurnResources: {
+      ...attackRollState.currentTurnResources,
+      attackRollMadeThisTurn: true,
+    },
+  };
+  const attackRolledState = consumeSelfAttackRollEffects(
+    attackRollObservedState,
+    attackerId,
+  );
+  if (!hit) {
+    if (fillSet.damageRoll !== undefined) {
+      return invalidResult(
+        input.input.state,
+        "invalidFill",
+        "Attack damage can only be filled after a hit.",
+      );
+    }
+    return input.spendAttackProcedure(attackRolledState, attackerId, attack);
+  }
+
+  const spellWeaponDamageRiders = activeSpellWeaponDamageRiders(
+    attackRolledState.combatants.get(attackerId),
+    attack,
+  );
+  const damage = ordinaryObjectAttackDamage({
+    input: input.input,
+    attack,
+    attackerId,
+    fillSet,
+    attackRolledState,
+    effectiveAttackRoll,
+    spellWeaponDamageRiders,
+  });
+  if (damage.tag === "resolution") return damage.result;
+  const damageEntries = damage.entries;
+  const primaryDamage = damageEntries[0];
+  if (primaryDamage === undefined) {
+    return invalidResult(
+      input.input.state,
+      "unsupportedActOption",
+      "The selected attack has no supported object damage component.",
+    );
+  }
+  const objectDamage = objectDamageOutcomeFromComponents({
+    objectId: fillSet.target.objectId,
+    components: [primaryDamage, ...damageEntries.slice(1)],
+    disposition: objectFact.damageDisposition,
+  });
+  const spent = input.spendAttackProcedure(
+    attackRolledState,
+    attackerId,
+    attack,
+  );
+  return spent.tag === "resolved"
+    ? { ...spent, ...nonEmptyArrayProperty("objectDamages", [objectDamage]) }
+    : spent;
+}
+
+type OrdinaryObjectAttackDamage =
+  | Readonly<{
+      readonly tag: "entries";
+      readonly entries: readonly {
+        readonly damageType: DamageType;
+        readonly amount: number;
+      }[];
+    }>
+  | Readonly<{
+      readonly tag: "resolution";
+      readonly result: BattleResolutionResult;
+    }>;
+
+function ordinaryObjectAttackDamage<
+  Attack extends BoundSupportedAttackActionOption,
+>(input: {
+  readonly input: AttackProcedureResolutionInput;
+  readonly attack: Attack;
+  readonly attackerId: CombatantId;
+  readonly fillSet: OrdinaryObjectAttackFillSet;
+  readonly attackRolledState: BattleState;
+  readonly effectiveAttackRoll: BattleAttackRollResult;
+  readonly spellWeaponDamageRiders: readonly SpellAttackDamageComponent[];
+}): OrdinaryObjectAttackDamage {
+  const fixedDamage = fixedAttackDamageByTypeEntries(
+    input.attackRolledState,
+    input.attackRolledState.combatants.get(input.attackerId),
+    input.attack,
+    input.effectiveAttackRoll,
+  );
+  if (fixedDamage !== null) {
+    return input.fillSet.damageRoll === undefined
+      ? { tag: "entries", entries: fixedDamage }
+      : {
+          tag: "resolution",
+          result: invalidResult(
+            input.input.state,
+            "invalidFill",
+            "Fixed attack damage does not use a rolled damage fill.",
+          ),
+        };
+  }
+  const critical = attackRollIsCriticalHit(
+    input.effectiveAttackRoll,
+    criticalThresholdForAttack(
+      input.attackRolledState.combatants.get(input.attackerId),
+      input.attack,
+    ),
+  );
+  if (input.fillSet.damageRoll === undefined) {
+    return {
+      tag: "resolution",
+      result: needsHolesResult(input.attackRolledState, input.input.subject, [
+        attackDamageHole(
+          input.attack,
+          critical,
+          input.effectiveAttackRoll,
+          [],
+          input.spellWeaponDamageRiders,
+        ),
+      ]),
+    };
+  }
+  const damageIssue = validateAttackDamageFill(
+    input.fillSet.damageRoll,
+    input.attack,
+    critical,
+    input.effectiveAttackRoll,
+    [],
+    input.spellWeaponDamageRiders,
+  );
+  if (damageIssue !== null) {
+    return {
+      tag: "resolution",
+      result: invalidResult(input.input.state, "invalidFill", damageIssue),
+    };
+  }
+  return {
+    tag: "entries",
+    entries: attackDamageByTypeEntries(
+      input.attackRolledState,
+      input.attackRolledState.combatants.get(input.attackerId),
+      input.attack,
+      input.attack.procedureRef,
+      input.fillSet.damageRoll,
+      critical,
+      input.effectiveAttackRoll,
+      [],
+      input.spellWeaponDamageRiders,
+    ),
+  };
+}
+
 export function resolveSelectedAttackProcedure<
   Attack extends BoundSupportedAttackActionOption,
 >(
@@ -1168,13 +1487,36 @@ export function resolveSelectedAttackProcedure<
   const pendingAttackDamageAdditions = input.pendingAttackDamageAdditions ?? [];
 
   const attackerId = battleAttackHostParticipantId(input.subject);
-  const fillSet = attackFillSet(input.fills, attackerId, input.state);
-  /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (fillSet.tag === "invalid") {
-    /* v8 ignore next -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.state, "invalidFill", fillSet.message);
+  const parsedFillSet = selectedAttackFillSet(
+    input.fills,
+    attackerId,
+    input.state,
+  );
+  const targetBranch = Match.value(parsedFillSet).pipe(
+    Match.when({ tag: "invalid" }, (invalid) => ({
+      tag: "result" as const,
+      result: invalidResult(input.state, "invalidFill", invalid.message),
+    })),
+    Match.when({ tag: "objectTarget" }, (fillSet) => ({
+      tag: "result" as const,
+      result: resolveOrdinaryObjectAttack({
+        input,
+        attack,
+        attackerId,
+        fillSet,
+        spendAttackProcedure,
+      }),
+    })),
+    Match.when({ tag: "ok" }, (fillSet) => ({
+      tag: "creature" as const,
+      fillSet,
+    })),
+    Match.exhaustive,
+  );
+  if (targetBranch.tag === "result") {
+    return targetBranch.result;
   }
-  /* v8 ignore stop */
+  const { fillSet } = targetBranch;
   if (fillSet.targetId == null) {
     /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
     if (
@@ -1191,7 +1533,9 @@ export function resolveSelectedAttackProcedure<
     }
     /* v8 ignore stop */
     return needsHolesResult(input.state, input.subject, [
-      attackTargetHole(input.state, attackerId, attack),
+      input.subject.tag === "action" && input.subject.action === "attack"
+        ? ordinaryAttackTargetHole(input.state, attackerId, attack)
+        : attackTargetHole(input.state, attackerId, attack),
     ]);
   }
 

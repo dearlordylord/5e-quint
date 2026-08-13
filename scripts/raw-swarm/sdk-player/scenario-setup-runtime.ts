@@ -2,18 +2,19 @@ import { pathToFileURL } from "node:url";
 import {
   battleCreatureInitFromStatBlock,
   battleId,
+  battleObjectId,
   battleStateInitIssueMessage,
   combatantId,
   initiativeScore,
-  isBattleRuntimeSession,
   startBattle,
-  type BattleRuntimeSession,
 } from "../../../packages/battle-runtime/src/index.ts";
 import {
   characterBattleRuntimeIssueMessage,
   characterSheetBattleInit,
 } from "../../../packages/character-battle-runtime/src/index.ts";
 import type { FreshCharacterSheet } from "../../../packages/character-sheet-runtime/src/index.ts";
+import { armorClass } from "../../../packages/shared-algebras/src/armor-class-algebra.ts";
+import { Hp, movementFeet } from "../../../packages/shared/src/types.ts";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -27,11 +28,17 @@ import { Either, Match } from "effect";
 import type { JsonValue } from "./continuation-contract.ts";
 import type { ScenarioSetupContext } from "./scenario-setup-contract.ts";
 import { isJsonValue } from "./json-value.ts";
+import {
+  createScenarioSession,
+  isScenarioSession,
+  scenarioSessionIssueMessage,
+  type ScenarioSession,
+} from "./scenario-session.ts";
 
 type ScenarioSessionResult =
   | {
       readonly tag: "ready";
-      readonly session: BattleRuntimeSession;
+      readonly session: ScenarioSession;
       readonly observation: JsonValue;
     }
   | {
@@ -71,12 +78,18 @@ function setupContext(
             sdk: {
               battleCreatureInitFromStatBlock,
               battleId,
+              battleObjectId,
               battleStateInitIssueMessage,
               characterBattleRuntimeIssueMessage,
               characterSheetBattleInit,
               combatantId,
               initiativeScore,
               startBattle,
+              armorClass,
+              hp: Hp,
+              movementFeet,
+              createScenarioSession,
+              scenarioSessionIssueMessage,
               isLeft: Either.isLeft,
             },
           },
@@ -122,7 +135,7 @@ function validateOutcome(outcome: unknown): ScenarioSessionResult {
   const observation = outcome.observation;
   return Match.value(outcome.kind).pipe(
     Match.when("ready", () =>
-      isBattleRuntimeSession(outcome.session)
+      isScenarioSession(outcome.session)
         ? {
             tag: "ready" as const,
             session: outcome.session,
@@ -130,7 +143,7 @@ function validateOutcome(outcome: unknown): ScenarioSessionResult {
           }
         : {
             tag: "invalid" as const,
-            message: "Scenario setup returned an invalid battle session.",
+            message: "Scenario setup returned an invalid scenario session.",
           },
     ),
     Match.when("obstructed", () =>

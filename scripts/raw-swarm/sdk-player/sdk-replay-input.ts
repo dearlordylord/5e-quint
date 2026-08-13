@@ -12,6 +12,13 @@ import type { SdkCallRecord } from "./sdk-transcript.ts";
 
 export type SdkCallInput =
   | {
+      readonly operation: "scenarioInitialRelation";
+      readonly input: {
+        readonly sourceId: string;
+        readonly targetId: string;
+      };
+    }
+  | {
       readonly operation: "discoverBattleActs";
       readonly input: Readonly<Record<string, never>>;
     }
@@ -44,6 +51,10 @@ type ParseResult<A> =
   | { readonly tag: "invalid"; readonly message: string };
 
 const EmptyInputSchema = Schema.Struct({});
+const InitialRelationInputSchema = Schema.Struct({
+  sourceId: Schema.NonEmptyTrimmedString,
+  targetId: Schema.NonEmptyTrimmedString,
+});
 const ResolveInputSchema = Schema.Struct({
   subject: BattleSubjectSchema,
   fills: Schema.Array(BattleFillSchema),
@@ -58,6 +69,12 @@ export function decodeSdkCallInput(
   call: Pick<SdkCallRecord, "operation" | "input">,
 ): ParseResult<SdkCallInput> {
   return Match.value(call.operation).pipe(
+    Match.when("scenarioInitialRelation", () =>
+      decodeInput(InitialRelationInputSchema, call.input, (decoded) => ({
+        operation: "scenarioInitialRelation",
+        input: decoded,
+      })),
+    ),
     Match.when("discoverBattleActs", () =>
       decodeInput(EmptyInputSchema, call.input, (decoded) => ({
         operation: "discoverBattleActs",

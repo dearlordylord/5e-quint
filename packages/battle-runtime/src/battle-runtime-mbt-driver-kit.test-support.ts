@@ -18092,7 +18092,7 @@ function targetFill(
     hole.attack === undefined
       ? []
       : [
-          hole.attack.targetConstraint === "meleeReach"
+          hole.attack.targetConstraint.kind === "meleeReach"
             ? {
                 kind: "attackTargetInMeleeReach" as const,
                 actorId: hole.attack.actorId,

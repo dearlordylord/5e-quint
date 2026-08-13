@@ -1,30 +1,50 @@
 import type {
   AvailableBattleAct,
   BattleFill,
+  BattleObjectId,
   BattleRuntimeResolutionResult,
-  BattleRuntimeSession,
   BattleSubject,
   CombatantId,
 } from "@dnd/battle-runtime";
+import type { ScenarioSession } from "./scenario-session.ts";
+import type { ScenarioSessionUpdateIssue } from "./scenario-session.ts";
+import type { ScenarioInitialRelationResult } from "./scenario-session.ts";
+
+export type ScenarioBattleResolutionResult =
+  | (BattleRuntimeResolutionResult extends infer Result
+      ? Result extends BattleRuntimeResolutionResult
+        ? Omit<Result, "session"> & { readonly session: ScenarioSession }
+        : never
+      : never)
+  | {
+      readonly tag: "scenarioSessionConflict";
+      readonly session: ScenarioSession;
+      readonly issue: ScenarioSessionUpdateIssue;
+    };
 
 export type PlayerSdk = {
+  readonly scenarioInitialRelation: (input: {
+    readonly session: ScenarioSession;
+    readonly sourceId: CombatantId | BattleObjectId;
+    readonly targetId: CombatantId | BattleObjectId;
+  }) => ScenarioInitialRelationResult;
   readonly discoverBattleActs: (
-    session: BattleRuntimeSession,
+    session: ScenarioSession,
   ) => readonly AvailableBattleAct[];
   readonly resolveBattleRuntimeSubject: (input: {
-    readonly session: BattleRuntimeSession;
+    readonly session: ScenarioSession;
     readonly subject: BattleSubject;
     readonly fills: readonly BattleFill[];
-  }) => BattleRuntimeResolutionResult;
+  }) => ScenarioBattleResolutionResult;
   readonly resolveBattleRuntimeInterrupt: (input: {
-    readonly session: BattleRuntimeSession;
+    readonly session: ScenarioSession;
     readonly fill: Extract<BattleFill, { readonly kind: "interruptDecision" }>;
-  }) => BattleRuntimeResolutionResult;
+  }) => ScenarioBattleResolutionResult;
   readonly endBattleRuntimeTurn: (input: {
-    readonly session: BattleRuntimeSession;
+    readonly session: ScenarioSession;
     readonly actorId: CombatantId;
     readonly fills?: readonly BattleFill[];
-  }) => BattleRuntimeResolutionResult;
+  }) => ScenarioBattleResolutionResult;
 };
 
 export type JsonValue =
@@ -36,19 +56,19 @@ export type JsonValue =
   | { readonly [key: string]: JsonValue };
 
 export type PlayerContinuationContext = {
-  readonly session: BattleRuntimeSession;
+  readonly session: ScenarioSession;
   readonly sdk: PlayerSdk;
 };
 
 export type PlayerContinuationOutcome =
   | {
       readonly kind: "continue";
-      readonly session: BattleRuntimeSession;
+      readonly session: ScenarioSession;
       readonly observation: JsonValue;
     }
   | {
       readonly kind: "playerConcluded";
-      readonly session: BattleRuntimeSession;
+      readonly session: ScenarioSession;
       readonly observation: JsonValue;
       readonly conclusion: string;
     };

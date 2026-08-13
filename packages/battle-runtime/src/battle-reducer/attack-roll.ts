@@ -5,6 +5,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.RELATIONSHIP_DISCOVERY
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
 
 import {
   nonEmptyArrayProperty,
@@ -373,10 +374,14 @@ function objectTargetAttackRollSourceFlags(
   attackerId: CombatantId,
   targetObjectId: BattleObjectId | undefined,
   attackerCanSeeObject: boolean | undefined,
+  attack?: SupportedAttackActionOption,
 ): AttackRollSourceFlags {
   const attacker = state.combatants.get(attackerId);
   const hasAdvantage =
-    activeEffectGrantsAttackRollMode(state, attacker, undefined, "advantage") ||
+    activeEffectGrantsAttackRollMode(state, attacker, undefined, "advantage", {
+      attack,
+      ...optionalProperty("attackerCanSeeTarget", attackerCanSeeObject),
+    }) ||
     objectOutlineGrantsAttackRollAdvantage(
       state.objectOutlines,
       targetObjectId,
@@ -389,6 +394,10 @@ function objectTargetAttackRollSourceFlags(
       attacker,
       undefined,
       "disadvantage",
+      {
+        attack,
+        ...optionalProperty("attackerCanSeeTarget", attackerCanSeeObject),
+      },
     );
   return { hasAdvantage, hasDisadvantage };
 }
@@ -423,6 +432,49 @@ export function requiredSpellObjectTargetAttackRollMode(
       invocation,
       "disadvantage",
     );
+  return attackRollModeFromSources(hasAdvantage, hasDisadvantage);
+}
+
+export function requiredOrdinaryObjectAttackRollMode(
+  state: BattleState,
+  attackerId: CombatantId,
+  attack: SupportedAttackActionOption,
+  fact: Extract<
+    BattleTargetSpatialFact,
+    { readonly kind: "attackObjectTarget" }
+  >,
+): AttackRollMode | undefined {
+  const attacker = state.combatants.get(attackerId);
+  const sources = objectTargetAttackRollSourceFlags(
+    state,
+    attackerId,
+    fact.objectId,
+    fact.attackerCanSeeObject,
+    attack,
+  );
+  const hasAdvantage =
+    sources.hasAdvantage ||
+    ongoingFeatureGrantsAttackRollMode(
+      state,
+      attacker,
+      undefined,
+      "advantage",
+      attack,
+    );
+  const hasDisadvantage =
+    sources.hasDisadvantage ||
+    !fact.attackerCanSeeObject ||
+    (fact.range.kind === "rangedRange" &&
+      (fact.range.band === "long" ||
+        fact.range.enemyWithin5FeetCanSeeAttacker)) ||
+    ongoingFeatureGrantsAttackRollMode(
+      state,
+      attacker,
+      undefined,
+      "disadvantage",
+      attack,
+    ) ||
+    state.grapples.some((grapple) => grapple.targetId === attackerId);
   return attackRollModeFromSources(hasAdvantage, hasDisadvantage);
 }
 
@@ -669,7 +721,6 @@ export function ongoingFeatureGrantsAttackRollMode(
 ): boolean {
   const outgoing =
     isCharacterBattleCreatureState(attacker) &&
-    target !== undefined &&
     [...activeOngoingFeatureOccurrencesForCombatant(state, attacker)].some(
       ([key]) =>
         ongoingFeatureProfileForSourceKey(attacker, key)?.rollModifiers.some(

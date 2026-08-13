@@ -15,6 +15,7 @@ import {
   arenaSnapshot,
   commitPreview,
   createState,
+  interveningTokens,
   occupantsAt,
   parseCoordinate,
   parseArena,
@@ -29,6 +30,7 @@ import {
   removeToken,
   renderRelation,
   renderRoute,
+  restoreState,
   snapshot,
 } from "./index";
 
@@ -125,17 +127,79 @@ function squareDefinition(
 function boundary(
   first: { readonly x: number; readonly y: number },
   second: { readonly x: number; readonly y: number },
-  facts: Partial<ArenaDefinition["boundaries"][number]> = {},
+  facts: Partial<Omit<ArenaDefinition["boundaries"][number], "cover">> & {
+    readonly cover?: CoverDegree;
+  } = {},
 ): ArenaDefinition["boundaries"][number] {
   return {
     between: [first, second],
     traversal: facts.traversal ?? "open",
     sight: facts.sight ?? "open",
-    cover: facts.cover ?? "none",
+    cover: { kind: "intervening", degree: facts.cover ?? "none" },
   };
 }
 
 describe("public arena and state seam", () => {
+  it("restores the opaque query state from its canonical evidence snapshots", () => {
+    const map = arena(squareDefinition(3, 1));
+    let state = createState(map);
+    state = place(state, "source", { x: 0, y: 0 });
+    state = place(state, "target", { x: 2, y: 0 });
+
+    const restored = value(restoreState(arenaSnapshot(map), snapshot(state)));
+
+    expect(snapshot(restored)).toEqual(snapshot(state));
+    expect(
+      value(relationBetween(restored, token("source"), token("target"))),
+    ).toEqual(value(relationBetween(state, token("source"), token("target"))));
+  });
+
+  it("rejects protected-occupant Cover with no protective degree", () => {
+    const result = parseArena({
+      cells: [
+        { x: 0, y: 0, terrain: "ordinary" },
+        { x: 1, y: 0, terrain: "ordinary" },
+      ],
+      boundaries: [
+        {
+          between: [
+            { x: 0, y: 0 },
+            { x: 1, y: 0 },
+          ],
+          traversal: "open",
+          sight: "open",
+          cover: {
+            kind: "protected-occupant",
+            degree: "none",
+            protectedCell: { x: 1, y: 0 },
+          },
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "error",
+      issues: [{ tag: "invalid-cover", path: "boundaries[0].cover" }],
+    });
+  });
+
+  it("finds occupied cells crossed away from their centers", () => {
+    const map = arena(squareDefinition(5, 2));
+    let state = createState(map);
+    state = place(state, "source", { x: 0, y: 0 });
+    state = place(state, "off-center-interceptor", { x: 2, y: 0 });
+    state = place(state, "outside-ray", { x: 1, y: 1 });
+    state = place(state, "target", { x: 4, y: 1 });
+
+    expect(
+      value(interveningTokens(state, token("source"), token("target"))),
+    ).toEqual({
+      source: "source",
+      target: "target",
+      tokens: ["off-center-interceptor"],
+    });
+  });
+
   it("aggregates independent cell and boundary definition issues", () => {
     const result = parseArena({
       cells: [
@@ -160,7 +224,7 @@ describe("public arena and state seam", () => {
           ],
           traversal: "open",
           sight: "open",
-          cover: "none",
+          cover: { kind: "intervening", degree: "none" },
         },
       ],
     });
@@ -460,6 +524,41 @@ describe("static boundaries and geometric relations", () => {
     expect(reverse.sight).toBe(forward.sight);
   });
 
+  it("applies protected-occupant Cover only to a target in the protected cell", () => {
+    const map = arena({
+      cells: squareDefinition(3, 1).cells,
+      boundaries: [
+        {
+          between: [
+            { x: 0, y: 0 },
+            { x: 1, y: 0 },
+          ],
+          traversal: "open",
+          sight: "open",
+          cover: {
+            kind: "protected-occupant",
+            degree: "half",
+            protectedCell: { x: 1, y: 0 },
+          },
+        },
+      ],
+    });
+    let state = createState(map);
+    state = place(state, "west", { x: 0, y: 0 });
+    state = place(state, "occupant", { x: 1, y: 0 });
+    state = place(state, "east", { x: 2, y: 0 });
+
+    expect(
+      value(relationBetween(state, token("west"), token("occupant"))).cover,
+    ).toBe("half");
+    expect(
+      value(relationBetween(state, token("occupant"), token("west"))).cover,
+    ).toBe("none");
+    expect(
+      value(relationBetween(state, token("west"), token("east"))).cover,
+    ).toBe("none");
+  });
+
   it("keeps named sight and Cover cases independent", () => {
     const isolatedBlocked = arena(
       squareDefinition(
@@ -662,7 +761,7 @@ describe("public error protocol seam", () => {
           ],
           traversal: "open",
           sight: "open",
-          cover: "none",
+          cover: { kind: "intervening", degree: "none" },
         },
         boundary({ x: 0, y: 0 }, { x: 1, y: 0 }),
         boundary({ x: 1, y: 0 }, { x: 0, y: 0 }),
@@ -1771,8 +1870,8 @@ function oracleRayFacts(
     ) {
       return highest;
     }
-    return coverRanks[boundary.cover] > coverRanks[highest]
-      ? boundary.cover
+    return coverRanks[boundary.cover.degree] > coverRanks[highest]
+      ? boundary.cover.degree
       : highest;
   }, "none");
   return {
@@ -2044,7 +2143,9 @@ describe("public property seam", () => {
         } as const;
         const expectedCover = definition.boundaries.reduce<CoverDegree>(
           (highest, fact) =>
-            coverRanks[fact.cover] > coverRanks[highest] ? fact.cover : highest,
+            coverRanks[fact.cover.degree] > coverRanks[highest]
+              ? fact.cover.degree
+              : highest,
           "none" as const,
         );
         expect(forward.sight).toBe(expectedSight);

@@ -423,6 +423,7 @@ export {
   type BattleObscurementZone,
   type BattleMovementFillValue,
   type BattleMovementHole,
+  type BattleObjectDamageComponent,
   type BattleObjectDamageDisposition,
   type BattleObjectDamageOutcome,
   type BattleObjectIgnitionDisposition,

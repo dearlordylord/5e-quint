@@ -12,6 +12,10 @@ settled before battle, including Initiative rolls and which completed Character
 Sheet occupies each scenario-delegated starting square. Supply those choices as
 ordinary TypeScript through the canonical public SDK. Do not add a choice
 record, scenario schema, command vocabulary, or parallel rules model.
+Supply the final assignment in the `placements` passed to the neutral source's
+single `createScenarioSession` call. Preserve its arena, ambient Illumination,
+vertical environment, and scenario-object facts; they are table-owned session
+facts, not battle state.
 If no delegated pre-battle choice remains, leave `setup.ts` byte-for-byte
 unchanged.
 

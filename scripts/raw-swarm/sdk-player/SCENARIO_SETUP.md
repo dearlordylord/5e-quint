@@ -7,8 +7,26 @@ Read `SCENARIO.md`, `SCENARIO_REVIEW.json`, `CHARACTERS.json`, `PUBLIC_SDK.md`,
 You are the neutral setup author. Edit only `setup.ts`. Export one
 `ScenarioSetup` named `setupScenario`. Use the canonical functions and catalog
 supplied through its context to construct the closest faithful initial
-`BattleRuntimeSession`. Do not invent substitute creatures, silently drop
+`ScenarioSession`. Start the canonical battle, then call
+`createScenarioSession` once with its five-foot arena, initial placements,
+ambient Illumination, vertical environment facts, and scenario-fixed objects.
+The composed session retains an untouched `BattleRuntimeSession` under
+`session.battle` and table-owned facts under `session.battlefield`; do not add
+those facts to battle state. Do not invent substitute creatures, silently drop
 required combatants, or encode later tactics in setup code.
+Supply only the directed `initialRangedAttackEnemyRelationships` needed by the
+scenario. Each `{ attackerId, enemyId }` is a pairwise Table Decision scoped to
+the initial ranged-attack proximity question. It is not an encounter-wide side,
+party, or faction model; omit pairs whose relationship the table has not decided.
+The retained `initialSpace` is immutable setup evidence. Player queries derive
+relations from it; this setup boundary does not claim to track later movement.
+
+A scenario object is a table-owned target fact: use canonical `BattleObjectId`,
+`ArmorClass`, `BattleObjectDamageDisposition`, and tactical-space
+openness/Cover vocabulary. Poison and Psychic Immunity are canonical object
+damage semantics and are not restated in scenario data. It is not a
+creature-held ground object, spell light emitter, or separate object reducer.
+Do not add use-state semantics that the scenario does not require.
 
 Project only facts that the scenario fixes before play. Do not choose facts the
 scenario delegates to a player, controller, or GM. Completed player-owned

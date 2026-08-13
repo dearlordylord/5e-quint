@@ -10,6 +10,7 @@ import type { JsonValue } from "./continuation-contract.ts";
 import { isJsonValue } from "./json-value.ts";
 
 export const SDK_PLAYER_OPERATIONS = [
+  "scenarioInitialRelation",
   "discoverBattleActs",
   "resolveBattleRuntimeSubject",
   "resolveBattleRuntimeInterrupt",
@@ -18,7 +19,7 @@ export const SDK_PLAYER_OPERATIONS = [
 export type SdkPlayerOperation = (typeof SDK_PLAYER_OPERATIONS)[number];
 
 export const SDK_SESSION_CONFLICT_MESSAGE =
-  "SDK call supplied a stale or foreign battle session.";
+  "SDK call supplied a stale or foreign scenario session.";
 
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 const PositiveIntegerSchema = Schema.Number.pipe(

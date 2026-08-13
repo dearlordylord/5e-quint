@@ -3,6 +3,12 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { describe, expect, test } from "vitest";
 import { Either } from "effect";
+import {
+  battleObjectId,
+  combatantId,
+  discoverBattleActs,
+  resolveBattleRuntimeSubject,
+} from "../../../packages/battle-runtime/src/index.ts";
 
 import { FIGHTER_EXAMPLE_DRAFT } from "../../../packages/app/src/components/character-creation/characterCreationPresets.ts";
 import { finalizeCharacterDraft } from "../../../packages/character-creation-runtime/src/index.ts";
@@ -10,17 +16,22 @@ import {
   characterSheetId,
   createFreshCharacterSheet,
 } from "../../../packages/character-sheet-runtime/src/index.ts";
-import { Hp } from "../../../packages/shared/src/types.ts";
+import { armorClass } from "../../../packages/shared-algebras/src/armor-class-algebra.ts";
+import { damageAmount, Hp } from "../../../packages/shared/src/types.ts";
 import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "../../../packages/surface/src/surface/unit-catalog.ts";
 import { repoRoot } from "../transcript.ts";
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
+import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
 import {
-  evaluateScenarioSetup,
-  scenarioSetupStatBlocks,
-} from "./scenario-setup-runtime.ts";
+  createScenarioSession,
+  scenarioInitialRelation,
+  scenarioEnemyWithinFiveFeetCanSeeAttacker,
+  scenarioObjectAttackFills,
+  scenarioSessionWithBattleResult,
+} from "./scenario-session.ts";
 
 const TRACER_SCENARIO_ID = "tracer-001-goblin-warrior-vs-skeleton";
 
@@ -124,9 +135,236 @@ describe("scenario setup public-SDK boundary", () => {
         initiatives: [15, 10],
       },
     });
+    if (result.tag === "ready") {
+      expect(
+        scenarioEnemyWithinFiveFeetCanSeeAttacker(
+          result.session,
+          combatantId("goblin-warrior"),
+        ),
+      ).toBe(true);
+    }
   }, 120_000);
 
-  test("retains only spatial setup as the generated battle obstruction", async () => {
+  test("reports every missing tactical placement at composition", async () => {
+    const setup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        `scripts/raw-swarm/sdk-player/scenarios/${TRACER_SCENARIO_ID}.setup.ts`,
+      ),
+      [],
+    );
+    expect(setup.tag).toBe("ready");
+    if (setup.tag !== "ready") return;
+
+    const result = createScenarioSession({
+      battle: setup.session.battle,
+      arena: {
+        cells: [
+          { x: 0, y: 0, terrain: "ordinary" },
+          { x: 1, y: 0, terrain: "ordinary" },
+        ],
+        boundaries: [],
+      },
+      placements: [],
+      ambientIllumination: "brightLight",
+      environment: { overhead: { kind: "open" }, barrierHeights: [] },
+      initialRangedAttackEnemyRelationships: [],
+      objects: [],
+    });
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left.issues).toEqual([
+      expect.objectContaining({
+        tag: "missing-placement",
+        tokenId: "goblin-warrior",
+      }),
+      expect.objectContaining({
+        tag: "missing-placement",
+        tokenId: "skeleton",
+      }),
+    ]);
+  }, 120_000);
+
+  test("accumulates independent arena, object, and placement issues", async () => {
+    const setup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        `scripts/raw-swarm/sdk-player/scenarios/${TRACER_SCENARIO_ID}.setup.ts`,
+      ),
+      [],
+    );
+    expect(setup.tag).toBe("ready");
+    if (setup.tag !== "ready") return;
+    const collidingObjectId = battleObjectId("goblin-warrior");
+    const object = {
+      objectId: collidingObjectId,
+      armorClass: armorClass(15),
+      damageDisposition: { kind: "hitPoints" as const, hitPoints: Hp(5) },
+      traversal: "blocked" as const,
+      sight: "open" as const,
+      interveningCover: "half" as const,
+    };
+
+    const result = createScenarioSession({
+      battle: setup.session.battle,
+      arena: {
+        cells: [
+          { x: 0, y: 0, terrain: "ordinary" },
+          { x: 0, y: 0, terrain: "ordinary" },
+        ],
+        boundaries: [],
+      },
+      placements: [
+        {
+          tokenId: setup.session.battle.state.activeCombatantId,
+          coordinate: { x: Number.NaN, y: 0 },
+        },
+      ],
+      ambientIllumination: "brightLight",
+      environment: { overhead: { kind: "open" }, barrierHeights: [] },
+      initialRangedAttackEnemyRelationships: [],
+      objects: [object, object],
+    });
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left.issues.map(({ tag }) => tag)).toEqual([
+      "arena-definition",
+      "combatant-object-id-collision",
+      "duplicate-object-id",
+      "combatant-object-id-collision",
+      "placement",
+    ]);
+  }, 120_000);
+
+  test("projects object obstruction and attack facts from one scenario session", async () => {
+    const setup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        `scripts/raw-swarm/sdk-player/scenarios/${TRACER_SCENARIO_ID}.setup.ts`,
+      ),
+      [],
+    );
+    expect(setup.tag).toBe("ready");
+    if (setup.tag !== "ready") return;
+    const objectId = battleObjectId("synthetic-intervening-object");
+    const composed = createScenarioSession({
+      battle: setup.session.battle,
+      arena: {
+        cells: [0, 1, 2].map((x) => ({
+          x,
+          y: 0,
+          terrain: "ordinary" as const,
+        })),
+        boundaries: [],
+      },
+      placements: [
+        {
+          tokenId: combatantId("goblin-warrior"),
+          coordinate: { x: 0, y: 0 },
+        },
+        { tokenId: objectId, coordinate: { x: 1, y: 0 } },
+        { tokenId: combatantId("skeleton"), coordinate: { x: 2, y: 0 } },
+      ],
+      ambientIllumination: "brightLight",
+      environment: { overhead: { kind: "open" }, barrierHeights: [] },
+      initialRangedAttackEnemyRelationships: [
+        {
+          attackerId: combatantId("goblin-warrior"),
+          enemyId: combatantId("skeleton"),
+        },
+      ],
+      objects: [
+        {
+          objectId,
+          armorClass: armorClass(17),
+          damageDisposition: {
+            kind: "hitPointsWithDamageThreshold",
+            hitPoints: Hp(24),
+            damageThreshold: damageAmount(6),
+          },
+          traversal: "blocked",
+          sight: "blocked",
+          interveningCover: "three-quarters",
+        },
+      ],
+    });
+    expect(Either.isRight(composed)).toBe(true);
+    if (Either.isLeft(composed)) return;
+
+    expect(
+      scenarioInitialRelation({
+        session: composed.right,
+        sourceId: combatantId("goblin-warrior"),
+        targetId: combatantId("skeleton"),
+      }),
+    ).toMatchObject({
+      tag: "relation",
+      relation: {
+        attackerCanSeeTarget: false,
+        cover: "threeQuarters",
+        traversal: "blocked",
+      },
+    });
+
+    const attack = discoverBattleActs(composed.right.battle).find(
+      ({ subject }) => subject.tag === "action" && subject.action === "attack",
+    );
+    expect(attack).toBeDefined();
+    if (attack === undefined) return;
+    const frontier = resolveBattleRuntimeSubject({
+      session: composed.right.battle,
+      subject: attack.subject,
+      fills: [],
+    });
+    expect(frontier.tag).toBe("needsHoles");
+    if (frontier.tag !== "needsHoles") return;
+    const targetHole = frontier.holes.find(
+      (hole) =>
+        hole.kind === "targetChoice" &&
+        hole.attack?.acceptsObjectTarget === true,
+    );
+    expect(targetHole?.kind).toBe("targetChoice");
+    if (targetHole?.kind !== "targetChoice") return;
+    const projected = scenarioObjectAttackFills({
+      session: composed.right,
+      subject: attack.subject,
+      fills: [
+        {
+          kind: "objectTargetChoice",
+          holeId: targetHole.holeId,
+          value: objectId,
+          spatialFacts: [],
+        },
+      ],
+    });
+    expect(Either.isRight(projected)).toBe(true);
+    if (Either.isLeft(projected)) return;
+    expect(projected.right).toEqual([
+      {
+        kind: "objectTargetChoice",
+        holeId: targetHole.holeId,
+        value: objectId,
+        spatialFacts: [
+          {
+            kind: "attackObjectTarget",
+            actorId: "goblin-warrior",
+            objectId,
+            range: { kind: "meleeReach" },
+            attackerCanSeeObject: true,
+            cover: "none",
+            armorClass: 17,
+            damageDisposition: {
+              kind: "hitPointsWithDamageThreshold",
+              hitPoints: 24,
+              damageThreshold: 6,
+            },
+          },
+        ],
+      },
+    ]);
+  }, 120_000);
+
+  test("retains the generated battle's tactical and interactive setup", async () => {
     const scenarioDirectory = resolve(
       repoRoot,
       "scripts/raw-swarm/sdk-player/scenarios",
@@ -142,29 +380,221 @@ describe("scenario setup public-SDK boundary", () => {
       characters.characterSheets,
     );
     expect(result).toMatchObject({
-      tag: "obstructed",
+      tag: "ready",
       observation: {
-        setup: "obstructed",
-        remainingUnavailablePublicCapability:
-          "initial spatial and interactive battlefield state",
-        projectedCombatants: [
-          { combatantId: "beacon-warden-ember", initiative: 18 },
-          { combatantId: "beacon-warden-veil", initiative: 16 },
-          { combatantId: "beacon-warden-aegis", initiative: 13 },
-          { combatantId: "beacon-warden-arc", initiative: 11 },
-          { combatantId: "goblin-warrior-2c", initiative: 14 },
-          { combatantId: "goblin-warrior-2d", initiative: 14 },
-          { combatantId: "wolf-3b", initiative: 10 },
-          { combatantId: "wolf-3e", initiative: 10 },
-          { combatantId: "goblin-warrior-5c", initiative: 14 },
-          { combatantId: "goblin-warrior-5d", initiative: 14 },
-        ],
+        setup: "ready",
+        combatantCount: 10,
+        arenaCellCount: 120,
+        battlefieldObjectIds: ["beacon-crystal"],
       },
     });
-    if (result.tag !== "obstructed") return;
-    expect(result.obstruction).not.toContain("deferred initial initiative");
-    expect(result.obstruction).not.toContain("initiative-roll hole");
-    expect(result.obstruction).not.toContain("round eight");
+    if (result.tag !== "ready") return;
+    expect(result.session.battle.state.combatants.size).toBe(10);
+    expect(result.session.battlefield).toMatchObject({
+      arena: { cellSizeFeet: 5 },
+      initialSpace: { revision: 11 },
+      ambientIllumination: "brightLight",
+      environment: {
+        overhead: { kind: "open" },
+        barrierHeights: expect.any(Array),
+      },
+      objects: [
+        {
+          objectId: "beacon-crystal",
+          armorClass: 15,
+          damageDisposition: { kind: "hitPoints", hitPoints: 30 },
+          traversal: "blocked",
+          sight: "open",
+          interveningCover: "half",
+        },
+      ],
+    });
+    expect(result.session.battlefield.arena.cells).toHaveLength(120);
+    expect(result.session.battlefield.arena.boundaries).toHaveLength(28);
+    expect(result.session.battlefield.initialSpace.placements).toHaveLength(11);
+    expect(result.session.battlefield.environment.barrierHeights).toHaveLength(
+      20,
+    );
+    expect(
+      result.session.battlefield.environment.barrierHeights.every(
+        ({ heightFeet }) => heightFeet === 15,
+      ),
+    ).toBe(true);
+
+    const crystalId = result.session.battlefield.objects[0]!.objectId;
+    expect(
+      scenarioInitialRelation({
+        session: result.session,
+        sourceId: combatantId("beacon-warden-ember"),
+        targetId: crystalId,
+      }),
+    ).toMatchObject({
+      tag: "relation",
+      relation: {
+        source: "beacon-warden-ember",
+        target: "beacon-crystal",
+        distanceFeet: 5,
+        attackerCanSeeTarget: true,
+        cover: "none",
+        traversal: "open",
+      },
+    });
+    expect(
+      scenarioInitialRelation({
+        session: result.session,
+        sourceId: combatantId("missing-scout"),
+        targetId: crystalId,
+      }),
+    ).toEqual({
+      tag: "unknown-token",
+      tokenId: "missing-scout",
+      message: "Scenario token missing-scout has no initial placement.",
+    });
+    const damaged = scenarioSessionWithBattleResult(
+      result.session,
+      result.session.battle,
+      [
+        {
+          kind: "hitPoints",
+          objectId: crystalId,
+          damageType: "force",
+          rolledDamage: damageAmount(8),
+          effectiveDamage: damageAmount(8),
+          priorHitPoints: Hp(30),
+          nextHitPoints: Hp(22),
+          destroyed: false,
+        },
+        {
+          kind: "hitPoints",
+          objectId: crystalId,
+          damageType: "force",
+          rolledDamage: damageAmount(22),
+          effectiveDamage: damageAmount(22),
+          priorHitPoints: Hp(22),
+          nextHitPoints: Hp(0),
+          destroyed: true,
+        },
+      ],
+    );
+    expect(Either.isRight(damaged)).toBe(true);
+    if (Either.isRight(damaged)) {
+      expect(damaged.right.battlefield.objects[0]?.damageDisposition).toEqual({
+        kind: "hitPoints",
+        hitPoints: 0,
+      });
+      expect(result.session.battlefield.objects[0]?.damageDisposition).toEqual({
+        kind: "hitPoints",
+        hitPoints: 30,
+      });
+      expect(
+        scenarioInitialRelation({
+          session: damaged.right,
+          sourceId: combatantId("beacon-warden-ember"),
+          targetId: crystalId,
+        }),
+      ).toMatchObject({
+        tag: "relation",
+        relation: {
+          distanceFeet: 5,
+          attackerCanSeeTarget: true,
+          cover: "none",
+        },
+      });
+    }
+
+    const staleDamage = scenarioSessionWithBattleResult(
+      result.session,
+      result.session.battle,
+      [
+        {
+          kind: "hitPoints",
+          objectId: crystalId,
+          damageType: "force",
+          rolledDamage: damageAmount(1),
+          effectiveDamage: damageAmount(1),
+          priorHitPoints: Hp(22),
+          nextHitPoints: Hp(21),
+          destroyed: false,
+        },
+      ],
+    );
+    expect(staleDamage).toMatchObject({
+      _tag: "Left",
+      left: { tag: "object-damage-state-conflict" },
+    });
+    expect(
+      result.session.battlefield.arena.cells
+        .filter(({ terrain }) => terrain === "difficult")
+        .map(({ coordinate }) => `${coordinate.x},${coordinate.y}`),
+    ).toEqual(["8,3", "8,4", "13,3", "13,4"]);
+    expect(
+      Object.fromEntries(
+        result.session.battlefield.initialSpace.placements.map(
+          ({ token, coordinate }) => [token, `${coordinate.x},${coordinate.y}`],
+        ),
+      ),
+    ).toEqual({
+      "beacon-crystal": "11,3",
+      "beacon-warden-aegis": "12,2",
+      "beacon-warden-arc": "12,5",
+      "beacon-warden-ember": "10,2",
+      "beacon-warden-veil": "10,5",
+      "goblin-warrior-2c": "2,3",
+      "goblin-warrior-2d": "2,4",
+      "goblin-warrior-5c": "5,3",
+      "goblin-warrior-5d": "5,4",
+      "wolf-3b": "3,2",
+      "wolf-3e": "3,5",
+    });
+    const totalCoverBoundaries =
+      result.session.battlefield.arena.boundaries.filter(
+        ({ cover }) => cover.kind === "intervening" && cover.degree === "total",
+      );
+    const barricadeBoundaries =
+      result.session.battlefield.arena.boundaries.filter(
+        ({ cover }) =>
+          cover.kind === "protected-occupant" && cover.degree === "half",
+      );
+    expect(totalCoverBoundaries).toHaveLength(20);
+    expect(barricadeBoundaries).toHaveLength(8);
+    expect(barricadeBoundaries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          between: [
+            expect.objectContaining({ x: 7, y: 3 }),
+            expect.objectContaining({ x: 8, y: 3 }),
+          ],
+          traversal: "open",
+          sight: "open",
+          cover: expect.objectContaining({
+            kind: "protected-occupant",
+            protectedCell: expect.objectContaining({ x: 8, y: 3 }),
+          }),
+        }),
+        expect.objectContaining({
+          between: [
+            expect.objectContaining({ x: 13, y: 4 }),
+            expect.objectContaining({ x: 14, y: 4 }),
+          ],
+          traversal: "open",
+          sight: "open",
+          cover: expect.objectContaining({
+            kind: "protected-occupant",
+            protectedCell: expect.objectContaining({ x: 13, y: 4 }),
+          }),
+        }),
+      ]),
+    );
+    expect(totalCoverBoundaries).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          between: [
+            expect.objectContaining({ x: 6, y: 3 }),
+            expect.objectContaining({ x: 7, y: 3 }),
+          ],
+        }),
+      ]),
+    );
   }, 120_000);
 
   test("retains an authored setup obstruction", async () => {

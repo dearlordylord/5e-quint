@@ -17,6 +17,23 @@ belong to another discriminated branch, and its error identifies the mismatch.
 The supervisor owns one linear SDK-session lineage. Start with `context.session`,
 pass that exact current value to each operation, and replace your local session
 with every resolution result's `session`. Stale or foreign sessions are rejected.
+The session's canonical battle reducer state is `session.battle`; its immutable
+`session.battlefield` projection retains the authored five-foot arena, initial
+placements, ambient Illumination, vertical environment facts, and scenario objects.
+Use `context.sdk.scenarioInitialRelation` to derive initial distance, sight,
+Cover, and traversal between retained tokens; do not restate those facts by
+reading coordinates yourself. Its Cover vocabulary is the battle reducer's
+`none | half | threeQuarters | total` vocabulary. `initialSpace` is immutable
+setup evidence, not current
+movement state. Until the SDK exposes movement evolution, report any tactic
+that requires a later position as an execution obstruction.
+Canonical object-damage outcomes advance each scenario object's current Hit
+Points. For an ordinary object attack, choose only the object id and pass an
+empty `spatialFacts` array; the scenario SDK projects range, sight, Cover, AC,
+the object's current damage disposition, and any visible non-incapacitated
+enemy within 5 feet from the canonical session. SDK
+operations accept the whole scenario session and preserve those table-owned
+facts while the nested battle advances.
 One continuation may make as many ordinary TypeScript decisions and SDK calls
 as one coherent tactical choice requires. Return `kind: "continue"` when a new
 observation should inform the next choice. Return `kind: "playerConcluded"`

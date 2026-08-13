@@ -437,6 +437,30 @@ export const continueBattle: PlayerContinuation = (context) => {
       '"operation":"resolveBattleRuntimeInterrupt"',
     );
     expect(callEvidence).toContain('"$set"');
+    const [header, ...calls] = callEvidence
+      .trim()
+      .split("\n")
+      .map((line): Readonly<Record<string, unknown>> => JSON.parse(line));
+    expect(header?.initialSession).toMatchObject({
+      battlefield: {
+        arena: { cellSizeFeet: 5 },
+        ambientIllumination: "brightLight",
+        objects: [],
+        initialSpace: { revision: 2 },
+      },
+    });
+    for (const call of calls) {
+      if (call.outcome === "returned") {
+        expect(call.outputSession).toMatchObject({
+          battlefield: {
+            arena: { cellSizeFeet: 5 },
+            ambientIllumination: "brightLight",
+            objects: [],
+            initialSpace: { revision: 2 },
+          },
+        });
+      }
+    }
 
     const programPath = join(trustedDestination, "evidence/program.ts");
     const frozenProgram = readFileSync(programPath, "utf8");

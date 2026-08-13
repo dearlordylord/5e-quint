@@ -31,7 +31,7 @@ import type {
   BattleRolledDiceFill,
   BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
-import type { CombatantId } from "../identity.ts";
+import type { BattleObjectId, CombatantId } from "../identity.ts";
 import type { DamageRelationshipDecisionsByHole } from "./damage-relationship-decisions.ts";
 
 export const INITIAL_ROUND: RoundType = Round(1);
@@ -215,6 +215,18 @@ type BattleAttackTargetChoiceFill = Omit<
     ...BattleAttackRollRelationshipFact[],
   ];
 };
+export type OrdinaryObjectAttackFillSet = {
+  readonly tag: "objectTarget";
+  readonly target: {
+    readonly objectId: BattleObjectId;
+    readonly spatialFacts: readonly Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "attackObjectTarget" }
+    >[];
+  };
+  readonly attackRoll: BattleAttackRollResult | undefined;
+  readonly damageRoll: BattleRolledDiceFill | undefined;
+};
 export type AttackFillSet =
   | {
       readonly tag: "ok";
@@ -341,6 +353,7 @@ export type AttackFillSet =
         | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string };
+export type SelectedAttackFillSet = AttackFillSet | OrdinaryObjectAttackFillSet;
 export type GrappleFillSet =
   | {
       readonly tag: "ok";

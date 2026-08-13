@@ -13,16 +13,24 @@ Coordinates and caller-owned token IDs are parsed at their boundaries with
 `parseCoordinate` and `parseTokenId`.
 
 `createState` creates an opaque immutable state. `placeToken`, `removeToken`,
-`occupantsAt`, `snapshot`, and `relationBetween` derive public spatial facts.
+`occupantsAt`, `snapshot`, `relationBetween`, and `interveningTokens` derive
+public spatial facts.
+`restoreState` reconstructs the opaque query state from an arena snapshot and
+its matching spatial snapshot, so durable evidence can remain the single
+spatial owner.
 Every successful state change creates a new revisioned value; retained values
 remain valid and unchanged. Tokens are one-cell placements, and overlap is
 valid spatial state.
 
 Relations are deliberately pathfinding-free. They report direct Chebyshev
-distance, compass direction, geometric sight, and symmetric Cover. Static
-boundaries independently carry traversal, sight, and Cover facts. A center ray
-uses a supercover corner policy: all local cardinal boundary segments touched
-at an exact corner contribute to blocked-if-either sight and maximum Cover.
+distance, compass direction, geometric sight, and Cover. Static boundaries
+independently carry traversal and sight facts. Their Cover is either
+`intervening` for every ray crossing the boundary or `protected-occupant` for
+an attack whose target occupies one named endpoint. A center ray uses a
+supercover corner policy: all local cardinal boundary segments touched at an
+exact corner contribute to blocked-if-either sight and maximum applicable
+Cover. `interveningTokens` uses exact occupied-cell intersection and therefore
+also finds a cell crossed away from its center.
 The structured `same-horizontal-position` direction is reserved for zero
 displacement/overlap; a target sharing only the source's x or y coordinate is
 reported as north, south, east, or west.

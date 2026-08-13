@@ -51,8 +51,10 @@ canonical Character Sheets through the real character-creation runtime; a
 separate setup flow consumes those sheets and canonical SRD Stat Blocks to build
 the initial battle session. Its neutral author first projects only fixed facts;
 a controller then reviews that exact source and supplies delegated pre-battle
-choices such as Initiative rolls through ordinary SDK code. Spatial setup
-remains the next capability edge. Multiple battle controllers and branching
+choices such as Initiative rolls and starting-square assignments through
+ordinary SDK code. The retained `ScenarioSession` pairs the untouched battle
+runtime session with canonical five-foot arena/placement snapshots and
+table-owned illumination and scenario-object facts. Multiple battle controllers and branching
 remain later workflow increments. Missing capability is reported as an
 obstruction rather than modeled in a harness language.
 
@@ -169,7 +171,9 @@ separate neutral setup agent authors the closest `<scenario-id>.setup.ts`
 against `@dnd/scenario-setup-sdk` without choosing delegated facts. A controller
 agent then reviews that exact source and may edit it only to supply player- and
 GM-owned pre-battle choices. The final source either returns the initial
-`BattleRuntimeSession` or reports a precise remaining obstruction. Neither
+`ScenarioSession`, whose `battle` member is the canonical `BattleRuntimeSession`
+and whose `battlefield` member retains table-owned setup facts, or reports a
+precise remaining obstruction. Neither
 author may substitute missing creatures, drop required combatants, or encode
 later tactics. From a clean revision run:
 

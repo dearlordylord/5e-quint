@@ -86,12 +86,14 @@ function emitPublicDeclarations(destination: string): void {
     "scripts/raw-swarm/sdk-player/continuation-contract.d.ts",
     "scripts/raw-swarm/sdk-player/scenario-character-contract.d.ts",
     "scripts/raw-swarm/sdk-player/scenario-setup-contract.d.ts",
+    "scripts/raw-swarm/sdk-player/scenario-session.d.ts",
     "packages/battle-runtime/src/index.d.ts",
     "packages/battle-runtime/src/battle-state-execution.d.ts",
     "packages/battle-runtime/src/battle-session-execution.d.ts",
     "packages/character-creation-runtime/src/index.d.ts",
     "packages/character-battle-runtime/src/index.d.ts",
     "packages/character-sheet-runtime/src/index.d.ts",
+    "packages/tactical-space/src/index.d.ts",
   ];
   for (const relativePath of requiredDeclarations) {
     if (!existsSync(resolve(declarationsDirectory, relativePath))) {
@@ -158,6 +160,12 @@ function consumerTsconfig(baseUrl: string, include: readonly string[]): string {
           ],
           "@dnd/shared-algebras/*": [
             resolve(baseUrl, "declarations/packages/shared-algebras/src/*"),
+          ],
+          "@dnd/tactical-space": [
+            resolve(
+              baseUrl,
+              "declarations/packages/tactical-space/src/index.d.ts",
+            ),
           ],
           "@dnd/surface/*": [
             resolve(baseUrl, "declarations/packages/surface/src/*"),

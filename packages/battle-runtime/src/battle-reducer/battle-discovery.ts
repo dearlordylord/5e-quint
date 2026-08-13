@@ -16,6 +16,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING CHARACTER.LIFECYCLE.LAYER_PROJECTION BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
 import { optionalProperty } from "../optional-property.ts";
 import type { ActionEconomyState } from "@dnd/shared-algebras/action-economy-algebra";
 import {
@@ -67,6 +68,8 @@ import {
 import {
   attackTargetChoices,
   attackTargetHole,
+  ordinaryAttackTargetHole,
+  ordinaryObjectAttackOptionIsSupported,
   bonusActionStandardActionActs,
   canHideInCurrentCircumstances,
   escapeGrappleOutcomeHole,
@@ -342,13 +345,16 @@ function discoverBattleActsWithoutRouteEvents(
     combatantCanTakeActions(state.combatants.get(actorId)) &&
     canSpendAction(state.currentTurnResources, "attack") &&
     attackActionOptions.some(
-      (attack) => attackTargetChoices(state, actorId, attack).length > 0,
+      (attack) =>
+        attackTargetChoices(state, actorId, attack).length > 0 ||
+        ordinaryObjectAttackOptionIsSupported(state, actorId, attack),
     )
   ) {
     acts.push(
       ...attackActionOptions.flatMap((attack) => {
-        const targetHole = attackTargetHole(state, actorId, attack);
-        return targetHole.choices.length === 0
+        const targetHole = ordinaryAttackTargetHole(state, actorId, attack);
+        return targetHole.choices.length === 0 &&
+          targetHole.attack?.acceptsObjectTarget !== true
           ? []
           : [
               {

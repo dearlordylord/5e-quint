@@ -674,7 +674,7 @@ export function attackTargetFill(
         }
       : {}),
     spatialFacts: [
-      hole.attack.targetConstraint === "rangedRange"
+      hole.attack.targetConstraint.kind === "rangedRange"
         ? {
             kind: "attackTargetInRangedRange",
             actorId,

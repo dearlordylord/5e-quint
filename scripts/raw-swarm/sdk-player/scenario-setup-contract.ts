@@ -1,11 +1,11 @@
 import type {
   battleCreatureInitFromStatBlock,
   battleId,
+  battleObjectId,
   battleStateInitIssueMessage,
   combatantId,
   initiativeScore,
   startBattle,
-  BattleRuntimeSession,
 } from "@dnd/battle-runtime";
 import type {
   characterBattleRuntimeIssueMessage,
@@ -16,18 +16,45 @@ import type { FreshCharacterSheet } from "@dnd/character-sheet-runtime";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import type { Either } from "effect";
+import type { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import type { Hp, movementFeet } from "@dnd/shared/types";
 
 import type { JsonValue } from "./continuation-contract.ts";
+import type {
+  createScenarioSession,
+  scenarioSessionIssueMessage,
+  ScenarioSession,
+} from "./scenario-session.ts";
+
+export type {
+  ScenarioBattleObject,
+  ScenarioBattlefield,
+  ScenarioBarrierHeight,
+  ScenarioEnvironment,
+  ScenarioInitialRangedAttackEnemyRelationship,
+  ScenarioPlacement,
+  ScenarioSession,
+  ScenarioTokenId,
+  ScenarioSessionFactIssue,
+  ScenarioSessionIssue,
+  ScenarioSessionUpdateIssue,
+} from "./scenario-session.ts";
 
 export type ScenarioSetupSdk = {
   readonly battleCreatureInitFromStatBlock: typeof battleCreatureInitFromStatBlock;
   readonly battleId: typeof battleId;
+  readonly battleObjectId: typeof battleObjectId;
   readonly battleStateInitIssueMessage: typeof battleStateInitIssueMessage;
   readonly characterBattleRuntimeIssueMessage: typeof characterBattleRuntimeIssueMessage;
   readonly characterSheetBattleInit: typeof characterSheetBattleInit;
   readonly combatantId: typeof combatantId;
   readonly initiativeScore: typeof initiativeScore;
   readonly startBattle: typeof startBattle;
+  readonly armorClass: typeof armorClass;
+  readonly hp: typeof Hp;
+  readonly movementFeet: typeof movementFeet;
+  readonly createScenarioSession: typeof createScenarioSession;
+  readonly scenarioSessionIssueMessage: typeof scenarioSessionIssueMessage;
   readonly isLeft: typeof Either.isLeft;
 };
 
@@ -42,7 +69,7 @@ export type ScenarioSetupContext = {
 export type ScenarioSetupOutcome =
   | {
       readonly kind: "ready";
-      readonly session: BattleRuntimeSession;
+      readonly session: ScenarioSession;
       readonly observation: JsonValue;
     }
   | {

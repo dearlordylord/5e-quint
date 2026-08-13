@@ -2,7 +2,9 @@
 // Owns classification of attack fills and the uniqueness invariant for attack target range facts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.brutal-strike
+// KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
 
+import { Match } from "effect";
 import {
   type BattleAttackDamageDisposition,
   type BattleAttackRollResult,
@@ -20,6 +22,7 @@ import {
   FRENZY_DAMAGE_TYPE_HOLE_ID,
   GRAPPLE_OUTCOME_HOLE_ID,
   type AttackFillSet,
+  type SelectedAttackFillSet,
 } from "./battle-runtime-protocol.ts";
 import { attackExecutionSelectionsEqual } from "./movement-speed.ts";
 import type { CombatantId } from "../identity.ts";
@@ -74,12 +77,12 @@ function isBrutalStrikeForcefulBlowMovementFill(
   return fill.value.brutalStrikeForcefulBlow !== undefined;
 }
 
-export function attackFillSet(
+export function selectedAttackFillSet(
   fills: readonly BattleFill[],
   attackerId: CombatantId,
   state: BattleState,
   attackRollRelationshipFactsAllowed = false,
-): AttackFillSet {
+): SelectedAttackFillSet {
   const attackRelationshipDecisionRequired =
     ongoingFeatureEnemyRelationshipDecisionRequired(
       state,
@@ -87,6 +90,15 @@ export function attackFillSet(
       "attackRollAgainstEnemy",
     );
   let targetId: CombatantId | undefined;
+  let objectTarget:
+    | {
+        readonly objectId: import("../identity.ts").BattleObjectId;
+        readonly spatialFacts: readonly Extract<
+          BattleTargetSpatialFact,
+          { readonly kind: "attackObjectTarget" }
+        >[];
+      }
+    | undefined;
   let targetSpatialFacts: readonly BattleTargetSpatialFact[] = [];
   let targetRelationshipFacts: readonly BattleAttackRollRelationshipFact[] = [];
   let attackRollRelationshipFacts: readonly BattleAttackRollRelationshipFact[] =
@@ -554,7 +566,7 @@ export function attackFillSet(
       );
       if (parsed.tag === "invalid") return parsed;
       /* v8 ignore start -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-      if (targetId !== undefined) {
+      if (targetId !== undefined || objectTarget !== undefined) {
         /* v8 ignore next -- Malformed attack fill set: discovery is the canonical hole contract; this parser rejects a duplicate, wrong-kind, wrong-hole, or contradictory attack fill. */
         return { tag: "invalid", message: "Attack target was filled twice." };
       }
@@ -580,6 +592,31 @@ export function attackFillSet(
         return { tag: "invalid", message: spatialFactValidation };
       }
       /* v8 ignore stop */
+      continue;
+    }
+
+    if (
+      fill.kind === "objectTargetChoice" &&
+      fill.holeId === ATTACK_TARGET_HOLE_ID
+    ) {
+      if (objectTarget !== undefined || targetId !== undefined) {
+        return { tag: "invalid", message: "Attack target was filled twice." };
+      }
+      const spatialFacts = fill.spatialFacts.filter(
+        (
+          fact,
+        ): fact is Extract<
+          BattleTargetSpatialFact,
+          { readonly kind: "attackObjectTarget" }
+        > => fact.kind === "attackObjectTarget",
+      );
+      if (spatialFacts.length !== fill.spatialFacts.length) {
+        return {
+          tag: "invalid",
+          message: "Ordinary object attacks require object attack table facts.",
+        };
+      }
+      objectTarget = { objectId: fill.value, spatialFacts };
       continue;
     }
 
@@ -1063,6 +1100,30 @@ export function attackFillSet(
     /* v8 ignore stop */
   }
 
+  if (objectTarget !== undefined) {
+    const incompatibleFills = fills.filter(
+      (fill) =>
+        !(
+          (fill.kind === "objectTargetChoice" &&
+            fill.holeId === ATTACK_TARGET_HOLE_ID) ||
+          (fill.kind === "attackRoll" && fill.holeId === ATTACK_ROLL_HOLE_ID) ||
+          fill === damageRoll
+        ),
+    );
+    if (incompatibleFills.length > 0) {
+      return {
+        tag: "invalid",
+        message: `Object attacks do not accept these creature-only fills: ${incompatibleFills.map((fill) => fill.kind).join(", ")}.`,
+      };
+    }
+    return {
+      tag: "objectTarget",
+      target: objectTarget,
+      attackRoll,
+      damageRoll,
+    };
+  }
+
   const relationshipDecisions = DamageRelationshipDecisionsByHole.parse({
     fills,
     damageEventHoleIds: new Set(
@@ -1141,6 +1202,30 @@ export function attackFillSet(
     grapplerPunchAndGrabDecision,
     grapplerPunchAndGrabOutcome,
   };
+}
+
+export function attackFillSet(
+  fills: readonly BattleFill[],
+  attackerId: CombatantId,
+  state: BattleState,
+  attackRollRelationshipFactsAllowed = false,
+): AttackFillSet {
+  return Match.value(
+    selectedAttackFillSet(
+      fills,
+      attackerId,
+      state,
+      attackRollRelationshipFactsAllowed,
+    ),
+  ).pipe(
+    Match.when({ tag: "ok" }, (fillSet) => fillSet),
+    Match.when({ tag: "invalid" }, (fillSet) => fillSet),
+    Match.when({ tag: "objectTarget" }, () => ({
+      tag: "invalid" as const,
+      message: "This attack procedure does not accept an object target.",
+    })),
+    Match.exhaustive,
+  );
 }
 
 export function validateUniqueAttackSightFacts(

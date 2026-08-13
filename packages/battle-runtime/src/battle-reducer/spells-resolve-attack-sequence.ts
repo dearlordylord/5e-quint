@@ -2,7 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-damage-type-substitution
-// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION
 import { optionalProperty } from "../optional-property.ts";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
@@ -103,7 +103,8 @@ import {
   spellAttackSequencePartTargetHole,
   spellAttackSequencePartObjectTargetHole,
   spellObjectDamageByType,
-  spellObjectDamageOutcomeFromDamageByType,
+  objectDamageComponentsFromMap,
+  objectDamageOutcomeFromComponents,
   spellObjectTargetFact,
   spellObjectTargetSightFact,
   spellTargetIsLegal,
@@ -1332,14 +1333,23 @@ function resolveSpellAttackSequenceObjectPart(input: {
       [...sourcePenalty.holes],
     );
   }
+  const objectDamageComponents = objectDamageComponentsFromMap(
+    sourcePenalty.damageByType,
+  );
+  if (objectDamageComponents.tag === "emptyDamageByType") {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "A resolved object-damage spell attack requires at least one rolled damage component.",
+    );
+  }
   return {
     tag: "resolved",
     state: postRemarkableAthleteMovementState,
     objectDamages: [
-      spellObjectDamageOutcomeFromDamageByType({
+      objectDamageOutcomeFromComponents({
         objectId: input.target.objectId,
-        damageType: input.invocation.damage.damageType,
-        damageByType: sourcePenalty.damageByType,
+        components: objectDamageComponents.components,
         disposition: objectFact.damageDisposition,
       }),
     ],

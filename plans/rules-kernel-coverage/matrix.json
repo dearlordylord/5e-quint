@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 136,
-    "covered": 128,
+    "total": 138,
+    "covered": 130,
     "open": 2,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 105,
+      "battle": 107,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 128,
+      "covered": 130,
       "needs-qnt-owner": 2,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -70,6 +70,38 @@
       "status": "covered",
       "surfaceEvidence": [],
       "title": "Battle movement, Stand/Drop Prone, Grapple/Escape/Release, and caller-supplied Opportunity Attack frontier facts"
+    },
+    {
+      "id": "BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "The closed six-step replay executes the production ordinary-object Attack procedure against fixed table facts. It compares Total Cover rejection without spend, Half Cover target admission and miss, uncovered target admission and hit-before-damage frontier, final object damage emission, and action-resource state after each probe.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-ordinary-object-attack.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/battle-runtime-ordinary-object-attack.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-ordinary-object-attack.qnt"
+      ],
+      "reason": "The focused procedure owner consumes table-supplied object AC, visibility, range, Cover, and damage disposition. Total Cover rejects the target without spending the action; an admitted target requests an attack roll before damage; Half Cover changes the hit threshold; a miss resolves without damage; and a hit requests damage before resolving and spending the action. Object immunity, Damage Threshold, and Hit Point mutation remain owned by BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Rules-Glossary.md#Attack-[Action]",
+        ".references/srd-5.2.1/Rules-Glossary.md#Cover",
+        ".references/srd-5.2.1/Rules-Glossary.md#Breaking-Objects"
+      ],
+      "title": "Ordinary object Attack target legality, Cover, roll-before-damage ordering, hit or miss resolution, and action spend"
     },
     {
       "id": "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
@@ -2881,6 +2913,42 @@
       "status": "covered",
       "surfaceEvidence": [],
       "title": "Battle attack target legality, Attack Roll hit/miss/Critical Hit, damage dice, and Attack action resource-spend branches"
+    },
+    {
+      "id": "BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION",
+      "kind": "state-transition",
+      "parityWitnesses": [
+        {
+          "deterministicReplayRationale": "The closed replay proves the shared production object-damage projection used by ordinary attacks, direct and sequenced object-target spell attacks, and save-gated area object damage. It covers mixed immune and nonimmune components on both sides of one Damage Threshold and compares effective damage and remaining Hit Points. Attack targeting, Cover, roll mode, resource spend, and spell-specific admission remain runtime integration evidence and are not claimed by this semantic core.",
+          "kind": "deterministic-qnt-replay",
+          "ownerPath": "packages/battle-runtime/src/rule-core-object-damage-transition.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-object-damage-transition.mbt.qnt",
+          "stepAction": "step"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/object-damage-transition-core.qnt"
+      ],
+      "reason": "The table supplies object identity and damage disposition. The shared reducer filters the SRD object immunities from all damage components, applies one attack or effect's Damage Threshold to the remaining total, and projects the resulting object Hit Points. Ordinary attack and spell reducers are listed because they consume this shared transition; their distinct target, roll, area, and resource protocols are outside this obligation.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-fill-set.ts",
+        "packages/battle-runtime/src/battle-reducer/attack-roll.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+        "packages/battle-runtime/src/battle-reducer/object-damage.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-object-target.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-sequence.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-save-gates.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Rules-Glossary.md#Breaking-Objects",
+        ".references/srd-5.2.1/Rules-Glossary.md#Damage-Threshold"
+      ],
+      "title": "Shared table-owned object damage immunity, Damage Threshold, and Hit Point transition projection"
     },
     {
       "id": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
@@ -7665,6 +7733,18 @@
       "role": "semantic-core"
     },
     {
+      "evidence": "Owns ordinary object Attack target legality, Cover-adjusted hit resolution, roll-before-damage ordering, and action-spend semantics.",
+      "obligationIds": ["BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE"],
+      "ownerPath": "packages/battle-runtime/battle-runtime-ordinary-object-attack.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Closed deterministic driver for the ordinary object Attack procedure parity witness.",
+      "obligationIds": [],
+      "ownerPath": "packages/battle-runtime/battle-runtime-ordinary-object-attack.mbt.qnt",
+      "role": "mbt-fixture"
+    },
+    {
       "evidence": "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt is the focused QNT owner carrying reusable reducer-owned area and emanation trigger cadence semantics while keeping area membership and geometry as table-supplied witness facts.",
       "obligationIds": [
         "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
@@ -8760,6 +8840,18 @@
       "obligationIds": ["BATTLE.SPELL.READIED_RESPONSE_PROCEDURE"],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core.qnt",
       "role": "semantic-core"
+    },
+    {
+      "evidence": "Owns the shared object-immunity, Damage Threshold, and Hit Point transition projection consumed by ordinary attack and spell object-damage reducers.",
+      "obligationIds": ["BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/object-damage-transition-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Deterministic examples witness object Hit Point damage without a threshold and mixed immune/nonimmune damage blocked by a threshold.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/object-damage-transition-examples.qnt",
+      "role": "proof-only"
     },
     {
       "evidence": "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt is the covered obligation QNT owner carrying direct spell Hit Point restoration, Mass Cure Wounds area, and zero-Hit-Point recovery semantics without the spell procedure fixture world.",
@@ -11229,6 +11321,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-ordinary-object-attack.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-paladin-sacred-weapon-activation.qnt",
       "role": "proof-only"
     },
@@ -11900,6 +11997,16 @@
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt",
       "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/object-damage-transition-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/object-damage-transition-examples.qnt",
+      "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
@@ -13030,6 +13137,31 @@
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/hit-point-damage.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block"
+      ],
+      "obligationId": "BATTLE.ATTACK.ORDINARY_OBJECT_PROCEDURE",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-ordinary-object-attack.mbt.qnt"
+      ],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-ordinary-object-attack.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15352,6 +15484,34 @@
         "packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
         "packages/shared-algebras/proofs/rule-core/unit-feature-brutal-strike-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "list",
+        "fold"
+      ],
+      "obligationId": "BATTLE.DAMAGE.OBJECT_DAMAGE_TRANSITION",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/object-damage-transition-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/object-damage-transition-core.qnt"
       ],
       "status": "generation-subset-clean"
     },

@@ -25,6 +25,18 @@ const COVER_DEGREES = [
   "total",
 ] as const satisfies ReadonlyArray<string>;
 export type CoverDegree = (typeof COVER_DEGREES)[number];
+export type ProtectedOccupantCoverDegree = Exclude<CoverDegree, "none">;
+
+export type BoundaryCoverDefinition =
+  | Readonly<{
+      readonly kind: "intervening";
+      readonly degree: CoverDegree;
+    }>
+  | Readonly<{
+      readonly kind: "protected-occupant";
+      readonly degree: ProtectedOccupantCoverDegree;
+      readonly protectedCell: CoordinateInput;
+    }>;
 
 const DIRECTIONS = Object.freeze([
   "same-horizontal-position",
@@ -107,7 +119,7 @@ export type BoundaryDefinition = Readonly<{
   readonly between: readonly [CoordinateInput, CoordinateInput];
   readonly traversal: BoundaryOpenness;
   readonly sight: BoundaryOpenness;
-  readonly cover: CoverDegree;
+  readonly cover: BoundaryCoverDefinition;
 }>;
 
 export type ArenaDefinition = Readonly<{
@@ -134,7 +146,13 @@ export type ArenaBoundary = Readonly<{
   readonly between: readonly [CellCoordinate, CellCoordinate];
   readonly traversal: BoundaryOpenness;
   readonly sight: BoundaryOpenness;
-  readonly cover: CoverDegree;
+  readonly cover:
+    | Readonly<{ readonly kind: "intervening"; readonly degree: CoverDegree }>
+    | Readonly<{
+        readonly kind: "protected-occupant";
+        readonly degree: ProtectedOccupantCoverDegree;
+        readonly protectedCell: CellCoordinate;
+      }>;
 }>;
 
 export type ArenaSnapshot = Readonly<{
@@ -163,6 +181,12 @@ export type SpatialRelation = Readonly<{
   readonly distanceFeet: DistanceFeet;
   readonly sight: GeometricSight;
   readonly cover: CoverDegree;
+}>;
+
+export type InterveningTokens = Readonly<{
+  readonly source: TokenId;
+  readonly target: TokenId;
+  readonly tokens: readonly TokenId[];
 }>;
 
 export type ProspectiveStep = Readonly<{
@@ -268,6 +292,10 @@ export type RemoveTokenError = UnknownTokenError | RevisionLimitError;
 export type OccupantsAtError = CoordinateError | MissingCellError;
 export type PlacementOfError = UnknownTokenError;
 export type RelationError = UnknownTokenError;
+export type RestoreStateError = Readonly<{
+  readonly tag: "invalid-spatial-snapshot";
+  readonly message: string;
+}>;
 
 export type InvalidEvaluatorError = Readonly<{
   readonly tag: "invalid-evaluator";
@@ -405,7 +433,13 @@ type CanonicalArenaBoundary = Readonly<{
   readonly between: readonly [CanonicalCoordinate, CanonicalCoordinate];
   readonly traversal: BoundaryOpenness;
   readonly sight: BoundaryOpenness;
-  readonly cover: CoverDegree;
+  readonly cover:
+    | Readonly<{ readonly kind: "intervening"; readonly degree: CoverDegree }>
+    | Readonly<{
+        readonly kind: "protected-occupant";
+        readonly degree: ProtectedOccupantCoverDegree;
+        readonly protectedCell: CanonicalCoordinate;
+      }>;
 }>;
 
 type CanonicalArenaProjection = Readonly<{
@@ -593,18 +627,31 @@ export function parseArena(input: unknown): ArenaParseResult {
           ),
         );
       }
-      const cover = readCover(rawBoundary.cover);
+      const cover = readBoundaryCover(rawBoundary.cover);
       if (cover === undefined) {
         issues.push(
           arenaIssue(
             "invalid-cover",
             `${path}.cover`,
-            "Cover must be none, half, three-quarters, or total.",
+            "Cover must declare an intervening or protected-occupant degree; protected-occupant Cover must name one boundary endpoint.",
           ),
         );
       }
       if (first === undefined || second === undefined) {
         return;
+      }
+      if (
+        cover?.kind === "protected-occupant" &&
+        !sameCoordinate(cover.protectedCell, first) &&
+        !sameCoordinate(cover.protectedCell, second)
+      ) {
+        issues.push(
+          arenaIssue(
+            "invalid-cover",
+            `${path}.cover.protectedCell`,
+            "Protected-occupant Cover must name one boundary endpoint.",
+          ),
+        );
       }
       const key = boundaryKey(first, second);
       if (!cellByKey.has(coordinateKey(first))) {
@@ -648,6 +695,9 @@ export function parseArena(input: unknown): ArenaParseResult {
         traversal === undefined ||
         sight === undefined ||
         cover === undefined ||
+        (cover.kind === "protected-occupant" &&
+          !sameCoordinate(cover.protectedCell, first) &&
+          !sameCoordinate(cover.protectedCell, second)) ||
         !cellByKey.has(coordinateKey(first)) ||
         !cellByKey.has(coordinateKey(second)) ||
         !areOrthogonalNeighbours(first, second) ||
@@ -722,6 +772,76 @@ export function createState(arena: Arena): SpatialState {
 export function snapshot(state: SpatialState): SpatialSnapshot {
   const data = stateDataOf(state);
   return makeStateSnapshot(data, arenaDataOf(data.arena));
+}
+
+export function restoreState(
+  arenaEvidence: ArenaSnapshot,
+  stateEvidence: SpatialSnapshot,
+): Result<SpatialState, RestoreStateError> {
+  const parsedArena = parseArena({
+    cells: arenaEvidence.cells.map(({ coordinate, terrain }) => ({
+      x: coordinate.x,
+      y: coordinate.y,
+      terrain,
+    })),
+    boundaries: arenaEvidence.boundaries,
+  });
+  if (parsedArena.tag === "error") {
+    return failure({
+      tag: "invalid-spatial-snapshot",
+      message: "Arena evidence no longer decodes as a tactical arena.",
+    });
+  }
+  const restoredArenaSnapshot = arenaSnapshot(parsedArena.value);
+  if (
+    arenaEvidence.cellSizeFeet !== CELL_SIZE_FEET ||
+    restoredArenaSnapshot.fingerprint !== arenaEvidence.fingerprint ||
+    stateEvidence.arenaFingerprint !== arenaEvidence.fingerprint
+  ) {
+    return failure({
+      tag: "invalid-spatial-snapshot",
+      message: "Spatial evidence does not identify the supplied arena.",
+    });
+  }
+  if (
+    !Number.isSafeInteger(stateEvidence.revision) ||
+    stateEvidence.revision < 0
+  ) {
+    return failure({
+      tag: "invalid-spatial-snapshot",
+      message: "Spatial evidence requires a nonnegative safe-integer revision.",
+    });
+  }
+  const cells = arenaDataOf(parsedArena.value).cells;
+  const placements = new Map<TokenId, CellCoordinate>();
+  for (const placement of stateEvidence.placements) {
+    const token = parseTokenId(placement.token);
+    const coordinate = cells.get(coordinateKey(placement.coordinate));
+
+    if (
+      token.tag === "error" ||
+      coordinate === undefined ||
+      placements.has(token.value)
+    ) {
+      return failure({
+        tag: "invalid-spatial-snapshot",
+        message: "Spatial evidence contains an invalid or duplicate placement.",
+      });
+    }
+    placements.set(token.value, coordinate.coordinate);
+  }
+  const restored = makeState(
+    parsedArena.value,
+    stateEvidence.revision,
+    placements,
+  );
+  if (snapshot(restored).fingerprint !== stateEvidence.fingerprint) {
+    return failure({
+      tag: "invalid-spatial-snapshot",
+      message: "Spatial evidence fingerprint does not match its placements.",
+    });
+  }
+  return success(restored);
 }
 
 export function placeToken(
@@ -809,6 +929,33 @@ export function relationBetween(
     source,
     target,
   );
+}
+
+/** Returns tokens whose occupied cell interior is crossed between two tokens. */
+export function interveningTokens(
+  state: SpatialState,
+  source: TokenId,
+  target: TokenId,
+): Result<InterveningTokens, RelationError> {
+  const stateData = stateDataOf(state);
+  const sourceCoordinate = stateData.placements.get(source);
+  if (sourceCoordinate === undefined) {
+    return failure({ tag: "unknown-token", token: source });
+  }
+  const targetCoordinate = stateData.placements.get(target);
+  if (targetCoordinate === undefined) {
+    return failure({ tag: "unknown-token", token: target });
+  }
+  const tokens = Array.from(stateData.placements.entries())
+    .filter(
+      ([token, coordinate]) =>
+        token !== source &&
+        token !== target &&
+        rayCrossesCellInterior(sourceCoordinate, targetCoordinate, coordinate),
+    )
+    .map(([token]) => token)
+    .sort(compareStringsByCodeUnit);
+  return success(freezeValue({ source, target, tokens: freezeValue(tokens) }));
 }
 
 export function renderRelation(relation: SpatialRelation): string {
@@ -1526,7 +1673,13 @@ function rayFacts(
     .reduce(
       (facts, boundary) => ({
         sightBlocked: facts.sightBlocked || boundary.sight === "blocked",
-        cover: moreProtectiveCover(facts.cover, boundary.cover),
+        cover: moreProtectiveCover(
+          facts.cover,
+          boundary.cover.kind === "intervening" ||
+            sameCoordinate(boundary.cover.protectedCell, target)
+            ? boundary.cover.degree
+            : "none",
+        ),
       }),
       initialBoundaryFacts,
     );
@@ -1644,6 +1797,53 @@ function rayTouchesBoundary(
     minimumX,
     maximumX,
   );
+}
+
+type Rational = Readonly<{
+  readonly numerator: bigint;
+  readonly denominator: bigint;
+}>;
+
+function compareRational(first: Rational, second: Rational): number {
+  const difference =
+    first.numerator * second.denominator - second.numerator * first.denominator;
+  return difference < 0n ? -1 : difference > 0n ? 1 : 0;
+}
+
+function rational(numerator: bigint, denominator: bigint): Rational {
+  return denominator < 0n
+    ? { numerator: -numerator, denominator: -denominator }
+    : { numerator, denominator };
+}
+
+function rayCrossesCellInterior(
+  source: CellCoordinate,
+  target: CellCoordinate,
+  cell: CellCoordinate,
+): boolean {
+  if (sameCoordinate(cell, source) || sameCoordinate(cell, target)) {
+    return false;
+  }
+  let lower: Rational = { numerator: 0n, denominator: 1n };
+  let upper: Rational = { numerator: 1n, denominator: 1n };
+  for (const axis of ["x", "y"] as const) {
+    const start = BigInt(source[axis]) * 2n;
+    const delta = (BigInt(target[axis]) - BigInt(source[axis])) * 2n;
+    const minimum = BigInt(cell[axis]) * 2n - 1n;
+    const maximum = BigInt(cell[axis]) * 2n + 1n;
+    if (delta === 0n) {
+      if (start <= minimum || start >= maximum) return false;
+      continue;
+    }
+    const first = rational(minimum - start, delta);
+    const second = rational(maximum - start, delta);
+    const axisLower = compareRational(first, second) < 0 ? first : second;
+    const axisUpper = compareRational(first, second) < 0 ? second : first;
+    if (compareRational(axisLower, lower) > 0) lower = axisLower;
+    if (compareRational(axisUpper, upper) < 0) upper = axisUpper;
+    if (compareRational(lower, upper) >= 0) return false;
+  }
+  return compareRational(lower, upper) < 0;
 }
 
 function rationalCoordinateInRange(
@@ -1902,6 +2102,21 @@ function readBoundaryOpenness(input: unknown): BoundaryOpenness | undefined {
 
 function readCover(input: unknown): CoverDegree | undefined {
   return isOneOf(COVER_DEGREES, input) ? input : undefined;
+}
+
+function readBoundaryCover(input: unknown): ArenaBoundary["cover"] | undefined {
+  if (!isRecord(input) || typeof input.kind !== "string") return undefined;
+  const degree = readCover(input.degree);
+  if (degree === undefined) return undefined;
+  if (input.kind === "intervening") {
+    return freezeValue({ kind: "intervening", degree });
+  }
+  if (input.kind !== "protected-occupant") return undefined;
+  if (degree === "none") return undefined;
+  const protectedCell = readCoordinate(input.protectedCell);
+  return protectedCell === undefined
+    ? undefined
+    : freezeValue({ kind: "protected-occupant", degree, protectedCell });
 }
 
 function isOneOf<const Values extends readonly string[]>(
