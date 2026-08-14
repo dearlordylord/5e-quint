@@ -17,6 +17,10 @@ The composed session retains an untouched `BattleRuntimeSession` under
 `session.battle` and table-owned facts under `session.battlefield`; do not add
 those facts to battle state. Do not invent substitute creatures, silently drop
 required combatants, or encode later tactics in setup code.
+Vertical environment facts are retained setup evidence only. The current public
+SDK has no table-authored per-test circumstance witness that turns relative
+height into Advantage or Disadvantage; a supported-only scenario must not
+require that adjudication.
 Supply only the directed `initialRangedAttackEnemyRelationships` needed by the
 scenario. Each `{ attackerId, enemyId }` is a pairwise Table Decision scoped to
 the initial ranged-attack proximity question. It is not an encounter-wide side,

@@ -26,9 +26,11 @@ import {
   ScenarioPolicyReviewSchema,
   ScenarioRawReviewSchema,
   ScenarioReadinessSchema,
+  ScenarioSdkCapabilityReviewSchema,
   verifyFinalScenarioReview,
   type ContentAvailabilityIntent,
   type ScenarioCampaignAgents,
+  type SdkCapabilityIntent,
 } from "./scenario-campaign.ts";
 import { scenarioSetupStatBlocks } from "./sdk-player/scenario-setup-runtime.ts";
 import { currentGitRevision, GitShaSchema, repoRoot } from "./transcript.ts";
@@ -40,7 +42,10 @@ function fail(message: string): never {
 function runCodexJson<A, I>(
   prompt: string,
   schema: Schema.Schema<A, I>,
-  reasoningEffort: "medium" | "high",
+  execution: {
+    readonly model: "gpt-5.6-sol" | "gpt-5.6-luna";
+    readonly reasoningEffort: "medium" | "max";
+  },
 ): A {
   const outputSchema = Schema.Struct({ result: schema });
   const temporary = mkdtempSync(resolve(tmpdir(), "dnd-scenario-campaign-"));
@@ -63,9 +68,9 @@ function runCodexJson<A, I>(
         "--disable",
         "tool_call_mcp_elicitation",
         "-m",
-        "gpt-5.6-sol",
+        execution.model,
         "-c",
-        `model_reasoning_effort=${JSON.stringify(reasoningEffort)}`,
+        `model_reasoning_effort=${JSON.stringify(execution.reasoningEffort)}`,
         "--output-schema",
         schemaPath,
         "--output-last-message",
@@ -92,6 +97,8 @@ function runCodexJson<A, I>(
 function generationPreamble(
   statBlockNames: readonly string[],
   contentAvailabilityIntent: ContentAvailabilityIntent,
+  sdkCapabilityIntent: SdkCapabilityIntent,
+  sdkCapabilityDocs: string,
 ): string {
   return `You generate battle-testing scenarios for an SRD 5.2.1 adjudicator SDK.
 Return complete prose scenario revisions, not outlines or patches. Bias toward combat, serious pursuit of authored objectives, and materially different or changing tactics. Keep story to mechanically consequential terrain, visibility, distance, objectives, builds, and encounter facts. Mix exact constraints with delegated player choices naturally in prose. Do not invent a stage system, command language, or expected result. Do not describe a winner, victory, winning side, or encounter-wide partition; retain concrete combatants, pairwise relationships, and objective facts. Use only SRD identity or visibly synthetic unsupported material; never copy non-SRD official D&D identity or expression.
@@ -101,18 +108,78 @@ ${statBlockNames.join(", ")}
 
 Content-availability intent: ${contentAvailabilityIntent}
 
-${contentAvailabilityIntent === "availableOnly" ? "Use canonical stat blocks only from that availability list. An absent SRD record is a scenario-authoring error, not an implied product request." : "This campaign deliberately probes unavailable content. The prose must explicitly name content availability as the intended unsupported boundary so setup obstruction is interpretable."}`;
+${contentAvailabilityIntent === "availableOnly" ? "Use canonical stat blocks only from that availability list. An absent SRD record is a scenario-authoring error, not an implied product request." : "This campaign deliberately probes unavailable content. The prose must explicitly name content availability as the intended unsupported boundary so setup obstruction is interpretable."}
+
+SDK-capability intent: ${sdkCapabilityIntent}
+
+${sdkCapabilityIntent === "supportedOnly" ? "Use only scenario facts and interactions representable through the current public SDK described below. Do not repeat known unsupported mechanics merely because a prior scenario used them." : "Deliberately exercise one capability absent from the current public SDK described below, and explicitly name that capability as the intended probe. Keep the remaining scenario representable."}
+
+Current public SDK capability documentation:
+${sdkCapabilityDocs}`;
 }
 
 function liveAgents(): ScenarioCampaignAgents {
   const statBlocks = scenarioSetupStatBlocks();
   if (statBlocks.tag === "invalid") fail(statBlocks.message);
+  const sdkCapabilityDocs = [
+    {
+      label: "SCENARIO_CHARACTERS.md",
+      path: "scripts/raw-swarm/sdk-player/SCENARIO_CHARACTERS.md",
+    },
+    {
+      label: "CHARACTER_CREATION_SDK.md",
+      path: "packages/character-creation-runtime/README.md",
+    },
+    {
+      label: "CHARACTER_SHEET_SDK.md",
+      path: "packages/character-sheet-runtime/README.md",
+    },
+    {
+      label: "@dnd/scenario-character-sdk public contract",
+      path: "scripts/raw-swarm/sdk-player/scenario-character-contract.ts",
+    },
+    {
+      label: "SCENARIO_SETUP.md",
+      path: "scripts/raw-swarm/sdk-player/SCENARIO_SETUP.md",
+    },
+    {
+      label: "@dnd/scenario-setup-sdk public contract",
+      path: "scripts/raw-swarm/sdk-player/scenario-setup-contract.ts",
+    },
+    {
+      label: "PLAYER.md",
+      path: "scripts/raw-swarm/sdk-player/PLAYER.md",
+    },
+    {
+      label: "@dnd/player-sdk public contract",
+      path: "scripts/raw-swarm/sdk-player/continuation-contract.ts",
+    },
+    {
+      label: "PUBLIC_SDK.md",
+      path: "packages/battle-runtime/README.md",
+    },
+  ]
+    .map(
+      ({ label, path }) =>
+        `## ${label}\n\n${readFileSync(resolve(repoRoot, path), "utf8")}`,
+    )
+    .join("\n\n");
+  const generatorExecution = {
+    model: "gpt-5.6-sol",
+    reasoningEffort: "medium",
+  } as const;
+  const reviewerExecution = {
+    model: "gpt-5.6-luna",
+    reasoningEffort: "max",
+  } as const;
   return {
     generate: async (input) =>
       runCodexJson(
         `${generationPreamble(
           statBlocks.statBlocks.map(({ name }) => name),
           input.contentAvailabilityIntent,
+          input.sdkCapabilityIntent,
+          sdkCapabilityDocs,
         )}
 
 Distribution preference:
@@ -129,12 +196,13 @@ ${input.priorRevision.tag === "initial" || input.priorRevision.critiques.length 
 
 Produce exactly ${input.candidateCount} materially different complete prose revisions. Differences must affect mechanics, character choices, encounter composition, or tactical intent—not wording alone. Return only the required JSON.`,
         ScenarioCandidateBatchSchema,
-        "medium",
+        generatorExecution,
       ),
     reviewReadiness: async ({
       scenario,
       distributionPreference,
       contentAvailabilityIntent,
+      sdkCapabilityIntent,
     }) =>
       runCodexJson(
         `Independently judge whether this battle-testing scenario is ready. It is ready only if the setup is mechanically meaningful, every represented combatant or group seriously pursues an authored strategy-bearing objective, and its fixed versus delegated choices fit the campaign's distribution preference. Do not impose a generic balance: a deliberately loose or highly prescribed scenario can be ready. Do not judge RAW legality, choose tactics, predict the outcome, rewrite prose, or stop merely because the document is coherent. Reject prose that introduces a winner, victory, winning side, or encounter-wide partition instead of concrete combatant, pairwise-relationship, and objective facts. Return ready or one concise critique that would materially improve the next whole revision.
@@ -144,6 +212,8 @@ ${statBlocks.statBlocks.map(({ name }) => name).join(", ")}
 
 Content-availability intent: ${contentAvailabilityIntent}
 
+SDK-capability intent: ${sdkCapabilityIntent}
+
 An availableOnly scenario is not ready when it selects a canonical stat block absent from that list. A probeUnavailableContent scenario is ready on this axis only when its prose states that unsupported intent.
 
 Campaign distribution preference:
@@ -152,7 +222,7 @@ ${distributionPreference}
 Scenario:
 ${scenario}`,
         ScenarioReadinessSchema,
-        "high",
+        reviewerExecution,
       ),
     reviewRaw: async (scenario, finalReview) =>
       runCodexJson(
@@ -161,7 +231,7 @@ ${scenario}`,
 Scenario:
 ${scenario}`,
         ScenarioRawReviewSchema,
-        "high",
+        reviewerExecution,
       ),
     reviewContent: async ({ scenario, contentAvailabilityIntent }) =>
       runCodexJson(
@@ -177,7 +247,23 @@ For availableOnly intent, return supplied when every selected canonical stat blo
 Scenario:
 ${scenario}`,
         ScenarioContentReviewSchema,
-        "high",
+        reviewerExecution,
+      ),
+    reviewSdkCapability: async ({ scenario, sdkCapabilityIntent }) =>
+      runCodexJson(
+        `Independently review whether every scenario fact and interaction required to set up and play this scenario is representable through the current public SDK documented below. Treat these current documents—not historical run verdicts or a permanent blacklist—as the capability authority. Do not inspect implementation files, judge RAW legality, choose tactics, predict results, or rewrite the scenario.
+
+SDK-capability intent: ${sdkCapabilityIntent}
+
+For supportedOnly intent, return supported only when the full scenario is representable; otherwise return unsupported with precise evidence and one correction critique. For probeUnsupportedCapability intent, return explicitUnsupportedProbe only when the prose explicitly names a capability that these documents do not support; if the requested capability is now supported or no unsupported capability is explicit, return missingUnsupportedProbe with a correction critique. This allows a capability to stop being excluded automatically when the public SDK documentation gains support.
+
+Current public SDK capability documentation:
+${sdkCapabilityDocs}
+
+Scenario:
+${scenario}`,
+        ScenarioSdkCapabilityReviewSchema,
+        reviewerExecution,
       ),
     reviewPolicy: async (scenario) =>
       runCodexJson(
@@ -186,7 +272,7 @@ ${scenario}`,
 Scenario:
 ${scenario}`,
         ScenarioPolicyReviewSchema,
-        "high",
+        reviewerExecution,
       ),
   };
 }
@@ -277,10 +363,13 @@ async function main(args: readonly string[]): Promise<void> {
     scenarioId: result.right.scenarioId,
     scenarioSha256: createHash("sha256").update(scenarioBytes).digest("hex"),
     gitSha: gitSha.right,
+    reviewScope: result.right.reviewScope,
     contentAvailabilityIntent: result.right.contentAvailabilityIntent,
+    sdkCapabilityIntent: result.right.sdkCapabilityIntent,
     admitReviewedUnsupported: result.right.admitReviewedUnsupported,
     rawReview: result.right.rawReview,
     contentReview: result.right.contentReview,
+    sdkCapabilityReview: result.right.sdkCapabilityReview,
     policyReview: result.right.policyReview,
   });
   if (Either.isLeft(review)) {

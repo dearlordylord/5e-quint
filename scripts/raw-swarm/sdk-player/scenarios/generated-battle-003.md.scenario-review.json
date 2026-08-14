@@ -2,6 +2,7 @@
   "scenarioId": "generated-battle-003",
   "scenarioSha256": "81b3ca56ba4e8bbf24b7f4ecd043794eecb224eda2fad71c8f54c50407b00c72",
   "gitSha": "ff7edc2c4c12d9cb7781a365e763aa3ba8a5f3df",
+  "reviewScope": "rawContentPolicy",
   "admitReviewedUnsupported": true,
   "rawReview": {
     "classification": "unsupported",

@@ -67,13 +67,18 @@ edge cases. It must bias toward battles, serious pursuit of authored objectives,
 and materially different strategies rather than plots or storytelling.
 
 The generator also receives the canonical stat-block availability profile and
-an explicit campaign intent: `availableOnly` or `probeUnavailableContent`.
+two explicit intents. Content availability is `availableOnly` or
+`probeUnavailableContent`; SDK capability is `supportedOnly` or
+`probeUnsupportedCapability`.
 Ordinary scenarios may select canonical stat blocks only from that profile; an
 absent SRD record is a scenario-authoring error, not an implied request to widen
 the shipped catalog. Unavailable content is admitted as playable authored input
 only for a deliberate availability-probe campaign whose prose names that
 unsupported intent. Rejected authoring evidence may still be retained outside
-the playable scenario directory.
+the playable scenario directory. A supported-only campaign must remain within
+the current public scenario-character, setup, and player SDK documentation. A
+capability-probe campaign must explicitly name one unsupported SDK boundary and
+keep the rest representable.
 
 Each generation iteration asks an LLM for several materially different, complete
 revisions of the scenario-so-far. A script randomly selects one revision and
@@ -86,7 +91,8 @@ reduce choice-after-generation bias, but cannot remove bias in the generated
 candidate set.
 
 Generation has campaign-configured minimum and maximum iteration counts. It
-cannot stop before the minimum. After the minimum, an independent readiness
+cannot stop before the minimum or before every configured review milestone.
+After both boundaries, an independent readiness
 reviewer decides whether the scenario has a mechanically meaningful setup,
 enough strategic substance in every strategy-bearing brief, and the campaign's
 requested balance of fixed and delegated choices. A ready decision stops
@@ -121,10 +127,21 @@ accumulated prose against the local SRD and the registered ambiguity decisions
 in [`ASSUMPTIONS.md`](../../ASSUMPTIONS.md) for legality, coherence, and
 executability. A separate content-availability reviewer compares authored
 canonical identities with the supplied catalog and explicit campaign intent.
-This keeps “RAW-supported” distinct from “available in this product profile.”
-Both report problems without choosing tactics, declaring an outcome, or silently
-rewriting the scenario, and their critiques become input to a later generation
-iteration. Final RAW, content, and policy reviews happen before play.
+A separate SDK-capability reviewer compares the scenario with the current
+public consumer documentation. This keeps “RAW-supported,” “available in this
+product profile,” and “representable through the current SDK” distinct. The
+SDK review does not use historical run verdicts as a permanent blacklist: when
+the public SDK and its documentation gain a capability, the next review sees it
+as supported, so ordinary generation can use it and an obsolete capability
+probe is rejected. These reviewers report problems without choosing tactics,
+declaring an outcome, or silently rewriting the scenario, and their critiques
+become input to a later generation iteration. Final RAW, content,
+SDK-capability, and policy reviews happen before play.
+
+Generation uses the Sol model at medium reasoning. Readiness, RAW, content,
+SDK-capability, and artifact-policy reviews run sequentially with the Luna model
+at max reasoning. They are separate review responsibilities, not concurrent
+voters or scenario domain roles.
 
 An impossible or partially unsupported scenario can still be valuable evidence.
 After preserving the RAW and availability verdicts, the campaign may admit the
@@ -142,8 +159,9 @@ the whole document. These prose sections do not constitute a scenario DSL.
 
 The executable campaign boundary is a small JSON authoring configuration, not a
 D&D scenario model. It contains only the distribution preference, explicit
-content-availability intent, iteration bounds, candidate count, RAW-review
-milestones, and whether a reviewed RAW-unsupported result may be admitted.
+content-availability and SDK-capability intents, iteration bounds, candidate
+count, review milestones, and whether a reviewed RAW-unsupported result may be
+admitted.
 Start from
 [`scenario-campaign.example.json`](scenario-campaign.example.json), then run
 from a clean revision:
@@ -156,12 +174,18 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/generate-scenario.ts \
 The command refuses to overwrite either output. It retains only the selected
 final prose and its adjacent `.scenario-review.json`; candidate batches, random
 indices, readiness decisions, milestone reviews, and agent process output are
-discarded. Separate final RAW, content-availability, and public-artifact policy
-reviews record the scenario id, clean Git revision, availability/admission
-intent, and a hash of the exact final prose bytes. The command derives both
-output filenames from the validated scenario id. Admitted
+discarded. Separate final RAW, content-availability, SDK-capability, and
+public-artifact policy reviews record the scenario id, clean Git revision,
+availability/capability/admission intent, and a hash of the exact final prose
+bytes. The command derives both output filenames from the validated scenario
+id. Admitted
 artifacts go under `sdk-player/scenarios/`; rejected diagnostic output goes
 under ignored `out/rejected-scenarios/` and is not playable input.
+The review's `reviewScope` states which independent review responsibilities
+actually ran. Retained pre-capability-review artifacts remain
+`rawContentPolicy`; do not backfill a verdict that was never produced. New
+campaigns retain `rawContentSdkCapabilityPolicy` and require the SDK-capability
+intent and verdict.
 
 An admitted prose artifact is not parsed. A controller agent first authors an
 adjacent `<scenario-id>.characters.ts` against the canonical character-creation
@@ -188,6 +212,9 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/author-scenario-characters.ts \
 
 mise exec -- pnpm exec tsx scripts/raw-swarm/author-scenario-setup.ts \
   "$SCENARIO"
+
+# Commit the retained setup source before recording play. The player runner,
+# replay, and review all require the clean revision recorded in their evidence.
 ```
 
 Each author receives only the prose, its exact admission review, relevant public

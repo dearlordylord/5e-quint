@@ -8,6 +8,7 @@
     "../generate-scenario.ts",
     "../author-scenario-setup.ts",
     "../author-scenario-characters.ts",
+    "../examples/*.ts",
     "../scenario-campaign.ts",
     "scenario-setup-contract.ts",
     "scenario-setup-runtime.ts",
@@ -22,6 +23,7 @@
     "lib": ["ES2022"],
     "types": ["node"],
     "paths": {
+      "@dnd/player-sdk": ["./consumer-entry.ts"],
       "@dnd/battle-runtime": ["../../../packages/battle-runtime/src/index.ts"],
       "@dnd/character-creation-runtime": [
         "../../../packages/character-creation-runtime/src/index.ts"

@@ -18,10 +18,11 @@ const config = {
   distributionPreference:
     "Vary battle tactics and delegated character choices.",
   contentAvailabilityIntent: "availableOnly",
+  sdkCapabilityIntent: "supportedOnly",
   minimumIterations: 2,
   maximumIterations: 4,
   candidatesPerIteration: 3,
-  rawReviewMilestones: [2],
+  reviewMilestones: [2],
   admitReviewedUnsupported: false,
 };
 
@@ -55,6 +56,10 @@ describe("scenario generation campaign", () => {
         classification: "supplied",
         evidence: "Synthetic content evidence.",
       })),
+      reviewSdkCapability: vi.fn(async () => ({
+        classification: "supported",
+        evidence: "Synthetic SDK evidence.",
+      })),
       reviewPolicy: vi.fn(async () => ({
         classification: "safe",
         evidence: "Synthetic policy evidence.",
@@ -79,6 +84,7 @@ describe("scenario generation campaign", () => {
       scenario: "iteration 2 candidate B",
       distributionPreference: config.distributionPreference,
       contentAvailabilityIntent: "availableOnly",
+      sdkCapabilityIntent: "supportedOnly",
     });
     expect(agents.reviewRaw).toHaveBeenCalledTimes(2);
   });
@@ -116,6 +122,10 @@ describe("scenario generation campaign", () => {
         reviewContent: async () => ({
           classification: "supplied",
           evidence: "Synthetic content evidence.",
+        }),
+        reviewSdkCapability: async () => ({
+          classification: "supported",
+          evidence: "Synthetic SDK evidence.",
         }),
         reviewPolicy: async () => ({
           classification: "safe",
@@ -162,6 +172,10 @@ describe("scenario generation campaign", () => {
         classification: "supplied",
         evidence: "Synthetic content evidence.",
       }),
+      reviewSdkCapability: async () => ({
+        classification: "supported",
+        evidence: "Synthetic SDK evidence.",
+      }),
       reviewPolicy: async () => ({
         classification: "safe",
         evidence: "Synthetic policy evidence.",
@@ -171,6 +185,13 @@ describe("scenario generation campaign", () => {
     expect(
       Either.isLeft(
         await runScenarioCampaign({ ...config, minimumIterations: 5 }, agents, {
+          select: () => 0,
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        await runScenarioCampaign({ ...config, reviewMilestones: [] }, agents, {
           select: () => 0,
         }),
       ),
@@ -312,6 +333,10 @@ describe("scenario generation campaign", () => {
           classification: "explicitUnavailableProbe",
           evidence: "The revised prose states the probe.",
         }),
+      reviewSdkCapability: async () => ({
+        classification: "supported",
+        evidence: "Synthetic SDK evidence.",
+      }),
       reviewPolicy: async () => ({
         classification: "safe",
         evidence: "Synthetic policy evidence.",
@@ -324,7 +349,7 @@ describe("scenario generation campaign", () => {
         contentAvailabilityIntent: "probeUnavailableContent",
         minimumIterations: 1,
         maximumIterations: 2,
-        rawReviewMilestones: [1],
+        reviewMilestones: [1],
       },
       agents,
       { select: () => 0 },
@@ -365,6 +390,10 @@ describe("scenario generation campaign", () => {
           classification: "explicitUnavailableProbe",
           evidence: "The revised prose states the probe.",
         }),
+      reviewSdkCapability: async () => ({
+        classification: "supported",
+        evidence: "Synthetic SDK evidence.",
+      }),
       reviewPolicy: async () => ({
         classification: "safe",
         evidence: "Synthetic policy evidence.",
@@ -377,7 +406,7 @@ describe("scenario generation campaign", () => {
         contentAvailabilityIntent: "probeUnavailableContent",
         minimumIterations: 1,
         maximumIterations: 2,
-        rawReviewMilestones: [1],
+        reviewMilestones: [1],
       },
       agents,
       { select: () => 0 },
@@ -414,12 +443,18 @@ describe("scenario generation campaign", () => {
       scenarioId,
       scenarioSha256: createHash("sha256").update(scenarioBytes).digest("hex"),
       gitSha,
+      reviewScope: "rawContentSdkCapabilityPolicy",
       contentAvailabilityIntent: "availableOnly",
+      sdkCapabilityIntent: "supportedOnly",
       admitReviewedUnsupported: false,
       rawReview: { classification: "supported", evidence: "Local RAW." },
       contentReview: {
         classification: "supplied",
         evidence: "Local catalog.",
+      },
+      sdkCapabilityReview: {
+        classification: "supported",
+        evidence: "Current public SDK.",
       },
       policyReview: { classification: "safe", evidence: "Local policy." },
     };
@@ -508,5 +543,119 @@ describe("scenario generation campaign", () => {
         sha: "b".repeat(40),
       }),
     ).toBe(false);
+  });
+
+  test("feeds accidental unsupported SDK capability back and rejects it", async () => {
+    const generationInputs: unknown[] = [];
+    const reviewSdkCapability = vi
+      .fn()
+      .mockResolvedValueOnce({
+        classification: "unsupported",
+        evidence: "The current public SDK cannot represent elevation.",
+        critique: "Remove elevation-dependent mechanics.",
+      })
+      .mockResolvedValue({
+        classification: "unsupported",
+        evidence: "The current public SDK cannot represent elevation.",
+        critique: "Remove elevation-dependent mechanics.",
+      });
+    const result = await runScenarioCampaign(
+      {
+        ...config,
+        minimumIterations: 1,
+        maximumIterations: 2,
+        reviewMilestones: [1],
+      },
+      {
+        generate: async (input) => {
+          generationInputs.push(input);
+          return {
+            candidates: Array.from(
+              { length: input.candidateCount },
+              (_, index) => `SDK candidate ${input.iteration}-${index}`,
+            ),
+          };
+        },
+        reviewReadiness: async () => ({ decision: "ready" }),
+        reviewRaw: async () => ({
+          classification: "supported",
+          evidence: "Synthetic RAW evidence.",
+        }),
+        reviewContent: async () => ({
+          classification: "supplied",
+          evidence: "Synthetic content evidence.",
+        }),
+        reviewSdkCapability,
+        reviewPolicy: async () => ({
+          classification: "safe",
+          evidence: "Synthetic policy evidence.",
+        }),
+      },
+      { select: () => 0 },
+    );
+
+    expect(generationInputs[1]).toMatchObject({
+      priorRevision: { critiques: ["Remove elevation-dependent mechanics."] },
+    });
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isRight(result)) {
+      expect(finalScenarioDisposition(result.right)).toBe("rejected");
+    }
+  });
+
+  test("admits only an explicit unsupported SDK probe for probe intent", async () => {
+    const baseAgents: ScenarioCampaignAgents = {
+      generate: async (input) => ({
+        candidates: Array.from(
+          { length: input.candidateCount },
+          (_, index) => `probe ${index}`,
+        ),
+      }),
+      reviewReadiness: async () => ({ decision: "ready" }),
+      reviewRaw: async () => ({
+        classification: "supported",
+        evidence: "Synthetic RAW evidence.",
+      }),
+      reviewContent: async () => ({
+        classification: "supplied",
+        evidence: "Synthetic content evidence.",
+      }),
+      reviewSdkCapability: async () => ({
+        classification: "explicitUnsupportedProbe",
+        evidence: "The scenario explicitly probes unsupported elevation.",
+      }),
+      reviewPolicy: async () => ({
+        classification: "safe",
+        evidence: "Synthetic policy evidence.",
+      }),
+    };
+    const probeConfig = {
+      ...config,
+      sdkCapabilityIntent: "probeUnsupportedCapability",
+    } as const;
+    const probe = await runScenarioCampaign(probeConfig, baseAgents, {
+      select: () => 0,
+    });
+    expect(Either.isRight(probe)).toBe(true);
+    if (Either.isRight(probe)) {
+      expect(finalScenarioDisposition(probe.right)).toBe("admitted");
+    }
+
+    const nowSupported = await runScenarioCampaign(
+      probeConfig,
+      {
+        ...baseAgents,
+        reviewSdkCapability: async () => ({
+          classification: "missingUnsupportedProbe",
+          evidence: "The current SDK now supports every requested mechanic.",
+          critique: "Choose a capability that remains unsupported.",
+        }),
+      },
+      { select: () => 0 },
+    );
+    expect(Either.isRight(nowSupported)).toBe(true);
+    if (Either.isRight(nowSupported)) {
+      expect(finalScenarioDisposition(nowSupported.right)).toBe("rejected");
+    }
   });
 });

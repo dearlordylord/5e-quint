@@ -103,6 +103,55 @@ const ScenarioContentAdmissionSchema = Schema.Union(
   }),
 );
 
+const SDK_CAPABILITY_INTENTS = [
+  "supportedOnly",
+  "probeUnsupportedCapability",
+] as const;
+const SdkCapabilityIntentSchema = Schema.Literal(...SDK_CAPABILITY_INTENTS);
+export type SdkCapabilityIntent = (typeof SDK_CAPABILITY_INTENTS)[number];
+
+const SupportedScenarioSdkCapabilityReviewSchema = Schema.Struct({
+  classification: Schema.Literal("supported"),
+  evidence: Schema.NonEmptyTrimmedString,
+});
+const UnsupportedScenarioSdkCapabilityReviewSchema = Schema.Struct({
+  classification: Schema.Literal("unsupported"),
+  evidence: Schema.NonEmptyTrimmedString,
+  critique: Schema.NonEmptyTrimmedString,
+});
+const ExplicitUnsupportedSdkCapabilityProbeReviewSchema = Schema.Struct({
+  classification: Schema.Literal("explicitUnsupportedProbe"),
+  evidence: Schema.NonEmptyTrimmedString,
+});
+const MissingUnsupportedSdkCapabilityProbeReviewSchema = Schema.Struct({
+  classification: Schema.Literal("missingUnsupportedProbe"),
+  evidence: Schema.NonEmptyTrimmedString,
+  critique: Schema.NonEmptyTrimmedString,
+});
+export const ScenarioSdkCapabilityReviewSchema = Schema.Union(
+  SupportedScenarioSdkCapabilityReviewSchema,
+  UnsupportedScenarioSdkCapabilityReviewSchema,
+  ExplicitUnsupportedSdkCapabilityProbeReviewSchema,
+  MissingUnsupportedSdkCapabilityProbeReviewSchema,
+);
+
+const ScenarioSdkCapabilityAdmissionSchema = Schema.Union(
+  Schema.Struct({
+    sdkCapabilityIntent: Schema.Literal("supportedOnly"),
+    sdkCapabilityReview: Schema.Union(
+      SupportedScenarioSdkCapabilityReviewSchema,
+      UnsupportedScenarioSdkCapabilityReviewSchema,
+    ),
+  }),
+  Schema.Struct({
+    sdkCapabilityIntent: Schema.Literal("probeUnsupportedCapability"),
+    sdkCapabilityReview: Schema.Union(
+      ExplicitUnsupportedSdkCapabilityProbeReviewSchema,
+      MissingUnsupportedSdkCapabilityProbeReviewSchema,
+    ),
+  }),
+);
+
 const SafeScenarioPolicyReviewSchema = Schema.Struct({
   classification: Schema.Literal("safe"),
   evidence: Schema.NonEmptyTrimmedString,
@@ -128,22 +177,41 @@ const FinalScenarioIdentitySchema = Schema.Struct({
   gitSha: GitShaSchema,
 });
 
-export const FinalScenarioReviewSchema = Schema.Struct({
+const FinalScenarioReviewBaseSchema = Schema.Struct({
   ...FinalScenarioIdentitySchema.fields,
   admitReviewedUnsupported: Schema.Boolean,
   rawReview: ScenarioRawReviewSchema,
   policyReview: ScenarioPolicyReviewSchema,
+});
+
+const RawContentPolicyScenarioReviewSchema = Schema.Struct({
+  ...FinalScenarioReviewBaseSchema.fields,
+  reviewScope: Schema.Literal("rawContentPolicy"),
 }).pipe(Schema.extend(ScenarioContentAdmissionSchema));
+
+const RawContentSdkCapabilityPolicyScenarioReviewSchema = Schema.Struct({
+  ...FinalScenarioReviewBaseSchema.fields,
+  reviewScope: Schema.Literal("rawContentSdkCapabilityPolicy"),
+}).pipe(
+  Schema.extend(ScenarioContentAdmissionSchema),
+  Schema.extend(ScenarioSdkCapabilityAdmissionSchema),
+);
+
+export const FinalScenarioReviewSchema = Schema.Union(
+  RawContentPolicyScenarioReviewSchema,
+  RawContentSdkCapabilityPolicyScenarioReviewSchema,
+);
 
 type ScenarioContentAdmission = Schema.Schema.Type<
   typeof ScenarioContentAdmissionSchema
 >;
+type ScenarioSdkCapabilityAdmission = Schema.Schema.Type<
+  typeof ScenarioSdkCapabilityAdmissionSchema
+>;
 
-type ScenarioAdmissionReviews = ScenarioContentAdmission &
-  Pick<
-    Schema.Schema.Type<typeof FinalScenarioReviewSchema>,
-    "admitReviewedUnsupported" | "rawReview" | "policyReview"
-  >;
+type ScenarioAdmissionReviews = Schema.Schema.Type<
+  typeof FinalScenarioReviewSchema
+>;
 
 function decodeScenarioContentAdmission(input: {
   readonly contentAvailabilityIntent: ContentAvailabilityIntent;
@@ -156,6 +224,21 @@ function decodeScenarioContentAdmission(input: {
     ? Either.right(decoded.right)
     : Either.left(
         "Scenario content reviewer returned a result inconsistent with the campaign intent.",
+      );
+}
+
+function decodeScenarioSdkCapabilityAdmission(input: {
+  readonly sdkCapabilityIntent: SdkCapabilityIntent;
+  readonly sdkCapabilityReview: ScenarioSdkCapabilityReview;
+}): Either.Either<ScenarioSdkCapabilityAdmission, string> {
+  const decoded = Schema.decodeUnknownEither(
+    ScenarioSdkCapabilityAdmissionSchema,
+    { onExcessProperty: "error" },
+  )(input);
+  return Either.isRight(decoded)
+    ? Either.right(decoded.right)
+    : Either.left(
+        "Scenario SDK capability reviewer returned a result inconsistent with the campaign intent.",
       );
 }
 
@@ -215,17 +298,80 @@ function contentDisposition(
   );
 }
 
+function sdkCapabilityDisposition(
+  review: ScenarioSdkCapabilityAdmission,
+): "admitted" | "rejected" {
+  return Match.value(review).pipe(
+    Match.when(
+      { sdkCapabilityIntent: "supportedOnly" },
+      ({ sdkCapabilityReview }) =>
+        Match.value(sdkCapabilityReview).pipe(
+          Match.when(
+            { classification: "supported" },
+            () => "admitted" as const,
+          ),
+          Match.when(
+            { classification: "unsupported" },
+            () => "rejected" as const,
+          ),
+          Match.exhaustive,
+        ),
+    ),
+    Match.when(
+      { sdkCapabilityIntent: "probeUnsupportedCapability" },
+      ({ sdkCapabilityReview }) =>
+        Match.value(sdkCapabilityReview).pipe(
+          Match.when(
+            { classification: "explicitUnsupportedProbe" },
+            () => "admitted" as const,
+          ),
+          Match.when(
+            { classification: "missingUnsupportedProbe" },
+            () => "rejected" as const,
+          ),
+          Match.exhaustive,
+        ),
+    ),
+    Match.exhaustive,
+  );
+}
+
 export function finalScenarioDisposition(
   review: ScenarioAdmissionReviews,
 ): "admitted" | "rejected" {
-  return Match.value(review.policyReview).pipe(
-    Match.when({ classification: "violation" }, () => "rejected" as const),
-    Match.when({ classification: "safe" }, () =>
-      contentDisposition(
-        review,
-        review.rawReview,
-        review.admitReviewedUnsupported,
+  return Match.value(review).pipe(
+    Match.when({ reviewScope: "rawContentPolicy" }, (scopedReview) =>
+      Match.value(scopedReview.policyReview).pipe(
+        Match.when({ classification: "violation" }, () => "rejected" as const),
+        Match.when({ classification: "safe" }, () =>
+          contentDisposition(
+            scopedReview,
+            scopedReview.rawReview,
+            scopedReview.admitReviewedUnsupported,
+          ),
+        ),
+        Match.exhaustive,
       ),
+    ),
+    Match.when(
+      { reviewScope: "rawContentSdkCapabilityPolicy" },
+      (scopedReview) =>
+        Match.value(scopedReview.policyReview).pipe(
+          Match.when(
+            { classification: "violation" },
+            () => "rejected" as const,
+          ),
+          Match.when({ classification: "safe" }, () =>
+            sdkCapabilityDisposition(scopedReview) === "rejected"
+              ? "rejected"
+              : contentDisposition(
+                  scopedReview,
+                  scopedReview.rawReview,
+                  scopedReview.admitReviewedUnsupported,
+                ),
+          ),
+          Match.exhaustive,
+        ),
     ),
     Match.exhaustive,
   );
@@ -271,23 +417,25 @@ export const ScenarioCampaignConfigSchema = Schema.Struct({
   scenarioId: ScenarioIdSchema,
   distributionPreference: Schema.NonEmptyTrimmedString,
   contentAvailabilityIntent: ContentAvailabilityIntentSchema,
+  sdkCapabilityIntent: SdkCapabilityIntentSchema,
   minimumIterations: PositiveIntegerSchema,
   maximumIterations: PositiveIntegerSchema,
   candidatesPerIteration: PositiveIntegerSchema.pipe(Schema.greaterThan(1)),
-  rawReviewMilestones: Schema.Array(PositiveIntegerSchema),
+  reviewMilestones: Schema.Array(PositiveIntegerSchema).pipe(
+    Schema.minItems(1),
+  ),
   admitReviewedUnsupported: Schema.Boolean,
 }).pipe(
   Schema.filter(
     (config) =>
       config.minimumIterations <= config.maximumIterations &&
-      config.rawReviewMilestones.every(
+      config.reviewMilestones.every(
         (milestone) => milestone < config.maximumIterations,
       ) &&
-      new Set(config.rawReviewMilestones).size ===
-        config.rawReviewMilestones.length,
+      new Set(config.reviewMilestones).size === config.reviewMilestones.length,
     {
       message: () =>
-        "campaign bounds require minimum <= maximum and unique RAW milestones below maximum",
+        "campaign bounds require minimum <= maximum and unique review milestones below maximum",
     },
   ),
 );
@@ -310,11 +458,15 @@ export type ScenarioPolicyReview = Schema.Schema.Type<
 export type ScenarioContentReview = Schema.Schema.Type<
   typeof ScenarioContentReviewSchema
 >;
+export type ScenarioSdkCapabilityReview = Schema.Schema.Type<
+  typeof ScenarioSdkCapabilityReviewSchema
+>;
 
 export type ScenarioGenerationInput = {
   readonly iteration: number;
   readonly distributionPreference: string;
   readonly contentAvailabilityIntent: ScenarioCampaignConfig["contentAvailabilityIntent"];
+  readonly sdkCapabilityIntent: ScenarioCampaignConfig["sdkCapabilityIntent"];
   readonly priorRevision:
     | { readonly tag: "initial" }
     | {
@@ -333,6 +485,7 @@ export interface ScenarioCampaignAgents {
     readonly scenario: string;
     readonly distributionPreference: string;
     readonly contentAvailabilityIntent: ScenarioCampaignConfig["contentAvailabilityIntent"];
+    readonly sdkCapabilityIntent: ScenarioCampaignConfig["sdkCapabilityIntent"];
   }) => Promise<ScenarioReadiness>;
   readonly reviewRaw: (
     scenario: string,
@@ -342,6 +495,10 @@ export interface ScenarioCampaignAgents {
     readonly scenario: string;
     readonly contentAvailabilityIntent: ScenarioCampaignConfig["contentAvailabilityIntent"];
   }) => Promise<ScenarioContentReview>;
+  readonly reviewSdkCapability: (input: {
+    readonly scenario: string;
+    readonly sdkCapabilityIntent: ScenarioCampaignConfig["sdkCapabilityIntent"];
+  }) => Promise<ScenarioSdkCapabilityReview>;
   readonly reviewPolicy: (scenario: string) => Promise<ScenarioPolicyReview>;
 }
 
@@ -357,10 +514,12 @@ type ScenarioCampaignResultBase = {
   readonly admitReviewedUnsupported: boolean;
   readonly rawReview: ScenarioRawReview;
   readonly policyReview: ScenarioPolicyReview;
+  readonly reviewScope: "rawContentSdkCapabilityPolicy";
 };
 
 export type ScenarioCampaignResult = ScenarioCampaignResultBase &
-  ScenarioContentAdmission;
+  ScenarioContentAdmission &
+  ScenarioSdkCapabilityAdmission;
 
 export async function runScenarioCampaign(
   configInput: unknown,
@@ -374,6 +533,7 @@ export async function runScenarioCampaign(
     return Either.left(`Invalid scenario campaign: ${decoded.left.message}`);
   }
   const config = decoded.right;
+  const lastReviewMilestone = Math.max(...config.reviewMilestones);
   let draft:
     | { readonly tag: "unstarted" }
     | {
@@ -392,6 +552,7 @@ export async function runScenarioCampaign(
       iteration,
       distributionPreference: config.distributionPreference,
       contentAvailabilityIntent: config.contentAvailabilityIntent,
+      sdkCapabilityIntent: config.sdkCapabilityIntent,
       priorRevision:
         draft.tag === "unstarted"
           ? { tag: "initial" }
@@ -432,7 +593,7 @@ export async function runScenarioCampaign(
     }
     const critiques: string[] = [];
 
-    if (config.rawReviewMilestones.includes(iteration)) {
+    if (config.reviewMilestones.includes(iteration)) {
       const review = await agents.reviewRaw(prose, false);
       if (review.classification !== "supported") {
         critiques.push(review.critique);
@@ -464,16 +625,47 @@ export async function runScenarioCampaign(
         ),
         Match.exhaustive,
       );
+      const sdkCapabilityReview = await agents.reviewSdkCapability({
+        scenario: prose,
+        sdkCapabilityIntent: config.sdkCapabilityIntent,
+      });
+      const sdkCapabilityAdmission = decodeScenarioSdkCapabilityAdmission({
+        sdkCapabilityIntent: config.sdkCapabilityIntent,
+        sdkCapabilityReview,
+      });
+      if (Either.isLeft(sdkCapabilityAdmission)) {
+        return Either.left(sdkCapabilityAdmission.left);
+      }
+      Match.value(sdkCapabilityAdmission.right.sdkCapabilityReview).pipe(
+        Match.when({ classification: "unsupported" }, ({ critique }) =>
+          critiques.push(critique),
+        ),
+        Match.when(
+          { classification: "missingUnsupportedProbe" },
+          ({ critique }) => critiques.push(critique),
+        ),
+        Match.when({ classification: "supported" }, () => undefined),
+        Match.when(
+          { classification: "explicitUnsupportedProbe" },
+          () => undefined,
+        ),
+        Match.exhaustive,
+      );
     }
     draft = { tag: "selected", prose, iteration, critiques };
     if (iteration === config.maximumIterations) {
       break;
     }
-    if (iteration >= config.minimumIterations && critiques.length === 0) {
+    if (
+      iteration >= config.minimumIterations &&
+      iteration >= lastReviewMilestone &&
+      critiques.length === 0
+    ) {
       const readiness = await agents.reviewReadiness({
         scenario: prose,
         distributionPreference: config.distributionPreference,
         contentAvailabilityIntent: config.contentAvailabilityIntent,
+        sdkCapabilityIntent: config.sdkCapabilityIntent,
       });
       if (readiness.decision === "ready") {
         break;
@@ -500,6 +692,17 @@ export async function runScenarioCampaign(
   if (Either.isLeft(finalContentAdmission)) {
     return Either.left(finalContentAdmission.left);
   }
+  const finalSdkCapabilityReview = await agents.reviewSdkCapability({
+    scenario: draft.prose,
+    sdkCapabilityIntent: config.sdkCapabilityIntent,
+  });
+  const finalSdkCapabilityAdmission = decodeScenarioSdkCapabilityAdmission({
+    sdkCapabilityIntent: config.sdkCapabilityIntent,
+    sdkCapabilityReview: finalSdkCapabilityReview,
+  });
+  if (Either.isLeft(finalSdkCapabilityAdmission)) {
+    return Either.left(finalSdkCapabilityAdmission.left);
+  }
   const finalPolicyReview = await agents.reviewPolicy(draft.prose);
   const resultBase = {
     scenarioId: config.scenarioId,
@@ -510,7 +713,9 @@ export async function runScenarioCampaign(
     admitReviewedUnsupported: config.admitReviewedUnsupported,
     rawReview: finalRawReview,
     policyReview: finalPolicyReview,
+    reviewScope: "rawContentSdkCapabilityPolicy",
     ...finalContentAdmission.right,
+    ...finalSdkCapabilityAdmission.right,
   } as const;
   return Either.right(resultBase);
 }

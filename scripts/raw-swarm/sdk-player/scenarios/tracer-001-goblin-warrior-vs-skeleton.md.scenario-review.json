@@ -2,6 +2,7 @@
   "scenarioId": "tracer-001-goblin-warrior-vs-skeleton",
   "scenarioSha256": "7a078a32f17b5e545d2bbda3975155ea41a06104c717adf7936a411a7e105dbf",
   "gitSha": "30194c5898a68ab8e6eb23b6cb50f0a2a15b746e",
+  "reviewScope": "rawContentPolicy",
   "contentAvailabilityIntent": "availableOnly",
   "admitReviewedUnsupported": false,
   "rawReview": {

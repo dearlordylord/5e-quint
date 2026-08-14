@@ -44,6 +44,9 @@ with every resolution result's `session`. Stale or foreign sessions are rejected
 The session's canonical battle reducer state is `session.battle`; its immutable
 `session.battlefield` projection retains the authored five-foot arena, current
 placements, ambient Illumination, vertical environment facts, and scenario objects.
+Those vertical facts do not currently produce a table-authored per-test
+circumstance witness or an attack-roll mode. Do not infer Advantage or
+Disadvantage from relative height.
 Use `context.sdk.scenarioRelation` to derive current distance, sight,
 Cover, and traversal between retained tokens; do not restate those facts by
 reading coordinates yourself. A creature attack remains table-owned: when its
