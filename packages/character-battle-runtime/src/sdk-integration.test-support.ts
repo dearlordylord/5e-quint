@@ -42,6 +42,7 @@ import {
   discoverCreationHoles,
   fillCreationHoles,
   finalizeCharacterDraft,
+  copperPieceAmount,
   progressionOptionId,
   sorcererMetamagicOptionId,
   type CharacterBuild,
@@ -291,7 +292,11 @@ function levelFiveBaseBuild(input: {
       ? {}
       : { spellcasting: input.spellcasting }),
     magicInitiateSpellAccesses: [],
-    equipment: input.equipment ?? { owned: [], loadout: {} },
+    equipment: input.equipment ?? {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
+      owned: [],
+      loadout: {},
+    },
   };
 }
 
@@ -310,6 +315,7 @@ export function levelFiveMartialBuild(input: {
       ? {}
       : { abilityScores: input.abilityScores }),
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [
         {
           kind: "catalogItem",

@@ -60,7 +60,10 @@ import {
   type CombatantId,
 } from "../identity.ts";
 import { combatantWearingArmor } from "./creature-state-leaves.ts";
-import { spellAttackSequencePartName } from "./spells-execution-facts.ts";
+import {
+  singleTargetSpellRangeFeet,
+  spellAttackSequencePartName,
+} from "./spells-execution-facts.ts";
 import {
   SPELL_MAGICAL_EFFECT_SOURCE,
   magicalEffectTargetsInterdictionMessage,
@@ -165,16 +168,11 @@ export function spellTargetHole(
     label: `Spell target`,
     procedureRef: invocation.sourceProcedureRef,
     requiresTableSpatialFact: true,
-    ...(invocation.procedure === "spellAttackDamage"
-      ? {
-          spellTargetSpatialFactRequest: {
-            casterId: actorId,
-            sourceProcedureRef: invocation.sourceProcedureRef,
-            rangeFeet: invocation.rangeFeet,
-            visibility: "notSpecifiedByProcedure" as const,
-          },
-        }
-      : {}),
+    ...(invocation.procedure === "spiritualWeaponAttackProxy" ||
+    invocation.procedure === "spiritualWeaponRepeatAttack" ||
+    invocation.procedure === "featherFallMitigation"
+      ? {}
+      : ordinarySpellTargetSpatialFactRequest(actorId, invocation)),
     ...(spellTargetRequiresAttackRollRelationshipFact(invocation) &&
     ongoingFeatureEnemyRelationshipDecisionRequired(
       state,
@@ -628,6 +626,9 @@ export function spellTargetListHole(
           }
         : { kind: "individualTargets" },
     requiresTableSpatialFact: true,
+    ...(invocation.targeting.kind === "pointOriginSphereTargetList"
+      ? {}
+      : ordinarySpellTargetSpatialFactRequest(actorId, invocation)),
     ...(spellInvocationRequiresKnownWillingTarget(invocation)
       ? { requiresKnownWillingTargets: true as const }
       : {}),
@@ -643,6 +644,26 @@ export function spellTargetListHole(
       : {}),
     choices,
   };
+}
+
+function ordinarySpellTargetSpatialFactRequest(
+  actorId: CombatantId,
+  invocation: BattleExecutableSpellInvocation,
+): Pick<BattleSpellTargetListHole, "spellTargetSpatialFactRequest"> {
+  const rangeFeet =
+    "rangeFeet" in invocation
+      ? invocation.rangeFeet
+      : singleTargetSpellRangeFeet(invocation.spellRuleFacts.range);
+  return rangeFeet === null
+    ? {}
+    : {
+        spellTargetSpatialFactRequest: {
+          casterId: actorId,
+          sourceProcedureRef: invocation.sourceProcedureRef,
+          rangeFeet,
+          visibility: "notSpecifiedByProcedure" as const,
+        },
+      };
 }
 
 export function targetListTargetingHasFixedMaximum(

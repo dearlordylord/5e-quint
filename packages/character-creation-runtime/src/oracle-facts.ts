@@ -24,6 +24,7 @@ import {
   SUPPORTED_ABILITY_SCORE_METHODS,
   UNIT_CHOICE_KEYS,
   isCharacterBuildToolProficiencyId,
+  isCopperPieceAmount,
   parseCharacterEquipmentItemId,
   parseCreationHoleId,
   type CharacterBuild,
@@ -71,6 +72,13 @@ const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(0),
   Schema.brand("NonNegativeInteger"),
+);
+const CopperPieceAmountSchema = Schema.Number.pipe(
+  Schema.filter(isCopperPieceAmount, {
+    message: () => "invalid copper-piece amount",
+  }),
+  Schema.brand("NonNegativeInteger"),
+  Schema.brand("CopperPieceAmount"),
 );
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
@@ -336,6 +344,7 @@ const characterEquipmentItemIdSchema = <
     Schema.brand("CharacterEquipmentItemId"),
   );
 const EquipmentSchema = Schema.Struct({
+  startingEquipmentCurrencyRemainderCp: CopperPieceAmountSchema,
   owned: Schema.Array(
     Schema.Union(
       Schema.Struct({
@@ -623,6 +632,29 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("unsupportedEquipmentUnitId"),
     equipmentUnitId: UnitIdSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("unsupportedEquipmentCost"),
+    equipmentUnitId: UnitIdSchema,
+    costGp: Schema.Number,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("unsupportedStartingCurrency"),
+    sourceUnitId: UnitIdSchema,
+    coinsGp: Schema.Number,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("currencySumOutsideCopperPieceAmountRange"),
+    source: Schema.Literal(
+      "startingEquipmentGrants",
+      "selectedEquipmentPurchases",
+    ),
+    components: Schema.Array(CopperPieceAmountSchema),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("startingCurrencyInsufficientForEquipmentPurchases"),
+    availableCp: CopperPieceAmountSchema,
+    purchaseCostCp: CopperPieceAmountSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("unreadableUnit"),
@@ -1291,7 +1323,12 @@ function spellcastingFact(
 function equipmentFact(
   equipment: CharacterBuild["equipment"],
 ): CharacterBuildFact["equipment"] {
-  const { owned, loadout, ...unprojected } = equipment;
+  const {
+    owned,
+    loadout,
+    startingEquipmentCurrencyRemainderCp,
+    ...unprojected
+  } = equipment;
   noUnprojectedFields(unprojected);
   const projectedOwned = owned.map((item) =>
     Match.value(item).pipe(
@@ -1345,6 +1382,7 @@ function equipmentFact(
           return { itemId };
         })();
   return {
+    startingEquipmentCurrencyRemainderCp,
     owned: projectedOwned,
     loadout: {
       ...(armor === undefined ? {} : { armor }),
@@ -1633,6 +1671,10 @@ type RemainingCharacterBuildProjectionCause = Extract<
     readonly tag:
       | "unprojectableAbilityCheckBonus"
       | "unsupportedEquipmentUnitId"
+      | "unsupportedEquipmentCost"
+      | "unsupportedStartingCurrency"
+      | "currencySumOutsideCopperPieceAmountRange"
+      | "startingCurrencyInsufficientForEquipmentPurchases"
       | "unreadableUnit"
       | "unknownUnit"
       | "abilityScoreCapExceeded"
@@ -1657,6 +1699,34 @@ function characterBuildProjectionCauseFactRemaining(
       ({ tag, equipmentUnitId, ...unprojected }) => {
         noUnprojectedFields(unprojected);
         return { tag, equipmentUnitId };
+      },
+    ),
+    byTag(
+      "unsupportedEquipmentCost",
+      ({ tag, equipmentUnitId, costGp, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, equipmentUnitId, costGp };
+      },
+    ),
+    byTag(
+      "unsupportedStartingCurrency",
+      ({ tag, sourceUnitId, coinsGp, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, sourceUnitId, coinsGp };
+      },
+    ),
+    byTag(
+      "currencySumOutsideCopperPieceAmountRange",
+      ({ tag, source, components, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, source, components };
+      },
+    ),
+    byTag(
+      "startingCurrencyInsufficientForEquipmentPurchases",
+      ({ tag, availableCp, purchaseCostCp, ...unprojected }) => {
+        noUnprojectedFields(unprojected);
+        return { tag, availableCp, purchaseCostCp };
       },
     ),
     byTag("unreadableUnit", ({ tag, role, unitId, issues, ...unprojected }) => {

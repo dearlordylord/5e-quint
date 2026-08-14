@@ -6,14 +6,14 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 
 ## Summary
 
-- Total obligations: 143
-- Covered obligations: 135
+- Total obligations: 144
+- Covered obligations: 136
 - Open transitional obligations: 2
 - Boundary or unsupported obligations: 6
 
 | Status                   | Count |
 | ------------------------ | ----: |
-| covered                  |   135 |
+| covered                  |   136 |
 | needs-qnt-owner          |     2 |
 | needs-parity-witness     |     0 |
 | needs-surface-evidence   |     0 |
@@ -24,7 +24,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | ------------------ | ----: |
 | shared-algebras    |     1 |
 | battle             |   110 |
-| character-creation |    15 |
+| character-creation |    16 |
 | character-sheet    |    13 |
 | character-battle   |     4 |
 
@@ -175,6 +175,7 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `CREATION.MAGIC_INITIATE.CHOICE_FINALIZATION`                     | character-creation | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `SHEET.SPELL_ACCESS.FREE_CAST_LIFECYCLE`                          | character-sheet    | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING`                      | battle             | covered                  | `battle.spell-access-magic-initiate-casting`                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION`               | character-creation | covered                  | _direct reducer entrypoint_                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Battle Hole Frontier
 
@@ -795,6 +796,8 @@ Generated detail; do not edit or read wholesale. Start with `plans/rules-kernel-
 | `packages/character-sheet-runtime/character-sheet-spell-access-free-cast.mbt.qnt`                                   | mbt-fixture             | `SHEET.SPELL_ACCESS.FREE_CAST_LIFECYCLE`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `packages/battle-runtime/battle-runtime-magic-initiate-spell-access.qnt`                                            | semantic-core           | `BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `packages/battle-runtime/battle-runtime-magic-initiate-spell-access-tests.qnt`                                      | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `packages/shared-algebras/proofs/rule-core/starting-currency-finalization.qnt`                                      | semantic-core           | `CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `packages/shared-algebras/proofs/rule-core/starting-currency-finalization-tests.qnt`                                | proof-only              | _none_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ## QNT Registry
 
@@ -1102,6 +1105,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/shared-algebras/proofs/rule-core/spell-slot-transitions.qnt`                                              | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/spell-turn-hook-core.qnt`                                                | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/spellbook-ritual-access.qnt`                                             | qnt-owner-role | semantic-core                                                                                                                                                                                            |
+| `packages/shared-algebras/proofs/rule-core/starting-currency-finalization.qnt`                                      | qnt-owner-role | semantic-core                                                                                                                                                                                            |
 | `packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt`                                        | qnt-owner-role | proof-only                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt`                                       | qnt-owner-role | proof-only                                                                                                                                                                                               |
 | `packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt`                                                 | qnt-owner-role | semantic-core                                                                                                                                                                                            |
@@ -1345,6 +1349,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `CREATION.MAGIC_INITIATE.CHOICE_FINALIZATION`                     | generation-subset-clean | `variant`, `record`, `pure-def`, `constant-val`, `int`, `bool`, `if-expression`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `membership`, `size`                                                                                                                                                  |          |           |
 | `SHEET.SPELL_ACCESS.FREE_CAST_LIFECYCLE`                          | generation-subset-clean | `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `forall`, `membership`                                                                                                                                                       |          |           |
 | `BATTLE.SPELL_ACCESS.MAGIC_INITIATE_CASTING`                      | generation-subset-clean | `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `forall`, `membership`                                                                                                     |          |           |
+| `CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION`               | generation-subset-clean | `variant`, `record`, `pure-def`, `int`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `all-block`, `bool`, `boolean-connective`, `list`, `fold`                                                                                                                                                      |          |           |
 
 ### Generator Readiness Backlog
 

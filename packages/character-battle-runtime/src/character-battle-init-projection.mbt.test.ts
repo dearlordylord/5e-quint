@@ -16,6 +16,7 @@ import {
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   classUnitId,
+  copperPieceAmount,
   sorcererMetamagicOptionId,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
@@ -596,6 +597,7 @@ function defenseBuild(input: {
     ],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [
         {
           kind: "catalogItem",
@@ -651,6 +653,7 @@ function sorcererMetamagicBuild(): CharacterBuild {
     ],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },
@@ -703,7 +706,11 @@ function wizardRuntimeDetachedSpellChoiceBuild(): CharacterBuild {
     proficiencyChoices: [],
     features: [],
     magicInitiateSpellAccesses: [],
-    equipment: { owned: [], loadout: {} },
+    equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
+      owned: [],
+      loadout: {},
+    },
     spellcasting: {
       sources: [
         {
@@ -748,6 +755,7 @@ function warlockPactMagicBuild(): CharacterBuild {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

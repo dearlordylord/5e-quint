@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 143,
-    "covered": 135,
+    "total": 144,
+    "covered": 136,
     "open": 2,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
       "battle": 110,
-      "character-creation": 15,
+      "character-creation": 16,
       "character-sheet": 13,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 135,
+      "covered": 136,
       "needs-qnt-owner": 2,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -5099,6 +5099,33 @@
         ".references/srd-5.2.1/Spells/Gaining-and-Casting.md#Casting without Slots"
       ],
       "title": "Battle source-scoped Magic Initiate cantrip and prepared level-one casting with independent free-cast and slot cast options"
+    },
+    {
+      "id": "CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION",
+      "kind": "projection-scalar",
+      "parityWitnesses": [
+        {
+          "kind": "contract-test",
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts"
+        }
+      ],
+      "profiles": [],
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/starting-currency-finalization.qnt"
+      ],
+      "reason": "The semantic core admits whole-GP starting grants, converts those integer grants to canonical CP, sums selected catalog purchase costs that are already supplied as CP, rejects an over-budget selection, and otherwise records the exact nonnegative remainder. It intentionally does not model decimal GP catalog-price conversion or safe-integer/range validation; runtime contracts own those authored-boundary checks, including a fractional-GP Quarterstaff price, while also covering summed grants and an over-budget three-item selection. The stored-sheet boundary requires the single startingEquipmentCurrencyRemainderCp spelling.",
+      "runtime": "character-creation",
+      "runtimeOwners": [
+        "packages/character-creation-runtime/src/finalization.ts",
+        "packages/character-creation-runtime/src/types.ts",
+        "packages/character-sheet-runtime/src/stored-sheet-parser.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Equipment.md#Coins",
+        ".references/srd-5.2.1/Character-Creation.md#Choose Starting Equipment"
+      ],
+      "title": "Character Creation starting coin grants, catalog purchase costs, and exact remaining currency"
     }
   ],
   "battleHoleFrontier": [
@@ -10970,6 +10997,18 @@
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-magic-initiate-spell-access-tests.qnt",
       "role": "proof-only"
+    },
+    {
+      "evidence": "Owns nonnegative integer-fact admission, whole-GP starting-grant conversion to CP, summation of catalog purchase costs already supplied as CP, over-budget rejection, and exact remaining CP; decimal GP conversion and safe-integer/range validation remain runtime-owned.",
+      "obligationIds": ["CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION"],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/starting-currency-finalization.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "Focused executable proofs for class/background grant summation, already-CP catalog purchase costs, exact-zero remainder, over-budget rejection, and negative-fact rejection.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/starting-currency-finalization-tests.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -12503,6 +12542,11 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spellbook-ritual-access.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/starting-currency-finalization.qnt",
       "role": "semantic-core"
     },
     {
@@ -16903,6 +16947,32 @@
       ],
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-magic-initiate-spell-access.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "int",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "all-block",
+        "bool",
+        "boolean-connective",
+        "list",
+        "fold"
+      ],
+      "obligationId": "CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION",
+      "proofOnly": [
+        "packages/shared-algebras/proofs/rule-core/starting-currency-finalization-tests.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/starting-currency-finalization.qnt"
       ],
       "status": "generation-subset-clean"
     }

@@ -14,6 +14,7 @@ import {
   characterBuildSelectedReferencesWithRoute,
   classUnitId,
   eldritchInvocationId,
+  copperPieceAmount,
   recordCharacterBuildSelectedReferenceRetentionWithRoute,
   sorcererMetamagicOptionId,
   type CharacterBuild,
@@ -307,6 +308,7 @@ function testBuild(input: {
     features: input.features ?? [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

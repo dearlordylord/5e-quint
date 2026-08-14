@@ -877,15 +877,25 @@ describe("battle runtime: setup and discovery", () => {
     ]);
   });
 
-  test("discoverBattleActs omits attack when there is no target", () => {
+  test("discoverBattleActs retains object-capable attack when there is no creature target", () => {
     const session = startBattleSessionRight({
       battleId: battleId("battle-no-target"),
       combatants: [characterSeed({ initiative: 20 })],
     });
     const acts = discoverBattleActs(session);
 
-    expect(acts.map((act) => act.subject)).not.toContainEqual(
-      expect.objectContaining({ tag: "action", action: "attack" }),
+    expect(acts).toContainEqual(
+      expect.objectContaining({
+        subject: expect.objectContaining({ tag: "action", action: "attack" }),
+        initialHoles: [
+          expect.objectContaining({
+            kind: "targetChoice",
+            choices: [],
+            attack: expect.objectContaining({ acceptsObjectTarget: true }),
+            requiresTableSpatialFact: true,
+          }),
+        ],
+      }),
     );
     expect(acts.map((act) => act.subject)).toContainEqual({
       tag: "runtimeCommand",

@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner SHEET.SPELL_ACCESS.FREE_CAST_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import {
   ALIGNMENT_MORALITIES,
@@ -9,6 +10,7 @@ import {
   characterEquipmentItemId,
   characterDraconicAncestrySelection,
   classLevelForUnit,
+  copperPieceAmount,
   classUnitId,
   classUnitIdToClassName,
   CHARACTER_CLASS_LEVELS,
@@ -16,6 +18,7 @@ import {
   eldritchInvocationOptionForInvocationId,
   eldritchInvocationRepeatableChoiceSatisfiesRule,
   isCharacterBuildToolProficiencyId,
+  isCopperPieceAmount,
   languageFromSurfaceLanguageId,
   parseCharacterBuildMagicInitiateSpellAccesses,
   parseCharacterEquipmentItemId,
@@ -34,6 +37,7 @@ import {
   type CharacterBuildSpellcastingFocus,
   type CharacterBuildSpellcastingSource,
   type CharacterEquipmentItemId,
+  type CopperPieceAmount,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
 import {
@@ -1957,6 +1961,13 @@ function parseStoredEquipment(
   ) {
     return characterSheetIssue("Character Build requires equipment.");
   }
+  const startingEquipmentCurrencyRemainderCp =
+    parseStoredStartingEquipmentCurrencyRemainderCp(
+      value.startingEquipmentCurrencyRemainderCp,
+    );
+  if (Either.isLeft(startingEquipmentCurrencyRemainderCp)) {
+    return Either.left(startingEquipmentCurrencyRemainderCp.left);
+  }
   const owned: CharacterBuildEquipment["owned"][number][] = [];
   for (const item of value.owned) {
     if (!isRecord(item) || !isPositiveInteger(item.quantity)) {
@@ -2057,7 +2068,27 @@ function parseStoredEquipment(
       "Character Build loadout must reference owned catalog equipment.",
     );
   }
-  return Either.right({ owned, loadout: loadout.right });
+  return Either.right({
+    startingEquipmentCurrencyRemainderCp:
+      startingEquipmentCurrencyRemainderCp.right,
+    owned,
+    loadout: loadout.right,
+  });
+}
+
+function parseStoredStartingEquipmentCurrencyRemainderCp(
+  value: unknown,
+): Either.Either<CopperPieceAmount, CharacterSheetIssue> {
+  if (value === undefined) {
+    return characterSheetIssue(
+      "Character Build starting-equipment currency remainder is required.",
+    );
+  }
+  return isCopperPieceAmount(value)
+    ? Either.right(copperPieceAmount(value))
+    : characterSheetIssue(
+        "Character Build starting-equipment currency remainder is invalid.",
+      );
 }
 
 function parseStoredLoadout(

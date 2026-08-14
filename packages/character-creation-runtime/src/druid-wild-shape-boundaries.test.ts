@@ -19,6 +19,7 @@ import {
   DRUID_WILD_SHAPE_KNOWN_FORM_ISSUE_CODES,
   DRUID_WILD_SHAPE_UNIT_ID,
   characterBuildDruidWildShapeFacts,
+  copperPieceAmount,
   classUnitId,
   messageForDruidWildShapeKnownFormIssue,
   replaceDruidWildShapeKnownForm,
@@ -99,7 +100,11 @@ function retainedFeatureBuild(
       unitId,
     })),
     magicInitiateSpellAccesses: [],
-    equipment: { owned: [], loadout: {} },
+    equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
+      owned: [],
+      loadout: {},
+    },
   };
 }
 

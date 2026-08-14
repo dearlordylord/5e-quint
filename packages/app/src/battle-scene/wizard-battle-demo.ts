@@ -1173,6 +1173,7 @@ function wizardCreature(input: {
       currentHp: Hp(wizardHp),
       maxHp: Hp(wizardHp),
       tempHp: Hp(0),
+      ammunitionStocks: [],
       selectedLoadout: {},
       attack: null,
       unarmedStrike: {
@@ -1187,13 +1188,17 @@ function wizardCreature(input: {
         damageAbilityModifier: abilityModifier(0)
       },
       spellcasting: {
-        sourceClassName: "wizard",
-        spellcastingAbilityModifier: abilityModifier(wizardSpellcastingAbilityModifier),
+        spellcastingSource: {
+          tag: "classSpellcasting",
+          className: "wizard",
+          abilityModifier: wizardSpellcastingAbilityModifier
+        },
         proficiencyBonus: proficiencyBonus(wizardProficiencyBonus),
         canCastSpells: true,
         cantrips: [],
         preparedSpells: input.preparedSpells,
         featurePreparedSpells: [],
+        spellAccesses: [],
         spellbookRitualSpellAccesses: [],
         invocationSpellAccesses: [],
         spellSlots: [

@@ -119,6 +119,7 @@ const generatorSubsetObservedConstructAuditObligationIds = new Set([
   "BATTLE.ATTACK.MINIMAL_RESOLUTION",
   "CREATION.DRAFT.FILL_BATCH_SLICE_REPLAY",
   "CREATION.CHOICE_DISCOVERY_CARDINALITY",
+  "CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION",
 ]);
 
 const generatorReadinessBlockers = new Set(

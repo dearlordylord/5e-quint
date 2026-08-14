@@ -477,8 +477,11 @@ describe("QMBT15 Spell Unit admission candidate narrowing", () => {
           {
             kind: "hitPoints",
             objectId,
-            damageType: immuneDamageType,
+            components: [
+              { damageType: immuneDamageType, rolledDamage: damageAmount(15) },
+            ],
             rolledDamage: damageAmount(15),
+            damageAfterImmunities: damageAmount(0),
             effectiveDamage: damageAmount(0),
             priorHitPoints: Hp(10),
             nextHitPoints: Hp(10),

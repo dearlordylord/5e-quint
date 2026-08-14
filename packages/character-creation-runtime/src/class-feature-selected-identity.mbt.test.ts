@@ -46,6 +46,7 @@ import {
   discoverCreationHoles,
   fillCreationHoles,
   finalizeCharacterDraft,
+  copperPieceAmount,
   type CharacterBuild,
   type CharacterDraft,
   type CharacterProgression,
@@ -1242,6 +1243,7 @@ function classBuild(input: {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

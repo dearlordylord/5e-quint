@@ -2693,8 +2693,9 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         {
           kind: "hitPoints",
           objectId,
-          damageType: "thunder",
+          components: [{ damageType: "thunder", rolledDamage: 14 }],
           rolledDamage: 14,
+          damageAfterImmunities: 14,
           effectiveDamage: 14,
           priorHitPoints: 20,
           nextHitPoints: 6,

@@ -10,6 +10,7 @@ import {
   abilityScoreAssignment,
   characterBuildFeatureUnitIds,
   classUnitId,
+  copperPieceAmount,
   weaponMasteryChoiceProfileForFeature,
   type CharacterBuild,
   type WeaponMasteryChoiceProfile,
@@ -753,7 +754,11 @@ function weaponMasteryBuild(input: {
       unitId,
     })),
     magicInitiateSpellAccesses: [],
-    equipment: { owned: [], loadout: {} },
+    equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
+      owned: [],
+      loadout: {},
+    },
   };
 }
 

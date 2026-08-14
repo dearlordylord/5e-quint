@@ -91,6 +91,13 @@ describe("character creation runtime", () => {
     expect(reducedSummary.right.spellSlots).toEqual([{ spellLevel: 1, count: 3, expended: 0 }])
     expect(reducedSummary.right.pactSlots).toBeUndefined()
     expect(reducedSummary.right.resources).toEqual([
+      {
+        tag: "spellAccessFreeCast",
+        sourceUnitId: "feat_magic_initiate_cleric",
+        spellId: "bane",
+        count: 1,
+        expended: 0
+      },
       expect.objectContaining({
         tag: "useCountResource",
         unitId: "druid_wild_shape",

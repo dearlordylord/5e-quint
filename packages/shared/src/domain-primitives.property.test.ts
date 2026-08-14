@@ -23,6 +23,7 @@ import {
   attackBonus,
   characterLevel,
   classLevel,
+  copperPieceAmount,
   d20Roll,
   damageAmount,
   deathSaveCount,
@@ -31,6 +32,7 @@ import {
   getOnlyOneStrict,
   healAmount,
   hp,
+  isCopperPieceAmount,
   isArrayOfOne,
   movementDeltaFeet,
   movementFeet,
@@ -116,6 +118,14 @@ describe("shared domain primitive constructors", () => {
     expect(proficiencyBonusForCharacterLevel(characterLevel(1))).toBe(2);
     expect(proficiencyBonusForCharacterLevel(characterLevel(20))).toBe(6);
     expect(abilityScoreToMod(9)).toBe(-1);
+    expect(copperPieceAmount(29)).toBe(29);
+    expect(isCopperPieceAmount(0)).toBe(true);
+    expect(isCopperPieceAmount(Number.MAX_SAFE_INTEGER)).toBe(true);
+    expect(isCopperPieceAmount(-1)).toBe(false);
+    expect(isCopperPieceAmount(0.5)).toBe(false);
+    expect(isCopperPieceAmount(Number.MAX_SAFE_INTEGER + 1)).toBe(false);
+    expect(isCopperPieceAmount("29")).toBe(false);
+    expect(() => copperPieceAmount(0.5)).toThrow();
     expect(druidWildShapeDurationHoursForClassLevel(5)).toBe(2);
 
     expect(isArrayOfOne([1])).toBe(true);

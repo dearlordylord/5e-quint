@@ -1055,7 +1055,10 @@ describe("scenario setup public-SDK boundary", () => {
     );
     expect(scalarTargetHole?.kind).toBe("targetChoice");
     if (scalarTargetHole?.kind !== "targetChoice") return;
-    expect(scalarTargetHole.spellTargetSpatialFactRequest).toBeUndefined();
+    expect(scalarTargetHole.spellTargetSpatialFactRequest).toMatchObject({
+      casterId: "beacon-warden-ember",
+      visibility: "notSpecifiedByProcedure",
+    });
 
     const pointOriginAct = genericTargetActs.find(
       (act) =>
@@ -1724,20 +1727,25 @@ describe("scenario setup public-SDK boundary", () => {
       characters: [
         {
           magicInitiate: {
-            cantrips: ["Fire Bolt", "Light"],
+            cantrips: ["Chill Touch", "Shocking Grasp"],
             levelOneSpell: "Burning Hands",
             spellcastingAbility: "int",
           },
         },
         {
           magicInitiate: {
-            cantrips: ["Chill Touch", "Light"],
+            cantrips: ["Ray of Frost", "Minor Illusion"],
             levelOneSpell: "Shield",
             spellcastingAbility: "int",
           },
         },
       ],
     });
+    expect(
+      characters.characterSheets.map(
+        ({ build }) => build.equipment.startingEquipmentCurrencyRemainderCp,
+      ),
+    ).toEqual([1300, 1300]);
 
     const result = await evaluateScenarioSetup(
       resolve(scenarioDirectory, "generated-battle-002.setup.ts"),

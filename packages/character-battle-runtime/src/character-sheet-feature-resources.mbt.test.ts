@@ -17,6 +17,7 @@ import {
 import {
   abilityScoreAssignment,
   classUnitId,
+  copperPieceAmount,
   DRUID_WILD_SHAPE_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -961,6 +962,7 @@ function baseBuild(input: {
     magicInitiateSpellAccesses: [],
     features: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

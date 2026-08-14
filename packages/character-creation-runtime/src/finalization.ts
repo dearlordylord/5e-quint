@@ -166,9 +166,11 @@ import {
   creationChoiceOptionId,
   choiceCardinalityBounds,
   exactChoiceCardinality,
+  copperPieceAmount,
   hitDieSize,
   hitDieTotal,
   nonEmptyReadonlyArray,
+  isCopperPieceAmount,
   loadoutSourceKey,
   isCharacterBuildToolProficiencyId,
   sorcererMetamagicOptionId,
@@ -193,6 +195,7 @@ import {
   type CharacterBuildProficiencyChoiceSubject,
   type CharacterBuildProjectionCause,
   type CharacterBuildProjectionIssue,
+  type CopperPieceAmount,
   type CharacterBuildResource,
   type CharacterBuildPactMagicSlotPool,
   type CharacterBuildSpellcasting,
@@ -1359,6 +1362,26 @@ function characterBuildProjectionCauseMessage(
       { tag: "unsupportedEquipmentUnitId" },
       ({ equipmentUnitId }) =>
         `Unsupported equipment Unit id for Character Build: ${equipmentUnitId}.`,
+    ),
+    Match.when(
+      { tag: "unsupportedEquipmentCost" },
+      ({ equipmentUnitId, costGp }) =>
+        `Equipment Unit ${equipmentUnitId} has unsupported GP cost ${costGp}.`,
+    ),
+    Match.when(
+      { tag: "unsupportedStartingCurrency" },
+      ({ sourceUnitId, coinsGp }) =>
+        `Starting-equipment source ${sourceUnitId} has unsupported GP currency ${coinsGp}.`,
+    ),
+    Match.when(
+      { tag: "currencySumOutsideCopperPieceAmountRange" },
+      ({ source, components }) =>
+        `The ${source} CP values cannot be represented as one Copper Piece Amount: ${components.join(", ")}.`,
+    ),
+    Match.when(
+      { tag: "startingCurrencyInsufficientForEquipmentPurchases" },
+      ({ availableCp, purchaseCostCp }) =>
+        `Starting equipment purchases cost ${purchaseCostCp} CP but only ${availableCp} CP is available.`,
     ),
     Match.when({ tag: "unreadableUnit" }, ({ role, unitId, issues }) =>
       [
@@ -3766,6 +3789,7 @@ function fixedModifyRollAbilityFilter(
   /* v8 ignore stop */
 }
 
+// KERNEL-COVERAGE: runtime-owner CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION
 export function finalizedBuildEquipment(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
@@ -3844,21 +3868,47 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
     selections.equipment.selectedUnitIds,
     (unitId) => {
       const itemUnitId = characterEquipmentItemUnitId(unitId);
+      const unit = unitLibrary.getUnit(unitId);
       /* v8 ignore start -- Supported equipment selections retain only ids accepted by the equipment-item id constructor. */
-      return Either.isLeft(itemUnitId)
+      if (Either.isLeft(itemUnitId) || Option.isNone(unit)) {
+        return Either.left(
+          characterBuildProjectionIssue({
+            tag: "unsupportedEquipmentUnitId",
+            equipmentUnitId: unitId,
+          }),
+        );
+      }
+      if (
+        unit.value.kind !== "armor" &&
+        unit.value.kind !== "shield" &&
+        unit.value.kind !== "weapon"
+      ) {
+        return Either.left(
+          characterBuildProjectionIssue({
+            tag: "unsupportedEquipmentUnitId",
+            equipmentUnitId: unitId,
+          }),
+        );
+      }
+      const costCopperPieces = goldPieceValueInCopperPieces(unit.value.costGp);
+      return Option.isNone(costCopperPieces)
         ? Either.left(
             characterBuildProjectionIssue({
-              tag: "unsupportedEquipmentUnitId",
+              tag: "unsupportedEquipmentCost",
               equipmentUnitId: unitId,
+              costGp: unit.value.costGp,
             }),
           )
-        : Either.right<CharacterBuildOwnedEquipmentItem>({
-            kind: "catalogItem",
-            itemId: characterEquipmentItemId({
-              slot: ownedEquipmentDefaultSlot(unitLibrary, unitId),
-              unitId: itemUnitId.right,
-            }),
-            quantity: PositiveInteger(1),
+        : Either.right({
+            costCopperPieces: costCopperPieces.value,
+            item: {
+              kind: "catalogItem",
+              itemId: characterEquipmentItemId({
+                slot: ownedEquipmentDefaultSlot(unitLibrary, unitId),
+                unitId: itemUnitId.right,
+              }),
+              quantity: PositiveInteger(1),
+            } satisfies CharacterBuildOwnedEquipmentItem,
           });
       /* v8 ignore stop */
     },
@@ -3874,65 +3924,123 @@ function finalizedBuildEquipmentForSupportedLoadoutChoices(
     return Either.left(starting.left);
   }
 
+  const availableCopperPieces = starting.right.currencyCopperPieces;
+  const purchaseCostComponents = purchased.right.map(
+    ({ costCopperPieces }) => costCopperPieces,
+  );
+  const purchaseCostCopperPieces = sumCopperPieceAmounts(
+    purchaseCostComponents,
+  );
+  if (Option.isNone(purchaseCostCopperPieces)) {
+    return Either.left([
+      characterBuildProjectionIssue({
+        tag: "currencySumOutsideCopperPieceAmountRange",
+        source: "selectedEquipmentPurchases",
+        components: purchaseCostComponents,
+      }),
+    ]);
+  }
+  if (purchaseCostCopperPieces.value > availableCopperPieces) {
+    return Either.left([
+      characterBuildProjectionIssue({
+        tag: "startingCurrencyInsufficientForEquipmentPurchases",
+        availableCp: availableCopperPieces,
+        purchaseCostCp: purchaseCostCopperPieces.value,
+      }),
+    ]);
+  }
+
   return Either.right({
-    owned: combineCatalogEquipment([...purchased.right, ...starting.right]),
+    startingEquipmentCurrencyRemainderCp: copperPieceAmount(
+      availableCopperPieces - purchaseCostCopperPieces.value,
+    ),
+    owned: combineCatalogEquipment([
+      ...purchased.right.map(({ item }) => item),
+      ...starting.right.items,
+    ]),
     loadout,
   });
+}
+
+function goldPieceValueInCopperPieces(
+  gp: number,
+): Option.Option<CopperPieceAmount> {
+  if (!Number.isFinite(gp) || gp < 0 || Number(gp.toFixed(2)) !== gp) {
+    return Option.none();
+  }
+  const copperPieceValue = gp * 100;
+  const roundedCopperPieceValue = Math.round(copperPieceValue);
+  return isCopperPieceAmount(roundedCopperPieceValue)
+    ? Option.some(copperPieceAmount(roundedCopperPieceValue))
+    : Option.none();
+}
+
+function sumCopperPieceAmounts(
+  components: readonly CopperPieceAmount[],
+): Option.Option<CopperPieceAmount> {
+  const total = components.reduce((sum, component) => sum + component, 0);
+  return isCopperPieceAmount(total)
+    ? Option.some(copperPieceAmount(total))
+    : Option.none();
+}
+
+function startingCurrencyCopperPieces(
+  choices: readonly {
+    readonly sourceUnitId: UnitRecord["id"];
+    readonly choice: StartingEquipmentChoice | undefined;
+  }[],
+): Either.Either<CopperPieceAmount, ProjectionIssues> {
+  const amounts = traverseValidation(choices, ({ sourceUnitId, choice }) => {
+    const coinsGp = choice?.coinsGp ?? 0;
+    const amount = goldPieceValueInCopperPieces(coinsGp);
+    return Option.isNone(amount)
+      ? Either.left(
+          characterBuildProjectionIssue({
+            tag: "unsupportedStartingCurrency",
+            sourceUnitId,
+            coinsGp,
+          }),
+        )
+      : Either.right(amount.value);
+  });
+  if (Either.isLeft(amounts)) {
+    return Either.left(amounts.left);
+  }
+  const total = sumCopperPieceAmounts(amounts.right);
+  return Option.isSome(total)
+    ? Either.right(total.value)
+    : Either.left([
+        characterBuildProjectionIssue({
+          tag: "currencySumOutsideCopperPieceAmountRange",
+          source: "startingEquipmentGrants",
+          components: amounts.right,
+        }),
+      ]);
 }
 
 function finalizedStartingEquipment(
   selections: FinalizedCharacterSelections,
   unitLibrary: UnitCatalog,
 ): Either.Either<
-  readonly CharacterBuildOwnedEquipmentItem[],
+  {
+    readonly items: readonly CharacterBuildOwnedEquipmentItem[];
+    readonly currencyCopperPieces: CopperPieceAmount;
+  },
   ProjectionIssues
 > {
   const startingClassId = startingClassUnitId(selections.progression);
-  const classUnit = unitForFinalization(unitLibrary, startingClassId, "class");
-  const backgroundUnit = unitForFinalization(
+  const choices = startingEquipmentChoicesForBuild(
+    selections,
     unitLibrary,
-    selections.background,
-    "background",
-  );
-  if (Either.isLeft(classUnit) && Either.isLeft(backgroundUnit)) {
-    return Either.left([classUnit.left, backgroundUnit.left]);
-  }
-  if (Either.isLeft(classUnit)) return Either.left([classUnit.left]);
-  if (Either.isLeft(backgroundUnit)) return Either.left([backgroundUnit.left]);
-
-  const classFacts = readableForFinalization(
-    readClassCreationFacts(classUnit.right),
     startingClassId,
-    "class",
   );
-  const backgroundFacts = readableForFinalization(
-    readBackgroundCreationFacts(backgroundUnit.right),
-    selections.background,
-    "background",
-  );
-  if (Either.isLeft(classFacts) && Either.isLeft(backgroundFacts)) {
-    return Either.left([classFacts.left, backgroundFacts.left]);
+  if (Either.isLeft(choices)) return Either.left(choices.left);
+  const currencyCopperPieces = startingCurrencyCopperPieces(choices.right);
+  if (Either.isLeft(currencyCopperPieces)) {
+    return Either.left(currencyCopperPieces.left);
   }
-  if (Either.isLeft(classFacts)) return Either.left([classFacts.left]);
-  if (Either.isLeft(backgroundFacts))
-    return Either.left([backgroundFacts.left]);
-
-  const choices = [
-    selectedStartingEquipmentForBuild(
-      selections,
-      startingClassId,
-      CLASS_EQUIPMENT_CHOICE_KEY,
-      classFacts.right.startingEquipment,
-    ),
-    selectedStartingEquipmentForBuild(
-      selections,
-      selections.background,
-      BACKGROUND_EQUIPMENT_CHOICE_KEY,
-      backgroundFacts.right.startingEquipment,
-    ),
-  ];
   const selectedToolIds = selectedBackgroundToolProficiencies(selections);
-  const items = choices.flatMap((choice) =>
+  const items = choices.right.flatMap(({ choice }) =>
     choice?.kind === "item_bundle" ? choice.items : [],
   );
   const projected = traverseValidation(items, (item) =>
@@ -4008,7 +4116,89 @@ function finalizedStartingEquipment(
   );
   return Either.isLeft(projected)
     ? Either.left(projected.left)
-    : Either.right(projected.right.flat());
+    : Either.right({
+        items: projected.right.flat(),
+        currencyCopperPieces: currencyCopperPieces.right,
+      });
+}
+
+type StartingEquipmentChoiceForBuild = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly choice: StartingEquipmentChoice | undefined;
+};
+
+function startingEquipmentChoiceForBuild(input: {
+  readonly selections: FinalizedCharacterSelections;
+  readonly unitLibrary: UnitCatalog;
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly lookupRole: CreationFinalizationLookupUnitRole;
+  readonly readableRole: CreationFinalizationReadableUnitRole;
+  readonly choiceKey:
+    | typeof CLASS_EQUIPMENT_CHOICE_KEY
+    | typeof BACKGROUND_EQUIPMENT_CHOICE_KEY;
+  readonly readFacts: (unit: UnitRecord) => UnitReaderResult<{
+    readonly startingEquipment: readonly StartingEquipmentChoice[];
+  }>;
+}): Either.Either<
+  StartingEquipmentChoiceForBuild,
+  CharacterBuildProjectionIssue
+> {
+  const unit = unitForFinalization(
+    input.unitLibrary,
+    input.sourceUnitId,
+    input.lookupRole,
+  );
+  if (Either.isLeft(unit)) return Either.left(unit.left);
+  const facts = readableForFinalization(
+    input.readFacts(unit.right),
+    input.sourceUnitId,
+    input.readableRole,
+  );
+  return Either.map(facts, ({ startingEquipment }) => ({
+    sourceUnitId: input.sourceUnitId,
+    choice: selectedStartingEquipmentForBuild(
+      input.selections,
+      input.sourceUnitId,
+      input.choiceKey,
+      startingEquipment,
+    ),
+  }));
+}
+
+function startingEquipmentChoicesForBuild(
+  selections: FinalizedCharacterSelections,
+  unitLibrary: UnitCatalog,
+  startingClassId: UnitRecord["id"],
+): Either.Either<
+  readonly [StartingEquipmentChoiceForBuild, StartingEquipmentChoiceForBuild],
+  ProjectionIssues
+> {
+  const classChoice = startingEquipmentChoiceForBuild({
+    selections,
+    unitLibrary,
+    sourceUnitId: startingClassId,
+    lookupRole: "class",
+    readableRole: "class",
+    choiceKey: CLASS_EQUIPMENT_CHOICE_KEY,
+    readFacts: readClassCreationFacts,
+  });
+  const backgroundChoice = startingEquipmentChoiceForBuild({
+    selections,
+    unitLibrary,
+    sourceUnitId: selections.background,
+    lookupRole: "background",
+    readableRole: "background",
+    choiceKey: BACKGROUND_EQUIPMENT_CHOICE_KEY,
+    readFacts: readBackgroundCreationFacts,
+  });
+  if (Either.isLeft(classChoice) && Either.isLeft(backgroundChoice)) {
+    return Either.left([classChoice.left, backgroundChoice.left]);
+  }
+  if (Either.isLeft(classChoice)) return Either.left([classChoice.left]);
+  if (Either.isLeft(backgroundChoice)) {
+    return Either.left([backgroundChoice.left]);
+  }
+  return Either.right([classChoice.right, backgroundChoice.right]);
 }
 
 function selectedStartingEquipmentForBuild(

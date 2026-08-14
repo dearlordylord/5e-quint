@@ -18,6 +18,7 @@ import {
   classUnitId,
   creationChoiceOptionId,
   fontOfMagicSpellSlotCreationOption,
+  copperPieceAmount,
   parseSorcererMetamagicOptionId,
   type CharacterBuild,
   type CharacterChoiceSelection,
@@ -102,7 +103,11 @@ function buildWithRetainedFeatures(
     proficiencyChoices: [],
     features,
     magicInitiateSpellAccesses: [],
-    equipment: { owned: [], loadout: {} },
+    equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
+      owned: [],
+      loadout: {},
+    },
   };
 }
 

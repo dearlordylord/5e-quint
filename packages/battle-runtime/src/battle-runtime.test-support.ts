@@ -3491,6 +3491,10 @@ export function characterSeed(input: {
         { readonly kind: "character" }
       >["attack"]
     | null;
+  readonly ammunitionStocks?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["ammunitionStocks"];
   readonly unarmedStrike?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -3666,7 +3670,7 @@ export function characterSeed(input: {
       currentHp: Hp(input.currentHp ?? 12),
       maxHp: Hp(input.maxHp ?? 12),
       tempHp: Hp(input.tempHp ?? 0),
-      ammunitionStocks: [],
+      ammunitionStocks: input.ammunitionStocks ?? [],
       ...(input.conditions === undefined
         ? {}
         : { conditions: input.conditions }),

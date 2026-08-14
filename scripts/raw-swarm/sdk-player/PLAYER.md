@@ -125,6 +125,10 @@ as one coherent tactical choice requires. Return `kind: "continue"` when a new
 observation should inform the next choice. Return `kind: "playerConcluded"`
 when you believe play has reached a conclusion. This is an assertion for the
 independent RAW reviewer, not proof that a RAW combat-ending condition occurred.
+Pursue each combatant's objective seriously. Do not spend a strictly greater
+expendable resource when a lower-cost surfaced option guarantees the same
+immediate concrete result and no observed fact gives the greater expenditure
+another benefit.
 Describe the concrete combatant, object, procedure, and resource facts that
 support the assertion. Do not report a winner, victory, or winning side, and do
 not infer an encounter-wide partition. Scenario-objective satisfaction and the

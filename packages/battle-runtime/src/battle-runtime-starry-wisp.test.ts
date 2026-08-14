@@ -626,8 +626,11 @@ describe("battle runtime: Starry Wisp", () => {
         {
           kind: "hitPoints",
           objectId,
-          damageType: "radiant",
+          components: [
+            { damageType: "radiant", rolledDamage: damageAmount(6) },
+          ],
           rolledDamage: damageAmount(6),
+          damageAfterImmunities: damageAmount(6),
           effectiveDamage: damageAmount(6),
           priorHitPoints: Hp(5),
           nextHitPoints: Hp(0),
@@ -693,7 +696,11 @@ describe("battle runtime: Starry Wisp", () => {
         {
           kind: "hitPoints",
           objectId: thresholdObjectId,
+          components: [
+            { damageType: "radiant", rolledDamage: damageAmount(6) },
+          ],
           rolledDamage: damageAmount(6),
+          damageAfterImmunities: damageAmount(6),
           effectiveDamage: damageAmount(0),
           priorHitPoints: Hp(10),
           nextHitPoints: Hp(10),

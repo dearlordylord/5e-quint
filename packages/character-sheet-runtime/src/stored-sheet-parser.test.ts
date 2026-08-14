@@ -639,6 +639,7 @@ describe("stored Character Build parser", () => {
     const armed = {
       ...fighterBuild,
       equipment: {
+        ...fighterBuild.equipment,
         owned: [
           {
             kind: "authoredCatalogItem",
@@ -674,6 +675,74 @@ describe("stored Character Build parser", () => {
     };
     expect(parseCharacterBuild(armed, unitLibrary)).toEqual(
       Either.right(armed),
+    );
+  });
+
+  test("parses retained starting currency", () => {
+    const withCurrency = {
+      ...fighterBuild,
+      equipment: {
+        ...fighterBuild.equipment,
+        startingEquipmentCurrencyRemainderCp: 1300,
+      },
+    };
+
+    expect(parseCharacterBuild(withCurrency, unitLibrary)).toEqual(
+      Either.right(withCurrency),
+    );
+    expectIssue(
+      parseCharacterBuild(
+        {
+          ...fighterBuild,
+          equipment: {
+            ...fighterBuild.equipment,
+            startingEquipmentCurrencyRemainderCp: -1,
+          },
+        },
+        unitLibrary,
+      ),
+      "Character Build starting-equipment currency remainder is invalid.",
+    );
+    expectIssue(
+      parseCharacterBuild(
+        {
+          ...fighterBuild,
+          equipment: {
+            ...fighterBuild.equipment,
+            startingEquipmentCurrencyRemainderCp: 0.5,
+          },
+        },
+        unitLibrary,
+      ),
+      "Character Build starting-equipment currency remainder is invalid.",
+    );
+    expectIssue(
+      parseCharacterBuild(
+        {
+          ...fighterBuild,
+          equipment: {
+            ...fighterBuild.equipment,
+            startingEquipmentCurrencyRemainderCp: Number.MAX_SAFE_INTEGER + 1,
+          },
+        },
+        unitLibrary,
+      ),
+      "Character Build starting-equipment currency remainder is invalid.",
+    );
+    const {
+      startingEquipmentCurrencyRemainderCp:
+        _startingEquipmentCurrencyRemainderCp,
+      ...equipmentWithoutCurrency
+    } = withCurrency.equipment;
+    expectIssue(
+      parseCharacterBuild(
+        {
+          ...fighterBuild,
+          equipment: equipmentWithoutCurrency,
+        },
+        unitLibrary,
+      ),
+      "Character Build starting-equipment currency remainder is required.",
     );
   });
 
@@ -942,7 +1011,11 @@ describe("stored Character Build parser", () => {
       name: "a malformed owned equipment item",
       value: {
         ...fighterBuild,
-        equipment: { owned: [null], loadout: {} },
+        equipment: {
+          ...fighterBuild.equipment,
+          owned: [null],
+          loadout: {},
+        },
       },
       expected: "Character Build owned equipment item is invalid.",
     },
@@ -951,6 +1024,7 @@ describe("stored Character Build parser", () => {
       value: {
         ...fighterBuild,
         equipment: {
+          ...fighterBuild.equipment,
           owned: [
             {
               kind: "catalogItem",
@@ -968,6 +1042,7 @@ describe("stored Character Build parser", () => {
       value: {
         ...fighterBuild,
         equipment: {
+          ...fighterBuild.equipment,
           owned: [],
           loadout: {
             weapon: {

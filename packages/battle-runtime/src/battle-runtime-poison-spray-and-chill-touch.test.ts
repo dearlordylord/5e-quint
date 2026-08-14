@@ -602,8 +602,11 @@ describe("battle runtime: Poison Spray and Chill Touch", () => {
         {
           kind: "hitPoints",
           objectId,
-          damageType: "necrotic",
+          components: [
+            { damageType: "necrotic", rolledDamage: damageAmount(9) },
+          ],
           rolledDamage: damageAmount(9),
+          damageAfterImmunities: damageAmount(9),
           effectiveDamage: damageAmount(9),
           priorHitPoints: Hp(12),
           nextHitPoints: Hp(3),

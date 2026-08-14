@@ -9,6 +9,7 @@ import { describe, expect, it, test } from "vitest";
 import {
   abilityScoreAssignment,
   classUnitId,
+  copperPieceAmount,
   type CharacterBuild,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
@@ -375,6 +376,7 @@ function armorClassBuild(input: {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

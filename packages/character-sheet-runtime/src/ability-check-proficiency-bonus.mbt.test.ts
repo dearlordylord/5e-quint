@@ -6,6 +6,7 @@ import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import {
   abilityScoreAssignment,
   classUnitId,
+  copperPieceAmount,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import {
@@ -257,6 +258,7 @@ function baseBuild(input: {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

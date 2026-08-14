@@ -15,6 +15,7 @@ import {
   eldritchInvocationId,
   fighterClassUnitId,
   fighterLevelGainWithFightingStyleReplacement,
+  copperPieceAmount,
   fightingStyleFeatUnitId,
   sorcererClassUnitId,
   sorcererLevelGain,
@@ -87,7 +88,11 @@ function buildForClass(
     proficiencyChoices: [],
     features,
     magicInitiateSpellAccesses: [],
-    equipment: { owned: [], loadout: {} },
+    equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
+      owned: [],
+      loadout: {},
+    },
   };
 }
 

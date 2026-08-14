@@ -26,6 +26,7 @@ import {
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   classUnitId,
+  copperPieceAmount,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import {
@@ -699,6 +700,7 @@ function sheetDerivedBuild(input?: {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: wieldedWeapon
         ? [
             {

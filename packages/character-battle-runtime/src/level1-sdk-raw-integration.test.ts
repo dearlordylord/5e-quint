@@ -43,6 +43,7 @@ import {
   creationHoleId,
   fillCreationHoles,
   finalizeCharacterDraft,
+  copperPieceAmount,
   loadoutEquipmentUnitId,
   loadoutSourceHoleIdText,
   unitChoiceKey,
@@ -6678,12 +6679,19 @@ function levelOneSingleClassBuild(input: {
 function levelOneEquipment(
   weaponUnitId: UnitRecord["id"] | undefined,
 ): CharacterBuild["equipment"] {
-  if (weaponUnitId === undefined) return { owned: [], loadout: {} };
+  if (weaponUnitId === undefined) {
+    return {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
+      owned: [],
+      loadout: {},
+    };
+  }
   const weaponItemId = characterEquipmentItemId({
     slot: "main",
     unitId: requireRight(characterEquipmentItemUnitId(weaponUnitId)),
   });
   return {
+    startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
     owned: [
       {
         kind: "catalogItem",

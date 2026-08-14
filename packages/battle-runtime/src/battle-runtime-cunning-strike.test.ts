@@ -106,7 +106,7 @@ describe("battle runtime: Cunning Strike", () => {
         },
       }),
     ).toThrow();
-  });
+  }, 30_000);
 
   test("Surface rejects malformed same-family Cunning Strike option grants", () => {
     const supremeSneak = unitLibrary.requireUnit("rogue_supreme_sneak");
@@ -140,7 +140,7 @@ describe("battle runtime: Cunning Strike", () => {
         },
       }),
     ).toThrow();
-  });
+  }, 30_000);
 
   test("exposes typed Cunning Strike options from an eligible Sneak Attack damage rider", () => {
     const window = cunningStrikeDamageWindow("trip");

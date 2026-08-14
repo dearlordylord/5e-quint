@@ -1,6 +1,7 @@
 import {
   abilityScoreAssignment,
   classUnitId,
+  copperPieceAmount,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import {
@@ -123,7 +124,9 @@ function druidWildShapeBuild(): CharacterBuild {
     ),
     proficiencyChoices: [],
     features: [],
+    magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

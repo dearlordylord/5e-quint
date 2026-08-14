@@ -779,8 +779,9 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
         {
           kind: "hitPoints",
           objectId,
-          damageType: "fire",
+          components: [{ damageType: "fire", rolledDamage: damageAmount(9) }],
           rolledDamage: damageAmount(9),
+          damageAfterImmunities: damageAmount(9),
           effectiveDamage: damageAmount(9),
           priorHitPoints: Hp(5),
           nextHitPoints: Hp(0),

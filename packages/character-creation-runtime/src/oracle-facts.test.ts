@@ -34,6 +34,7 @@ import {
   draftRevision,
   eldritchInvocationId,
   exactChoiceCardinality,
+  copperPieceAmount,
   loadoutEquipmentUnitId,
   sorcererMetamagicOptionId,
   toolProficiencyId,
@@ -208,7 +209,11 @@ function syntheticBuild(): CharacterBuild {
     proficiencyChoices: [],
     features: [],
     magicInitiateSpellAccesses: [],
-    equipment: { owned: [], loadout: {} },
+    equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
+      owned: [],
+      loadout: {},
+    },
   };
 }
 
@@ -417,6 +422,7 @@ describe("Character Creation owner facts", () => {
         },
       },
       equipment: {
+        startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
         owned: [
           {
             kind: "catalogItem",
@@ -726,6 +732,8 @@ describe("Character Creation owner facts", () => {
         decodeCharacterBuildFact({
           ...buildFact,
           equipment: {
+            startingEquipmentCurrencyRemainderCp:
+              buildFact.equipment.startingEquipmentCurrencyRemainderCp,
             owned: [
               {
                 kind: "catalogItem",
@@ -743,6 +751,8 @@ describe("Character Creation owner facts", () => {
         decodeCharacterBuildFact({
           ...buildFact,
           equipment: {
+            startingEquipmentCurrencyRemainderCp:
+              buildFact.equipment.startingEquipmentCurrencyRemainderCp,
             owned: [
               {
                 kind: "selectedToolItem",
@@ -1283,6 +1293,26 @@ describe("Character Creation owner facts", () => {
           equipmentUnitId: syntheticUnitId,
         },
         {
+          tag: "unsupportedEquipmentCost",
+          equipmentUnitId: syntheticUnitId,
+          costGp: -1,
+        },
+        {
+          tag: "unsupportedStartingCurrency",
+          sourceUnitId: syntheticUnitId,
+          coinsGp: -1,
+        },
+        {
+          tag: "currencySumOutsideCopperPieceAmountRange",
+          source: "selectedEquipmentPurchases",
+          components: [copperPieceAmount(1), copperPieceAmount(2)],
+        },
+        {
+          tag: "startingCurrencyInsufficientForEquipmentPurchases",
+          availableCp: copperPieceAmount(1),
+          purchaseCostCp: copperPieceAmount(2),
+        },
+        {
           tag: "unreadableUnit",
           role: "class",
           unitId: syntheticUnitId,
@@ -1573,6 +1603,7 @@ describe("Character Creation owner facts", () => {
     const fact = characterBuildFact({
       ...build,
       equipment: {
+        startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
         owned: [
           {
             kind: "catalogItem",

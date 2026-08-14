@@ -9,6 +9,7 @@ import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import {
   abilityScoreAssignment,
   classUnitId,
+  copperPieceAmount,
   classSpellcastingCreationAtLevel,
   isListPreparedSpellcastingCreation,
   isPactMagicSpellcastingCreation,
@@ -814,6 +815,7 @@ function baseBuild(input: {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

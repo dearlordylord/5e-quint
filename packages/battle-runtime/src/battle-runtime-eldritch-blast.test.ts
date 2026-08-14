@@ -193,8 +193,9 @@ describe("battle runtime: Eldritch Blast", () => {
         {
           kind: "hitPoints",
           objectId,
-          damageType: "force",
+          components: [{ damageType: "force", rolledDamage: damageAmount(4) }],
           rolledDamage: damageAmount(4),
+          damageAfterImmunities: damageAmount(4),
           effectiveDamage: damageAmount(4),
           priorHitPoints: Hp(5),
           nextHitPoints: Hp(1),

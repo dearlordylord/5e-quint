@@ -19,6 +19,7 @@ import * as path from "node:path";
 import {
   abilityScoreAssignment,
   classUnitId,
+  copperPieceAmount,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import { Hp } from "@dnd/shared/types";
@@ -704,6 +705,7 @@ function classBuild(input: {
     features: input.features ?? [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

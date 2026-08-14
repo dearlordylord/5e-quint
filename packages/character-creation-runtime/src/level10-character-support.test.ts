@@ -23,6 +23,7 @@ import {
   discoverCreationHoles,
   fillCreationHoles,
   finalizeCharacterDraft,
+  copperPieceAmount,
   unitChoiceSourceKey,
   unitChoiceSourceUnitId,
   type CharacterBuild,
@@ -266,7 +267,11 @@ function bardLevelNineBuild(): CharacterBuild {
         },
       },
     },
-    equipment: { owned: [], loadout: {} },
+    equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
+      owned: [],
+      loadout: {},
+    },
   };
 }
 

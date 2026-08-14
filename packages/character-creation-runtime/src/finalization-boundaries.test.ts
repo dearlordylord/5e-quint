@@ -38,6 +38,7 @@ import {
   characterDraftId,
   creationChoiceOptionId,
   draftRevision,
+  copperPieceAmount,
   toolProficiencyId,
 } from "./types.ts";
 
@@ -703,7 +704,11 @@ describe("character finalization boundaries", () => {
           species: unitId,
           features: [],
           magicInitiateSpellAccesses: [],
-          equipment: { owned: [], loadout: {} },
+          equipment: {
+            startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
+            owned: [],
+            loadout: {},
+          },
           spellcasting: {
             sources: [
               {

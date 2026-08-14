@@ -23,6 +23,7 @@ import {
   abilityScoreAssignment,
   classUnitId,
   characterBuildHitPoints,
+  copperPieceAmount,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
   sorcererMetamagicOptionId,
   type CharacterBuild,
@@ -1233,6 +1234,7 @@ function baseBuild(input: {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

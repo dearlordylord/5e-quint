@@ -9,6 +9,7 @@ import {
   abilityScoreAssignment,
   characterBuildHitPoints,
   classUnitId,
+  copperPieceAmount,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import { Hp } from "@dnd/shared/types";
@@ -303,6 +304,7 @@ function buildFixture(input: {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

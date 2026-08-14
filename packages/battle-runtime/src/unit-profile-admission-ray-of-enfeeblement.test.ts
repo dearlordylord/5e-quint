@@ -1200,8 +1200,11 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
         {
           kind: "hitPoints",
           objectId,
-          damageType: "radiant",
+          components: [
+            { damageType: "radiant", rolledDamage: damageAmount(4) },
+          ],
           rolledDamage: damageAmount(4),
+          damageAfterImmunities: damageAmount(4),
           effectiveDamage: damageAmount(4),
           priorHitPoints: Hp(10),
           nextHitPoints: Hp(6),
@@ -1443,8 +1446,11 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
         {
           kind: "hitPoints",
           objectId,
-          damageType: "thunder",
+          components: [
+            { damageType: "thunder", rolledDamage: damageAmount(11) },
+          ],
           rolledDamage: damageAmount(11),
+          damageAfterImmunities: damageAmount(11),
           effectiveDamage: damageAmount(11),
           priorHitPoints: Hp(20),
           nextHitPoints: Hp(9),

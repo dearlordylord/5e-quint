@@ -21,6 +21,7 @@ import {
   characterBuildSorcererFontOfMagicFacts,
   characterBuildSorcererMetamagicFacts,
   classUnitId,
+  copperPieceAmount,
   sorcererMetamagicOptionId,
   type CharacterBuild,
   type CharacterBuildSorcererMetamagicFacts,
@@ -384,6 +385,7 @@ function classBuild(input: {
     features: input.features ?? [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

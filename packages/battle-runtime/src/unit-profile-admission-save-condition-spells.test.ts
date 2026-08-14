@@ -1530,7 +1530,15 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     ).toEqual([
       expect.objectContaining({
         procedure: "sleepTargetAdmission",
-        spell,
+        spell: expect.objectContaining({
+          id: sleepUnitId,
+          castingSource: {
+            tag: "classSpellcasting",
+            className: "wizard",
+            abilityModifier: 3,
+          },
+          spellAccessFreeCastResourcePoolRefs: [],
+        }),
         targeting: { kind: "pointOriginSphere", radiusFeet: 5 },
       }),
     ]);

@@ -12,6 +12,7 @@ import {
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   classUnitId,
+  copperPieceAmount,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import {
@@ -702,6 +703,7 @@ function armorClassBuild(input: {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [
         ...(armorItemId === undefined || input.armor === undefined
           ? []

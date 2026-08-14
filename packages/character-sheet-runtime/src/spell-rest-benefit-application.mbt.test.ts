@@ -6,6 +6,7 @@ import * as path from "node:path";
 
 import {
   classUnitId,
+  copperPieceAmount,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -344,6 +345,7 @@ function characterBuild(input: {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

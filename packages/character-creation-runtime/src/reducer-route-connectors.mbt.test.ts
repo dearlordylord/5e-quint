@@ -58,6 +58,7 @@ import {
   creationChoiceOptionId,
   eldritchInvocationId,
   creationHoleId,
+  copperPieceAmount,
   discoverCreationHoles as discoverRuntimeCreationHoles,
   draftRevision,
   fighterLevelGainWithFightingStyleReplacement,
@@ -1759,6 +1760,7 @@ function classFeatureProjectionBuild(input: {
     features: input.features ?? [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

@@ -29,6 +29,7 @@ import {
   DRUID_WILD_SHAPE_UNIT_ID,
   fillCreationHoles,
   finalizeCharacterDraft,
+  copperPieceAmount,
   loadoutEquipmentUnitId,
   loadoutSourceHoleIdText,
   MONK_MONKS_FOCUS_UNIT_ID,
@@ -1321,6 +1322,7 @@ function featureResourceBaseBuild(input: {
     magicInitiateSpellAccesses: [],
     features: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

@@ -12,6 +12,7 @@ import {
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   classUnitId,
+  copperPieceAmount,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
@@ -1078,6 +1079,7 @@ function baseBuild(input: {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },
@@ -1147,6 +1149,7 @@ function armorClassBuild(input: {
       }),
     ),
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [
         ...(armorItemId === undefined || input.armor === undefined
           ? []

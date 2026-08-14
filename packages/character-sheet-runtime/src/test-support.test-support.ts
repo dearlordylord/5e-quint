@@ -11,6 +11,7 @@ import {
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   classUnitId,
+  copperPieceAmount,
   DRUID_WILD_SHAPE_UNIT_ID,
   eldritchInvocationId,
   MONK_MARTIAL_ARTS_UNIT_ID,
@@ -1069,6 +1070,7 @@ export function armorClassBuild(input: {
     features: input.features ?? [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [
         ...(armorItemId === undefined || input.armor === undefined
           ? []

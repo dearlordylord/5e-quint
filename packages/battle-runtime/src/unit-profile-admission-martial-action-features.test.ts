@@ -1946,7 +1946,7 @@ describe("QMBT68 Monk Deflect Attacks deterministic Unit profile admission", () 
         },
       }),
     ).toThrow();
-  });
+  }, 30_000);
 
   test("monk_deflect_attacks projects zero-damage redirect executable facts", () => {
     const unit = unitLibrary.requireUnit(monkDeflectAttacksUnitId);

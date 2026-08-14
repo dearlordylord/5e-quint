@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness CREATION.MAGIC_INITIATE.CHOICE_FINALIZATION
+// KERNEL-COVERAGE: parity-witness CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION
 import {
   statBlockId as authoredStatBlockId,
   unitId as authoredUnitId,
@@ -27,6 +28,7 @@ import {
 import type {
   ProficiencyGrant,
   ProficiencyGrantSubject,
+  StartingEquipmentChoice,
   ToolProficiencyGrant,
   UnitRecord,
 } from "@dnd/surface/surface/types";
@@ -9929,6 +9931,7 @@ describe("character creation finalization", () => {
     expect(result.tag, JSON.stringify(result)).toBe("ready");
     if (result.tag !== "ready") return;
     expect(result.build.equipment).toEqual({
+      startingEquipmentCurrencyRemainderCp: 5500,
       owned: [
         {
           kind: "catalogItem",
@@ -9962,6 +9965,233 @@ describe("character creation finalization", () => {
         (ref) => ref.unitId,
       ),
     ).toEqual(expect.arrayContaining(["weapon_dagger", "weapon_quarterstaff"]));
+  });
+
+  test("sums class and background starting currency", () => {
+    const wizard = completeWizardDraft({
+      classEquipmentOption: "option_a",
+      backgroundEquipmentOption: "option_a",
+    });
+    const result = finalizeCharacterDraft({ draft: wizard, unitLibrary });
+
+    expect(result.tag, JSON.stringify(result)).toBe("ready");
+    if (result.tag !== "ready") return;
+    expect(result.build.equipment.startingEquipmentCurrencyRemainderCp).toBe(
+      1900,
+    );
+  });
+
+  test("subtracts catalog purchases with copper-piece precision", () => {
+    const wizard = completeWizardDraft({
+      coinEquipmentUnitIds: ["weapon_quarterstaff"],
+    });
+    const result = finalizeCharacterDraft({ draft: wizard, unitLibrary });
+
+    expect(result.tag, JSON.stringify(result)).toBe("ready");
+    if (result.tag !== "ready") return;
+    expect(result.build.equipment.startingEquipmentCurrencyRemainderCp).toBe(
+      10480,
+    );
+  });
+
+  test("converts a two-decimal GP catalog price to exact CP", () => {
+    const wizard = completeWizardDraft({
+      coinEquipmentUnitIds: ["weapon_quarterstaff"],
+    });
+    const completeSelections = finalizedSelections(wizard);
+    expect(completeSelections).toBeDefined();
+    if (completeSelections === undefined) return;
+    const quarterstaff = unitLibrary.requireUnit("weapon_quarterstaff");
+    expect(quarterstaff.kind).toBe("weapon");
+    if (quarterstaff.kind !== "weapon") return;
+    const result = finalizedBuildEquipment(
+      completeSelections,
+      unitLibraryReplacingUnits([{ ...quarterstaff, costGp: 0.29 }]),
+    );
+
+    expect(result).toMatchObject({
+      _tag: "Right",
+      right: { startingEquipmentCurrencyRemainderCp: 10_471 },
+    });
+  });
+
+  test("rejects catalog purchases whose copper-piece total exceeds starting currency", () => {
+    const wizard = completeWizardDraft({
+      coinEquipmentUnitIds: ["weapon_quarterstaff"],
+    });
+    const completeSelections = finalizedSelections(wizard);
+    expect(completeSelections).toBeDefined();
+    if (completeSelections === undefined) return;
+
+    const result = finalizedBuildEquipment(
+      {
+        ...completeSelections,
+        equipment: {
+          selectedUnitIds: [
+            authoredUnitId("armor_chain_mail"),
+            authoredUnitId("weapon_shortbow"),
+            authoredUnitId("weapon_longsword"),
+          ],
+        },
+      },
+      unitLibrary,
+    );
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: [
+        {
+          cause: {
+            tag: "startingCurrencyInsufficientForEquipmentPurchases",
+            availableCp: 10500,
+            purchaseCostCp: 11500,
+          },
+        },
+      ],
+    });
+  });
+
+  test("rejects a selected equipment purchase total outside the CP domain", () => {
+    const wizard = completeWizardDraft({
+      coinEquipmentUnitIds: ["weapon_quarterstaff"],
+    });
+    const completeSelections = finalizedSelections(wizard);
+    expect(completeSelections).toBeDefined();
+    if (completeSelections === undefined) return;
+    const selectedUnitIds = [
+      authoredUnitId("armor_chain_mail"),
+      authoredUnitId("weapon_shortbow"),
+      authoredUnitId("weapon_longsword"),
+    ] as const;
+    const individuallyRepresentableCostGp = 45_035_996_273_704;
+    const highCostCatalog = unitLibraryReplacingUnits(
+      selectedUnitIds.map((unitId) => ({
+        ...unitLibrary.requireUnit(unitId),
+        costGp: individuallyRepresentableCostGp,
+      })),
+    );
+
+    const result = finalizedBuildEquipment(
+      {
+        ...completeSelections,
+        equipment: { selectedUnitIds },
+      },
+      highCostCatalog,
+    );
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: [
+        {
+          cause: {
+            tag: "currencySumOutsideCopperPieceAmountRange",
+            source: "selectedEquipmentPurchases",
+          },
+        },
+      ],
+    });
+  });
+
+  test("rejects starting-equipment grant totals outside the CP domain", () => {
+    const wizard = completeWizardDraft({
+      classEquipmentOption: "option_a",
+      backgroundEquipmentOption: "option_a",
+    });
+    const completeSelections = finalizedSelections({
+      ...wizard,
+      selections: {
+        ...wizard.selections,
+        equipment: { selectedUnitIds: [] },
+      },
+    });
+    expect(completeSelections).toBeDefined();
+    if (completeSelections === undefined) return;
+    const wizardUnit = unitLibrary.requireUnit("class_wizard");
+    const soldierUnit = unitLibrary.requireUnit("background_soldier");
+    expect(wizardUnit.kind).toBe("class");
+    expect(soldierUnit.kind).toBe("background");
+    if (wizardUnit.kind !== "class" || soldierUnit.kind !== "background")
+      return;
+    const individuallyRepresentableGrantGp = 45_035_996_273_705;
+    const highGrantCatalog = unitLibraryReplacingUnits([
+      {
+        ...wizardUnit,
+        startingEquipment: startingEquipmentChoicesWithCoins(
+          wizardUnit.startingEquipment,
+          "option_a",
+          individuallyRepresentableGrantGp,
+        ),
+      },
+      {
+        ...soldierUnit,
+        startingEquipment: startingEquipmentChoicesWithCoins(
+          soldierUnit.startingEquipment,
+          "option_a",
+          individuallyRepresentableGrantGp,
+        ),
+      },
+    ]);
+
+    const result = finalizedBuildEquipment(
+      completeSelections,
+      highGrantCatalog,
+    );
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: [
+        {
+          cause: {
+            tag: "currencySumOutsideCopperPieceAmountRange",
+            source: "startingEquipmentGrants",
+          },
+        },
+      ],
+    });
+  });
+
+  test("reports a starting-equipment grant that is not exactly convertible to CP", () => {
+    const wizard = completeWizardDraft({ classEquipmentOption: "option_a" });
+    const completeSelections = finalizedSelections({
+      ...wizard,
+      selections: {
+        ...wizard.selections,
+        equipment: { selectedUnitIds: [] },
+      },
+    });
+    expect(completeSelections).toBeDefined();
+    if (completeSelections === undefined) return;
+    const wizardUnit = unitLibrary.requireUnit("class_wizard");
+    expect(wizardUnit.kind).toBe("class");
+    if (wizardUnit.kind !== "class") return;
+    const unsupportedGrantCatalog = unitLibraryReplacingUnits([
+      {
+        ...wizardUnit,
+        startingEquipment: startingEquipmentChoicesWithCoins(
+          wizardUnit.startingEquipment,
+          "option_a",
+          1e-12,
+        ),
+      },
+    ]);
+
+    const result = finalizedBuildEquipment(
+      completeSelections,
+      unsupportedGrantCatalog,
+    );
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: [
+        {
+          cause: {
+            tag: "unsupportedStartingCurrency",
+            sourceUnitId: "class_wizard",
+            coinsGp: 1e-12,
+          },
+        },
+      ],
+    });
   });
 
   test("does not project a purchased plain Quarterstaff as an Arcane Focus", () => {
@@ -11893,6 +12123,19 @@ function assertProficiencySubjectProjected(input: {
   }
 }
 
+function startingEquipmentChoicesWithCoins(
+  choices: readonly [StartingEquipmentChoice, ...StartingEquipmentChoice[]],
+  optionId: string,
+  coinsGp: number,
+): readonly [StartingEquipmentChoice, ...StartingEquipmentChoice[]] {
+  const replaceCoins = (
+    choice: StartingEquipmentChoice,
+  ): StartingEquipmentChoice =>
+    choice.id === optionId ? { ...choice, coinsGp } : choice;
+  const [first, ...rest] = choices;
+  return [replaceCoins(first), ...rest.map(replaceCoins)];
+}
+
 function unitLibraryWithUnrelatedUnits(count: number): UnitCatalog {
   const fighter = unitLibrary.requireUnit("class_fighter");
   const soldier = unitLibrary.requireUnit("background_soldier");
@@ -12620,6 +12863,7 @@ function completeFighterDraftForBackground(input: {
 function completeWizardDraft(
   input: {
     readonly classEquipmentOption?: "option_a" | "option_b";
+    readonly backgroundEquipmentOption?: "option_a" | "option_b";
     readonly coinEquipmentUnitIds?: readonly string[];
   } = {},
 ): CharacterDraft {
@@ -12704,7 +12948,7 @@ function completeWizardDraft(
         ),
         choiceFill(
           testUnitHoleId("background_soldier", "background_equipment_choice"),
-          "option_b",
+          input.backgroundEquipmentOption ?? "option_b",
         ),
       ],
     }),

@@ -8,6 +8,7 @@ import {
   abilityScoreAssignment,
   characterBuildFeatureUnitIds,
   classUnitId,
+  copperPieceAmount,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
@@ -447,7 +448,11 @@ function wizard4BuildWithPactSlots(): CharacterBuild {
         },
       },
     },
-    equipment: { owned: [], loadout: {} },
+    equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
+      owned: [],
+      loadout: {},
+    },
   };
 }
 

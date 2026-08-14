@@ -29,12 +29,17 @@ import {
   Index,
   NonNegativeInteger,
   PositiveInteger,
+  copperPieceAmount,
+  isCopperPieceAmount,
   type AbilityScore as AbilityScoreValue,
+  type CopperPieceAmount,
   type HP,
   type Index as IndexType,
   type NonNegativeInteger as NonNegativeIntegerType,
   type PositiveInteger as PositiveIntegerType,
 } from "@dnd/shared/types";
+
+// KERNEL-COVERAGE: runtime-owner CREATION.EQUIPMENT.STARTING_CURRENCY_FINALIZATION
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type {
   MagicInitiateSpellAccessSourceFacts,
@@ -69,6 +74,9 @@ export type CharacterDraftId = string & Brand.Brand<"CharacterDraftId">;
 const CharacterDraftId = Brand.nominal<CharacterDraftId>();
 export const characterDraftId: (value: string) => CharacterDraftId =
   CharacterDraftId;
+
+export { copperPieceAmount, isCopperPieceAmount };
+export type { CopperPieceAmount };
 
 export {
   ALIGNMENT_MORALITIES,
@@ -1117,6 +1125,26 @@ export type CharacterBuildProjectionCause =
       readonly equipmentUnitId: UnitRecord["id"];
     }
   | {
+      readonly tag: "unsupportedEquipmentCost";
+      readonly equipmentUnitId: UnitRecord["id"];
+      readonly costGp: number;
+    }
+  | {
+      readonly tag: "unsupportedStartingCurrency";
+      readonly sourceUnitId: UnitRecord["id"];
+      readonly coinsGp: number;
+    }
+  | {
+      readonly tag: "currencySumOutsideCopperPieceAmountRange";
+      readonly source: "startingEquipmentGrants" | "selectedEquipmentPurchases";
+      readonly components: readonly CopperPieceAmount[];
+    }
+  | {
+      readonly tag: "startingCurrencyInsufficientForEquipmentPurchases";
+      readonly availableCp: CopperPieceAmount;
+      readonly purchaseCostCp: CopperPieceAmount;
+    }
+  | {
       readonly tag: "unreadableUnit";
       readonly role: CreationFinalizationReadableUnitRole;
       readonly unitId: UnitRecord["id"];
@@ -1509,6 +1537,8 @@ export type CharacterBuildOwnedEquipmentItem =
 // The build records durable owned equipment separately from the initial loadout.
 // The in-play Character Sheet owns mutable equipment state after creation.
 export type CharacterBuildEquipment = {
+  /** Coin value left when creation applied the selected starting-equipment purchases; this is not a live adventuring purse. */
+  readonly startingEquipmentCurrencyRemainderCp: CopperPieceAmount;
   readonly owned: readonly CharacterBuildOwnedEquipmentItem[];
   readonly loadout: CharacterBuildLoadout;
 };

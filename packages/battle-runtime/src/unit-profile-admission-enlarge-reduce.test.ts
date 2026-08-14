@@ -657,12 +657,14 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
         spellId: enlargeReduceUnitId,
         slotLevel: 2,
         procedure: "creatureSizeIncrease",
+        source: { tag: "classSpellcasting" },
       },
       {
         tag: "spellSlot",
         spellId: enlargeReduceUnitId,
         slotLevel: 2,
         procedure: "creatureSizeDecrease",
+        source: { tag: "classSpellcasting" },
       },
     ]);
   });

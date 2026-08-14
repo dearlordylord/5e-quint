@@ -72,6 +72,7 @@ import {
   supportedBattleUnitRef,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
+import { battleAmmunitionStock } from "./index.ts";
 import type {
   BattleState,
   BattleSubject,
@@ -2931,6 +2932,7 @@ describe("battle runtime: Weapon Mastery", () => {
           ],
           weaponMasteries: longbowWeaponMasterySelections(),
           attack: testRangedCleaveLongbowAttack(),
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         }),
         statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
       ],

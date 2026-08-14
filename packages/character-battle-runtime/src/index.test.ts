@@ -75,6 +75,7 @@ import {
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
   classUnitId,
+  copperPieceAmount,
   eldritchInvocationId,
   MONK_MONKS_FOCUS_UNIT_ID,
   sorcererMetamagicOptionId,
@@ -6657,6 +6658,7 @@ describe("Character Build battle projection", () => {
     const missingEquipmentBuild = {
       ...build,
       equipment: {
+        startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
         owned: [
           characterBuildCatalogEquipmentItem({
             itemId: missingItemId,
@@ -6753,6 +6755,7 @@ describe("Character Build battle projection", () => {
             },
           ],
           equipment: {
+            startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
             owned: [
               characterBuildCatalogEquipmentItem({
                 itemId: daggerItemId,
@@ -6781,6 +6784,7 @@ describe("Character Build battle projection", () => {
         {
           ...build,
           equipment: {
+            startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
             owned: [
               characterBuildCatalogEquipmentItem({
                 itemId: nonWeaponItemId,
@@ -6820,6 +6824,7 @@ describe("Character Build battle projection", () => {
         build: {
           ...build,
           equipment: {
+            startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
             owned: [
               characterBuildCatalogEquipmentItem({
                 itemId: missingOffHandItemId,
@@ -6841,6 +6846,7 @@ describe("Character Build battle projection", () => {
         build: {
           ...build,
           equipment: {
+            startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
             owned: [
               characterBuildCatalogEquipmentItem({
                 itemId: missingArmorItemId,
@@ -6859,6 +6865,7 @@ describe("Character Build battle projection", () => {
         build: {
           ...pactBladeInvocationBuild(authoredUnitId("weapon_longsword")),
           equipment: {
+            startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
             owned: [
               characterBuildCatalogEquipmentItem({
                 itemId: missingItemId,
@@ -7098,6 +7105,7 @@ describe("Character Build battle projection", () => {
         build: {
           ...wizard,
           equipment: {
+            startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
             owned: [
               characterBuildCatalogEquipmentItem({
                 itemId: missingArmorItemId,
@@ -7124,6 +7132,7 @@ describe("Character Build battle projection", () => {
           build: {
             ...wizard,
             equipment: {
+              startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
               owned: [
                 characterBuildCatalogEquipmentItem({
                   itemId: chainMailItemId,
@@ -7223,6 +7232,7 @@ describe("Character Build battle projection", () => {
         {
           ...build,
           equipment: {
+            startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
             owned: [
               characterBuildCatalogEquipmentItem({
                 itemId: leatherArmorItemId,
@@ -7392,6 +7402,7 @@ describe("Character Build battle projection", () => {
         build: {
           ...multiclassUnarmoredDefenseBuild(),
           equipment: {
+            startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
             owned: [
               characterBuildCatalogEquipmentItem({
                 itemId: shieldItemId,
@@ -7773,7 +7784,11 @@ describe("Character Build battle projection", () => {
           unitId: authoredUnitId("subclass_barbarian_path_of_the_berserker"),
         },
       ],
-      equipment: { owned: [], loadout: {} },
+      equipment: {
+        startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
+        owned: [],
+        loadout: {},
+      },
     } satisfies CharacterBuild;
     expect(
       characterBattleResourceInitsFromBuild(barbarian, unitLibrary, [
@@ -9411,6 +9426,7 @@ describe("Character Build battle projection", () => {
         build: {
           ...validBuild,
           equipment: {
+            startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
             owned: [
               characterBuildCatalogEquipmentItem({
                 itemId: missingItemId,
@@ -9764,6 +9780,7 @@ function monkBuild(input: {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [
         ...(weaponItemId === undefined || input.weaponUnitId === undefined
           ? []
@@ -9884,6 +9901,7 @@ function pactBladeInvocationBuild(
           ],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [
         characterBuildCatalogEquipmentItem({
           itemId: weaponItemId,
@@ -10192,6 +10210,7 @@ function multiclassUnarmoredDefenseBuild(): CharacterBuild {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },
@@ -10238,6 +10257,7 @@ function defenseBuild(input: {
     ],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [
         characterBuildCatalogEquipmentItem({
           itemId: armorItemId,
@@ -10271,6 +10291,7 @@ function dragonbornFighterBuild(
     originLanguages: ["Common", "Draconic", "Dwarvish"],
     features: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },
@@ -10284,6 +10305,7 @@ function dwarfFighterBuild(): CharacterBuild {
     originLanguages: ["Common", "Dwarvish", "Draconic"],
     features: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },
@@ -10297,6 +10319,7 @@ function halflingFighterBuild(): CharacterBuild {
     originLanguages: ["Common", "Halfling", "Dwarvish"],
     features: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },
@@ -10321,6 +10344,7 @@ function weaponMasteryLongswordFighterBuild(): CharacterBuild {
       },
     ],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [
         characterBuildCatalogEquipmentItem({
           itemId: longswordItemId,
@@ -10367,6 +10391,7 @@ function weaponMasteryQuarterstaffFighterBuild(): CharacterBuild {
       },
     ],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [
         characterBuildCatalogEquipmentItem({
           itemId: quarterstaffItemId,
@@ -10400,6 +10425,7 @@ function weaponMasteryGreataxeFighterBuild(): CharacterBuild {
       },
     ],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [
         characterBuildCatalogEquipmentItem({
           itemId: greataxeItemId,
@@ -10442,6 +10468,7 @@ function trueStrikeWizardBuild(): CharacterBuild {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [
         characterBuildCatalogEquipmentItem({
           itemId: daggerItemId,
@@ -10495,6 +10522,7 @@ function favoredEnemyRangerBuild(): CharacterBuild {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },
@@ -10579,6 +10607,7 @@ function favoredEnemyRangerResourceBuild(): CharacterBuild {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },
@@ -10615,6 +10644,7 @@ function paladinsSmitePaladinBuild(): CharacterBuild {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },
@@ -10775,6 +10805,7 @@ function armorOfShadowsWarlockBuild(
     features,
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },
@@ -10955,6 +10986,7 @@ function druidDruidicBuild(): CharacterBuild {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },
@@ -11111,6 +11143,7 @@ function wizardWarlockBuild(): CharacterBuild {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },
@@ -11182,6 +11215,7 @@ function sorcererFontOfMagicBuild(): CharacterBuild {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },
@@ -11253,6 +11287,7 @@ function paladinBuild(): CharacterBuild {
     features: [],
     magicInitiateSpellAccesses: [],
     equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
       owned: [],
       loadout: {},
     },

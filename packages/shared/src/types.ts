@@ -154,6 +154,21 @@ export const NonNegativeInteger = Brand.all(
   ),
 );
 
+export type CopperPieceAmount = NonNegativeInteger &
+  Brand.Brand<"CopperPieceAmount">;
+export const isCopperPieceAmount = (
+  value: unknown,
+): value is CopperPieceAmount =>
+  typeof value === "number" && value >= 0 && Number.isSafeInteger(value);
+export const CopperPieceAmount = Brand.all(
+  NonNegativeInteger,
+  Brand.refined<CopperPieceAmount>(isCopperPieceAmount, (n: number) =>
+    Brand.error(`Expected ${n} to be a safe copper-piece amount`),
+  ),
+);
+export const copperPieceAmount: (value: number) => CopperPieceAmount =
+  CopperPieceAmount;
+
 export type PositiveInteger = number & Brand.Brand<"PositiveInteger">;
 export const PositiveInteger = Brand.all(
   Integer,

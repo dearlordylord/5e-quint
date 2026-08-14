@@ -103,7 +103,9 @@ describe("battle runtime: Fire Bolt object targets", () => {
         {
           kind: "hitPoints",
           objectId,
+          components: [{ damageType: "fire", rolledDamage: damageAmount(9) }],
           rolledDamage: damageAmount(9),
+          damageAfterImmunities: damageAmount(9),
           effectiveDamage: damageAmount(9),
           destroyed: true,
         },
@@ -340,8 +342,9 @@ describe("battle runtime: Fire Bolt object targets", () => {
         {
           kind: "hitPoints",
           objectId,
-          damageType: "fire",
+          components: [{ damageType: "fire", rolledDamage: damageAmount(9) }],
           rolledDamage: damageAmount(9),
+          damageAfterImmunities: damageAmount(9),
           effectiveDamage: damageAmount(9),
           priorHitPoints: Hp(8),
           nextHitPoints: Hp(0),
@@ -463,7 +466,7 @@ describe("battle runtime: Fire Bolt object targets", () => {
       objectDamages: [
         {
           kind: "tableResolved",
-          damageType: "fire",
+          components: [{ damageType: "fire", rolledDamage: damageAmount(6) }],
           rolledDamage: damageAmount(6),
         },
       ],

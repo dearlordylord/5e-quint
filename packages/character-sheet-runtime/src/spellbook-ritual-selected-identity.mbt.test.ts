@@ -9,6 +9,7 @@ import {
   abilityScoreAssignment,
   characterBuildFeatureUnitIds,
   classUnitId,
+  copperPieceAmount,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import { Hp } from "@dnd/shared/types";
@@ -467,7 +468,11 @@ function wizardBuild(input: {
         },
       },
     },
-    equipment: { owned: [], loadout: {} },
+    equipment: {
+      startingEquipmentCurrencyRemainderCp: copperPieceAmount(0),
+      owned: [],
+      loadout: {},
+    },
   };
 }
 
