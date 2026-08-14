@@ -1,86 +1,91 @@
-# D&D 5e SRD rules engine
+# D&D 5e Rules SDK
 
-A TypeScript workspace for executable D&D 5e rules based on SRD 5.2.1. It
-includes authored content, character and battle reducers, Quint specifications,
-MCP tools, and a React app.
+An executable, formally specified implementation of D&D 5e SRD 5.2.1 rules
+for character creation, progression, character sheets, and combat.
 
-The reducers consume typed rules facts and return the next state, explicit
-caller decisions, or typed rejections. Focused Quint models, proofs, and
-model-based tests check the same rule procedures without treating one
-whole-game model as the verification boundary.
+Supports every class through [level 10](plans/unit-profile-coverage/LEVEL1_10_FULL_SUPPORT.md)
+and an executable subset of battle-relevant spells with mechanically decidable
+outcomes.
 
-## Get started
+The [shipped SRD catalog](plans/unit-profile-coverage/README.md#collection-boundaries)
+contains only SRD 5.2.1 content. Closed-license content is not included; the
+runtime also accepts additional content catalogs.
 
-The workspace pins Node.js 24 in [`mise.toml`](mise.toml) and pnpm 10.29.3 in
-[`package.json`](package.json).
+## How it works
+
+Rules are specified in [Quint](https://quint.sh/) and executed by
+[TypeScript reducers](ARCHITECTURE.md).
+
+When a rule depends on a player choice or table observation, the runtime
+returns a question to fill.
+
+The runtime does not roll dice or infer battlefield geometry. Callers provide
+those facts as witnesses through the API.
+
+## Example
+
+Conceptual pseudocode; the public API exposes each discovery and fill step:
+
+```ts
+let creation = beginCharacter();
+
+creation = fill(creation, {
+  class: "fighter",
+  background: "soldier",
+  species: "human",
+  size: "medium",
+  humanSkill: "perception",
+  originFeat: "alert",
+  fighterSkills: ["acrobatics", "survival"],
+  fightingStyle: "defense",
+});
+
+const fighter1 = finishCharacter(creation);
+const fighter2 = levelUp(fighter1);
+const fighter3 = levelUp(fighter2, { subclass: "champion" });
+const fighterSheet = createCharacterSheet(fighter3);
+
+const encounter = startBattle(fighterSheet, srd.monsters.goblinWarrior, {
+  witnesses: { fighterInitiative: 17, goblinInitiative: 12 },
+});
+let battle = encounter.battle;
+const fighter = encounter.character;
+const goblin = encounter.opponent;
+
+battle = attack(battle, {
+  target: goblin,
+  witnesses: { distance: 5, attackRoll: 17, damageRoll: 8 },
+});
+
+battle = takeDamage(battle, {
+  target: fighter,
+  witnesses: { damage: 7 },
+});
+
+battle = secondWind(battle, {
+  witnesses: { healingRoll: 6 },
+});
+
+battle = actionSurge(battle);
+battle = attack(battle, {
+  target: goblin,
+  witnesses: { distance: 5, attackRoll: 16, damageRoll: 7 },
+});
+
+const fighterAfterBattle = handoff(battle, fighterSheet);
+```
+
+## Develop
 
 ```sh
 pnpm install
-pnpm dev
+pnpm test
+pnpm typecheck
+pnpm quality
 ```
 
-The app runs at <http://localhost:3000>.
+## License
 
-## Packages
-
-- Content and rules: [`@dnd/surface`](packages/surface/README.md),
-  [`@dnd/shared`](packages/shared/README.md), and
-  [`@dnd/shared-algebras`](packages/shared-algebras/README.md).
-- Runtimes:
-  [`@dnd/character-creation-runtime`](packages/character-creation-runtime/README.md),
-  [`@dnd/character-sheet-runtime`](packages/character-sheet-runtime/README.md),
-  [`@dnd/character-battle-runtime`](packages/character-battle-runtime/README.md),
-  and [`@dnd/battle-runtime`](packages/battle-runtime/README.md).
-- Interfaces: [`@dnd/mcp`](packages/mcp/README.md) and
-  [`@dnd/app`](packages/app/README.md).
-- Standalone geometry:
-  [`@dnd/tactical-space`](packages/tactical-space/README.md).
-
-See [Architecture](ARCHITECTURE.md) for package responsibilities, dependency
-direction, and runtime boundaries.
-
-## Verify changes
-
-```sh
-pnpm test       # workspace tests
-pnpm typecheck  # TypeScript checks
-pnpm proof:qnt  # Quint proof and parity lanes
-pnpm quality    # complete repository quality gate
-```
-
-The complete quality gate also checks builds, authored-content boundaries, the
-rules-kernel and Unit-profile registries, lint, complexity, duplication,
-circular dependencies, and test coverage.
-
-Coverage has three separate views:
-
-- [RAW coverage](plans/raw-coverage/README.md) classifies local SRD spans and
-  traces covered requirements to executable owners. Check it separately with
-  `pnpm raw-coverage:check`.
-- [Rules-kernel coverage](plans/rules-kernel-coverage/README.md) tracks reducer
-  semantics and their Quint/runtime witnesses.
-- [Unit-profile coverage](plans/unit-profile-coverage/README.md) tracks authored
-  content supported by those procedures.
-
-## Documentation
-
-- [Context map](CONTEXT-MAP.md) — find the document that owns a domain fact.
-- [Ubiquitous language](UBIQUITOUS_LANGUAGE.md) — D&D and SRD terminology.
-- [Modeling assumptions](ASSUMPTIONS.md) — choices where the SRD is silent or
-  ambiguous.
-- [Contributor instructions](AGENTS.md) — implementation and verification
-  rules.
-- [QNT and MBT guide](docs/agents/QNT-MBT.md) — safe proof and model-based test
-  workflows.
-
-## Content and license
-
-Public content is redistributable SRD 5.2.1 material or original synthetic
-content. This repository does not publish non-SRD official identity or book
-text. See the [content architecture](ARCHITECTURE.md#content-scope-and-licensing)
-and [Mushroom authoring policy](docs/mushroom-playbook/AUTHORING.md).
-
-Code is licensed under the [Apache License 2.0](LICENSE). SRD 5.2.1 content is
-available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
-&copy; Wizards of the Coast LLC. See [NOTICE](NOTICE) and the
-[local corpus attribution](.references/srd-5.2.1/ATTRIBUTION.md).
+Code is licensed under [Apache 2.0](LICENSE). SRD 5.2.1 content is available
+under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); see
+[NOTICE](NOTICE) for attribution.
