@@ -1,103 +1,86 @@
-# D&D 5e SRD Runtime Workspace
+# D&D 5e SRD rules engine
 
-D&D 5e SRD 5.2.1 runtime packages, Surface-authored content, MCP tools, and a
-React frontend.
+A TypeScript workspace for executable D&D 5e rules based on SRD 5.2.1. It
+includes authored content, character and battle reducers, Quint specifications,
+MCP tools, and a React app.
 
-## What this is
+The reducers consume typed rules facts and return the next state, explicit
+caller decisions, or typed rejections. Focused Quint models, proofs, and
+model-based tests check the same rule procedures without treating one
+whole-game model as the verification boundary.
 
-A package workspace for the active runtimes:
+## Get started
 
-```mermaid
-graph TD
-    SRD["SRD 5.2.1"] -.-> SURFACE["@dnd/surface authored Units and Stat Blocks"]
-    SURFACE --> CCR["@dnd/character-creation-runtime"]
-    SURFACE --> BR["@dnd/battle-runtime + focused battle QNT"]
-    CCR --> CSR["@dnd/character-sheet-runtime"]
-    CSR --> CBR["@dnd/character-battle-runtime"]
-    BR --> MCP["@dnd/mcp"]
-    CCR --> MCP
-    CSR --> APP["@dnd/app"]
-    BR --> APP
-```
-
-## What's covered
-
-**Battle runtime:** Unit/StatBlock-backed action resources, attack
-flows, selected spells, Death Saving Throws, Knock Out lifecycle, battle
-snapshots, and caller-owned hole/fill replay.
-
-**Character runtimes:** character-creation choices, progression, sheet-session
-projection, and character battle-entry projection.
-
-**Also:** Surface-authored content records, shared reducer algebras, MCP
-session workflows, React app routes, and research-only community Q&A
-classification tooling
-([`scripts/qa/QA_README.md`](scripts/qa/QA_README.md)).
-
-## Content Provenance
-
-Published content is redistributable SRD material or original synthetic content;
-non-SRD official identity and book text are not published here. The authoritative
-boundaries are the [content architecture](ARCHITECTURE.md#content-scope-and-licensing),
-[Mushroom authoring policy](docs/mushroom-playbook/AUTHORING.md), and
-[agent implementation rules](AGENTS.md#authored-identity-and-phb-content).
-
-## How the layers work
-
-**Surface** (`packages/surface`) — source-authored records and projection
-contracts for Units, Stat Blocks, spells, class features, and related content.
-
-**Battle runtime** (`packages/battle-runtime`) — Unit/StatBlock-backed battle
-reducer behavior. Battle QNT authority is distributed across shared rule-core
-slices, focused runtime slices, and focused MBT/proof witnesses.
-
-**Character runtimes** (`packages/character-creation-runtime`,
-`packages/character-sheet-runtime`, `packages/character-battle-runtime`) —
-package-owned character build, sheet-session, and battle-entry projections.
-
-**MCP and app** (`packages/mcp`, `packages/app`) — user-facing workflows over
-the runtime packages.
-
-**Q&A research tooling** (`scripts/qa/`) — optional corpus download,
-classification, and research support. It is not a rules or verification source;
-see [`scripts/qa/QA_README.md`](scripts/qa/QA_README.md).
-
-**Rules kernel coverage** (`plans/rules-kernel-coverage/`) — semantic
-obligation manifest for TS-current reducer behavior. New reducer semantics are
-QNT-first and must connect back to production runtime behavior through a focused
-random MBT witness or deterministic QNT replay witness according to the lane's
-witness-mode rules.
-
-**Unit profile coverage** (`plans/unit-profile-coverage/`) — authored-content
-support breadth for Surface Units. Its generated reports include the
-rules-kernel join, so a supported Unit can be read through to reducer-semantic
-coverage without merging the two denominators.
-
-## Running It
+The workspace pins Node.js 24 in [`mise.toml`](mise.toml) and pnpm 10.29.3 in
+[`package.json`](package.json).
 
 ```sh
-pnpm quality                    # coverage, lint, complexity, circular, tests, and typecheck
-pnpm proof:qnt                  # conscious QNT proof lanes: inventory, closure, run-block proofs, and QNT slice parity
-pnpm test                       # workspace package tests
-pnpm dev                        # React UI
+pnpm install
+pnpm dev
 ```
 
-`pnpm check:complexity` applies classic cyclomatic complexity with a maximum of
-8 to production-package source. Existing violations are recorded by stable,
-syntax-derived function identity and measured value, so a new violation, an
-increase in an existing function, or an obsolete baseline entry fails the gate.
-Tests, generated files, test support, and throwaway prototypes are excluded.
-Inline ESLint configuration is disabled for this analysis; complexity
-exceptions cannot be hidden in source.
-After reducing existing debt, run `pnpm check:complexity:prune` to ratchet the
-baseline downward. That command refuses to record regressions.
+The app runs at <http://localhost:3000>.
 
-## SRD parity
+## Packages
 
-The spec formalizes the SRD and nothing else — no homebrew, no licensed content. Where the formalization requires choices the SRD doesn't prescribe, those are documented in [`ASSUMPTIONS.md`](ASSUMPTIONS.md).
+- Content and rules: [`@dnd/surface`](packages/surface/README.md),
+  [`@dnd/shared`](packages/shared/README.md), and
+  [`@dnd/shared-algebras`](packages/shared-algebras/README.md).
+- Runtimes:
+  [`@dnd/character-creation-runtime`](packages/character-creation-runtime/README.md),
+  [`@dnd/character-sheet-runtime`](packages/character-sheet-runtime/README.md),
+  [`@dnd/character-battle-runtime`](packages/character-battle-runtime/README.md),
+  and [`@dnd/battle-runtime`](packages/battle-runtime/README.md).
+- Interfaces: [`@dnd/mcp`](packages/mcp/README.md) and
+  [`@dnd/app`](packages/app/README.md).
+- Standalone geometry:
+  [`@dnd/tactical-space`](packages/tactical-space/README.md).
 
-## License
+See [Architecture](ARCHITECTURE.md) for package responsibilities, dependency
+direction, and runtime boundaries.
 
-Licensed under the [Apache License 2.0](LICENSE).
+## Verify changes
 
-This project formalizes mechanics from the [System Reference Document 5.2.1](https://www.dndbeyond.com/srd), &copy; Wizards of the Coast LLC, available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See [NOTICE](NOTICE) and [the local SRD 5.2.1 corpus attribution](.references/srd-5.2.1/ATTRIBUTION.md) for full attribution.
+```sh
+pnpm test       # workspace tests
+pnpm typecheck  # TypeScript checks
+pnpm proof:qnt  # Quint proof and parity lanes
+pnpm quality    # complete repository quality gate
+```
+
+The complete quality gate also checks builds, authored-content boundaries, the
+rules-kernel and Unit-profile registries, lint, complexity, duplication,
+circular dependencies, and test coverage.
+
+Coverage has three separate views:
+
+- [RAW coverage](plans/raw-coverage/README.md) classifies local SRD spans and
+  traces covered requirements to executable owners. Check it separately with
+  `pnpm raw-coverage:check`.
+- [Rules-kernel coverage](plans/rules-kernel-coverage/README.md) tracks reducer
+  semantics and their Quint/runtime witnesses.
+- [Unit-profile coverage](plans/unit-profile-coverage/README.md) tracks authored
+  content supported by those procedures.
+
+## Documentation
+
+- [Context map](CONTEXT-MAP.md) — find the document that owns a domain fact.
+- [Ubiquitous language](UBIQUITOUS_LANGUAGE.md) — D&D and SRD terminology.
+- [Modeling assumptions](ASSUMPTIONS.md) — choices where the SRD is silent or
+  ambiguous.
+- [Contributor instructions](AGENTS.md) — implementation and verification
+  rules.
+- [QNT and MBT guide](docs/agents/QNT-MBT.md) — safe proof and model-based test
+  workflows.
+
+## Content and license
+
+Public content is redistributable SRD 5.2.1 material or original synthetic
+content. This repository does not publish non-SRD official identity or book
+text. See the [content architecture](ARCHITECTURE.md#content-scope-and-licensing)
+and [Mushroom authoring policy](docs/mushroom-playbook/AUTHORING.md).
+
+Code is licensed under the [Apache License 2.0](LICENSE). SRD 5.2.1 content is
+available under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
+&copy; Wizards of the Coast LLC. See [NOTICE](NOTICE) and the
+[local corpus attribution](.references/srd-5.2.1/ATTRIBUTION.md).
