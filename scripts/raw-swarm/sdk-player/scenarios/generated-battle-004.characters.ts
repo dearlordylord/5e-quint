@@ -4,7 +4,10 @@ import type {
   CreationFill,
   CreationHole,
 } from "@dnd/character-creation-runtime";
-import type { ScenarioCharacters } from "@dnd/scenario-character-sdk";
+import type {
+  ScenarioCharacterOutcome,
+  ScenarioCharacters,
+} from "@dnd/scenario-character-sdk";
 import type { FreshCharacterSheet } from "@dnd/character-sheet-runtime";
 
 type BuildPlan = {
@@ -20,7 +23,10 @@ type BuildPlan = {
 
 type CompositionFailure = {
   readonly obstruction: string;
-  readonly observation: unknown;
+  readonly observation: Extract<
+    ScenarioCharacterOutcome,
+    { readonly kind: "obstructed" }
+  >["observation"];
 };
 
 const fighterPlan: BuildPlan = {
