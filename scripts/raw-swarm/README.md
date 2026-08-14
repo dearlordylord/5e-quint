@@ -122,7 +122,7 @@ in [`ASSUMPTIONS.md`](../../ASSUMPTIONS.md) for legality, coherence, and
 executability. A separate content-availability reviewer compares authored
 canonical identities with the supplied catalog and explicit campaign intent.
 This keeps “RAW-supported” distinct from “available in this product profile.”
-Both report problems without choosing tactics, predicting a winner, or silently
+Both report problems without choosing tactics, declaring an outcome, or silently
 rewriting the scenario, and their critiques become input to a later generation
 iteration. Final RAW, content, and policy reviews happen before play.
 
@@ -335,7 +335,8 @@ later failure after a call remains frozen evidence. The retained
 `frozen-prefix.json` carries the byte length and SHA-256 of the append-only final
 program, and every later attempt verifies both before running. A
 `playerConcluded` outcome records the player's assertion; only the independent
-RAW review decides whether the trace supports a combat-ending conclusion.
+RAW review decides whether the concrete terminal facts support the Table's
+decision to end combat; it does not derive an encounter-wide outcome.
 
 Recording requires a clean revision and refuses to overwrite prior evidence:
 
@@ -343,6 +344,12 @@ Recording requires a clean revision and refuses to overwrite prior evidence:
 SCENARIO=tracer-001-goblin-warrior-vs-skeleton
 
 mise exec -- pnpm exec tsx scripts/raw-swarm/run-sdk-player.ts "$SCENARIO"
+
+# The standard Codex worker environment does not currently provide the Linux
+# filesystem isolation required by the preferred profile. The runner proves
+# that capability at startup and otherwise requires this explicit fallback:
+mise exec -- pnpm exec tsx scripts/raw-swarm/run-sdk-player.ts \
+  "$SCENARIO" --instructional-isolation
 
 mise exec -- pnpm exec tsx scripts/raw-swarm/replay-sdk-player.ts \
   "scripts/raw-swarm/out/$SCENARIO-sdk-player"
@@ -367,8 +374,11 @@ mise exec -- pnpm exec tsx scripts/raw-swarm/report.ts review \
 ```
 
 The runner prefers a Codex permission profile that grants only minimal runtime
-reads and write access to the scratch consumer. On a worker where Linux
-filesystem sandboxing cannot initialize, it fails unless the operator appends
+reads and write access to the scratch consumer. The standard Codex worker
+environment currently lacks the Linux filesystem-isolation capability needed
+by that profile. The startup probe is the authority for this capability; do not
+infer support merely from the host or CLI version. When the probe fails, the
+runner refuses to proceed unless the operator appends
 `--instructional-isolation`; the transcript header records
 `instructionalFallback`, and the prompt forbids reading outside scratch. The
 profile probe checks that the agent shell can write scratch but cannot read
@@ -527,7 +537,8 @@ schema identity.
 `roundReached` and `activeTurnActorId`. Report it as “Battle session closed
 during round N, during X's turn.” Session closure does not prove the RAW reason
 combat ended, the highest round reached is not elapsed duration, and it must not
-be converted to seconds. The reviewer determines when and why combat ended.
+be converted to seconds. The reviewer checks the concrete facts recorded when
+the Table ended combat.
 
 ### SQLite report store
 

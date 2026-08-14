@@ -170,6 +170,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       { tokenId: skeletonIds[3], coordinate: { x: 11, y: 9 } },
     ],
     ambientIllumination: "brightLight",
+    statBlockDamageNotation: "rolled",
     environment: {
       overhead: { kind: "open" },
       barrierHeights: [],

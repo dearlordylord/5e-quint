@@ -1582,7 +1582,12 @@ export function attackExecutionSelectionForSubjectForTest(
   }
   return subject.attackAbility === undefined ||
     subject.attackDamageType === undefined
-    ? { procedureRef: subject.procedureRef }
+    ? subject.statBlockDamageNotation === "static"
+      ? {
+          procedureRef: subject.procedureRef,
+          statBlockDamageNotation: "static",
+        }
+      : { procedureRef: subject.procedureRef }
     : {
         procedureRef: subject.procedureRef,
         attackAbility: subject.attackAbility,

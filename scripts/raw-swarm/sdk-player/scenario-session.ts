@@ -10,16 +10,22 @@ import type {
   BattleOpportunityAttackThreat,
   BattleFill,
   BattleMovementSpeedKind,
+  BattleProcedureExecutionRef,
+  BattleReadyResponse,
   BattleResolvedMovement,
   BattleRuntimeSession,
+  BattleStatBlockProcedureExecutionRef,
   BattleSubject,
   BattleTablePositionId,
   CombatantId,
+  StatBlockDamageNotation,
+  AvailableBattleAct,
 } from "@dnd/battle-runtime";
 import {
   battleTablePositionId,
   combatantEffectiveSize,
   deriveOrdinaryMovementTableRouteFacts,
+  discoverBattleActs,
   isBattleRuntimeSession,
   opportunityAttackExecutionCandidates,
   opportunityAttackLeavesReach,
@@ -107,6 +113,7 @@ export type ScenarioBattlefield = Readonly<{
   readonly arena: ArenaSnapshot;
   readonly space: SpatialSnapshot;
   readonly ambientIllumination: BattleIllumination;
+  readonly statBlockDamageNotation: StatBlockDamageNotation;
   readonly environment: ScenarioEnvironment;
   readonly initialRangedAttackEnemyRelationships: readonly ScenarioInitialRangedAttackEnemyRelationship[];
   readonly movementAllyRelationships: readonly ScenarioMovementAllyRelationship[];
@@ -140,6 +147,222 @@ export type ScenarioSession = Readonly<{
   readonly movementResolution: ScenarioMovementResolution;
   readonly [scenarioSessionBrand]: true;
 }>;
+
+type ScenarioStatBlockAttackSubject = Extract<
+  BattleSubject,
+  | Readonly<{
+      readonly tag: "action";
+      readonly action: "attack";
+      readonly procedureRef: BattleStatBlockProcedureExecutionRef;
+    }>
+  | Readonly<{ readonly tag: "pactOfTheChainFamiliarAttack" }>
+>;
+
+function isStatBlockAttackSubject(
+  subject: BattleSubject,
+): subject is ScenarioStatBlockAttackSubject {
+  return (
+    subject.tag === "pactOfTheChainFamiliarAttack" ||
+    (subject.tag === "action" &&
+      subject.action === "attack" &&
+      !("attackAbility" in subject))
+  );
+}
+
+function statBlockAttackDamageNotation(
+  selection: Readonly<{ readonly statBlockDamageNotation?: "static" }>,
+): StatBlockDamageNotation {
+  return selection.statBlockDamageNotation === "static" ? "static" : "rolled";
+}
+
+type ScenarioStatBlockDamageOption = Readonly<{
+  readonly procedureRef: BattleProcedureExecutionRef;
+  readonly statBlockDamageNotation?: "static";
+}>;
+
+function scenarioStatBlockDamageOptionIsAdmitted(input: {
+  readonly selected: StatBlockDamageNotation;
+  readonly option: ScenarioStatBlockDamageOption;
+  readonly available: readonly ScenarioStatBlockDamageOption[];
+}): boolean {
+  const selectedNotationIsAvailable = input.available.some(
+    (candidate) =>
+      candidate.procedureRef === input.option.procedureRef &&
+      statBlockAttackDamageNotation(candidate) === input.selected,
+  );
+  return (
+    !selectedNotationIsAvailable ||
+    statBlockAttackDamageNotation(input.option) === input.selected
+  );
+}
+
+function scenarioReadyResponseChoices(input: {
+  readonly selected: StatBlockDamageNotation;
+  readonly choices: readonly BattleReadyResponse[];
+}): readonly BattleReadyResponse[] {
+  const statBlockOptions = input.choices.flatMap((choice) =>
+    choice.kind === "attack" && choice.selection.attackAbility === undefined
+      ? [choice.selection]
+      : [],
+  );
+  return input.choices.filter((choice) => {
+    if (
+      choice.kind !== "attack" ||
+      choice.selection.attackAbility !== undefined
+    ) {
+      return true;
+    }
+    return scenarioStatBlockDamageOptionIsAdmitted({
+      selected: input.selected,
+      option: choice.selection,
+      available: statBlockOptions,
+    });
+  });
+}
+
+function sameStatBlockAttackProcedure(
+  left: ScenarioStatBlockAttackSubject,
+  right: ScenarioStatBlockAttackSubject,
+): boolean {
+  return (
+    left.tag === right.tag &&
+    left.actorId === right.actorId &&
+    left.procedureRef === right.procedureRef &&
+    (left.tag !== "pactOfTheChainFamiliarAttack" ||
+      (right.tag === "pactOfTheChainFamiliarAttack" &&
+        left.familiarId === right.familiarId))
+  );
+}
+
+export function scenarioBattleActs(
+  session: ScenarioSession,
+): readonly AvailableBattleAct[] {
+  const acts = discoverBattleActs(session.battle);
+  const statBlockOptions = acts.flatMap(({ subject }) =>
+    isStatBlockAttackSubject(subject) ? [subject] : [],
+  );
+  return acts
+    .filter(({ subject }) => {
+      if (!isStatBlockAttackSubject(subject)) return true;
+      return scenarioStatBlockDamageOptionIsAdmitted({
+        selected: session.battlefield.statBlockDamageNotation,
+        option: subject,
+        available: statBlockOptions,
+      });
+    })
+    .map((act) => ({
+      ...act,
+      initialHoles: act.initialHoles.map((hole) =>
+        hole.kind === "readyDeclaration"
+          ? {
+              ...hole,
+              responseChoices: scenarioReadyResponseChoices({
+                selected: session.battlefield.statBlockDamageNotation,
+                choices: hole.responseChoices,
+              }),
+            }
+          : hole,
+      ),
+    }));
+}
+
+export function scenarioBattleFills(
+  session: ScenarioSession,
+  subject: BattleSubject,
+  fills: readonly BattleFill[],
+): readonly BattleFill[] {
+  if (
+    subject.tag !== "action" ||
+    subject.action !== "ready" ||
+    fills[0]?.kind !== "readyDeclaration"
+  ) {
+    return fills;
+  }
+  const fill = fills[0];
+  const selectedResponse = fill.value.response;
+  if (
+    selectedResponse.kind !== "attack" ||
+    selectedResponse.selection.attackAbility !== undefined
+  ) {
+    return fills;
+  }
+  const readyHole = scenarioBattleActs(session)
+    .find(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "ready" &&
+        act.subject.actorId === subject.actorId,
+    )
+    ?.initialHoles.find((hole) => hole.kind === "readyDeclaration");
+  const projectedResponse = readyHole?.responseChoices.find(
+    (candidate) =>
+      candidate.kind === "attack" &&
+      candidate.selection.attackAbility === undefined &&
+      candidate.selection.procedureRef ===
+        selectedResponse.selection.procedureRef,
+  );
+  return projectedResponse === undefined
+    ? fills
+    : [
+        {
+          ...fill,
+          value: { ...fill.value, response: projectedResponse },
+        },
+      ];
+}
+
+export function scenarioBattleSubject(
+  session: ScenarioSession,
+  subject: BattleSubject,
+): BattleSubject {
+  if (!isStatBlockAttackSubject(subject)) return subject;
+  const resolutionPhase = session.battle.state.subjectResolutionPhase;
+  if (
+    resolutionPhase.kind === "subjectContinuation" &&
+    isStatBlockAttackSubject(resolutionPhase.subject) &&
+    sameStatBlockAttackProcedure(subject, resolutionPhase.subject)
+  ) {
+    return resolutionPhase.subject;
+  }
+  const available = discoverBattleActs(session.battle).flatMap(({ subject }) =>
+    isStatBlockAttackSubject(subject) ? [subject] : [],
+  );
+  const sameProcedure = available.filter((candidate) =>
+    sameStatBlockAttackProcedure(subject, candidate),
+  );
+  return (
+    sameProcedure.find(
+      (candidate) =>
+        statBlockAttackDamageNotation(candidate) ===
+        session.battlefield.statBlockDamageNotation,
+    ) ??
+    sameProcedure[0] ??
+    subject
+  );
+}
+
+export function scenarioOpportunityAttackExecutionCandidates(input: {
+  readonly session: ScenarioSession;
+  readonly reactorId: CombatantId;
+  readonly moverId: CombatantId;
+}): ReturnType<typeof opportunityAttackExecutionCandidates> {
+  const candidates = opportunityAttackExecutionCandidates(
+    input.session.battle.state,
+    input.reactorId,
+    input.moverId,
+  );
+  const statBlockOptions = candidates.flatMap(({ selection }) =>
+    selection.attackAbility === undefined ? [selection] : [],
+  );
+  return candidates.filter(({ selection }) => {
+    if (selection.attackAbility !== undefined) return true;
+    return scenarioStatBlockDamageOptionIsAdmitted({
+      selected: input.session.battlefield.statBlockDamageNotation,
+      option: selection,
+      available: statBlockOptions,
+    });
+  });
+}
 
 export type ScenarioSessionFactIssue =
   | Readonly<{
@@ -299,6 +522,7 @@ export function createScenarioSession(input: {
   readonly arena: ArenaDefinition;
   readonly placements: readonly ScenarioPlacement[];
   readonly ambientIllumination: BattleIllumination;
+  readonly statBlockDamageNotation: StatBlockDamageNotation;
   readonly environment: ScenarioEnvironment;
   readonly initialRangedAttackEnemyRelationships: readonly ScenarioInitialRangedAttackEnemyRelationship[];
   readonly movementAllyRelationships: readonly ScenarioMovementAllyRelationship[];
@@ -536,6 +760,7 @@ export function createScenarioSession(input: {
     arena,
     space: space,
     ambientIllumination: input.ambientIllumination,
+    statBlockDamageNotation: input.statBlockDamageNotation,
     environment: Object.freeze({
       overhead: Object.freeze({ ...input.environment.overhead }),
       barrierHeights: Object.freeze(
@@ -882,11 +1107,11 @@ export function planScenarioMovement(input: {
       });
     }
     for (const relationship of opportunityAttackEnemyRelationships) {
-      const candidates = opportunityAttackExecutionCandidates(
-        input.session.battle.state,
-        relationship.reactorId,
-        input.subject.actorId,
-      );
+      const candidates = scenarioOpportunityAttackExecutionCandidates({
+        session: input.session,
+        reactorId: relationship.reactorId,
+        moverId: input.subject.actorId,
+      });
       for (const candidate of candidates) {
         const threat = {
           reactorId: candidate.reactorId,

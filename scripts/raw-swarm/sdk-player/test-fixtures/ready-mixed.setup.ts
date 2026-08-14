@@ -74,6 +74,7 @@ export const setupScenario: ScenarioSetup = ({
       { tokenId: monster.right.combatantId, coordinate: { x: 1, y: 0 } },
     ],
     ambientIllumination: "brightLight",
+    statBlockDamageNotation: "rolled",
     environment: { overhead: { kind: "open" }, barrierHeights: [] },
     initialRangedAttackEnemyRelationships: [
       {

@@ -297,11 +297,17 @@ export type CharacterAttackExecutionSelection = {
   readonly attackAbility: BattleAttackExecutionAbility;
   readonly attackDamageType: DamageType;
 };
-export type StatBlockAttackExecutionSelection = {
+type StatBlockAttackExecutionSelectionBase = {
   readonly procedureRef: BattleStatBlockProcedureExecutionRef;
   readonly attackAbility?: never;
   readonly attackDamageType?: never;
 };
+export type StatBlockAttackExecutionSelection =
+  StatBlockAttackExecutionSelectionBase &
+    (
+      | { readonly statBlockDamageNotation?: never }
+      | { readonly statBlockDamageNotation: "static" }
+    );
 export type BoundAttackExecutionSelection =
   | CharacterAttackExecutionSelection
   | StatBlockAttackExecutionSelection;
@@ -337,7 +343,12 @@ export function attackExecutionSelectionForOption(
   attack: BoundSupportedAttackActionOption,
 ): BoundAttackExecutionSelection {
   if (attack.kind === "statBlockAttack") {
-    return { procedureRef: attack.procedureRef };
+    return attack.damageNotation === "static"
+      ? {
+          procedureRef: attack.procedureRef,
+          statBlockDamageNotation: "static",
+        }
+      : { procedureRef: attack.procedureRef };
   }
   return {
     procedureRef: attack.procedureRef,
@@ -357,7 +368,11 @@ export function boundAttackExecutionSelectionMatchesOption(
   if (selection.procedureRef !== attack.procedureRef) return false;
   return attack.kind === "statBlockAttack"
     ? selection.attackAbility === undefined &&
-        selection.attackDamageType === undefined
+        selection.attackDamageType === undefined &&
+        ("statBlockDamageNotation" in selection
+          ? selection.statBlockDamageNotation
+          : undefined) ===
+          (attack.damageNotation === "static" ? "static" : undefined)
     : selection.attackAbility === attackExecutionAbility(attack) &&
         selection.attackDamageType === attackExecutionDamageType(attack);
 }
@@ -371,12 +386,17 @@ export function boundAttackExecutionSelectionKey(
 export function attackExecutionSelectionKey(
   selection: AttackExecutionSelectionIdentity,
 ): string {
-  return JSON.stringify([
+  const identity = [
     "boundAttack",
     selection.procedureRef,
     selection.attackAbility ?? null,
     selection.attackDamageType ?? null,
-  ]);
+  ];
+  return JSON.stringify(
+    "statBlockDamageNotation" in selection
+      ? [...identity, selection.statBlockDamageNotation ?? ("rolled" as const)]
+      : identity,
+  );
 }
 
 export function attackExecutionSelectionIdentitiesEqual(

@@ -119,12 +119,5 @@ export function attackSubjectPart(attack: BoundSupportedAttackActionOption):
   | (StatBlockAttackExecutionSelection & {
       readonly statBlockDamageNotation?: "static";
     }) {
-  return attack.kind === "statBlockAttack"
-    ? {
-        ...attackExecutionSelectionForOption(attack),
-        ...(attack.damageNotation === "static"
-          ? { statBlockDamageNotation: "static" as const }
-          : {}),
-      }
-    : attackExecutionSelectionForOption(attack);
+  return attackExecutionSelectionForOption(attack);
 }

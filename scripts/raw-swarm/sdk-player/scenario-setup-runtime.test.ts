@@ -10,7 +10,7 @@ import {
   battleObjectId,
   combatantId,
   discoverBattleActs,
-  opportunityAttackExecutionCandidates,
+  readyTriggerDescription,
   resolveBattleRuntimeSubject,
 } from "../../../packages/battle-runtime/src/index.ts";
 import { battleRuntimeSessionWithState } from "../../../packages/battle-runtime/src/battle-runtime-context.ts";
@@ -38,10 +38,14 @@ import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
 import {
   createScenarioSession,
   continueScenarioMovement,
+  scenarioBattleActs,
+  scenarioBattleFills,
+  scenarioBattleSubject,
   scenarioCreatureSpellTargetFills,
   scenarioRelation,
   scenarioEnemyWithinFiveFeetCanSeeAttacker,
   scenarioObjectAttackFills,
+  scenarioOpportunityAttackExecutionCandidates,
   planScenarioMovement,
   scenarioSessionWithBattleResult,
 } from "./scenario-session.ts";
@@ -198,6 +202,7 @@ describe("scenario setup public-SDK boundary", () => {
           { tokenId: occupantId, coordinate: { x: 1, y: 0 } },
         ],
         ambientIllumination: "brightLight",
+        statBlockDamageNotation: "rolled",
         environment: { overhead: { kind: "open" }, barrierHeights: [] },
         initialRangedAttackEnemyRelationships: [],
         movementAllyRelationships: allies
@@ -387,7 +392,7 @@ describe("scenario setup public-SDK boundary", () => {
     if (setup.tag !== "ready") return;
     const moverId = combatantId("goblin-warrior");
     const reactorId = combatantId("skeleton");
-    const scenario = createScenarioSession({
+    const scenarioInput = {
       battle: setup.session.battle,
       arena: {
         cells: [-1, 0, 1].map((x) => ({
@@ -402,12 +407,14 @@ describe("scenario setup public-SDK boundary", () => {
         { tokenId: reactorId, coordinate: { x: 1, y: 0 } },
       ],
       ambientIllumination: "brightLight",
+      statBlockDamageNotation: "rolled",
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
       initialRangedAttackEnemyRelationships: [],
       movementAllyRelationships: [],
       opportunityAttackEnemyRelationships: [{ reactorId, moverId }],
       objects: [],
-    });
+    } as const;
+    const scenario = createScenarioSession(scenarioInput);
     expect(Either.isRight(scenario)).toBe(true);
     if (Either.isLeft(scenario)) return;
     const planned = planScenarioMovement({
@@ -417,15 +424,61 @@ describe("scenario setup public-SDK boundary", () => {
       speedKind: "walk",
       fills: [],
     });
-    const expectedThreats = opportunityAttackExecutionCandidates(
-      setup.session.battle.state,
+    const expectedThreats = scenarioOpportunityAttackExecutionCandidates({
+      session: scenario.right,
       reactorId,
       moverId,
-    ).map(({ reactorId: candidateReactorId, selection }) => ({
+    }).map(({ reactorId: candidateReactorId, selection }) => ({
       reactorId: candidateReactorId,
       ...selection,
     }));
     expect(expectedThreats).toHaveLength(2);
+    const staticScenario = createScenarioSession({
+      ...scenarioInput,
+      statBlockDamageNotation: "static",
+    });
+    expect(Either.isRight(staticScenario)).toBe(true);
+    if (Either.isRight(staticScenario)) {
+      const staticThreats = scenarioOpportunityAttackExecutionCandidates({
+        session: staticScenario.right,
+        reactorId,
+        moverId,
+      });
+      const staticStatBlockThreats = staticThreats.filter(
+        ({ selection }) => selection.attackAbility === undefined,
+      );
+      expect(staticStatBlockThreats).not.toEqual([]);
+      expect(
+        staticStatBlockThreats.every(
+          ({ selection }) => selection.statBlockDamageNotation === "static",
+        ),
+      ).toBe(true);
+      const staticPlan = planScenarioMovement({
+        session: staticScenario.right,
+        subject: { tag: "runtimeCommand", actorId: moverId, command: "move" },
+        route: [{ x: -1, y: 0 }],
+        speedKind: "walk",
+        fills: [],
+      });
+      expect(Either.isRight(staticPlan)).toBe(true);
+      if (Either.isRight(staticPlan)) {
+        const staticResolution = resolveBattleRuntimeSubject({
+          session: staticPlan.right.session.battle,
+          subject: staticPlan.right.subject,
+          fills: staticPlan.right.fills,
+        });
+        expect(staticResolution.snapshot.pendingInterrupt?.choices).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              kind: "opportunityAttack",
+              subject: expect.objectContaining({
+                statBlockDamageNotation: "static",
+              }),
+            }),
+          ]),
+        );
+      }
+    }
     expect(planned).toMatchObject({
       _tag: "Right",
       right: {
@@ -493,6 +546,7 @@ describe("scenario setup public-SDK boundary", () => {
       },
       placements: [],
       ambientIllumination: "brightLight",
+      statBlockDamageNotation: "rolled",
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
       initialRangedAttackEnemyRelationships: [],
       movementAllyRelationships: [],
@@ -549,6 +603,7 @@ describe("scenario setup public-SDK boundary", () => {
         },
       ],
       ambientIllumination: "brightLight",
+      statBlockDamageNotation: "rolled",
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
       initialRangedAttackEnemyRelationships: [],
       movementAllyRelationships: [],
@@ -596,6 +651,7 @@ describe("scenario setup public-SDK boundary", () => {
         { tokenId: combatantId("skeleton"), coordinate: { x: 2, y: 0 } },
       ],
       ambientIllumination: "brightLight",
+      statBlockDamageNotation: "rolled",
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
       initialRangedAttackEnemyRelationships: [
         {
@@ -643,6 +699,116 @@ describe("scenario setup public-SDK boundary", () => {
     );
     expect(attack).toBeDefined();
     if (attack === undefined) return;
+    const scenarioActs = scenarioBattleActs(composed.right);
+    expect(scenarioActs).not.toEqual([]);
+    const rawReadyAct = discoverBattleActs(composed.right.battle).find(
+      ({ subject }) => subject.tag === "action" && subject.action === "ready",
+    );
+    const rawReadyHole = rawReadyAct?.initialHoles.find(
+      (hole) => hole.kind === "readyDeclaration",
+    );
+    const rawStaticResponse = rawReadyHole?.responseChoices.find(
+      (response) =>
+        response.kind === "attack" &&
+        response.selection.attackAbility === undefined &&
+        response.selection.statBlockDamageNotation === "static" &&
+        rawReadyHole.responseChoices.some(
+          (candidate) =>
+            candidate.kind === "attack" &&
+            candidate.selection.attackAbility === undefined &&
+            candidate.selection.procedureRef ===
+              response.selection.procedureRef &&
+            candidate.selection.statBlockDamageNotation === undefined,
+        ),
+    );
+    const scenarioReadyAct = scenarioActs.find(
+      ({ subject }) => subject.tag === "action" && subject.action === "ready",
+    );
+    const scenarioReadyHole = scenarioReadyAct?.initialHoles.find(
+      (hole) => hole.kind === "readyDeclaration",
+    );
+    expect(rawStaticResponse).toBeDefined();
+    expect(
+      scenarioReadyHole?.responseChoices.some(
+        (response) =>
+          response.kind === "attack" &&
+          response.selection.attackAbility === undefined &&
+          response.selection.procedureRef ===
+            rawStaticResponse?.selection.procedureRef &&
+          response.selection.statBlockDamageNotation === "static",
+      ),
+    ).toBe(false);
+    if (
+      rawStaticResponse !== undefined &&
+      scenarioReadyAct?.subject.tag === "action" &&
+      scenarioReadyAct.subject.action === "ready" &&
+      scenarioReadyHole !== undefined
+    ) {
+      const projectedReadyFills = scenarioBattleFills(
+        composed.right,
+        scenarioReadyAct.subject,
+        [
+          {
+            kind: "readyDeclaration",
+            holeId: scenarioReadyHole.holeId,
+            value: {
+              trigger: readyTriggerDescription("a target enters reach"),
+              response: rawStaticResponse,
+            },
+          },
+        ],
+      );
+      expect(projectedReadyFills).toEqual([
+        expect.objectContaining({
+          value: expect.objectContaining({
+            response: expect.objectContaining({
+              kind: "attack",
+              selection: expect.not.objectContaining({
+                statBlockDamageNotation: "static",
+              }),
+            }),
+          }),
+        }),
+      ]);
+      expect(
+        resolveBattleRuntimeSubject({
+          session: composed.right.battle,
+          subject: scenarioReadyAct.subject,
+          fills: projectedReadyFills,
+        }).tag,
+      ).toBe("resolved");
+    }
+    if (
+      attack.subject.tag === "action" &&
+      attack.subject.action === "attack" &&
+      !("attackAbility" in attack.subject)
+    ) {
+      expect(
+        scenarioActs.some(
+          ({ subject }) =>
+            subject.tag === "action" &&
+            subject.action === "attack" &&
+            subject.procedureRef === attack.subject.procedureRef &&
+            "statBlockDamageNotation" in subject &&
+            subject.statBlockDamageNotation === "static",
+        ),
+      ).toBe(false);
+      expect(
+        discoverBattleActs(composed.right.battle).some(
+          ({ subject }) =>
+            subject.tag === "action" &&
+            subject.action === "attack" &&
+            subject.procedureRef === attack.subject.procedureRef &&
+            subject.statBlockDamageNotation === "static",
+        ),
+      ).toBe(true);
+      expect(
+        scenarioBattleSubject(composed.right, {
+          ...attack.subject,
+          statBlockDamageNotation: "static",
+        }),
+      ).not.toHaveProperty("statBlockDamageNotation");
+    }
     const frontier = resolveBattleRuntimeSubject({
       session: composed.right.battle,
       subject: attack.subject,
@@ -725,6 +891,7 @@ describe("scenario setup public-SDK boundary", () => {
       arena: { cellSizeFeet: 5 },
       space: { revision: 11 },
       ambientIllumination: "brightLight",
+      statBlockDamageNotation: "rolled",
       environment: {
         overhead: { kind: "open" },
         barrierHeights: expect.any(Array),
@@ -1142,6 +1309,7 @@ describe("scenario setup public-SDK boundary", () => {
       arena: twoThreatArena,
       placements: twoThreatPlacements,
       ambientIllumination: "brightLight" as const,
+      statBlockDamageNotation: "rolled",
       environment: { overhead: { kind: "open" }, barrierHeights: [] },
       initialRangedAttackEnemyRelationships: [],
       movementAllyRelationships: [],
@@ -1170,11 +1338,11 @@ describe("scenario setup public-SDK boundary", () => {
       expect(movementFill?.kind).toBe("movement");
       if (movementFill?.kind !== "movement") return;
       const expectedThreats = twoThreatReactorIds.flatMap((reactorId) =>
-        opportunityAttackExecutionCandidates(
-          result.session.battle.state,
+        scenarioOpportunityAttackExecutionCandidates({
+          session: twoThreatScenario.right,
           reactorId,
-          twoThreatMoverId,
-        ).map(({ reactorId: candidateReactorId, selection }) => ({
+          moverId: twoThreatMoverId,
+        }).map(({ reactorId: candidateReactorId, selection }) => ({
           reactorId: candidateReactorId,
           ...selection,
         })),
@@ -1292,6 +1460,7 @@ describe("scenario setup public-SDK boundary", () => {
     const dimScenario = createScenarioSession({
       ...twoThreatInput,
       ambientIllumination: "dimLight",
+      statBlockDamageNotation: "rolled",
     });
     expect(Either.isRight(dimScenario)).toBe(true);
     if (Either.isRight(dimScenario)) {

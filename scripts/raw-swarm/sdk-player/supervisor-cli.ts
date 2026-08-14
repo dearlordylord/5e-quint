@@ -17,7 +17,6 @@ import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   BattleSnapshotSchema,
-  discoverBattleActs,
   endBattleRuntimeTurn,
   resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
@@ -39,6 +38,9 @@ import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
 import {
   continueScenarioMovement,
   planScenarioMovement,
+  scenarioBattleActs,
+  scenarioBattleFills,
+  scenarioBattleSubject,
   scenarioSessionAfterRejectedMovement,
   scenarioRelation,
   scenarioObjectAttackFills,
@@ -388,14 +390,16 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
       return { session, result: jsonValue(result), value: result };
     }),
     byOperation("discoverBattleActs", () => {
-      const acts = discoverBattleActs(session.battle);
+      const acts = scenarioBattleActs(session);
       return { session, result: jsonValue(acts), value: acts };
     }),
     byOperation("resolveBattleRuntimeSubject", ({ input }) => {
+      const subject = scenarioBattleSubject(session, input.subject);
+      const battleFills = scenarioBattleFills(session, subject, input.fills);
       const projectedFills = scenarioObjectAttackFills({
         session,
-        subject: input.subject,
-        fills: input.fills,
+        subject,
+        fills: battleFills,
       });
       if (Either.isLeft(projectedFills)) {
         const result: ScenarioBattleResolutionResult = {
@@ -413,12 +417,12 @@ function applyCall(session: ScenarioSession, call: SdkCallInput): AppliedCall {
       }
       const creatureSpellProjectedFills = scenarioCreatureSpellTargetFills({
         session,
-        subject: input.subject,
+        subject,
         fills: projectedFills.right,
       });
       const battleResult = resolveBattleRuntimeSubject({
         session: session.battle,
-        subject: input.subject,
+        subject,
         fills: creatureSpellProjectedFills,
       });
       const result = retainScenarioBattlefield(session, battleResult);

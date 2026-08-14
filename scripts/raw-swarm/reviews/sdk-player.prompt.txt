@@ -19,7 +19,11 @@ arithmetic, Hit Points, zero-HP handling, completion claims, and any stated
 obstruction.
 
 Use only .references/srd-5.2.1/ as RAW authority and consult ASSUMPTIONS.md for
-registered ambiguity decisions. Do not browse external D&D sources.
+registered ambiguity decisions. Follow the Battle vocabulary in
+UBIQUITOUS_LANGUAGE.md: do not infer encounter-wide sides and do not describe
+an outcome as a victory, winner, or winning side. Report concrete combatant,
+object, procedure, resource, and Table-decision facts instead. Do not browse
+external D&D sources.
 Distinguish an SDK/runtime bug from a direct-SDK adapter defect, invalid player
 continuation, invalid scenario, unsupported capability, corpus ambiguity,
 assumption divergence, or reviewer error.

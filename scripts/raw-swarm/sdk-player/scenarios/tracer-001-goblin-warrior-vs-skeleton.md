@@ -8,12 +8,12 @@ Play a D&D 5e SRD 5.2.1 battle while faithfully controlling both combatants.
   sight, no cover, and no Difficult Terrain. Use theater of the mind rather than
   a grid.
 
-Both combatants are trying to win. This tracer uses controller-authored roll
+Both combatants seriously pursue their hostile objectives. This tracer uses controller-authored roll
 totals and is not a fairness or random-distribution experiment: choose plausible
 totals only when the SDK requests them and include them in the recorded calls.
 Only replay of those recorded calls is deterministic; a fresh player run may
 make different tactical and roll choices. Choose tactics for each combatant
-without favoring a predetermined winner. Strategies may change in response to
+without favoring a predetermined outcome. Strategies may change in response to
 observed SDK results. Continue until the observed state supports a reasonable
 player conclusion, then report that conclusion and any SDK obstruction for
 independent RAW review.

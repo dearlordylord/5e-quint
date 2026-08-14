@@ -9,7 +9,10 @@ You are the neutral setup author. Edit only `setup.ts`. Export one
 supplied through its context to construct the closest faithful initial
 `ScenarioSession`. Start the canonical battle, then call
 `createScenarioSession` once with its five-foot arena, initial placements,
-ambient Illumination, vertical environment facts, and scenario-fixed objects.
+ambient Illumination, stat-block damage notation, vertical environment facts,
+and scenario-fixed objects. The notation is one Table decision for this
+scenario: `rolled` keeps stat-block damage rolls in the player protocol, while
+`static` uses the authored average. Players cannot override it per attack.
 The composed session retains an untouched `BattleRuntimeSession` under
 `session.battle` and table-owned facts under `session.battlefield`; do not add
 those facts to battle state. Do not invent substitute creatures, silently drop

@@ -525,12 +525,26 @@ const CharacterAttackExecutionSelectionSchema = Schema.Struct({
   attackName: Schema.optionalWith(Schema.Never, { exact: true }),
 });
 
-const StatBlockAttackExecutionSelectionSchema = Schema.Struct({
+const RolledStatBlockAttackExecutionSelectionSchema = Schema.Struct({
   procedureRef: BattleStatBlockProcedureExecutionRef,
   attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
   attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
   attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+  statBlockDamageNotation: Schema.optionalWith(Schema.Never, { exact: true }),
 });
+
+const StaticStatBlockAttackExecutionSelectionSchema = Schema.Struct({
+  procedureRef: BattleStatBlockProcedureExecutionRef,
+  attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+  attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
+  attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+  statBlockDamageNotation: Schema.Literal("static"),
+});
+
+const StatBlockAttackExecutionSelectionSchema = Schema.Union(
+  RolledStatBlockAttackExecutionSelectionSchema,
+  StaticStatBlockAttackExecutionSelectionSchema,
+);
 
 export const BattleAttackExecutionSelectionSchema = Schema.Union(
   CharacterAttackExecutionSelectionSchema,
@@ -578,9 +592,18 @@ export const BattleSubjectSchema = Schema.Union(
     attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
     attackName: Schema.optionalWith(Schema.Never, { exact: true }),
     statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
-    statBlockDamageNotation: Schema.optionalWith(Schema.Literal("static"), {
-      exact: true,
-    }),
+    statBlockDamageNotation: Schema.optionalWith(Schema.Never, { exact: true }),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("attack"),
+    procedureRef: BattleStatBlockProcedureExecutionRef,
+    attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+    attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
+    attackName: Schema.optionalWith(Schema.Never, { exact: true }),
+    statBlockSection: Schema.optionalWith(Schema.Never, { exact: true }),
+    statBlockDamageNotation: Schema.Literal("static"),
   }),
   Schema.Struct({
     tag: Schema.Literal("pactOfTheChainFamiliarAttack"),

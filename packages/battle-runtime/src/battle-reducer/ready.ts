@@ -47,7 +47,12 @@ export function readyResponseChoices(
           kind: "attack",
           selection:
             subject.attackAbility === undefined
-              ? { procedureRef: subject.procedureRef }
+              ? subject.statBlockDamageNotation === "static"
+                ? {
+                    procedureRef: subject.procedureRef,
+                    statBlockDamageNotation: "static",
+                  }
+                : { procedureRef: subject.procedureRef }
               : {
                   procedureRef: subject.procedureRef,
                   attackAbility: subject.attackAbility,

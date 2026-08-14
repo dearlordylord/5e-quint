@@ -73,6 +73,7 @@ export const setupScenario: ScenarioSetup = (context) => {
       { tokenId: skeleton.right.combatantId, coordinate: { x: 1, y: 0 } },
     ],
     ambientIllumination: "brightLight",
+    statBlockDamageNotation: "rolled",
     environment: { overhead: { kind: "open" }, barrierHeights: [] },
     initialRangedAttackEnemyRelationships: [
       {

@@ -233,6 +233,7 @@ export const setupScenario: ScenarioSetup = ({
     arena: { cells, boundaries },
     placements,
     ambientIllumination: "brightLight",
+    statBlockDamageNotation: "rolled",
     environment: {
       overhead: { kind: "open" },
       barrierHeights: boundaries
